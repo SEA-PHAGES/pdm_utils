@@ -79,7 +79,7 @@ try:
 		newColor = "#FFFFFF"
 
 		cur.execute("update pham_color set color = %s where id = %s" , (newColor, pham_id))
-		print "buuuuutt"
+
 
 except mdb.Error, e:
   

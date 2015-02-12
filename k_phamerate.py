@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #PYTHON code for executing iterative kClust
 #Charles Bowman
-#20140126
+#20150126
  
 
 import MySQLdb as mdb

@@ -124,7 +124,7 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
                                     startCoord = int(strStart)
                                     stopCoord = int(strStop)
                                 else:
-                                    f.write("Shitty Coord " + geneID + " " + strStart + " " + strStop + "\n")
+                                    f.write("Non-traditional Coord " + geneID + " " + strStart + " " + strStop + "\n")
                                     locusCounter += 1 
                                     continue
 

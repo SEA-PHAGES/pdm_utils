@@ -10,11 +10,12 @@
 #ALTER TABLE `Mycobacteriophage_Draft`.`gene` ADD COLUMN `cdd_status` TINYINT(1) NOT NULL  AFTER `blast_status` ;
 #SET SQL_SAFE_UPDATES = 0;
 #update gene
-#set cdd_status = 0; #Or 1 if already completed for current DB
+#set cdd_status = 0;
+ #Or 1 if already completed for current DB
 #SET SQL_SAFE_UPDATES = 1;
 #To use on legacy databases
 
-#To reset shit for update of cdd
+#To reset STUFF for update of cdd
 #Truncate table gene_domain;
 #SET SQL_SAFE_UPDATES = 0;
 #update gene
@@ -38,26 +39,26 @@ except:
 
 def search(geneid, translation, database, username, password):
 
-	#IMPORT SHIT
+	#IMPORT STUFF
 	import Bio
 	from Bio.Blast import NCBIStandalone
 	from Bio.Blast import NCBIXML
 	import MySQLdb as mdb
 
-	#DEFINE SHIT - Change variables here for executable and CDD locations
+	#DEFINE STUFF - Change variables here for executable and CDD locations
 	rpsblast_exe = "/home/cbowman/Applications/BLAST/bin/rpsblast"
 	rpsblast_db = "/home/cbowman/Databases/CDD/Cdd"
 	query_filename = "/tmp/" + geneid + ".txt"
 	E_VALUE_THRESH = 0.001	#Adjust the expectation cut-off here
 
-	#WRITE SHIT
+	#WRITE STUFF
 	f = open(query_filename,'w')
 	f.write(">" + geneid + "\n" + translation)
 	f.close()
 
 	output_handle, error_handle = NCBIStandalone.rpsblast(rpsblast_exe, rpsblast_db, query_filename, expectation=E_VALUE_THRESH)
 	
-	#PARSE SHIT
+	#PARSE STUFF
 	for record in NCBIXML.parse(output_handle):
 		if record.alignments:
 			for align in record.alignments:
@@ -121,7 +122,7 @@ def search(geneid, translation, database, username, password):
 
 
 
-#GET SHIT
+#GET STUFF
 
 username = getpass.getpass(prompt='mySQL username:')
 password = getpass.getpass(prompt='mySQL password:')
@@ -142,7 +143,7 @@ finally:
 	if con:    
 		con.close()
 
-#IF THERE IS SHIT, PROCESS SHIT
+#IF THERE IS STUFF, PROCESS STUFF
 if tuples:
 	#Set up pp server
 	job_server = pp.Server(secret="butt")
@@ -158,7 +159,7 @@ if tuples:
 	
 	print `numgenes` + " searches to perform, please be patient."
 	
-	#WAIT FOR SHIT TO BE DONE
+	#WAIT FOR STUFF TO BE DONE
 	for job in jobs:
 		counter = counter + 1
 		print `counter` + " / " + `numgenes`
