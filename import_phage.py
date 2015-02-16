@@ -58,7 +58,7 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
                 #Nonessential Stuff
                 try:
                     phageHost = seq_record.annotations["organism"].split(' ')[0]
-                    if phageHost = phageName:
+                    if phageHost == phageName:
                     	phageHost = ""
                 except:
                     phageHost = ""
