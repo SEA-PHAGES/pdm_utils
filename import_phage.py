@@ -1,3 +1,8 @@
+#Phage Import Script
+#Charles Bowman and Damani Brown
+#University of Pittsburgh
+#20150216
+
 #!/usr/bin/env python
 import sys, os, getpass
 from Bio import SeqIO
@@ -53,6 +58,8 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
                 #Nonessential Stuff
                 try:
                     phageHost = seq_record.annotations["organism"].split(' ')[0]
+                    if phageHost = phageName:
+                    	phageHost = ""
                 except:
                     phageHost = ""
                 
