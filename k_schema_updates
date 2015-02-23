@@ -1,0 +1,44 @@
+//Execute these queries in SQL to properly update your sql schema for easy genome removal.
+
+ALTER TABLE `gene` DROP FOREIGN KEY `gene_ibfk_1` ;
+ALTER TABLE `gene` 
+  ADD CONSTRAINT `gene_ibfk_1`
+  FOREIGN KEY (`PhageID` )
+  REFERENCES `phage` (`PhageID` )
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+
+ALTER TABLE `gene_domain` DROP FOREIGN KEY `gene_domain_ibfk_1` ;
+ALTER TABLE `gene_domain` 
+  ADD CONSTRAINT `gene_domain_ibfk_1`
+  FOREIGN KEY (`GeneID` )
+  REFERENCES `gene` (`GeneID` )
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+
+ALTER TABLE `pham` DROP FOREIGN KEY `pham_ibfk_1` ;
+ALTER TABLE `pham` 
+  ADD CONSTRAINT `pham_ibfk_1`
+  FOREIGN KEY (`GeneID` )
+  REFERENCES `gene` (`GeneID` )
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+
+ALTER TABLE `scores_summary` DROP FOREIGN KEY `scores_summary_ibfk_1` , DROP FOREIGN KEY `scores_summary_ibfk_2` ;
+ALTER TABLE `scores_summary` 
+  ADD CONSTRAINT `scores_summary_ibfk_1`
+  FOREIGN KEY (`query` )
+  REFERENCES `gene` (`GeneID` )
+  ON DELETE CASCADE
+  ON UPDATE CASCADE, 
+  ADD CONSTRAINT `scores_summary_ibfk_2`
+  FOREIGN KEY (`subject` )
+  REFERENCES `gene` (`GeneID` )
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+
+//This query shrinks database size substantially, as these alignments are no longer used for phameration
+
+TRUNCATE TABLE `scores_summary`;
+
+//end file
