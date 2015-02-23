@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #PYTHON code for executing parallel conserved domain searches
-#Charles Bowman, some snippets from Matt Bogel
+#Charles Bowman, adapted from original code from Matt Bogel
 #cab106@pitt.edu
 
 #BE SURE TO CHANGE rpsblast_exe and rpsblast_db to fit your system

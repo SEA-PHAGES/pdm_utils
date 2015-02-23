@@ -119,8 +119,8 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
                             if str(feature.location)[:4] == "join":
 
                                 temp = str(feature.location).strip("join{}").split(",")[1]
-                                startCoord = int(temp.split(":")[0].split("[")[1])- 1
-                                stopCoord = int(temp.split(":")[1].split("]")[0]) - 1
+                                startCoord = int(temp.split(":")[0].split("[")[1])
+                                stopCoord = int(temp.split(":")[1].split("]")[0])
 
                             else:
 
@@ -137,7 +137,7 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
 
                             #Length (via Translation)
                             translation = feature.qualifiers["translation"][0]
-                            geneLen = len(translation) * 3
+                            geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
 
                             #Parse orientation
                             if feature.strand == 1:
