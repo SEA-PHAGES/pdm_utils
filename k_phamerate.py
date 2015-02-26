@@ -37,6 +37,7 @@ try:
 	cur.execute("select a.name, a.GeneID, b.color from (Select p.name, g.GeneID from gene g inner join pham p on g.GeneID = p.GeneID) as a inner join pham_color as b on a.name = b.name order by a.name asc")
 	tuples = cur.fetchall()
 
+	print `len(tuples)` + " old genes"
 	for tuple in tuples:
 		name, GeneID, color = tuple
 		if name in pre_phams.keys():
@@ -47,6 +48,8 @@ try:
 
 	cur.execute("select geneid from gene where geneid not in (select g.GeneID from gene g inner join pham p on g.geneid = p.geneid)")
 	tuples = cur.fetchall()
+
+	print `len(tuples)` + " new genes"
 
 	for tuple in tuples:
 		GeneID = tuple[0]
@@ -80,6 +83,8 @@ try:
 	#Get gene data
 	cur.execute("select GeneID, translation from gene")
 	tuples = cur.fetchall()
+
+	print `len(tuples)` + " total genes"
 	
 	#Build the query file
 	f = open('/tmp/tempquery.txt','w')
@@ -135,10 +140,12 @@ try:
 		line = line.split()
 		geneIDs[line[0]] = line[1][1:]
 
+	print `len(phams)` + " 1st iteration genes"
+
 	#do the pham inserts
 	for key in phams:
 		#print "*****"
-		print "Inserting Gene " + key + " - " + geneIDs[key] + " pham - " + phams[key] 
+		#print "Inserting Gene " + key + " - " + geneIDs[key] + " pham - " + phams[key] 
 		#print ""
 		cur.execute("INSERT INTO pham(geneid, name) VALUES (%s, %s)" , (geneIDs[key], phams[key]))
 	cur.execute("COMMIT")
@@ -297,8 +304,6 @@ post_phams_temp = post_phams.copy()
 #Iterate through old and new phams
 for pre_key in pre_phams:
 
-	
-
 	for post_key in post_phams_temp:
 		
 		pre = pre_phams[pre_key]
@@ -312,7 +317,7 @@ for pre_key in pre_phams:
 			phams_final[pre_key] = post
 			phams_colors[pre_key] = pre_colors[pre_key]
 			post_phams.pop(post_key, None)
-			print "1 or 5"
+			#print "1 or 5"
 			continue
 
 		#Case 2 and 4 (Addition and Join) - PHAM GREW
@@ -323,24 +328,24 @@ for pre_key in pre_phams:
 
 				#Case 4 - Join with new gene
 				if (post - (post & new_set)) - pre != set():
-					print "4"
+					#print "4"
 					continue
 
 				#Case 2 - Addition
 				phams_final[pre_key] = post
 				phams_colors[pre_key] = pre_colors[pre_key]
 				post_phams.pop(post_key, None)
-				print "2"
+				#print "2"
 				continue
 
 			#Case 4 - Join without new gene
 			else:
-				print "4"
+				#print "4"
 				continue
 
 		#Case 3 - split - PHAM SHRANK, BUT NOT BY REMOVAL
 		elif pre - post != set():
-			print "3"
+			#print "3"
 			continue
 
 pre_phams[0] = "placeholder"
