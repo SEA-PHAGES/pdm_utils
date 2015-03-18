@@ -142,13 +142,17 @@ try:
 
 	print `len(phams)` + " 1st iteration genes"
 
+	f = open("/tmp/phirst_pham_insert_log.txt", "w")
+
 	#do the pham inserts
 	for key in phams:
 		#print "*****"
 		#print "Inserting Gene " + key + " - " + geneIDs[key] + " pham - " + phams[key] 
 		#print ""
+		f.write(`geneIDs[key]` + "\t" + `phams[key]` + "\n")
 		cur.execute("INSERT INTO pham(geneid, name) VALUES (%s, %s)" , (geneIDs[key], phams[key]))
 	cur.execute("COMMIT")
+	f.close()
 
 except mdb.Error, e:
   
@@ -197,7 +201,8 @@ print "Doing Phamily kalignments"
 count = 1
 length = len(phams)
 for key in phams:
-	print "Processing pham " + `count` + " out of " + `length`
+	if count % 100 == 0:
+		print "Processing pham " + `count` + " out of " + `length`
 	count += 1
 	if (len(phams[key]) < 2):
 		#print "Singleton... " + str(key)
@@ -283,16 +288,19 @@ for tuple in tuples:
 
 #Building the POST-dictionary
 post_phams = {}
+f = open("/tmp/phecond_pham_insert_log.txt", "w")
 
 for key in phams_penultimate:
 
 	name, GeneID = phams_penultimate[key], key
 
+	f.write(`GeneID` + "\t" + `name` + "\n")
+
 	if name in post_phams.keys():
 		post_phams[name] = post_phams[name] | set([GeneID])
 	else:
 		post_phams[name] = set([GeneID])
-
+f.close()
 
 #Do Phamily Conservationatory Measures
 phams_final = {}
@@ -381,13 +389,7 @@ try:
 	cur.execute("truncate table pham_color")
 	cur.execute("COMMIT")
 
-	#do the color inserts
-	print "Inserting Colors"
-	for key in phams_colors:
-		#print "Pham " + key + " - " + colors[key]
-		cur.execute("INSERT IGNORE INTO pham_color(name, color) VALUES (%s, %s)" , (key, phams_colors[key]))
-	cur.execute("COMMIT")
-
+	f = open("/tmp/phinal_pham_insert_log.txt", "w")
 
 	#do the pham inserts
 	for key in phams_final:
@@ -396,7 +398,19 @@ try:
 			#print "*****"
 			#print "Inserting Gene " + key + " - " + phams_firstiter[key] + " pham - " + phams[key] 
 			#print ""
+
+			f.write(`gene` + "\t" + `key` + "\n")
+
 			cur.execute("INSERT INTO pham(geneid, name) VALUES (%s, %s)" , (gene, key))
+	cur.execute("COMMIT")
+
+	f.close()
+
+	#do the color inserts
+	print "Inserting Colors"
+	for key in phams_colors:
+		#print "Pham " + key + " - " + colors[key]
+		cur.execute("INSERT IGNORE INTO pham_color(name, color) VALUES (%s, %s)" , (key, phams_colors[key]))
 	cur.execute("COMMIT")
 
 except mdb.Error, e:

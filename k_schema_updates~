@@ -16,7 +16,6 @@ ALTER TABLE `gene_domain`
   ON DELETE CASCADE
   ON UPDATE CASCADE;
 
-//NOTE!  Some database for some reason have this key as pham_ibfk_2 - change accordingly
 ALTER TABLE `pham` DROP FOREIGN KEY `pham_ibfk_1` ;
 ALTER TABLE `pham` 
   ADD CONSTRAINT `pham_ibfk_1`
