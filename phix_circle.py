@@ -99,7 +99,7 @@ for task in tasks:
 	f = open(result_file, 'r').readlines()
 	result = f[3].split('\t')
 	blast_e = result[-2]
-	blast_bit = int(result[-1])
+	blast_bit = float(result[-1])
 
 	#Clustal code
 	cline = ClustalwCommandline("clustalw", infile = clustalw_infile)
@@ -114,6 +114,15 @@ for task in tasks:
 
 	#stow away the insert statement
 	inserts.append('REPLACE INTO scores_summary (query, subject, blast_score, clustalw_score, blast_bit_score) VALUES ("%s", "%s", %s, %s, %s)' % (task[0], task[1], blast_e,clustal_score,blast_bit))
+
+f = open("/tmp/circle_del.txt",'w')
+f.write(deletes)
+f.close()
+f = open("/tmp/circle_ins.txt",'w')
+f.write(inserts)
+f.close()
+
+
 
 print "...\nRemoving old then inserting new data into database\n..."
 #do Inserts
