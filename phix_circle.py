@@ -19,7 +19,9 @@ import MySQLdb as mdb
 import getpass
 
 #Globals
+#blast binaries (NOTE NOT BLAST+)
 blast_exe = "/home/cbowman/Applications/BLAST/bin/bl2seq"
+#All temporary files
 query_file = "/home/cbowman/Desktop/Query.fasta"
 subject_file = "/home/cbowman/Desktop/subject.fasta"
 result_file = "/home/cbowman/Desktop/result.txt"
