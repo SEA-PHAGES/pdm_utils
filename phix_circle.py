@@ -115,14 +115,9 @@ for task in tasks:
 	#stow away the insert statement
 	inserts.append('REPLACE INTO scores_summary (query, subject, blast_score, clustalw_score, blast_bit_score) VALUES ("%s", "%s", %s, %s, %s)' % (task[0], task[1], blast_e,clustal_score,blast_bit))
 
-f = open("/tmp/circle_del.txt",'w')
-f.write(deletes)
-f.close()
-f = open("/tmp/circle_ins.txt",'w')
-f.write(inserts)
-f.close()
+d = open("/tmp/circle_del.txt",'w')
 
-
+i = open("/tmp/circle_ins.txt",'w')
 
 print "...\nRemoving old then inserting new data into database\n..."
 #do Inserts
@@ -134,10 +129,12 @@ try:
     cur.execute("START TRANSACTION")
 
     for delete in deletes:
+    		d.write(delete + "\n")
     		cur.execute(delete)
 
     for insert in inserts:
-        cur.execute(insert)
+    		i.write(insert + "\n")
+    		cur.execute(insert)
 
     cur.execute("COMMIT")
     con.autocommit(True)
@@ -149,5 +146,11 @@ except mdb.Error, e:
     cur.execute("ROLLBACK")
     cur.execute("SET autocommit = 1")
     con.close()
+    d.close()
+    i.close()
+
+con.close()
+d.close()
+i.close()
 
 print "Done!  You can now draw your phamily circle!"
