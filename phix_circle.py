@@ -92,22 +92,31 @@ for task in tasks:
 	f.write(">" + task[1] + "\n" + translations[task[1]])
 	f.close()
 
-	#BLAST code
-	bashCom = '%s -p blastp -i %s -D 1 -F F -j %s -o %s' % (blast_exe, query_file, subject_file, result_file)
-	#print bashCom
-	os.system(bashCom)
-	f = open(result_file, 'r').readlines()
-	result = f[3].split('\t')
-	blast_e = result[-2]
-	blast_bit = float(result[-1])
+	try:
+		#BLAST code
+		bashCom = '%s -p blastp -i %s -D 1 -F F -j %s -o %s' % (blast_exe, query_file, subject_file, result_file)
+		#print bashCom
+		os.system(bashCom)
+		f = open(result_file, 'r').readlines()
+		result = f[3].split('\t')
+		blast_e = result[-2]
+		blast_bit = float(result[-1])
+	except:
+		blast_e = "null"
+		blast_bit = "null"
+		print "Blast Error"
 
 	#Clustal code
-	cline = ClustalwCommandline("clustalw", infile = clustalw_infile)
-	stdout, stderr = cline()
-	alignment = AlignIO.read(clustalw_infile.replace('.fasta', '.aln'), "clustal")
-	length = alignment.get_alignment_length()
-	stars = alignment._star_info.count('*')
-	clustal_score = float(stars)/length
+	try:
+		cline = ClustalwCommandline("clustalw", infile = clustalw_infile)
+		stdout, stderr = cline()
+		alignment = AlignIO.read(clustalw_infile.replace('.fasta', '.aln'), "clustal")
+		length = alignment.get_alignment_length()
+		stars = alignment._star_info.count('*')
+		clustal_score = float(stars)/length
+	except:
+		clustal_score = "null"
+		print "Clustal Error"
 
 	#Stow away the remove statement
 	deletes.append('DELETE FROM scores_summary where query like "%s" and subject like "%s"' % (task[0], task[1]))
