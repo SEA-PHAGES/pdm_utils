@@ -27,12 +27,14 @@ subject_file = "/home/cbowman/Desktop/subject.fasta"
 result_file = "/home/cbowman/Desktop/result.txt"
 clustalw_infile = "/home/cbowman/Desktop/clustalw.fasta"
 
+print "Be sure to change global variables to match your system in file!"
+
 #define db vars
 try:
 	database = sys.argv[1]
 	pham = sys.argv[2]
 except:
-	print "Incorrect Parameters!\n./phix_circle.py DATABASE PHAM"
+	print "Incorrect Parameters! - ./phix_circle.py DATABASE PHAM"
 	sys.exit(1)
 
 #get SQL stuff

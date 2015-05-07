@@ -13,7 +13,7 @@ try:
     database = sys.argv[1]
     phageListDir = sys.argv[2]
 except:
-    print "Incorrect Parameters - no database given"
+    print "Incorrect Parameters - python import_phage.py DATABASE DIRECTORY"
     sys.exit(1)
 
 #GET u/n and pw
@@ -25,6 +25,7 @@ genecount = 0;
 geneIdSet = set()
 
 f = open("/tmp/phage_import_log.txt", "w")
+print "Adding Phages:"
 
 #Iterating over each file in the directory. 
 for root, dirs, files in os.walk(phageListDir,topdown = True):
@@ -249,4 +250,3 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
         else:
             True
 f.close()
-print genecount

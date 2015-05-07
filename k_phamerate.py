@@ -11,7 +11,7 @@ import sys, os, random, colorsys, datetime, getpass
 try:
 	database = sys.argv[1]
 except:
-	print "Incorrect Parameters - no database given"
+	print "Incorrect Parameters - ./k_phamerate.py DATABASE"
 	sys.exit(1)
 
 #GET u/n and pw

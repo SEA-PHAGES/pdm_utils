@@ -34,7 +34,8 @@ import getpass
 try:
 	database = sys.argv[1]
 except:
-	print "Incorrect Parameters - no database given"
+	print "Incorrect Parameters - ./cdd_pp.py DATABASE"
+	print "Be sure to point rpsblast_exe and rpsblast_db to the proper directory in the file!"
 	sys.exit(1)
 
 def search(geneid, translation, database, username, password):
@@ -123,7 +124,7 @@ def search(geneid, translation, database, username, password):
 
 
 #GET STUFF
-
+print "Be sure to point rpsblast_exe and rpsblast_db to the proper directory in the file!"
 username = getpass.getpass(prompt='mySQL username:')
 password = getpass.getpass(prompt='mySQL password:')
 

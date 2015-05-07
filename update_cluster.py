@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#PYTHON code for updating host from CSV
+#PYTHON code for updating cluster from CSV
 #Cbowman
 
 
@@ -11,7 +11,7 @@ try:
 	database = sys.argv[1]
 	infile = sys.argv[2]
 except:
-	print "Incorrect Parameters - ./update_host.py DATABASE HOSTCSV"
+	print "Incorrect Parameters - ./update_cluster.py DATABASE CLUSTERCSV"
 	sys.exit(1)
 
 #Get the gene information
@@ -27,9 +27,9 @@ try:
 
 	for line in lines:
 		line = line.split(',')
-		print "update phage set HostStrain = '" + str(line[1]) + "' where name like '" + str(line[0]) + "';"
-		cur.execute("update phage set HostStrain = '" + str(line[1]) + "' where name like '" + str(line[0]) + "';")
-		cur.execute("update phage set HostStrain = '" + str(line[1]) + "' where name like '" + str(line[0]) + "_Draft';")
+		print "update phage set cluster = '" + str(line[1]) + "' where name like '" + str(line[0]) + "';"
+		cur.execute("update phage set cluster = '" + str(line[1]) + "' where name like '" + str(line[0]) + "';")
+		cur.execute("update phage set cluster = '" + str(line[1]) + "' where name like '" + str(line[0]) + "_Draft';")
 	cur.execute("COMMIT")
 	con.close()
 
