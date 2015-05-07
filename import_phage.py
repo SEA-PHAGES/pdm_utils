@@ -239,6 +239,7 @@ for root, dirs, files in os.walk(phageListDir,topdown = True):
                 con.autocommit(True)
 
             except:
+                print "error inserting " + `phageName` + "\n"
                 f.write("error inserting " + `phageName` + "\n")
                 f.write( "Error: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]` + "\n")
                 cur.execute("ROLLBACK")
