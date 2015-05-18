@@ -312,16 +312,22 @@ post_phams_temp = post_phams.copy()
 #f = open("/tmp/post_cons.txt", "w")
 #g = open("/tmp/pre_cons.txt", "w")
 
+outcount = 0
+total = len(pre_phams)
+
 #Iterate through old and new phams
 for pre_key in pre_phams:
+
+	outcount += 1
+	print "Pham Name Conservation Search: " + `outcount` + " / " + `total`
 
 	pre = pre_phams[pre_key]
 	#g.write(`pre_key` + `pre` + "\n")
 
-	for post_key in post_phams_temp:
-
-		if (pre_key in phams_final.keys()):
+	if (pre_key in phams_final.keys()):
 			continue;
+
+	for post_key in post_phams_temp:
 		
 		post = post_phams_temp[post_key]
 
@@ -335,7 +341,7 @@ for pre_key in pre_phams:
 			post_phams.pop(post_key, None)
 			#f.write(post_key + `post` + "1 + 5\n")
 			#print "1 or 5"
-			continue
+			break
 
 		#Case 2 and 4 (Addition and Join) - PHAM GREW
 		elif post - pre != set():
@@ -347,7 +353,7 @@ for pre_key in pre_phams:
 				if (post - (post & new_set)) - pre != set():
 					#print "4"
 					#f.write(post_key + `post` + "4\n")
-					continue
+					break
 
 				#Case 2 - Addition with new gene
 				phams_final[pre_key] = post
@@ -355,19 +361,19 @@ for pre_key in pre_phams:
 				post_phams.pop(post_key, None)
 				#f.write(post_key + `post` + "2\n")
 				#print `pre_key` + `phams_final[pre_key]`
-				continue
+				break
 
 			#Case 4 - Join without new gene
 			else:
 				#f.write(post_key + `post` + "4\n")
 				#print "4"
-				continue
+				break
 
 		#Case 3 - split - PHAM SHRANK, BUT NOT BY REMOVAL
 		elif pre - post != set():
 			#f.write(post_key + `post` + "3\n")
-			print "3"
-			continue
+			#print "3"
+			break
 
 phams_final[0] = "placeholder"
 highest_pham = max(map(int, phams_final.keys())) + 1
