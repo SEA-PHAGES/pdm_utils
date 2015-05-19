@@ -123,10 +123,15 @@ for seqFile in files:
 
                         #Start/Stop
                         if str(feature.location)[:4] == "join":
-
-                            temp = str(feature.location).strip("join{}").split(",")[1]
-                            startCoord = int(temp.split(":")[0].split("[")[1])
-                            stopCoord = int(temp.split(":")[1].split("]")[0])
+	                        #print "join"
+	                        temp = str(feature.location).strip("join{}").split(",")[0]
+	                        #print temp
+	                        startCoord = int(temp.split(":")[0].split("[")[1])
+	                        temp = str(feature.location).strip("join{}").split(",")[1]
+	                        #print temp
+	                        stopCoord = int(temp.split(":")[1].split("]")[0])
+	                        #print startCoord
+	                        #print stopCoord
 
                         else:
 
