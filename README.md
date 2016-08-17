@@ -7,6 +7,7 @@
 ### How do I get set up? ###
 
 * Refer to k_phamerate_instructions.pdf for installation and use instructions.
+* Note: instructions may not be up-to-date.
 
 ### Contribution guidelines ###
 
@@ -14,4 +15,4 @@
 
 ### Who do I talk to? ###
 
-* Contact Charles Bowman with any issues (cab106@pitt.edu)
+* Contact Travis Mavrich with any issues (trm53@pitt.edu).
