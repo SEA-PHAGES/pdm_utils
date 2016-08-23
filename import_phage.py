@@ -38,7 +38,7 @@ except:
             This is a python script to import and update phage genomes in the Phamerator database.\n\
             It requires three arguments:\n\
             First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
-            Second argument: directory path to the folder of genome files that will uploaded (genbank-formatted).\n\
+            Second argument: directory path to the folder of genome files that will be uploaded (genbank-formatted).\n\
             Third argument: directory path to the import table file with the following columns (csv-formatted):\n\
                     1. Action to implement on the database (add, remove, replace, update)\n\
                     2. PhageID to add or update\n\
@@ -140,6 +140,15 @@ def retrieve_description(genbank_feature,description_field):
     return description
 
 
+
+#Function to search through a list of elements using a regular expression
+def find_name(expression,list_of_items):
+    search_tally = 0
+    for element in list_of_items:
+        search_result = expression.search(element)
+        if search_result:
+            search_tally += 1
+    return search_tally
 
 
 
@@ -689,6 +698,8 @@ for filename in files:
     #If the file extension is not admissible, then skip. Otherwise, proceed
     if(str(seqFile[-2:]) != "gb" and str(seqFile[-3:]) != "gbf" and str(seqFile[-3:]) != "gbk" and str(seqFile[-3:]) != "txt"):
         failed_genome_files.append(filename)
+        print "File %s does not have a valid file extension. This file will not be processed." % filename
+        raw_input("Press ENTER to proceed to next file.")
         continue
     
     #The file is parsed to grab the header information
@@ -723,7 +734,6 @@ for filename in files:
             #Name
             record_organism = seq_record.annotations["organism"]
             phageName = record_organism.split(' ')[-1]
-            #phageName = seq_record.annotations["organism"].split(' ')[-1]
             if phageName == "Unclassified.":
                 phageName = seq_record.annotations["organism"].split(' ')[-2]
             
@@ -738,16 +748,17 @@ for filename in files:
             phageSeq = ""
             seqLength = 0
             seqGC = 0
-            print "Record does not have record organism information."
+            print "\nRecord does not have record organism information."
             write_out(output_file,"\nProblem with header block in: %s" % filename)
             record_errors += 1
 
 
+        #File header fields are retrieved to be able to check phageName and HostStrain typos
         try:
             record_id = str(seq_record.id)
         except:
             record_id = ""
-            print "Record does not have record ID information."
+            print "\nRecord does not have record ID information."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
@@ -755,7 +766,7 @@ for filename in files:
             record_def = str(seq_record.description)
         except:
             record_def = ""
-            print "Record does not have record definition information."
+            print "\nRecord does not have record definition information."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
@@ -763,21 +774,11 @@ for filename in files:
             record_source = str(seq_record.annotations["source"])
         except:
             record_source = ""
-            print "Record does not have record source information."
+            print "\nRecord does not have record source information."
             record_errors += question("\nError: problem with header info of file %s." % filename)
         
         
-        
-        
-
-
-
-
-
-
-
-
-
+  
 
         #Nonessential Stuff. PhageNotes and Accessions
         try:
@@ -805,6 +806,7 @@ for filename in files:
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
             failed_genome_files.append(filename)
+            raw_input("Press ENTER to proceed to next file.")
             continue
         
            
@@ -872,22 +874,10 @@ for filename in files:
         add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
         
         
-        #Retrieve the Source Feature info
-        #feature_source_info = ""
-        #for feature in seq_record.features:
-        #    if feature.type == "source":
-        #        feature_source_info = str(feature.qualifiers["organism"][0])
-        #record_summary_header.append(["Source Feature Organism Qualifier",feature_source_info])
-                 
 
         #Before processing CDS info, if a genome is being replaced, remove all of its associated GeneIDs from the reference set of all GeneIDs.
         if phageAction == "replace":
             phageGene_set = phageGene_set - phageGene_dict.pop(genomeReplace)
-
-
-
-
-
 
 
         #Next each CDS feature is parsed from the file
@@ -896,6 +886,7 @@ for filename in files:
         addCount = 0
         transl_table_set = set()
         missing_locus_tag_tally = 0
+        assigned_description_tally = 0
         feature_note_tally = 0
         feature_product_tally = 0
         feature_function_tally = 0
@@ -975,12 +966,10 @@ for filename in files:
             #Translation, Gene Length (via Translation)
             try:
                 translation = feature.qualifiers["translation"][0]
-                #translation_trunc = translation[:5]
                 geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
                                 
             except:
                 translation = ""
-                #translation_trunc = ""
                 geneLen = 0
                 write_out(output_file,"\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 record_errors += 1
@@ -1012,66 +1001,50 @@ for filename in files:
 
             #First retrieve gene function, note, and product fields.
             try:
-                feature_product = retrieve_description[feature,"product"]
-                #feature_product = feature.qualifiers["product"][0]
+                feature_product = retrieve_description(feature,"product")
                 if feature_product != "":
                     feature_product_tally += 1
-                #if len(feature_product) > 20:
-                #    feature_product = feature_product[:20]
             except:
                 feature_product = ""
 
             try:
-                feature_note = retrieve_description[feature,"note"]
-                #feature_note = feature.qualifiers["note"][0]
+                feature_note = retrieve_description(feature,"note")
                 if feature_note != "":
                     feature_note_tally += 1
-
-                #if len(feature_note) > 20:
-                #    feature_note = feature_note[:20]                
             except:
                 feature_note = ""
 
             try:
-                feature_function = retrieve_description[feature,"function"]
-                #feature_function = feature.qualifiers["function"][0]
+                feature_function = retrieve_description(feature,"function")
                 if feature_function != "":
                     feature_function_tally += 1
-                #if len(feature_function) > 20:
-                #    feature_function = feature_function[:20]                
             except:
                 feature_function = ""
             
             
             
-            #Now assign the appropriate description info to the featureNote variable, as indicated from the import table.
+            #Now assign the appropriate description info to the assigned_description variable, as indicated from the import table.
             try:
                 
                 if cdsQualifier == "product":
-                    featureNote = feature_product 
+                    assigned_description = feature_product 
                 
                 elif cdsQualifier == "function":
-                    featureNote = feature_function 
+                    assigned_description = feature_function 
 
                 elif cdsQualifier == "note":
-                    featureNote = feature_note
-                    
-                else:
-                    featureNote = retrieve_description(feature,cdsQualifier)
+                    assigned_description = feature_note
                 
-                #description = feature.qualifiers[cdsQualifier][0].lower().strip()
-                #split_description = description.split(' ')                
-                #if description == "hypothetical protein":
-                #    featureNote = ""
-                #elif (split_description[0][:2] == "gp" and len(split_description) == 1):
-                #    featureNote = ""
-                #else:
-                #    featureNote = feature.qualifiers[cdsQualifier][0].strip()
+                
+                #This clause allows the user to specify an uncommon feature qualifier to retrieve the gene description from.    
+                else:
+                    assigned_description = retrieve_description(feature,cdsQualifier)
                 
             except:
-                featureNote = ""
+                assigned_description = ""
 
-
+            if assigned_description != "":
+                assigned_description_tally += 1
 
 
 
@@ -1092,16 +1065,31 @@ for filename in files:
                 continue
 
             addCount+= 1
-            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], featureNote)) 
+            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
 
 
             #Retrieve summary info to verify quality of file
-            
-            #featureNote_trunc = featureNote
-            #if len(featureNote_trunc) > 20:
-            #    featureNote_trunc = featureNote_trunc[:20]            
-            
-            record_summary_cds.append([feature_locus_tag,feature_product[:20],feature_note[:20],feature_function[:20],feature_transl_table,translation[:5],geneID,featureNote[:20]])
+            feature_product_trunc = feature_product
+            if len(feature_product_trunc) > 15:
+                feature_product_trunc = feature_product_trunc[:15] + "..."            
+                       
+            feature_note_trunc = feature_note
+            if len(feature_note_trunc) > 15:
+                feature_note_trunc = feature_note_trunc[:15] + "..."            
+
+            feature_function_trunc = feature_function
+            if len(feature_function_trunc) > 15:
+                feature_function_trunc = feature_function_trunc[:15] + "..."            
+
+            translation_trunc = translation
+            if len(translation_trunc) > 5:
+                translation_trunc = translation_trunc[:5] + "..."            
+
+            assigned_description_trunc = assigned_description
+            if len(assigned_description_trunc) > 15:
+                assigned_description_trunc = assigned_description_trunc[:15] + "..."            
+    
+            record_summary_cds.append([feature_locus_tag,feature_product_trunc,feature_note_trunc,feature_function_trunc,feature_transl_table,translation_trunc,geneID,assigned_description_trunc])
             
             
             
@@ -1119,10 +1107,8 @@ for filename in files:
         record_summary_header.append(["Record Source",record_source])
         record_summary_header.append(["Record Organism",record_organism])
         record_summary_header.append(["Source Feature Organism Qualifier",feature_source_info])
-        print "\nHere is the header summary information for %s from file %s:\n" % (phageName,filename)
+        print "\nSummary of record header information for %s from file %s:\n" % (phageName,filename)
         print tabulate(record_summary_header,headers = "firstrow")
-        print "Double-check genome name and host name information."
-        record_errors += question("\nError: problem with header info of file %s." % filename)
         print "\n\n\n"
         
 
@@ -1130,27 +1116,29 @@ for filename in files:
 
         
         #See if there are any phage name typos in the header block
-        pattern1 = re.compile(phageName)
-        search_result = pattern1.search(record_id)
-        if search_result == False:
-        
-            print "Record ID does not have identical phage name as found in the record organism field."
+
+        pattern1 = re.compile('^' + phageName + '$')
+        pattern2 = re.compile('^' + phageName)
+
+        if find_name(pattern1,record_id.split(' ')) == 0:
+
+            print "\nRecord ID does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        search_result = pattern1.search(record_def)
-        if search_result == False:
+        if find_name(pattern2,record_def.split(' ')) == 0:
         
-            print "Record definition does not have identical phage name as found in the record organism field."
+            print "\nRecord definition does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        search_result = pattern1.search(record_source)
-        if search_result == False:
+        if find_name(pattern1,record_source.split(' ')) == 0:
         
-            print "Record source does not have identical phage name as found in the record organism field."
+            print "\nRecord source does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
-
-
-
+    
+        if find_name(pattern1,feature_source_info.split(' ')) == 0:
+        
+            print "\nSource feature does not have identical phage name as found in the record organism field."
+            record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
 
@@ -1159,24 +1147,26 @@ for filename in files:
         if phageHost_trim == "Mycobacterium":
             phageHost_trim = phageHost_trim[:-3]
             
-        pattern2 = re.compile(lower(phageHost_trim))
-         
-        search_result = pattern2.search(lower(record_def))
-        if search_result == False:
+        pattern3 = re.compile('^' + phageHost_trim)
+
+        if find_name(pattern3,record_def.split(' ')) == 0:
         
-            print "Record definition does not appear to have same host data as found in import table."
+            print "\nRecord definition does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        search_result = pattern2.search(lower(record_source))
-        if search_result == False:
+        if find_name(pattern3,record_source.split(' ')) == 0:
         
-            print "Record source does not appear to have same host data as found in import table."
+            print "\nRecord source does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
-      
-        search_result = pattern2.search(lower(feature_source_info))
-        if search_result == False:
+
+        if find_name(pattern3,record_organism.split(' ')) == 0:
         
-            print "Source feature does not appear to have same host data as found in import table."
+            print "\nRecord organism does not appear to have same host data as found in import table."
+            record_errors += question("\nError: problem with header info of file %s." % filename)
+
+        if find_name(pattern3,feature_source_info.split(' ')) == 0:
+        
+            print "\nSource feature does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
         
         
@@ -1186,29 +1176,31 @@ for filename in files:
         
         
         #Print record summary for all CDS information for quality control
-        print "\nHere is the CDS summary information for %s from file %s:\n" % (phageName,filename)
+        print "\nSummary of CDS summary information for %s from file %s:\n" % (phageName,filename)
         print tabulate(record_summary_cds,headers = "firstrow")
-        print "Double-check assigned geneID, gene descriptions, and translations."        
-        #record_errors += question("\nError: problem with CDS features of file %s." % filename)
-        print "\n"
+        print "\n\n\n"
 
 
         #Check locus tag info:
         if missing_locus_tag_tally > 0:
-            print "Phage %s from file %s is missing %s CDS locus tags." % (phageName, filename, missing_locus_tag_tally)
+            print "\nPhage %s from file %s is missing %s CDS locus tag(s)." % (phageName, filename, missing_locus_tag_tally)
             record_errors += question("\nError: problem with locus tags in file  %s." % filename)
 
 
         #Check the phage name spelling in the locus tags
-        pattern3 = re.compile(lower(phageName))
+        pattern4 = re.compile(phageName.lower())
         geneID_typo_tally = 0
+        geneID_typo_list = []
         for geneID in geneID_set:
-           search_result = pattern3.search(lower(geneID))            
-           if search_result == False:
+           
+           search_result = pattern4.search(geneID.lower())            
+           if search_result == None:
                 geneID_typo_tally += 1
+                geneID_typo_list.append(geneID)
 
-        if geneID_tally > 0:
-            print "There are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally
+        if geneID_typo_tally > 0:
+            write_out(output_file,"\nThere are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
+            print geneID_typo_list
             record_errors += question("\nError: problem with locus tags of file %s." % filename)
 
 
@@ -1218,10 +1210,9 @@ for filename in files:
         #Check all translation table info:
         if len(transl_table_set) == 1:
             transl_table_list = list(transl_table_set)
-            if trans_table_list[0] != '11':
-                write_out("The translation table used for %s is: %s." % (phageName,transl_table_list[0]))
-                record_errors += question("\nError: phage %s does not use correct translation table." % phageName)
-        
+            if transl_table_list[0] != '11':
+                write_out(output_file,"\nThe translation table used for %s is: %s." % (phageName,transl_table_list[0]))
+                record_errors += question("\nError: phage %s does not use correct translation table." % phageName)     
         else:
             write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
             record_errors += 1
@@ -1233,24 +1224,31 @@ for filename in files:
 
 
         #Check to ensure the best gene description field was retained
-        write_out(output_file,"\nNumber of gene product descriptions found for phage %s: %s" % (phageName, feature_product_tally)
-        write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally) 
-        write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally)       
+        if cdsQualifier not in description_set:        
+            write_out(output_file,"\nNumber of gene " + cdsQualifier + " descriptions found for phage %s: %s" % (phageName, assigned_description_tally))     
+        write_out(output_file,"\nNumber of gene product descriptions found for phage %s: %s" % (phageName, feature_product_tally))
+        write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally)) 
+        write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally))
         
         
-        if (cdsQualifier == "product" or cdsQualifier == "note":
+        #if (cdsQualifier == "product" or cdsQualifier == "note"):        
+        if cdsQualifier != "function":
             if feature_function_tally > 0:
-                print "There are %s gene functions found. These will be ignored." % feature_function_tally
-                record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
-        
-        if (cdsQualifier == "product" or cdsQualifier == "function":
-            if feature_note_tally > 0:
-                print "There are %s gene notes found. These will be ignored." % feature_note_tally
+                print "\nThere are %s gene functions found. These will be ignored." % feature_function_tally
                 record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
 
-        if (cdsQualifier == "function" or cdsQualifier == "note":
+
+        #if (cdsQualifier == "product" or cdsQualifier == "function"):        
+        if cdsQualifier != "note":
+            if feature_note_tally > 0:
+                print "\nThere are %s gene notes found. These will be ignored." % feature_note_tally
+                record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+
+
+        #if (cdsQualifier == "function" or cdsQualifier == "note"):
+        if cdsQualifier != "product":
             if feature_product_tally > 0:
-                print "There are %s gene products found. These will be ignored." % feature_product_tally
+                print "\nThere are %s gene products found. These will be ignored." % feature_product_tally
                 record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
 
 
@@ -1267,6 +1265,7 @@ for filename in files:
             write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
             failed_genome_files.append(filename)
             failed_actions.append(matchedData)
+            raw_input("Press ENTER to proceed to next file.")
             continue
 
       
