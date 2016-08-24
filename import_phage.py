@@ -277,6 +277,9 @@ action_set = set(["add","remove","replace","update"])
 description_set = set(["product","note","function"])
 
 
+#Create list of potential Host Names in the Genbank file to ignore
+host_ignore = ['enterobacteria']
+
 #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
 #0 = Type of database action to be performed (add, remove, replace, update)
 #1 = New phage name that will be added to database
@@ -744,6 +747,7 @@ for filename in files:
         
         
         #Create a list to hold summary info on the genome record:
+        #Record Name
         #Record ID
         #Record Definition
         #Record Source
@@ -802,6 +806,19 @@ for filename in files:
 
 
         #File header fields are retrieved to be able to check phageName and HostStrain typos
+        #The Accession field, with the appended version number, is stored as the record.id
+        #The Locus name at the top of the file is stored as the record.name
+        #The base accession number, without the version, is stored in the 'accession' annotation list
+        
+        try:
+            record_name = str(seq_record.name)
+        except:
+            record_name = ""
+            print "\nRecord does not have record Locus information."
+            record_errors += question("\nError: problem with header info of file %s." % filename)
+
+        
+        
         try:
             record_id = str(seq_record.id)
         except:
@@ -1195,6 +1212,7 @@ for filename in files:
 
 
         #Print the summary of the header information        
+        record_summary_header.append(["Record Name",record_name])
         record_summary_header.append(["Record ID",record_id])
         record_summary_header.append(["Record Defintion",record_def])
         record_summary_header.append(["Record Source",record_source])
@@ -1213,25 +1231,25 @@ for filename in files:
         pattern1 = re.compile('^' + phageName + '$')
         pattern2 = re.compile('^' + phageName)
 
-        if find_name(pattern1,record_id.split(' ')) == 0:
+        if find_name(pattern1,record_name.split(' ')) == 0:
             
-            if record_id.split('.')[0] != accessionNum:            
-                print "\nRecord ID does not have the accession number or the identical phage name as found in the record organism field."
+            if record_name.split('.')[0] != accessionNum:            
+                print "\nRecord Name does not have the accession number or the identical phage name as found in the record organism field."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern2,record_def.split(' ')) == 0:
         
-            print "\nRecord definition does not have identical phage name as found in the record organism field."
+            print "\nRecord Definition does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern1,record_source.split(' ')) == 0:
         
-            print "\nRecord source does not have identical phage name as found in the record organism field."
+            print "\nRecord Source does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
     
         if find_name(pattern1,feature_source_info.split(' ')) == 0:
         
-            print "\nSource feature does not have identical phage name as found in the record organism field."
+            print "\nSource Feature does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
@@ -1243,24 +1261,23 @@ for filename in files:
             
         pattern3 = re.compile('^' + phageHost_trim)
 
-        if find_name(pattern3,record_def.split(' ')) == 0:
-        
-            print "\nRecord definition does not appear to have same host data as found in import table."
+        if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
+            print "\nRecord Definition does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if find_name(pattern3,record_source.split(' ')) == 0:
+        if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
         
-            print "\nRecord source does not appear to have same host data as found in import table."
+            print "\nRecord Source does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if find_name(pattern3,record_organism.split(' ')) == 0:
+        if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
         
-            print "\nRecord organism does not appear to have same host data as found in import table."
+            print "\nRecord Organism does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if find_name(pattern3,feature_source_info.split(' ')) == 0:
+        if (find_name(pattern3,feature_source_info.split(' ')) == 0 and feature_source_info.split(' ')[0].lower() not in host_ignore):
         
-            print "\nSource feature does not appear to have same host data as found in import table."
+            print "\nSource Feature does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
         
         
