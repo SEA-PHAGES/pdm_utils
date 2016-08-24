@@ -62,7 +62,12 @@ while (run_type != "test" and run_type != "production"):
     run_type = raw_input("Indicate run type (test or production): ")
     run_type = run_type.lower()
     
-
+    
+#ALLPHAGES
+use_basename = ""
+while (use_basename != "no" and use_basename != "yes"):
+    use_basename = raw_input("Should the PhageID be set to the file's basename? ")
+    use_basename = use_basename.lower()
 
 
 
@@ -136,6 +141,24 @@ def retrieve_description(genbank_feature,description_field):
         description = ""
     elif (split_description[0][:2] == "gp" and len(split_description) == 1):
         description = ""
+
+
+    #ALLPHAGES
+    elif (split_description[0][:3] == "orf" and len(split_description) == 1):
+        description = ""
+
+    elif (split_description[0] == "orf" and len(split_description) == 2):
+        description = ""
+        
+
+    elif (split_description[0] == "putative" and split_description[1][:7] == "protein" and len(split_description) == 2):
+        description = ""
+
+
+    elif (split_description[0] == "putative" and split_description[1] == "protein" and len(split_description) == 3):
+        description = ""
+
+            
     else:
         description = genbank_feature.qualifiers[description_field][0].strip()    
     return description
@@ -699,6 +722,11 @@ for filename in files:
     write_out(output_file,"\n\nProcessing file: %s" % filename)
     seqFile = phageListDir + filename
     
+    #ALLPHAGES
+    basename = filename.split('.')[0]
+    
+    
+    
     #If the file extension is not admissible, then skip. Otherwise, proceed
     if(str(seqFile[-2:]) != "gb" and str(seqFile[-3:]) != "gbf" and str(seqFile[-3:]) != "gbk" and str(seqFile[-3:]) != "txt"):
         failed_genome_files.append(filename)
@@ -766,6 +794,8 @@ for filename in files:
         if len(nucleotide_error_set) > 0:
             print "\nPhage %s appears to have unexpected nucleotide(s):" % phageName
             print nucleotide_error_set
+            for element in nucleotide_error_set:
+                print "\nThere are %s unexpected %s nucleotides in %s." % (phageSeq.count(element),element,phageName)
             record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName)
 
 
@@ -812,7 +842,15 @@ for filename in files:
         
         
         #Retrieve Host,Cluster,Status,Description,Drop-genome info
-        matchedData = add_replace_data_dict.pop(phageName,"error")
+        
+        #ALLPHAGES
+        if use_basename == "yes":
+            matchedData = add_replace_data_dict.pop(basename,"error")
+        else:
+            matchedData = add_replace_data_dict.pop(phageName,"error") 
+        
+#        matchedData = add_replace_data_dict.pop(phageName,"error")
+
         if matchedData != "error":
             write_out(output_file,"\nPreparing: " + str(matchedData))
             phageAction = matchedData[0]
@@ -887,10 +925,18 @@ for filename in files:
             pass
            
 
-        #Create statements   
-        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phageName, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
-        add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
+        #Create statements
         
+        ##ALLPHAGES   
+        if use_basename == "yes":
+            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (basename, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
+            add_replace_statements.append(create_cluster_statement(basename,phageCluster))
+        else:        
+            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phageName, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
+            add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
+        
+#        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phageName, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
+#        add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
         
 
         #Before processing CDS info, if a genome is being replaced, remove all of its associated GeneIDs from the reference set of all GeneIDs.
@@ -903,6 +949,7 @@ for filename in files:
         cdsCount = 0
         addCount = 0
         transl_table_set = set()
+        missing_transl_table_tally = 0
         missing_locus_tag_tally = 0
         assigned_description_tally = 0
         feature_note_tally = 0
@@ -936,7 +983,15 @@ for filename in files:
             except:
                 feature_locus_tag = ""
                 missing_locus_tag_tally += 1
-                geneID = phageName + "_" + str(cdsCount)
+ 
+                #ALLPHAGES               
+                if use_basename == "yes":
+                    geneID = basename + "_" + str(cdsCount)
+                else:
+                    geneID = phageName + "_" + str(cdsCount)
+                
+                
+#                geneID = phageName + "_" + str(cdsCount)
 
             if (geneID not in geneID_set and geneID not in phageGene_set):
                 geneID_set.add(geneID)
@@ -1012,8 +1067,12 @@ for filename in files:
                 transl_table_set.add(feature_transl_table)
             except:
                 feature_transl_table = ""
-                write_out(output_file,"\nError: problem with %s translation table in phage %s." % (geneID,phageName))
-                record_errors += 1
+                
+                #ALLPHAGES
+                missing_transl_table_tally += 1
+
+#                write_out(output_file,"\nError: problem with %s translation table in phage %s." % (geneID,phageName))
+#                record_errors += 1
                
 
 
@@ -1091,7 +1150,15 @@ for filename in files:
                 continue
 
             addCount+= 1
-            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
+            
+            #ALLPHAGES
+            if use_basename == "yes":
+                add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, basename,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
+            else:
+                add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
+
+
+#            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
 
 
             #Retrieve summary info to verify quality of file
@@ -1147,9 +1214,10 @@ for filename in files:
         pattern2 = re.compile('^' + phageName)
 
         if find_name(pattern1,record_id.split(' ')) == 0:
-
-            print "\nRecord ID does not have identical phage name as found in the record organism field."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
+            
+            if record_id.split('.')[0] != accessionNum:            
+                print "\nRecord ID does not have the accession number or the identical phage name as found in the record organism field."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern2,record_def.split(' ')) == 0:
         
@@ -1234,15 +1302,22 @@ for filename in files:
 
 
         #Check all translation table info:
-        if len(transl_table_set) == 1:
+        if len(transl_table_set) > 1:
+            write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
+            record_errors += 1
+        
+        elif len(transl_table_set) == 1:
             transl_table_list = list(transl_table_set)
             if transl_table_list[0] != '11':
                 write_out(output_file,"\nThe translation table used for %s is: %s." % (phageName,transl_table_list[0]))
                 record_errors += question("\nError: phage %s does not use correct translation table." % phageName)     
         else:
-            write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
-            record_errors += 1
-
+            pass
+            
+        if missing_transl_table_tally > 0:
+            print "\nThere are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName)
+            record_errors += question("\nError: phage %s has missing translation table information." % phageName)     
+            
 
 
 
