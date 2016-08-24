@@ -24,6 +24,7 @@
 
 import time, sys, os, getpass, csv, re
 from Bio import SeqIO
+from Bio.Alphabet import IUPAC
 import MySQLdb as mdb
 from tabulate import tabulate
 
@@ -237,6 +238,9 @@ for gene_tuple in current_gene_data_tuples:
   
 
     
+#Set up dna and protein alphabets to verify sequence integrity
+dna_alphabet_set = set(IUPAC.IUPACUnambiguousDNA.letters)
+protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
 
 
 #Create set of all types of actions allowed using this script
@@ -729,28 +733,42 @@ for filename in files:
         record_summary_header = [["Header Field","Data"]]      
         
         
-        #Make sure the file header attributes are successfully retrieved
+        #Phage Name
         try:
-            #Name
             record_organism = seq_record.annotations["organism"]
-            phageName = record_organism.split(' ')[-1]
-            if phageName == "Unclassified.":
-                phageName = seq_record.annotations["organism"].split(' ')[-2]
-            
-            #Sequence, length, and GC
+            if record_organism.split(' ')[-1] == "Unclassified.":
+                phageName = record_organism.split(' ')[-2]
+            else:
+                phageName = record_organism.split(' ')[-1]
+        except:
+            write_out(output_file,"\nError: problem retrieving phage name in file %s. This file will not be processed." % filename)
+            record_errors += 1
+            failed_genome_files.append(filename)
+            continue
+
+
+        #Sequence, length, and GC
+        try:
             phageSeq = seq_record.seq.upper()
             seqLength = len(phageSeq)
             seqGC = 100 * (float(phageSeq.count('G')) + float(phageSeq.count('C'))) / float(seqLength)
             
         except:
-            record_organism = ""
-            phageName = "ERROR"
-            phageSeq = ""
-            seqLength = 0
-            seqGC = 0
-            print "\nRecord does not have record organism information."
-            write_out(output_file,"\nProblem with header block in: %s" % filename)
+            write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)
             record_errors += 1
+            failed_genome_files.append(filename)
+            continue
+
+
+        #Check DNA sequence for possible errors
+        nucleotide_set = set(phageSeq)
+        nucleotide_error_set = nucleotide_set - dna_alphabet_set
+        if len(nucleotide_error_set) > 0:
+            print "\nPhage %s appears to have unexpected nucleotide(s):" % phageName
+            print nucleotide_error_set
+            record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName)
+
+
 
 
         #File header fields are retrieved to be able to check phageName and HostStrain typos
@@ -902,8 +920,7 @@ for filename in files:
             
                 #Retrieve the Source Feature info
                 if feature.type == "source":           
-                    feature_source_info = str(feature.qualifiers["organism"][0])
-            
+                    feature_source_info = str(feature.qualifiers["organism"][0])            
                 continue
 
             else:                
@@ -959,13 +976,13 @@ for filename in files:
                     startCoord = int(strStart)
                     stopCoord = int(strStop)
                 else:
-                    write_out(output_file,"\n" + geneID + " " + strStart + " " + strStop + " are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue.")
+                    write_out(output_file,"\nWarning: Gene " + geneID + " " + strStart + " " + strStop + " are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue.")
                     record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
                     continue
                     
             #Translation, Gene Length (via Translation)
             try:
-                translation = feature.qualifiers["translation"][0]
+                translation = feature.qualifiers["translation"][0].upper()
                 geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
                                 
             except:
@@ -974,7 +991,16 @@ for filename in files:
                 write_out(output_file,"\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 record_errors += 1
                 
-       
+            
+            #Check translation for possible errors
+            amino_acid_set = set(translation)
+            amino_acid_error_set = amino_acid_set - protein_alphabet_set
+            if len(amino_acid_error_set) > 0:
+                print "Feature %s of %s appears to have unexpected amino acid(s):" % (geneID,phageName)
+                print amino_acid_error_set
+                record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
+                
+            
        
        
        
@@ -1060,7 +1086,7 @@ for filename in files:
             elif feature.strand is None:
                 orientation = "Forward"
             else:
-                print "Feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName)
+                print "\nWarning: Feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName)
                 record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
                 continue
 
@@ -1258,9 +1284,10 @@ for filename in files:
                 
         #If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
         if record_errors == 0:
-            diffCount = cdsCount - addCount
             write_out(output_file,"\nNo errors encountered while parsing: %s." % filename)
-            write_out(output_file,"\nNumber of %s CDS features that failed: %s." % (phageName,diffCount))
+            diffCount = cdsCount - addCount            
+            if diffCount > 0:
+                write_out(output_file,"\nWarning: Number of %s CDS features that were not added: %s." % (phageName,diffCount))
         else:
             write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
             failed_genome_files.append(filename)
