@@ -22,7 +22,7 @@
 #that force the script to exit do not cause ROLLBACK errors or connection errors.
 
 
-import time, sys, os, getpass, csv, re
+import time, sys, os, getpass, csv, re, shutil
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 import MySQLdb as mdb
@@ -49,31 +49,49 @@ except:
                     6. PhageID that will be removed or replaced\n\n"
     sys.exit(1)
 
+
+#Verify the genome folder and import table exists
+if phageListDir[-1] != "/":
+    phageListDir = phageListDir + "/"
+
+if os.path.isdir(phageListDir) == False:
+    print "\n\nInvalid input for genome folder.\n\n"
+    sys.exit(1)
+
+if os.path.exists(updateFile) == False:
+    print "\n\nInvalid input for import table file.\n\n"
+    sys.exit(1)
+
+
+
+
 #Set up MySQL parameters
 mysqlhost = 'localhost'
+print "\n\n"
 username = getpass.getpass(prompt='mySQL username:')
+print "\n\n"
 password = getpass.getpass(prompt='mySQL password:')
-
+print "\n\n"
 
 
 #Set up run type
 run_type = ""
 while (run_type != "test" and run_type != "production"):
-    run_type = raw_input("Indicate run type (test or production): ")
+    run_type = raw_input("\nIndicate run type (test or production): ")
     run_type = run_type.lower()
     
     
 #ALLPHAGES
 use_basename = ""
 while (use_basename != "no" and use_basename != "yes"):
-    use_basename = raw_input("Should the PhageID be set to the file's basename? ")
+    use_basename = raw_input("\nShould the PhageID be set to the file's basename? ")
     use_basename = use_basename.lower()
 
 
 
 
 
-
+    
 
 
 #Define several functions
@@ -150,14 +168,11 @@ def retrieve_description(genbank_feature,description_field):
     elif (split_description[0] == "orf" and len(split_description) == 2):
         description = ""
         
-
     elif (split_description[0] == "putative" and split_description[1][:7] == "protein" and len(split_description) == 2):
         description = ""
 
-
     elif (split_description[0] == "putative" and split_description[1] == "protein" and len(split_description) == 3):
         description = ""
-
             
     else:
         description = genbank_feature.qualifiers[description_field][0].strip()    
@@ -183,13 +198,38 @@ def find_name(expression,list_of_items):
 
 
 
+#Create output directories
+date = time.strftime("%Y%m%d")
+
+failed_folder = '%s_failed_upload_files' % date
+success_folder = '%s_successful_upload_files' % date
+
+try:
+    os.mkdir(os.path.join(phageListDir,failed_folder))
+except:
+    print "\nUnable to create output folder: %s" % os.path.join(phageListDir,failed_folder)
+    sys.exit(1)
+
+
+try:
+    os.mkdir(os.path.join(phageListDir,success_folder))
+except:
+    print "\nUnable to create output folder: %s" % os.path.join(phageListDir,success_folder)
+    sys.exit(1)
+
+
 
 #Open file to record update information
-date = time.strftime("%Y%m%d")
-output_file = open("/tmp/" + date + "_phage_import_log_" + run_type + "_run.txt", "w")
+output_file = open(os.path.join(phageListDir,success_folder,date + "_phage_import_log_" + run_type + "_run.txt"), "w")
 write_out(output_file,date + " Phamerator database updates:\n\n\n")
 write_out(output_file,"\n\n\n\nBeginning import script...")
 write_out(output_file,"\nRun type: " + run_type)
+
+
+
+
+
+
 
 
 #Retrieve database version
@@ -205,6 +245,7 @@ try:
     cur = con.cursor()
 except:
     print "Unsuccessful attempt to connect to the database. Please verify the database, username, and password."
+    output_file.close()
     sys.exit(1)
 
 try:
@@ -303,6 +344,13 @@ replace_total = 0
 update_total = 0
 
 for row in file_reader:
+
+    #Verify the row of information has the correct number of fields to parse.
+    if len(row) != 7:
+        write_out(output_file,"\nRow in import table is not formatted correctly: " + str(row))
+        table_errors += 1
+        continue
+
 
     #Make sure "none" indications are lowercase, as well as "action", "status", and "feature" fields are lowercase
     row[0] = row[0].lower()
@@ -421,7 +469,6 @@ for row in file_reader:
             write_out(output_file,"\nError: %s is not a valid PhageID. This genome cannot be dropped from the database." %row[6])
             table_errors += 1
         
-    
     
     #Replace
     elif row[0] == "replace":
@@ -568,15 +615,20 @@ if table_errors == 0:
     write_out(output_file,"\nField headers: " + str(column_headers))      
     for genome_data in genome_data_list:
         write_out(output_file,"\n" + str(genome_data))
-    raw_input("Press ENTER to proceed to next import stage.")
+    raw_input("\nPress ENTER to proceed to next import stage.")
 else:
     write_out(output_file,"\n%s error(s) encountered with import file.\nNo changes have been made to the database." % table_errors)
     write_out(output_file,"\nExiting import script.")
+    output_file.close()
     sys.exit(1)
 
 
 
 
+#Create output file to store successul actions implemented
+success_action_file = '%s_successful_import_table_actions.csv' % date
+success_action_file_handle = open(os.path.join(phageListDir,success_folder,success_action_file),"w")
+success_action_file_writer = csv.writer(success_action_file_handle)
 
 
 
@@ -617,20 +669,26 @@ if updated == update_total:
             con.autocommit(True)
             
         except:
+            success_action_file_handle.close()
             mdb_exit("\nError: problem updating genome information.\nNo changes have been made to the database.")
             
         con.close()
     
     else:
         write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
-
+        
 else:
     write_out(output_file,"\nError: problem processing data list to update genomes. Check input table format.\nNo changes have been made to the database.")
     write_out(output_file,"\nExiting import script.")
+    output_file.close()
+    success_action_file_handle.close()
     sys.exit(1)
-    
+
+#Document the update actions
+for element in update_data_list:
+    success_action_file_writer.writerow(element)
 write_out(output_file,"\nAll field update actions have been implemented.")
-raw_input("Press ENTER to proceed to next import stage.")
+raw_input("\nPress ENTER to proceed to next import stage.")
     
 
 
@@ -672,6 +730,7 @@ if removed == remove_total:
             con.autocommit(True)
             
         except:
+            success_action_file_handle.close()
             mdb_exit("\nError: problem removing genomes with no replacements.\nNo remove actions have been implemented.")
 
         con.close()
@@ -681,14 +740,18 @@ if removed == remove_total:
 
 else:
     write_out(output_file,"\nError: problem processing data list to remove genomes. Check input table format.\nNo remove actions have been implemented.")
+    output_file.close()
+    success_action_file_handle.close()
     sys.exit(1)
     
+#Document the remove actions    
+for element in remove_data_list:
+    success_action_file_writer.writerow(element)
 write_out(output_file,"\nAll genome remove actions have been implemented.")
-raw_input("Press ENTER to proceed to next import stage.")
+raw_input("\nPress ENTER to proceed to next import stage.")
 
 
   
-
 
 
 
@@ -712,6 +775,8 @@ for genome_data in add_replace_data_list:
     else:
         write_out(output_file,"\nError: problem creating genome data dictionary. PhageID %s already in dictionary. Check input table format." % genome_data[1])
         write_out(output_file,"\nNo add/replace actions have been implemented.")
+        output_file.close()
+        success_action_file_handle.close()
         sys.exit(1)
 
 
@@ -720,30 +785,32 @@ write_out(output_file,"\n\n\n\nAccessing genbank-formatted files for add/replace
 files =  [X for X in os.listdir(phageListDir) if os.path.isfile(os.path.join(phageListDir,X))]
 failed_genome_files = []
 failed_actions = []
+file_tally = 0
 for filename in files:
     
-    write_out(output_file,"\n\nProcessing file: %s" % filename)
-    seqFile = phageListDir + filename
+    file_tally += 1
+    write_out(output_file,"\n\nProcessing file %s: %s" % (file_tally,filename))
     
-    #ALLPHAGES
+    #ALLPHAGES option
     basename = filename.split('.')[0]
     
     
     
     #If the file extension is not admissible, then skip. Otherwise, proceed
-    if(str(seqFile[-2:]) != "gb" and str(seqFile[-3:]) != "gbf" and str(seqFile[-3:]) != "gbk" and str(seqFile[-3:]) != "txt"):
+    if(str(filename[-2:]) != "gb" and str(filename[-3:]) != "gbf" and str(filename[-3:]) != "gbk" and str(filename[-3:]) != "txt"):
         failed_genome_files.append(filename)
-        print "File %s does not have a valid file extension. This file will not be processed." % filename
-        raw_input("Press ENTER to proceed to next file.")
+        write_out(output_file,"\nFile %s does not have a valid file extension. This file will not be processed." % filename)
+        raw_input("\nPress ENTER to proceed to next file.")
         continue
     
     #The file is parsed to grab the header information
-    for seq_record in SeqIO.parse(seqFile, "genbank"):
+    for seq_record in SeqIO.parse(os.path.join(phageListDir,filename), "genbank"):
         
         add_replace_statements = []
         record_errors = 0
         geneID_set = set()
         missing_phage_name_tally = 0
+        phage_data_list = []
         
         
         #Create a list to hold summary info on the genome record:
@@ -860,14 +927,13 @@ for filename in files:
         
         #Retrieve Host,Cluster,Status,Description,Drop-genome info
         
-        #ALLPHAGES
+        #ALLPHAGES option
         if use_basename == "yes":
             matchedData = add_replace_data_dict.pop(basename,"error")
         else:
             matchedData = add_replace_data_dict.pop(phageName,"error") 
         
-#        matchedData = add_replace_data_dict.pop(phageName,"error")
-
+        
         if matchedData != "error":
             write_out(output_file,"\nPreparing: " + str(matchedData))
             phageAction = matchedData[0]
@@ -879,7 +945,7 @@ for filename in files:
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
             failed_genome_files.append(filename)
-            raw_input("Press ENTER to proceed to next file.")
+            raw_input("\nPress ENTER to proceed to next file.")
             continue
         
            
@@ -897,6 +963,7 @@ for filename in files:
             con.autocommit(True)
                   
         except:
+            success_action_file_handle.close()
             mdb_exit("\nError: retrieving genome information from database while processing file %s.\nNot all genbank files were processed." % filename)
 
         con.close()
@@ -942,19 +1009,36 @@ for filename in files:
             pass
            
 
-        #Create statements
-        
-        ##ALLPHAGES   
+        #Create list of phage data, then append it to the SQL statement
+        #0 = phageName or basename
+        #1 = accessionNum
+        #2 = phageName
+        #3 = phageHost
+        #4 = phageSeq
+        #5 = seqLength
+        #6 = seqGC
+        #7 = phageStatus
+        #8 = date
         if use_basename == "yes":
-            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (basename, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
+            phage_data_list.append(basename)
+        else:
+            phage_data_list.append(phageName)
+        phage_data_list.append(accessionNum)
+        phage_data_list.append(phageName)
+        phage_data_list.append(phageHost)
+        phage_data_list.append(phageSeq)
+        phage_data_list.append(seqLength)
+        phage_data_list.append(seqGC)
+        phage_data_list.append(phageStatus)
+        phage_data_list.append(date)
+        
+        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phage_data_list[0],phage_data_list[1],phage_data_list[2],phage_data_list[3],phage_data_list[4],phage_data_list[5],phage_data_list[6],phage_data_list[7],phage_data_list[8]))
+        
+        if use_basename == "yes":
             add_replace_statements.append(create_cluster_statement(basename,phageCluster))
-        else:        
-            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phageName, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
+        else:
             add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
-        
-#        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phageName, accessionNum, phageName, phageHost, phageSeq, seqLength, seqGC, phageStatus,date))
-#        add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
-        
+                
 
         #Before processing CDS info, if a genome is being replaced, remove all of its associated GeneIDs from the reference set of all GeneIDs.
         if phageAction == "replace":
@@ -973,13 +1057,12 @@ for filename in files:
         feature_product_tally = 0
         feature_function_tally = 0
         feature_source_info = ""
+        all_features_data_list = []
+        record_summary_cds = [["Locus Tag","Product","Function","Note","Translation Table","Translation","Assigned GeneID","Assigned Description"]]        
         
-        
-        
-        
-        
-        record_summary_cds = [["Locus Tag","Product","Note","Function","Translation Table","Translation","Assigned GeneID","Assigned Description"]]
         for feature in seq_record.features:
+        
+        
             if feature.type != "CDS":
             
                 #Retrieve the Source Feature info
@@ -991,6 +1074,9 @@ for filename in files:
                 cdsCount += 1
                 typeID = feature.type
             
+            #This will store all data for this feature that will be imported
+            feature_data_list = []
+
                  
             #GeneID
             #Feature_locus_tag is a record of the locus tag found in the file. GeneID is what will be assigned in the database.
@@ -1001,28 +1087,18 @@ for filename in files:
                 feature_locus_tag = ""
                 missing_locus_tag_tally += 1
  
-                #ALLPHAGES               
+                #ALLPHAGES option           
                 if use_basename == "yes":
                     geneID = basename + "_" + str(cdsCount)
                 else:
                     geneID = phageName + "_" + str(cdsCount)
                 
-                
-#                geneID = phageName + "_" + str(cdsCount)
-
             if (geneID not in geneID_set and geneID not in phageGene_set):
                 geneID_set.add(geneID)
             else:
                 write_out(output_file,"\nError: feature %s of %s is a duplicate geneID." % (geneID,phageName))
                 record_errors += 1
                 continue
-
-
-
-
-
-
-
 
 
 
@@ -1073,26 +1149,14 @@ for filename in files:
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 
             
-       
-       
-       
-       
                 
             #Translation table used
             try:
                 feature_transl_table = feature.qualifiers["transl_table"][0]
                 transl_table_set.add(feature_transl_table)
             except:
-                feature_transl_table = ""
-                
-                #ALLPHAGES
+                feature_transl_table = ""                
                 missing_transl_table_tally += 1
-
-#                write_out(output_file,"\nError: problem with %s translation table in phage %s." % (geneID,phageName))
-#                record_errors += 1
-               
-
-
 
 
             #Gene Description
@@ -1110,18 +1174,19 @@ for filename in files:
                 feature_product = ""
 
             try:
+                feature_function = retrieve_description(feature,"function")
+                if feature_function != "":
+                    feature_function_tally += 1
+            except:
+                feature_function = ""
+
+            try:
                 feature_note = retrieve_description(feature,"note")
                 if feature_note != "":
                     feature_note_tally += 1
             except:
                 feature_note = ""
 
-            try:
-                feature_function = retrieve_description(feature,"function")
-                if feature_function != "":
-                    feature_function_tally += 1
-            except:
-                feature_function = ""
             
             
             
@@ -1136,8 +1201,7 @@ for filename in files:
 
                 elif cdsQualifier == "note":
                     assigned_description = feature_note
-                
-                
+                           
                 #This clause allows the user to specify an uncommon feature qualifier to retrieve the gene description from.    
                 else:
                     assigned_description = retrieve_description(feature,cdsQualifier)
@@ -1147,10 +1211,6 @@ for filename in files:
 
             if assigned_description != "":
                 assigned_description_tally += 1
-
-
-
-
 
 
             #Orientation
@@ -1166,18 +1226,46 @@ for filename in files:
                 record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
                 continue
 
+            
+            
+            #Now that it has acquired all gene feature info, create list of gene data and append to list of all gene feature data
+            #0 = geneID
+            #1 = phageName or basename
+            #2 = startCoord
+            #3 = stopCoord 
+            #4 = geneLen  
+            #5 = geneName 
+            #6 = typeID
+            #7 = translation
+            #8 = orientation[0]
+            #9 = assigned_description
+            #10 = feature_product
+            #11 = feature_function
+            #12 = feature_note
             addCount+= 1
             
-            #ALLPHAGES
+            
+            feature_data_list.append(geneID)
+            
+            #ALLPHAGES option            
             if use_basename == "yes":
-                add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, basename,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
+                feature_data_list.append(basename)
             else:
-                add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
-
-
-#            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (geneID, phageName,startCoord, stopCoord, geneLen, geneName, typeID, translation, orientation[0], assigned_description)) 
-
-
+                feature_data_list.append(phageName) 
+            feature_data_list.append(startCoord)
+            feature_data_list.append(stopCoord)
+            feature_data_list.append(geneLen)
+            feature_data_list.append(geneName)
+            feature_data_list.append(typeID)
+            feature_data_list.append(translation)
+            feature_data_list.append(orientation[0])
+            feature_data_list.append(assigned_description)
+            feature_data_list.append(feature_product)
+            feature_data_list.append(feature_function)
+            feature_data_list.append(feature_note)
+            all_features_data_list.append(feature_data_list)
+ 
+          
             #Retrieve summary info to verify quality of file
             feature_product_trunc = feature_product
             if len(feature_product_trunc) > 15:
@@ -1199,17 +1287,13 @@ for filename in files:
             if len(assigned_description_trunc) > 15:
                 assigned_description_trunc = assigned_description_trunc[:15] + "..."            
     
-            record_summary_cds.append([feature_locus_tag,feature_product_trunc,feature_note_trunc,feature_function_trunc,feature_transl_table,translation_trunc,geneID,assigned_description_trunc])
+            record_summary_cds.append([feature_locus_tag,feature_product_trunc,feature_function_trunc,feature_note_trunc,feature_transl_table,translation_trunc,geneID,assigned_description_trunc])
             
             
             
             
             
-            
-            
-            
-        #Now that all CDS features processed, process the source and organism fields to look or problems
-
+        #Now that all CDS features processed, process the source and organism fields to look for problems
 
         #Print the summary of the header information        
         record_summary_header.append(["Record Name",record_name])
@@ -1227,7 +1311,6 @@ for filename in files:
 
         
         #See if there are any phage name typos in the header block
-
         pattern1 = re.compile('^' + phageName + '$')
         pattern2 = re.compile('^' + phageName)
 
@@ -1279,9 +1362,6 @@ for filename in files:
         
             print "\nSource Feature does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
-        
-        
-        
         
         
         
@@ -1342,36 +1422,67 @@ for filename in files:
 
 
         #Check to ensure the best gene description field was retained
+        #Element indices for feature data:
+        #0 = geneID
+        #1 = phageName or basename
+        #2 = startCoord
+        #3 = stopCoord 
+        #4 = geneLen  
+        #5 = geneName 
+        #6 = typeID
+        #7 = translation
+        #8 = orientation[0]
+        #9 = assigned_description
+        #10 = feature_product
+        #11 = feature_function
+        #12 = feature_note
+
         if cdsQualifier not in description_set:        
-            write_out(output_file,"\nNumber of gene " + cdsQualifier + " descriptions found for phage %s: %s" % (phageName, assigned_description_tally))     
+            write_out(output_file,"\nNumber of gene %s descriptions found for phage %s: %s" % (cdsQualifier,phageName, assigned_description_tally))     
         write_out(output_file,"\nNumber of gene product descriptions found for phage %s: %s" % (phageName, feature_product_tally))
         write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally)) 
         write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally))
         
         
-        #if (cdsQualifier == "product" or cdsQualifier == "note"):        
-        if cdsQualifier != "function":
-            if feature_function_tally > 0:
-                print "\nThere are %s gene functions found. These will be ignored." % feature_function_tally
-                record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+  
+        #If other CDS fields contain descriptions, they can be chosen to replace the default cdsQualifier descriptions. Then provide option to verify changes
+        changed = 0
+        if (cdsQualifier != "product" and feature_product_tally > 0):
+
+           print "\nThere are %s CDS products found. These will be ignored." % feature_product_tally
+           if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
+                
+                for feature in all_features_data_list:
+                    feature[9] = feature[10]
+                changed = 1
+
+        if (cdsQualifier != "function" and feature_function_tally > 0):
+
+            print "\nThere are %s CDS functions found. These will be ignored." % feature_function_tally
+            if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
+
+                for feature in all_features_data_list:
+                    feature[9] = feature[11]
+                changed = 1
 
 
-        #if (cdsQualifier == "product" or cdsQualifier == "function"):        
-        if cdsQualifier != "note":
-            if feature_note_tally > 0:
-                print "\nThere are %s gene notes found. These will be ignored." % feature_note_tally
-                record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+        if (cdsQualifier != "note" and feature_note_tally > 0):
 
+            print "\nThere are %s CDS notes found. These will be ignored." % feature_note_tally
+            if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
 
-        #if (cdsQualifier == "function" or cdsQualifier == "note"):
-        if cdsQualifier != "product":
-            if feature_product_tally > 0:
-                print "\nThere are %s gene products found. These will be ignored." % feature_product_tally
-                record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+                for feature in all_features_data_list:
+                    feature[9] = feature[12]
+                changed = 1
 
+        if changed == 1:
+             print "\nCDS descriptions have been changed."
+             record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+        
 
-
-
+        #Add all updated gene feature data to the add_replace_statements list
+        for feature in all_features_data_list:
+            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (feature[0],feature[1],feature[2],feature[3],feature[4],feature[5],feature[6],feature[7],feature[8],feature[9])) 
 
                 
         #If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
@@ -1384,7 +1495,7 @@ for filename in files:
             write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
             failed_genome_files.append(filename)
             failed_actions.append(matchedData)
-            raw_input("Press ENTER to proceed to next file.")
+            raw_input("\nPress ENTER to proceed to next file.")
             continue
 
       
@@ -1404,6 +1515,7 @@ for filename in files:
                 con.autocommit(True)
 
             except:
+                success_action_file_handle.close()
                 mdb_exit("\nError: problem importing the file %s with the following add/replace action: %s.\nNot all genbank files were processed." % (filename,matchedData))
 
             con.close()
@@ -1411,12 +1523,20 @@ for filename in files:
         else:
             write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
         
-        raw_input("Press ENTER to proceed to next file.")           
-
+        #Now that genome has been successfully uploaded, proceed
+        try:
+            shutil.move(os.path.join(phageListDir,filename),os.path.join(phageListDir,success_folder,filename))
+        except:
+            print "Unable to move file %s to success file folder." % filename    
+        
+        #Add the action data to the success output file then proceed
+        success_action_file_writer.writerow(matchedData)                
+        raw_input("\nPress ENTER to proceed to next file.")
+        
       
 
 write_out(output_file,"\nAll files have been iterated through.")
-raw_input("Press ENTER to proceed to next import stage.")        
+raw_input("\nPress ENTER to proceed to next import stage.")        
 
         
 #Final verifications
@@ -1433,18 +1553,33 @@ if len(failed_actions) > 0:
 
 #Verify all add/replace actions from the import csv file were addressed.
 if len(add_replace_data_dict) > 0:
+
+    failed_action_file = '%s_failed_import_table_actions.csv' % date
+    failed_action_file_handle = open(os.path.join(phageListDir,failed_folder,failed_action_file),"w")
+    failed_action_file_writer = csv.writer(failed_action_file_handle)
     write_out(output_file,"\n\nThe following add/replace action(s) in the import table were NOT successfully implemented:")
     for key in add_replace_data_dict:
         write_out(output_file,"\n" + str(add_replace_data_dict[key]))
+        failed_action_file_writer.writerow(add_replace_data_dict[key])
+    failed_action_file_handle.close()
+
 else:
     write_out(output_file,"\nAll add/replace actions have been implemented.")  
 
 
 #Verify that none of the genbank files failed to be uploaded.
 if len(failed_genome_files) > 0:
+    
     write_out(output_file,"\n\nThe following genbank files were NOT successfully processed:")
     for filename in failed_genome_files:
         write_out(output_file,"\n" + filename)
+        
+        try:
+            shutil.move(os.path.join(phageListDir,filename),os.path.join(phageListDir,failed_folder,filename))
+        except:
+            print "Unable to move file %s to failed file folder." % filename    
+    
+    
 else:
     write_out(output_file,"\n\nAll genbank files were successfully processed.")
 
@@ -1461,6 +1596,8 @@ try:
     cur = con.cursor()
 except:
     print "Unsuccessful attempt to connect to the database. Please verify the database, username, and password.\nImport script was not completed."
+    output_file.close()
+    success_action_file_handle.close()
     sys.exit(1)
 
 try:
@@ -1472,6 +1609,8 @@ try:
     con.autocommit(True)
 
 except:
+    output_file.close()
+    success_action_file_handle.close()
     mdb_exit("\nUnable to access the database to retrieve genome information.\nImport script was not completed.")
 
 write_out(output_file,"\n\nTotal phages in database after changes: " + str(final_tally[0][0]))
