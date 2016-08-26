@@ -794,6 +794,7 @@ for filename in files:
         
         add_replace_statements = []
         record_errors = 0
+        record_warnings = 0
         geneID_set = set()
         missing_phage_name_tally = 0
         phage_data_list = []
@@ -849,8 +850,8 @@ for filename in files:
         nucleotide_set = set(phageSeq)
         nucleotide_error_set = nucleotide_set - dna_alphabet_set
         if len(nucleotide_error_set) > 0:
-            print "\nPhage %s appears to have unexpected nucleotide(s):" % phageName
-            print nucleotide_error_set
+            record_warnings += 1
+            write_out(output_file,"\nWarning: phage %s contains unexpected nucleotide(s): %s" % (phageName,str(nucleotide_error_set)))
             for element in nucleotide_error_set:
                 print "\nThere are %s unexpected %s nucleotides in %s." % (phageSeq.count(element),element,phageName)
             record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName)
@@ -1116,7 +1117,8 @@ for filename in files:
                     startCoord = int(strStart)
                     stopCoord = int(strStop)
                 else:
-                    write_out(output_file,"\nWarning: Gene " + geneID + " " + strStart + " " + strStop + " are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue.")
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: gene " + geneID + " " + strStart + " " + strStop + " are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue.")
                     record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
                     continue
                     
@@ -1136,8 +1138,9 @@ for filename in files:
             amino_acid_set = set(translation)
             amino_acid_error_set = amino_acid_set - protein_alphabet_set
             if len(amino_acid_error_set) > 0:
-                print "Feature %s of %s appears to have unexpected amino acid(s):" % (geneID,phageName)
-                print amino_acid_error_set
+                record_warnings += 1
+                write_out(output_file,"\nWarning: feature %s of %s appears to have unexpected amino acid(s)." % (geneID,phageName))
+                print "Unexpected amino acids: " + str(amino_acid_error_set)
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 
             
@@ -1214,7 +1217,8 @@ for filename in files:
             elif feature.strand is None:
                 orientation = "Forward"
             else:
-                print "\nWarning: Feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName)
+                record_warnings += 1
+                write_out(output_file,"\nWarning: feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName))
                 record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
                 continue
 
@@ -1366,7 +1370,8 @@ for filename in files:
 
         #Check locus tag info:
         if missing_locus_tag_tally > 0:
-            print "\nPhage %s from file %s is missing %s CDS locus tag(s)." % (phageName, filename, missing_locus_tag_tally)
+            record_warnings += 1
+            write_out(output_file,"\nWarning: phage %s from file %s is missing %s CDS locus tag(s)." % (phageName, filename, missing_locus_tag_tally))
             record_errors += question("\nError: problem with locus tags in file  %s." % filename)
 
 
@@ -1382,7 +1387,8 @@ for filename in files:
                 geneID_typo_list.append(geneID)
 
         if geneID_typo_tally > 0:
-            write_out(output_file,"\nThere are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
+            record_warnings += 1
+            write_out(output_file,"\nWarning: there are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
             print geneID_typo_list
             record_errors += question("\nError: problem with locus tags of file %s." % filename)
 
@@ -1404,7 +1410,8 @@ for filename in files:
             pass
             
         if missing_transl_table_tally > 0:
-            print "\nThere are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName)
+            record_warnings += 1
+            write_out(output_file,"\nWarning: there are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName))
             record_errors += question("\nError: phage %s has missing translation table information." % phageName)     
             
 
@@ -1438,7 +1445,7 @@ for filename in files:
         
   
         #If other CDS fields contain descriptions, they can be chosen to replace the default cdsQualifier descriptions. Then provide option to verify changes
-        changed = 0
+        changed = ""
         if (cdsQualifier != "product" and feature_product_tally > 0):
 
            print "\nThere are %s CDS products found. These will be ignored." % feature_product_tally
@@ -1446,7 +1453,7 @@ for filename in files:
                 
                 for feature in all_features_data_list:
                     feature[9] = feature[10]
-                changed = 1
+                changed = "product"
 
         if (cdsQualifier != "function" and feature_function_tally > 0):
 
@@ -1455,7 +1462,7 @@ for filename in files:
 
                 for feature in all_features_data_list:
                     feature[9] = feature[11]
-                changed = 1
+                changed = "function"
 
 
         if (cdsQualifier != "note" and feature_note_tally > 0):
@@ -1465,10 +1472,10 @@ for filename in files:
 
                 for feature in all_features_data_list:
                     feature[9] = feature[12]
-                changed = 1
+                changed = "note"
 
-        if changed == 1:
-             print "\nCDS descriptions have been changed."
+        if changed != "":
+             write_out(output_file,"\nCDS descriptions have been changed to the %s field." % changed)
              record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
         
 
@@ -1480,9 +1487,9 @@ for filename in files:
         #If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
         if record_errors == 0:
             write_out(output_file,"\nNo errors encountered while parsing: %s." % filename)
-            diffCount = cdsCount - addCount            
-            if diffCount > 0:
-                write_out(output_file,"\nWarning: Number of %s CDS features that were not added: %s." % (phageName,diffCount))
+            diffCount = cdsCount - addCount
+            if record_warnings > 0:
+                write_out(output_file,"\nWarning: there are %s warning(s) with phage %s and %s CDS feature(s) were not added." % (record_warnings,phageName,diffCount))
         else:
             write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
             failed_genome_files.append(filename)
