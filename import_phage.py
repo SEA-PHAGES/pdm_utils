@@ -254,8 +254,6 @@ try:
     db_version = str(cur.fetchone()[0])
     cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster FROM phage")
     current_genome_data_tuples = cur.fetchall()
-    cur.execute("SELECT GeneID,PhageID FROM gene")
-    current_gene_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
     con.autocommit(True)
@@ -270,36 +268,19 @@ write_out(output_file,"\nDatabase version: " + db_version)
 write_out(output_file,"\nTotal phages in database before changes: " + str(len(current_genome_data_tuples)))
 
 #Create data sets to compare new data with
-#Originally, a phageName_set and phageSequence_set was implemented, but I ended up not using it. The SQL query still returns these values
-#so if I need to re-implement those, I am able to.
+#Originally, a phageName_set, phageSequence_set, phageGene_set, and phageGene_dict were implemented, but I ended up not using them here. 
+#The phageGene_set get implemented later in the script.
+#The SQL query still returns these values so if I need to re-implement those, I am able to.
 phageId_set = set()
 phageHost_set = set()
 phageStatus_set = set()
 phageCluster_set = set()
-phageGene_set = set()
-phageGene_dict = {}
 print "Preparing genome data sets from the database..."
 for genome_tuple in current_genome_data_tuples:
     phageId_set.add(genome_tuple[0])
     phageHost_set.add(genome_tuple[2])
     phageStatus_set.add(genome_tuple[4])
     phageCluster_set.add(genome_tuple[5])
-
-    #Create a dictionary of GeneIDs
-    #Key = PhageID
-    #Value = set of GeneIDs
-    tempGeneID_set = set()
-    for gene_tuple in current_gene_data_tuples:
-        if gene_tuple[1] == genome_tuple[0]:
-            tempGeneID_set.add(gene_tuple[0])
-    phageGene_dict[genome_tuple[0]] = tempGeneID_set
-
-
-#Create a set of GeneIDs, regardless of corresponding PhageID
-for gene_tuple in current_gene_data_tuples:
-    phageGene_set.add(gene_tuple[0])
-
-  
 
     
 #Set up dna and protein alphabets to verify sequence integrity
@@ -704,11 +685,7 @@ removed = 0
 removal_statements = []
 for genome_data in remove_data_list:
     write_out(output_file,"\nPreparing: " + str(genome_data))
-    removal_statements.append("DELETE FROM phage WHERE PhageID = '" + genome_data[6] + "';")
-    
-    #Remove the GeneIDs associated with this genome from the reference set of all GeneIDs that is used later in the script. (It is NOT removing GeneIDs from the database).
-    phageGene_set = phageGene_set - phageGene_dict.pop(genome_data[6])
-    
+    removal_statements.append("DELETE FROM phage WHERE PhageID = '" + genome_data[6] + "';")    
     removed += 1
 
 #If it looks like there is a problem with some of the genomes on the list, cancel the transaction, otherwise proceed	    
@@ -958,16 +935,27 @@ for filename in files:
             cur.execute("START TRANSACTION")
             cur.execute("""SELECT PhageID,status FROM phage WHERE Sequence = "%s" """ % phageSeq)
             query_results = cur.fetchall()
+            cur.execute("SELECT GeneID,PhageID FROM gene")
+            current_gene_data_tuples = cur.fetchall()
             cur.execute("COMMIT")
             cur.close()
             con.autocommit(True)
+
                   
         except:
             success_action_file_handle.close()
             mdb_exit("\nError: retrieving genome information from database while processing file %s.\nNot all genbank files were processed." % filename)
 
         con.close()
-        
+
+
+        #Create a set of GeneIDs. If a genome will be replaced, do not add those GeneIDs to the set.
+        all_GeneID_set = set()
+        for gene_tuple in current_gene_data_tuples:
+            if (phageAction == "replace" and gene_tuple[1] == genomeReplace):
+                continue
+            all_GeneID_set.add(gene_tuple[0])
+            
         
         
         #Cross-check the import action against the current state of the database and create SQL statements
@@ -1040,11 +1028,6 @@ for filename in files:
             add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
                 
 
-        #Before processing CDS info, if a genome is being replaced, remove all of its associated GeneIDs from the reference set of all GeneIDs.
-        if phageAction == "replace":
-            phageGene_set = phageGene_set - phageGene_dict.pop(genomeReplace)
-
-
         #Next each CDS feature is parsed from the file
         #The cdsCount will increment for each CDS processed, even if it does not pass the QC filters. This way, the genome still retains the info that another CDS was originally present.
         cdsCount = 0
@@ -1093,7 +1076,7 @@ for filename in files:
                 else:
                     geneID = phageName + "_" + str(cdsCount)
                 
-            if (geneID not in geneID_set and geneID not in phageGene_set):
+            if (geneID not in geneID_set and geneID not in all_GeneID_set):
                 geneID_set.add(geneID)
             else:
                 write_out(output_file,"\nError: feature %s of %s is a duplicate geneID." % (geneID,phageName))
