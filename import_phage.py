@@ -79,16 +79,25 @@ run_type = ""
 while (run_type != "test" and run_type != "production"):
     run_type = raw_input("\nIndicate run type (test or production): ")
     run_type = run_type.lower()
-    
-    
-#ALLPHAGES
+
+
+#Modes
+print "\n\nAvailable import modes:"
+print "1: Standard (e.g. Actino database)"
+print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename)"
+print "\n"
 use_basename = ""
-while (use_basename != "no" and use_basename != "yes"):
-    use_basename = raw_input("\nShould the PhageID be set to the file's basename? ")
-    use_basename = use_basename.lower()
-
-
-
+mode_valid = False
+while mode_valid == False:
+    mode = raw_input("\nIndicate import mode (1 or 2): ")
+    if mode == '1':
+        mode_valid = True
+    elif mode == '2':
+        mode_valid = True
+        use_basename = "yes"
+    else:
+        print "Invalid choice."
+ 
 
 
     
