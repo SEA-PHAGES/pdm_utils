@@ -1086,12 +1086,43 @@ for filename in files:
                 else:
                     geneID = phageName + "_" + str(cdsCount)
                 
-            if (geneID not in geneID_set and geneID not in all_GeneID_set):
-                geneID_set.add(geneID)
+
+            #See if the geneID is already in the database
+            duplicate = False  
+            if geneID in geneID_set:
+                duplicate = True                
+                write_out(output_file,"\nWarning: there is a duplicate geneID %s in phage %s." % (geneID,phageName))
+
+            elif geneID in all_GeneID_set:
+                duplicate = True                
+                write_out(output_file,"\nWarning: there is a duplicate geneID %s in the current database." % geneID)
             else:
-                write_out(output_file,"\nError: feature %s of %s is a duplicate geneID." % (geneID,phageName))
-                record_errors += 1
-                continue
+                geneID_set.add(geneID)
+
+            #Try to resolve the geneID duplication conflict
+            if duplicate == True:
+                old_ID = geneID
+                geneID = geneID + "_duplicateID"
+                
+                #Check to see if the new geneID is found in the set of all geneIDs
+                if (geneID in geneID_set or geneID in all_GeneID_set):
+                    record_warnings += 1                
+                    write_out(output_file,"\nWarning: unable to resolve duplicate geneID %s conflict. This CDS will be skipped, but processing of the other genes will continue." % old_ID)
+                    record_errors += question("\nError: feature %s of phage %s is a duplicate geneID and cannot be renamed to %s." % (old_ID,phageName,geneID))
+                    continue
+                else:
+                    record_warnings += 1
+                    write_out(output_file,"\nGeneID %s duplication has been automatically resolved by renaming ID to %s." % (old_ID,geneID))
+                    duplicate_answer = question("\nError: feature %s of %s is a duplicate geneID." % (old_ID,phageName))
+
+                    #If user indicates the feature with the new geneID should not be added, add to record_errors. Otherwise, assign new geneID to the geneID_set
+                    if duplicate_answer == 1:
+                        record_errors += 1
+                    else:
+                        geneID_set.add(geneID)                        
+
+            ####KNOWN PROBLEM: IF GENEID GETS ADDED, THEN GENE GETS SKIPPED FOR OTHER ERRORS, THE GENEID SHOULD BE REMOVED FROM THE GENEID SET
+
 
 
 
@@ -1130,8 +1161,9 @@ for filename in files:
             except:
                 translation = ""
                 geneLen = 0
-                write_out(output_file,"\nError: problem with %s translation in phage %s." % (geneID,phageName))
-                record_errors += 1
+                record_warnings += 1                
+                write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
+                record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 
             
             #Check translation for possible errors
@@ -1416,10 +1448,6 @@ for filename in files:
             
 
 
-
-
-
-
         #Check to ensure the best gene description field was retained
         #Element indices for feature data:
         #0 = geneID
@@ -1489,7 +1517,7 @@ for filename in files:
             write_out(output_file,"\nNo errors encountered while parsing: %s." % filename)
             diffCount = cdsCount - addCount
             if record_warnings > 0:
-                write_out(output_file,"\nWarning: there are %s warning(s) with phage %s and %s CDS feature(s) were not added." % (record_warnings,phageName,diffCount))
+                write_out(output_file,"\nWarning summary: there are %s warning(s) with phage %s and %s CDS feature(s) were not added." % (record_warnings,phageName,diffCount))
         else:
             write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
             failed_genome_files.append(filename)
