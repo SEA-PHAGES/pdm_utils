@@ -166,23 +166,38 @@ def retrieve_description(genbank_feature,description_field):
     split_description = description.split(' ')                
     if description == "hypothetical protein":
         description = ""
-    elif (split_description[0][:2] == "gp" and len(split_description) == 1):
+
+    elif description == "phage protein":
         description = ""
 
-
-    #ALLPHAGES
-    elif (split_description[0][:3] == "orf" and len(split_description) == 1):
+    elif description == "unknown":
         description = ""
 
-    elif (split_description[0] == "orf" and len(split_description) == 2):
+    elif description.isdigit():
         description = ""
+
+    elif len(split_description) == 1:
         
-    elif (split_description[0] == "putative" and split_description[1][:7] == "protein" and len(split_description) == 2):
-        description = ""
+        if (split_description[0][:2] == "gp" and split_description[0][2:].isdigit()): 
+            description = ""
 
-    elif (split_description[0] == "putative" and split_description[1] == "protein" and len(split_description) == 3):
-        description = ""
+        elif (split_description[0][:3] == "orf" and split_description[0][3:].isdigit()):
+            description = ""
             
+        else:
+            description = genbank_feature.qualifiers[description_field][0].strip()    
+  
+    elif len(split_description) == 2:
+    
+        if (split_description[0] == "orf" and split_description[1].isdigit()): 
+            description = ""
+        
+        elif (split_description[0] == "putative" and split_description[1][:7] == "protein"):
+            description = ""
+                        
+        else:
+            description = genbank_feature.qualifiers[description_field][0].strip()    
+
     else:
         description = genbank_feature.qualifiers[description_field][0].strip()    
     return description
@@ -1099,19 +1114,16 @@ for filename in files:
             else:
                 geneID_set.add(geneID)
 
-            #Try to resolve the geneID duplication conflict
-            if duplicate == True:
-                old_ID = geneID
-                geneID = geneID + "_duplicateID"
-                
+            #If there is a geneID duplication conflict, try to resolve it
+            old_ID = geneID
+            dupe_value = 1
+            while duplicate == True and dupe_value < 20:                       
+            
+                geneID = old_ID + "_duplicateID" + str(dupe_value)
+                record_warnings += 1            
                 #Check to see if the new geneID is found in the set of all geneIDs
-                if (geneID in geneID_set or geneID in all_GeneID_set):
-                    record_warnings += 1                
-                    write_out(output_file,"\nWarning: unable to resolve duplicate geneID %s conflict. This CDS will be skipped, but processing of the other genes will continue." % old_ID)
-                    record_errors += question("\nError: feature %s of phage %s is a duplicate geneID and cannot be renamed to %s." % (old_ID,phageName,geneID))
-                    continue
-                else:
-                    record_warnings += 1
+                if (geneID not in geneID_set and geneID not in all_GeneID_set):
+                    duplicate = False
                     write_out(output_file,"\nGeneID %s duplication has been automatically resolved by renaming ID to %s." % (old_ID,geneID))
                     duplicate_answer = question("\nError: feature %s of %s is a duplicate geneID." % (old_ID,phageName))
 
@@ -1120,11 +1132,15 @@ for filename in files:
                         record_errors += 1
                     else:
                         geneID_set.add(geneID)                        
-
-            ####KNOWN PROBLEM: IF GENEID GETS ADDED, THEN GENE GETS SKIPPED FOR OTHER ERRORS, THE GENEID SHOULD BE REMOVED FROM THE GENEID SET
-
-
-
+                dupe_value += 1
+                    
+            #Once the while loop exits, check if the duplication was resolved
+            if duplicate == True:
+                record_warnings += 1                
+                write_out(output_file,"\nWarning: unable to resolve duplicate geneID %s conflict. This CDS will be skipped, but processing of the other genes will continue." % old_ID)
+                record_errors += question("\nError: feature %s of phage %s is a duplicate geneID and cannot be renamed to %s." % (old_ID,phageName,geneID))
+                continue
+                
 
             #Name
             if (geneID.split('_')[-1].isdigit()):
