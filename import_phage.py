@@ -84,7 +84,7 @@ while (run_type != "test" and run_type != "production"):
 #Modes
 print "\n\nAvailable import modes:"
 print "1: Standard (e.g. Actino database)"
-print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename)"
+print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename, some QC steps are skipped)"
 print "\n"
 use_basename = ""
 mode_valid = False
@@ -324,7 +324,7 @@ description_set = set(["product","note","function"])
 
 
 #Create list of potential Host Names in the Genbank file to ignore
-host_ignore = ['enterobacteria']
+host_ignore = ['enterobacteria','phage','bacteriophage','cyanophage']
 
 #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
 #0 = Type of database action to be performed (add, remove, replace, update)
@@ -1159,6 +1159,9 @@ for filename in files:
                 continue
                 
 
+
+
+
             #Name
             if (geneID.split('_')[-1].isdigit()):
                 geneName = geneID.split('_')[-1]
@@ -1452,22 +1455,25 @@ for filename in files:
             record_errors += question("\nError: problem with locus tags in file  %s." % filename)
 
 
-        #Check the phage name spelling in the locus tags
+        #Check the phage name spelling in the locus tags. If importing non-SEA-PHAGES file, skip this step
+
         pattern4 = re.compile(phageName.lower())
         geneID_typo_tally = 0
         geneID_typo_list = []
-        for geneID in geneID_set:
-           
-           search_result = pattern4.search(geneID.lower())            
-           if search_result == None:
-                geneID_typo_tally += 1
-                geneID_typo_list.append(geneID)
 
-        if geneID_typo_tally > 0:
-            record_warnings += 1
-            write_out(output_file,"\nWarning: there are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
-            print geneID_typo_list
-            record_errors += question("\nError: problem with locus tags of file %s." % filename)
+        if use_basename != "yes":
+            for geneID in geneID_set:
+               
+               search_result = pattern4.search(geneID.lower())            
+               if search_result == None:
+                    geneID_typo_tally += 1
+                    geneID_typo_list.append(geneID)
+
+            if geneID_typo_tally > 0:
+                record_warnings += 1
+                write_out(output_file,"\nWarning: there are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
+                print geneID_typo_list
+                record_errors += question("\nError: problem with locus tags of file %s." % filename)
 
 
 
