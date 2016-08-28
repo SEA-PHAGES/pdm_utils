@@ -1064,7 +1064,9 @@ for filename in files:
         feature_note_tally = 0
         feature_product_tally = 0
         feature_function_tally = 0
-        feature_source_info = ""
+        feature_source_organism = ""
+        feature_source_lab_host = ""
+        feature_source_host = ""
         all_features_data_list = []
         record_summary_cds = [["Locus Tag","Product","Function","Note","Translation Table","Translation","Assigned GeneID","Assigned Description"]]        
         
@@ -1075,7 +1077,22 @@ for filename in files:
             
                 #Retrieve the Source Feature info
                 if feature.type == "source":           
-                    feature_source_info = str(feature.qualifiers["organism"][0])            
+
+                    try:
+                        feature_source_organism = str(feature.qualifiers["organism"][0])            
+                    except:
+                        feature_source_organism = ""
+
+                    try:
+                        feature_source_host = str(feature.qualifiers["host"][0])            
+                    except:
+                        feature_source_host = ""
+
+                    try:
+                        feature_source_lab_host = str(feature.qualifiers["lab_host"][0])            
+                    except:
+                        feature_source_lab_host = ""
+
                 continue
 
             else:                
@@ -1345,7 +1362,9 @@ for filename in files:
         record_summary_header.append(["Record Defintion",record_def])
         record_summary_header.append(["Record Source",record_source])
         record_summary_header.append(["Record Organism",record_organism])
-        record_summary_header.append(["Source Feature Organism Qualifier",feature_source_info])
+        record_summary_header.append(["Source Feature Organism",feature_source_organism])
+        record_summary_header.append(["Source Feature Host",feature_source_host])        
+        record_summary_header.append(["Source Feature Lab Host",feature_source_lab_host])        
         print "\nSummary of record header information for %s from file %s:\n" % (phageName,filename)
         print tabulate(record_summary_header,headers = "firstrow")
         print "\n\n\n"
@@ -1374,7 +1393,7 @@ for filename in files:
             print "\nRecord Source does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
     
-        if find_name(pattern1,feature_source_info.split(' ')) == 0:
+        if find_name(pattern1,feature_source_organism.split(' ')) == 0:
         
             print "\nSource Feature does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
@@ -1402,12 +1421,22 @@ for filename in files:
             print "\nRecord Organism does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if (find_name(pattern3,feature_source_info.split(' ')) == 0 and feature_source_info.split(' ')[0].lower() not in host_ignore):
+        if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
         
-            print "\nSource Feature does not appear to have same host data as found in import table."
+            print "\nSource Feature Organism does not appear to have same host data as found in import table."
             record_errors += question("\nError: problem with header info of file %s." % filename)
         
-        
+        #Host and Lab_Host data may not have been present, so skip if it is blank
+        if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
+            
+            print "\nSource Feature Host does not appear to have same host data as found in import table."
+            record_errors += question("\nError: problem with header info of file %s." % filename)
+                
+        if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
+            
+            print "\nSource Feature Lab Host does not appear to have same host data as found in import table."
+            record_errors += question("\nError: problem with header info of file %s." % filename)
+
         
         
         #Print record summary for all CDS information for quality control
