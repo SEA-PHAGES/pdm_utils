@@ -612,7 +612,7 @@ for genome_data in remove_data_list:
 
 
 
-#If no erros encountered, print list of action items to be implemented and continue. Otherwise, exit the program.
+#If no errors encountered, print list of action items to be implemented and continue. Otherwise, exit the program.
 if table_errors == 0:
     write_out(output_file,"\nImport table verified with 0 errors.")
     write_out(output_file,"\nList of all actions to be implemented:")
@@ -845,8 +845,8 @@ for filename in files:
             write_out(output_file,"\nError: problem retrieving phage name in file %s. This file will not be processed." % filename)
             record_errors += 1
             failed_genome_files.append(filename)
+            raw_input("\nPress ENTER to proceed to next file.")
             continue
-
 
         #Sequence, length, and GC
         try:
@@ -858,8 +858,8 @@ for filename in files:
             write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)
             record_errors += 1
             failed_genome_files.append(filename)
+            raw_input("\nPress ENTER to proceed to next file.")
             continue
-
 
         #Check DNA sequence for possible errors
         nucleotide_set = set(phageSeq)
@@ -950,7 +950,7 @@ for filename in files:
             raw_input("\nPress ENTER to proceed to next file.")
             continue
         
-           
+                       
            
         #Check the database to make sure the genome sequence and name matches correctly.            
         con = mdb.connect(mysqlhost, username, password, database)
@@ -1200,6 +1200,7 @@ for filename in files:
                 record_warnings += 1                
                 write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
+                continue
                 
             
             #Check translation for possible errors
