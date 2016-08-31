@@ -22,11 +22,16 @@
 #that force the script to exit do not cause ROLLBACK errors or connection errors.
 
 
-import time, sys, os, getpass, csv, re, shutil
+#Third-party libraries
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
-import MySQLdb as mdb
 from tabulate import tabulate
+import MySQLdb as mdb
+
+#Built-in libraries
+import time, sys, os, getpass, csv, re, shutil
+import json, urllib
+
 
 #Get the command line parameters
 try:
@@ -326,6 +331,14 @@ description_set = set(["product","note","function"])
 #Create list of potential Host Names in the Genbank file to ignore
 host_ignore = ['enterobacteria','phage','bacteriophage','cyanophage']
 
+
+
+#Phagesdb API to retrieve genome information
+api_prefix = "http://phagesdb.org/api/phages/"
+api_suffix = "/?format=json"
+
+
+
 #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
 #0 = Type of database action to be performed (add, remove, replace, update)
 #1 = New phage name that will be added to database
@@ -339,7 +352,10 @@ column_headers = ["Action","PhageID","HostStrain","Cluster","Status","Descriptio
 
 write_out(output_file,"\n\n\n\nRetrieving import info from table in file...")
 
-file_object = open(sys.argv[3],'r')
+file_object = open(updateFile,'r')
+
+
+
 file_reader = csv.reader(file_object)
 genome_data_list = []
 table_errors = 0
@@ -350,6 +366,7 @@ update_total = 0
 
 for row in file_reader:
 
+
     #Verify the row of information has the correct number of fields to parse.
     if len(row) != 7:
         write_out(output_file,"\nRow in import table is not formatted correctly: " + str(row))
@@ -357,18 +374,42 @@ for row in file_reader:
         continue
 
 
-    #Make sure "none" indications are lowercase, as well as "action", "status", and "feature" fields are lowercase
+    #Make sure "none" and "retrieve" indications are lowercase, as well as "action", "status", and "feature" fields are lowercase
     row[0] = row[0].lower()
     if row[1].lower() == "none":
         row[1] = row[1].lower()
-    if row[2].lower() == "none":
+    if (row[2].lower() == "none" or row[2].lower() == "retrieve"):
         row[2] = row[2].lower()        
-    if row[3].lower() == "none":
+    if (row[3].lower() == "none" or row[3].lower() == "retrieve"):
         row[3] = row[3].lower()        
     row[4] = row[4].lower()
     row[5] = row[5].lower()        
     if row[6].lower() == "none":
         row[6] = row[6].lower()
+        
+        
+    #If either the Host or Cluster data needs to be retrieved, try to access the data in phagesdb before proceeding
+    if (row[2] == "retrieve" or row[3] == "retrieve"):
+        try:
+            #Ensure the phage name does not have Draft appended    
+            if row[1][-6:].lower() == "_draft":
+                search_name = row[1][:-6]
+            else:
+                search_name = row[1]        
+            phage_url = api_prefix + search_name + api_suffix
+            online_data_json = urllib.urlopen(phage_url)
+            online_data_dict = json.loads(online_data_json.read())
+        except:
+            phage_url = ""
+            online_data_json = ""
+            online_data_dict = {}
+            write_out(output_file,"\nError: unable to retrieve Host and/or Cluster data for phage %s from phagesdb." %row[1])
+            if row[2] == "retrieve":
+                row[2] = "none"
+            if row[3] == "retrieve":
+                row[3] = "none"
+            table_errors += 1
+        
         
         
     #Make sure the requested action is permissible
@@ -390,32 +431,74 @@ for row in file_reader:
 
 
         
-    #Modify Host, Cluster, Status, and PhageName fields if needed
+    #Modify fields if needed
+
+    #Modify Host if needed
+    if row[2] == "retrieve":
+
+        #On phagesdb, phages should always have the Genus info of the isolation host.
+        try:
+            row[2] = online_data_dict['isolation_host']['genus']
+        except:
+            write_out(output_file,"\nError: unable to retrieve Host data for phage %s from phagesdb." %row[1])
+            row[2] = "none"
+            table_errors += 1
+           
     if row[2] != "none":
         row[2] = row[2].split(' ')[0] #Keep only the genus in the host data field and discard the rest
         if row[2] not in phageHost_set:
             print "The host strain " + row[2] + " is not currently in the database."
             table_errors +=  question("\nError: %s is not the correct host for %s." % (row[2],row[1])) #errors will be incremented if host was not correct
 
+
+    #Modify Cluster if needed
+    if row[3] == "retrieve":
+        try:
+
+            #On phagesdb, phages may have a Cluster and no Subcluster info (which is set to None). If the phage has a Subcluster, it should also have a Cluster.
+            #If by accident no Cluster or Subcluster info is added at the time the genome is added to phagesdb, the Cluster may automatically be set to "Unclustered". This will be filtered out later in the script due to its character length.
+            #If the phage has a Subcluster designation, take that info. Otherwise, take the Cluster designation.
+            if online_data_dict['psubcluster'] is None:
+                row[3] = online_data_dict['pcluster']['cluster']
+            else:
+                row[3] = online_data_dict['psubcluster']['subcluster']
+
+        except:
+            write_out(output_file,"\nError: unable to retrieve Cluster data for phage %s from phagesdb." %row[1])
+            row[3] = "none"
+            table_errors += 1
+
     if row[3] != "none":
         if row[3].lower() == "singleton":
             row[3] = row[3].lower()
+            
         if (row[3] not in phageCluster_set and row[3] != "singleton"):
-            print "The Cluster " + row[3] + " is not currently in the database."
-            table_errors +=  question("\nError: %s is not the correct Cluster for %s." % (row[3],row[1])) #errors will be incremented if host was not correct   
+            print "The Cluster %s is not currently in the database." % row[3]
+            table_errors +=  question("\nError: %s is not the correct Cluster for %s." % (row[3],row[1]))
 
+        if (row[3] != "singleton" and len(row[3]) > 5):
+            write_out(output_file,"\nError: phage %s Cluster designation %s exceeds character limit." % (row[1],row[3]))
+            table_errors += 1
+
+
+    #Modify Status if needed, and PhageID if needed
     if (row[4] not in phageStatus_set and row[4] != "none"):
-            print "The status " + row[4] + " is not currently in the database."
-            table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1])) #errors will be incremented if host was not correct   
+            print "The status %s is not currently in the database." % row[4]
+            table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))  
+    if len(row[4]) > 5:
+        write_out(output_file,"\nError: the status %s exceeds character limit." % row[4])
+        table_errors += 1
     if (row[4] == "draft" and row[1][-6:].lower() != "_draft"):
         row[1] = row[1] + "_Draft"
 
+
+    #Modify Description Qualifier if needed
     if (row[5] not in description_set and row[5] != "none"):     
         print row[5] + " is an uncommon qualifier."
         table_errors += question("\nError: %s is an incorrect qualifier." % row[5])
 
 
-    
+
 
 
 
@@ -621,6 +704,7 @@ if table_errors == 0:
     for genome_data in genome_data_list:
         write_out(output_file,"\n" + str(genome_data))
     raw_input("\nPress ENTER to proceed to next import stage.")
+    
 else:
     write_out(output_file,"\n%s error(s) encountered with import file.\nNo changes have been made to the database." % table_errors)
     write_out(output_file,"\nExiting import script.")
@@ -787,6 +871,8 @@ files =  [X for X in os.listdir(phageListDir) if os.path.isfile(os.path.join(pha
 failed_genome_files = []
 failed_actions = []
 file_tally = 0
+script_warnings = 0
+script_errors = 0
 for filename in files:
     
     file_tally += 1
@@ -845,6 +931,8 @@ for filename in files:
             write_out(output_file,"\nError: problem retrieving phage name in file %s. This file will not be processed." % filename)
             record_errors += 1
             failed_genome_files.append(filename)
+            script_warnings += record_warnings
+            script_errors += record_errors
             raw_input("\nPress ENTER to proceed to next file.")
             continue
 
@@ -858,6 +946,8 @@ for filename in files:
             write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)
             record_errors += 1
             failed_genome_files.append(filename)
+            script_warnings += record_warnings
+            script_errors += record_errors
             raw_input("\nPress ENTER to proceed to next file.")
             continue
 
@@ -947,6 +1037,8 @@ for filename in files:
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
             failed_genome_files.append(filename)
+            script_warnings += record_warnings
+            script_errors += record_errors
             raw_input("\nPress ENTER to proceed to next file.")
             continue
         
@@ -1574,6 +1666,8 @@ for filename in files:
             write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
             failed_genome_files.append(filename)
             failed_actions.append(matchedData)
+            script_warnings += record_warnings
+            script_errors += record_errors            
             raw_input("\nPress ENTER to proceed to next file.")
             continue
 
@@ -1608,8 +1702,10 @@ for filename in files:
         except:
             print "Unable to move file %s to success file folder." % filename    
         
-        #Add the action data to the success output file then proceed
-        success_action_file_writer.writerow(matchedData)                
+        #Add the action data to the success output file, update tally of total script warnings and errors, then proceed
+        success_action_file_writer.writerow(matchedData)
+        script_warnings += record_warnings
+        script_errors += record_errors
         raw_input("\nPress ENTER to proceed to next file.")
         
       
@@ -1664,8 +1760,9 @@ else:
 
 
 
-
-
+#Output the total number of warnings and errors encountered during the import process
+write_out(output_file,"\n\nTotal number of warnings encountered: %s" % script_warnings)
+write_out(output_file,"\nTotal number of errors encountered: %s" % script_errors)
 
 
 #Retrieve the total number of genomes now in the updated database
