@@ -93,7 +93,7 @@ print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's
 print "\n"
 use_basename = ""
 run_mode_valid = False
-while mode_valid == False:
+while run_mode_valid == False:
     run_mode = raw_input("\nIndicate import mode (1 or 2): ")
     if run_mode == '1':
         run_mode_valid = True
