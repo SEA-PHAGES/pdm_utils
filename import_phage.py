@@ -92,13 +92,13 @@ print "1: Standard (e.g. Actino database)"
 print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename, some QC steps are skipped)"
 print "\n"
 use_basename = ""
-mode_valid = False
+run_mode_valid = False
 while mode_valid == False:
-    mode = raw_input("\nIndicate import mode (1 or 2): ")
-    if mode == '1':
-        mode_valid = True
-    elif mode == '2':
-        mode_valid = True
+    run_mode = raw_input("\nIndicate import mode (1 or 2): ")
+    if run_mode == '1':
+        run_mode_valid = True
+    elif run_mode == '2':
+        run_mode_valid = True
         use_basename = "yes"
     else:
         print "Invalid choice."
@@ -253,7 +253,7 @@ output_file = open(os.path.join(phageListDir,success_folder,date + "_phage_impor
 write_out(output_file,date + " Phamerator database updates:\n\n\n")
 write_out(output_file,"\n\n\n\nBeginning import script...")
 write_out(output_file,"\nRun type: " + run_type)
-
+write_out(output_file,"\nRun mode: " + run_mode)
 
 
 
