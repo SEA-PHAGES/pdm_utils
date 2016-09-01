@@ -80,33 +80,48 @@ print "\n\n"
 
 
 #Set up run type
+
+print "\n\nAvailable run types:"
+print "Test: checks flat files for accuracy, but the database is not changed."
+print "Production: after testing files, the database is updated."
+print "SMART: same as Test, but with some defaults set."
+print "\n"
 run_type = ""
-while (run_type != "test" and run_type != "production"):
-    run_type = raw_input("\nIndicate run type (test or production): ")
+run_type_valid = False
+while run_type_valid == False:
+    run_type = raw_input("\nIndicate run type (test, production, or smart): ")
     run_type = run_type.lower()
+    if (run_type == 'test' or run_type == 'production' or run_type == 'smart'):
+        run_type_valid = True
+    else:
+        print "Invalid choice."
+
+
+
 
 
 #Modes
-print "\n\nAvailable import modes:"
-print "1: Standard (e.g. Actino database)"
-print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename, some QC steps are skipped)"
-print "\n"
 use_basename = ""
-run_mode_valid = False
-while run_mode_valid == False:
-    run_mode = raw_input("\nIndicate import mode (1 or 2): ")
-    if run_mode == '1':
-        run_mode_valid = True
-    elif run_mode == '2':
-        run_mode_valid = True
-        use_basename = "yes"
-    else:
-        print "Invalid choice."
- 
+smart_defaults = ""
+if run_type != "smart":
+    print "\n\nAvailable import modes:"
+    print "1: Standard (e.g. Actino database)"
+    print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename, some QC steps are skipped)"
+    print "\n"
+    run_mode_valid = False
+    while run_mode_valid == False:
+        run_mode = raw_input("\nIndicate import mode (1 or 2): ")
+        if run_mode == '1':
+            run_mode_valid = True
+        elif run_mode == '2':
+            run_mode_valid = True
+            use_basename = "yes"
+        else:
+            print "Invalid choice."
 
-
-    
-
+else:
+    run_mode = '1'
+    smart_defaults = "yes"
 
 #Define several functions
 
@@ -776,8 +791,10 @@ else:
 #Document the update actions
 for element in update_data_list:
     success_action_file_writer.writerow(element)
-write_out(output_file,"\nAll field update actions have been implemented.")
-raw_input("\nPress ENTER to proceed to next import stage.")
+    
+if run_type != "smart":
+    write_out(output_file,"\nAll field update actions have been implemented.")
+    raw_input("\nPress ENTER to proceed to next import stage.")
     
 
 
@@ -832,8 +849,10 @@ else:
 #Document the remove actions    
 for element in remove_data_list:
     success_action_file_writer.writerow(element)
-write_out(output_file,"\nAll genome remove actions have been implemented.")
-raw_input("\nPress ENTER to proceed to next import stage.")
+    
+if run_type != "smart":
+    write_out(output_file,"\nAll genome remove actions have been implemented.")
+    raw_input("\nPress ENTER to proceed to next import stage.")
 
 
   
