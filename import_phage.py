@@ -1279,26 +1279,74 @@ for filename in files:
             else:
                 geneName = cdsCount                        
 
-            #Gene boundary coordinates
-            if str(feature.location)[:4] == "join":
-                temp = str(feature.location).strip("join{}").split(",")[0]
-                startCoord = int(temp.split(":")[0].split("[")[1])
-                temp = str(feature.location).strip("join{}").split(",")[1]
-                stopCoord = int(temp.split(":")[1].split("]")[0])
 
+
+            #Orientation
+            if feature.strand == 1:
+                orientation = "Forward"
+            elif feature.strand == -1:
+                orientation = "Reverse"
+            #ssRNA phages
+            elif feature.strand is None:
+                orientation = "Forward"
             else:
+                record_warnings += 1
+                write_out(output_file,"\nWarning: feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName))
+                record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
+                continue
 
+
+
+
+
+
+            #Gene boundary coordinates
+            #Compound features are tricky to parse.
+            if str(feature.location)[:4] == "join":
+
+
+                #Skip this compound feature if it is comprised of more than two features (too tricky to parse).
+                if len(feature.location.parts) > 2:
+                
+                    strStart = ""
+                    strStop = ""
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: gene %s is a compound feature that is unable to be parsed. This CDS will be skipped, but processing of the other genes will continue." % geneID)
+                    record_errors += question("\nError: unable to parse gene %s of phage %s." % (geneID,phageName))
+                    continue
+                
+                else:                    
+
+                    #Retrieve compound feature positions based on strand
+                    if feature.strand == 1:
+                    
+                        strStart = str(feature.location.parts[0].start)
+                        strStop = str(feature.location.parts[1].end)
+                    
+                    elif feature.strand == -1:
+                    
+                        strStart = str(feature.location.parts[1].start)
+                        strStop = str(feature.location.parts[0].end)
+                        
+                    #If strand is None...
+                    else:
+                        strStart = ""
+                        strStop = ""
+                
+            else:
                 strStart = str(feature.location.start)
                 strStop = str(feature.location.end)
 
-                if (strStart.isdigit() and strStop.isdigit()):
-                    startCoord = int(strStart)
-                    stopCoord = int(strStop)
-                else:
-                    record_warnings += 1
-                    write_out(output_file,"\nWarning: gene " + geneID + " " + strStart + " " + strStop + " are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue.")
-                    record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
-                    continue
+            #Now that start and stop have been parsed, check if coordinates are fuzzy or not
+            if (strStart.isdigit() and strStop.isdigit()):
+                startCoord = int(strStart)
+                stopCoord = int(strStop)
+            else:
+                record_warnings += 1
+                write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the genes other will continue." % (geneID,strStart,strStop))
+                record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
+                continue
+
                     
             #Translation, Gene Length (via Translation)
             try:
@@ -1313,6 +1361,9 @@ for filename in files:
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 continue
                 
+
+
+
             
             #Check translation for possible errors
             amino_acid_set = set(translation)
@@ -1388,19 +1439,6 @@ for filename in files:
                 assigned_description_tally += 1
 
 
-            #Orientation
-            if feature.strand == 1:
-                orientation = "Forward"
-            elif feature.strand == -1:
-                orientation = "Reverse"
-            #ssRNA phages
-            elif feature.strand is None:
-                orientation = "Forward"
-            else:
-                record_warnings += 1
-                write_out(output_file,"\nWarning: feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName))
-                record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
-                continue
 
             
             
