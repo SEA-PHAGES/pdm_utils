@@ -35,8 +35,8 @@ except:
     print "\n\n\
             This is a python script to determine which phage genomes have been updated in NCBI.\n\
             It requires two argument(s):\n\
-            First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
-            Second argument: directory path to where output should be created.\n\
+            First argument: name of MySQL database that will be used (e.g. 'Actino_Draft').\n\
+            Second argument: directory path to where output should be created.\n"
 
     sys.exit(1)
     
@@ -57,10 +57,31 @@ print "\n\n"
 
 
 #Get email infor for NCBI
-contact_email = input("Provide email for NCBI: ")
-batch_size = int(input("Record retrieval batch size: "))
+contact_email = raw_input("Provide email for NCBI: ")
+print "\n\n"
 
 
+batch_size = ""
+batch_size_valid = False
+while batch_size_valid == False:
+    batch_size = raw_input("Record retrieval batch size (must be greater than 0): ")
+    print "\n\n"
+    if batch_size.isdigit():
+        batch_size = int(batch_size)
+        if batch_size > 0:
+            batch_size_valid = True
+        else:
+            print "Invalid choice."
+            print "\n\n"
+
+    else:
+        print "Invalid choice."
+        print "\n\n"
+
+
+
+
+print batch_size
 
 
 
@@ -81,21 +102,6 @@ def mdb_exit(message):
 
 
 
-
-#Create output directories
-date = time.strftime("%Y%m%d")
-
-output_folder = '%s_retrieved_files' % date
-new_dir = os.path.join(output_path,output_folder)
-
-try:
-    os.mkdir(new_dir)
-except:
-    print "\nUnable to create output folder: %s" % new_dir)
-    sys.exit(1)
-
-
-os.chdir(new_dir)
 
 
 
@@ -120,7 +126,6 @@ try:
     cur = con.cursor()
 except:
     print "Unsuccessful attempt to connect to the database. Please verify the database, username, and password."
-    output_file.close()
     sys.exit(1)
 
 try:
@@ -141,10 +146,61 @@ con.close()
 
 
 
+#Initialize tally variables
+tally_total = 0
+tally_not_final = 0
+tally_no_accession = 0
+tally_duplicate_accession = 0
+tally_retrieval_failure = 0
+tally_retrieved_not_new = 0
+tally_retrieved_for_update = 0
+
+
+
+
+
+
+
+
+
+
+tally_total = len(current_genome_data_tuples)
+
+
+
+#Create output directory and processing file
+date = time.strftime("%Y%m%d")
+output_folder = '%s_retrieved_files' % date
+new_dir = os.path.join(output_path,output_folder)
+
+try:
+    os.mkdir(new_dir)
+except:
+    print "\nUnable to create output folder: %s" % new_dir
+    sys.exit(1)
+
+
+os.chdir(new_dir)
+
+
+processing_results_file = '%s_processing_results.csv' % date
+processing_results_file_handle = open(processing_results_file,"w")
+processing_results_file_writer = csv.writer(processing_results_file_handle)
+file_headers = ['PhageID','PhageName','Accession','Status','PhameratorDate','RetrievedRecordDate','Note']
+processing_results_file_writer.writerow(file_headers)
+
+
+
+
+
+
+
+
+
 
 #Create dictionary of phage data based on unique accessions
 #Key = accession
-#Value = phage data tuple
+#Value = phage data list
 #Create list of phage data with duplicate accession info
 unique_accession_dict = {}
 duplicate_accession_list = []
@@ -152,47 +208,69 @@ duplicate_accession_list = []
 #Add to dictionary if status is 'final', and if there is an accession number
 for phage_tuple in current_genome_data_tuples:
 
+    phage_list = list(phage_tuple)
     
-    if phage_tuple[4] != 'final':
-        print "PhageID %s is not 'final' status." %phage_tuple[0]
 
-    elif phage_tuple[5] == "":
-        print "PhageID does not have accession number." %phage_tuple[0]
+    #Edit some of the phage data fields    
+    #When querying NCBI with Accession numbers, efetch retrieves the most updated version. So you can drop the version number after the decimal (e.g. 'XY99999.1')
+    if phage_list[5] != "":
+        print phage_list[5]
+        phage_list[5] = phage_list[5].split('.')[0]
+        print phage_list[5]
+
+
+
+    #Singleton Cluster values should be converted from None to 'Singleton'
+    if phage_list[3] is None:
+        phage_list[3] = "Singleton"
+        print "PhageID %s Cluster changed to Singleton." %phage_list[0]
+ 
+    #Make sure there is a date in the DateLastModified field
+    print phage_list
+    if phage_list[6] is None:
+        print phage_list[6]
+        phage_list[6] = datetime.strptime('1/1/1900','%m/%d/%Y')
+        print phage_list[6]
+
+   
+   
+   
+    #Now determine what to do with the data    
+    if phage_list[4] != 'final':
+        print "PhageID %s is not 'final' status." %phage_list[0]
+        tally_not_final += 1
+        processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','not final status'])
+
+    elif phage_list[5] == "":
+        print "PhageID %s does not have accession number." %phage_list[0]
+        tally_no_accession += 1
+        processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','no accession'])
     
-    elif phage_tuple[5] in unique_accession_dict.keys():
-        print "PhageID %s accession %s is duplicated in the Phamerator database." %(phage_tuple[0],phage_tuple[5])
-        duplicate_accession_list.append(phage_tuple)
+    elif phage_list[5] in unique_accession_dict.keys():
+        print "PhageID %s accession %s is duplicated in the Phamerator database." %(phage_list[0],phage_list[5])
+        duplicate_accession_list.append(phage_list)
 
     else:
-        unique_accession_dict[phage_tuple[5]] = phage_tuple
+        unique_accession_dict[phage_list[5]] = phage_list
 
 #For values that were not unique, remove all accession numbers from the dictionary
 temp_list = []
 for element in duplicate_accession_list:
-    if element in unique_accession_dict.keys():
-        temp_list.append(unique_accession_dict.pop(element))
+    print element
+    if element[5] in unique_accession_dict.keys():
+        temp_list.append(unique_accession_dict.pop(element[5]))
 
 #Now add these elements from dictionary to the duplicate data list
 for element in temp_list:
     duplicate_accession_list.append(element)
+    
 
 #Output the duplicate data
-if len(duplicate_accession_list) > 0:
+tally_duplicate_accession = len(duplicate_accession_list)    
+for data_list in duplicate_accession_list:
+    processing_results_file_writer.writerow([data_list[0],data_list[1],data_list[5],data_list[4],data_list[6],'NA','duplicate accession'])
 
-    duplicate_data_file = '%s_duplicate_accession_data.csv' % date
-    duplicate_data_file_handle = open(duplicate_data_file,"w")
-    duplicate_data_file_writer = csv.writer(duplicate_data_file_handle)
-    file_headers = ['PhageID','PhageName','Accession']
-    duplicate_data_file_writer.write(file_headers)
-
-    for data_tuple in duplicate_accession_list:
-        output_data_list = [data_tuple[0],data_tuple[1],data_tuple[5]]
-        duplicate_data_file_writer.write(output_data_list)
-
-    duplicate_data_file_handle.close()
-
-
-
+    
 
 
 
@@ -216,11 +294,16 @@ while index < len(unique_accession_list):
     unique_accession_list[index] = unique_accession_list[index] + "[ACCN]"
     index += 1
 
-
+print unique_accession_list
 
 
 retrieved_record_list = []
-accession_error_list = []
+retrieval_error_list = []
+
+
+print len(unique_accession_list)
+
+print range(0,len(unique_accession_list),batch_size)
 for batch_index_start in range(0,len(unique_accession_list),batch_size):
 
     
@@ -229,16 +312,24 @@ for batch_index_start in range(0,len(unique_accession_list),batch_size):
     else:
         batch_index_stop = batch_index_start + batch_size
     
-    
+    current_batch_size = batch_index_stop - batch_index_start
+    print batch_index_start
+    print batch_index_stop
+    print current_batch_size
     
     delimiter = " | "
-    esearch_term = delimiter.join(unique_accession_list[batch_index_start:batch_index_stop]
+    esearch_term = delimiter.join(unique_accession_list[batch_index_start:batch_index_stop])
 
 
-
+    print esearch_term
+    
+    print "Ready to retrieve"
+    raw_input('Waiting to continue')
+    
 
     #Use esearch for each accession
     search_handle = Entrez.esearch(db = "nucleotide", term = esearch_term,usehistory="y")
+    #time.sleep(5)
     search_record = Entrez.read(search_handle)
     search_count = int(search_record["Count"])
     search_webenv = search_record["WebEnv"]
@@ -248,11 +339,13 @@ for batch_index_start in range(0,len(unique_accession_list),batch_size):
     
     #Keep track of the accessions that failed to be located in NCBI
 
-    if search_count < batch_size:
+
+    if search_count < current_batch_size:
         search_accession_failure = search_record["ErrorList"]["PhraseNotFound"]
+
         #Each element in this list is formatted "accession[ACCN]"
         for element in search_accession_failure:
-            accession_error_list.append(element[:-6])
+            retrieval_error_list.append(element[:-6])
     
     
     
@@ -284,30 +377,82 @@ import_table_file_writer = csv.writer(import_table_file_handle)
 
 
 
+
+
+
+tally_retrieval_failure = len(retrieval_error_list)
+for retrieval_error_accession in retrieval_error_list:
+
+    phamerator_data = unique_accession_dict[retrieval_error_accession]
+    processing_results_file_writer.writerow([phamerator_data[0],phamerator_data[1],phamerator_data[5],phamerator_data[4],phamerator_data[6],'NA','retrieval failure'])
+
+
+
+
 for retrieved_record in retrieved_record_list:
     retrieved_record_accession = retrieved_record.name
 
     #Convert date date to datetime object
     retrieved_record_date = retrieved_record.annotations["date"]
-    retrieved_record_date_obj = datetime.strptime(retrieved_record_date,'%d-%b-%Y')
+    retrieved_record_date = datetime.strptime(retrieved_record_date,'%d-%b-%Y')
 
+
+    #phamerator_date_obj = datetime.strptime(phamerator_date,'%m/%d/%Y')
+    #
+    #MySQL outputs the DateLastModified as a datetime object
     phamerator_data = unique_accession_dict[retrieved_record_accession]
-    phamerator_date = phamerator_data[6].split(' ')[0]
-    phamerator_date_obj = datetime.strptime(phamerator_date,'%m/%d/%Y')
-
 
     #6 Save new records in a folder and create an import table row for them
-    if retrieved_record_date_obj > phamerator_date_obj:
-        SeqIO.write(retrieved_record, phamerator_data[1].lower() + "__" + retrieved_record_accession + ".gb","genbank")
+    if retrieved_record_date > phamerator_data[6]:
 
+        print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_data[6])
+        tally_retrieved_for_update += 1
+        processing_results_file_writer.writerow([phamerator_data[0],phamerator_data[1],phamerator_data[5],phamerator_data[4],phamerator_data[6],retrieved_record_date,'record to be updated'])
+
+
+        #Now output genbank-formatted file to be uploaded to Phamerator and create the import table action
+        SeqIO.write(retrieved_record, phamerator_data[1].lower() + "__" + retrieved_record_accession + ".gb","genbank")
         import_table_data_list = ['replace',phamerator_data[0],phamerator_data[2],phamerator_data[3],'final','product',phamerator_data[0]]
         import_table_file_writer.writerow(import_table_data_list)
+
+
+    else:
+        print 'Phamerator date %s is more recent than retrieved record date %s.' %(phamerator_data[6],retrieved_record_date)
+        tally_retrieved_not_new += 1
+        processing_results_file_writer.writerow([phamerator_data[0],phamerator_data[1],phamerator_data[5],phamerator_data[4],phamerator_data[6],retrieved_record_date,'record not new'])        
         
 import_table_file_handle.close()
+processing_results_file_handle.close()
+
+
+
+
+
+
+
+
+
+
+
+#Print summary of script
+print "Number of genomes in Phamerator: %s" %tally_total
+print "Number of genomes that are NOT final: %s" %tally_not_final
+print "Number of final genomes with no accession: %s" %tally_no_accession
+print "Number of duplicate accessions: %s" %tally_duplicate_accession
+print "Number of records that failed to be retrieved: %s" %tally_retrieval_failure
+print "Number of records retrieved that are not more recent than Phamerator record: %s" %tally_retrieved_not_new
+print "Number of records retrieved that should be updated in Phamerator: %s" %tally_retrieved_for_update
+
+
+processing_check = tally_total - tally_not_final - tally_no_accession - tally_duplicate_accession - tally_retrieval_failure - tally_retrieved_not_new - tally_retrieved_for_update
+if processing_check != 0:
+    print "Processing check: %s" %processing_check
+    print "Error: the processing of phages was not tracked correctly."
+    print "\n\n\n"
 
 
 #Close script.
-print "\n\n\n\nRecord retrieval script completed.")  
+print "\n\n\n\nRecord retrieval script completed."
 
 
 
