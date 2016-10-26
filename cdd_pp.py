@@ -42,14 +42,22 @@ def search(geneid, translation, database, username, password):
 
 	#IMPORT STUFF
 	import Bio
-	from Bio.Blast import NCBIStandalone
+
+	#from Bio.Blast import NCBIStandalone              #NCBI Legacy Version
+
+
+	from Bio.Blast.Applications import NcbirpsblastCommandline
 	from Bio.Blast import NCBIXML
 	import MySQLdb as mdb
 
-	#DEFINE STUFF - Change variables here for executable and CDD locations
-	rpsblast_exe = "/home/cbowman/Applications/BLAST/bin/rpsblast"
+	#DEFINE STUFF - Change variables here for executable and CDD locations 
+	#rpsblast_exe = "/home/cbowman/Applications/BLAST/bin/rpsblast"                                      #NCBI Legacy Version
+	rpsblast_exe = "/usr/bin/rpsblast+"
+
+
 	rpsblast_db = "/home/cbowman/Databases/CDD/Cdd"
 	query_filename = "/tmp/" + geneid + ".txt"
+	output_filename = "/tmp/" + geneid + "_rps_out.xml"
 	E_VALUE_THRESH = 0.001	#Adjust the expectation cut-off here
 
 	#WRITE STUFF
@@ -57,10 +65,30 @@ def search(geneid, translation, database, username, password):
 	f.write(">" + geneid + "\n" + translation)
 	f.close()
 
-	output_handle, error_handle = NCBIStandalone.rpsblast(rpsblast_exe, rpsblast_db, query_filename, expectation=E_VALUE_THRESH)
+	#output_handle, error_handle = NCBIStandalone.rpsblast(rpsblast_exe, rpsblast_db, query_filename, expectation=E_VALUE_THRESH)    #NCBI Legacy Version
+	
+	rps_command = NcbirpsblastCommandline(cmd=rpsblast_exe, db=rpsblast_db, query= query_filename, evalue=E_VALUE_THRESH,outfmt=5,out=output_filename)		
+	#output_handle, error_handle = rps_command()               #NCBI Legacy Version
+	rps_command()
+	output_handle = open(output_filename,"r")
+
+
+
+
+
+	print "\n\n\n\n"
+	print "rps blast output:"
+	print type(output_handle)
+	print output_handle
+
+	#print error_handle
 	
 	#PARSE STUFF
 	for record in NCBIXML.parse(output_handle):
+	
+		print "within parse loop"
+		print record	
+	
 		if record.alignments:
 			for align in record.alignments:
 				for hsp in align.hsps:
@@ -168,3 +196,14 @@ if tuples:
 	print "done..."
 else:
 	print "No genes to process..."	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
