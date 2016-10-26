@@ -1179,6 +1179,7 @@ for filename in files:
         feature_source_lab_host = ""
         feature_source_host = ""
         all_features_data_list = []
+        all_coordinates_set = set()
         record_summary_cds = [["Locus Tag","Product","Function","Note","Translation Table","Translation","Assigned GeneID","Assigned Description"]]        
         
         for feature in seq_record.features:
@@ -1347,6 +1348,22 @@ for filename in files:
                 record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
                 continue
 
+            #Test if there is a gene with the same coordinates already parsed.
+            coordinate_tuple = tuple([startCoord,stopCoord,orientation])           
+            if coordinate_tuple not in all_coordinates_set:
+                all_coordinates_set.add(coordinate_tuple)
+            else:
+                record_warnings += 1
+                write_out(output_file,"\nWarning: multiple genes have coordinates %s. This is likely a gene feature duplication." % str(coordinate_tuple))
+                record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple))               
+
+
+
+
+
+
+
+
                     
             #Translation, Gene Length (via Translation)
             try:
@@ -1360,11 +1377,7 @@ for filename in files:
                 write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 continue
-                
-
-
-
-            
+                            
             #Check translation for possible errors
             amino_acid_set = set(translation)
             amino_acid_error_set = amino_acid_set - protein_alphabet_set
@@ -1373,9 +1386,7 @@ for filename in files:
                 write_out(output_file,"\nWarning: feature %s of %s appears to have unexpected amino acid(s)." % (geneID,phageName))
                 print "Unexpected amino acids: " + str(amino_acid_error_set)
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
-                
-            
-                
+                                
             #Translation table used
             try:
                 feature_transl_table = feature.qualifiers["transl_table"][0]
@@ -1383,6 +1394,10 @@ for filename in files:
             except:
                 feature_transl_table = ""                
                 missing_transl_table_tally += 1
+
+
+
+
 
 
             #Gene Description
