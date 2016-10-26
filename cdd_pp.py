@@ -2,41 +2,39 @@
 #PYTHON code for executing parallel conserved domain searches
 #Charles Bowman, adapted from original code from Matt Bogel
 #cab106@pitt.edu
-
-#BE SURE TO CHANGE rpsblast_exe and rpsblast_db to fit your system
+#Updated 20161026 by Travis Mavrich
+#NCBI Legacy Blast toolkit no longer supported by Biopython.
+#Script has been updated to use rpsblast+ from NCBI BLAST+ toolkit.
+#For reference, lines of code used for the legacy version are commented with #NCBI Legacy Version
+#Be sure to change rpsblast_exe and rpsblast_db to fit your system
 #Change SQL server at 82, 107, 126 if yours differ from localhost
 
-#Add column:
-#ALTER TABLE `Mycobacteriophage_Draft`.`gene` ADD COLUMN `cdd_status` TINYINT(1) NOT NULL  AFTER `blast_status` ;
-#SET SQL_SAFE_UPDATES = 0;
-#update gene
-#set cdd_status = 0;
- #Or 1 if already completed for current DB
-#SET SQL_SAFE_UPDATES = 1;
-#To use on legacy databases
-
-#To reset STUFF for update of cdd
-#Truncate table gene_domain;
-#SET SQL_SAFE_UPDATES = 0;
-#update gene
-#set cdd_status = 0;
-#SET SQL_SAFE_UPDATES = 1;
-#SET SQL_SAFE_UPDATES = 0;
-#delete from domain;
-#SET SQL_SAFE_UPDATES = 1;
 
 
+
+#Import modules to set up parallel processing
 import os, sys
 import MySQLdb as mdb
 import pp
 import getpass
 
+
+#Get the command line parameters
 try:
 	database = sys.argv[1]
 except:
-	print "Incorrect Parameters - ./cdd_pp.py DATABASE"
-	print "Be sure to point rpsblast_exe and rpsblast_db to the proper directory in the file!"
+
+	print "\n\n"
+	print "This is a python script to identify conserved domains in phage genes.\n"
+	print "Ensure the paths to the NCBI rpsblast+ executable and the Cdd database are correct in the script.\n"
+	print "It requires one argument(s):\n"
+	print "First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n"
+
 	sys.exit(1)
+
+
+
+
 
 def search(geneid, translation, database, username, password):
 
@@ -53,8 +51,6 @@ def search(geneid, translation, database, username, password):
 	#DEFINE STUFF - Change variables here for executable and CDD locations 
 	#rpsblast_exe = "/home/cbowman/Applications/BLAST/bin/rpsblast"                                      #NCBI Legacy Version
 	rpsblast_exe = "/usr/bin/rpsblast+"
-
-
 	rpsblast_db = "/home/cbowman/Databases/CDD/Cdd"
 	query_filename = "/tmp/" + geneid + ".txt"
 	output_filename = "/tmp/" + geneid + "_rps_out.xml"
@@ -66,33 +62,26 @@ def search(geneid, translation, database, username, password):
 	f.close()
 
 	#output_handle, error_handle = NCBIStandalone.rpsblast(rpsblast_exe, rpsblast_db, query_filename, expectation=E_VALUE_THRESH)    #NCBI Legacy Version
-	
+
+
+	#Compile the rpsblast command that will be executed.
+	#outfmt. sets the format of the cdd data. 5 = XML format	
 	rps_command = NcbirpsblastCommandline(cmd=rpsblast_exe, db=rpsblast_db, query= query_filename, evalue=E_VALUE_THRESH,outfmt=5,out=output_filename)		
-	#output_handle, error_handle = rps_command()               #NCBI Legacy Version
 	rps_command()
 	output_handle = open(output_filename,"r")
 
 
 
-
-
-	print "\n\n\n\n"
-	print "rps blast output:"
-	print type(output_handle)
-	print output_handle
-
-	#print error_handle
 	
 	#PARSE STUFF
 	for record in NCBIXML.parse(output_handle):
 	
-		print "within parse loop"
-		print record	
 	
 		if record.alignments:
 			for align in record.alignments:
 				for hsp in align.hsps:
 					align.hit_def = align.hit_def.replace("\"", "\'")
+					con=False #initialize this variable. In case connection can't be made in the try clause, the finally clause to close con won't fail.
 					try:
 
 						descList = align.hit_def.split(',')
@@ -120,8 +109,8 @@ def search(geneid, translation, database, username, password):
 					except mdb.Error, e:
 					  
 					  	if e[0] == 1062:
-					  		print "Error %d: %s" % (e.args[0],e.args[1])
-					  		print "Ignoring duplicate hit"
+					  		#print "Error %d: %s" % (e.args[0],e.args[1])
+					  		print "%s. This hit will be ignored." % e.args[1]
 					  	else:
 					  		sys.exit(1)
 					    
@@ -133,6 +122,9 @@ def search(geneid, translation, database, username, password):
 							cur.execute('COMMIT')
 							con.close()
 
+
+	#Now that cdd data has been added, mark the cdd_status field to 1 so that it won't be re-checked in future cdd search
+	con=False #initialize this variable. In case connection can't be made in the try clause, the finally clause to close con won't fail.
 	try:
 		#connect to sql, post cdd_status, and commit changes in this thread
 		con = mdb.connect('localhost', username, password, database)
@@ -152,12 +144,11 @@ def search(geneid, translation, database, username, password):
 
 
 #GET STUFF
-print "Be sure to point rpsblast_exe and rpsblast_db to the proper directory in the file!"
 username = getpass.getpass(prompt='mySQL username:')
 password = getpass.getpass(prompt='mySQL password:')
-
+con=False #initialize this variable. In case connection can't be made in the try clause, the finally clause to close con won't fail.
 try:
-	print "Fetching Genes"
+	print "\n\n\nFetching Genes."
 	con = mdb.connect('localhost', username, password, database)
 	cur = con.cursor()
 	cur.execute("select GeneID, translation from gene where cdd_status < 1")
@@ -165,6 +156,7 @@ try:
 
 except mdb.Error, e:
   
+	print "Unable to connect to the database."
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
     
@@ -175,31 +167,30 @@ finally:
 #IF THERE IS STUFF, PROCESS STUFF
 if tuples:
 	#Set up pp server
-	job_server = pp.Server(secret="butt")
+	job_server = pp.Server(secret="password")
 	print "pp initialized, " + `job_server.get_ncpus()` + " CPUs in use"
 	
 	#make the jobs
 	jobs = []
 	for tuple in tuples:
 		jobs.append(job_server.submit(search, (tuple[0], tuple[1], database, username, password),(),()))
-	print "Searches Submitted, waiting for jobs to complete"
 	numgenes = len(tuples)
-	counter = 0
-	
-	print `numgenes` + " searches to perform, please be patient."
+	print "%s searches submitted...\n\n\n" % numgenes
 	
 	#WAIT FOR STUFF TO BE DONE
+	counter = 0	
 	for job in jobs:
-		counter = counter + 1
-		print `counter` + " / " + `numgenes`
+		counter += 1
+		print "%s/%s" %(counter,numgenes)
 		result = job()
-	print "done..."
 else:
-	print "No genes to process..."	
+	print "No genes to process."	
 	
 	
 	
 	
+#Close script.
+print "\n\n\n\nCDD script completed."
 	
 	
 	
