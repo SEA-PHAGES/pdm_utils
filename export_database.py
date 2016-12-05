@@ -9,18 +9,6 @@
 
 
 
-#Several bugs that need fixed:
-#
-#
-#1. allow toggle to increment version number or not. you may not always want to change version number prior to exporting database
-#2. expand './' in directory paths
-#3. append '/' to end of directory paths if not there
-#4. check to verify directory paths exist
-
-
-
-
-
 #Import modules
 import time, sys, os, getpass
 import MySQLdb as mdb
@@ -48,25 +36,56 @@ except:
 
 
 
-#Verify the Main folder exists
+#Verify the main folder exists
+home_dir = os.path.expanduser('~')
+
+#First, expand the path if it references the home directory
+if main_dir[0] == "~":
+    main_dir = home_dir + main_dir[1:]
+
+#Second, expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+main_dir = os.path.abspath(main_dir)
+
+
 if main_dir[-1] != "/":
     main_dir = main_dir + "/"
 
 if os.path.isdir(main_dir) == False:
-    print "\n\nInvalid Main directory path.\n\n"
+    print "\n\nInvalid main database directory path.\n\n"
     sys.exit(1)
 
 
 
-#Verify the Backup folder exists
+#Verify the backup folder exists
+
+#First, expand the path if it references the home directory
+if backup_dir[0] == "~":
+    backup_dir = home_dir + backup_dir[1:]
+
+#Second, expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+backup_dir = os.path.abspath(backup_dir)
+
+
+
 if backup_dir[-1] != "/":
     backup_dir = backup_dir + "/"
 
 if os.path.isdir(backup_dir) == False:
-    print "\n\nInvalid Backup directory path.\n\n"
+    print "\n\nInvalid backup database directory path.\n\n"
     sys.exit(1)
 
+
+
 #Verify the query folder exists
+
+#First, expand the path if it references the home directory
+if mysql_query_final_dir[0] == "~":
+    mysql_query_final_dir = home_dir + mysql_query_final_dir[1:]
+
+#Second, expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+mysql_query_final_dir = os.path.abspath(mysql_query_final_dir)
+
+
 if mysql_query_final_dir[-1] != "/":
     mysql_query_final_dir = mysql_query_final_dir + "/"
 
@@ -121,23 +140,54 @@ except:
 
 
 
+#Allow user to control whether the database version number is incremented or not.
+#This option allows this script to be used to re-export databases, if needed, when no changes to the database have been made (and thus no need to update the version).
+version_change = "no"
+version_change_valid = False
+while version_change_valid == False:
+    version_change = raw_input("\nDo you want to increment the database version number? ")
+
+    if (version_change.lower() == "yes" or version_change.lower() == "y"):
+        version_change = "yes"
+        version_change_valid = True
+
+    elif (version_change.lower() == "no" or version_change.lower() == "n"):                         
+        version_change = "no"
+        version_change_valid = True
+
+    else:
+        print "Invalid response."
+
+
+
+
+
+
 #Change database version
+
 try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     version_old = str(cur.fetchone()[0])
     print "Old database version: " + version_old
-    version_new_int = int(version_old) + 1
-    version_new = str(version_new_int)
-    print "New database version: " + version_new
-    statement = """UPDATE version SET version = %s;""" % version_new_int
-    cur.execute(statement)
-    cur.execute("COMMIT")
-    print "Database version has been updated."
-    
+
+    if version_change == "yes":
+
+
+        version_new_int = int(version_old) + 1
+        version_new = str(version_new_int)
+        print "New database version: " + version_new
+        statement = """UPDATE version SET version = %s;""" % version_new_int
+        cur.execute(statement)
+        cur.execute("COMMIT")
+        print "Database version has been updated."
+
+    else:
+        version_new = version_old
+        print "Database version will not be updated."        
     
 except:
-    mdb_exit("\nError updating database version.\nNo changes have been made to the database.")
+    mdb_exit("\nError retrieving database version.\nNo changes have been made to the database.")
 
 
 
