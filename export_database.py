@@ -8,6 +8,19 @@
 
 
 
+
+#Several bugs that need fixed:
+#
+#
+#1. allow toggle to increment version number or not. you may not always want to change version number prior to exporting database
+#2. expand './' in directory paths
+#3. append '/' to end of directory paths if not there
+#4. check to verify directory paths exist
+
+
+
+
+
 #Import modules
 import time, sys, os, getpass
 import MySQLdb as mdb
@@ -21,14 +34,26 @@ try:
     database = sys.argv[1]
     main_dir = sys.argv[2]
     backup_dir = sys.argv[3]
-except:
-    print "Incorrect Parameters: ./export_database.py DATABASE MAIN_DIRECTORY BACKUP_DIRETCTORY"
+    mysql_query_final_dir = sys.argv[4]
+except:    
+    print "\n\n\
+            This is a python script to export Phamerator databases.\n\
+            It requires four arguments:\n\
+            First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
+            Second argument: directory path to the Main folder used to store the new database.\n\
+            Third argument: directory path to the Backup folder used to store frozen backup versions.\n\
+            Fourth argument: directory path to the folder used to stored gene and genome data queried from the new database.\n"
     sys.exit(1)
 
 #Set up MySQL parameters
 mysqlhost = 'localhost'
 username = getpass.getpass(prompt='mySQL username:')
 password = getpass.getpass(prompt='mySQL password:')
+
+
+#MySQL has changed the way it outputs queries. By default, query files are stored in the directory below.
+#I am unable to figure out how to change this to a custom directory. So now the script outputs queries to files in this default directory, and the files get copied to a custom directory.
+mysql_query_default_dir = '/var/lib/mysql-files/'
 
 
 #Exits MySQL
@@ -99,28 +124,6 @@ except:
 
 
 
-#Export genome and gene data to file
-#Filename formatting: DATE_DATABASE_VERSION_genes/genomes.csv
-try:
-    print "Exporting genome data..."
-    filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_new)   
-    statement1 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, phage.SequenceLength, phage.Accession, phage.DateLastModified FROM phage INTO OUTFILE '/tmp/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % filename1
-    cur.execute(statement1)
-
-
-    print "Exporting gene data..."
-    filename2 = "%s_%s_v%s_genes.csv" % (date,database,version_new)
-    statement2 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.name FROM gene JOIN phage on gene.PhageID = phage.PhageID JOIN pham on gene.GeneID = pham.GeneID INTO OUTFILE '/tmp/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % filename2
-    cur.execute(statement2)
-    cur.execute("COMMIT")
-    cur.close()
-    con.autocommit(True)
-    print "Genome and gene data exported."
-        
-except:
-    mdb_exit("\nError exporting genome or gene data to file.")
-
-con.close()
 
 
 
@@ -144,6 +147,40 @@ dumpfile2_handle = open(backup_dir + dumpfile2,'w')
 command_string = "mysqldump -u %s -p%s --skip-comments %s" % (username,password,database)
 command_list = command_string.split(" ")
 proc = subprocess.check_call(command_list,stdout=dumpfile2_handle)
+
+
+
+#Export genome and gene data to file
+#Filename formatting: DATE_DATABASE_VERSION_genes/genomes.csv
+try:
+    print "Exporting genome data..."
+    filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_new)   
+    statement1 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, phage.SequenceLength, phage.Accession, phage.DateLastModified FROM phage INTO OUTFILE '%s/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % (mysql_query_default_dir,filename1)
+    cur.execute(statement1)
+
+    command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename1,mysql_query_final_dir)
+    command_list = command_string.split(" ")
+    proc = subprocess.check_call(command_list)
+
+
+
+    print "Exporting gene data..."
+    filename2 = "%s_%s_v%s_genes.csv" % (date,database,version_new)
+    statement2 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.name FROM gene JOIN phage on gene.PhageID = phage.PhageID JOIN pham on gene.GeneID = pham.GeneID INTO OUTFILE '%s/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % (mysql_query_default_dir,filename2)
+    cur.execute(statement2)
+    cur.execute("COMMIT")
+    cur.close()
+    con.autocommit(True)
+    command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename2,mysql_query_final_dir)
+    command_list = command_string.split(" ")
+    proc = subprocess.check_call(command_list)
+
+    print "Genome and gene data exported."
+        
+except:
+    mdb_exit("\nError exporting genome or gene data to file.")
+
+con.close()
 
 
 
