@@ -45,6 +45,40 @@ except:
             Fourth argument: directory path to the folder used to stored gene and genome data queried from the new database.\n"
     sys.exit(1)
 
+
+
+
+#Verify the Main folder exists
+if main_dir[-1] != "/":
+    main_dir = main_dir + "/"
+
+if os.path.isdir(main_dir) == False:
+    print "\n\nInvalid Main directory path.\n\n"
+    sys.exit(1)
+
+
+
+#Verify the Backup folder exists
+if backup_dir[-1] != "/":
+    backup_dir = backup_dir + "/"
+
+if os.path.isdir(backup_dir) == False:
+    print "\n\nInvalid Backup directory path.\n\n"
+    sys.exit(1)
+
+#Verify the query folder exists
+if mysql_query_final_dir[-1] != "/":
+    mysql_query_final_dir = mysql_query_final_dir + "/"
+
+if os.path.isdir(mysql_query_final_dir) == False:
+    print "\n\nInvalid mysql query directory path.\n\n"
+    sys.exit(1)
+
+
+
+
+
+
 #Set up MySQL parameters
 mysqlhost = 'localhost'
 username = getpass.getpass(prompt='mySQL username:')
