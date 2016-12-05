@@ -35,15 +35,17 @@ except:
 
 
 
-
-#Verify the main folder exists
+#Expand home directory
 home_dir = os.path.expanduser('~')
 
-#First, expand the path if it references the home directory
+
+#Verify the main folder exists
+
+#Expand the path if it references the home directory
 if main_dir[0] == "~":
     main_dir = home_dir + main_dir[1:]
 
-#Second, expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
 main_dir = os.path.abspath(main_dir)
 
 
@@ -58,11 +60,11 @@ if os.path.isdir(main_dir) == False:
 
 #Verify the backup folder exists
 
-#First, expand the path if it references the home directory
+#Expand the path if it references the home directory
 if backup_dir[0] == "~":
     backup_dir = home_dir + backup_dir[1:]
 
-#Second, expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
 backup_dir = os.path.abspath(backup_dir)
 
 
@@ -78,11 +80,11 @@ if os.path.isdir(backup_dir) == False:
 
 #Verify the query folder exists
 
-#First, expand the path if it references the home directory
+#Expand the path if it references the home directory
 if mysql_query_final_dir[0] == "~":
     mysql_query_final_dir = home_dir + mysql_query_final_dir[1:]
 
-#Second, expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
 mysql_query_final_dir = os.path.abspath(mysql_query_final_dir)
 
 

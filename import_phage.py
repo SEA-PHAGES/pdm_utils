@@ -55,13 +55,50 @@ except:
     sys.exit(1)
 
 
-#Verify the genome folder and import table exists
+
+
+
+
+
+
+
+
+#Expand home directory
+home_dir = os.path.expanduser('~')
+
+
+#Verify the genome folder exists
+
+#Add '/' at the end if it's not there
 if phageListDir[-1] != "/":
     phageListDir = phageListDir + "/"
+
+
+#Expand the path if it references the home directory
+if phageListDir[0] == "~":
+    phageListDir = home_dir + phageListDir[1:]
+
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+phageListDir = os.path.abspath(phageListDir)
+
+
 
 if os.path.isdir(phageListDir) == False:
     print "\n\nInvalid input for genome folder.\n\n"
     sys.exit(1)
+
+
+
+
+
+
+#Verify the import table path exists
+#Expand the path if it references the home directory
+if updateFile[0] == "~":
+    updateFile = home_dir + updateFile[1:]
+
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+updateFile = os.path.abspath(updateFile)
 
 if os.path.exists(updateFile) == False:
     print "\n\nInvalid input for import table file.\n\n"
