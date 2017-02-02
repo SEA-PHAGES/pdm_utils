@@ -1381,7 +1381,7 @@ for filename in files:
                 stopCoord = int(strStop)
             else:
                 record_warnings += 1
-                write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the genes other will continue." % (geneID,strStart,strStop))
+                write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue." % (geneID,strStart,strStop))
                 record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
                 continue
 
@@ -1559,7 +1559,19 @@ for filename in files:
             
             
             
-        #Now that all CDS features processed, process the source and organism fields to look for problems
+
+        #Now that all CDS features are processed, run quality control on the data:
+        
+        
+        #Check to see if there are any CDS features processed. If not, then the genbank record does not have any called genes.
+        #The record_summary_cds list contains the column headers, so at minimum, it is length == 1
+        if len(record_summary_cds) == 1:
+            print "\nNo CDS features were found in this record. The genome will still be added to the database."
+            record_errors += question("\nError: no CDS features found in %s." % filename)
+
+
+        #Process the source and organism fields to look for problems
+
 
         #Print the summary of the header information        
         record_summary_header.append(["Record Name",record_name])
