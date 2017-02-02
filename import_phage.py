@@ -760,8 +760,8 @@ for genome_data in remove_data_list:
 if table_errors == 0:
     write_out(output_file,"\nImport table verified with 0 errors.")
     write_out(output_file,"\nList of all actions to be implemented:")
-    write_out(output_file,"\nApplicable actions per field: " + str(column_action_headers))
-    write_out(output_file,"\nField headers: " + str(column_headers))      
+    #write_out(output_file,"\nApplicable actions per field: " + str(column_action_headers))
+    #write_out(output_file,"\nField headers: " + str(column_headers))      
     for genome_data in genome_data_list:
         write_out(output_file,"\n" + str(genome_data))
     raw_input("\nPress ENTER to proceed to next import stage.")
@@ -1626,42 +1626,45 @@ for filename in files:
 
 
 
-        #See if there are any host name typos in the header block
-        phageHost_trim = phageHost
-        if phageHost_trim == "Mycobacterium":
-            phageHost_trim = phageHost_trim[:-3]
-            
-        pattern3 = re.compile('^' + phageHost_trim)
-
-        if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
-            print "\nRecord Definition does not appear to have same host data as found in import table."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
-
-        if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
-        
-            print "\nRecord Source does not appear to have same host data as found in import table."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
-
-        if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
-        
-            print "\nRecord Organism does not appear to have same host data as found in import table."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
-
-        if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
-        
-            print "\nSource Feature Organism does not appear to have same host data as found in import table."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
-        
-        #Host and Lab_Host data may not have been present, so skip if it is blank
-        if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
-            
-            print "\nSource Feature Host does not appear to have same host data as found in import table."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
+        #See if there are any host name typos in the header block.
+        #Skip this step if it is a Draft genome, because it won't correctly have this information.
+        if phageStatus != "draft":
+            phageHost_trim = phageHost
+            if phageHost_trim == "Mycobacterium":
+                phageHost_trim = phageHost_trim[:-3]
                 
-        if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
+            pattern3 = re.compile('^' + phageHost_trim)
+
+
+            if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
+                print "\nRecord Definition does not appear to have same host data as found in import table."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
+
+            if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
             
-            print "\nSource Feature Lab Host does not appear to have same host data as found in import table."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
+                print "\nRecord Source does not appear to have same host data as found in import table."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
+
+            if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
+            
+                print "\nRecord Organism does not appear to have same host data as found in import table."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
+
+            if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
+            
+                print "\nSource Feature Organism does not appear to have same host data as found in import table."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
+            
+            #Host and Lab_Host data may not have been present, so skip if it is blank
+            if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
+                
+                print "\nSource Feature Host does not appear to have same host data as found in import table."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
+                    
+            if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
+                
+                print "\nSource Feature Lab Host does not appear to have same host data as found in import table."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
 
         
         
@@ -1836,7 +1839,8 @@ for filename in files:
         success_action_file_writer.writerow(matchedData)
         script_warnings += record_warnings
         script_errors += record_errors
-        raw_input("\nPress ENTER to proceed to next file.")
+        print "Processing of %s is complete." %filename
+        #raw_input("\nPress ENTER to proceed to next file.")
         
       
 
