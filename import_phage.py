@@ -639,7 +639,22 @@ for row in file_reader:
         if row[6] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID. This genome cannot be dropped from the database." %row[6])
             table_errors += 1
-            
+        #Compare phage names. If replacing a genome, the genome names should be spelled the same way (excluding any "_Draft" suffix).
+        if row[1][-6:].lower() == "_draft":
+            name_check_new = row[1][:-6]
+        else:
+            name_check_new = row[1]
+        
+        if row[6][-6:].lower() == "_draft":
+            name_check_old = row[6][:-6]
+        else:
+            name_check_old = row[6]
+
+        if name_check_new != name_check_old:
+            print "%s to replace %s is not spelled the same." %(row[1],row[6])
+            table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
+       
+        
     else:
         pass
 

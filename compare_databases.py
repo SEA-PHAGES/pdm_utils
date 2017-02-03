@@ -355,21 +355,16 @@ for genome_tuple in current_genome_data_tuples:
         if phameratorCluster != phagesdbCluster:
             print "Phamerator Cluster: " + phameratorCluster
             print "Phagesdb Cluster: " + phagesdbCluster
-            write_out(report_file,"\nError: Phamerator Cluster %s does not match with phagesdb Cluster %s or Subcluster %s for phageID %s." %(phameratorCluster,phagesdbCluster,phagesdbSubcluster,phameratorId))
+            write_out(report_file,"\nError: Phamerator Cluster %s does not match with phagesdb Cluster %s for phageID %s." %(phameratorCluster,phagesdbCluster,phameratorId))
             total_errors += 1
             corrections_needed += 1
         
     elif phameratorCluster != phagesdbSubcluster:
             print "Phamerator Cluster: " + phameratorCluster
             print "Phagesdb Subcluster: " + phagesdbSubcluster
-            write_out(report_file,"\nError: Phamerator Cluster %s does not match with phagesdb Cluster %s or Subcluster %s for phageID %s." %(phameratorCluster,phagesdbCluster,phagesdbSubcluster,phameratorId))
+            write_out(report_file,"\nError: Phamerator Cluster %s does not match with phagesdb Subcluster %s for phageID %s." %(phameratorCluster,phagesdbSubcluster,phameratorId))
             total_errors += 1
             corrections_needed += 1
-
-
-    #Verify nucleotide sequence
-
-
 
 
     #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
@@ -377,31 +372,14 @@ for genome_tuple in current_genome_data_tuples:
         import_table_writer.writerow(["update",phameratorId,phagesdbHost,phagesdbClusterUpdate,phameratorStatus,"none","none"])
     
           
-print matched_count
-print unmatched_count
-print unmatched_phageId_list    
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+write_out(report_file,"\nMatched phage tally: %s." %matched_count)
+write_out(report_file,"\nUnmatched phage tally: %s." %unmatched_count)
+write_out(report_file,"\nUnmatched phages:")
+for element in unmatched_phageId_list:
+    write_out(report_file,"\n%s" %element)
 
     
     
