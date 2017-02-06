@@ -44,6 +44,54 @@ except:
 
 
 
+#Expand home directory
+home_dir = os.path.expanduser('~')
+
+
+
+#Verify the output path exists
+
+#Add '/' at the end if it's not there
+if output_path[-1] != "/":
+    output_path = output_path + "/"
+
+#Expand the path if it references the home directory
+if output_path[0] == "~":
+    output_path = home_dir + output_path[1:]
+
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+output_path = os.path.abspath(output_path)
+
+
+if os.path.isdir(output_path) == False:
+    print "\n\nInvalid input for output folder.\n\n"
+    sys.exit(1)
+
+
+
+#Create output directory and processing file
+date = time.strftime("%Y%m%d")
+output_folder = '%s_retrieved_files' % date
+new_dir = os.path.join(output_path,output_folder)
+
+try:
+    os.mkdir(new_dir)
+except:
+    print "\nUnable to create output folder: %s" % new_dir
+    sys.exit(1)
+
+os.chdir(new_dir)
+
+
+
+
+
+
+
+
+
+
+
 
 #Set up MySQL parameters
 mysqlhost = 'localhost'
@@ -64,7 +112,7 @@ print "\n\n"
 batch_size = ""
 batch_size_valid = False
 while batch_size_valid == False:
-    batch_size = raw_input("Record retrieval batch size (must be greater than 0): ")
+    batch_size = raw_input("Record retrieval batch size (must be greater than 0 and recommended is 100-200): ")
     print "\n\n"
     if batch_size.isdigit():
         batch_size = int(batch_size)
@@ -77,11 +125,6 @@ while batch_size_valid == False:
     else:
         print "Invalid choice."
         print "\n\n"
-
-
-
-
-print batch_size
 
 
 
@@ -105,6 +148,9 @@ def mdb_exit(message):
 
 
 
+
+
+
 #2 Retrieve current database information and create list of phages to check for updates at NCBI
 
 
@@ -117,8 +163,6 @@ def mdb_exit(message):
 #4 = status
 #5 = accession
 #6 = date last modified
-
-
 
 try:
     con = mdb.connect(mysqlhost, username, password, database)
@@ -157,30 +201,8 @@ tally_retrieved_for_update = 0
 
 
 
-
-
-
-
-
-
-
 tally_total = len(current_genome_data_tuples)
 
-
-
-#Create output directory and processing file
-date = time.strftime("%Y%m%d")
-output_folder = '%s_retrieved_files' % date
-new_dir = os.path.join(output_path,output_folder)
-
-try:
-    os.mkdir(new_dir)
-except:
-    print "\nUnable to create output folder: %s" % new_dir
-    sys.exit(1)
-
-
-os.chdir(new_dir)
 
 
 processing_results_file = '%s_processing_results.csv' % date
@@ -219,11 +241,12 @@ for phage_tuple in current_genome_data_tuples:
         print phage_list[5]
 
 
-
     #Singleton Cluster values should be converted from None to 'Singleton'
     if phage_list[3] is None:
         phage_list[3] = "Singleton"
-        print "PhageID %s Cluster changed to Singleton." %phage_list[0]
+        print "PhageID %s Cluster converted to Singleton." %phage_list[0]
+
+
  
     #Make sure there is a date in the DateLastModified field
     print phage_list
@@ -241,10 +264,12 @@ for phage_tuple in current_genome_data_tuples:
         tally_not_final += 1
         processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','not final status'])
 
-    elif phage_list[5] == "":
+    elif phage_list[5] == "" or phage_list[5] is None:
         print "PhageID %s does not have accession number." %phage_list[0]
         tally_no_accession += 1
         processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','no accession'])
+
+
     
     elif phage_list[5] in unique_accession_dict.keys():
         print "PhageID %s accession %s is duplicated in the Phamerator database." %(phage_list[0],phage_list[5])
@@ -253,12 +278,17 @@ for phage_tuple in current_genome_data_tuples:
     else:
         unique_accession_dict[phage_list[5]] = phage_list
 
+
+
 #For values that were not unique, remove all accession numbers from the dictionary
 temp_list = []
 for element in duplicate_accession_list:
     print element
     if element[5] in unique_accession_dict.keys():
         temp_list.append(unique_accession_dict.pop(element[5]))
+
+
+
 
 #Now add these elements from dictionary to the duplicate data list
 for element in temp_list:
@@ -287,6 +317,8 @@ Entrez.tool = "GenbankRecordRetrievalScript"
 #Create batches of accessions
 unique_accession_list = unique_accession_dict.keys()
 
+print "List of accessions to be retrieved:"
+print unique_accession_list
 
 #Add [ACCN] field to each accession number
 index = 0
@@ -304,6 +336,10 @@ retrieval_error_list = []
 print len(unique_accession_list)
 
 print range(0,len(unique_accession_list),batch_size)
+
+
+#When retrieving in batch sizes, first create the list of values indicating which indices of the unique_accession_list should be used to create each batch
+#For instace, if there are five accessions, batch size of two produces indices = 0,2,4
 for batch_index_start in range(0,len(unique_accession_list),batch_size):
 
     
@@ -324,7 +360,6 @@ for batch_index_start in range(0,len(unique_accession_list),batch_size):
     print esearch_term
     
     print "Ready to retrieve"
-    raw_input('Waiting to continue')
     
 
     #Use esearch for each accession
