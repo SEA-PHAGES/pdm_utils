@@ -22,9 +22,8 @@ try:
 except:
     print "\n\n\
             This is a python script to retrieve auto-annotated genomes from PECAAN to import into Phamerator.\n\
-            It requires two arguments:\n\
-            First argument: name of MySQL database that will be checked (e.g. 'Actino_Draft').\n\
-            Second argument: directory path to where the consistency report should be made (csv-formatted).\n\
+            It requires one argument:\n\
+            First argument: directory path to where the new genomes and associated import table should be made (csv-formatted).\n\
                     1. Action to implement on the database (add, remove, replace, update)\n\
                     2. PhageID to add or update\n\
                     3. Host genus of the updated phage\n\
