@@ -18,12 +18,14 @@ import json, urllib, urllib2
 
 #Get the command line parameters
 try:
-    updateFileDir = sys.argv[1] #What is the directory into which the report should go
+    phage_file = sys.argv[1] #What is the name of the file that contains the list of new available phage annotations?
+    updateFileDir = sys.argv[2] #What is the directory into which the report should go?
 except:
     print "\n\n\
             This is a python script to retrieve manually annotated Genbank flatfiles to import into Phamerator.\n\
-            It requires one arguments:\n\
-            First argument: directory path to where the phage list is stored and where new genomes and associated import table should be made (csv-formatted).\n\
+            It requires two arguments:\n\
+            First argument: directory path to the file indicating which phages to retrieve (csv-formatted)\n\
+            Second argument: directory path to where new genomes and associated import table should be made (csv-formatted).\n\
                     1. Action to implement on the database (add, remove, replace, update)\n\
                     2. PhageID to add or update\n\
                     3. Host genus of the updated phage\n\
@@ -39,7 +41,36 @@ except:
 home_dir = os.path.expanduser('~')
 
 
-#Verify the folder for the consistency report exists
+
+
+
+
+
+
+
+
+#Verify the path exists for the phage list file
+#Expand the path if it references the home directory
+if phage_file[0] == "~":
+    phage_file = home_dir + phage_file[1:]
+
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+phage_file = os.path.abspath(phage_file)
+
+if os.path.exists(phage_file) == False:
+    print "\n\nInvalid input for phage list file.\n\n"
+    sys.exit(1)
+
+
+
+
+
+
+
+
+
+
+#Verify the folder for the new annotations exists
 
 #Add '/' at the end if it's not there
 if updateFileDir[-1] != "/":
@@ -82,9 +113,8 @@ os.chdir(output_path)
 
 #Retrieve list of genomes with new annotations available
 #Retrieved file should be tab-delimited text file, each row is a newly sequenced phage
-phage_file = '/home/cbowman/Documents/PhameratorDB_Management/Updates/temp/new_phages.txt'
 phage_file_handle = open(phage_file,'r')
-phage_file_reader = csv.reader(phage_file_handle,delimiter='\t')
+phage_file_reader = csv.reader(phage_file_handle)
 
 
 
@@ -108,17 +138,30 @@ failed_list = []
 
 for new_phage in phage_file_reader:
 
-
-    print "Attempting to retrieve %s from phagesdb..." %new_phage[0]
+    print "\n\n"
+    #print "\nAttempting to retrieve %s from phagesdb..." %new_phage[0]
     #Retrieve phage-specific data from phagesdb
-    phage_url = api_prefix + new_phage + api_suffix
+    #Note: urlopen is not case sensitive, so while this script tests for correct spelling, it does not test for correct capitalization.
+    #However, the import script tests for that.    
+    phage_url = api_prefix + new_phage[0] + api_suffix
     online_data_json = urllib.urlopen(phage_url)
     online_data_dict = json.loads(online_data_json.read())
 
 
+    #If the phage is not found in phagesdb, then the phage url will return a dictionary with a single key ("detail") and value ("not found.")
+    #Not sure if "detail" key is present in other phage urls, but they probably do not have the same value
+    try:
+        if online_data_dict["detail"] == "Not found.":
+            print "Unable to locate URL for phage %s." %new_phage[0]
+            failed_tally += 1
+            failed_list.append(new_phage[0])
+            continue
+        else:
+            print "URL found for phage %s." %new_phage[0]
+    except:
+        print "URL found for phage %s." %new_phage[0]
+
     #Check to see if there is a flatfile stored on phagesdb for this phage
-    print online_data_dict["qced_genbank_file"]
-    
     if online_data_dict["qced_genbank_file"] is not None:
         flatfile_url = online_data_dict["qced_genbank_file"]
 
@@ -161,7 +204,7 @@ for new_phage in phage_file_reader:
 
 
 if retrieved_tally > 0:
-    print "The following %s phage(s) were successfully retrieved:" %retrieved_tally
+    print "\n\nThe following %s phage(s) were successfully retrieved:" %retrieved_tally
     for element in retrieved_list:
         print element
     
@@ -170,7 +213,7 @@ else:
 
 
 if failed_tally > 0:
-    print "The following %s phage(s) failed to be retrieved:" %failed_tally
+    print "\n\nThe following %s phage(s) failed to be retrieved:" %failed_tally
     for element in failed_list:
         print element
 
