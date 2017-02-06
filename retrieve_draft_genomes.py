@@ -69,7 +69,6 @@ output_path = os.path.join(updateFileDir,output_folder)
 
 
 try:
-
     os.mkdir(output_path)
 except:
     print "\nUnable to create output folder: %s" %output_path
@@ -79,12 +78,8 @@ os.chdir(output_path)
 
 #Retrieve list of unphamerated genomes
 #Retrieved file should be tab-delimited text file, each row is a newly sequenced phage
-phage_file = '/home/cbowman/Documents/PhameratorDB_Management/Updates/temp/new_phages.txt'
-
-
-phage_file_handle = open(phage_file,'r')
-phage_file_reader = csv.reader(phage_file_handle,delimiter='\t')
-
+phage_list_url = 'http://phagesdb.org/data/unphameratedlist'
+response = urllib2.urlopen(phage_list_url)
 
 
 
@@ -106,15 +101,15 @@ retrieved_list = []
 failed_list = []
 
 
+#Iterate through each row in the file
+for new_phage in response:
 
-for new_phage in phage_file_reader:
 
     #PECAAN should be able to generate any phage that is listed on phagesdb
-    #print new_phage
-    print "Attempting to retrieve %s from PECAAN..." %new_phage[0]
-    pecaan_link = pecaan_prefix + new_phage[0]
-    pecaan_file = new_phage[0] + "_Draft.txt"
-    print pecaan_link
+    new_phage = new_phage.strip() #Remove \t character at the end of each row
+    pecaan_link = pecaan_prefix + new_phage
+    pecaan_file = new_phage + "_Draft.txt"
+    #print pecaan_link
     try:
         response = urllib2.urlopen(pecaan_link)
         pecaan_file_handle = open(pecaan_file,'w')
@@ -131,16 +126,18 @@ for new_phage in phage_file_reader:
         #4 = Status
         #5 = Gene description field
         #6 = Phage to replace
-        import_table_writer.writerow(["add",new_phage[0],"retrieve","retrieve","draft","product","none"])
-
+        import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none"])
+        print "Retrieved %s from PECAAN." %new_phage
         retrieved_tally += 1
-        retrieved_list.append(new_phage[0])
+        retrieved_list.append(new_phage)
 
     except:
-        print "Error: unable to retrieve %s draft genome." %new_phage[0]
+        print "Error: unable to retrieve %s draft genome." %new_phage
         failed_tally += 1
-        failed_list.append(new_phage[0])
+        failed_list.append(new_phage)
 
+
+response.close()
 
 
 
