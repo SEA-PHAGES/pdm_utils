@@ -11,15 +11,14 @@ import MySQLdb as mdb
 
 #Built-in libraries
 import time, sys, os, getpass, csv, re, shutil
-import json, urllib, urllib2
+import json, urllib, urllib2, time
 
 
 
 
 #Get the command line parameters
 try:
-    database = sys.argv[1] #What Phamerator database should be compared to phagesdb?
-    updateFileDir = sys.argv[2] #What is the directory into which the report should go
+    updateFileDir = sys.argv[1] #What is the directory into which the report should go
 except:
     print "\n\n\
             This is a python script to retrieve auto-annotated genomes from PECAAN to import into Phamerator.\n\
@@ -63,23 +62,34 @@ if os.path.isdir(updateFileDir) == False:
 
 
 
+#Create output directories
+date = time.strftime("%Y%m%d")
+
+output_folder = '%s_new_draft_genomes' % date
+output_path = os.path.join(updateFileDir,output_folder)
 
 
+try:
 
+    os.mkdir(output_path)
+except:
+    print "\nUnable to create output folder: %s" %output_path
+    sys.exit(1)
+
+os.chdir(output_path)
 
 #Retrieve list of unphamerated genomes
 #Retrieved file should be tab-delimited text file, each row is a newly sequenced phage
-phage_file = '/home/cbowman/Documents/Phamerator/Updates/temp/new_phages.txt'
+phage_file = '/home/cbowman/Documents/PhameratorDB_Management/Updates/temp/new_phages.txt'
+
 
 phage_file_handle = open(phage_file,'r')
-phage_file_reader = csv.reader(phage_file_handle,sep='\t')
+phage_file_reader = csv.reader(phage_file_handle,delimiter='\t')
 
 
 
 
-
-
-
+    
 #Open file to create import table with changes that need to be implemented
 import_table_file = open(os.path.join(updateFileDir,output_folder,date + "_draft_genome_import_table.csv"), "w")
 import_table_writer = csv.writer(import_table_file)
@@ -91,16 +101,29 @@ import_table_writer = csv.writer(import_table_file)
 
 #Retrieve auto-annotated genomes from PECAAN
 pecaan_prefix = 'https://discoverdev.kbrinsgd.org/phameratoroutput/phage/'
+retrieved_tally = 0
+failed_tally = 0
+retrieved_list = []
+failed_list = []
+
+
 
 for new_phage in phage_file_reader:
 
     #PECAAN should be able to generate any phage that is listed on phagesdb
-    pecaan_link = pecaan_prefix + '/' + new_phage
-    pecaan_file = new_phage + "_Draft.txt'
+    #print new_phage
+    print "Attempting to retrieve %s from PECAAN..." %new_phage[0]
+    pecaan_link = pecaan_prefix + new_phage[0]
+    pecaan_file = new_phage[0] + "_Draft.txt"
     print pecaan_link
     try:
-        urllib2.urlretrieve(pecaan_link,pecaan_file)
-
+        response = urllib2.urlopen(pecaan_link)
+        pecaan_file_handle = open(pecaan_file,'w')
+        pecaan_file_handle.write(response.read())
+        response.close()
+        pecaan_file_handle.close()
+        
+        
         #Create the new import ticket
         #0 = Import action
         #1 = New phageID
@@ -109,24 +132,39 @@ for new_phage in phage_file_reader:
         #4 = Status
         #5 = Gene description field
         #6 = Phage to replace
-        import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none"])
+        import_table_writer.writerow(["add",new_phage[0],"retrieve","retrieve","draft","product","none"])
 
-
+        retrieved_tally += 1
+        retrieved_list.append(new_phage[0])
 
     except:
-        print "Error: unable to retrieve %s draft genome." %new_phage
+        print "Error: unable to retrieve %s draft genome." %new_phage[0]
+        failed_tally += 1
+        failed_list.append(new_phage[0])
 
 
 
 
+if retrieved_tally > 0:
+    print "The following %s phage(s) were successfully retrieved:" %retrieved_tally
+    for element in retrieved_list:
+        print element
+    
+else:
+    print "No new draft genomes available."
 
 
+if failed_tally > 0:
+    print "The following %s phage(s) failed to be retrieved:" %failed_tally
+    for element in failed_list:
+        print element
 
-
+else:
+    print "No phages failed to be retrieved."
 
 
 #Close script.
-print "All new sequences downloaded.")  
+print "\n\n\nDraft genome retrieval script completed."
 import_table_file.close()
 
 
