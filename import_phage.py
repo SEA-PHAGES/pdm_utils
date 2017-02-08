@@ -810,6 +810,7 @@ for genome_data in update_data_list:
     update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
+
     #Create the statement to update Cluster.
     update_statements.append(create_cluster_statement(genome_data[1],genome_data[3]))
 
@@ -1194,6 +1195,14 @@ for filename in files:
             pass
            
 
+        #Determine if the RetrieveNCBIRecord should be turned on or not
+        #If it is a Draft genome, set to 0 (OFF). Otherwise set update to 1 (ON)
+        if genome_data[4] != "draft":
+            ncbi_update_status = '1'
+        else:
+            ncbi_update_status = '0'
+
+
         #Create list of phage data, then append it to the SQL statement
         #0 = phageName or basename
         #1 = accessionNum
@@ -1216,8 +1225,11 @@ for filename in files:
         phage_data_list.append(seqGC)
         phage_data_list.append(phageStatus)
         phage_data_list.append(date)
+        phage_data_list.append(ncbi_update_status)
+
+
         
-        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s")""" % (phage_data_list[0],phage_data_list[1],phage_data_list[2],phage_data_list[3],phage_data_list[4],phage_data_list[5],phage_data_list[6],phage_data_list[7],phage_data_list[8]))
+        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified, RetrieveNCBIRecord) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s")""" % (phage_data_list[0],phage_data_list[1],phage_data_list[2],phage_data_list[3],phage_data_list[4],phage_data_list[5],phage_data_list[6],phage_data_list[7],phage_data_list[8],phage_data_list[9]))
         
         if use_basename == "yes":
             add_replace_statements.append(create_cluster_statement(basename,phageCluster))

@@ -163,6 +163,7 @@ def mdb_exit(message):
 #4 = status
 #5 = accession
 #6 = date last modified
+#7 = retrieve NCBI record
 
 try:
     con = mdb.connect(mysqlhost, username, password, database)
@@ -176,7 +177,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Cluster,status,Accession,DateLastModified FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Cluster,status,Accession,DateLastModified,RetrieveNCBIRecord FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -192,7 +193,7 @@ con.close()
 
 #Initialize tally variables
 tally_total = 0
-tally_not_final = 0
+tally_not_updated = 0
 tally_no_accession = 0
 tally_duplicate_accession = 0
 tally_retrieval_failure = 0
@@ -227,7 +228,7 @@ processing_results_file_writer.writerow(file_headers)
 unique_accession_dict = {}
 duplicate_accession_list = []
 
-#Add to dictionary if status is 'final', and if there is an accession number
+#Add to dictionary if 1) the genome is set to be automatically updated and 2) if there is an accession number
 for phage_tuple in current_genome_data_tuples:
 
     phage_list = list(phage_tuple)
@@ -258,18 +259,17 @@ for phage_tuple in current_genome_data_tuples:
    
    
    
-    #Now determine what to do with the data    
-    if phage_list[4] != 'final':
-        print "PhageID %s is not 'final' status." %phage_list[0]
-        tally_not_final += 1
-        processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','not final status'])
+    #Now determine what to do with the data
+    print phage_list[7]    
+    if phage_list[7] != 1:
+        print "PhageID %s is not set to be automatically updated by NCBI record." %phage_list[0]
+        tally_not_updated += 1
+        processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','no automatic update'])
 
     elif phage_list[5] == "" or phage_list[5] is None:
         print "PhageID %s does not have accession number." %phage_list[0]
         tally_no_accession += 1
         processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','no accession'])
-
-
     
     elif phage_list[5] in unique_accession_dict.keys():
         print "PhageID %s accession %s is duplicated in the Phamerator database." %(phage_list[0],phage_list[5])
@@ -310,7 +310,7 @@ for data_list in duplicate_accession_list:
 
 
 Entrez.email = contact_email
-Entrez.tool = "GenbankRecordRetrievalScript"
+Entrez.tool = "NCBIRecordRetrievalScript"
 
 
 
@@ -442,7 +442,7 @@ for retrieved_record in retrieved_record_list:
 
         print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_data[6])
         tally_retrieved_for_update += 1
-        processing_results_file_writer.writerow([phamerator_data[0],phamerator_data[1],phamerator_data[5],phamerator_data[4],phamerator_data[6],retrieved_record_date,'record to be updated'])
+        processing_results_file_writer.writerow([phamerator_data[0],phamerator_data[1],phamerator_data[5],phamerator_data[4],phamerator_data[6],retrieved_record_date,'update record'])
 
 
         #Now output genbank-formatted file to be uploaded to Phamerator and create the import table action
@@ -471,7 +471,7 @@ processing_results_file_handle.close()
 
 #Print summary of script
 print "Number of genomes in Phamerator: %s" %tally_total
-print "Number of genomes that are NOT final: %s" %tally_not_final
+print "Number of genomes that are NOT updated: %s" %tally_not_updated
 print "Number of final genomes with no accession: %s" %tally_no_accession
 print "Number of duplicate accessions: %s" %tally_duplicate_accession
 print "Number of records that failed to be retrieved: %s" %tally_retrieval_failure
@@ -479,7 +479,7 @@ print "Number of records retrieved that are not more recent than Phamerator reco
 print "Number of records retrieved that should be updated in Phamerator: %s" %tally_retrieved_for_update
 
 
-processing_check = tally_total - tally_not_final - tally_no_accession - tally_duplicate_accession - tally_retrieval_failure - tally_retrieved_not_new - tally_retrieved_for_update
+processing_check = tally_total - tally_not_updated - tally_no_accession - tally_duplicate_accession - tally_retrieval_failure - tally_retrieved_not_new - tally_retrieved_for_update
 if processing_check != 0:
     print "Processing check: %s" %processing_check
     print "Error: the processing of phages was not tracked correctly."
