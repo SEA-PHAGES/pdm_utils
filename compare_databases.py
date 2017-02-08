@@ -11,7 +11,7 @@ import MySQLdb as mdb
 
 #Built-in libraries
 import time, sys, os, getpass, csv, re, shutil
-import json, urllib
+import json, urllib, urllib2
 
 
 
@@ -77,24 +77,30 @@ print "\n\n"
 
 
 
+#Decide whether to compare nucleotide sequences or not.
+#Since this may take a long time, and generate thousands of requests to phagesdb, it may not need to be performed very often.
+check_sequence_valid = False
+while check_sequence_valid == False:
+    check_sequence_value = raw_input("Do you want to compare all genome sequences? (yes or no): ")
+    if (check_sequence_value.lower() == "yes" or check_sequence_value.lower() == "y"):
+        check_sequence_valid = True
+        check_sequence = True
+    elif (check_sequence_value.lower() == "no" or check_sequence_value.lower() == "n"):                         
+        check_sequence_valid = True
+        check_sequence = False
+    else:
+        print "Invalid response."
+
+
 
 
 
 #Define several functions
 
 #Print out statements to both the terminal and to the output file
-#For SQL statements that may be long (>150 characters), don't print entire statements.
 def write_out(filename,statement):
-    if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"): 
-        if len(statement) > 150:
-            print statement[:150] + "...(statement truncated)"
-            filename.write(statement[:150] + "...(statement truncated)")
-        else:
-            print statement
-            filename.write(statement)
-    else:
-        print statement
-        filename.write(statement)
+    print statement
+    filename.write(statement)
 
 
 #For questionable data, user is requested to clarify if the data is correct or not
@@ -179,7 +185,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,SequenceLength FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -267,6 +273,7 @@ for genome_tuple in current_genome_data_tuples:
     phameratorSequence = genome_tuple[3]
     phameratorStatus = genome_tuple[4]
     phameratorCluster= genome_tuple[5]
+    phameratorSize = int(genome_tuple[6])
 
     #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
     if phameratorCluster is None:
@@ -300,7 +307,7 @@ for genome_tuple in current_genome_data_tuples:
         matched_count += 1
 
     else:
-        write_out(report_file,"\nError: unable to find phageID %s or phageName %s from phagesdb." %(genome_tuple[0],genome_tuple[1]))
+        write_out(report_file,"\nError: unable to find phageID %s or phageName %s from phagesdb." %(phameratorId,phameratorName))
         matched_phagesdb_data = ""
         unmatched_count += 1
         unmatched_phageId_list.append(phameratorId)
@@ -311,7 +318,7 @@ for genome_tuple in current_genome_data_tuples:
     #Retrieve specific matched data
     phagesdbName = matched_phagesdb_data['phage_name']
     phagesdbHost = matched_phagesdb_data['isolation_host']['genus']
-    #phagesdbSequence = 
+    phagesdbSize = int(matched_phagesdb_data['genome_length'])
 
 
     if matched_phagesdb_data['pcluster'] is None:
@@ -372,6 +379,68 @@ for genome_tuple in current_genome_data_tuples:
         import_table_writer.writerow(["update",phameratorId,phagesdbHost,phagesdbClusterUpdate,phameratorStatus,"none","none"])
     
           
+
+    #Compare recorded genome sizes
+    if phameratorSize != phagesdbSize:
+        write_out(report_file,"\nError: Phamerator genome size %s does not match phagesdb genome size %s for phageID %s." %(phameratorSize,phagesdbSize,phameratorId))
+        total_errors += 1
+
+
+    #Compare genome sequence (if this option was selected)
+    #phagesdb stores the 'official' nucleotide sequence, so make sure the sequence in Phamerator matches the sequence in phagesdb
+    if check_sequence == True:
+        
+        #First retrieve the fasta file containing the sequence
+        
+        #Check to see if there is a fasta file stored on phagesdb for this phage
+        if matched_phagesdb_data["fasta_file"] is not None:
+            fastafile_url = matched_phagesdb_data["fasta_file"]
+                        
+            response = urllib2.urlopen(fastafile_url)
+            retrieved_fasta_file = response.read()
+            response.close()
+            
+            #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
+            #If you split by newline, the header is retained in the first list element
+            split_fasta_data = retrieved_fasta_file.split('\n')
+            phagesdbSequence = ""
+            index = 1
+            while index < len(split_fasta_data):
+                phagesdbSequence = phagesdbSequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
+                index += 1
+
+
+            phagesdbSequence_size = len(phagesdbSequence)
+            
+            #Compare phagesdb recorded genome size with genome size based on the stored fasta sequence
+            if phagesdbSize != phagesdbSequence_size:
+                write_out(report_file,"\nError: phagesdb genome size %s does not match fasta sequence genome size %s for phagesdb phageName %s." %(phagesdbSize,phagesdbSequence_size,phagesdbName))
+                total_errors += 1
+            
+            #Compare phamerator recorded genome size with genome size based on the stored fasta sequence
+            if phameratorSize != phagesdbSequence_size:
+                write_out(report_file,"\nError: Phamerator genome size %s does not match fasta sequence genome size %s for phageID %s." %(phameratorSize,phagesdbSequence_size,phameratorId))
+                total_errors += 1
+
+            
+            #Compare genome sequences stored in Phamerator and phagesdb fasta file
+            if phameratorSequence.lower() != phagesdbSequence.lower():
+                write_out(report_file,"\nError: Genome sequences stored in Phamerator and phagesdb do not match for phageID %s." %phameratorId)
+
+                print phagesdbSequence[:10]
+                print phagesdbSequence[-10:]
+                print len(phagesdbSequence)
+                print phameratorSequence[:10]
+                print phameratorSequence[-10:]
+                print len(phameratorSequence)
+                
+
+                total_errors += 1
+                
+
+        else:
+            write_out(report_file,"\nError: no fasta file found on phagesdb for phageID %s." %phameratorID)
+            total_errors += 1            
 
 
 
