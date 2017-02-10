@@ -459,8 +459,14 @@ for retrieved_record in retrieved_record_list:
 
 
         #Now output genbank-formatted file to be uploaded to Phamerator and create the import table action
+        #First remove the "_Draft" suffix if it is present
+        if phamerator_data[0][-6:].lower() == '_draft':
+            import_table_name = phamerator_data[0][:-6]
+        else:
+            import_table_name = phamerator_data[0]
+        
         SeqIO.write(retrieved_record, phamerator_data[1].lower() + "__" + retrieved_record_accession + ".gb","genbank")
-        import_table_data_list = ['replace',phamerator_data[0],phamerator_data[2],phamerator_data[3],'final','product',phamerator_data[0]]
+        import_table_data_list = ['replace',import_table_name,phamerator_data[2],phamerator_data[3],'final','product',phamerator_data[0]]
         import_table_file_writer.writerow(import_table_data_list)
 
 
