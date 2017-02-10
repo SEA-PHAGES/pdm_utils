@@ -71,7 +71,7 @@ if os.path.isdir(output_path) == False:
 
 #Create output directory and processing file
 date = time.strftime("%Y%m%d")
-output_folder = '%s_retrieved_files' % date
+output_folder = '%s_retrieved_ncbi_files' % date
 new_dir = os.path.join(output_path,output_folder)
 
 try:
@@ -163,7 +163,7 @@ def mdb_exit(message):
 #4 = status
 #5 = accession
 #6 = date last modified
-#7 = retrieve NCBI record
+#7 = retrieve record
 
 try:
     con = mdb.connect(mysqlhost, username, password, database)
@@ -177,7 +177,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Cluster,status,Accession,DateLastModified,RetrieveNCBIRecord FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Cluster,status,Accession,DateLastModified,RetrieveRecord FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -211,7 +211,6 @@ processing_results_file_handle = open(processing_results_file,"w")
 processing_results_file_writer = csv.writer(processing_results_file_handle)
 file_headers = ['PhageID','PhageName','Accession','Status','PhameratorDate','RetrievedRecordDate','Note']
 processing_results_file_writer.writerow(file_headers)
-
 
 
 
@@ -267,7 +266,7 @@ for phage_tuple in current_genome_data_tuples:
         processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','no automatic update'])
 
     elif phage_list[5] == "" or phage_list[5] is None:
-        print "PhageID %s does not have accession number." %phage_list[0]
+        print "PhageID %s is set to be automatically update, but it does not have accession number." %phage_list[0]
         tally_no_accession += 1
         processing_results_file_writer.writerow([phage_list[0],phage_list[1],phage_list[5],phage_list[4],phage_list[6],'NA','no accession'])
     
@@ -326,16 +325,17 @@ while index < len(unique_accession_list):
     unique_accession_list[index] = unique_accession_list[index] + "[ACCN]"
     index += 1
 
-print unique_accession_list
+#print unique_accession_list
 
 
 retrieved_record_list = []
 retrieval_error_list = []
 
 
-print len(unique_accession_list)
+#print len(unique_accession_list)
+#print range(0,len(unique_accession_list),batch_size)
 
-print range(0,len(unique_accession_list),batch_size)
+
 
 
 #When retrieving in batch sizes, first create the list of values indicating which indices of the unique_accession_list should be used to create each batch
@@ -406,9 +406,22 @@ for batch_index_start in range(0,len(unique_accession_list),batch_size):
 #4 = status = final
 #5 = Gene Description Field = product
 #6 = Genome to replace = current phamerator PhageID
-import_table_file = '%s_retrieved_records_import_table.csv' % date
+import_table_file = '%s_ncbi_import_table.csv' % date
 import_table_file_handle = open(import_table_file,"w")
 import_table_file_writer = csv.writer(import_table_file_handle)
+
+
+
+
+
+
+
+#Create the output folder to hold the genome files
+genomes_folder = "genomes"
+os.mkdir(genomes_folder)
+os.chdir(genomes_folder)
+
+
 
 
 
@@ -471,11 +484,11 @@ processing_results_file_handle.close()
 
 #Print summary of script
 print "Number of genomes in Phamerator: %s" %tally_total
-print "Number of genomes that are NOT updated: %s" %tally_not_updated
-print "Number of final genomes with no accession: %s" %tally_no_accession
+print "Number of genomes that are NOT set to be updated: %s" %tally_not_updated
+print "Number of auto-updated genomes with no accession: %s" %tally_no_accession
 print "Number of duplicate accessions: %s" %tally_duplicate_accession
 print "Number of records that failed to be retrieved: %s" %tally_retrieval_failure
-print "Number of records retrieved that are not more recent than Phamerator record: %s" %tally_retrieved_not_new
+print "Number of records retrieved that are NOT more recent than Phamerator record: %s" %tally_retrieved_not_new
 print "Number of records retrieved that should be updated in Phamerator: %s" %tally_retrieved_for_update
 
 

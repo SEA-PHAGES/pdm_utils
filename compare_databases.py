@@ -142,6 +142,7 @@ def mdb_exit(message):
 date = time.strftime("%Y%m%d")
 
 output_folder = '%s_database_comparison' % date
+output_path = os.path.join(updateFileDir,output_folder)
 
 
 try:
@@ -149,7 +150,16 @@ try:
 except:
     print "\nUnable to create output folder: %s" % os.path.join(updateFileDir,output_folder)
     sys.exit(1)
+    
+os.chdir(output_path)
 
+
+
+#Create a folder names "genomes"
+#This is a dummy folder, since the comparison script does not retrieve any files.
+#However, creating the folder makes it easier to run the import_script on the corrections_import_table, since this script relies on the presence of a genomes folder.
+genomes_folder = "genomes"
+os.mkdir(genomes_folder)
 
 
 

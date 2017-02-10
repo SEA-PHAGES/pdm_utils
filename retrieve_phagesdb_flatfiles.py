@@ -95,7 +95,7 @@ if os.path.isdir(updateFileDir) == False:
 #Create output directories
 date = time.strftime("%Y%m%d")
 
-output_folder = '%s_new_flatfiles' % date
+output_folder = '%s_retrieved_phagesdb_flatfiles' % date
 output_path = os.path.join(updateFileDir,output_folder)
 
 
@@ -120,8 +120,15 @@ phage_file_reader = csv.reader(phage_file_handle)
 
 
 #Open file to create import table with changes that need to be implemented
-import_table_file = open(os.path.join(updateFileDir,output_folder,date + "_flatfile_import_table.csv"), "w")
+import_table_file = open(os.path.join(updateFileDir,output_folder,date + "_phagesdb_import_table.csv"), "w")
 import_table_writer = csv.writer(import_table_file)
+
+
+
+#Create the output folder to hold the genome files
+genomes_folder = "genomes"
+os.mkdir(genomes_folder)
+os.chdir(genomes_folder)
 
 
 

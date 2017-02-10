@@ -64,7 +64,7 @@ if os.path.isdir(updateFileDir) == False:
 #Create output directories
 date = time.strftime("%Y%m%d")
 
-output_folder = '%s_new_draft_genomes' % date
+output_folder = '%s_retrieved_pecaan_genomes' % date
 output_path = os.path.join(updateFileDir,output_folder)
 
 
@@ -85,10 +85,16 @@ response = urllib2.urlopen(phage_list_url)
 
     
 #Open file to create import table with changes that need to be implemented
-import_table_file = open(os.path.join(updateFileDir,output_folder,date + "_draft_genome_import_table.csv"), "w")
+import_table_file = open(os.path.join(updateFileDir,output_folder,date + "_pecaan_import_table.csv"), "w")
 import_table_writer = csv.writer(import_table_file)
 
 
+
+
+#Create the output folder to hold the genome files
+genomes_folder = "genomes"
+os.mkdir(genomes_folder)
+os.chdir(genomes_folder)
 
 
 
