@@ -1195,12 +1195,23 @@ for filename in files:
             pass
            
 
-        #Determine if the RetrieveNCBIRecord should be turned on or not
-        #If it is a Draft genome, set to 0 (OFF). Otherwise set update to 1 (ON)
-        if genome_data[4] != "draft":
+        #Determine if the RetrieveRecord field setting
+        #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
+        #If the genome is not auto-annotated (status = 'gbk') then set to 0 (OFF)
+        if genome_data[4] == "draft" or genome_data[4] == "final":
             ncbi_update_status = '1'
         else:
             ncbi_update_status = '0'
+
+
+        #Determine if the AnnotationQC field setting
+        #All new auto-annotated (status = 'draft') and non-SEA-PHAGES (status = 'gbk') genomes should be set to 0 (OFF)
+        #If the genome has been manually annotated (status = 'final') then set to 1 (ON)
+        if genome_data[4] == "final":
+            annotation_qc = '1'
+        else:
+            annotation_qc = '0'
+
 
 
         #Create list of phage data, then append it to the SQL statement
@@ -1213,6 +1224,8 @@ for filename in files:
         #6 = seqGC
         #7 = phageStatus
         #8 = date
+        #9 = ncbi_update_status
+        #10 = annotation_qc
         if use_basename == "yes":
             phage_data_list.append(basename)
         else:
@@ -1226,10 +1239,23 @@ for filename in files:
         phage_data_list.append(phageStatus)
         phage_data_list.append(date)
         phage_data_list.append(ncbi_update_status)
+        phage_data_list.append(annotation_qc)        
 
 
         
-        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified, RetrieveNCBIRecord) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s")""" % (phage_data_list[0],phage_data_list[1],phage_data_list[2],phage_data_list[3],phage_data_list[4],phage_data_list[5],phage_data_list[6],phage_data_list[7],phage_data_list[8],phage_data_list[9]))
+        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified, RetrieveRecord,AnnotationQC) \
+                                        VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
+                                        % (phage_data_list[0],\
+                                        phage_data_list[1],\
+                                        phage_data_list[2],\
+                                        phage_data_list[3],\
+                                        phage_data_list[4],\
+                                        phage_data_list[5],\
+                                        phage_data_list[6],\
+                                        phage_data_list[7],\
+                                        phage_data_list[8],\
+                                        phage_data_list[9],\
+                                        phage_data_list[10]))
         
         if use_basename == "yes":
             add_replace_statements.append(create_cluster_statement(basename,phageCluster))
