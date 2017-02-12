@@ -45,10 +45,11 @@ except:
                 4. It retrieves updated Genbank-formatted flatfiles from NCBI.\n\n\n\
             It requires three arguments:\n\
             First argument: name of MySQL database that will be checked (e.g. 'Actino_Draft').\n\
-            Second argument: directory path to where all reports, update import tables, and retrieved files.\n\
-            Third argument: list of phages that have manually curated files available on phagesdb (csv-formatted):\n\
-                    1. phagesdb phage name\n\n\n\
-            All retrievals create import tables if updates are available (csv-formatted):\n\
+            Second argument: directory path to where all reports, update import tables, and retrieved files will be generated.\n\
+            Third argument: list of phages that have manually-annotated files available on phagesdb (csv-formatted):\n\
+                    1. phagesdb phage name\n\
+                    (Indicate 'none' if this option will not be requested)\n\n\n\
+            All retrieval options create a genomes folder and an import table if updates are available (csv-formatted):\n\
                     1. Action to implement on the database (add, remove, replace, update)\n\
                     2. PhageID to add or update\n\
                     3. Host genus of the updated phage\n\
@@ -88,18 +89,20 @@ if os.path.isdir(updateFileDir) == False:
 
 
 
+#Check to see if the user has indicated a phage file.
+#If so, verify the path exists for the phage list file
+if phage_file.lower() != "none":
 
-#Verify the path exists for the phage list file
-#Expand the path if it references the home directory
-if phage_file[0] == "~":
-    phage_file = home_dir + phage_file[1:]
+    #Expand the path if it references the home directory
+    if phage_file[0] == "~":
+        phage_file = home_dir + phage_file[1:]
 
-#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
-phage_file = os.path.abspath(phage_file)
+    #Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+    phage_file = os.path.abspath(phage_file)
 
-if os.path.exists(phage_file) == False:
-    print "\n\nInvalid input for phage list file.\n\n"
-    sys.exit(1)
+    if os.path.exists(phage_file) == False:
+        print "\n\nInvalid input for phage list file.\n\n"
+        sys.exit(1)
 
 
 
@@ -534,10 +537,10 @@ if compare_databases == "yes":
 
 ####Code from retrieve_draft_genomes.py
 
-retrieve_draft_genomes = select_option("\nDo you want to retrieve auto-annotated genomes from PECAAN? (yes or no) ")
+retrieve_pecaan_genomes = select_option("\nDo you want to retrieve auto-annotated genomes from PECAAN? (yes or no) ")
 
 
-if retrieve_draft_genomes == "yes":
+if retrieve_pecaan_genomes == "yes":
 
 
     #Create output directories
@@ -652,7 +655,11 @@ if retrieve_draft_genomes == "yes":
 
 
 ####Code from retrieve_phagesdb_flatfiles.py
-retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-annotated genomes from phagesdb? (yes or no) ")
+if phage_file.lower() != "none":
+    retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-annotated genomes from phagesdb? (yes or no) ")
+else:
+    retrieve_phagesdb_genomes = "no"
+
 
 if retrieve_phagesdb_genomes == "yes":
 
