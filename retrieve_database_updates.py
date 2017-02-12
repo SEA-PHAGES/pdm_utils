@@ -3,7 +3,22 @@
 #University of Pittsburgh
 #Travis Mavrich
 #20170212
-#The purpose of this script is to provide an interactive environment to retrieve several types of Phamerator updates.
+#The purpose of this script is to provide an interactive environment to retrieve several types of Phamerator updates\
+#that will be implemented through import_phage.py script.
+#This script has combined the following independent scripts:
+#1. compare_databases.py
+#2. retrieve_draft_genomes.py
+#3. retrieve_phagesdb_flatfiles.py
+#4. retrieve_ncbi_phage.py
+
+
+
+#Flow of the import process:
+#1 Import python modules, set up variables and functions
+#2 Option 1: compare Phamerator and phagesdb databases
+#3 Option 2: retrieve auto-annotated files from PECAAN
+#4 Option 3: retrieve manually-annotated files from phagesdb
+#5 Option 4: retrieve updated files from NCBI
 
 
 
@@ -19,7 +34,6 @@ from datetime import datetime
 try:
     import MySQLdb as mdb
     from Bio import SeqIO, Entrez
-
 except:
     print "\nUnable to import one or more of the following third-party modules: MySQLdb."
     print "Install modules and try again.\n\n"
@@ -56,8 +70,6 @@ except:
                     4. Cluster of the updated phage\n\
                     5. Field that contains the gene description information (product, note, function)\n\
                     6. PhageID that will be removed or replaced\n\n"
-
-
     sys.exit(1)
 
 
@@ -121,7 +133,7 @@ print "\n\n"
 
 
 
-
+#Set up other variables
 date = time.strftime("%Y%m%d")
 genomes_folder = "genomes"
 
@@ -187,7 +199,7 @@ def select_option(message):
 
 
 
-####Code from compare_databases.py
+#Option 1: Compare Phamerator and phagesdb databases
 compare_databases = select_option("\nDo you want to compare Phamerator and phagesdb databases for updates and changes? ")
 
 if compare_databases == "yes":
@@ -221,12 +233,12 @@ if compare_databases == "yes":
 
 
     #Open file to record update information
-    report_file = open(os.path.join(updateFileDir,comparison_output_folder,date + "_database_comparison.txt"), "w")
+    report_file = open(os.path.join(comparison_output_path,date + "_database_comparison.txt"), "w")
     write_out(report_file,date + " Database comparison:\n\n\n")
 
 
     #Open file to create import table with changes that need to be implemented
-    import_table_file = open(os.path.join(updateFileDir,comparison_output_folder,date + "_corrections_import_table.csv"), "w")
+    import_table_file = open(os.path.join(comparison_output_path,date + "_corrections_import_table.csv"), "w")
     import_table_writer = csv.writer(import_table_file)
 
 
@@ -348,10 +360,7 @@ if compare_databases == "yes":
         if phameratorCluster is None:
             phameratorCluster = 'Singleton'
             
-
         matched_phagesdb_data = ""
-        #print "PhageID: %s" %genome_tuple[0]
-        #print "PhageName: %s" %genome_tuple[1]
         
         #Ensure the phageID does not have Draft appended    
         if phameratorId[-6:].lower() == "_draft":
@@ -462,9 +471,12 @@ if compare_databases == "yes":
             #First retrieve the fasta file containing the sequence
             
             #Check to see if there is a fasta file stored on phagesdb for this phage
-            if matched_phagesdb_data["fasta_file"] is not None:
-                fastafile_url = matched_phagesdb_data["fasta_file"]
-                            
+            if matched_phagesdb_data["fasta_file"] is None:
+                write_out(report_file,"\nError: no fasta file found on phagesdb for phageID %s." %phameratorID)
+                total_errors += 1            
+            else:
+            
+                fastafile_url = matched_phagesdb_data["fasta_file"]                        
                 response = urllib2.urlopen(fastafile_url)
                 retrieved_fasta_file = response.read()
                 response.close()
@@ -475,9 +487,8 @@ if compare_databases == "yes":
                 phagesdbSequence = ""
                 index = 1
                 while index < len(split_fasta_data):
-                    phagesdbSequence = phagesdbSequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
+                    phagesdbSequence = phagesdbSequence + split_fasta_data[index].strip() #Remove any whitespace before appending, such as '\r'
                     index += 1
-
 
                 phagesdbSequence_size = len(phagesdbSequence)
                 
@@ -491,27 +502,10 @@ if compare_databases == "yes":
                     write_out(report_file,"\nError: Phamerator genome size %s does not match fasta sequence genome size %s for phageID %s." %(phameratorSize,phagesdbSequence_size,phameratorId))
                     total_errors += 1
 
-                
                 #Compare genome sequences stored in Phamerator and phagesdb fasta file
                 if phameratorSequence.lower() != phagesdbSequence.lower():
                     write_out(report_file,"\nError: Genome sequences stored in Phamerator and phagesdb do not match for phageID %s." %phameratorId)
-
-                    print phagesdbSequence[:10]
-                    print phagesdbSequence[-10:]
-                    print len(phagesdbSequence)
-                    print phameratorSequence[:10]
-                    print phameratorSequence[-10:]
-                    print len(phameratorSequence)
-                    
-
                     total_errors += 1
-                    
-
-            else:
-                write_out(report_file,"\nError: no fasta file found on phagesdb for phageID %s." %phameratorID)
-                total_errors += 1            
-
-
 
     write_out(report_file,"\nMatched phage tally: %s." %matched_count)
     write_out(report_file,"\nUnmatched phage tally: %s." %unmatched_count)
@@ -520,7 +514,7 @@ if compare_databases == "yes":
         write_out(report_file,"\n%s" %element)
 
     
-    print "\nDatabase comparison completed.\n\n\n"
+    print "\nDone comparing databases.\n\n\n"
     report_file.close()
     import_table_file.close()    
     os.chdir('..')
@@ -535,8 +529,7 @@ if compare_databases == "yes":
 
 
 
-####Code from retrieve_draft_genomes.py
-
+#Option 2: Retrieve auto-annotated genomes from PECAAN
 retrieve_pecaan_genomes = select_option("\nDo you want to retrieve auto-annotated genomes from PECAAN? (yes or no) ")
 
 
@@ -559,13 +552,13 @@ if retrieve_pecaan_genomes == "yes":
     #Retrieve list of unphamerated genomes
     #Retrieved file should be tab-delimited text file, each row is a newly sequenced phage
     phage_list_url = 'http://phagesdb.org/data/unphameratedlist'
-    response = urllib2.urlopen(phage_list_url)
+    phagesdb_response = urllib2.urlopen(phage_list_url)
 
 
 
         
     #Open file to create import table with changes that need to be implemented
-    import_table_file = open(os.path.join(updateFileDir,pecaan_output_folder,date + "_pecaan_import_table.csv"), "w")
+    import_table_file = open(os.path.join(pecaan_output_path,date + "_pecaan_import_table.csv"), "w")
     import_table_writer = csv.writer(import_table_file)
 
 
@@ -587,7 +580,7 @@ if retrieve_pecaan_genomes == "yes":
 
 
     #Iterate through each row in the file
-    for new_phage in response:
+    for new_phage in phagesdb_response:
 
 
         #PECAAN should be able to generate any phage that is listed on phagesdb
@@ -596,10 +589,10 @@ if retrieve_pecaan_genomes == "yes":
         pecaan_file = new_phage + "_Draft.txt"
         #print pecaan_link
         try:
-            response = urllib2.urlopen(pecaan_link)
+            pecaan_response = urllib2.urlopen(pecaan_link)
             pecaan_file_handle = open(pecaan_file,'w')
-            pecaan_file_handle.write(response.read())
-            response.close()
+            pecaan_file_handle.write(pecaan_response.read())
+            pecaan_response.close()
             pecaan_file_handle.close()
             
             
@@ -622,15 +615,14 @@ if retrieve_pecaan_genomes == "yes":
             failed_list.append(new_phage)
 
 
-    response.close()
+    phagesdb_response.close()
 
 
-
+    #Report results
     if retrieved_tally > 0:
         print "The following %s phage(s) were successfully retrieved:" %retrieved_tally
         for element in retrieved_list:
             print element
-        
     else:
         print "No new draft genomes available."
 
@@ -639,12 +631,11 @@ if retrieve_pecaan_genomes == "yes":
         print "The following %s phage(s) failed to be retrieved:" %failed_tally
         for element in failed_list:
             print element
-
     else:
         print "No phages failed to be retrieved."
 
 
-    print "\nAuto-annotated genomes retrieved from PECAAN.\n\n\n"
+    print "\nDone retrieving auto-annotated genomes from PECAAN.\n\n\n"
     import_table_file.close()
     os.chdir('..')
 
@@ -654,7 +645,7 @@ if retrieve_pecaan_genomes == "yes":
 
 
 
-####Code from retrieve_phagesdb_flatfiles.py
+#Option 3: Retrieve manually-annotated genomes from phagesdb
 if phage_file.lower() != "none":
     retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-annotated genomes from phagesdb? (yes or no) ")
 else:
@@ -687,7 +678,7 @@ if retrieve_phagesdb_genomes == "yes":
 
 
     #Open file to create import table with changes that need to be implemented
-    import_table_file = open(os.path.join(updateFileDir,phagesdb_output_folder,date + "_phagesdb_import_table.csv"), "w")
+    import_table_file = open(os.path.join(phagesdb_output_path,date + "_phagesdb_import_table.csv"), "w")
     import_table_writer = csv.writer(import_table_file)
 
 
@@ -711,8 +702,6 @@ if retrieve_phagesdb_genomes == "yes":
 
     for new_phage in phage_file_reader:
 
-        print "\n\n"
-        #print "\nAttempting to retrieve %s from phagesdb..." %new_phage[0]
         #Retrieve phage-specific data from phagesdb
         #Note: urlopen is not case sensitive, so while this script tests for correct spelling, it does not test for correct capitalization.
         #However, the import script tests for that.    
@@ -735,7 +724,14 @@ if retrieve_phagesdb_genomes == "yes":
             print "URL found for phage %s." %new_phage[0]
 
         #Check to see if there is a flatfile stored on phagesdb for this phage
-        if online_data_dict["qced_genbank_file"] is not None:
+        if online_data_dict["qced_genbank_file"] is None:
+
+            print "Error: no flatfile found for phage %s." %new_phage[0]
+            failed_tally += 1
+            failed_list.append(new_phage[0])
+
+        else:
+
             flatfile_url = online_data_dict["qced_genbank_file"]
 
             #Save the file on the hard drive with the same name as stored on phagesdb
@@ -768,19 +764,14 @@ if retrieve_phagesdb_genomes == "yes":
                 failed_tally += 1
                 failed_list.append(new_phage[0])
 
-        else:
-            print "Error: no flatfile found for phage %s." %new_phage[0]
-            failed_tally += 1
-            failed_list.append(new_phage[0])
 
 
 
-
+    #Report retrieval results
     if retrieved_tally > 0:
         print "\n\nThe following %s phage(s) were successfully retrieved:" %retrieved_tally
         for element in retrieved_list:
             print element
-        
     else:
         print "No new flatfiles available."
 
@@ -789,13 +780,12 @@ if retrieve_phagesdb_genomes == "yes":
         print "\n\nThe following %s phage(s) failed to be retrieved:" %failed_tally
         for element in failed_list:
             print element
-
     else:
         print "No phages failed to be retrieved."
     
 
 
-    print "\nManually-annotated genomes retrieved from phagesdb.\n\n\n"    
+    print "\nDone retrieving manually-annotated genomes from phagesdb.\n\n\n"    
     report_file.close()
     import_table_file.close()        
     os.chdir('..')
@@ -805,27 +795,22 @@ if retrieve_phagesdb_genomes == "yes":
     
 
 
+###STILL NEED TO MAKE SURE VARIABLES ARENT REDUNDANT BELOW THIS LINE.
+###THEN I NEED TO VERIFY THAT ALL OPTIONS WORK INDEPENDENTLY BY RUNNING ONLY ONE AT A TIME
 
 
-
-####Code from retrieve_ncbi_phage.py
+#Option 4: Retrieve updated records from NCBI
 retrieve_ncbi_genomes = select_option("\nDo you want to retrieve updated NCBI records? (yes or no) ")
 
 if retrieve_ncbi_genomes == "yes":
 
 
-
-
-
-
-
-    #Flow of the import process
-    #1 Import python modules, set up variables and functions
-    #2 Retrieve current database information and create list of phages to check for updates at NCBI
-    #3 Using esearch, verify the accessions are valid
-    #4 Retrieve valid records in batches
-    #5 Check which records are newer than the upload date of the current version in phamerator
-    #6 Save new records in a folder and create an import table for them
+    #Flow of the NCBI record retrieval process:
+    #1 Retrieve current database information and create list of phages to check for updates at NCBI
+    #2 Using esearch, verify the accessions are valid
+    #3 Retrieve valid records in batches
+    #4 Check which records are newer than the upload date of the current version in phamerator
+    #5 Save new records in a folder and create an import table for them
 
 
 
@@ -1108,9 +1093,8 @@ if retrieve_ncbi_genomes == "yes":
     #4 = status = final
     #5 = Gene Description Field = product
     #6 = Genome to replace = current phamerator PhageID
-    import_table_file = '%s_ncbi_import_table.csv' % date
-    import_table_file_handle = open(import_table_file,"w")
-    import_table_file_writer = csv.writer(import_table_file_handle)
+    import_table_file = open(os.path.join(ncbi_output_path,date + "_ncbi_import_table.csv"), "w")
+    import_table_file_writer = csv.writer(import_table_file)
 
 
     #Create the output folder to hold the genome files
@@ -1186,8 +1170,8 @@ if retrieve_ncbi_genomes == "yes":
 
 
 
-    print "\nUpdated records retrieved from NCBI.\n\n\n"
-    import_table_file_handle.close()
+    print "\nDone retrieving updated records from NCBI.\n\n\n"
+    import_table_file.close()
     processing_results_file_handle.close()
     os.chdir('..')
 
