@@ -9,13 +9,18 @@
 
 
 
-#Import modules
+#Import built-in modules
 import time, sys, os, getpass
-import MySQLdb as mdb
 import subprocess
-import paramiko
 
-
+#Import third-party modules
+try:
+    import MySQLdb as mdb
+    import paramiko
+except:
+    print "\nUnable to import one or more of the following third-party modules: paramiko, MySQLdb."
+    print "Install modules and try again.\n\n"
+    sys.exit(1)
 
 
 #Get the command line parameters
