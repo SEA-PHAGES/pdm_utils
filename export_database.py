@@ -170,6 +170,7 @@ if dump_database == "yes":
         cur = con.cursor()
     except:
         print "Unsuccessful attempt to connect to the database. Please verify the database, username, and password."
+        print "Exiting export script."
         sys.exit(1)
 
 
@@ -193,27 +194,25 @@ if dump_database == "yes":
             print "Invalid response."
 
 
-    #Change database version
-
+    #Retrieve database version and change if requested
     try:
         cur.execute("START TRANSACTION")
         cur.execute("SELECT version FROM version")
-        version_old = str(cur.fetchone()[0])
-        print "Old database version: " + version_old
+        version_current = str(cur.fetchone()[0])
+        print "Old database version: " + version_current
 
         if version_change == "yes":
 
 
-            version_new_int = int(version_old) + 1
-            version_new = str(version_new_int)
-            print "New database version: " + version_new
+            version_new_int = int(version_current) + 1
+            version_current = str(version_new_int)
+            print "New database version: " + version_current
             statement = """UPDATE version SET version = %s;""" % version_new_int
             cur.execute(statement)
             cur.execute("COMMIT")
             print "Database version has been updated."
 
         else:
-            version_new = version_old
             print "Database version will not be updated."        
         
     except:
@@ -222,10 +221,11 @@ if dump_database == "yes":
 
 
     #Create a new version file
+    #It is okay if there is already a copy of this file present. Filenames like "Actino_Draft.sql" and "Actino_Draft.version" never change.
     try:
         print "Creating version file..."
         versionfile_handle = open(main_dir + versionfile,'w')
-        command_string = "echo %s" % version_new
+        command_string = "echo %s" % version_current
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list,stdout=versionfile_handle)
         versionfile_handle.close()
@@ -238,6 +238,7 @@ if dump_database == "yes":
 
 
     #Now that the version has been updated, make a copy of the database in the MAIN directory, that will be uploaded to webfactional
+    #It is okay if there is already a copy of this file present. Filenames like "Actino_Draft.sql" and "Actino_Draft.version" never change.    
     print "Dumping new %s database to the Main directory..." % database
 
     dumpfile1_handle = open(main_dir + dumpfile1,'w')
@@ -248,8 +249,18 @@ if dump_database == "yes":
 
 
     #Also, create a backup of the update database in the BACKUP directory
+    #The backup folder should contain files that serve as backup. Therefore, these files should not be overwritten by default, unlike the version and database files in the "Main" directory.
+    #First check if the path to the backup file already exists. If it does, this means that something may have gone wrong in the export process,
+    #or that this export has previously been completed.
+    dumpfile2 = "%s_v%s.sql" % (database,version_current)
+
+    if os.path.exists(backup_dir + dumpfile2) == True:
+        print "\n\nThe backup database file already exists in the indicated backup directory."
+        print "Backup file path: %s\n\n" %(backup_dir + dumpfile2)
+        sys.exit(1)
+        
+    
     print "Dumping copy of %s database to the Backup directory..." % database
-    dumpfile2 = "%s_v%s.sql" % (database,version_new)
     dumpfile2_handle = open(backup_dir + dumpfile2,'w')
     command_string = "mysqldump -u %s -p%s --skip-comments %s" % (username,password,database)
     command_list = command_string.split(" ")
@@ -258,8 +269,10 @@ if dump_database == "yes":
 
 
 
-
-
+    #Close MySQL connection
+    cur.close()
+    con.autocommit(True)
+    con.close()
 
 
 
@@ -271,7 +284,7 @@ if dump_database == "yes":
 query_database = "no"
 query_database_valid = False
 while query_database_valid == False:
-    query_database = raw_input("\nDo you want to export the database from MySQL? ")
+    query_database = raw_input("\nDo you want to query the database for gene and genome data? ")
 
     if (query_database.lower() == "yes" or query_database.lower() == "y"):
         query_database = "yes"
@@ -289,15 +302,44 @@ while query_database_valid == False:
 
 
 
-
-
+#Code is structured such that each section is independent, so even though MySQL username and password
+# were provided for dumping the database, it needs to be provided again.
 if query_database == "yes":
+
+    #Set up MySQL parameters
+    mysqlhost = 'localhost'
+    username = getpass.getpass(prompt='mySQL username:')
+    password = getpass.getpass(prompt='mySQL password:')
+
+
+
+    #Verify connection to database
+    try:
+        con = mdb.connect(mysqlhost, username, password, database)
+        con.autocommit(False)
+        cur = con.cursor()
+    except:
+        print "Unsuccessful attempt to connect to the database. Please verify the database, username, and password."
+        print "Exiting export script."
+        sys.exit(1)
+
+
+    #If connection was successfull, retrieve the database version
+    try:
+        cur.execute("START TRANSACTION")
+        cur.execute("SELECT version FROM version")
+        version_export = str(cur.fetchone()[0])
+        cur.execute("COMMIT")
+    except:
+        mdb_exit("\nError retrieving database version.\nUnable to query the database for gene and genome data.")
+
+
 
     #Export genome and gene data to file
     #Filename formatting: DATE_DATABASE_VERSION_genes/genomes.csv
     try:
         print "Exporting genome data..."
-        filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_new)   
+        filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_export)   
         statement1 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, phage.SequenceLength, phage.Accession, phage.DateLastModified \
                      FROM phage INTO OUTFILE '%s/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" \
                      % (mysql_query_default_dir,filename1)
@@ -310,7 +352,7 @@ if query_database == "yes":
 
 
         print "Exporting gene data..."
-        filename2 = "%s_%s_v%s_genes.csv" % (date,database,version_new)
+        filename2 = "%s_%s_v%s_genes.csv" % (date,database,version_export)
         statement2 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.name \
                      FROM gene JOIN phage on gene.PhageID = phage.PhageID JOIN pham on gene.GeneID = pham.GeneID INTO OUTFILE '%s/%s' \
                      FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % (mysql_query_default_dir,filename2)
@@ -326,6 +368,20 @@ if query_database == "yes":
             
     except:
         mdb_exit("\nError exporting genome or gene data to file.")
+
+
+
+    #MySQL stores the gene and genome data query files in a specific directory.
+    #After the script copies these two files from the original MySQL directory to the user-requested directory, delete the original files in the MySQL directory.
+    command_string = "sudo rm %s/%s" % (mysql_query_default_dir,filename1)
+    command_list = command_string.split(" ")
+    proc = subprocess.check_call(command_list)
+    
+    command_string = "sudo rm %s/%s" % (mysql_query_default_dir,filename2)
+    command_list = command_string.split(" ")
+    proc = subprocess.check_call(command_list)
+
+
 
     con.close()
 
@@ -354,6 +410,19 @@ while server_upload_valid == False:
 
 if server_upload == "yes":
 
+
+    #Verify the path to both files exists
+    if os.path.exists(main_dir + versionfile) == False:
+        print "\n\nProblem locating version file."
+        print "Version file: %s\n\n" %(main_dir + versionfile)
+        sys.exit(1)
+
+    if os.path.exists(main_dir + dumpfile1) == False:
+        print "\n\nProblem locating database file."
+        print "Version file: %s\n\n" %(main_dir + dumpfile1)
+        sys.exit(1)
+
+
     
     #Set up paramiko parameters
     server = 'phamerator.webfactional.com'
@@ -370,7 +439,7 @@ if server_upload == "yes":
 
 
     try:
-        transport.connect('username'=server_username,'password'=server_password)
+        transport.connect(username=server_username,password=server_password)
         
         sftp = paramiko.SFTPClient.from_transport(transport)
 
@@ -382,10 +451,16 @@ if server_upload == "yes":
         
     try:
         #First upload the version file
+        print "Uploading the version file..."
         sftp.put(main_dir + versionfile,'/home/phamerator/webapps/htdocs/databases_Hatfull/' + versionfile)
+        print "Version file successfully uploaded."
+
 
         #Second upload the version file
+        print "Uploading the sql database..."
         sftp.put(main_dir + dumpfile1,'/home/phamerator/webapps/htdocs/databases_Hatfull/' + dumpfile1)
+        print "Database successfully uploaded."
+        
     except:
         print "Problems encountered with the specified local or destination directories"
         print "\nThe export script did not complete."
