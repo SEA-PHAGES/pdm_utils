@@ -796,9 +796,6 @@ if retrieve_phagesdb_genomes == "yes":
     
 
 
-###THEN I NEED TO VERIFY THAT ALL OPTIONS WORK INDEPENDENTLY BY RUNNING ONLY ONE AT A TIME
-
-
 #Option 4: Retrieve updated records from NCBI
 retrieve_ncbi_genomes = select_option("\nDo you want to retrieve updated NCBI records? (yes or no) ")
 
