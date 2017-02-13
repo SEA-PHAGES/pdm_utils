@@ -250,6 +250,7 @@ if compare_databases == "yes":
     #3 = Sequence
     #4 = status
     #5 = Cluster
+    #6 = SequenceLength
     try:
         con = mdb.connect(mysqlhost, username, password, database)
         con.autocommit(False)
@@ -786,7 +787,7 @@ if retrieve_phagesdb_genomes == "yes":
 
 
     print "\nDone retrieving manually-annotated genomes from phagesdb.\n\n\n"    
-    report_file.close()
+    phage_file_handle.close()
     import_table_file.close()        
     os.chdir('..')
     
@@ -795,7 +796,6 @@ if retrieve_phagesdb_genomes == "yes":
     
 
 
-###STILL NEED TO MAKE SURE VARIABLES ARENT REDUNDANT BELOW THIS LINE.
 ###THEN I NEED TO VERIFY THAT ALL OPTIONS WORK INDEPENDENTLY BY RUNNING ONLY ONE AT A TIME
 
 
@@ -855,7 +855,7 @@ if retrieve_ncbi_genomes == "yes":
 
 
 
-    #2 Retrieve current database information and create list of phages to check for updates at NCBI
+    #1 Retrieve current database information and create list of phages to check for updates at NCBI
 
     #Retrieve database version
     #Retrieve current data in database
@@ -902,13 +902,10 @@ if retrieve_ncbi_genomes == "yes":
     tally_retrieval_failure = 0
     tally_retrieved_not_new = 0
     tally_retrieved_for_update = 0
-
-
-
     tally_total = len(current_genome_data_tuples)
 
 
-
+    #Create file to write results to
     processing_results_file = '%s_processing_results.csv' % date
     processing_results_file_handle = open(processing_results_file,"w")
     processing_results_file_writer = csv.writer(processing_results_file_handle)
@@ -944,7 +941,6 @@ if retrieve_ncbi_genomes == "yes":
             print "PhageID %s Cluster converted to Singleton." %phage_list[0]
 
 
-     
         #Make sure there is a date in the DateLastModified field
         print phage_list
         if phage_list[6] is None:
@@ -952,11 +948,8 @@ if retrieve_ncbi_genomes == "yes":
             phage_list[6] = datetime.strptime('1/1/1900','%m/%d/%Y')
             print phage_list[6]
 
-       
-       
-       
+
         #Now determine what to do with the data
-        print phage_list[7]    
         if phage_list[7] != 1:
             print "PhageID %s is not set to be automatically updated by NCBI record." %phage_list[0]
             tally_not_updated += 1
@@ -979,11 +972,8 @@ if retrieve_ncbi_genomes == "yes":
     #For values that were not unique, remove all accession numbers from the dictionary
     temp_list = []
     for element in duplicate_accession_list:
-        print element
         if element[5] in unique_accession_dict.keys():
             temp_list.append(unique_accession_dict.pop(element[5]))
-
-
 
 
     #Now add these elements from dictionary to the duplicate data list
@@ -1000,9 +990,7 @@ if retrieve_ncbi_genomes == "yes":
 
 
 
-
-
-    #3 & #4 Use esearch to verify the accessions are valid and efetch to retrieve the record
+    #2 & #3 Use esearch to verify the accessions are valid and efetch to retrieve the record
     Entrez.email = contact_email
     Entrez.tool = "NCBIRecordRetrievalScript"
 
@@ -1010,9 +998,6 @@ if retrieve_ncbi_genomes == "yes":
 
     #Create batches of accessions
     unique_accession_list = unique_accession_dict.keys()
-
-    print "List of accessions to be retrieved:"
-    print unique_accession_list
 
     #Add [ACCN] field to each accession number
     index = 0
@@ -1036,19 +1021,10 @@ if retrieve_ncbi_genomes == "yes":
         else:
             batch_index_stop = batch_index_start + batch_size
         
-        current_batch_size = batch_index_stop - batch_index_start
-        print batch_index_start
-        print batch_index_stop
-        print current_batch_size
-        
+        current_batch_size = batch_index_stop - batch_index_start        
         delimiter = " | "
         esearch_term = delimiter.join(unique_accession_list[batch_index_start:batch_index_stop])
 
-
-        print esearch_term
-        
-        print "Ready to retrieve"
-        
 
         #Use esearch for each accession
         search_handle = Entrez.esearch(db = "nucleotide", term = esearch_term,usehistory="y")
@@ -1060,8 +1036,6 @@ if retrieve_ncbi_genomes == "yes":
 
         
         #Keep track of the accessions that failed to be located in NCBI
-
-
         if search_count < current_batch_size:
             search_accession_failure = search_record["ErrorList"]["PhraseNotFound"]
 
@@ -1083,7 +1057,7 @@ if retrieve_ncbi_genomes == "yes":
 
 
 
-    #5 Now that all records have been retrieved, check which records are newer than the upload date of the current version in phamerator.
+    #4 Now that all records have been retrieved, check which records are newer than the upload date of the current version in phamerator.
     # Create the genbank-formatted file only if it is a newer genome
     # Also create an import table
     #0 = Action = replace
@@ -1120,12 +1094,10 @@ if retrieve_ncbi_genomes == "yes":
         retrieved_record_date = datetime.strptime(retrieved_record_date,'%d-%b-%Y')
 
 
-        #phamerator_date_obj = datetime.strptime(phamerator_date,'%m/%d/%Y')
-        #
         #MySQL outputs the DateLastModified as a datetime object
         phamerator_data = unique_accession_dict[retrieved_record_accession]
 
-        #6 Save new records in a folder and create an import table row for them
+        #5 Save new records in a folder and create an import table row for them
         if retrieved_record_date > phamerator_data[6]:
 
             print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_data[6])
