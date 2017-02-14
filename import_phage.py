@@ -397,7 +397,7 @@ action_set = set(["add","remove","replace","update"])
 description_set = set(["product","note","function"])
 
 
-#Create list of potential Host Names in the Genbank file to ignore
+#Create list of potential Host Names in the Genbank file to ignore. This is primarily for databases that contain phages of all host phyla and not just Actinobacteria
 host_ignore = ['enterobacteria','phage','bacteriophage','cyanophage']
 
 
@@ -516,7 +516,7 @@ for row in file_reader:
     if row[2] != "none":
         row[2] = row[2].split(' ')[0] #Keep only the genus in the host data field and discard the rest
         if row[2] not in phageHost_set:
-            print "The host strain " + row[2] + " is not currently in the database."
+            print "The host strain %s is not currently in the database." % row[2]
             table_errors +=  question("\nError: %s is not the correct host for %s." % (row[2],row[1])) #errors will be incremented if host was not correct
 
 
@@ -678,10 +678,6 @@ for row in file_reader:
         
     genome_data_list.append(row)
 file_object.close()
-
-
-
-
 
 
 
