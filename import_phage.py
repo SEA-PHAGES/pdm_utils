@@ -22,15 +22,25 @@
 #that force the script to exit do not cause ROLLBACK errors or connection errors.
 
 
-#Third-party libraries
-from Bio import SeqIO
-from Bio.Alphabet import IUPAC
-from tabulate import tabulate
-import MySQLdb as mdb
+
 
 #Built-in libraries
 import time, sys, os, getpass, csv, re, shutil
 import json, urllib
+
+
+#Import third-party modules
+try:
+    from Bio import SeqIO
+    from Bio.Alphabet import IUPAC
+    from tabulate import tabulate
+    import MySQLdb as mdb
+except:
+    print "\nUnable to import one or more of the following third-party modules: MySQLdb, Biopython, tabulate."
+    print "Install modules and try again.\n\n"
+    sys.exit(1)
+
+
 
 
 #Get the command line parameters
@@ -39,7 +49,6 @@ try:
     phageListDir = sys.argv[2]
     updateFile = sys.argv[3]
 except:
-    #print "Incorrect Parameters: ./import_phage.py DATABASE GENOME_DIRECTORY IMPORT_FILE"
     print "\n\n\
             This is a python script to import and update phage genomes in the Phamerator database.\n\
             It requires three arguments:\n\
@@ -946,31 +955,82 @@ for genome_data in add_replace_data_list:
         sys.exit(1)
 
 
-#Iterate over each genbank-formatted genome file in the directory
+
+
+
+####IN PROGRESS
+
+#Iterate over each file in the directory
+admissible_file_types = set(["gb","gbf","gbk","txt"])
 write_out(output_file,"\n\n\n\nAccessing genbank-formatted files for add/replace actions...")
-files =  [X for X in os.listdir(phageListDir) if os.path.isfile(os.path.join(phageListDir,X))]
+all_files =  [X for X in os.listdir(phageListDir) if os.path.isfile(os.path.join(phageListDir,X))]
+genbank_files = []
 failed_genome_files = []
 failed_actions = []
 file_tally = 0
 script_warnings = 0
 script_errors = 0
-for filename in files:
+
+
+
+
+#Files in the directory may not have the correct extension, or may contain 0, 1, or >1 parseable records.
+#When SeqIO parses files, if there are 0 Genbank-formatted records, it does not throw an error, but simply moves on.
+#The code first iterates through each file to check how many actually are valid Genbank files.
+#It's advantageous to do this first round of file iteration to identify any files with multiple records present,
+#and that the file can be successfully read by Biopython SeqIO (if not, it could crash the script).
+#Not sure how often there are multiple records present in non-SEA-PHAGES NCBI records, but it is a good idea to verify there is only one record per file before proceeding.
+write_out(output_file,"\nA total of %s file(s) present in the directory." % len(all_files))
+for filename in all_files:
+
+
+    #If the file extension is not admissible, then skip. Otherwise, proceed
+    if filename.split('.')[-1] not in admissible_file_types:
+        failed_genome_files.append(filename)
+        write_out(output_file,"\nFile %s does not have a valid file extension. This file will not be processed." % filename)
+        raw_input("\nPress ENTER to proceed to next file.")
+        continue
+
+    #This try/except clause prevents the code from crashing if there is a problem with a file that Biopython has trouble parsing.
+    try:
+        #Keep track of how many records Biopython parses
+        parsed_records_tally = 0
+        for seq_record in SeqIO.parse(os.path.join(phageListDir,filename), "genbank"):
+            parsed_records_tally += 1
+
+    except:
+        failed_genome_files.append(filename)
+        write_out(output_file,"\nBiopython is unable to parse file %s. This file will not be processed." % filename)
+        raw_input("\nPress ENTER to proceed to next file.")
+        continue
+
+            
+    if parsed_records_tally == 0:
+        failed_genome_files.append(filename)
+        write_out(output_file,"\nBiopython was unable to parse any records from file %s. This file will not be processed." % filename)
+        raw_input("\nPress ENTER to proceed to next file.")
+
+    elif parsed_records_tally > 1:
+        failed_genome_files.append(filename)
+        write_out(output_file,"\nBiopython found two records in file %s. This file will not be processed." % filename)
+        raw_input("\nPress ENTER to proceed to next file.")
+
+    elif parsed_records_tally == 1:
+        genbank_files.append(filename)
+
+
+
+
+#Iterate over each genbank-formatted genome file in the directory and parse all the needed data
+write_out(output_file,"\nA total of %s file(s) containg Genbank-formatted records will be parsed." % len(genbank_files))        
+for filename in genbank_files:
     
     file_tally += 1
     write_out(output_file,"\n\nProcessing file %s: %s" % (file_tally,filename))
     
     #ALLPHAGES option
     basename = filename.split('.')[0]
-    
-    
-    
-    #If the file extension is not admissible, then skip. Otherwise, proceed
-    if(str(filename[-2:]) != "gb" and str(filename[-3:]) != "gbf" and str(filename[-3:]) != "gbk" and str(filename[-3:]) != "txt"):
-        failed_genome_files.append(filename)
-        write_out(output_file,"\nFile %s does not have a valid file extension. This file will not be processed." % filename)
-        raw_input("\nPress ENTER to proceed to next file.")
-        continue
-    
+
     #The file is parsed to grab the header information
     for seq_record in SeqIO.parse(os.path.join(phageListDir,filename), "genbank"):
         
