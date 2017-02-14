@@ -677,7 +677,7 @@ for row in file_reader:
 
         
     genome_data_list.append(row)
-file_object.close
+file_object.close()
 
 
 
@@ -2067,6 +2067,7 @@ write_out(output_file,"\n\nTotal phages in database after changes: " + str(final
 
 
 #Close script.
+success_action_file_handle.close()
 write_out(output_file,"\n\n\n\nImport script completed.")  
 output_file.close()
 
