@@ -209,6 +209,41 @@ if compare_databases == "yes":
     #Since this may take a long time, and generate thousands of requests to phagesdb, it may not need to be performed very often.
     compare_sequences = select_option("\nDo you want to compare all genome sequences? (yes or no) ")
         
+    
+    #Decide whether to retrieve all Genbank-formatted files from phagesdb or not.
+    retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-annotated genomes from phagesdb? (yes or no) ")
+
+    if retrieve_phagesdb_genomes == "yes":
+
+        #Create output directories
+        phagesdb_output_folder = '%s_retrieved_phagesdb_flatfiles' % date
+        phagesdb_output_path = os.path.join(updateFileDir,phagesdb_output_folder)
+
+        try:
+            os.mkdir(phagesdb_output_path)
+        except:
+            print "\nUnable to create output folder: %s" %phagesdb_output_path
+            sys.exit(1)
+        os.chdir(phagesdb_output_path)
+
+
+        #Open file to create import table with changes that need to be implemented
+        phagesdb_import_table_file = open(os.path.join(phagesdb_output_path,date + "_phagesdb_import_table.csv"), "w")
+        phagesdb_import_table_writer = csv.writer(phagesdb_import_table_file)
+
+        #Create the output folder to hold the genome files
+        os.mkdir(os.path.join(phagesdb_output_folder,genomes_folder)
+
+ 
+        #Initialize phagesdb retrieval variables 
+        phagesdb_retrieved_tally = 0
+        phagesdb_failed_tally = 0
+        phagesdb_retrieved_list = []
+        phagesdb_failed_list = []
+
+ 
+ 
+ 
         
     #Create output directories
 
@@ -265,7 +300,7 @@ if compare_databases == "yes":
         cur.execute("START TRANSACTION")
         cur.execute("SELECT version FROM version")
         db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,SequenceLength FROM phage")
+        cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,SequenceLength,DateLastModified FROM phage")
         current_genome_data_tuples = cur.fetchall()
         cur.execute("COMMIT")
         cur.close()
@@ -309,11 +344,6 @@ if compare_databases == "yes":
         
         
         
-    #Phagesdb API to retrieve genome information
-    api_prefix = "http://phagesdb.org/api/phages/"
-    api_suffix = "/?format=json"
-
-
 
 
     #Retrieve a list of all sequenced phages listed on phagesdb
@@ -356,6 +386,7 @@ if compare_databases == "yes":
         phameratorStatus = genome_tuple[4]
         phameratorCluster= genome_tuple[5]
         phameratorSize = int(genome_tuple[6])
+        phameratorDate = genome_tuple[7]
 
         #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
         if phameratorCluster is None:
@@ -463,6 +494,130 @@ if compare_databases == "yes":
         if phameratorSize != phagesdbSize:
             write_out(report_file,"\nError: Phamerator genome size %s does not match phagesdb genome size %s for phageID %s." %(phameratorSize,phagesdbSize,phameratorId))
             total_errors += 1
+
+
+
+
+
+
+
+
+        ###IN PROGRESS
+        ###IF NEW GB FILES SHOULD BE RETRIEVED FROM PHAGESDB, ADD THAT CODE HERE:
+        
+        #Retrieve all Genbank-formatted files that have been uploaded to phagesdb more recently than the genome was uploaded into Phamerator (if user selected this option)
+        if retrieve_phagesdb_genomes == "yes":
+        
+        
+        
+
+
+            #os.chdir(genomes_folder)
+
+
+
+            ###Check if gb file is available
+            phagesdbName
+            phameratorName
+
+            #Not all phages have associated Genbank-formatted files available on phagesdb
+            #Check to see if there is a flatfile for this phage
+            if online_data_dict["qced_genbank_file"] is None:
+
+                print "No flatfile found for phageID %s and phageName %s." %(phameratorId,phameratorName)
+                phagesdb_failed_tally += 1
+                phagesdb_failed_list.append(phameratorId)
+
+            else:
+
+                #Some phages may have a file but no associated date tagged with that file (since date tagging has only recently been implemented).
+                #Download the flatfile only if there is a date tag, and only if that date is more recent than the date stored in Phamerator for that genome.
+                #The tagged date only reflects when the file was uploaded into phagesdb. The date the actual Genbank record was created is stored within the file,
+                #and this too could be less recent than the current version in Phamerator; however, this part gets checked during the import stage.
+                if online_data_dict[NAME_OF_NEW_DATE_FIELD] is None:
+
+                    print "Available flatfile does not have a date tag for phageID %s and phageName %s." %(phameratorId,phameratorName)
+                    phagesdb_failed_tally += 1
+                    phagesdb_failed_list.append(phameratorId)
+
+                elif not online_data_dict[NAME_OF_NEW_DATE_FIELD] > phameratorDate:
+
+                    print "The date of the available flatfile is not more recent than the current version in Phamerator for phageID %s and phageName %s." %(phameratorId,phameratorName)
+                    phagesdb_failed_tally += 1
+                    phagesdb_failed_list.append(phameratorId)
+
+                else:
+
+                    #Save the file on the hard drive with the same name as stored on phagesdb
+                    flatfile_url = online_data_dict["qced_genbank_file"]
+                    phagesdb_file = flatfile_url.split('/')[-1]
+
+                
+                
+                ###CURRENT STOPPING POINT
+                
+                
+                    try:
+                        response = urllib2.urlopen(flatfile_url)
+                        phagesdb_file_handle = open(phagesdb_file,'w')
+                        phagesdb_file_handle.write(response.read())
+                        response.close()
+                        phagesdb_file_handle.close()
+                        
+                        
+                        #Create the new import ticket
+                        #0 = Import action
+                        #1 = New phageID
+                        #2 = HostStrain
+                        #3 = Cluster
+                        #4 = Status
+                        #5 = Gene description field
+                        #6 = Phage to replace
+                        import_table_writer.writerow(["replace",phameratorId,"retrieve","retrieve","final","product","unspecified"])
+
+                        retrieved_tally += 1
+                        retrieved_list.append(phameratorId)
+
+                    except:
+                        print "Error: unable to retrieve %s genome." %phameratorId
+                        failed_tally += 1
+                        failed_list.append(phameratorId)
+
+
+
+
+            #Report retrieval results
+            if retrieved_tally > 0:
+                print "\n\nThe following %s phage(s) were successfully retrieved:" %retrieved_tally
+                for element in retrieved_list:
+                    print element
+            else:
+                print "No new flatfiles available."
+
+
+            if failed_tally > 0:
+                print "\n\nThe following %s phage(s) failed to be retrieved:" %failed_tally
+                for element in failed_list:
+                    print element
+            else:
+                print "No phages failed to be retrieved."
+            
+
+
+            print "\nDone retrieving manually-annotated genomes from phagesdb.\n\n\n"    
+            phage_file_handle.close()
+            import_table_file.close()        
+            os.chdir('..')        
+
+
+
+
+        
+        
+        
+        
+        ###IN PROGRESS
+
 
 
         #Compare genome sequence (if this option was selected)
