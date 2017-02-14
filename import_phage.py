@@ -1188,7 +1188,6 @@ for filename in genbank_files:
             phageStatus = matchedData[4]
             cdsQualifier = matchedData[5]
             genomeReplace = matchedData[6]
-            phamerator_date = datelastmod_dict[genomeReplace]            
             
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
@@ -1267,6 +1266,8 @@ for filename in genbank_files:
                 pass
 
             #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)            
+            phamerator_date = datelastmod_dict[genomeReplace]            
+
             if not seq_record_date > phamerator_date:
                 print 'The date %s in file %s is not more recent than the Phamerator date %s.' %(seq_record_date,filename,phamerator_date)
                 print 'Despite it being an older record, the phage %s will continue to be imported.' % phageName
