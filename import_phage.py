@@ -23,10 +23,11 @@
 
 
 
-
 #Built-in libraries
 import time, sys, os, getpass, csv, re, shutil
 import json, urllib
+from datetime import datetime
+
 
 
 #Import third-party modules
@@ -342,7 +343,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,DateLastModified FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -365,12 +366,19 @@ phageId_set = set()
 phageHost_set = set()
 phageStatus_set = set()
 phageCluster_set = set()
+datelastmod_dict = {}
 print "Preparing genome data sets from the database..."
 for genome_tuple in current_genome_data_tuples:
     phageId_set.add(genome_tuple[0])
     phageHost_set.add(genome_tuple[2])
     phageStatus_set.add(genome_tuple[4])
     phageCluster_set.add(genome_tuple[5])
+    
+    #If there is no date in the DateLastModified field, set it to a very early date
+    if genome_tuple[6] is None:
+        datelastmod_dict[genome_tuple[0]] = datetime.strptime('1/1/1900','%m/%d/%Y')
+    else:
+        datelastmod_dict[genome_tuple[0]] = genome_tuple[6]
 
     
 #Set up dna and protein alphabets to verify sequence integrity
@@ -957,9 +965,6 @@ for genome_data in add_replace_data_list:
 
 
 
-
-####IN PROGRESS
-
 #Iterate over each file in the directory
 admissible_file_types = set(["gb","gbf","gbk","txt"])
 write_out(output_file,"\n\n\n\nAccessing genbank-formatted files for add/replace actions...")
@@ -1118,7 +1123,6 @@ for filename in genbank_files:
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
         
-        
         try:
             record_id = str(seq_record.id)
         except:
@@ -1142,10 +1146,23 @@ for filename in genbank_files:
             print "\nRecord does not have record source information."
             record_errors += question("\nError: problem with header info of file %s." % filename)
         
-        
-  
 
-        #Nonessential Stuff. PhageNotes and Accessions
+        #Date of the record
+        try:
+            seq_record_date = seq_record.annotations["date"]
+            seq_record_date = datetime.strptime(seq_record_date,'%d-%b-%Y')
+
+        except:
+            write_out(output_file,"\nError: problem retrieving date in file %s. This file will not be processed." % filename)
+            record_errors += 1
+            failed_genome_files.append(filename)
+            script_warnings += record_warnings
+            script_errors += record_errors
+            raw_input("\nPress ENTER to proceed to next file.")
+            continue
+
+
+        #PhageNotes and Accessions
         try:
             phageNotes = str(seq_record.annotations["comment"])
         except:
@@ -1175,6 +1192,8 @@ for filename in genbank_files:
             phageStatus = matchedData[4]
             cdsQualifier = matchedData[5]
             genomeReplace = matchedData[6]
+            phamerator_date = datelastmod_dict[genomeReplace]            
+            
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
             failed_genome_files.append(filename)
@@ -1224,9 +1243,11 @@ for filename in genbank_files:
             write_out(output_file,"\nError: these genome(s) in the database currently contain the same genome sequence: %s.\nUnable to upload %s." % (query_results,phageName))
 
 
-        #If replacing a genome, exactly one and only one genome in the database is expected to have the same sequence.                
+        #If replacing a genome:
         elif phageAction == "replace":
-            
+
+
+            #Exactly one and only one genome in the database is expected to have the same sequence.  
             if len(query_results) > 1:
                 record_errors += 1 
                 write_out(output_file,"\nError: the following genomes in the database currently contain the same genome sequence as %s: %s).\nUnable to perform replace action." % (phageName,query_results))
@@ -1248,7 +1269,14 @@ for filename in genbank_files:
                     record_errors += 1
             else:
                 pass
+
+            #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)            
+            if not seq_record_date > phamerator_date:
+                print 'The date %s in file %s is not more recent than the Phamerator date %s.' %(seq_record_date,filename,phamerator_date)
+                print 'Despite it being an older record, the phage %s will continue to be imported.' % phageName
+                record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_date))
             
+            #Create the DELETE command            
             add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + genomeReplace + "';")
 
         else:
@@ -1527,8 +1555,7 @@ for filename in genbank_files:
             #Translation, Gene Length (via Translation)
             try:
                 translation = feature.qualifiers["translation"][0].upper()
-                geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
-                                
+                geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...                            
             except:
                 translation = ""
                 geneLen = 0
