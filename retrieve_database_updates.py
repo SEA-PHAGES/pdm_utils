@@ -421,9 +421,12 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
         #Accession data may have version number (e.g. XY12345.1)
         if phamerator_accession is None:
-            phamerator_accession = ""
+            phamerator_accession = "none"
+
+        elif phamerator_accession.strip() == "":
+            phamerator_accession = "none"
         
-        if phamerator_accession != "":
+        if phamerator_accession != "none":
             phamerator_accession = phamerator_accession.split('.')[0]
 
             #Check for accession duplicates            
@@ -471,7 +474,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
     if len(phamerator_duplicate_accessions) > 0:
-        print "There are duplicate in accessions Phamerator. Unable to proceed with NCBI record retrieval."
+        print "There are duplicate accessions in Phamerator. Unable to proceed with NCBI record retrieval."
         for accession in phamerator_duplicate_accessions:
             print accession
         retrieve_ncbi_genomes = "no"
@@ -529,8 +532,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 tally_not_auto_updated += 1
                 ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,'NA','no automatic update'])
 
-            elif phamerator_accession == "" or phamerator_accession is None:
-                print "PhageID %s is set to be automatically update, but it does not have accession number." %phamerator_id
+            elif phamerator_accession == "none" or phamerator_accession is None:
+                print "PhageID %s is set to be automatically updated, but it does not have an accession number." %phamerator_id
                 tally_no_accession += 1
                 ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,'NA','no accession'])
             
@@ -586,6 +589,19 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             phagesdb_name = matched_phagesdb_data['phage_name']
             phagesdb_host = matched_phagesdb_data['isolation_host']['genus']
 
+
+            #Matched accession
+            phagesdb_accession = matched_phagesdb_data['genbank_accession']
+            if phagesdb_accession.strip() != "":
+                phagesdb_accession = phagesdb_accession.strip() #Sometimes accession data from phagesdb have whitespace characters
+                phagesdb_accession = phagesdb_accession.split('.')[0] #Sometimes accession data from phagesdb have version suffix
+            else:
+                phagesdb_accession = "none"
+
+
+
+
+
             #Matched cluster
             if matched_phagesdb_data['pcluster'] is None:
                 #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
@@ -632,9 +648,17 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 field_corrections_needed += 1
 
 
+            #Compare Accession
+            #If the genome status is "gbk", then don't worry about updating the accession
+            if phamerator_accession != phagesdb_accession and phamerator_status != "gbk":
+                print "\nPhamerator accession %s and phagesdb accession %s do not match for phageID %s." %(phamerator_accession,phagesdb_accession,phamerator_id)
+                field_corrections_needed += 1
+
+
+
             #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
-                field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none","none"])
+                field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none",phagesdb_accession,"none"])
         
               
 
@@ -685,7 +709,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_file_handle.close()
                                    
                     #Create the new import ticket
-                    phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product",phamerator_id])
+                    phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product","retrieve",phamerator_id])
                     phagesdb_retrieved_tally += 1
                     phagesdb_retrieved_list.append(phamerator_id)
 
@@ -875,7 +899,7 @@ if retrieve_ncbi_genomes == "yes":
             #Now output the file and create the import ticket.
             ncbi_filename = phamerator_name.lower() + "__" + retrieved_record_accession + ".gb"
             SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,genomes_folder,ncbi_filename),"genbank")
-            ncbi_import_table_writer.writerow(['replace',import_table_name,phamerator_host,phamerator_cluster,phamerator_status,'product',phamerator_id])
+            ncbi_import_table_writer.writerow(['replace',import_table_name,phamerator_host,phamerator_cluster,phamerator_status,'product',phamerator_accession,phamerator_id])
 
 
         else:
@@ -938,7 +962,7 @@ if retrieve_pecaan_genomes == "yes":
             
             
             #Create the new import ticket
-            pecaan_import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none"])
+            pecaan_import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none","none"])
             print "Retrieved %s from PECAAN." %new_phage
             pecaan_retrieved_tally += 1
             pecaan_retrieved_list.append(new_phage)
