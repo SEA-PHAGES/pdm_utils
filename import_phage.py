@@ -227,6 +227,7 @@ def create_cluster_statement(phage_name,cluster):
 
 
 
+
 #Function to split gene description field
 def retrieve_description(genbank_feature,description_field):
     description = genbank_feature.qualifiers[description_field][0].lower().strip()
@@ -330,6 +331,9 @@ write_out(output_file,"\nRun mode: " + run_mode)
 #2 = HostStrain
 #3 = Sequence
 #4 = status
+#5 = Cluster
+#6 = DateLastModified
+#7 = Accession
 try:
     con = mdb.connect(mysqlhost, username, password, database)
     con.autocommit(False)
@@ -343,7 +347,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,DateLastModified FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,DateLastModified,Accession FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -366,19 +370,54 @@ phageId_set = set()
 phageHost_set = set()
 phageStatus_set = set()
 phageCluster_set = set()
-datelastmod_dict = {}
+phageAccession_set = set()
+modified_genome_data_lists = []
 print "Preparing genome data sets from the database..."
+
+#Modify several fields of the data and create sets
 for genome_tuple in current_genome_data_tuples:
     phageId_set.add(genome_tuple[0])
     phageHost_set.add(genome_tuple[2])
     phageStatus_set.add(genome_tuple[4])
     phageCluster_set.add(genome_tuple[5])
-    
+
+
     #If there is no date in the DateLastModified field, set it to a very early date
     if genome_tuple[6] is None:
-        datelastmod_dict[genome_tuple[0]] = datetime.strptime('1/1/1900','%m/%d/%Y')
+        modified_datelastmod = datetime.strptime('1/1/1900','%m/%d/%Y')
     else:
-        datelastmod_dict[genome_tuple[0]] = genome_tuple[6]
+        modified_datelastmod = genome_tuple[6]
+
+
+    #The Accession field in Phamerator defaults to "". Some accessions have the version number suffix.
+    #Process Accession data. Discard the version number.
+    if genome_tuple[7] != "":
+        modified_accession = genome_tuple[7].split('.')[0]
+        phageAccession_set.add(modified_accession) #Only add to the accession set if there was an accession, and not if it was empty "".
+    else:
+        modified_accession = "none"
+       
+
+
+    #Add all modified data into new list
+    modified_genome_data_lists.append([genome_tuple[0],\
+                                        genome_tuple[1],\
+                                        genome_tuple[2],\
+                                        genome_tuple[3],\
+                                        genome_tuple[4],\
+                                        genome_tuple[5],\
+                                        modified_datelastmod,\
+                                        modified_accession])
+
+
+    
+
+#Now that sets and dictionaries have been made, create a phamerator_data_dict
+#Key = phageID
+#Value = list of modified data retrieved from MySQL query
+phamerator_data_dict = {}
+for element in modified_genome_data_lists:
+    phamerator_data_dict[element[0]] = element
 
     
 #Set up dna and protein alphabets to verify sequence integrity
@@ -415,16 +454,14 @@ api_suffix = "/?format=json"
 #3 = Cluster of new phage (singletons should be reported as "singleton")
 #4 = Status of new phage
 #5 = Feature field containing gene descriptions of new phage
-#6 = PhageID of genome to be removed from the database
+#6 = Accession
+#7 = PhageID of genome to be removed from the database
 column_action_headers = ["All","Add/Replace/Update","Add/Replace/Update","Add/Replace/Update","Add/Replace/Update","Add/Replace","Replace/Remove"]
 column_headers = ["Action","PhageID","HostStrain","Cluster","Status","DescriptionField","PhageID"]
 
 write_out(output_file,"\n\n\n\nRetrieving import info from table in file...")
 
 file_object = open(updateFile,'r')
-
-
-
 file_reader = csv.reader(file_object)
 genome_data_list = []
 table_errors = 0
@@ -432,16 +469,37 @@ add_total = 0
 remove_total = 0
 replace_total = 0
 update_total = 0
-
-for row in file_reader:
+for input_row in file_reader:
 
 
     #Verify the row of information has the correct number of fields to parse.
-    if len(row) != 7:
-        write_out(output_file,"\nRow in import table is not formatted correctly: " + str(row))
+    if len(input_row) != 8:
+        write_out(output_file,"\nRow in import table is not formatted correctly: " + str(input_row))
         table_errors += 1
         continue
 
+
+    #Once the row length has been verified, rearrange the elements into another order.
+    #This is a straightforward, but not ideal, solution to when columnes are added or removed from the import table.
+    #This prevents the entire code for needing to be re-factored to account for the new indices.
+    #Internal import row structure:
+    #0 = Import action (unchanged)
+    #1 = New phage name (unchanged)
+    #2 = Host (unchanged)
+    #3 = Cluster (unchanged)
+    #4 = Status (unchanged)
+    #5 = Feature field (unchanged)
+    #6 = PhageID to be removed
+    #7 = Accession
+    row = []
+    row.append(input_row[0])
+    row.append(input_row[1])
+    row.append(input_row[2])
+    row.append(input_row[3])
+    row.append(input_row[4])
+    row.append(input_row[5])
+    row.append(input_row[7])
+    row.append(input_row[6])
 
     #Make sure "none" and "retrieve" indications are lowercase, as well as "action", "status", and "feature" fields are lowercase
     row[0] = row[0].lower()
@@ -455,10 +513,12 @@ for row in file_reader:
     row[5] = row[5].lower()        
     if row[6].lower() == "none":
         row[6] = row[6].lower()
+    if (row[7].lower() == "none" or row[7].lower() == "retrieve"):
+        row[7] = row[7].lower()        
         
         
-    #If either the Host or Cluster data needs to be retrieved, try to access the data in phagesdb before proceeding
-    if (row[2] == "retrieve" or row[3] == "retrieve"):
+    #If either the Host, Cluster, or Accession data needs to be retrieved, try to access the data in phagesdb before proceeding
+    if (row[2] == "retrieve" or row[3] == "retrieve" or row[7] == "retrieve"):
         try:
             #Ensure the phage name does not have Draft appended    
             if row[1][-6:].lower() == "_draft":
@@ -472,11 +532,13 @@ for row in file_reader:
             phage_url = ""
             online_data_json = ""
             online_data_dict = {}
-            write_out(output_file,"\nError: unable to retrieve Host and/or Cluster data for phage %s from phagesdb." %row[1])
+            write_out(output_file,"\nError: unable to retrieve Host, Cluster, and/or Accession data for phage %s from phagesdb." %row[1])
             if row[2] == "retrieve":
                 row[2] = "none"
             if row[3] == "retrieve":
                 row[3] = "none"
+            if row[7] == "retrieve":
+                row[7] = "none"
             table_errors += 1
         
         
@@ -576,6 +638,31 @@ for row in file_reader:
         table_errors += question("\nError: %s is an incorrect qualifier." % row[5])
 
 
+    #Modify Accession if needed
+    if row[7] == "retrieve":
+
+        #On phagesdb, phages should always have a Genbank Accession field. If no accession, it will be ""
+        try:
+            row[7] = online_data_dict['genbank_accession']
+            if row[7] != "":
+                row[7] = row[7].strip() #Sometimes accession data from phagesdb have whitespace characters
+                row[7] = row[7].split('.')[0] #Sometimes accession data from phagesdb have version suffix
+            else:
+                row[7] = "none"
+            
+        except:
+            write_out(output_file,"\nError: unable to retrieve Accession data for phage %s from phagesdb." %row[1])
+            row[7] = "none"
+            table_errors += 1
+           
+        if row[7] != "none" and row[7] in phageAccession_set:
+            print "The Accession %s is already in the database." % row[7]
+            write_out(output_file,"\nError: phage %s Accession designation %s is already in the database." % (row[1],row[7]))
+            table_errors += 1
+
+    elif row[7].strip() == "":
+        row[7] = "none"
+
 
 
 
@@ -603,6 +690,8 @@ for row in file_reader:
             write_out(output_file,"\nError: %s should not have a genome listed to be removed." %row[1])
             table_errors += 1
 
+        #Accession = it will either be an accession or it will be "none"
+
     
     #Add
     elif row[0] == "add":
@@ -623,11 +712,15 @@ for row in file_reader:
         if row[6] != "none":
             write_out(output_file,"\nError: %s to be added should not have a genome indicated for removal." %row[1])
             table_errors += 1
+
+        #Accession = it will either be an accession or it will be "none"
+
+
     
     #Remove
     elif row[0] == "remove":
-        #FirstPhageID,Host, Cluster, Status, Description
-        if (row[1] != "none" or row[2] != "none" or row[3] != "none" or row[4] != "none" or row[5] != "none"):
+        #FirstPhageID,Host, Cluster, Status, Description, Accession
+        if (row[1] != "none" or row[2] != "none" or row[3] != "none" or row[4] != "none" or row[5] != "none" or row[7] != "none"):
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
             table_errors += 1        
         #SecondPhageID
@@ -671,6 +764,9 @@ for row in file_reader:
             print "%s to replace %s is not spelled the same." %(row[1],row[6])
             table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
        
+        #Accession = it will either be an accession or it will be "none"
+
+
         
     else:
         pass
@@ -751,6 +847,14 @@ for genome_data in genome_data_list:
 
              
 
+#Verify there are no duplicate accessions in the import table
+importAccession_set = set()
+for genome_data in genome_data_list:
+    if genome_data[7] in importAccession_set:
+        write_out(output_file,"\nError: Accession %s is duplicated in the import table." %genome_data[7])
+        table_errors += 1
+    else:
+        importAccession_set.add(genome_data[7])
 
 
 
@@ -774,13 +878,76 @@ for genome_data in genome_data_list:
 
 
 
+###
+#Check to see if there are any inconsistencies with the update data compared to current phamerator data
+for genome_data in update_data_list:
+    matched_phamerator_data = phamerator_data_dict[genome_data[1]]
 
+    #Host data check
+    if genome_data[2] != matched_phamerator_data[2]:
+
+        print "There is conflicting host data for genome %s" % genome_data[1]
+        print "Phamerator host: %s" % matched_phamerator_data[2]
+        print "Import ticket host: %s" % genome_data[2]
+        print "The new host data will be imported."
+        table_errors += question("\nError: incorrect host data for %s." % genome_data[1])
+
+
+    #Status data check
+    if genome_data[4] != matched_phamerator_data[4]: 
+
+        #It is not common to change from 'gbk' or 'final' to anything else
+        if matched_phamerator_data[4] != 'draft':
+            
+            print "There is conflicting status data for genome %s" % genome_data[1]
+            print "Phamerator status: %s" % matched_phamerator_data[4]
+            print "Import ticket status: %s" % genome_data[4]
+            print "The new status data will be imported."
+            table_errors += question("\nError: incorrect status data for %s." % genome_data[1])
+
+        #It is common to change status from 'draft' to 'final', but not anything else
+        elif genome_data[4] != "final":
+
+            print "There is conflicting status data for genome %s" % genome_data[1]
+            print "Phamerator status: %s" % matched_phamerator_data[4]
+            print "Import ticket status: %s" % genome_data[4]
+            print "The new status data will be imported."
+            table_errors += question("\nError: incorrect status data for %s." % genome_data[1])
+
+
+    #Accession data check
+    if genome_data[7] == "none" and matched_phamerator_data[7] != "none":
+
+        print "There is conflicting accession data for genome %s" % genome_data[1]
+        print "Phamerator accession: %s" % matched_phamerator_data[7]
+        print "Import ticket accession: %s" % genome_data[7]
+        print "The new accession data will be imported."
+        table_errors += question("\nError: incorrect accession data for %s." % genome_data[1])
+
+    elif genome_data[7] != "none" and matched_phamerator_data[7] != "none" and genome_data[7] != matched_phamerator_data[7]:
+
+        print "There is conflicting accession data for genome %s" % genome_data[1]
+        print "Phamerator accession: %s" % matched_phamerator_data[7]
+        print "Import ticket accession: %s" % genome_data[7]
+        print "The new accession data will be imported."
+        table_errors += question("\nError: incorrect accession data for %s." % genome_data[1])
+
+
+
+###
 #Check to see if any genomes to be removed are the correct status
 for genome_data in remove_data_list:
-    for genome_tuple in current_genome_data_tuples:
-        if (genome_data[6] == genome_tuple[0] and genome_tuple[4] != "draft"):
-            print "The genome %s to be removed is currently %s status." % (genome_data[6],genome_tuple[4])
-            table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],genome_tuple[4])) #errors will be incremented if name is used more than once
+    matched_phamerator_data = phamerator_data_dict[genome_data[6]]
+    if matched_phamerator_data[4] != "draft":
+        print "The genome %s to be removed is currently %s status." % (genome_data[6],matched_phamerator_data[4])
+        table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],matched_phamerator_data[4]))
+
+
+    ###The code block below uses current_genome_data_tuples, but should be updated to use the phamerator_data_dict
+    #for genome_tuple in current_genome_data_tuples:
+    #    if (genome_data[6] == genome_tuple[0] and genome_tuple[4] != "draft"):
+    #        print "The genome %s to be removed is currently %s status." % (genome_data[6],genome_tuple[4])
+    #        table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],genome_tuple[4])) #errors will be incremented if name is used more than once
 
 
 
@@ -819,13 +986,18 @@ update_statements = []
 for genome_data in update_data_list:
     write_out(output_file,"\nPreparing: " + str(genome_data))
 
-    #HostStrain and status updates.		
+    if genome_data[7] == "none":
+        genome_data[7] = ""
+        
+    #HostStrain, status, and Accession updates.		
     update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
+    update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
 
     #Create the statement to update Cluster.
     update_statements.append(create_cluster_statement(genome_data[1],genome_data[3]))
+###
 
     updated += 1
 
@@ -1158,20 +1330,25 @@ for filename in genbank_files:
             continue
 
 
-        #PhageNotes and Accessions
+        #PhageNotes
         try:
             phageNotes = str(seq_record.annotations["comment"])
         except:
             phageNotes = ""
 
+###
+
+        #Accession
         try:
-            accessionNum = seq_record.annotations["accessions"][0]
+            #There may be a list of accessions associated with this file. I think the first accession in the list is the most recent.
+            #Discard the version suffix
+            parsed_accession = seq_record.annotations["accessions"][0]
+            parsed_accession = parsed_accession.split('.')[0]
         except:
-            accessionNum = ""
+            parsed_accession = "none"
         
         
-        
-        #Retrieve Host,Cluster,Status,Description,Drop-genome info
+        #Retrieve import ticket
         
         #ALLPHAGES option
         if use_basename == "yes":
@@ -1182,12 +1359,13 @@ for filename in genbank_files:
         
         if matchedData != "error":
             write_out(output_file,"\nPreparing: " + str(matchedData))
-            phageAction = matchedData[0]
-            phageHost = matchedData[2]
-            phageCluster = matchedData[3]
-            phageStatus = matchedData[4]
-            cdsQualifier = matchedData[5]
-            genomeReplace = matchedData[6]
+            import_action = matchedData[0]
+            import_host = matchedData[2]
+            import_cluster = matchedData[3]
+            import_status = matchedData[4]
+            import_cds_qualifier = matchedData[5]
+            import_genome_replace = matchedData[6]
+            import_accession = matchedData[7]
             
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
@@ -1198,6 +1376,7 @@ for filename in genbank_files:
             continue
         
                        
+        
            
         #Check the database to make sure the genome sequence and name matches correctly.            
         con = mdb.connect(mysqlhost, username, password, database)
@@ -1224,7 +1403,7 @@ for filename in genbank_files:
         #Create a set of GeneIDs. If a genome will be replaced, do not add those GeneIDs to the set.
         all_GeneID_set = set()
         for gene_tuple in current_gene_data_tuples:
-            if (phageAction == "replace" and gene_tuple[1] == genomeReplace):
+            if (import_action == "replace" and gene_tuple[1] == import_genome_replace):
                 continue
             all_GeneID_set.add(gene_tuple[0])
             
@@ -1233,13 +1412,110 @@ for filename in genbank_files:
         #Cross-check the import action against the current state of the database and create SQL statements
         
         #If adding a new genome, no genome sequence in database is expected to match the current genome sequence
-        if (phageAction == "add" and len(query_results) > 0):
+        if (import_action == "add" and len(query_results) > 0):
             record_errors += 1 
             write_out(output_file,"\nError: these genome(s) in the database currently contain the same genome sequence: %s.\nUnable to upload %s." % (query_results,phageName))
 
 
         #If replacing a genome:
-        elif phageAction == "replace":
+        elif import_action == "replace":
+
+###
+            #Retrieve current phamerator data (if it is a 'replace' ticket)
+            try:
+                matched_phamerator_data = phamerator_data_dict[phageName]
+            except:
+                matched_phamerator_data = "error"
+
+               
+            if matched_phamerator_data != "error":
+                write_out(output_file,"\nRetrieved phamerator data for phage: %s" % phageName)
+                
+                phamerator_host = matched_phamerator_data[2]
+                phamerator_cluster = matched_phamerator_data[5]
+                phamerator_status = matched_phamerator_data[4]
+                phamerator_datelastmod = matched_phamerator_data[6]
+                phamerator_accession = matched_phamerator_data[7]   
+             
+            else:
+                write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))            
+                failed_genome_files.append(filename)
+                script_warnings += record_warnings
+                script_errors += record_errors
+                raw_input("\nPress ENTER to proceed to next file.")
+                continue
+
+
+            #Import and Phamerator host data check
+            #After all features are parsed, the import and parsed host data is checked
+            if import_host != phamerator_host:
+
+                print "There is conflicting host data for genome %s" % phageName
+                print "Phamerator host: %s" % phamerator_host
+                print "Import ticket host: %s" % import_host
+                print "The new host data will be imported."
+                record_errors += question("\nError: incorrect host data for %s." % phageName)
+
+
+            #Import and Phamerator status data check
+            if import_status != phamerator_status: 
+
+                #It is not common to change from 'gbk' or 'final' to anything else
+                if phamerator_status != 'draft':
+                    
+                    print "There is conflicting status data for genome %s" % phageName
+                    print "Phamerator status: %s" % phamerator_status
+                    print "Import ticket status: %s" % import_status
+                    print "The new status data will be imported."
+                    record_errors += question("\nError: incorrect status data for %s." % phageName)
+
+                #It is common to change status from 'draft' to 'final', but not anything else
+                elif import_status != "final":
+
+                    print "There is conflicting status data for genome %s" % phageName
+                    print "Phamerator status: %s" % phamerator_status
+                    print "Import ticket status: %s" % import_status
+                    print "The new status data will be imported."
+                    record_errors += question("\nError: incorrect status data for %s." % phageName)
+
+
+            #Phamerator may or may not have accession data.
+            #Import table may or may not have accession data.
+            #Genbank-formatted file may or may not have accession data.
+            #Verify all accessions match.
+            
+            #Import and Phamerator accession data check
+            if import_accession == "none" and phamerator_accession != "none":
+
+                print "There is conflicting accession data for genome %s" % phageName
+                print "Phamerator accession: %s" % phamerator_accession
+                print "Import ticket accession: %s" % import_accession
+                print "The new accession data will be imported."
+                record_errors += question("\nError: incorrect accession data for %s." % phageName)
+
+            elif import_accession != "none" and phamerator_accession != "none" and import_accession != phamerator_accession:
+
+                print "There is conflicting accession data for genome %s" % phageName
+                print "Phamerator accession: %s" % phamerator_accession
+                print "Import ticket accession: %s" % import_accession
+                print "The new accession data will be imported."
+                record_errors += question("\nError: incorrect accession data for %s." % phageName)
+
+
+            #Import and parsed accession data check
+            if import_accession != "none" and import_accession != parsed_accession:
+
+                print "There is conflicting accession data for genome %s" % phageName
+                print "Import ticket accession: %s" % import_accession
+                print "Parsed accession from file: %s" % parsed_accession
+                print "The parsed accession data will be imported."
+                record_errors += question("\nError: incorrect accession data for %s." % phageName)
+
+
+
+
+
+###
 
 
             #Exactly one and only one genome in the database is expected to have the same sequence.  
@@ -1248,8 +1524,8 @@ for filename in genbank_files:
                 write_out(output_file,"\nError: the following genomes in the database currently contain the same genome sequence as %s: %s).\nUnable to perform replace action." % (phageName,query_results))
 
             elif len(query_results) == 0: 
-                write_out(output_file,"\n%s appears to be a different genome sequence than %s. These genomes do not match." % (phageName,genomeReplace))
-                record_errors += question("\nError: %s and %s have different genome sequences." % (phageName,genomeReplace))
+                write_out(output_file,"\n%s appears to be a different genome sequence than %s. These genomes do not match." % (phageName,import_genome_replace))
+                record_errors += question("\nError: %s and %s have different genome sequences." % (phageName,import_genome_replace))
                            
             elif len(query_results) == 1:
 
@@ -1259,22 +1535,21 @@ for filename in genbank_files:
                     record_errors +=  question("\nError: the genome in the database with matching sequence was incorrect status")
                 
                 #The genome to be replaced does not match the genome name in the database with the same sequence.
-                if query_results[0][0] != genomeReplace:
-                    write_out(output_file,"\nError: the genome to be removed, %s, does not match the genome name in database, %s, that has the matching genome sequence to %s." % (genomeReplace,query_results[0][0],phageName))
+                if query_results[0][0] != import_genome_replace:
+                    write_out(output_file,"\nError: the genome to be removed, %s, does not match the genome name in database, %s, that has the matching genome sequence to %s." % (import_genome_replace,query_results[0][0],phageName))
                     record_errors += 1
             else:
                 pass
 
             #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)            
-            phamerator_date = datelastmod_dict[genomeReplace]            
-
-            if not seq_record_date > phamerator_date:
-                print 'The date %s in file %s is not more recent than the Phamerator date %s.' %(seq_record_date,filename,phamerator_date)
+###
+            if not seq_record_date > phamerator_datelastmod:
+                print 'The date %s in file %s is not more recent than the Phamerator date %s.' %(seq_record_date,filename,phamerator_datelastmod)
                 print 'Despite it being an older record, the phage %s will continue to be imported.' % phageName
-                record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_date))
+                record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
             
             #Create the DELETE command            
-            add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + genomeReplace + "';")
+            add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + import_genome_replace + "';")
 
         else:
             pass
@@ -1301,13 +1576,13 @@ for filename in genbank_files:
 
         #Create list of phage data, then append it to the SQL statement
         #0 = phageName or basename
-        #1 = accessionNum
+        #1 = accession
         #2 = phageName
-        #3 = phageHost
+        #3 = import_host
         #4 = phageSeq
         #5 = seqLength
         #6 = seqGC
-        #7 = phageStatus
+        #7 = import_status
         #8 = date
         #9 = ncbi_update_status
         #10 = annotation_qc
@@ -1315,18 +1590,27 @@ for filename in genbank_files:
             phage_data_list.append(basename)
         else:
             phage_data_list.append(phageName)
-        phage_data_list.append(accessionNum)
+            
+        ###Decide which accession to use
+        if parsed_accession == "none":
+            if import_accession == "none":
+                accession_to_upload = ""
+            else:
+                accession_to_upload = import_accession
+        else:
+            accession_to_upload = parsed_accession      
+            
+        
+        phage_data_list.append(accession_to_upload)
         phage_data_list.append(phageName)
-        phage_data_list.append(phageHost)
+        phage_data_list.append(import_host)
         phage_data_list.append(phageSeq)
         phage_data_list.append(seqLength)
         phage_data_list.append(seqGC)
-        phage_data_list.append(phageStatus)
+        phage_data_list.append(import_status)
         phage_data_list.append(date)
         phage_data_list.append(ncbi_update_status)
         phage_data_list.append(annotation_qc)        
-
-
         
         add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, status, DateLastModified, RetrieveRecord,AnnotationQC) \
                                         VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
@@ -1343,9 +1627,9 @@ for filename in genbank_files:
                                         phage_data_list[10]))
         
         if use_basename == "yes":
-            add_replace_statements.append(create_cluster_statement(basename,phageCluster))
+            add_replace_statements.append(create_cluster_statement(basename,import_cluster))
         else:
-            add_replace_statements.append(create_cluster_statement(phageName,phageCluster))
+            add_replace_statements.append(create_cluster_statement(phageName,import_cluster))
                 
 
         #Next each CDS feature is parsed from the file
@@ -1617,18 +1901,18 @@ for filename in genbank_files:
             #Now assign the appropriate description info to the assigned_description variable, as indicated from the import table.
             try:
                 
-                if cdsQualifier == "product":
+                if import_cds_qualifier == "product":
                     assigned_description = feature_product 
                 
-                elif cdsQualifier == "function":
+                elif import_cds_qualifier == "function":
                     assigned_description = feature_function 
 
-                elif cdsQualifier == "note":
+                elif import_cds_qualifier == "note":
                     assigned_description = feature_note
                            
                 #This clause allows the user to specify an uncommon feature qualifier to retrieve the gene description from.    
                 else:
-                    assigned_description = retrieve_description(feature,cdsQualifier)
+                    assigned_description = retrieve_description(feature,import_cds_qualifier)
                 
             except:
                 assigned_description = ""
@@ -1742,7 +2026,7 @@ for filename in genbank_files:
 
         if find_name(pattern1,record_name.split(' ')) == 0:
             
-            if record_name.split('.')[0] != accessionNum:            
+            if record_name.split('.')[0] != parsed_accession:            
                 print "\nRecord Name does not have the accession number or the identical phage name as found in the record organism field."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
@@ -1765,12 +2049,12 @@ for filename in genbank_files:
 
         #See if there are any host name typos in the header block.
         #Skip this step if it is a Draft genome, because it won't correctly have this information.
-        if phageStatus != "draft":
-            phageHost_trim = phageHost
-            if phageHost_trim == "Mycobacterium":
-                phageHost_trim = phageHost_trim[:-3]
+        if import_status != "draft":
+            import_host_trim = import_host
+            if import_host_trim == "Mycobacterium":
+                import_host_trim = import_host_trim[:-3]
                 
-            pattern3 = re.compile('^' + phageHost_trim)
+            pattern3 = re.compile('^' + import_host_trim)
 
 
             if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
@@ -1878,17 +2162,17 @@ for filename in genbank_files:
         #11 = feature_function
         #12 = feature_note
 
-        if cdsQualifier not in description_set:        
-            write_out(output_file,"\nNumber of gene %s descriptions found for phage %s: %s" % (cdsQualifier,phageName, assigned_description_tally))     
+        if import_cds_qualifier not in description_set:        
+            write_out(output_file,"\nNumber of gene %s descriptions found for phage %s: %s" % (import_cds_qualifier,phageName, assigned_description_tally))     
         write_out(output_file,"\nNumber of gene product descriptions found for phage %s: %s" % (phageName, feature_product_tally))
         write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally)) 
         write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally))
         
         
   
-        #If other CDS fields contain descriptions, they can be chosen to replace the default cdsQualifier descriptions. Then provide option to verify changes
+        #If other CDS fields contain descriptions, they can be chosen to replace the default import_cds_qualifier descriptions. Then provide option to verify changes
         changed = ""
-        if (cdsQualifier != "product" and feature_product_tally > 0):
+        if (import_cds_qualifier != "product" and feature_product_tally > 0):
 
            print "\nThere are %s CDS products found. These will be ignored." % feature_product_tally
            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
@@ -1897,7 +2181,7 @@ for filename in genbank_files:
                     feature[9] = feature[10]
                 changed = "product"
 
-        if (cdsQualifier != "function" and feature_function_tally > 0):
+        if (import_cds_qualifier != "function" and feature_function_tally > 0):
 
             print "\nThere are %s CDS functions found. These will be ignored." % feature_function_tally
             if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
@@ -1907,7 +2191,7 @@ for filename in genbank_files:
                 changed = "function"
 
 
-        if (cdsQualifier != "note" and feature_note_tally > 0):
+        if (import_cds_qualifier != "note" and feature_note_tally > 0):
 
             print "\nThere are %s CDS notes found. These will be ignored." % feature_note_tally
             if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
