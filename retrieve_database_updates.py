@@ -478,8 +478,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         
         raw_input("Press ENTER to proceed")
 
-
-       ####
        
     #Retrieve a list of all sequenced phages listed on phagesdb
     print "Retrieving data from phagesdb..."
@@ -642,7 +640,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-####
         #Determine if any new Genbank-formatted files are available
         if retrieve_phagesdb_genomes == "yes":
         
@@ -725,7 +722,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-####DEBUG BELOW
 
 
 #Option 3: Retrieve updated records from NCBI
@@ -933,7 +929,6 @@ if retrieve_pecaan_genomes == "yes":
         pecaan_filename = new_phage + "_Draft.txt"
 
 
-        #print pecaan_link
         try:
             pecaan_response = urllib2.urlopen(pecaan_link)
             pecaan_file_handle = open(os.path.join(pecaan_output_path,genomes_folder,pecaan_filename),'w')
