@@ -654,11 +654,6 @@ for input_row in file_reader:
             write_out(output_file,"\nError: unable to retrieve Accession data for phage %s from phagesdb." %row[1])
             row[7] = "none"
             table_errors += 1
-           
-        if row[7] != "none" and row[7] in phageAccession_set:
-            print "The Accession %s is already in the database." % row[7]
-            write_out(output_file,"\nError: phage %s Accession designation %s is already in the database." % (row[1],row[7]))
-            table_errors += 1
 
     elif row[7].strip() == "":
         row[7] = "none"
@@ -675,6 +670,7 @@ for input_row in file_reader:
         if row[1] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID in the database." %row[1])
             table_errors += 1
+
         #Host, Cluster, Status
         if (row[2] == "none" or row[3] == "none" or row[4] == "none"):
             write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, or Status fields." %row[1])
@@ -699,10 +695,12 @@ for input_row in file_reader:
         if row[1] in phageId_set:
             write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
             table_errors += 1
+
         #FirstPhageID, Host, Cluster, Status, Description
         if (row[1] == "none" or row[2] == "none" or row[3] == "none" or row[4] == "none" or row[5] == "none"):
             write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
             table_errors += 1
+
         #Status
         if row[4] == "final":
             print row[1] + " to be added is listed as Final status, but no Draft (or other) genome is listed to be removed."
@@ -850,11 +848,13 @@ for genome_data in genome_data_list:
 #Verify there are no duplicate accessions in the import table
 importAccession_set = set()
 for genome_data in genome_data_list:
-    if genome_data[7] in importAccession_set:
-        write_out(output_file,"\nError: Accession %s is duplicated in the import table." %genome_data[7])
-        table_errors += 1
-    else:
-        importAccession_set.add(genome_data[7])
+
+    if genome_data[7] != "none":
+        if genome_data[7] in importAccession_set:
+            write_out(output_file,"\nError: Accession %s is duplicated in the import table." %genome_data[7])
+            table_errors += 1
+        else:
+            importAccession_set.add(genome_data[7])
 
 
 
@@ -878,15 +878,22 @@ for genome_data in genome_data_list:
 
 
 
-###
 #Check to see if there are any inconsistencies with the update data compared to current phamerator data
 for genome_data in update_data_list:
-    matched_phamerator_data = phamerator_data_dict[genome_data[1]]
 
+    #For Draft genomes in the import ticket, the phage name gets "_Draft" appended.
+    #At this point, if the phamerator genome being updated does not have the "_Draft" suffix, they will no longer be able to be matched
+    try:
+        matched_phamerator_data = phamerator_data_dict[genome_data[1]]
+    except:
+        write_out(output_file,"\nError: unable to retrieve phamerator data for %s." %genome_data[1])
+        table_errors += 1    
+        continue
+        
     #Host data check
     if genome_data[2] != matched_phamerator_data[2]:
 
-        print "There is conflicting host data for genome %s" % genome_data[1]
+        print "\n\nThere is conflicting host data for genome %s" % genome_data[1]
         print "Phamerator host: %s" % matched_phamerator_data[2]
         print "Import ticket host: %s" % genome_data[2]
         print "The new host data will be imported."
@@ -899,7 +906,7 @@ for genome_data in update_data_list:
         #It is not common to change from 'gbk' or 'final' to anything else
         if matched_phamerator_data[4] != 'draft':
             
-            print "There is conflicting status data for genome %s" % genome_data[1]
+            print "\n\nThere is conflicting status data for genome %s" % genome_data[1]
             print "Phamerator status: %s" % matched_phamerator_data[4]
             print "Import ticket status: %s" % genome_data[4]
             print "The new status data will be imported."
@@ -908,7 +915,7 @@ for genome_data in update_data_list:
         #It is common to change status from 'draft' to 'final', but not anything else
         elif genome_data[4] != "final":
 
-            print "There is conflicting status data for genome %s" % genome_data[1]
+            print "\n\nThere is conflicting status data for genome %s" % genome_data[1]
             print "Phamerator status: %s" % matched_phamerator_data[4]
             print "Import ticket status: %s" % genome_data[4]
             print "The new status data will be imported."
@@ -918,7 +925,7 @@ for genome_data in update_data_list:
     #Accession data check
     if genome_data[7] == "none" and matched_phamerator_data[7] != "none":
 
-        print "There is conflicting accession data for genome %s" % genome_data[1]
+        print "\n\nThere is conflicting accession data for genome %s" % genome_data[1]
         print "Phamerator accession: %s" % matched_phamerator_data[7]
         print "Import ticket accession: %s" % genome_data[7]
         print "The new accession data will be imported."
@@ -926,7 +933,7 @@ for genome_data in update_data_list:
 
     elif genome_data[7] != "none" and matched_phamerator_data[7] != "none" and genome_data[7] != matched_phamerator_data[7]:
 
-        print "There is conflicting accession data for genome %s" % genome_data[1]
+        print "\n\nThere is conflicting accession data for genome %s" % genome_data[1]
         print "Phamerator accession: %s" % matched_phamerator_data[7]
         print "Import ticket accession: %s" % genome_data[7]
         print "The new accession data will be imported."
@@ -934,20 +941,12 @@ for genome_data in update_data_list:
 
 
 
-###
 #Check to see if any genomes to be removed are the correct status
 for genome_data in remove_data_list:
     matched_phamerator_data = phamerator_data_dict[genome_data[6]]
     if matched_phamerator_data[4] != "draft":
         print "The genome %s to be removed is currently %s status." % (genome_data[6],matched_phamerator_data[4])
         table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],matched_phamerator_data[4]))
-
-
-    ###The code block below uses current_genome_data_tuples, but should be updated to use the phamerator_data_dict
-    #for genome_tuple in current_genome_data_tuples:
-    #    if (genome_data[6] == genome_tuple[0] and genome_tuple[4] != "draft"):
-    #        print "The genome %s to be removed is currently %s status." % (genome_data[6],genome_tuple[4])
-    #        table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],genome_tuple[4])) #errors will be incremented if name is used more than once
 
 
 
@@ -997,7 +996,6 @@ for genome_data in update_data_list:
 
     #Create the statement to update Cluster.
     update_statements.append(create_cluster_statement(genome_data[1],genome_data[3]))
-###
 
     updated += 1
 
@@ -1281,8 +1279,7 @@ for filename in genbank_files:
         #File header fields are retrieved to be able to check phageName and HostStrain typos
         #The Accession field, with the appended version number, is stored as the record.id
         #The Locus name at the top of the file is stored as the record.name
-        #The base accession number, without the version, is stored in the 'accession' annotation list
-        
+        #The base accession number, without the version, is stored in the 'accession' annotation list        
         try:
             record_name = str(seq_record.name)
         except:
@@ -1336,20 +1333,17 @@ for filename in genbank_files:
         except:
             phageNotes = ""
 
-###
 
         #Accession
         try:
             #There may be a list of accessions associated with this file. I think the first accession in the list is the most recent.
-            #Discard the version suffix
+            #Discard the version suffix if it is present in the Accession field (it might not be present)
             parsed_accession = seq_record.annotations["accessions"][0]
             parsed_accession = parsed_accession.split('.')[0]
         except:
             parsed_accession = "none"
         
-        
-        #Retrieve import ticket
-        
+                
         #ALLPHAGES option
         if use_basename == "yes":
             matchedData = add_replace_data_dict.pop(basename,"error")
@@ -1420,7 +1414,6 @@ for filename in genbank_files:
         #If replacing a genome:
         elif import_action == "replace":
 
-###
             #Retrieve current phamerator data (if it is a 'replace' ticket)
             try:
                 matched_phamerator_data = phamerator_data_dict[phageName]
@@ -1450,7 +1443,8 @@ for filename in genbank_files:
             #After all features are parsed, the import and parsed host data is checked
             if import_host != phamerator_host:
 
-                print "There is conflicting host data for genome %s" % phageName
+                record_warnings += 1
+                write_out(output_file,"\nWarning: There is conflicting host data for genome %s" % phageName)
                 print "Phamerator host: %s" % phamerator_host
                 print "Import ticket host: %s" % import_host
                 print "The new host data will be imported."
@@ -1462,8 +1456,9 @@ for filename in genbank_files:
 
                 #It is not common to change from 'gbk' or 'final' to anything else
                 if phamerator_status != 'draft':
-                    
-                    print "There is conflicting status data for genome %s" % phageName
+
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: There is conflicting status data for genome %s" % phageName)
                     print "Phamerator status: %s" % phamerator_status
                     print "Import ticket status: %s" % import_status
                     print "The new status data will be imported."
@@ -1472,7 +1467,8 @@ for filename in genbank_files:
                 #It is common to change status from 'draft' to 'final', but not anything else
                 elif import_status != "final":
 
-                    print "There is conflicting status data for genome %s" % phageName
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: There is conflicting status data for genome %s" % phageName)
                     print "Phamerator status: %s" % phamerator_status
                     print "Import ticket status: %s" % import_status
                     print "The new status data will be imported."
@@ -1487,7 +1483,8 @@ for filename in genbank_files:
             #Import and Phamerator accession data check
             if import_accession == "none" and phamerator_accession != "none":
 
-                print "There is conflicting accession data for genome %s" % phageName
+                record_warnings += 1
+                write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
                 print "Phamerator accession: %s" % phamerator_accession
                 print "Import ticket accession: %s" % import_accession
                 print "The new accession data will be imported."
@@ -1495,7 +1492,8 @@ for filename in genbank_files:
 
             elif import_accession != "none" and phamerator_accession != "none" and import_accession != phamerator_accession:
 
-                print "There is conflicting accession data for genome %s" % phageName
+                record_warnings += 1
+                write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
                 print "Phamerator accession: %s" % phamerator_accession
                 print "Import ticket accession: %s" % import_accession
                 print "The new accession data will be imported."
@@ -1505,17 +1503,12 @@ for filename in genbank_files:
             #Import and parsed accession data check
             if import_accession != "none" and import_accession != parsed_accession:
 
-                print "There is conflicting accession data for genome %s" % phageName
+                record_warnings += 1
+                write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
                 print "Import ticket accession: %s" % import_accession
                 print "Parsed accession from file: %s" % parsed_accession
                 print "The parsed accession data will be imported."
                 record_errors += question("\nError: incorrect accession data for %s." % phageName)
-
-
-
-
-
-###
 
 
             #Exactly one and only one genome in the database is expected to have the same sequence.  
@@ -1524,15 +1517,21 @@ for filename in genbank_files:
                 write_out(output_file,"\nError: the following genomes in the database currently contain the same genome sequence as %s: %s).\nUnable to perform replace action." % (phageName,query_results))
 
             elif len(query_results) == 0: 
-                write_out(output_file,"\n%s appears to be a different genome sequence than %s. These genomes do not match." % (phageName,import_genome_replace))
+
+                record_warnings += 1
+                write_out(output_file,"\nWarning: %s appears to be a different genome sequence than %s. These genomes do not match." % (phageName,import_genome_replace))
+                print "The genome will still be replaced."
                 record_errors += question("\nError: %s and %s have different genome sequences." % (phageName,import_genome_replace))
                            
             elif len(query_results) == 1:
 
                 #The genome to be replaced is not Draft.
                 if query_results[0][1].lower() != "draft":            
-                    print "The genome in the database with matching sequence, %s, is listed as %s status." % (query_results[0][0],query_results[0][1])
-                    record_errors +=  question("\nError: the genome in the database with matching sequence was incorrect status")
+
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: The genome in the database with matching sequence, %s, is listed as %s status." % (query_results[0][0],query_results[0][1]))
+                    print "The genome will still be replaced."
+                    record_errors +=  question("\nError: the genome to be removed, %s, was incorrect status." %import_genome_replace)
                 
                 #The genome to be replaced does not match the genome name in the database with the same sequence.
                 if query_results[0][0] != import_genome_replace:
@@ -1542,9 +1541,9 @@ for filename in genbank_files:
                 pass
 
             #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)            
-###
             if not seq_record_date > phamerator_datelastmod:
-                print 'The date %s in file %s is not more recent than the Phamerator date %s.' %(seq_record_date,filename,phamerator_datelastmod)
+                record_warnings += 1
+                write_out(output_file,"\nWarning: The date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
                 print 'Despite it being an older record, the phage %s will continue to be imported.' % phageName
                 record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
             
@@ -1591,7 +1590,7 @@ for filename in genbank_files:
         else:
             phage_data_list.append(phageName)
             
-        ###Decide which accession to use
+        #Decide which accession to use
         if parsed_accession == "none":
             if import_accession == "none":
                 accession_to_upload = ""
