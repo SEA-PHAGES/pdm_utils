@@ -311,6 +311,9 @@ while query_database_valid == False:
 # were provided for dumping the database, it needs to be provided again.
 if query_database == "yes":
 
+
+
+
     #Set up MySQL parameters
     mysqlhost = 'localhost'
     username = getpass.getpass(prompt='mySQL username:')
@@ -340,8 +343,21 @@ if query_database == "yes":
 
 
 
+    #Verify the query output folder exists
+    #Expand the path if it references the home directory
+    query_folder = os.path.join(mysql_query_final_dir,"%s_%s_v%s" %(date,database,version_export))
+
+    if os.path.isdir(query_folder) == True:
+        cur.close()
+        con.close()
+        print "\nError creating new mysql query output folder in specifiied output directory. Folder already exists."
+        sys.exit(1)
+
+
+
     #Export genome and gene data to file
     #Filename formatting: DATE_DATABASE_VERSION_genes/genomes.csv
+    os.mkdir(query_folder)
     try:
         print "Exporting genome data..."
         filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_export)   
@@ -350,7 +366,7 @@ if query_database == "yes":
                      % (mysql_query_default_dir,filename1)
         cur.execute(statement1)
 
-        command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename1,mysql_query_final_dir)
+        command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename1,query_folder)
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list)
 
@@ -365,7 +381,7 @@ if query_database == "yes":
         cur.execute("COMMIT")
         cur.close()
         con.autocommit(True)
-        command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename2,mysql_query_final_dir)
+        command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename2,query_folder)
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list)
 
