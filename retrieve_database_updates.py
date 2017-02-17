@@ -426,7 +426,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_accession = genome_tuple[6]
         phamerator_retrieve = genome_tuple[7]
         phamerator_program = genome_tuple[8]
-###
+
         #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
         if phamerator_cluster is None:
             phamerator_cluster = 'Singleton'
@@ -462,7 +462,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_host_set.add(phamerator_host)
         phamerator_cluster_set.add(phamerator_cluster)
 
-        ###Check program data
+        #Check program data
         #Default program setting is NULL
         if phamerator_program is None:
             phamerator_program = "none"
@@ -486,7 +486,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
     #Check if there are any phageName duplications. If there are, they will not be able to be compared to phagesdb data.
     if len(phamerator_duplicate_phage_names) > 0:
-        print "Data is not able to be matched to phagesdb because of the following non-unique phage Names in phamerator:"
+        print "Error: Data is not able to be matched to phagesdb because of the following non-unique phage Names in phamerator:"
         for element in phamerator_duplicate_phage_names:
             print element
         retrieve_field_updates = "no"
@@ -495,7 +495,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
     if len(phamerator_duplicate_accessions) > 0:
-        print "There are duplicate accessions in Phamerator. Unable to proceed with NCBI record retrieval."
+        print "Error: There are duplicate accessions in Phamerator. Unable to proceed with NCBI record retrieval."
         for accession in phamerator_duplicate_accessions:
             print accession
         retrieve_ncbi_genomes = "no"
@@ -577,7 +577,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         
         #The next code block is only applicable if all phage data was successfully retrieved from phagesdb
         #If incomplete data was retrieved from phagesdb, the retrieve_field_updates and retrieve_phagesdb_genomes flags should have been set to "no"
-        if (retrieve_field_updates == "yes" and retrieve_phagesdb_genomes == "yes"):       
+        if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes"):       
 
             #Ensure the phageID does not have Draft appended    
             if phamerator_id[-6:].lower() == "_draft":
@@ -645,12 +645,12 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-            ###Matched program
+            #Matched program
             #On phagesdb, phages may or may not have a Program associated with it
             try:
             
                 #Code to retrieve program data will probably change once it all has been updated in phagesdb
-                phagesdb_program = online_data_dict['program']['program_name']
+                phagesdb_program = matched_phagesdb_data['program']['program_name']
                 if phagesdb_program != "" or phagesdb_program is not None:
                     
                     #See if the program is found in the current list of long program names
@@ -703,12 +703,12 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 field_corrections_needed += 1
 
 
-            ###Compare Program
+            #Compare Program
             if phamerator_program != phagesdb_program and phagesdb_program != "none":
                 print "\nPhamerator program %s and phagesdb program %s do not match for phageID %s." %(phamerator_program,phagesdb_program,phamerator_id)
                 field_corrections_needed += 1
 
-###
+
             #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
                 field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none",phagesdb_accession,phagesdb_program,"none"])
@@ -761,7 +761,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_flatfile_response.close()
                     phagesdb_file_handle.close()
                                    
-                    ###Create the new import ticket
+                    #Create the new import ticket
                     phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product","retrieve","retrieve",phamerator_id])
                     phagesdb_retrieved_tally += 1
                     phagesdb_retrieved_list.append(phamerator_id)
