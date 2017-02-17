@@ -374,6 +374,7 @@ phageStatus_set = set()
 phageCluster_set = set()
 phageAccession_set = set()
 phageProgram_set = set()
+phageProgram_set.add("none")
 modified_genome_data_lists = []
 print "Preparing genome data sets from the database..."
 
@@ -456,7 +457,7 @@ api_prefix = "http://phagesdb.org/api/phages/"
 api_suffix = "/?format=json"
 
 
-###List of eligible programs
+#List of eligible programs
 program_long_dict = {\
     "Science Education Alliance-Phage Hunters Advancing Genomics and Evolutionary Science":"SEA",\
     "Kentucky Biomedical Infrastructure Network Small Genomes Discovery Program":"KBRIN",\
@@ -489,7 +490,7 @@ replace_total = 0
 update_total = 0
 for input_row in file_reader:
 
-###
+
     #Verify the row of information has the correct number of fields to parse.
     if len(input_row) != 9:
         write_out(output_file,"\nRow in import table is not formatted correctly: " + str(input_row))
@@ -536,13 +537,12 @@ for input_row in file_reader:
         row[6] = row[6].lower()
     if (row[7].lower() == "none" or row[7].lower() == "retrieve"):
         row[7] = row[7].lower()        
-###
     if (row[8].lower() == "none" or row[8].lower() == "retrieve"):
         row[8] = row[8].lower()        
         
         
     #If either the Host, Cluster, or Accession data needs to be retrieved, try to access the data in phagesdb before proceeding
-    if (row[2] == "retrieve" or row[3] == "retrieve" or row[7] == "retrieve"):
+    if (row[2] == "retrieve" or row[3] == "retrieve" or row[7] == "retrieve" or row[8] == "retrieve"):
         try:
             #Ensure the phage name does not have Draft appended    
             if row[1][-6:].lower() == "_draft":
@@ -563,10 +563,8 @@ for input_row in file_reader:
                 row[3] = "none"
             if row[7] == "retrieve":
                 row[7] = "none"
-###
             if row[8] == "retrieve":
                 row[8] = "none"
-                
                 
             table_errors += 1
         
@@ -688,14 +686,13 @@ for input_row in file_reader:
         row[7] = "none"
 
 
-###
     #Modify Program if needed
     if row[8] == "retrieve":
 
         #On phagesdb, phages may or may not have a Program associated with it
         try:
         
-            ###Code to retrieve program data will probably change once it all has been updated in phagesdb
+            #Code to retrieve program data will probably change once it all has been updated in phagesdb
             row[8] = online_data_dict['program']['program_name']
             if row[8] != "" or row[8] is not None:
                 
@@ -722,8 +719,6 @@ for input_row in file_reader:
         print "The program %s is not currently in the database." % row[8]
         table_errors +=  question("\nError: %s is not the correct program for %s." % (row[8],row[1]))  
 
-        
-###
 
 
 
@@ -736,7 +731,7 @@ for input_row in file_reader:
         if row[1] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID in the database." %row[1])
             table_errors += 1
-###
+
         #Host, Cluster, Status, Program
         if (row[2] == "none" or row[3] == "none" or row[4] == "none" or row[8] == "none"):
             write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, Status, or Program fields." %row[1])
@@ -761,7 +756,7 @@ for input_row in file_reader:
         if row[1] in phageId_set:
             write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
             table_errors += 1
-###
+
         #FirstPhageID, Host, Cluster, Status, Description, Program
         if (row[1] == "none" or row[2] == "none" or row[3] == "none" or row[4] == "none" or row[5] == "none" or row[8] == "none"):
             write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
@@ -783,7 +778,7 @@ for input_row in file_reader:
     
     #Remove
     elif row[0] == "remove":
-###
+
         #FirstPhageID,Host, Cluster, Status, Description, Accession, Program
         if (row[1] != "none" or row[2] != "none" or row[3] != "none" or row[4] != "none" or row[5] != "none" or row[7] != "none" or row[8] != "none"):
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
@@ -806,7 +801,7 @@ for input_row in file_reader:
         if (row[1] in phageId_set and row[1] != row[6]):
             write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
             table_errors += 1
-###
+
         #Host,Cluster,Status,Description, Program
         if (row[2] == "none" or row[3] == "none" or row[4] == "none" or row[5] == "none" or row[8] == "none"):
             write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
@@ -1008,8 +1003,9 @@ for genome_data in update_data_list:
         table_errors += question("\nError: incorrect accession data for %s." % genome_data[1])
 
 
-    ###Program data check
-    if genome_data[8] != matched_phamerator_data[8]:
+    #Program data check
+    #If the current phamerator program data is NULL (which this script regards as "none"), then there is no conflict
+    if genome_data[8] != matched_phamerator_data[8] and matched_phamerator_data[8] != "none":
 
         print "\n\nThere is conflicting program data for genome %s" % genome_data[1]
         print "Phamerator program: %s" % matched_phamerator_data[8]
@@ -1082,7 +1078,7 @@ for genome_data in update_data_list:
     update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET Program = '" + genome_data[8] + "' WHERE PhageID = '" + genome_data[1] + "';")
-###
+
     #Create the statement to update Cluster.
     update_statements.append(create_cluster_statement(genome_data[1],genome_data[3]))
 
@@ -1603,8 +1599,9 @@ for filename in genbank_files:
 
 
 
-            ###Program data check
-            if import_program != phamerator_program:
+            #Program data check
+            #If the current phamerator program data is NULL (which this script regards as "none"), then there is no conflict
+            if import_program != phamerator_program and phamerator_program != "none":
 
                 record_warnings += 1
                 write_out(output_file,"\nWarning: There is conflicting program data for genome %s" % phageName)
@@ -1716,8 +1713,6 @@ for filename in genbank_files:
         phage_data_list.append(date)
         phage_data_list.append(ncbi_update_status)
         phage_data_list.append(annotation_qc)
-        
-        ###
         phage_data_list.append(import_program)
         
         
