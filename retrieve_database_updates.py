@@ -125,6 +125,16 @@ new_phage_list_url = 'http://phagesdb.org/data/unphameratedlist'
 pecaan_prefix = 'https://discoverdev.kbrinsgd.org/phameratoroutput/phage/'
 open_file_handles_list = []
 
+
+#List of eligible programs
+program_long_dict = {\
+    "Science Education Alliance-Phage Hunters Advancing Genomics and Evolutionary Science":"SEA",\
+    "Kentucky Biomedical Infrastructure Network Small Genomes Discovery Program":"KBRIN",\
+    "Phage Hunters Integrating Research and Education":"PHIRE",\
+    }
+
+
+
 #You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
 sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
 
@@ -188,7 +198,7 @@ def close_all_files(file_list):
 
 
 #Determine which type of updates will be performed.
-retrieve_field_updates = select_option("\nDo you want to retrieve Host and Cluster updates? (yes or no) ")
+retrieve_field_updates = select_option("\nDo you want to retrieve Host, Cluster, Accession, and Program updates? (yes or no) ")
 retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-annotated genomes from phagesdb? (yes or no) ")
 retrieve_pecaan_genomes = select_option("\nDo you want to retrieve auto-annotated genomes from PECAAN? (yes or no) ")
 retrieve_ncbi_genomes = select_option("\nDo you want to retrieve updated NCBI records? (yes or no) ")
@@ -339,6 +349,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #5 = DateLastModified
     #6 = Accession
     #7 = RetrieveRecord
+    #8 = Program
     try:
         con = mdb.connect(mysqlhost, username, password, database)
         con.autocommit(False)
@@ -352,7 +363,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         cur.execute("START TRANSACTION")
         cur.execute("SELECT version FROM version")
         db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,status,Cluster,DateLastModified,Accession,RetrieveRecord FROM phage")
+        cur.execute("SELECT PhageID,Name,HostStrain,status,Cluster,DateLastModified,Accession,RetrieveRecord,Program FROM phage")
         current_genome_data_tuples = cur.fetchall()
         cur.execute("COMMIT")
         cur.close()
@@ -414,7 +425,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_date = genome_tuple[5]
         phamerator_accession = genome_tuple[6]
         phamerator_retrieve = genome_tuple[7]
-
+        phamerator_program = genome_tuple[8]
+###
         #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
         if phamerator_cluster is None:
             phamerator_cluster = 'Singleton'
@@ -450,6 +462,12 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_host_set.add(phamerator_host)
         phamerator_cluster_set.add(phamerator_cluster)
 
+        ###Check program data
+        #Default program setting is NULL
+        if phamerator_program is None:
+            phamerator_program = "none"
+
+
         #Output modified genome data
         modified_genome_data_list.append([phamerator_id,\
                                             phamerator_name,\
@@ -458,8 +476,11 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                             phamerator_cluster,\
                                             phamerator_date,\
                                             phamerator_accession,\
-                                            phamerator_retrieve])
+                                            phamerator_retrieve,\
+                                            phamerator_program])
 
+
+        
 
 
     #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
@@ -520,6 +541,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_date = genome_data[5]
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
+        phamerator_program = genome_data[8]
 
     
 
@@ -549,7 +571,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                                 phamerator_cluster,\
                                                                 phamerator_date,\
                                                                 phamerator_accession,\
-                                                                phamerator_retrieve]
+                                                                phamerator_retrieve,\
+                                                                phamerator_program]
     
         
         #The next code block is only applicable if all phage data was successfully retrieved from phagesdb
@@ -622,6 +645,31 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
+            ###Matched program
+            #On phagesdb, phages may or may not have a Program associated with it
+            try:
+            
+                #Code to retrieve program data will probably change once it all has been updated in phagesdb
+                phagesdb_program = online_data_dict['program']['program_name']
+                if phagesdb_program != "" or phagesdb_program is not None:
+                    
+                    #See if the program is found in the current list of long program names
+                    if phagesdb_program in program_long_dict.keys():
+                        phagesdb_program = program_long_dict[phagesdb_program]
+                    else:
+                        print "\nError: phagesdb program data for phage %s is not on list of eligible programs." %phamerator_id
+                        phagesdb_program = "none"
+                        
+                else:
+                    phagesdb_program = "none"
+
+            except:
+                print "\nError: unable to retrieve program data for phage %s from phagesdb." %phamerator_id
+                phagesdb_program = "none"
+
+
+
+
         #Determine if any fields need updated
         if retrieve_field_updates == "yes":
 
@@ -655,10 +703,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 field_corrections_needed += 1
 
 
+            ###Compare Program
+            if phamerator_program != phagesdb_program and phagesdb_program != "none":
+                print "\nPhamerator program %s and phagesdb program %s do not match for phageID %s." %(phamerator_program,phagesdb_program,phamerator_id)
+                field_corrections_needed += 1
 
+###
             #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
-                field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none",phagesdb_accession,"none"])
+                field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none",phagesdb_accession,phagesdb_program,"none"])
         
               
 
@@ -708,8 +761,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_flatfile_response.close()
                     phagesdb_file_handle.close()
                                    
-                    #Create the new import ticket
-                    phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product","retrieve",phamerator_id])
+                    ###Create the new import ticket
+                    phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product","retrieve","retrieve",phamerator_id])
                     phagesdb_retrieved_tally += 1
                     phagesdb_retrieved_list.append(phamerator_id)
 
@@ -842,6 +895,7 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_date = genome_data[5]
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
+        phamerator_program = genome_data[8]
 
 
         #ncbi_results_headers = 'PhageID','PhageName','Accession','Status','PhameratorDate','RetrievedRecordDate','Result'
@@ -872,6 +926,7 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_date = genome_data[5]
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
+        phamerator_program = genome_data[8]
 
 
         #5 Save new records in a folder and create an import table row for them
@@ -899,7 +954,7 @@ if retrieve_ncbi_genomes == "yes":
             #Now output the file and create the import ticket.
             ncbi_filename = phamerator_name.lower() + "__" + retrieved_record_accession + ".gb"
             SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,genomes_folder,ncbi_filename),"genbank")
-            ncbi_import_table_writer.writerow(['replace',import_table_name,phamerator_host,phamerator_cluster,phamerator_status,'product',phamerator_accession,phamerator_id])
+            ncbi_import_table_writer.writerow(['replace',import_table_name,phamerator_host,phamerator_cluster,phamerator_status,'product',phamerator_accession,phamerator_program,phamerator_id])
 
 
         else:
@@ -962,7 +1017,7 @@ if retrieve_pecaan_genomes == "yes":
             
             
             #Create the new import ticket
-            pecaan_import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none","none"])
+            pecaan_import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none","retrieve","none"])
             print "Retrieved %s from PECAAN." %new_phage
             pecaan_retrieved_tally += 1
             pecaan_retrieved_list.append(new_phage)
