@@ -694,6 +694,8 @@ for input_row in file_reader:
 
         #On phagesdb, phages may or may not have a Program associated with it
         try:
+        
+            ###Code to retrieve program data will probably change once it all has been updated in phagesdb
             row[8] = online_data_dict['program']['program_name']
             if row[8] != "" or row[8] is not None:
                 
