@@ -647,6 +647,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
             #Matched program
             #On phagesdb, phages may or may not have a Program associated with it
+            ###Currently, if no program is listed in phagesdb, ['program'] will be NULL with no ['program_name'] field.
+            ###For now, simply assign all these as 'NCBI'            
             try:
             
                 #Code to retrieve program data will probably change once it all has been updated in phagesdb
@@ -665,7 +667,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
             except:
                 print "\nError: unable to retrieve program data for phage %s from phagesdb." %phamerator_id
-                phagesdb_program = "none"
+                phagesdb_program = "NCBI"
 
 
 

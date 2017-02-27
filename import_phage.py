@@ -690,6 +690,8 @@ for input_row in file_reader:
     if row[8] == "retrieve":
 
         #On phagesdb, phages may or may not have a Program associated with it
+        ###Currently, if no program is listed in phagesdb, ['program'] will be NULL with no ['program_name'] field.
+        ###For now, simply assign all these as 'NCBI'
         try:
         
             #Code to retrieve program data will probably change once it all has been updated in phagesdb
@@ -709,8 +711,8 @@ for input_row in file_reader:
             
         except:
             write_out(output_file,"\nError: unable to retrieve program data for phage %s from phagesdb." %row[1])
-            row[8] = "none"
-            table_errors += 1
+            row[8] = "NCBI"
+            #table_errors += 1
 
     elif row[8].strip() == "":
         row[8] = "none"
@@ -1502,7 +1504,7 @@ for filename in genbank_files:
 
             #Retrieve current phamerator data (if it is a 'replace' ticket)
             try:
-                matched_phamerator_data = phamerator_data_dict[phageName]
+                matched_phamerator_data = phamerator_data_dict[import_genome_replace]
             except:
                 matched_phamerator_data = "error"
 
@@ -1716,9 +1718,7 @@ for filename in genbank_files:
         phage_data_list.append(import_program)
         
         
-        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, \
-                                        status, DateLastModified, RetrieveRecord, AnnotationQC, Program) \
-                                        VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
+        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, Program) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
                                         phage_data_list[1],\
                                         phage_data_list[2],\
