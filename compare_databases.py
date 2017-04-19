@@ -30,21 +30,6 @@ def write_out(filename,statement):
     filename.write(statement)
 
 
-#For questionable data, user is requested to clarify if the data is correct or not
-def question(message):
-    number = -1
-    while number < 0:
-        value = raw_input("Is this correct? (yes or no): ")
-        if (value.lower() == "yes" or value.lower() == "y"):
-            number = 0
-        elif (value.lower() == "no" or value.lower() == "n"):
-            write_out(report_file,message)
-            number = 1
-        else:
-            print "Invalid response."
-    #This value will be added to the current error total. If 0, no error was encountered. If 1, an error was encountered.
-    return number
-
 #Exits MySQL
 def mdb_exit(message):
     write_out(report_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
@@ -145,19 +130,18 @@ class UnannotatedGenome:
     # Define all attribute setters:
     def set_phage_name(self,value):
         self.__phage_name = value
+        self.__search_name = remove_draft_suffix(self.__phage_name)
     def set_host(self,value):
         self.__host = value
     def set_sequence(self,value):
         self.__sequence = value.upper()
+        self.__length = len(self.__sequence)
     def set_accession(self,value):
         if value is None or value.strip() == '':
-            self.__accession = 'none'
+            self.__accession = ''
         else:
+            value = value.strip()
             self.__accession = value.split('.')[0]
-    def set_search_name(self):
-        self.__search_name = remove_draft_suffix(self.__phage_name)
-    def set_length(self):
-        self.__length = len(self.__sequence)
     def set_nucleotide_errors(self,dna_alphabet_set):
         nucleotide_set = set(self.__sequence)
         nucleotide_error_set = nucleotide_set - dna_alphabet_set
@@ -166,8 +150,6 @@ class UnannotatedGenome:
 
 
     # Define all attribute getters:
-    def get_phage_id(self):
-        return self.__phage_id
     def get_name(self):
         return self.__name
     def get_host(self):
@@ -176,16 +158,10 @@ class UnannotatedGenome:
         return self.__sequence
     def get_length(self):
         return self.__length
-    def get_cluster(self):
-        return self.__cluster
-    def get_status(self):
-        return self.__status
     def get_accession(self):
         return self.__accession
     def get_search_name(self):
         return self.__search_name
-    def get_length(self):
-        return self.__length
     def get_nucleotide_errors(self):
         return self.__nucleotide_errors
 
@@ -203,6 +179,7 @@ class AnnotatedGenome:
         # Computed datafields
         self.__cds_features = []
         self.__cds_dict = {}
+        self.__cds_features_tally = 0
         self.__cds_features_with_translation_error_tally = 0
         self.__cds_feature_boundary_error_tally = 0
 
@@ -210,6 +187,7 @@ class AnnotatedGenome:
     # Define all attribute setters:
     def set_cds_features(self,value):
         self.__cds_features = value #Should be a list
+        self.__cds_features_tally = len(self.__cds_features)
     def set_cds_dict(self):
         for cds in self.__cds_features:
             if cds.get_start_end_strand_id() not in cds_dict.keys():
@@ -235,6 +213,12 @@ class AnnotatedGenome:
         return self.__cds_features
     def get_cds_dict(self):
         return self.__cds_dict
+    def get_cds_features_tally(self):
+        return self.__cds_features_tally
+    def get_cds_features_with_translation_error_tally(self):
+        return self.__cds_features_with_translation_error_tally
+    def get_cds_feature_boundary_error_tally(self):
+        return self.__cds_feature_boundary_error_tally
 
 
 
@@ -260,6 +244,7 @@ class PhameratorGenome:
     # Define all attribute setters:
     def set_phage_id(self,value):
         self.__phage_id = value
+        self.__search_id = remove_draft_suffix(self.__phage_id)
     def set_status(self,value):
         self.__status = value
     def set_cluster_subcluster(self,value):
@@ -269,8 +254,6 @@ class PhameratorGenome:
             self.__cluster_subcluster = value
     def set_ncbi_update_flag(self,value):
         self.__ncbi_update_flag = value
-    def set_search_id(self):
-        self.__search_id = remove_draft_suffix(self.__phage_id)
 
 
     # Define all attribute getters:
@@ -282,6 +265,8 @@ class PhameratorGenome:
         return self.__status
     def get_search_id(self):
         return self.__search_id
+    def get_ncbi_update_flag(self):
+        return self.__ncbi_update_flag
 
 
 
@@ -402,12 +387,17 @@ class NcbiGenome:
         return self.__source_feature_host
     def get_source_feature_lab_host(self):
         return self.__source_feature_lab_host
+    def get_tally_function_descriptions(self):
+        return self.__tally_function_descriptions
+    def get_tally_product_descriptions(self):
+        return self.__tally_product_descriptions
+    def get_tally_note_descriptions(self):
+        return self.__tally_note_descriptions
+    def get_tally_missing_locus_tags(self):
+        return self.__tally_missing_locus_tags
+    def get_tally_locus_tag_typos(self):
+        return self.__tally_locus_tag_typos
 
-
-
-
-
-        ###For setting source field data, iterate through each gene
 
 
 
@@ -424,11 +414,9 @@ class CdsFeature:
         self.__right_boundary = '' #Position of right boundary of feature, 0-indexed
         self.__strand = '' #'forward', 'reverse', or 'NA'
         self.__translation = ''
-        self.__length = ''
+        self.__translation_length = ''
 
         # Computed datafields
-        self.__search_id = '' # The phage ID void of "_Draft" and converted to lowercase
-        self.__search_name = '' # The phage name void of "_Draft" and converted to lowercase
         self.__amino_acid_errors = 0
         self.__start_end_strand_id = ''
         self.__boundary_error = 0
@@ -441,17 +429,11 @@ class CdsFeature:
         self.__right_boundary = value
     def set_strand(self,value):
         self.__strand = parse_strand(value)
-    def set_length(self,value):
-        self.__length = value
     def set_translation(self,value):
         self.__translation = value.upper()
+        self.__translation_length = len(self.__translation)
     def set_type_id(self,value):
         self.__type_id = value
-    def set_search_id(self):
-        self.__search_id = remove_draft_suffix(self.__phage_id)
-    def set_search_name(self):
-        self.__search_name = remove_draft_suffix(self.__phage_name)
-
     def set_genome_boundary_straddle(self):
         ###Do I need this method?
         # Determine if the gene straddles the genome boundary and set the attribute appropriately.
@@ -485,20 +467,16 @@ class CdsFeature:
         return self.__left_boundary
     def get_right_boundary(self):
         return self.__right_boundary
-    def get_length(self):
-        return self.__length
     def get_type_id(self):
         return self.__type_id
     def get_strand(self):
         return self.__strand
-    def get_search_id(self):
-        return self.__search_id
-    def get_search_name(self):
-        return self.__search_name
     def get_amino_acid_errors(self):
         return self.__amino_acid_errors
     def get_translation(self):
         return self.__translation
+    def get_translation_length(self):
+        return self.__translation_length
     def get_genome_boundary_straddle(self):
         return self.__genome_boundary_straddle
     def get_start_end_strand_id(self):
@@ -516,13 +494,18 @@ class PhameratorCdsFeature:
         # Initialize all non-calculated attributes:
 
         #Datafields from Phamerator database:
+        self.__phage_id = ''
         self.__gene_id = '' #Gene ID comprised of PhageID and Gene name
         self.__gene_name = ''
         self.__notes = ''
 
         # Computed datafields
+        self.__search_id = ''
 
     # Define all attribute setters:
+    def set_phage_id(self,value):
+        self.__phage_id = value
+        self.__search_id = remove_draft_suffix(self.__phage_id)
     def set_gene_id(self,value):
         self.__gene_id = value
     def set_gene_name(self,name):
@@ -537,6 +520,10 @@ class PhameratorCdsFeature:
         return self.__gene_name
     def get_notes(self):
         return self.__notes
+    def get_phage_id(self):
+        return self.__phage_id
+    def get_search_id(self):
+        return self.__search_id
 
 
 
@@ -552,11 +539,14 @@ class NcbiCdsFeature:
         self.__product_description = ''
         self.__function_description = ''
         self.__note_description = ''
+        self.__locus_tag_missing = False
 
 
     # Define all attribute setters:
     def set_locus_tag(self,value):
         self.__locus_tag = value
+        if value == '':
+            self.__locus_tag_missing = True
     def set_gene_number(self,value):
         self.__gene_number = value
     def set_product_description(self,value):
@@ -578,6 +568,8 @@ class NcbiCdsFeature:
         return self.__function_description
     def get_note_description(self):
         return self.__note_description
+    def get_locus_tag_missing(self):
+        return self.__locus_tag_missing
 
 
 
@@ -605,7 +597,8 @@ class MatchedGenomes:
         self.__phamerator_ncbi_imperfect_matched_features_tally = 0
         self.__phamerator_features_unmatched_in_ncbi_tally = 0
         self.__ncbi_features_unmatched_in_phamerator_tally = 0
-
+        self.__phamerator_ncbi_different_descriptions_tally = 0
+        self.__phamerator_ncbi_different_translation_tally = 0
 
 
 
@@ -614,7 +607,7 @@ class MatchedGenomes:
         self.__phamerator_phagesdb_sequence_length_mismatch = False
         self.__phamerator_phagesdb_host_mismatch = False
         self.__phamerator_phagesdb_accession_mismatch = False
-
+        self.__phamerator_phagesdb_cluster_subcluster_mismatch = False
 
 
         #phagesdb and NCBI matched data comparison results
@@ -724,7 +717,7 @@ class MatchedGenomes:
             imperfect_matched_cds_id_set = ph_cds_second_id_set | ncbi_cds_second_id_set
 
 
-            #These set methods can be added to the match_features method
+            #Create MatchedCdsFeatures objects
             for start_end_strand_tup in perfect_matched_cds_id_set:
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_cds_data[start_end_strand_tup])
@@ -754,9 +747,20 @@ class MatchedGenomes:
             self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
             self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
 
-            #Now compare gene descriptions and translations
+            #Now compare gene descriptions and translations for perfectly matched cds features
             for matched_cds_object in self.__phamerator_ncbi_perfect_matched_features:
-                matched_cds_object.compare_phamerator_ncbi_features()
+                matched_cds_object.compare_phamerator_ncbi_cds_features()
+                if matched_cds_object.get_phamerator_ncbi_different_translations():
+                    self.__phamerator_ncbi_different_translation_tally += 1
+                if matched_cds_object.get_phamerator_ncbi_different_descriptions():
+                    self.__phamerator_ncbi_different_descriptions_tally += 1
+
+            #Compare gene descriptions for imperfectly matched cds features
+            #Since imperfect matches means different start site, the translation will be different by default
+            for matched_cds_object in self.__phamerator_ncbi_imperfect_matched_features:
+                matched_cds_object.compare_phamerator_ncbi_cds_features()
+                if matched_cds_object.get_phamerator_ncbi_different_descriptions():
+                    self.__phamerator_ncbi_different_descriptions_tally += 1
 
 
     def compare_phamerator_phagesdb_genomes(self):
@@ -778,6 +782,11 @@ class MatchedGenomes:
                 self.__phamerator_phagesdb_accession_mismatch = True
             if ph_genome.get_host() != pdb_genome.get_host():
                 self.__phamerator_phagesdb_host_mismatch = True
+            if ph_genome.get_cluster_subcluster() != pdb_genome.get_cluster() and \
+                ph_genome.get_cluster_subcluster() != pdb_genome.get_subcluster():
+
+                self.__phamerator_phagesdb_cluster_subcluster_mismatch = True
+
 
 
     def compare_phagesdb_ncbi_genomes(self):
@@ -806,10 +815,6 @@ class MatchedGenomes:
             return self.__ncbi_genome
         def get_phamerator_ncbi_sequence_mismatch(self):
             return self.__phamerator_ncbi_sequence_mismatch
-        def get_phamerator_phagesdb_sequence_mismatch(self):
-            return self.__phamerator_phagesdb_sequence_mismatch
-        def get_phagesdb_ncbi_sequence_mismatch(self):
-            return self.__phagesdb_ncbi_sequence_mismatch
         def get_phamerator_ncbi_perfect_matched_features(self):
             self.__phamerator_ncbi_perfect_matched_features
         def get_phamerator_ncbi_imperfect_matched_features(self):
@@ -826,7 +831,32 @@ class MatchedGenomes:
             self.__phamerator_features_unmatched_in_ncbi_tally
         def get_ncbi_features_unmatched_in_phamerator_tally(self):
             self.__ncbi_features_unmatched_in_phamerator_tally
+        def get_phamerator_ncbi_sequence_length_mismatch(self):
+            return self.__phamerator_ncbi_sequence_length_mismatch
+        def get_ncbi_record_header_fields_phage_name_mismatch(self):
+            return self.__ncbi_record_header_fields_phage_name_mismatch
+        def get_ncbi_host_mismatch(self):
+            return self.__ncbi_host_mismatch
+        def get_phamerator_ncbi_different_descriptions_tally(self):
+            return self.__phamerator_ncbi_different_descriptions_tally
+        def get_phamerator_ncbi_different_translation_tally(self):
+            return self.__phamerator_ncbi_different_translation_tally
 
+        def get_phagesdb_ncbi_sequence_mismatch(self):
+            return self.__phagesdb_ncbi_sequence_mismatch
+        def get_phagesdb_ncbi_sequence_length_mismatch(self):
+            return self.__phagesdb_ncbi_sequence_length_mismatch
+
+        def get_phamerator_phagesdb_sequence_mismatch(self):
+            return self.__phamerator_phagesdb_sequence_mismatch
+        def get_phamerator_phagesdb_sequence_length_mismatch(self):
+            return self.__phamerator_phagesdb_sequence_length_mismatch
+        def get_phamerator_phagesdb_host_mismatch(self):
+            return self.__phamerator_phagesdb_host_mismatch
+        def get_phamerator_phagesdb_accession_mismatch(self):
+            return self.__phamerator_phagesdb_accession_mismatch
+        def get_phamerator_phagesdb_cluster_subcluster_mismatch(self):
+            return self.__phamerator_phagesdb_cluster_subcluster_mismatch
 
 
 
@@ -852,7 +882,7 @@ class MatchedCdsFeatures:
             self.__ncbi_feature = value
 
 
-        def compare phamerator_ncbi_cds_features(self):
+        def compare_phamerator_ncbi_cds_features(self):
 
             if self.__phamerator_feature.get_left_boundary() != self.__ncbi_feature.get_left_boundary():
                 self.__phamerator_ncbi_different_start_sites = True
@@ -884,12 +914,30 @@ class MatchedCdsFeatures:
 
 
 
-#Mainline code
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###Mainline code
 
 #Get the command line parameters
 try:
     database = sys.argv[1] #What Phamerator database should be compared to phagesdb?
-    updateFileDir = sys.argv[2] #What is the directory into which the report should go
+    output_dir = sys.argv[2] #What is the directory into which the report should go
 except:
     print "\n\n\
             This is a python script to compare the Phamerator, phagesdb, and NCBI databases for inconsistencies.\n\
@@ -898,30 +946,27 @@ except:
             Second argument: directory path to where the consistency report should be made (csv-formatted).\n\"
     sys.exit(1)
 
-
-
-
 #Expand home directory
 home_dir = os.path.expanduser('~')
 
 
-#Verify the folder for the consistency report exists
+#Verify the folder exists
 
 #Add '/' at the end if it's not there
-if updateFileDir[-1] != "/":
-    updateFileDir = updateFileDir + "/"
+if output_dir[-1] != "/":
+    output_dir = output_dir + "/"
 
 
 #Expand the path if it references the home directory
-if updateFileDir[0] == "~":
-    updateFileDir = home_dir + updateFileDir[1:]
+if output_dir[0] == "~":
+    output_dir = home_dir + output_dir[1:]
 
 #Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
-updateFileDir = os.path.abspath(updateFileDir)
+output_dir = os.path.abspath(output_dir)
 
 
-if os.path.isdir(updateFileDir) == False:
-    print "\n\nInvalid input for output folder.\n\n"
+if os.path.isdir(output_dir) == False:
+    print "\n\nInvalid output folder.\n\n"
     sys.exit(1)
 
 
@@ -937,6 +982,9 @@ username = getpass.getpass(prompt='mySQL username:')
 print "\n\n"
 password = getpass.getpass(prompt='mySQL password:')
 print "\n\n"
+
+
+#Set up NCBI parameters
 
 #Get email infor for NCBI
 contact_email = raw_input("Provide email for NCBI: ")
@@ -957,10 +1005,8 @@ while batch_size_valid == False:
         print "Invalid choice."
         print "\n\n"
 
-
 #Determine which type of updates will be performed.
 save_ncbi_records = select_option("\nDo you want to save retrieved NCBI records to disk? (yes or no) ")
-
 
 #You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
 pdb_sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
@@ -975,33 +1021,27 @@ protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
 #Create output directories
 date = time.strftime("%Y%m%d")
 
-output_folder = '%s_database_comparison' % date
-output_path = os.path.join(updateFileDir,output_folder)
+main_output_folder = '%s_database_comparison' % date
+main_output_path = os.path.join(output_dir,main_output_folder)
 
 
 try:
-    os.mkdir(os.path.join(updateFileDir,output_folder))
+    os.mkdir(main_output_path)
 except:
-    print "\nUnable to create output folder: %s" % os.path.join(updateFileDir,output_folder)
+    print "\nUnable to create output folder: %s" % main_output_path
     sys.exit(1)
 
-os.chdir(output_path)
+os.chdir(main_output_path)
 
 
 
 #Create a folder names "genomes" to store NCBI records
+if save_ncbi_records == 'y':
+    ncbi_output_folder = '%s_ncbi_records' % date
+    os.mkdir(os.path.join(output_dir,ncbi_output_folder)
 
-genomes_folder = "genomes"
-os.mkdir(genomes_folder)
-
-
-
-
-#Open file to record update information
-report_file = open(os.path.join(updateFileDir,output_folder,date + "_database_comparison.csv"), "w")
-write_out(report_file,date + " Database comparison:\n\n\n")
-
-
+#Create list to hold all open file handles
+file_handle_list = []
 
 
 #Retrieve database version
@@ -1090,9 +1130,6 @@ for genome_tuple in ph_genome_data_tuples:
     genome_object.set_cluster_subcluster(genome_tuple[6])
     genome_object.set_accession(genome_tuple[7])
     genome_object.set_ncbi_update_flag(genome_tuple[8])
-    genome_object.set_search_id()
-    genome_object.set_search_name()
-    genome_object.set_length()
     genome_object.compute_nucleotide_errors(dna_alphabet_set)
     genome_object.compute_cds_feature_errors()
     ph_genome_objects[genome_tuple[0]] = genome_object
@@ -1191,11 +1228,24 @@ pdb_search_name_duplicate_set = set()
 for element_dict in sequenced_phages_dict['results']:
 
     genome_object = PhagesdbGenome()
+
+    #Name, Host, Accession
     genome_object.set_phage_name(element_dict['phage_name'])
     genome_object.set_host(element_dict['isolation_host']['genus'])
-    genome_object.set_search_name('phage_name')
+    genome_object.set_accession(element_dict['genbank_accession'])
 
+    #Cluster
+    if element_dict['pcluster'] is not None:
+        #Sometimes cluster information is not present. In the phagesdb database, it is recorded as NULL.
+        #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
+        #In these cases, leave cluster as ''
+        genome_object.set_cluster(element_dict['pcluster']['cluster'])
 
+    #Subcluster
+    if element_dict['psubcluster'] is not None:
+        #A phage may be clustered but not subclustered.
+        #In these cases, leave subcluster as ''
+        genome_object.set_subcluster(element_dict['psubcluster']['subcluster'])
 
     #Check to see if there is a fasta file stored on phagesdb for this phage
     if element_dict['fasta_file'] is not None:
@@ -1214,7 +1264,6 @@ for element_dict in sequenced_phages_dict['results']:
             pdb_sequence = pdb_sequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
             index += 1
         genome_object.set_sequence(pdb_sequence)
-        genome_object.set_length()
         genome_object.compute_nucleotide_errors(dna_alphabet_set)
 
     pdb_search_name = genome_object.get_search_name()
@@ -1356,9 +1405,6 @@ for retrieval_error_accession in retrieval_error_list:
 
 
 
-
-#Now that all records have been retrieved, check which records are newer than the upload date of the current version in phamerator.
-
 ncbi_genome_dict = {} #Key = accession; #Value = genome data
 for retrieved_record in retrieved_record_list:
 
@@ -1367,12 +1413,12 @@ for retrieved_record in retrieved_record_list:
     try:
         genome_object.set_record_name(retrieved_record.name)
     except:
-        genome_object.set_record_name('none')
+        genome_object.set_record_name('')
 
     try:
         genome_object.set_record_id(retrieved_record.id)
     except:
-        genome_object.set_record_id('none')
+        genome_object.set_record_id('')
 
     try:
         #There may be a list of accessions associated with this file. I think the first accession in the list is the most recent.
@@ -1381,17 +1427,17 @@ for retrieved_record in retrieved_record_list:
         record_accession = record_accession.split('.')[0]
         genome_object.set_record_accession(record_accession)
     except:
-        genome_object.set_record_accession('none')
+        genome_object.set_record_accession('')
 
     try:
         genome_object.set_record_description(retrieved_record.description)
     except:
-        genome_object.set_record_description('none')
+        genome_object.set_record_description('')
 
     try:
         genome_object.set_record_source(retrieved_record.annotations['source'])
     except:
-        genome_object.set_record_source('none')
+        genome_object.set_record_source('')
 
     try:
         record_organism = retrieved_record.annotations['organism']
@@ -1400,10 +1446,9 @@ for retrieved_record in retrieved_record_list:
         else:
             genome_object.set_record_organism(record_organism.split(' ')[-1])
     except:
-        genome_object.set_record_organism('none')
+        genome_object.set_record_organism('')
 
     genome_object.set_sequence(retrieved_record.seq)
-    genome_object.set_length()
     genome_object.compute_nucleotide_errors(dna_alphabet_set)
 
 
@@ -1598,25 +1643,14 @@ for phage_id in ph_genome_object_dict.keys():
 
 
 
-
-
-
-
+####
 #Now that all genomes have been matched, iterate through each matched objects
 #and run methods to compare the genomes
 for matched_genome_object in matched_genomes_list:
 
-    matched_genome_object.compare_phamerator_ncbi_genomes()
-    matched_genome_object.compare_phamerator_phagesdb_genomes():
-    matched_genome_object.compare_phagesdb_ncbi_genomes():
-
-
-
-#####
-
-
-
-###At which point do I run methods on individual CDS features?
+    matched_genome_object.compare_phamerator_ncbi_genomes() #This method automatically calls method to match and compare cds features
+    matched_genome_object.compare_phamerator_phagesdb_genomes()
+    matched_genome_object.compare_phagesdb_ncbi_genomes()
 
 
 
@@ -1626,37 +1660,235 @@ for matched_genome_object in matched_genomes_list:
 
 
 
+#Now output results
+#Open files to record update information
+genome_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_genome_output.csv'), 'w')
+file_handle_list.append(genome_report_fh)
+genome_report_writer = csv.writer(genome_report_fh)
+genome_report_writer.writerow(date + " Database comparison")
+
+gene_report_fh = open(os.path.join(main_output_path,date + "_database_comparison_gene_output.csv"), "w")
+file_handle_list.append(gene_report_fh)
+gene_report_writer = csv.writer(gene_report_fh)
+gene_report_writer.writerow(date + " Database comparison")
 
 
 
 
+#Iterate through matched objects.
+#All genomes are stored in a MatchedGenomes object, even if there are no matches.
+#All but a few phages should be matched to phagesdb
+#Only half of phages should be matched to NCBI
+for matched_genomes in matched_genomes_list:
+
+    genome_data_output = []
+    ph_genome = matched_genomes.get_phamerator_genome()
+    pdb_genome = matched_genomes.get_phagesdb_genome()
+    ncbi_genome = matched_genomes.get_ncbi_genome()
 
 
 
+    #Phamerator data
+    #General genome data
+    genome_data_output.append(ph_genome.get_phage_id())# PhageID
+    genome_data_output.append(ph_genome.get_name())# Name
+    genome_data_output.append(ph_genome.get_search_id())# search_id
+    genome_data_output.append(ph_genome.get_search_name())# search name
+    genome_data_output.append(ph_genome.get_status())# status
+    genome_data_output.append(ph_genome.get_cluster_subcluster())# cluster_subcluster
+    genome_data_output.append(ph_genome.get_host())# Host
+    genome_data_output.append(ph_genome.get_accession())# Accession
+    genome_data_output.append(ph_genome.get_length())# sequence_length
+    genome_data_output.append(ph_genome.get_cds_features_tally())# # genes
+    genome_data_output.append(ph_genome.get_ncbi_update_flag())# ncbi_update_flag
+
+
+    #Genome data checks
+    genome_data_output.append(ph_genome.get_nucleotide_errors())# sequence contains std nucleotides?
+    genome_data_output.append(ph_genome.get_cds_features_with_translation_error_tally())# # translations with non-std amino acids
+    genome_data_output.append(ph_genome.get_cds_feature_boundary_error_tally())# # genes with non-standard start-stops
+
+
+    #Phagesdb data
+    if pdb_genome != '':
+
+        #General genome data
+        genome_data_output.append(pdb_genome.get_name())# Name
+        genome_data_output.append(pdb_genome.get_search_name())# search name
+        genome_data_output.append(pdb_genome.get_cluster())# cluster
+        genome_data_output.append(pdb_genome.get_subcluster())# subcluster
+        genome_data_output.append(pdb_genome.get_host())# Host
+        genome_data_output.append(pdb_genome.get_accession())# Accession
+        genome_data_output.append(pdb_genome.get_length())# sequence_length
+
+        #Genome data checks
+        genome_data_output.append(pdb_genome.get_nucleotide_errors())# sequence contains std nucleotides?
+    else:
+        genome_data_output.extend(['','','','','','','',''])
 
 
 
+    #NCBI data
+    if ncbi_genome != '':
+
+        #General genome data
+        genome_data_output.append(ncbi_genome.get_record_id())# record_id
+        genome_data_output.append(ncbi_genome.get_record_name()# record_name
+        genome_data_output.append(ncbi_genome.get_record_accession())# record_accession
+        genome_data_output.append(ncbi_genome.get_record_description())# record_description
+        genome_data_output.append(ncbi_genome.get_record_source())# record_source
+        genome_data_output.append(ncbi_genome.get_record_organism())# record_organism
+        genome_data_output.append(ncbi_genome.get_source_feature_organism())# source_feature_organism
+        genome_data_output.append(ncbi_genome.get_source_feature_host())# source_feature_host
+        genome_data_output.append(ncbi_genome.get_source_feature_lab_host())# source_feature_lab_host
+        genome_data_output.append(ncbi_genome.get_length())# sequence_length
+        genome_data_output.append(ncbi_genome.get_cds_features_tally())# # genes
+
+        #Genome data checks
+        genome_data_output.append(ncbi_genome.get_nucleotide_errors())# sequence contains std nucleotides?
+        genome_data_output.append(ncbi_genome.get_cds_features_with_translation_error_tally())# # translations with non-std amino acids
+        genome_data_output.append(ncbi_genome.get_cds_feature_boundary_error_tally())# # genes with non-standard start-stops
+        genome_data_output.append(ncbi_genome.get_tally_product_descriptions())# # genes with product descriptions
+        genome_data_output.append(ncbi_genome.get_tally_function_descriptions())# # genes with function descriptions
+        genome_data_output.append(ncbi_genome.get_tally_note_descriptions())# # genes with notes descriptions
+        genome_data_output.append(ncbi_genome.get_tally_missing_locus_tags())# # genes with missing locus tags
+        genome_data_output.append(ncbi_genome.get_tally_locus_tag_typos())# # genes with locus tag typos
+    else:
+        genome_data_output.extend(['','','','','','','','','','',\
+                                    '','','','','','','','',''])
+
+    #Phamerator-phagesdb checks
+    if pdb_genome != '':
+        genome_data_output.append(matched_genomes.get_phamerator_phagesdb_sequence_mismatch())# sequence
+        genome_data_output.append(matched_genomes.get_phamerator_phagesdb_sequence_length_mismatch())# sequence length
+        genome_data_output.append(matched_genomes.get_phamerator_phagesdb_cluster_subcluster_mismatch())# cluster_subcluster
+        genome_data_output.append(matched_genomes.get_phamerator_phagesdb_accession_mismatch())# accession
+        genome_data_output.append(matched_genomes.get_phamerator_phagesdb_host_mismatch())# host
+    else:
+        genome_data_output.extend(['','','','',''])
+
+
+    #Phamerator-NCBI checks
+    if ncbi_genome != '':
+        genome_data_output.append(matched_genomes.get_phamerator_ncbi_sequence_mismatch())# sequence
+        genome_data_output.append(matched_genomes.get_phamerator_ncbi_sequence_length_mismatch())# sequence length
+        genome_data_output.append(matched_genomes.get_ncbi_record_header_fields_phage_name_mismatch())# PhageID or PhageName in record header fields mismatch
+        genome_data_output.append(matched_genomes.get_ncbi_host_mismatch())# Host in record header or source feature mismatch
+        genome_data_output.append(matched_genomes.get_phamerator_ncbi_perfect_matched_features_tally())# # genes perfectly matched
+        genome_data_output.append(matched_genomes.get_phamerator_ncbi_imperfect_matched_features_tally())# # genes imperfectly matched (different start sites)
+        genome_data_output.append(matched_genomes.get_phamerator_features_unmatched_in_ncbi_tally())# # Phamerator genes not matched
+        genome_data_output.append(matched_genomes.get_ncbi_features_unmatched_in_phamerator_tally())# # NCBI genes not matched
+        genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_descriptions_tally())# # genes with Phamerator descriptions not in NCBI description fields
+        genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_translation_tally())# # genes perfectly matched with different translations
+    else:
+        genome_data_output.extend(['','','','','','','','','',''])
+
+
+    #Output phagesdb-NCBI checks
+    if pdb_genome != '' and ncbi_genome != '':
+        genome_data_output.append(matched_genomes.get_phagesdb_ncbi_sequence_mismatch())# sequence
+        genome_data_output.append(matched_genomes.get_phagesdb_ncbi_sequence_length_mismatch())# sequence length
+    else:
+        genome_data_output.extend(['',''])
+
+    genome_report_writer.writerow(genome_data_output)
+
+
+    #Once all matched genome data has been outputted, iterate through all matched gene data
+
+    feature_data_output = [] #Will hold all data for each gene
+
+    perfectly_matched_features = matched_genomes.get_phamerator_ncbi_perfect_matched_features()
+    imperfectly_matched_features = matched_genomes.get_phamerator_ncbi_imperfect_matched_features()
+    ph_unmatched_features = matched_genomes.get_phamerator_features_unmatched_in_ncbi()
+    ncbi_unmatched_features = matched_genomes.get_ncbi_features_unmatched_in_phamerator()
+
+    all_features_list = []
+    all_features_list.extend(perfectly_matched_features)
+    all_features_list.extend(imperfectly_matched_features)
+    all_features_list.extend(ph_unmatched_features)
+    all_features_list.extend(ncbi_unmatched_features)
 
 
 
+    #Iterate through the list of mixed feature objects
+    for mixed_feature_object in all_features_list:
+
+        if isinstance(mixed_feature_object,###):
+            phamerator_feature = mixed_feature_object.get_phamerator_feature()
+            ncbi_feature = mixed_feature_object.get_ncbi_feature()
+        else:
+            phamerator_feature = ''
+            ncbi_feature = ''
+
+        #Phamerator feature
+        if phamerator_feature != '':
+
+            #General gene data
+            feature_data_output.append(phamerator_feature.get_phage_id())# phage_id
+            feature_data_output.append(phamerator_feature.get_search_id())# search_id
+            feature_data_output.append(phamerator_feature.get_type_id())# type_id
+            feature_data_output.append(phamerator_feature.get_gene_id())# gene_id
+            feature_data_output.append(phamerator_feature.get_gene_name())# gene_name
+            feature_data_output.append(phamerator_feature.get_left_boundary())# left boundary
+            feature_data_output.append(phamerator_feature.get_right_boundary())# right boundary
+            feature_data_output.append(phamerator_feature.get_strand())# strand
+            feature_data_output.append(phamerator_feature.get_translation())# translation
+            feature_data_output.append(phamerator_feature.get_translation_length())# translation_length
+            feature_data_output.append(phamerator_feature.get_notes())# notes
+
+            #Gene data checks
+            feature_data_output.append(phamerator_feature.get_amino_acid_errors())# translation contains std amino acids
+            feature_data_output.append(phamerator_feature.get_boundary_error())# contains std start and stop coordinates
+
+        else:
+            feature_data_output.extend(['','','','','',\
+                                        '','','','','',\
+                                        '','',''])
 
 
+        #NCBI feature
+        if ncbi_feature != '':
+
+            #General gene data
+            feature_data_output.append(ncbi_feature.get_locus_tag())# locus_tag
+            feature_data_output.append(ncbi_feature.get_gene_number())# gene_number
+            feature_data_output.append(ncbi_feature.get_type_id())# type_id
+            feature_data_output.append(ncbi_feature.get_left_boundary())# left boundary
+            feature_data_output.append(ncbi_feature.get_right_boundary())# right boundary
+            feature_data_output.append(ncbi_feature.get_strand())# strand
+            feature_data_output.append(ncbi_feature.get_translation())# translation
+            feature_data_output.append(ncbi_feature.get_translation_length())# translation_length
+            feature_data_output.append(ncbi_feature.get_product_description())# product description
+            feature_data_output.append(ncbi_feature.get_function_description())# function description
+            feature_data_output.append(ncbi_feature.get_note_description())# note description
+
+            #Gene data checks
+            feature_data_output.append(ncbi_feature.get_amino_acid_errors())# translation contains std amino acids
+            feature_data_output.append(ncbi_feature.get_boundary_error())# contains std start and stop coordinates
+            feature_data_output.append(ncbi_feature.get_locus_tag_missing())# missing locus tag
+
+        else:
+            feature_data_output.extend(['','','','','',\
+                                        '','','','','',\
+                                        '','','',''])
 
 
+        #Phamerator-NCBI checks
+        if isinstance(mixed_feature_object,###):
+            feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_descriptions())# Phamerator description in product, function, or note description
+            feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_start_sites())# same start site
+            feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_translations())# same translation
+        else:
+            feature_data_output.extend(['','',''])
 
 
-
-
-
-
-
-
-
-
+        gene_report_writer.writerow(feature_data_output)
 
 
 
 #Close script.
-write_out(report_file,"\n\n\n\Database comparison script completed.")
+print "\n\n\n\Database comparison script completed."
 
 #close all file handles
+close_all_files(file_handle_list)
