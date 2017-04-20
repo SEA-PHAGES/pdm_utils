@@ -193,26 +193,14 @@ class AnnotatedGenome(UnannotatedGenome):
 
         # Computed datafields
         self.__cds_features = []
-        self.__cds_dict = {}
         self.__cds_features_tally = 0
         self.__cds_features_with_translation_error_tally = 0
         self.__cds_feature_boundary_error_tally = 0
-        self.__duplicate_cds_features = False
 
     # Define all attribute setters:
     def set_cds_features(self,value):
         self.__cds_features = value #Should be a list
         self.__cds_features_tally = len(self.__cds_features)
-        #Now create the cds dictionary
-        for cds in self.__cds_features:
-            if cds.get_start_end_strand_id() not in cds_dict.keys():
-                self.__cds_dict[cds.get_start_end_strand_id()] = cds
-            else:
-                print 'Error: more than one CDS contains identical start, stop, and strand data'
-                print 'Phage: %s' %self.__phage_name
-                print 'Feature start, stop, strand: %s' %cds.get_start_end_strand_id()
-                self.__duplicate_cds_features = True
-                raw_input('Press ENTER to continue.')
 
     def compute_cds_feature_errors(self):
         translation_error_tally = 0
@@ -228,16 +216,12 @@ class AnnotatedGenome(UnannotatedGenome):
     # Define all attribute getters:
     def get_cds_features(self):
         return self.__cds_features
-    def get_cds_dict(self):
-        return self.__cds_dict
     def get_cds_features_tally(self):
         return self.__cds_features_tally
     def get_cds_features_with_translation_error_tally(self):
         return self.__cds_features_with_translation_error_tally
     def get_cds_feature_boundary_error_tally(self):
         return self.__cds_feature_boundary_error_tally
-    def get_duplicate_cds_features(self):
-        return self.__duplicate_cds_features
 
 
 
@@ -630,9 +614,8 @@ class MatchedGenomes:
         ph_genome = self.__phamerator_genome
         ncbi_genome = self.__ncbi_genome
 
-        if not isinstance(ph_genome,PhameratorGenome) or not isinstance(ncbi_genome,NcbiGenome):
-            pass
-        else:
+        if isinstance(ph_genome,PhameratorGenome) and isinstance(ncbi_genome,NcbiGenome):
+
             if ph_genome.get_sequence() != ncbi_genome.get_sequence():
                 self.__phamerator_ncbi_sequence_mismatch = True
             if ph_genome.get_length() != ncbi_genome.get_length():
@@ -664,50 +647,77 @@ class MatchedGenomes:
 
                 self.__ncbi_host_mismatch = True
 
+
+
+
+
+
             #Compare CDS features
-            ph_cds_data = ph_genome.get_cds_dict()
-            ncbi_cds_data = ncbi_genome.get_cds_dict()
-            ph_cds_id_set = ph_cds_data.keys()
-            ncbi_cds_id_set = ncbi_cds_data.keys()
+
+            #First find all unique start-end-strand cds identifiers for phamerator and ncbi genomes
+            ph_cds_list = ph_genome.get_cds_features()
+            ph_start_end_strand_id_set = set()
+            ph_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
+            for cds in ph_cds_list:
+                if cds.get_start_end_strand_id() not in ph_start_end_strand_id_set:
+                    ph_start_end_strand_id_set.add(cds.get_start_end_strand_id())
+                else:
+                    ph_start_end_strand_duplicate_id_set.add(cds.get_start_end_strand_id())
+            #Remove the duplicate end_strand ids from the main id_set
+            ph_start_end_strand_id_set = ph_start_end_strand_id_set - ph_start_end_strand_duplicate_id_set
+
+
+
+            ncbi_cds_list = ncbi_genome.get_cds_features()
+            ncbi_start_end_strand_id_set = set()
+            ncbi_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
+            for cds in ncbi_cds_list:
+                if cds.get_start_end_strand_id() not in ncbi_start_end_strand_id_set:
+                    ncbi_start_end_strand_id_set.add(cds.get_start_end_strand_id())
+                else:
+                    ncbi_start_end_strand_duplicate_id_set.add(cds.get_start_end_strand_id())
+            #Remove the duplicate end_strand ids from the main id_set
+            ncbi_start_end_strand_id_set = ncbi_start_end_strand_id_set - ncbi_start_end_strand_duplicate_id_set
+
 
             #Create the perfect matched and unmatched sets
-            unmatched_ph_cds_id_set = ph_cds_id_set - ncbi_cds_id_set
-            unmatched_ncbi_cds_id_set = ncbi_cds_id_set - ph_cds_id_set
-            perfect_matched_cds_id_set = ph_cds_id_set & ncbi_cds_id_set
+            ph_unmatched_start_end_strand_id_set = ph_start_end_strand_id_set - ncbi_start_end_strand_id_set
+            ncbi_unmatched_start_end_strand_id_set = ncbi_start_end_strand_id_set - ph_start_end_strand_id_set
+            perfect_matched_cds_id_set = ph_start_end_strand_id_set & ncbi_start_end_strand_id_set
 
 
 
-#####Alternative strategy
 
-
-
-            #From the unmatched sets, created second round of cds_id sets
+            #From the unmatched sets, created second round of end-strand id sets
             #Phamerator end_strand data
-            ph_cds_end_strand_id_set = set()
-            ph_cds_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
-            for cds_id in ph_cds_data:
-                cds = ph_cds_data[cds_id]
-                if cds.get_end_strand_id() not in ph_cds_end_strand_id_set:
-                    ph_cds_end_strand_id_set.add(cds.get_end_strand_id())
-                else:
-                    ph_cds_end_strand_duplicate_id_set.add(cds.get_end_strand_id())
+            ph_end_strand_id_set = set()
+            ph_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
+            for cds in ph_cds_list:
+                if cds.get_start_end_strand_id() in ph_unmatched_start_end_strand_id_set:
+                    if cds.get_end_strand_id() not in ph_end_strand_id_set:
+                        ph_end_strand_id_set.add(cds.get_end_strand_id())
+                    else:
+                        ph_end_strand_duplicate_id_set.add(cds.get_end_strand_id())
             #Remove the duplicate end_strand ids from the main id_set
-            ph_cds_end_strand_id_set = ph_cds_end_strand_id_set - ph_cds_end_strand_duplicate_id_set
+            ph_end_strand_id_set = ph_end_strand_id_set - ph_end_strand_duplicate_id_set
 
 
-            ncbi_cds_end_strand_id_set = set()
-            ncbi_cds_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
-            for cds_id in ncbi_cds_data:
-                cds = ncbi_cds_data[cds_id]
-                if cds.get_end_strand_id() not in ncbi_cds_end_strand_id_set:
-                    ncbi_cds_end_strand_id_set.add(cds.get_end_strand_id())
-                else:
-                    ncbi_cds_end_strand_duplicate_id_set.add(cds.get_end_strand_id())
+            ncbi_end_strand_id_set = set()
+            ncbi_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
+            for cds in ncbi_cds_list:
+                if cds.get_start_end_strand_id() in ncbi_unmatched_start_end_strand_id_set:
+                    if cds.get_end_strand_id() not in ncbi_end_strand_id_set:
+                        ncbi_end_strand_id_set.add(cds.get_end_strand_id())
+                    else:
+                        ncbi_end_strand_duplicate_id_set.add(cds.get_end_strand_id())
             #Remove the duplicate end_strand ids from the main id_set
-            ncbi_cds_end_strand_id_set = ncbi_cds_end_strand_id_set - ncbi_cds_end_strand_duplicate_id_set
+            ncbi_end_strand_id_set = ncbi_end_strand_id_set - ncbi_end_strand_duplicate_id_set
 
-            #Create the imperfect matched and final unmatched sets
-            imperfect_matched_cds_id_set = ph_cds_end_strand_id_set & ncbi_cds_end_strand_id_set
+
+            #Create the imperfect matched set
+            imperfect_matched_cds_id_set = ph_end_strand_id_set & ncbi_end_strand_id_set
+
+
 
 
 
@@ -717,10 +727,9 @@ class MatchedGenomes:
             ph_unmatched_cds_list = []
 
 
-            for cds_start_end_strand_tup in ph_cds_data:
-                cds = ph_cds_data[cds_start_end_strand_tup]
-                if cds_start_end_strand_tup in perfect_matched_cds_id_set:
-                    ph_perfect_matched_cds_dict[cds_start_end_strand_tup] = cds
+            for cds in ph_cds_list:
+                if cds.get_start_end_strand_id() in perfect_matched_cds_id_set:
+                    ph_perfect_matched_cds_dict[cds.get_start_end_strand_id()] = cds
                 elif cds.get_end_strand_id() in imperfect_matched_cds_id_set:
                     ph_imperfect_matched_cds_dict[cds.get_end_strand_id()] = cds
                 else:
@@ -731,133 +740,33 @@ class MatchedGenomes:
             ncbi_imperfect_matched_cds_dict = {}
             ncbi_unmatched_cds_list = []
 
-            for cds_start_end_strand_tup in ncbi_cds_data:
-                cds = ncbi_cds_data[cds_start_end_strand_tup]
-                if cds_start_end_strand_tup in perfect_matched_cds_id_set:
-                    ph_perfect_matched_cds_dict[cds_start_end_strand_tup] = cds
+            for cds in ncbi_cds_list:
+                if cds.get_start_end_strand_id() in perfect_matched_cds_id_set:
+                    ncbi_perfect_matched_cds_dict[cds.get_start_end_strand_id()] = cds
                 elif cds.get_end_strand_id() in imperfect_matched_cds_id_set:
                     ncbi_imperfect_matched_cds_dict[cds.get_end_strand_id()] = cds
                 else:
                     ncbi_unmatched_cds_list.add(cds)
 
 
-
             #Create MatchedCdsFeatures objects
             for start_end_strand_tup in perfect_matched_cds_id_set:
                 matched_cds_object = MatchedCdsFeatures()
-                matched_cds_object.set_phamerator_feature(ph_cds_data[start_end_strand_tup])
-                matched_cds_object.set_ncbi_feature(ncbi_cds_data[start_end_strand_tup])
+                matched_cds_object.set_phamerator_feature(ph_perfect_matched_cds_dict[start_end_strand_tup])
+                matched_cds_object.set_ncbi_feature(ncbi_perfect_matched_cds_dict[start_end_strand_tup])
                 self.__phamerator_ncbi_perfect_matched_features.append(matched_cds_object)
 
             for end_strand_tup in imperfect_matched_cds_id_set:
-                ph_start_end_strand_tup = ph_cds_end_strand_id_dict[end_strand_tup]
-                ncbi_start_end_strand_tup = ncbi_cds_end_strand_id_dict[end_strand_tup]
                 matched_cds_object = MatchedCdsFeatures()
-                matched_cds_object.set_phamerator_feature(ph_cds_data[ph_start_end_strand_tup])
-                matched_cds_object.set_ncbi_feature(ncbi_cds_data[ncbi_start_end_strand_tup])
+                matched_cds_object.set_phamerator_feature(ph_imperfect_matched_cds_dict[end_strand_tup])
+                matched_cds_object.set_ncbi_feature(ncbi_imperfect_matched_cds_dict[end_strand_tup])
                 self.__phamerator_ncbi_imperfect_matched_features.append(matched_cds_object)
 
 
-                self.__phamerator_features_unmatched_in_ncbi = ph_unmatched_cds_list
-                self.__ncbi_features_unmatched_in_phamerator = ncbi_unmatched_cds_list
+            #Set unmatched cds lists
+            self.__phamerator_features_unmatched_in_ncbi = ph_unmatched_cds_list
+            self.__ncbi_features_unmatched_in_phamerator = ncbi_unmatched_cds_list
 
-
-
-
-
-#####Alternative strategy
-
-
-
-
-#####OLD strategy
-
-            #From the unmatched sets, created second round of cds_id sets
-            #Phamerator end_strand data
-            ph_cds_end_strand_id_dict = {} #Key = end, strand tuple; #Value = start, end, strand tuple
-            ph_duplicate_end_strand_id_list = []
-            ph_duplicate_end_strand_id_set = set()
-
-            for element in unmatched_ph_cds_id_set:
-                element_end_strand_tup = (element[1],element[2])
-                if element_end_strand_tup not in ph_cds_end_strand_id_dict.keys():
-                    ph_cds_end_strand_id_dict[element_end_strand_tup] = element
-                else:
-                    ph_duplicate_end_strand_id_set.add(element_end_strand_tup)
-                    ph_duplicate_end_strand_id_list.append(element)
-
-
-            #Now go back and remove the elements with duplicate ids
-            for element_end_strand_tup in ph_duplicate_end_strand_id_set:
-                print 'Error: duplicate Phamerator end_strand id %s' %element_end_strand_tup
-                ph_duplicate_end_strand_id_list.append(\
-                    ph_cds_end_strand_id_dict.pop(element_end_strand_tup)
-                raw_input('Press ENTER to continue')
-
-
-            #NCBI end_strand data
-            ncbi_cds_end_strand_id_dict = {} #Key = end, strand tuple; #Value = start, end, strand tuple
-            ncbi_duplicate_end_strand_id_list = []
-            ncbi_duplicate_end_strand_id_set = se()
-
-            for element in unmatched_ncbi_cds_id_set:
-                element_end_strand_tup = (element[1],element[2])
-                if element_end_strand_tup not in ncbi_cds_end_strand_id_dict.keys():
-                    ncbi_cds_end_strand_id_dict[element_end_strand_tup] = element
-                else:
-                    ncbi_duplicate_end_strand_id_set.add(element_end_strand_tup)
-                    ncbi_duplicate_end_strand_id_list.append(element)
-
-
-            #Now go back and remove the elements with duplicate ids
-            for element_end_strand_tup in ncbi_duplicate_end_strand_id_set:
-                print 'Error: duplicate NCBI end_strand id %s' %element_end_strand_tup
-                ncbi_duplicate_end_strand_id_list.append(\
-                    ncbi_cds_end_strand_id_dict.pop(element_end_strand_tup)
-                raw_input('Press ENTER to continue')
-
-
-            #Using only the end_strand tuple data of the unmatched features, see if additional features can be matched
-            ph_cds_second_id_set = ph_cds_end_strand_id_dict.keys()
-            ncbi_cds_second_id_set = ncbi_cds_end_strand_id_dict.keys()
-            second_unmatched_ph_cds_id_set = ph_cds_second_id_set - ncbi_cds_second_id_set
-            second_unmatched_ncbi_cds_id_set = ncbi_cds_second_id_set - ph_cds_second_id_set
-            imperfect_matched_cds_id_set = ph_cds_second_id_set | ncbi_cds_second_id_set
-            ###At this point, there are cds feaures that contained duplicate end_strand ids that are not included in these sets
-
-
-
-
-
-
-
-
-            #Create MatchedCdsFeatures objects
-            for start_end_strand_tup in perfect_matched_cds_id_set:
-                matched_cds_object = MatchedCdsFeatures()
-                matched_cds_object.set_phamerator_feature(ph_cds_data[start_end_strand_tup])
-                matched_cds_object.set_ncbi_feature(ncbi_cds_data[start_end_strand_tup])
-                self.__phamerator_ncbi_perfect_matched_features.append(matched_cds_object)
-
-            for end_strand_tup in imperfect_matched_cds_id_set:
-                ph_start_end_strand_tup = ph_cds_end_strand_id_dict[end_strand_tup]
-                ncbi_start_end_strand_tup = ncbi_cds_end_strand_id_dict[end_strand_tup]
-                matched_cds_object = MatchedCdsFeatures()
-                matched_cds_object.set_phamerator_feature(ph_cds_data[ph_start_end_strand_tup])
-                matched_cds_object.set_ncbi_feature(ncbi_cds_data[ncbi_start_end_strand_tup])
-                self.__phamerator_ncbi_imperfect_matched_features.append(matched_cds_object)
-
-            for end_strand_tup in second_unmatched_ph_cds_id_set:
-                start_end_strand_tup = ph_cds_end_strand_id_dict[end_strand_tup]
-                self.__phamerator_features_unmatched_in_ncbi.append(ph_cds_data[start_end_strand_tup])
-
-            for end_strand_tup in second_unmatched_ncbi_cds_id_set:
-                start_end_strand_tup = ncbi_cds_end_strand_id_dict[end_strand_tup]
-                self.__ncbi_features_unmatched_in_phamerator.append(ncbi_cds_data[start_end_strand_tup])
-
-
-
-#####OLD strategy
 
 
             #Now compute the number of features in each category
@@ -865,6 +774,7 @@ class MatchedGenomes:
             self.__phamerator_ncbi_imperfect_matched_features_tally = len(self.__phamerator_ncbi_imperfect_matched_features)
             self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
             self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
+
 
             #Now compare gene descriptions and translations for perfectly matched cds features
             for matched_cds_object in self.__phamerator_ncbi_perfect_matched_features:
@@ -1589,10 +1499,9 @@ for retrieved_record in retrieved_record_list:
                     elif feature.strand == -1:
                         gene_object.set_left_boundary(str(feature.location.parts[1].start))
                         gene_object.set_right_boundary(str(feature.location.parts[0].end))
-                    #If strand is None...
+                    #If strand is None, not sure how to parse it
                     else:
                         pass
-                        ###Do I want to pass?
             else:
                 gene_object.set_left_boundary(str(feature.location.start))
                 gene_object.set_right_boundary(str(feature.location.end))
@@ -1803,7 +1712,7 @@ for matched_genomes in matched_genomes_list:
     pdb_genome = matched_genomes.get_phagesdb_genome()
     ncbi_genome = matched_genomes.get_ncbi_genome()
 
-
+    ###NEED TO OUTPUT COLUMN HEADERS
 
     #Phamerator data
     #General genome data
@@ -1823,7 +1732,6 @@ for matched_genomes in matched_genomes_list:
     genome_data_output.append(ph_genome.get_nucleotide_errors())# sequence contains std nucleotides?
     genome_data_output.append(ph_genome.get_cds_features_with_translation_error_tally())# # translations with non-std amino acids
     genome_data_output.append(ph_genome.get_cds_feature_boundary_error_tally())# # genes with non-standard start-stops
-    genome_data_output.append(ph_genome.get_duplicate_cds_features())# genes with duplicate start, stop, strand
 
 
     #Phagesdb data
@@ -1871,11 +1779,10 @@ for matched_genomes in matched_genomes_list:
         genome_data_output.append(ncbi_genome.get_tally_note_descriptions())# # genes with notes descriptions
         genome_data_output.append(ncbi_genome.get_tally_missing_locus_tags())# # genes with missing locus tags
         genome_data_output.append(ncbi_genome.get_tally_locus_tag_typos())# # genes with locus tag typos
-        genome_data_output.append(ncbi_genome.get_duplicate_cds_features())# genes with duplicate start, stop, strand
 
     else:
         genome_data_output.extend(['','','','','','','','','','',\
-                                    '','','','','','','','',''])
+                                    '','','','','','','',''])
 
     #Phamerator-phagesdb checks
     if isinstance(pdb_genome,PhagesdbGenome):
