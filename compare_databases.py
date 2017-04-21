@@ -13,12 +13,23 @@
 
 
 #Built-in libraries
-import time, sys, os, getpass, csv, re, shutil
+import time, sys, os, getpass, csv, re
 import json, urllib, urllib2
 
-#Third-party libraries
-import MySQLdb as mdb
 
+#Third-party libraries
+try:
+    import MySQLdb as mdb
+    from Bio import SeqIO, Entrez
+    from Bio.Alphabet import IUPAC
+except:
+    print "\nUnable to import one or more of the following third-party modules: \n\n\
+        MySQLdb\n\
+        Biopython SeqIO\n\
+        Biopython Entrez\n\
+        Biopython IUPAC\n"
+    print "\n\nInstall modules and try again.\n\n"
+    sys.exit(1)
 
 
 
@@ -202,7 +213,6 @@ class AnnotatedGenome(UnannotatedGenome):
     def set_cds_features(self,value):
         self.__cds_features = value #Should be a list
         self.__cds_features_tally = len(self.__cds_features)
-
     def compute_cds_feature_errors(self):
         for cds_feature in self.__cds_features:
             if cds_feature.get_amino_acid_errors():
@@ -312,33 +322,32 @@ class NcbiGenome(AnnotatedGenome):
         self.__source_feature_lab_host = ''
 
         #Computed data fields
-        self.__function_descriptions_tally = 0 #specific to NCBI records
-        self.__product_descriptions_tally = 0 #specific to NCBI records
-        self.__note_descriptions_tally = 0 #specific to NCBI records
-        self.__missing_locus_tags_tally = 0 #specific to NCBI records
-        self.__locus_tag_typos_tally = 0 #specific to NCBI records
+        self.__function_descriptions_tally = 0
+        self.__product_descriptions_tally = 0
+        self.__note_descriptions_tally = 0
+        self.__missing_locus_tags_tally = 0
+        self.__locus_tag_typos_tally = 0
+        self.__description_field_error_tally = 0
 
     #Define setter functions
     def set_record_name(self,value):
         self.__record_name = value
     def set_record_id(self,value):
-        self.__record_id = ''
+        self.__record_id = value
     def set_record_accession(self,value):
         self.__record_accession = value
     def set_record_description(self,value):
-        self.__record_description = ''
+        self.__record_description = value
     def set_record_source(self,value):
-        self.__record_source = ''
+        self.__record_source = value
     def set_record_organism(self,value):
-        self.__record_organism = ''
+        self.__record_organism = value
     def set_source_feature_organism(self,value):
-        self.__source_feature_organism = ''
+        self.__source_feature_organism = value
     def set_source_feature_host(self,value):
-        self.__source_feature_host = ''
+        self.__source_feature_host = value
     def set_source_feature_lab_host(self,value):
-        self.__source_feature_lab_host = ''
-
-
+        self.__source_feature_lab_host = value
     def compute_ncbi_cds_feature_errors(self):
         for cds_feature in self.__cds_features:
             if cds_feature.get_product_description() != '':
@@ -354,6 +363,8 @@ class NcbiGenome(AnnotatedGenome):
                 search_result = pattern4.search(cds_feature.get_locus_tag().lower())
                 if search_result == None:
                     self.__locus_tag_typos_tally += 1
+            if cds_feature.get_description_field_error():
+                self.__description_field_error_tally += 1
 
     #Define getter functions
     def get_record_name(self):
@@ -384,7 +395,8 @@ class NcbiGenome(AnnotatedGenome):
         return self.__missing_locus_tags_tally
     def get_locus_tag_typos_tally(self):
         return self.__locus_tag_typos_tally
-
+    def get_description_field_error_tally(self):
+        return self.__description_field_error_tally
 
 
 
@@ -433,6 +445,8 @@ class CdsFeature:
         #the feature, disregarding the inner "join" coordinates.
         self.__start_end_strand_id = (self.__left_boundary,self.__right_boundary,self.__strand)
     def set_end_strand_id(self):
+        #Since this id matched genes with different start sites,
+        #the strand impacts whether the left or right boundary is used
         if self.__strand == 'forward':
             self.__end_strand_id = (self.__right_boundary,self.__strand)
         elif self.__strand == 'reverse':
@@ -524,7 +538,7 @@ class NcbiCdsFeature(CdsFeature):
         self.__function_description = ''
         self.__note_description = ''
         self.__locus_tag_missing = False
-
+        self.__description_field_error = False
 
     # Define all attribute setters:
     def set_locus_tag(self,value):
@@ -541,6 +555,13 @@ class NcbiCdsFeature(CdsFeature):
         self.__note_description = value
 
 
+    def compute_description_error(self):
+        if self.__product_description == '' and \
+            self.__function_description != '' and \
+            self.__note_description != '':
+
+            self.__description_field_error = True
+
     # Define all attribute getters:
     def get_locus_tag(self):
         return self.__locus_tag
@@ -554,6 +575,8 @@ class NcbiCdsFeature(CdsFeature):
         return self.__note_description
     def get_locus_tag_missing(self):
         return self.__locus_tag_missing
+    def get_description_field_error(self):
+        return self.__description_field_error
 
 
 
@@ -800,9 +823,7 @@ class MatchedGenomes:
         ph_genome = self.__phamerator_genome
         pdb_genome = self.__phagesdb_genome
 
-        if not isinstance(ph_genome,PhameratorGenome) or not isinstance(pdb_genome,PhagesdbGenome):
-            pass
-        else:
+        if isinstance(ph_genome,PhameratorGenome) and isinstance(pdb_genome,PhagesdbGenome):
 
             if ph_genome.get_sequence() != pdb_genome.get_sequence():
                 self.__phamerator_phagesdb_sequence_mismatch = True
@@ -823,9 +844,7 @@ class MatchedGenomes:
         pdb_genome = self.__phagesdb_genome
         ncbi_genome = self.__ncbi_genome
 
-        if not isinstance(pdb_genome,PhagesdbGenome) or not isinstance(ncbi_genome,NcbiGenome):
-            pass
-        else:
+        if isinstance(pdb_genome,PhagesdbGenome) and isinstance(ncbi_genome,NcbiGenome):
             if pdb_genome.get_sequence() != ncbi_genome.get_sequence():
                 self.__phagesdb_ncbi_sequence_mismatch = True
             if pdb_genome.get_length() != ncbi_genome.get_length():
@@ -946,7 +965,248 @@ class MatchedCdsFeatures:
 
 
 
+class DatabaseSummary:
 
+    # Initialize all attributes:
+    def __init__(self):
+
+        # Initialize all calculated attributes:
+
+###Include PhameratorGenome attribute about status compared to accession and other attributes?
+        #Phamerator data
+        #General genome data
+        self.__ncbi_update_flag_tally = 0
+
+        #Genome data checks
+        self.__ph_genomes_with_nucleotide_errors_tally = 0
+        self.__ph_genomes_with_translations_errors_tally = 0
+        self.__ph_genomes_with_boundary_errors_tally = 0
+        self.__status_accession_error_tally = 0
+
+
+        #Phagesdb data
+        #Genome data checks
+        self.__pdb_genomes_with_nucleotide_errors_tally = 0
+
+        #NCBI data
+        #Genome data checks
+        self.__ncbi_genomes_with_nucleotide_errors_tally = 0
+        self.__ncbi_genomes_with_translations_errors_tally = 0
+        self.__ncbi_genomes_with_boundary_errors_tally = 0
+        self.__ncbi_genoems_with_missing_locus_tags_tally = 0
+        self.__ncbi_genomes_with_locus_tag_typos_tally = 0
+        self.__ncbi_genomes_with_description_field_errors_tally = 0
+
+        #Phamerator-phagesdb checks
+        self.__ph_pdb_sequence_mismatch_tally = 0
+        self.__ph_pdb_sequence_length_mismatch_tally = 0
+        self.__ph_pdb_cluster_subcluster_mismatch_tally = 0
+        self.__ph_pdb_accession_mismatch_tally = 0
+        self.__ph_pdb_host_mismatch_tally = 0
+
+        #Phamerator-NCBI checks
+        self.__ph_ncbi_sequence_mistmatch_tally = 0
+        self.__ph_ncbi_sequence_length_mismatch_tally = 0
+        self.__ph_ncbi_record_header_phage_mismatch_tally = 0
+        self.__ph_ncbi_record_header_host_mismatch_tally = 0
+        self.__ph_ncbi_genomes_with_imperfectly_matched_features_tally = 0
+        self.__ph_ncbi_genomes_with_unmatched_phamerator_features_tally = 0
+        self.__ph_ncbi_genomes_with_unmatched_ncbi_features_tally = 0
+        self.__ph_ncbi_genomes_with_different_descriptions_tally = 0
+        self.__ph_ncbi_genomes_with_different_translations_tally = 0
+
+        #phagesdb-NCBI checks
+        self.__pdb_ncbi_sequence_mismatch_tally = 0
+        self.__pdb_ncbi_sequence_length_mismatch_tally = 0
+
+
+        #Phamerator feature
+        #Gene data checks
+        self.__ph_amino_acid_errors_tally = 0
+        self.__ph_boundary_errors_tally = 0
+
+
+        #NCBI feature
+        #Gene data checks
+        self.__ncbi_amino_acid_errors_tally = 0
+        self.__ncbi_boundary_errors_tally = 0
+        self.__ncbi_missing_locus_tags_tally = 0
+        self.__ncbi_description_field_errors_tally = 0
+
+        #Phamerator-NCBI checks
+        self.__ph_ncbi_different_descriptions_tally = 0
+        self.__ph_ncbi_different_start_sites_tally = 0
+        self.__ph_ncbi_different_translation_tally = 0
+
+
+####Duplicate code below
+
+        #Define setter functions
+
+        #Phamerator data
+        #General genome data
+    def update_summaries(self,matched_genomes):
+
+        ph_genome = matched_genomes.get_phamerator_genome()
+        pdb_genome = matched_genomes.get_phagesdb_genome()
+        ncbi_genome = matched_genomes.get_ncbi_genome()
+
+        #Phamerator data
+        if isinstance(ph_genome,PhameratorGenome):
+
+            self.__ncbi_update_flag_tally += ph_genome.get_ncbi_update_flag()
+
+            #Genome data checks
+            if ph_genome.get_nucleotide_errors():
+                self.__ph_genomes_with_nucleotide_errors_tally += 1
+
+            if ph_genome.get_cds_features_with_translation_error_tally() > 0:
+                self.__ph_genomes_with_translations_errors_tally += 1
+                ###Add total # features
+
+            if ph_genome.get_cds_features_with_translation_error_tally() > 0:
+                self.__ph_genomes_with_boundary_errors_tally += 1
+                self.__ph_boundary_errors_tally += ph_genome.get_cds_features_with_translation_error_tally()
+
+                ###Add total # features
+
+            if ph_genome.get ###Need to add this method and attribute
+                self.__status_accession_error_tally += 1
+
+
+
+            ###How do I add this?
+            #Phamerator feature
+            #Gene data checks
+            self.__ph_amino_acid_errors_tally = 0
+
+
+
+
+
+        #Phagesdb data
+        if isinstance(pdb_genome,PhagesdbGenome):
+
+            #Genome data checks
+            if pdb_genome.get_nucleotide_errors():
+                self.__pdb_genomes_with_nucleotide_errors_tally += 1
+
+        #NCBI data
+        if isinstance(ncbi_genome,NcbiGenome):
+
+            #Genome data checks
+            if ncbi_genome.get_nucleotide_errors():
+                self.__ncbi_genomes_with_nucleotide_errors_tally += 1
+
+            if ncbi_genome.get_cds_features_with_translation_error_tally() > 0:
+                self.__ncbi_genomes_with_translations_errors_tally += 1
+                ###Add total # features
+
+            if ncbi_genome.get_cds_feature_boundary_error_tally() > 0:
+                self.__ncbi_genomes_with_boundary_errors_tally += 1
+                self.__ncbi_boundary_errors_tally += ncbi_genome.get_cds_feature_boundary_error_tally()
+            if ncbi_genome.get_missing_locus_tags_tally() > 0:
+                self.__ncbi_genomes_with_missing_locus_tags_tally += 1
+                self.__ncbi_missing_locus_tags_tally += ncbi_genome.get_missing_locus_tags_tally()
+            if ncbi_genome.get_locus_tag_typos_tally() > 0:
+                self.__ncbi_genomes_with_locus_tag_typos_tally += 1
+                ###Add total # features
+
+            if ncbi_genome.get_description_field_error_tally() > 0:
+                self.__ncbi_genomes_with_description_field_errors_tally += 1
+                self.__ncbi_description_field_errors_tally += ncbi_genome.get_description_field_error_tally()
+
+
+
+            ###How do I add this?
+            #NCBI feature
+            #Gene data checks
+            self.__ncbi_amino_acid_errors_tally = 0
+
+
+
+
+
+
+        #Phamerator-phagesdb checks
+        if matched_genome.get_phamerator_phagesdb_sequence_mismatch():
+            self.__ph_pdb_sequence_mismatch_tally += 1
+        if matched_genome.get_phamerator_phagesdb_sequence_length_mismatch():
+            self.__ph_pdb_sequence_length_mismatch_tally += 1
+        if matched_genome.get_phamerator_phagesdb_cluster_subcluster_mismatch():
+            self.__ph_pdb_cluster_subcluster_mismatch_tally += 1
+        if matched_genome.get_phamerator_phagesdb_accession_mismatch():
+            self.__ph_pdb_accession_mismatch_tally += 1
+        if matched_genome.get_phamerator_phagesdb_host_mismatch():
+            self.__ph_pdb_host_mismatch_tally += 1
+###Need to call the method that computes these values
+        #Phamerator-NCBI checks
+        if matched_genome.get_phamerator_ncbi_sequence_mismatch():
+            self.__ph_ncbi_sequence_mistmatch_tally += 1
+        if matched_genome.get_phamerator_ncbi_sequence_length_mismatch():
+            self.__ph_ncbi_sequence_length_mismatch_tally += 1
+        if matched_genome.get_ncbi_record_header_fields_phage_name_mismatch():
+            self.__ph_ncbi_record_header_phage_mismatch_tally += 1
+        if matched_genome.get_ncbi_host_mismatch():
+            self.__ph_ncbi_record_header_host_mismatch_tally += 1
+        if matched_genome.get_phamerator_ncbi_imperfect_matched_features_tally():
+            self.__ph_ncbi_genomes_with_imperfectly_matched_features_tally += 1
+        if matched_genome.get_phamerator_features_unmatched_in_ncbi_tally() > 0:
+            self.__ph_ncbi_genomes_with_unmatched_phamerator_features_tally += 1
+            ###Add total # features
+
+
+        if matched_genome.get_ncbi_features_unmatched_in_phamerator_tally() > 0:
+            self.__ph_ncbi_genomes_with_unmatched_ncbi_features_tally += 1
+            ###Add total # features
+
+        if matched_genome.get_phamerator_ncbi_different_descriptions_tally() > 0:
+            self.__ph_ncbi_genomes_with_different_descriptions_tally += 1
+            self.__ph_ncbi_different_descriptions_tally += matched_genome.get_phamerator_ncbi_different_descriptions_tally()
+        if matched_genome.get_phamerator_ncbi_different_translation_tally() > 0:
+            self.__ph_ncbi_genomes_with_different_translations_tally += 1
+            self.__ph_ncbi_different_translation_tally += matched_genome.get_phamerator_ncbi_different_translation_tally()
+
+
+            ###How do I add this?
+            #Phamerator-NCBI checks
+            self.__ph_ncbi_different_start_sites_tally = 0
+
+
+
+
+
+
+        #phagesdb-NCBI checks
+        if matched_genome.get_phagesdb_ncbi_sequence_mismatch():
+            self.__pdb_ncbi_sequence_mismatch_tally += 1
+
+        if matched_genome.get_phagesdb_ncbi_sequence_length_mismatch():
+            self.__pdb_ncbi_sequence_length_mismatch_tally += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
 
 
 
@@ -968,6 +1228,8 @@ class MatchedCdsFeatures:
 
 
 ##Mainline code
+start_time = time.strftime("%x %X")
+
 
 #Get the command line parameters
 try:
@@ -1043,13 +1305,9 @@ while batch_size_valid == False:
 #Determine which type of updates will be performed.
 save_ncbi_records = select_option("\nDo you want to save retrieved NCBI records to disk? (yes or no) ")
 
-#You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
-pdb_sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
-
 #Set up dna and protein alphabets to verify sequence integrity
 dna_alphabet_set = set(IUPAC.IUPACUnambiguousDNA.letters)
 protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
-
 
 
 
@@ -1127,9 +1385,6 @@ except:
     mdb_exit("\nUnable to access the database to retrieve genome information.\nNo changes have been made to the database.")
 
 con.close()
-
-
-
 
 
 
@@ -1227,6 +1482,8 @@ for phage_id in ph_genome_object_dict.keys():
             new_gene_object_list.append(gene_object)
 
     genome_object.set_cds_features(new_gene_object_list)
+
+
 
 
 
@@ -1364,7 +1621,7 @@ for batch_index_start in range(0,len(accession_retrieval_list),batch_size):
 
 
     #Use esearch for each accession
-    search_handle = Entrez.esearch(db = 'nucleotide', term = esearch_term,usehistory='y')
+    search_handle = Entrez.esearch(db = 'nucleotide', term = esearch_term,usehistory = 'y')
     search_record = Entrez.read(search_handle)
     search_count = int(search_record['Count'])
     search_webenv = search_record['WebEnv']
@@ -1393,7 +1650,6 @@ for batch_index_start in range(0,len(accession_retrieval_list),batch_size):
     fetch_records = SeqIO.parse(fetch_handle,'genbank')
 
     for record in fetch_records:
-
         retrieved_record_list.append(record)
 
     search_handle.close()
@@ -1493,7 +1749,7 @@ for retrieved_record in retrieved_record_list:
                 gene_object.set_strand('reverse')
             #ssRNA phages
             elif feature.strand is None:
-                gene_object.set_strand('forward')
+                gene_object.set_strand('NA')
 
 
             #Gene boundary coordinates
@@ -1526,23 +1782,17 @@ for retrieved_record in retrieved_record_list:
             try:
                 feature_product = retrieve_description(feature.qualifiers['product'][0])
                 gene_object.set_product_description(feature_product)
-                if feature_product != '':
-                    feature_product_tally += 1
             except:
                 pass
             try:
                 feature_function = retrieve_description(feature.qualifiers['function'][0])
                 gene_object.set_function_description(feature_function)
-                if feature_function != '':
-                    feature_function_tally += 1
             except:
                 pass
 
             try:
                 feature_note = retrieve_description(feature.qualifiers['note'][0])
                 gene_object.set_note_description(feature_note)
-                if feature_note != '':
-                    feature_note_tally += 1
             except:
                 pass
 
@@ -1557,6 +1807,7 @@ for retrieved_record in retrieved_record_list:
             gene_object.compute_amino_acid_errors(protein_alphabet_set)
             gene_object.set_start_end_strand_id()
             gene_object.compute_boundary_error()
+            gene_object.compute_description_error()
 
             #Now add to full list of gene objects
             ncbi_cds_features.append(gene_object)
@@ -1595,16 +1846,12 @@ for retrieved_record in retrieved_record_list:
         SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,ncbi_filename),'genbank')
 
 
-
-
 #Now that all NCBI and phagesdb data is retrieved, match up to Phamerator genome data
-
+matched_genomes_list = [] #Will store a list of MatchedGenomes objects
 ph_unmatched_to_pdb_genomes = [] #List of the phamerator genome objects with no phagesdb matches
 ph_unmatched_to_ncbi_genomes = [] #List of the phamerator genome objects with no NCBI matches
 
 #Iterate through each phage in Phamerator
-matched_genomes_list = [] #Will store a list of MatchedGenomes objects
-
 for phage_id in ph_genome_object_dict.keys():
 
 
@@ -1689,6 +1936,15 @@ for matched_genome_object in matched_genomes_list:
 
 
 
+
+
+
+
+
+
+
+
+
 #Now output results
 #Open files to record update information
 genome_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_genome_output.csv'), 'w')
@@ -1756,6 +2012,7 @@ genome_report_column_headers = [\
     'ncbi_gene_note_tally',\
     'ncbi_missing_locus_tag_tally',\
     'ncbi_locus_tag_typo_tally',\
+    'ncbi_description_field_error_tally',\
 
     #phamerator-phagesdb
     'ph_pdb_dna_seq_error',\
@@ -1832,6 +2089,7 @@ gene_report_column_headers = [\
     'ncbi_translation_error',\
     'ncbi_gene_coords_error',\
     'ncbi_missing_locus_tag',\
+    'ncbi_description_field_error',\
 
     #Phamerator-NCBI checks
     'ph_ncbi_description_error',\
@@ -1922,10 +2180,11 @@ for matched_genomes in matched_genomes_list:
         genome_data_output.append(ncbi_genome.get_note_descriptions_tally())# # genes with notes descriptions
         genome_data_output.append(ncbi_genome.get_missing_locus_tags_tally())# # genes with missing locus tags
         genome_data_output.append(ncbi_genome.get_locus_tag_typos_tally())# # genes with locus tag typos
+        genome_data_output.append(ncbi_genome.get_description_field_error_tally())# # genes with descriptions in wrong field
 
     else:
         genome_data_output.extend(['','','','','','','','','','',\
-                                    '','','','','','','',''])
+                                    '','','','','','','','',''])
 
     #Phamerator-phagesdb checks
     if isinstance(pdb_genome,PhagesdbGenome):
@@ -2037,11 +2296,13 @@ for matched_genomes in matched_genomes_list:
             feature_data_output.append(ncbi_feature.get_amino_acid_errors())# translation contains std amino acids
             feature_data_output.append(ncbi_feature.get_boundary_error())# contains std start and stop coordinates
             feature_data_output.append(ncbi_feature.get_locus_tag_missing())# missing locus tag
+            feature_data_output.append(ncbi_feature.get_description_field_error())# description in function or note but not product
+
 
         else:
             feature_data_output.extend(['','','','','',\
                                         '','','','','',\
-                                        '','','',''])
+                                        '','','','',''])
 
 
         #Phamerator-NCBI checks
@@ -2068,6 +2329,11 @@ for matched_genomes in matched_genomes_list:
 
 
 #Close script.
+end_time = time.strftime("%x %X")
+
+print 'Start time: %s' %start_time
+print 'Stop time: %s' %end_time
+
 print "\n\n\n\Database comparison script completed."
 
 #close all file handles
