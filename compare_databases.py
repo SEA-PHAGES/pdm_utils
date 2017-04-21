@@ -2627,6 +2627,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
 
 
+#Close all file handles
+close_all_files(file_handle_list)
 
 
 
@@ -2637,6 +2639,3 @@ print 'Start time: %s' %start_time
 print 'Stop time: %s' %end_time
 
 print "\n\n\n\Database comparison script completed."
-
-#close all file handles
-close_all_files(file_handle_list)
