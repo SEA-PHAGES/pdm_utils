@@ -114,10 +114,10 @@ def select_option(message):
 
 
 #Output list to file
-def output_to_file(data_list,filename)
+def output_to_file(data_list,filename):
     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
     filename_writer = csv.writer(filename_fh)
-    filename_writer.writerow(date + '' Database comparison')
+    filename_writer.writerow(date + ' Database comparison')
     for element in data_list:
         filename_writer.writerow([element])
     filename_fh.close()
@@ -260,7 +260,7 @@ class PhameratorGenome(AnnotatedGenome):
 
         #Be sure to first set the accession attribute before the status attribute,
         #else this will throw an error.
-        if: self.__status == 'final' and self.__accession == '':
+        if self.__status == 'final' and self.__accession == '':
             self.__status_accession_error = True
 
 
@@ -279,7 +279,7 @@ class PhameratorGenome(AnnotatedGenome):
                 description_tally += 1
         if self.__status == 'draft' and description_tally > 0:
             self.__status_description_error = True
-        elif: self.__status == 'final' and description_tally == 0:
+        elif self.__status == 'final' and description_tally == 0:
             self.__status_description_error = True
         else:
             pass
@@ -475,7 +475,7 @@ class CdsFeature:
             self.__end_strand_id = (self.__right_boundary,self.__strand)
         elif self.__strand == 'reverse':
             self.__end_strand_id = (self.__left_boundary,self.__strand)
-        elif:
+        else:
             pass
     def compute_boundary_error(self):
         #Check if start and end coordinates are fuzzy
@@ -690,7 +690,7 @@ class MatchedGenomes:
             if (find_name(pattern3,ncbi_genome.get_record_description().split(' ')) == 0 or \
                 find_name(pattern3,ncbi_genome.get_record_source().split(' ')) == 0 or \
                 find_name(pattern3,ncbi_genome.get_record_organism().split(' ')) == 0 or \
-                find_name(pattern3,ncbi_genome.get_source_feature_organism().split(' ')) == 0 or \
+                find_name(pattern3,ncbi_genome.get_source_feature_organism().split(' ')) == 0) or \
                 (ncbi_genome.get_source_feature_host() != '' and find_name(pattern3,ncbi_genome.get_source_feature_host().split(' ')) == 0) or \
                 (ncbi_genome.get_source_feature_lab_host() != '' and find_name(pattern3,ncbi_genome.get_source_feature_lab_host().split(' ')) == 0):
 
@@ -1343,7 +1343,7 @@ except:
             This is a python script to compare the Phamerator, phagesdb, and NCBI databases for inconsistencies.\n\
             It requires two arguments:\n\
             First argument: name of MySQL database that will be checked (e.g. 'Actino_Draft').\n\
-            Second argument: directory path to where the consistency report should be made (csv-formatted).\n\"
+            Second argument: directory path to where the consistency report should be made (csv-formatted).\n"
     sys.exit(1)
 
 #Expand home directory
@@ -1399,10 +1399,10 @@ while batch_size_valid == False:
         if batch_size > 0:
             batch_size_valid = True
         else:
-            print 'Invalid choice.''
+            print 'Invalid choice.'
             print "\n\n"
     else:
-        print 'Invalid choice.''
+        print 'Invalid choice.'
         print "\n\n"
 
 #Determine which type of updates will be performed.
@@ -1547,7 +1547,7 @@ if len(ph_search_name_duplicate_set) > 0:
 if len(ph_accession_duplicate_set) > 0:
     print 'Warning: There are duplicate accessions in Phamerator. \
     Some Phamerator genomes will not be able to be matched to NCBI records.'
-    output_to_file(list(ph_accession_duplicate_set),'duplicate_phage_accessions.csv'')
+    output_to_file(list(ph_accession_duplicate_set),'duplicate_phage_accessions.csv')
     raw_input('Press ENTER to proceed')
 
 
@@ -1764,7 +1764,7 @@ for batch_index_start in range(0,len(accession_retrieval_list),batch_size):
 #Report the accessions that could not be retrieved.
 failed_accession_report_fh = open(os.path.join(main_output_path,date + '_failed_accession_retrieval.csv'), 'w')
 failed_accession_report_writer = csv.writer(failed_accession_report_fh)
-failed_accession_report_writer.writerow(date + '' Database comparison')
+failed_accession_report_writer.writerow(date + ' Database comparison')
 failed_accession_report_writer.writerow('Accessions unable to be retrieved from NCBI')
 for retrieval_error_accession in retrieval_error_list:
     failed_accession_report_writer.writerow(retrieval_error_accession)
@@ -2396,7 +2396,7 @@ if len(summary_report_fields) == len(summary_data_output):
         database_summary_report_writer.writerow([\
             summary_report_fields[summary_output_index],\
             summary_report_fields[summary_output_index]])
-            summary_output_index += 1
+        summary_output_index += 1
 else:
     database_summary_report_writer.writerow(['Different number of database summary metrics than database summary data fields.'])
     database_summary_report_writer.writerow(['Unable to output database summary.'])
@@ -2461,7 +2461,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
         #General genome data
         genome_data_output.append(ncbi_genome.get_record_id())# record_id
-        genome_data_output.append(ncbi_genome.get_record_name()# record_name
+        genome_data_output.append(ncbi_genome.get_record_name())# record_name
         genome_data_output.append(ncbi_genome.get_record_accession())# record_accession
         genome_data_output.append(ncbi_genome.get_record_description())# record_description
         genome_data_output.append(ncbi_genome.get_record_source())# record_source
