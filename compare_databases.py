@@ -178,8 +178,8 @@ class UnannotatedGenome:
 
 
     # Define all attribute getters:
-    def get_name(self):
-        return self.__name
+    def get_phage_name(self):
+        return self.__phage_name
     def get_host(self):
         return self.__host
     def get_sequence(self):
@@ -1433,7 +1433,7 @@ os.chdir(main_output_path)
 
 
 #Create a folder to store NCBI records
-if save_ncbi_records == 'y':
+if save_ncbi_records == 'yes':
     ncbi_output_folder = '%s_ncbi_records' % date
     ncbi_output_path = os.path.join(output_dir,ncbi_output_folder)
     os.mkdir(ncbi_output_path)
@@ -1665,7 +1665,7 @@ for element_dict in pdb_sequenced_phages_dict['results']:
         pdb_search_name_duplicate_set.add(pdb_search_name)
     else:
         pdb_search_name_set.add(pdb_search_name)
-        pdb_genome_dict[pdb_search_name] = element_dict
+        pdb_genome_dict[pdb_search_name] = genome_object
     pdb_genome_count += 1
 
 
@@ -1961,7 +1961,7 @@ for retrieved_record in retrieved_record_list:
 
     #If selected by user, save retrieved record to file
     if save_ncbi_records == 'yes':
-        ncbi_filename = genome_object.get_record_name().lower() + '__' + genome_object.get_accession() + '.gb'
+        ncbi_filename = genome_object.get_record_organism().lower() + '__' + genome_object.get_record_accession() + '.gb'
         SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,ncbi_filename),'genbank')
 
 
@@ -2022,7 +2022,7 @@ for phage_id in ph_genome_object_dict.keys():
         ncbi_genome = ''
         ph_unmatched_to_ncbi_genomes.append(phamerator_genome)
 
-    matched_genomes_list.append(matched_object)
+    matched_genomes_list.append(matched_objects)
     matched_genome_count += 1
 
 
@@ -2038,7 +2038,7 @@ for element in ph_unmatched_to_pdb_genomes:
                                                 element.get_status()])
 unmatched_genome_output_writer.writerow(['The following Phamerator genomes were not matched to NCBI:'])
 unmatched_genome_output_writer.writerow(['PhageID','PhageName','Status','Accession'])
-for element in ph_unmatched_to_pdb_genomes:
+for element in ph_unmatched_to_ncbi_genomes:
     unmatched_genome_output_writer.writerow([element.get_phage_id(),\
                                                 element.get_phage_name(),\
                                                 element.get_status(),\
@@ -2431,7 +2431,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     #Phamerator data
     #General genome data
     genome_data_output.append(ph_genome.get_phage_id())# PhageID
-    genome_data_output.append(ph_genome.get_name())# Name
+    genome_data_output.append(ph_genome.get_phage_name())# Name
     genome_data_output.append(ph_genome.get_search_id())# search_id
     genome_data_output.append(ph_genome.get_search_name())# search name
     genome_data_output.append(ph_genome.get_status())# status
@@ -2455,7 +2455,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     if isinstance(pdb_genome,PhagesdbGenome):
 
         #General genome data
-        genome_data_output.append(pdb_genome.get_name())# Name
+        genome_data_output.append(pdb_genome.get_phage_name())# Name
         genome_data_output.append(pdb_genome.get_search_name())# search name
         genome_data_output.append(pdb_genome.get_cluster())# cluster
         genome_data_output.append(pdb_genome.get_subcluster())# subcluster
