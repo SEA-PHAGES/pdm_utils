@@ -43,16 +43,14 @@ def write_out(filename,statement):
 
 #Exits MySQL
 def mdb_exit(message):
-    write_out(report_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
-    write_out(report_file,message)
-    write_out(report_file,"\nThe import script did not complete.")
-    write_out(report_file,"\nExiting MySQL.")
+    print "\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`
+    print "\nThe import script did not complete."
+    print "\nExiting MySQL."
     cur.execute("ROLLBACK")
     cur.execute("SET autocommit = 1")
     cur.close()
     con.close()
-    write_out(report_file,"\nExiting import script.")
-    report_file.close()
+    print "\nExiting import script."
     sys.exit(1)
 
 #Closes all file handles currently open
@@ -81,7 +79,10 @@ def parse_strand(value):
 
 #Function to split gene description field
 def retrieve_description(description):
-    description = description.lower().strip()
+    if description is None:
+        description = ''
+    else:
+        description = description.lower().strip()
     return description
 
 #Function to search through a list of elements using a regular expression
@@ -117,7 +118,7 @@ def select_option(message):
 def output_to_file(data_list,filename):
     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
     filename_writer = csv.writer(filename_fh)
-    filename_writer.writerow(date + ' Database comparison')
+    filename_writer.writerow([date + ' Database comparison'])
     for element in data_list:
         filename_writer.writerow([element])
     filename_fh.close()
@@ -168,7 +169,7 @@ class UnannotatedGenome:
         else:
             value = value.strip()
             self.__accession = value.split('.')[0]
-    def set_nucleotide_errors(self,dna_alphabet_set):
+    def compute_nucleotide_errors(self,dna_alphabet_set):
         nucleotide_set = set(self.__sequence)
         nucleotide_error_set = nucleotide_set - dna_alphabet_set
         if len(nucleotide_error_set) > 0:
@@ -260,7 +261,7 @@ class PhameratorGenome(AnnotatedGenome):
 
         #Be sure to first set the accession attribute before the status attribute,
         #else this will throw an error.
-        if self.__status == 'final' and self.__accession == '':
+        if self.__status == 'final' and self.get_accession() == '':
             self.__status_accession_error = True
 
 
@@ -274,7 +275,7 @@ class PhameratorGenome(AnnotatedGenome):
     def compute_status_description_error(self):
         #Iterate through all CDS features, see if they have descriptions, then compare to the status
         description_tally = 0
-        for feature in self.__cds_features:
+        for feature in self.get_cds_features():
             if feature.get_notes() == '':
                 description_tally += 1
         if self.__status == 'draft' and description_tally > 0:
@@ -332,7 +333,7 @@ class NcbiGenome(AnnotatedGenome):
 
     # Initialize all attributes:
     def __init__(self):
-        AnnotatedGenome.__init_(self)
+        AnnotatedGenome.__init__(self)
 
         #Non-computed data fields
         self.__record_name = ''
@@ -373,7 +374,7 @@ class NcbiGenome(AnnotatedGenome):
     def set_source_feature_lab_host(self,value):
         self.__source_feature_lab_host = value
     def compute_ncbi_cds_feature_errors(self):
-        for cds_feature in self.__cds_features:
+        for cds_feature in self.get_cds_features():
             if cds_feature.get_product_description() != '':
                 self.__product_descriptions_tally += 1
             if cds_feature.get_function_description() != '':
@@ -383,7 +384,7 @@ class NcbiGenome(AnnotatedGenome):
             if cds_feature.get_locus_tag() == '':
                 self.__missing_locus_tags_tally += 1
             else:
-                pattern4 = re.compile(self.__search_name)
+                pattern4 = re.compile(self.get_search_name())
                 search_result = pattern4.search(cds_feature.get_locus_tag().lower())
                 if search_result == None:
                     self.__locus_tag_typos_tally += 1
@@ -457,7 +458,7 @@ class CdsFeature:
         self.__translation_length = len(self.__translation)
     def set_type_id(self,value):
         self.__type_id = value
-    def set_amino_acid_errors(self,protein_alphabet_set):
+    def compute_amino_acid_errors(self,protein_alphabet_set):
         amino_acid_set = set(self.__translation)
         amino_acid_error_set = amino_acid_set - protein_alphabet_set
         if len(amino_acid_error_set) > 0:
@@ -479,7 +480,7 @@ class CdsFeature:
             pass
     def compute_boundary_error(self):
         #Check if start and end coordinates are fuzzy
-        if not (self.__left_boundary.isdigit() and self.__right_boundary.isdigit()):
+        if not (str(self.__left_boundary).isdigit() and str(self.__right_boundary).isdigit()):
             self.__boundary_error += True
 
 
@@ -1469,7 +1470,6 @@ try:
     cur = con.cursor()
 except:
     print 'Unsuccessful attempt to connect to the database. Please verify the database, username, and password.'
-    report_file.close()
     sys.exit(1)
 
 try:
@@ -1492,15 +1492,17 @@ con.close()
 
 
 print 'Preparing genome data sets from the phamerator database...'
+ph_genome_count = 1
 ph_genome_object_dict = {} #Key = PhageID; #Value = genome_object
 ph_search_name_set = set()
 ph_search_name_duplicate_set = set()
 ph_accession_set = set()
 ph_accession_duplicate_set = set()
-
+ph_total_genome_count = len(ph_genome_data_tuples)
 
 #Iterate through each phamerator genome and create a genome object
 for genome_tuple in ph_genome_data_tuples:
+    print "Processing Phamerator genome %s out of %s" %(ph_genome_count,ph_total_genome_count)
 
     genome_object = PhameratorGenome()
     genome_object.set_phage_id(genome_tuple[0])
@@ -1530,7 +1532,7 @@ for genome_tuple in ph_genome_data_tuples:
             ph_accession_duplicate_set.add(genome_object.get_accession())
         else:
             ph_accession_set.add(genome_object.get_accession())
-
+    ph_genome_count += 1
 
 
 #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
@@ -1553,13 +1555,18 @@ if len(ph_accession_duplicate_set) > 0:
 
 
 
+
+print 'Preparing gene data sets from the phamerator database...'
+ph_gene_count = 1
 ph_gene_objects_list = []
 ph_gene_data_phage_id_set = set()
-for gene_tuple in ph_gene_data_tuples:
+ph_total_gene_count = len(ph_gene_data_tuples)
 
+for gene_tuple in ph_gene_data_tuples:
+    print "Processing Phamerator gene %s of %s" %(ph_gene_count,ph_total_gene_count)
     ph_gene_data_phage_id_set.add(gene_tuple[0])
 
-    gene_object = PhameratorFeature()
+    gene_object = PhameratorCdsFeature()
     gene_object.set_phage_id(gene_tuple[0])
     gene_object.set_gene_id(gene_tuple[1])
     gene_object.set_gene_name(gene_tuple[2])
@@ -1569,16 +1576,19 @@ for gene_tuple in ph_gene_data_tuples:
     gene_object.set_strand(gene_tuple[5])
     gene_object.set_translation(gene_tuple[6])
     gene_object.set_notes(retrieve_description(gene_tuple[7]))
-    gene_object.set_search_id()
-    gene_object.set_search_name()
     gene_object.compute_amino_acid_errors(protein_alphabet_set)
     gene_object.set_start_end_strand_id()
     gene_object.compute_boundary_error()
     ph_gene_objects_list.append(gene_object)
+    ph_gene_count += 1
 
 
 #ph_gene_objects_dict = {} #Key = PhageID; #Value = list of gene objects
+print 'Matching gene and genome data sets from the phamerator database...'
+ph_match_count = 1
+ph_total_match_count = len(ph_genome_object_dict.keys())
 for phage_id in ph_genome_object_dict.keys():
+    print "Matching gene data for genome %s of %s" %(ph_match_count,ph_total_match_count)
     genome_object = ph_genome_object_dict[phage_id]
     new_gene_object_list = []
     for gene_object in ph_gene_objects_list:
@@ -1586,7 +1596,7 @@ for phage_id in ph_genome_object_dict.keys():
             new_gene_object_list.append(gene_object)
 
     genome_object.set_cds_features(new_gene_object_list)
-
+    ph_match_count += 1
 
 
 
@@ -1603,10 +1613,13 @@ pdb_sequenced_phages_dict = json.loads(pdb_sequenced_phages_json.read())
 pdb_sequenced_phages_json.close()
 
 #Data for each phage is stored in a dictionary per phage, and all dictionaries are stored in a list under "results"
+pdb_genome_count = 1
 pdb_genome_dict = {}
 pdb_search_name_set = set()
 pdb_search_name_duplicate_set = set()
-for element_dict in sequenced_phages_dict['results']:
+pdb_total_genome_count = len(pdb_sequenced_phages_dict['results'])
+for element_dict in pdb_sequenced_phages_dict['results']:
+    print "Processing phagesdb genome %s of %s" %(pdb_genome_count,pdb_total_genome_count)
 
     genome_object = PhagesdbGenome()
 
@@ -1653,7 +1666,7 @@ for element_dict in sequenced_phages_dict['results']:
     else:
         pdb_search_name_set.add(pdb_search_name)
         pdb_genome_dict[pdb_search_name] = element_dict
-
+    pdb_genome_count += 1
 
 
 #phagesdb phage names are unique, but just make sure after they are converted to a search name
@@ -1709,7 +1722,7 @@ retrieval_error_list = []
 
 
 
-#When retrieving in batch sizes, first create the list of values indicating which indices of the unique_accession_list should be used to create each batch
+#When retrieving in batch sizes, first create the list of values indicating which indices of the accession_retrieval_list should be used to create each batch
 #For instace, if there are five accessions, batch size of two produces indices = 0,2,4
 for batch_index_start in range(0,len(accession_retrieval_list),batch_size):
 
@@ -1721,7 +1734,7 @@ for batch_index_start in range(0,len(accession_retrieval_list),batch_size):
 
     current_batch_size = batch_index_stop - batch_index_start
     delimiter = " | "
-    esearch_term = delimiter.join(unique_accession_list[batch_index_start:batch_index_stop])
+    esearch_term = delimiter.join(accession_retrieval_list[batch_index_start:batch_index_stop])
 
 
     #Use esearch for each accession
@@ -1764,17 +1777,20 @@ for batch_index_start in range(0,len(accession_retrieval_list),batch_size):
 #Report the accessions that could not be retrieved.
 failed_accession_report_fh = open(os.path.join(main_output_path,date + '_failed_accession_retrieval.csv'), 'w')
 failed_accession_report_writer = csv.writer(failed_accession_report_fh)
-failed_accession_report_writer.writerow(date + ' Database comparison')
-failed_accession_report_writer.writerow('Accessions unable to be retrieved from NCBI')
+failed_accession_report_writer.writerow([date + ' Database comparison'])
+failed_accession_report_writer.writerow(['Accessions unable to be retrieved from NCBI'])
 for retrieval_error_accession in retrieval_error_list:
-    failed_accession_report_writer.writerow(retrieval_error_accession)
+    failed_accession_report_writer.writerow([retrieval_error_accession])
 failed_accession_report_fh.close()
 
 
 
 
 ncbi_genome_dict = {} #Key = accession; #Value = genome data
+ncbi_genome_count = 1
+ncbi_total_genome_count = len(retrieved_record_list)
 for retrieved_record in retrieved_record_list:
+    print "Processing NCBI genome %s of %s" %(ncbi_genome_count,ncbi_total_genome_count)
 
     genome_object = NcbiGenome()
 
@@ -1907,7 +1923,6 @@ for retrieved_record in retrieved_record_list:
                 pass
 
             #Compute other fields
-            gene_object.set_search_name()
             gene_object.compute_amino_acid_errors(protein_alphabet_set)
             gene_object.set_start_end_strand_id()
             gene_object.compute_boundary_error()
@@ -1946,18 +1961,27 @@ for retrieved_record in retrieved_record_list:
 
     #If selected by user, save retrieved record to file
     if save_ncbi_records == 'yes':
-        ncbi_filename = phamerator_name.lower() + '__' + retrieved_record_accession + '.gb'
+        ncbi_filename = genome_object.get_record_name().lower() + '__' + genome_object.get_accession() + '.gb'
         SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,ncbi_filename),'genbank')
 
 
+    ncbi_genome_count += 1
+
+
+
+
+
 #Now that all NCBI and phagesdb data is retrieved, match up to Phamerator genome data
+print "Matching phagesdb and NCBI genomes to Phamerator genomes..."
 matched_genomes_list = [] #Will store a list of MatchedGenomes objects
 ph_unmatched_to_pdb_genomes = [] #List of the phamerator genome objects with no phagesdb matches
 ph_unmatched_to_ncbi_genomes = [] #List of the phamerator genome objects with no NCBI matches
-
+matched_genome_count = 1
+matched_total_genome_count = len(ph_genome_object_dict.keys())
 #Iterate through each phage in Phamerator
 for phage_id in ph_genome_object_dict.keys():
 
+    print "Matching genome %s of %s" %(matched_genome_count,matched_total_genome_count)
 
     phamerator_genome = ph_genome_object_dict[phage_id]
     matched_objects = MatchedGenomes()
@@ -1999,19 +2023,21 @@ for phage_id in ph_genome_object_dict.keys():
         ph_unmatched_to_ncbi_genomes.append(phamerator_genome)
 
     matched_genomes_list.append(matched_object)
+    matched_genome_count += 1
+
 
 #Output unmatched data to file
 unmatched_genome_output_fh = open(os.path.join(main_output_path,date + '_database_comparison_unmatched_genomes.csv'), 'w')
 unmatched_genome_output_writer = csv.writer(unmatched_genome_output_fh)
-unmatched_genome_output_writer.writerow(date + ' Database comparison')
-unmatched_genome_output_writer.writerow('The following Phamerator genomes were not matched to phagesdb:')
-unmatched_genome_output_writer.writerow('PhageID','PhageName','Status')
+unmatched_genome_output_writer.writerow([date + ' Database comparison'])
+unmatched_genome_output_writer.writerow(['The following Phamerator genomes were not matched to phagesdb:'])
+unmatched_genome_output_writer.writerow(['PhageID','PhageName','Status'])
 for element in ph_unmatched_to_pdb_genomes:
     unmatched_genome_output_writer.writerow([element.get_phage_id(),\
                                                 element.get_phage_name(),\
                                                 element.get_status()])
-unmatched_genome_output_writer.writerow('The following Phamerator genomes were not matched to NCBI:')
-unmatched_genome_output_writer.writerow('PhageID','PhageName','Status','Accession')
+unmatched_genome_output_writer.writerow(['The following Phamerator genomes were not matched to NCBI:'])
+unmatched_genome_output_writer.writerow(['PhageID','PhageName','Status','Accession'])
 for element in ph_unmatched_to_pdb_genomes:
     unmatched_genome_output_writer.writerow([element.get_phage_id(),\
                                                 element.get_phage_name(),\
@@ -2026,11 +2052,15 @@ unmatched_genome_output_fh.close()
 
 #Now that all genomes have been matched, iterate through each matched objects
 #and run methods to compare the genomes
+print "Comparing matched genomes and identifying inconsistencies..."
+comparison_count = 1
+comparison_total_count = len(matched_genomes_list)
 for matched_genome_object in matched_genomes_list:
-
+    print "Comparison matched genome set %s of %s" %(comparison_count,comparison_total_count)
     matched_genome_object.compare_phamerator_ncbi_genomes() #This method automatically calls method to match and compare cds features
     matched_genome_object.compare_phamerator_phagesdb_genomes()
     matched_genome_object.compare_phagesdb_ncbi_genomes()
+    comparison_count += 1
 
 #Now that all individual matched_genome_objects have all computed attributes,
 #compute database summary
@@ -2052,24 +2082,8 @@ summary_object.compute_summary()
 
 
 #Now output results
+print "Outputting results to file..."
 #Open files to record update information
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2077,7 +2091,7 @@ summary_object.compute_summary()
 database_summary_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_summary_output.csv'), 'w')
 file_handle_list.append(database_summary_report_fh)
 database_summary_report_writer = csv.writer(database_summary_report_fh)
-database_summary_report_writer.writerow(date + ' Database comparison')
+database_summary_report_writer.writerow([date + ' Database comparison'])
 
 #Create vector of column headers
 summary_report_fields = [\
@@ -2157,7 +2171,7 @@ summary_report_fields = [\
 genome_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_genome_output.csv'), 'w')
 file_handle_list.append(genome_report_fh)
 genome_report_writer = csv.writer(genome_report_fh)
-genome_report_writer.writerow(date + ' Database comparison')
+genome_report_writer.writerow([date + ' Database comparison'])
 
 #Create vector of column headers
 genome_report_column_headers = [\
@@ -2254,7 +2268,7 @@ genome_report_writer.writerow(genome_report_column_headers)
 gene_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_gene_output.csv'), 'w')
 file_handle_list.append(gene_report_fh)
 gene_report_writer = csv.writer(gene_report_fh)
-gene_report_writer.writerow(date + ' Database comparison')
+gene_report_writer.writerow([date + ' Database comparison'])
 
 #Create vector of column headers
 gene_report_column_headers = [\
