@@ -62,8 +62,8 @@ def close_all_files(file_list):
 def remove_draft_suffix(value):
     # Is the word "_Draft" appended to the end of the name?
     value_truncated = value.lower()
-    if value[-6:] == "_draft":
-        value_truncated = value[:-6]
+    if value_truncated[-6:] == "_draft":
+        value_truncated = value_truncated[:-6]
     return value_truncated
 
 def parse_strand(value):
@@ -877,57 +877,57 @@ class MatchedGenomes:
 
 
 
-        # Define all attribute getters:
-        def get_phamerator_genome(self):
-            return self.__phamerator_genome
-        def get_phagesdb_genome(self):
-            return self.__phagesdb_genome
-        def get_ncbi_genome(self):
-            return self.__ncbi_genome
-        def get_phamerator_ncbi_sequence_mismatch(self):
-            return self.__phamerator_ncbi_sequence_mismatch
-        def get_phamerator_ncbi_perfect_matched_features(self):
-            self.__phamerator_ncbi_perfect_matched_features
-        def get_phamerator_ncbi_imperfect_matched_features(self):
-            self.__phamerator_ncbi_imperfect_matched_features
-        def get_phamerator_features_unmatched_in_ncbi(self):
-            self.__phamerator_features_unmatched_in_ncbi
-        def get_ncbi_features_unmatched_in_phamerator(self):
-            self.__ncbi_features_unmatched_in_phamerator
-        def get_phamerator_ncbi_perfect_matched_features_tally(self):
-            self.__phamerator_ncbi_perfect_matched_features_tally
-        def get_phamerator_ncbi_imperfect_matched_features_tally(self):
-            self.__phamerator_ncbi_imperfect_matched_features_tally
-        def get_phamerator_features_unmatched_in_ncbi_tally(self):
-            self.__phamerator_features_unmatched_in_ncbi_tally
-        def get_ncbi_features_unmatched_in_phamerator_tally(self):
-            self.__ncbi_features_unmatched_in_phamerator_tally
-        def get_phamerator_ncbi_sequence_length_mismatch(self):
-            return self.__phamerator_ncbi_sequence_length_mismatch
-        def get_ncbi_record_header_fields_phage_name_mismatch(self):
-            return self.__ncbi_record_header_fields_phage_name_mismatch
-        def get_ncbi_host_mismatch(self):
-            return self.__ncbi_host_mismatch
-        def get_phamerator_ncbi_different_descriptions_tally(self):
-            return self.__phamerator_ncbi_different_descriptions_tally
-        def get_phamerator_ncbi_different_translation_tally(self):
-            return self.__phamerator_ncbi_different_translation_tally
+    # Define all attribute getters:
+    def get_phamerator_genome(self):
+        return self.__phamerator_genome
+    def get_phagesdb_genome(self):
+        return self.__phagesdb_genome
+    def get_ncbi_genome(self):
+        return self.__ncbi_genome
+    def get_phamerator_ncbi_sequence_mismatch(self):
+        return self.__phamerator_ncbi_sequence_mismatch
+    def get_phamerator_ncbi_perfect_matched_features(self):
+        return self.__phamerator_ncbi_perfect_matched_features
+    def get_phamerator_ncbi_imperfect_matched_features(self):
+        return self.__phamerator_ncbi_imperfect_matched_features
+    def get_phamerator_features_unmatched_in_ncbi(self):
+        return self.__phamerator_features_unmatched_in_ncbi
+    def get_ncbi_features_unmatched_in_phamerator(self):
+        return self.__ncbi_features_unmatched_in_phamerator
+    def get_phamerator_ncbi_perfect_matched_features_tally(self):
+        return self.__phamerator_ncbi_perfect_matched_features_tally
+    def get_phamerator_ncbi_imperfect_matched_features_tally(self):
+        return self.__phamerator_ncbi_imperfect_matched_features_tally
+    def get_phamerator_features_unmatched_in_ncbi_tally(self):
+        return self.__phamerator_features_unmatched_in_ncbi_tally
+    def get_ncbi_features_unmatched_in_phamerator_tally(self):
+        return self.__ncbi_features_unmatched_in_phamerator_tally
+    def get_phamerator_ncbi_sequence_length_mismatch(self):
+        return self.__phamerator_ncbi_sequence_length_mismatch
+    def get_ncbi_record_header_fields_phage_name_mismatch(self):
+        return self.__ncbi_record_header_fields_phage_name_mismatch
+    def get_ncbi_host_mismatch(self):
+        return self.__ncbi_host_mismatch
+    def get_phamerator_ncbi_different_descriptions_tally(self):
+        return self.__phamerator_ncbi_different_descriptions_tally
+    def get_phamerator_ncbi_different_translation_tally(self):
+        return self.__phamerator_ncbi_different_translation_tally
 
-        def get_phagesdb_ncbi_sequence_mismatch(self):
-            return self.__phagesdb_ncbi_sequence_mismatch
-        def get_phagesdb_ncbi_sequence_length_mismatch(self):
-            return self.__phagesdb_ncbi_sequence_length_mismatch
+    def get_phagesdb_ncbi_sequence_mismatch(self):
+        return self.__phagesdb_ncbi_sequence_mismatch
+    def get_phagesdb_ncbi_sequence_length_mismatch(self):
+        return self.__phagesdb_ncbi_sequence_length_mismatch
 
-        def get_phamerator_phagesdb_sequence_mismatch(self):
-            return self.__phamerator_phagesdb_sequence_mismatch
-        def get_phamerator_phagesdb_sequence_length_mismatch(self):
-            return self.__phamerator_phagesdb_sequence_length_mismatch
-        def get_phamerator_phagesdb_host_mismatch(self):
-            return self.__phamerator_phagesdb_host_mismatch
-        def get_phamerator_phagesdb_accession_mismatch(self):
-            return self.__phamerator_phagesdb_accession_mismatch
-        def get_phamerator_phagesdb_cluster_subcluster_mismatch(self):
-            return self.__phamerator_phagesdb_cluster_subcluster_mismatch
+    def get_phamerator_phagesdb_sequence_mismatch(self):
+        return self.__phamerator_phagesdb_sequence_mismatch
+    def get_phamerator_phagesdb_sequence_length_mismatch(self):
+        return self.__phamerator_phagesdb_sequence_length_mismatch
+    def get_phamerator_phagesdb_host_mismatch(self):
+        return self.__phamerator_phagesdb_host_mismatch
+    def get_phamerator_phagesdb_accession_mismatch(self):
+        return self.__phamerator_phagesdb_accession_mismatch
+    def get_phamerator_phagesdb_cluster_subcluster_mismatch(self):
+        return self.__phamerator_phagesdb_cluster_subcluster_mismatch
 
 
 
@@ -946,46 +946,46 @@ class MatchedCdsFeatures:
         self.__phamerator_ncbi_different_descriptions = False #True = there are different gene descriptions
 
 
-        # Define all attribute setters:
-        def set_phamerator_feature(self,value):
-            self.__phamerator_feature = value
-        def set_ncbi_feature(self,value):
-            self.__ncbi_feature = value
+    # Define all attribute setters:
+    def set_phamerator_feature(self,value):
+        self.__phamerator_feature = value
+    def set_ncbi_feature(self,value):
+        self.__ncbi_feature = value
 
 
-        def compare_phamerator_ncbi_cds_features(self):
+    def compare_phamerator_ncbi_cds_features(self):
 
-            if self.__phamerator_feature.get_strand() == 'forward':
-                if self.__phamerator_feature.get_left_boundary() != self.__ncbi_feature.get_left_boundary():
-                    self.__phamerator_ncbi_different_start_sites = True
-            elif self.__phamerator_feature.get_strand() == 'reverse':
-                if self.__phamerator_feature.get_right_boundary() != self.__ncbi_feature.get_right_boundary():
-                    self.__phamerator_ncbi_different_start_sites = True
-            else:
-                pass
+        if self.__phamerator_feature.get_strand() == 'forward':
+            if self.__phamerator_feature.get_left_boundary() != self.__ncbi_feature.get_left_boundary():
+                self.__phamerator_ncbi_different_start_sites = True
+        elif self.__phamerator_feature.get_strand() == 'reverse':
+            if self.__phamerator_feature.get_right_boundary() != self.__ncbi_feature.get_right_boundary():
+                self.__phamerator_ncbi_different_start_sites = True
+        else:
+            pass
 
-            if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description():
-            #Below is an alternative strategy, just looking in any field for the same description
-            # if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description() and \
-            #     self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_function_description() and \
-            #     self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_note_description():
+        if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description():
+        #Below is an alternative strategy, just looking in any field for the same description
+        # if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description() and \
+        #     self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_function_description() and \
+        #     self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_note_description():
 
-                self.__phamerator_ncbi_different_descriptions = True
+            self.__phamerator_ncbi_different_descriptions = True
 
-            if self.__phamerator_feature.get_translation() != self.__ncbi_feature.get_translation():
-                self.__phamerator_ncbi_different_translations = True
+        if self.__phamerator_feature.get_translation() != self.__ncbi_feature.get_translation():
+            self.__phamerator_ncbi_different_translations = True
 
-        # Define all attribute getters:
-        def get_phamerator_feature(self):
-            return self.__phamerator_feature
-        def get_ncbi_feature(self):
-            return self.__ncbi_feature
-        def get_phamerator_ncbi_different_start_sites(self):
-            return self.__different_start_sites
-        def get_phamerator_ncbi_different_descriptions(self):
-            return self.__different_descriptions
-        def get_phamerator_ncbi_different_translations(self):
-            return self.__different_translations
+    # Define all attribute getters:
+    def get_phamerator_feature(self):
+        return self.__phamerator_feature
+    def get_ncbi_feature(self):
+        return self.__ncbi_feature
+    def get_phamerator_ncbi_different_start_sites(self):
+        return self.__phamerator_ncbi_different_start_sites
+    def get_phamerator_ncbi_different_descriptions(self):
+        return self.__phamerator_ncbi_different_descriptions
+    def get_phamerator_ncbi_different_translations(self):
+        return self.__phamerator_ncbi_different_translation
 
 
 
@@ -1128,49 +1128,47 @@ class DatabaseSummary:
 
 
             #Phamerator-phagesdb checks
-            if matched_genome.get_phamerator_phagesdb_sequence_mismatch():
+            if matched_genomes.get_phamerator_phagesdb_sequence_mismatch():
                 self.__ph_pdb_sequence_mismatch_tally += 1
-            if matched_genome.get_phamerator_phagesdb_sequence_length_mismatch():
+            if matched_genomes.get_phamerator_phagesdb_sequence_length_mismatch():
                 self.__ph_pdb_sequence_length_mismatch_tally += 1
-            if matched_genome.get_phamerator_phagesdb_cluster_subcluster_mismatch():
+            if matched_genomes.get_phamerator_phagesdb_cluster_subcluster_mismatch():
                 self.__ph_pdb_cluster_subcluster_mismatch_tally += 1
-            if matched_genome.get_phamerator_phagesdb_accession_mismatch():
+            if matched_genomes.get_phamerator_phagesdb_accession_mismatch():
                 self.__ph_pdb_accession_mismatch_tally += 1
-            if matched_genome.get_phamerator_phagesdb_host_mismatch():
+            if matched_genomes.get_phamerator_phagesdb_host_mismatch():
                 self.__ph_pdb_host_mismatch_tally += 1
 
             #Phamerator-NCBI checks
-            if matched_genome.get_phamerator_ncbi_sequence_mismatch():
+            if matched_genomes.get_phamerator_ncbi_sequence_mismatch():
                 self.__ph_ncbi_sequence_mistmatch_tally += 1
-            if matched_genome.get_phamerator_ncbi_sequence_length_mismatch():
+            if matched_genomes.get_phamerator_ncbi_sequence_length_mismatch():
                 self.__ph_ncbi_sequence_length_mismatch_tally += 1
-            if matched_genome.get_ncbi_record_header_fields_phage_name_mismatch():
+            if matched_genomes.get_ncbi_record_header_fields_phage_name_mismatch():
                 self.__ph_ncbi_record_header_phage_mismatch_tally += 1
-            if matched_genome.get_ncbi_host_mismatch():
+            if matched_genomes.get_ncbi_host_mismatch():
                 self.__ph_ncbi_record_header_host_mismatch_tally += 1
-            if matched_genome.get_phamerator_ncbi_imperfect_matched_features_tally():
+            if matched_genomes.get_phamerator_ncbi_imperfect_matched_features_tally() > 0:
                 self.__ph_ncbi_genomes_with_imperfectly_matched_features_tally += 1
-            if matched_genome.get_phamerator_features_unmatched_in_ncbi_tally() > 0:
+                self.__ph_ncbi_different_start_sites_tally += matched_genomes.get_phamerator_ncbi_imperfect_matched_features_tally()
+            if matched_genomes.get_phamerator_features_unmatched_in_ncbi_tally() > 0:
                 self.__ph_ncbi_genomes_with_unmatched_phamerator_features_tally += 1
-                self.__ph_ncbi_unmatched_phamerator_features_tally += matched_genome.get_phamerator_features_unmatched_in_ncbi_tally()
-            if matched_genome.get_ncbi_features_unmatched_in_phamerator_tally() > 0:
+                self.__ph_ncbi_unmatched_phamerator_features_tally += matched_genomes.get_phamerator_features_unmatched_in_ncbi_tally()
+            if matched_genomes.get_ncbi_features_unmatched_in_phamerator_tally() > 0:
                 self.__ph_ncbi_genomes_with_unmatched_ncbi_features_tally += 1
-                self.__ph_ncbi_unmatched_ncbi_features_tally += matched_genome.get_ncbi_features_unmatched_in_phamerator_tally()
-            if matched_genome.get_phamerator_ncbi_different_descriptions_tally() > 0:
+                self.__ph_ncbi_unmatched_ncbi_features_tally += matched_genomes.get_ncbi_features_unmatched_in_phamerator_tally()
+            if matched_genomes.get_phamerator_ncbi_different_descriptions_tally() > 0:
                 self.__ph_ncbi_genomes_with_different_descriptions_tally += 1
-                self.__ph_ncbi_different_descriptions_tally += matched_genome.get_phamerator_ncbi_different_descriptions_tally()
-            if matched_genome.get_phamerator_ncbi_different_translation_tally() > 0:
+                self.__ph_ncbi_different_descriptions_tally += matched_genomes.get_phamerator_ncbi_different_descriptions_tally()
+            if matched_genomes.get_phamerator_ncbi_different_translation_tally() > 0:
                 self.__ph_ncbi_genomes_with_different_translations_tally += 1
-                self.__ph_ncbi_different_translation_tally += matched_genome.get_phamerator_ncbi_different_translation_tally()
-            if matched_genome.get_phamerator_ncbi_different_start_sites() > 0:
-                self.__ph_ncbi_genomes_with_different_start_sites_tally += 1
-                self.__ph_ncbi_different_start_sites_tally += matched_genome.get_phamerator_ncbi_different_start_sites()
+                self.__ph_ncbi_different_translation_tally += matched_genomes.get_phamerator_ncbi_different_translation_tally()
 
 
             #phagesdb-NCBI checks
-            if matched_genome.get_phagesdb_ncbi_sequence_mismatch():
+            if matched_genomes.get_phagesdb_ncbi_sequence_mismatch():
                 self.__pdb_ncbi_sequence_mismatch_tally += 1
-            if matched_genome.get_phagesdb_ncbi_sequence_length_mismatch():
+            if matched_genomes.get_phagesdb_ncbi_sequence_length_mismatch():
                 self.__pdb_ncbi_sequence_length_mismatch_tally += 1
 
 
