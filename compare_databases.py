@@ -250,7 +250,8 @@ class PhameratorGenome(AnnotatedGenome):
         self.__search_id = '' # The phage ID void of "_Draft" and converted to lowercase
         self.__status_accession_error = False
         self.__status_description_error = False
-
+        self.__description_tally = 0
+        self.__date_last_modified = ''
 
     # Define all attribute setters:
     def set_phage_id(self,value):
@@ -272,15 +273,19 @@ class PhameratorGenome(AnnotatedGenome):
             self.__cluster_subcluster = value
     def set_ncbi_update_flag(self,value):
         self.__ncbi_update_flag = value
+    def set_date_last_modified(self,value):
+        if value is None:
+            self.__date_last_modified = ''
+        else:
+            self.__date_last_modified = value
     def compute_status_description_error(self):
         #Iterate through all CDS features, see if they have descriptions, then compare to the status
-        description_tally = 0
         for feature in self.get_cds_features():
             if feature.get_notes() == '':
-                description_tally += 1
-        if self.__status == 'draft' and description_tally > 0:
+                self.__description_tally += 1
+        if self.__status == 'draft' and self.__description_tally > 0:
             self.__status_description_error = True
-        elif self.__status == 'final' and description_tally == 0:
+        elif self.__status == 'final' and self.__description_tally == 0:
             self.__status_description_error = True
         else:
             pass
@@ -297,11 +302,14 @@ class PhameratorGenome(AnnotatedGenome):
         return self.__search_id
     def get_ncbi_update_flag(self):
         return self.__ncbi_update_flag
+    def get_date_last_modified(self):
+        return self.__date_last_modified
     def get_status_description_error(self):
         return self.__status_description_error
     def get_status_accession_error(self):
         return self.__status_accession_error
-
+    def get_description_tally(self):
+        return self.__description_tally
 
 class PhagesdbGenome(UnannotatedGenome):
 
@@ -675,15 +683,15 @@ class MatchedGenomes:
             pattern1 = re.compile('^' + ph_genome.get_phage_name() + '$')
             pattern2 = re.compile('^' + ph_genome.get_phage_name())
 
-            if find_name(pattern2,ncbi_genome.get_record_description.split(' ')) == 0 or \
-                find_name(pattern1,ncbi_genome.get_record_source.split(' ')) == 0 or \
-                find_name(pattern1,ncbi_genome.get_record_organism.split(' ')) == 0 or \
-                find_name(pattern1,ncbi_genome.get_source_feature_organism.split(' ')) == 0:
+            if find_name(pattern2,ncbi_genome.get_record_description().split(' ')) == 0 or \
+                find_name(pattern1,ncbi_genome.get_record_source().split(' ')) == 0 or \
+                find_name(pattern1,ncbi_genome.get_record_organism().split(' ')) == 0 or \
+                find_name(pattern1,ncbi_genome.get_source_feature_organism().split(' ')) == 0:
 
                 self.__ncbi_record_header_fields_phage_name_mismatch = True
 
             #Compare host data
-            search_host = ph_genome.get_host
+            search_host = ph_genome.get_host()
             if search_host == 'Mycobacterium':
                 search_host = search_host[:-3]
             pattern3 = re.compile('^' + search_host)
@@ -783,7 +791,7 @@ class MatchedGenomes:
                 elif cds.get_end_strand_id() in imperfect_matched_cds_id_set:
                     ph_imperfect_matched_cds_dict[cds.get_end_strand_id()] = cds
                 else:
-                    ph_unmatched_cds_list.add(cds)
+                    ph_unmatched_cds_list.append(cds)
 
 
             ncbi_perfect_matched_cds_dict = {}
@@ -796,7 +804,7 @@ class MatchedGenomes:
                 elif cds.get_end_strand_id() in imperfect_matched_cds_id_set:
                     ncbi_imperfect_matched_cds_dict[cds.get_end_strand_id()] = cds
                 else:
-                    ncbi_unmatched_cds_list.add(cds)
+                    ncbi_unmatched_cds_list.append(cds)
 
 
             #Create MatchedCdsFeatures objects
@@ -858,10 +866,15 @@ class MatchedGenomes:
                 self.__phamerator_phagesdb_accession_mismatch = True
             if ph_genome.get_host() != pdb_genome.get_host():
                 self.__phamerator_phagesdb_host_mismatch = True
-            if ph_genome.get_cluster_subcluster() != pdb_genome.get_cluster() and \
-                ph_genome.get_cluster_subcluster() != pdb_genome.get_subcluster():
+            if ph_genome.get_cluster_subcluster() != pdb_genome.get_cluster() and ph_genome.get_cluster_subcluster() != pdb_genome.get_subcluster():
 
                 self.__phamerator_phagesdb_cluster_subcluster_mismatch = True
+
+                #TODO cluster subcluster check
+                print ph_genome.get_cluster_subcluster()
+                print pdb_genome.get_cluster()
+                print pdb_genome.get_subcluster()
+                raw_input("Check cluster subcluster data")
 
     def compare_phagesdb_ncbi_genomes(self):
 
@@ -1451,6 +1464,8 @@ file_handle_list = []
 #6 = Cluster
 #7 = Accession
 #8 = auto-update NCBI record flag
+#9 = DateLastModified
+
 #Retrieve current gene data in database
 #0 = PhageID
 #1 = GeneID
@@ -1474,7 +1489,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     ph_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,status,Cluster,Accession,RetrieveRecord FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,status,Cluster,Accession,RetrieveRecord,DateLastModified FROM phage")
     ph_genome_data_tuples = cur.fetchall()
     cur.execute("SELECT PhageID,GeneID,Name,Start,Stop,Orientation,Translation,Notes from gene")
     ph_gene_data_tuples = cur.fetchall()
@@ -1511,6 +1526,7 @@ for genome_tuple in ph_genome_data_tuples:
     genome_object.set_status(genome_tuple[5])
     genome_object.set_cluster_subcluster(genome_tuple[6])
     genome_object.set_ncbi_update_flag(genome_tuple[8])
+    genome_object.set_date_last_modified(genome_tuple[9])
     genome_object.compute_nucleotide_errors(dna_alphabet_set)
     genome_object.compute_cds_feature_errors()
     genome_object.compute_status_description_error()
@@ -1955,7 +1971,7 @@ for retrieved_record in retrieved_record_list:
 
 
     #After parsing all data, add to the ncbi dictionary
-    ncbi_genome_dict[genome_object.get_accession()] = genome_object
+    ncbi_genome_dict[genome_object.get_record_accession()] = genome_object
 
     #If selected by user, save retrieved record to file
     if save_ncbi_records == 'yes':
@@ -2020,6 +2036,7 @@ for phage_id in ph_genome_object_dict.keys():
         ncbi_genome = ''
         ph_unmatched_to_ncbi_genomes.append(phamerator_genome)
 
+    matched_objects.set_ncbi_genome(ncbi_genome)
     matched_genomes_list.append(matched_objects)
     matched_genome_count += 1
 
@@ -2186,7 +2203,10 @@ genome_report_column_headers = [\
     'ph_accession',\
     'ph_dna_seq_length',\
     'ph_gene_tally',\
+    'ph_description_tally',\
     'ph_ncbi_update_flag',\
+    'ph_date_last_modified',\
+
 
     #Genome data checks
     'ph_dna_seq_error',\
@@ -2407,7 +2427,7 @@ if len(summary_report_fields) == len(summary_data_output):
     while summary_output_index < len(summary_report_fields):
         database_summary_report_writer.writerow([\
             summary_report_fields[summary_output_index],\
-            summary_report_fields[summary_output_index]])
+            summary_data_output[summary_output_index]])
         summary_output_index += 1
 else:
     database_summary_report_writer.writerow(['Different number of database summary metrics than database summary data fields.'])
@@ -2438,7 +2458,9 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     genome_data_output.append(ph_genome.get_accession())# Accession
     genome_data_output.append(ph_genome.get_length())# sequence_length
     genome_data_output.append(ph_genome.get_cds_features_tally())# # genes
+    genome_data_output.append(ph_genome.get_description_tally()) # # genes with descriptions
     genome_data_output.append(ph_genome.get_ncbi_update_flag())# ncbi_update_flag
+    genome_data_output.append(ph_genome.get_date_last_modified()) # DateLastModified
 
 
     #Genome data checks
