@@ -812,15 +812,25 @@ class MatchedGenomes:
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_perfect_matched_cds_dict[start_end_strand_tup])
                 matched_cds_object.set_ncbi_feature(ncbi_perfect_matched_cds_dict[start_end_strand_tup])
+                matched_cds_object.compare_phamerator_ncbi_cds_features()
+                if matched_cds_object.get_phamerator_ncbi_different_translations():
+                    self.__phamerator_ncbi_different_translation_tally += 1
+                if matched_cds_object.get_phamerator_ncbi_different_descriptions():
+                    self.__phamerator_ncbi_different_descriptions_tally += 1
                 self.__phamerator_ncbi_perfect_matched_features.append(matched_cds_object)
+
+
 
             for end_strand_tup in imperfect_matched_cds_id_set:
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_imperfect_matched_cds_dict[end_strand_tup])
                 matched_cds_object.set_ncbi_feature(ncbi_imperfect_matched_cds_dict[end_strand_tup])
+                matched_cds_object.compare_phamerator_ncbi_cds_features()
+                if matched_cds_object.get_phamerator_ncbi_different_descriptions():
+                    self.__phamerator_ncbi_different_descriptions_tally += 1
                 self.__phamerator_ncbi_imperfect_matched_features.append(matched_cds_object)
 
-
+            #TODO make sure matched_cds_object attributes and methods are computed
             #Set unmatched cds lists
             self.__phamerator_features_unmatched_in_ncbi = ph_unmatched_cds_list
             self.__ncbi_features_unmatched_in_phamerator = ncbi_unmatched_cds_list
@@ -834,21 +844,24 @@ class MatchedGenomes:
             self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
 
 
-            #Now compare gene descriptions and translations for perfectly matched cds features
-            for matched_cds_object in self.__phamerator_ncbi_perfect_matched_features:
-                matched_cds_object.compare_phamerator_ncbi_cds_features()
-                if matched_cds_object.get_phamerator_ncbi_different_translations():
-                    self.__phamerator_ncbi_different_translation_tally += 1
-                if matched_cds_object.get_phamerator_ncbi_different_descriptions():
-                    self.__phamerator_ncbi_different_descriptions_tally += 1
 
-            #Compare gene descriptions for imperfectly matched cds features
-            #Since imperfect matches means different start site, the translation will be different by default
-            for matched_cds_object in self.__phamerator_ncbi_imperfect_matched_features:
-                matched_cds_object.compare_phamerator_ncbi_cds_features()
-                if matched_cds_object.get_phamerator_ncbi_different_descriptions():
-                    self.__phamerator_ncbi_different_descriptions_tally += 1
 
+            # ###OLD CODE
+            # #Now compare gene descriptions and translations for perfectly matched cds features
+            # for matched_cds_object in self.__phamerator_ncbi_perfect_matched_features:
+            #     matched_cds_object.compare_phamerator_ncbi_cds_features()
+            #     if matched_cds_object.get_phamerator_ncbi_different_translations():
+            #         self.__phamerator_ncbi_different_translation_tally += 1
+            #     if matched_cds_object.get_phamerator_ncbi_different_descriptions():
+            #         self.__phamerator_ncbi_different_descriptions_tally += 1
+            #
+            # #Compare gene descriptions for imperfectly matched cds features
+            # #Since imperfect matches means different start site, the translation will be different by default
+            # for matched_cds_object in self.__phamerator_ncbi_imperfect_matched_features:
+            #     matched_cds_object.compare_phamerator_ncbi_cds_features()
+            #     if matched_cds_object.get_phamerator_ncbi_different_descriptions():
+            #         self.__phamerator_ncbi_different_descriptions_tally += 1
+            # ###OLD CODE
 
     def compare_phamerator_phagesdb_genomes(self):
 
@@ -871,7 +884,9 @@ class MatchedGenomes:
                 self.__phamerator_phagesdb_cluster_subcluster_mismatch = True
 
                 #TODO cluster subcluster check
+                print ph_genome.get_search_name()
                 print ph_genome.get_cluster_subcluster()
+                print pdb_genome.get_search_name()
                 print pdb_genome.get_cluster()
                 print pdb_genome.get_subcluster()
                 raw_input("Check cluster subcluster data")
@@ -1033,7 +1048,7 @@ class DatabaseSummary:
         self.__ncbi_genomes_with_nucleotide_errors_tally = 0
         self.__ncbi_genomes_with_translations_errors_tally = 0
         self.__ncbi_genomes_with_boundary_errors_tally = 0
-        self.__ncbi_genoems_with_missing_locus_tags_tally = 0
+        self.__ncbi_genomes_with_missing_locus_tags_tally = 0
         self.__ncbi_genomes_with_locus_tag_typos_tally = 0
         self.__ncbi_genomes_with_description_field_errors_tally = 0
 
@@ -1223,8 +1238,8 @@ class DatabaseSummary:
         return self.__ncbi_genomes_with_translations_errors_tally
     def get_ncbi_genomes_with_boundary_errors_tally(self):
         return self.__ncbi_genomes_with_boundary_errors_tally
-    def get_ncbi_genoems_with_missing_locus_tags_tally(self):
-        return self.__ncbi_genoems_with_missing_locus_tags_tally
+    def get_ncbi_genomes_with_missing_locus_tags_tally(self):
+        return self.__ncbi_genomes_with_missing_locus_tags_tally
     def get_ncbi_genomes_with_locus_tag_typos_tally(self):
         return self.__ncbi_genomes_with_locus_tag_typos_tally
 
@@ -1632,74 +1647,77 @@ pdb_genome_dict = {}
 pdb_search_name_set = set()
 pdb_search_name_duplicate_set = set()
 pdb_total_genome_count = len(pdb_sequenced_phages_dict['results'])
-for element_dict in pdb_sequenced_phages_dict['results']:
-    print "Processing phagesdb genome %s of %s" %(pdb_genome_count,pdb_total_genome_count)
 
-    genome_object = PhagesdbGenome()
-
-    #Name, Host, Accession
-    genome_object.set_phage_name(element_dict['phage_name'])
-    genome_object.set_host(element_dict['isolation_host']['genus'])
-    genome_object.set_accession(element_dict['genbank_accession'])
-
-    #Cluster
-    if element_dict['pcluster'] is not None:
-        #Sometimes cluster information is not present. In the phagesdb database, it is recorded as NULL.
-        #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-        #In these cases, leave cluster as ''
-        genome_object.set_cluster(element_dict['pcluster']['cluster'])
-
-    #Subcluster
-    if element_dict['psubcluster'] is not None:
-        #A phage may be clustered but not subclustered.
-        #In these cases, leave subcluster as ''
-        genome_object.set_subcluster(element_dict['psubcluster']['subcluster'])
-
-    #Check to see if there is a fasta file stored on phagesdb for this phage
-    if element_dict['fasta_file'] is not None:
-        fastafile_url = element_dict['fasta_file']
-
-        response = urllib2.urlopen(fastafile_url)
-        retrieved_fasta_file = response.read()
-        response.close()
-
-        #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
-        #If you split by newline, the header is retained in the first list element
-        split_fasta_data = retrieved_fasta_file.split('\n')
-        pdb_sequence = ''
-        index = 1
-        while index < len(split_fasta_data):
-            pdb_sequence = pdb_sequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
-            index += 1
-        genome_object.set_sequence(pdb_sequence)
-        genome_object.compute_nucleotide_errors(dna_alphabet_set)
-
-    pdb_search_name = genome_object.get_search_name()
-    if pdb_search_name in pdb_search_name_set:
-        pdb_search_name_duplicate_set.add(pdb_search_name)
-    else:
-        pdb_search_name_set.add(pdb_search_name)
-        pdb_genome_dict[pdb_search_name] = genome_object
-    pdb_genome_count += 1
-
-
-#phagesdb phage names are unique, but just make sure after they are converted to a search name
-if len(pdb_search_name_duplicate_set) > 0:
-
-    print 'Warning: There are duplicate phage search names in phagesdb. \
-    Some phagesdb genomes will not be able to be matched to Phamerator:'
-    output_to_file(list(pdb_search_name_duplicate_set),'duplicate_phage_names.csv')
-    raw_input('Press ENTER to proceed')
-
-
-#Make sure all sequenced phage data has been retrieved
-if (len(pdb_sequenced_phages_dict['results']) != pdb_sequenced_phages_dict['count'] or \
-    len(pdb_sequenced_phages_dict['results']) != len(pdb_genome_dict)):
-
-    print "\nUnable to retrieve all phage data from phagesdb due to default retrieval parameters."
-    print 'Update parameters in script to enable these functions.'
-    raw_input('Press ENTER to proceed')
-
+#TODO temp commented out
+# for element_dict in pdb_sequenced_phages_dict['results']:
+#     print "Processing phagesdb genome %s of %s" %(pdb_genome_count,pdb_total_genome_count)
+#
+#     genome_object = PhagesdbGenome()
+#
+#     #Name, Host, Accession
+#     genome_object.set_phage_name(element_dict['phage_name'])
+#     genome_object.set_host(element_dict['isolation_host']['genus'])
+#     genome_object.set_accession(element_dict['genbank_accession'])
+#
+#     #Cluster
+#     if element_dict['pcluster'] is not None:
+#         #Sometimes cluster information is not present. In the phagesdb database, it is recorded as NULL.
+#         #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
+#         #In these cases, leave cluster as ''
+#         genome_object.set_cluster(element_dict['pcluster']['cluster'])
+#
+#     #Subcluster
+#     if element_dict['psubcluster'] is not None:
+#         #A phage may be clustered but not subclustered.
+#         #In these cases, leave subcluster as ''
+#         genome_object.set_subcluster(element_dict['psubcluster']['subcluster'])
+#
+#     #Check to see if there is a fasta file stored on phagesdb for this phage
+#     if element_dict['fasta_file'] is not None:
+#         fastafile_url = element_dict['fasta_file']
+#
+#         response = urllib2.urlopen(fastafile_url)
+#         #TODO add a timeout to the urllib2 call?
+#         retrieved_fasta_file = response.read()
+#         response.close()
+#
+#         #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
+#         #If you split by newline, the header is retained in the first list element
+#         split_fasta_data = retrieved_fasta_file.split('\n')
+#         pdb_sequence = ''
+#         index = 1
+#         while index < len(split_fasta_data):
+#             pdb_sequence = pdb_sequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
+#             index += 1
+#         genome_object.set_sequence(pdb_sequence)
+#         genome_object.compute_nucleotide_errors(dna_alphabet_set)
+#
+#     pdb_search_name = genome_object.get_search_name()
+#     if pdb_search_name in pdb_search_name_set:
+#         pdb_search_name_duplicate_set.add(pdb_search_name)
+#     else:
+#         pdb_search_name_set.add(pdb_search_name)
+#         pdb_genome_dict[pdb_search_name] = genome_object
+#     pdb_genome_count += 1
+#
+#
+# #phagesdb phage names are unique, but just make sure after they are converted to a search name
+# if len(pdb_search_name_duplicate_set) > 0:
+#
+#     print 'Warning: There are duplicate phage search names in phagesdb. \
+#     Some phagesdb genomes will not be able to be matched to Phamerator:'
+#     output_to_file(list(pdb_search_name_duplicate_set),'duplicate_phage_names.csv')
+#     raw_input('Press ENTER to proceed')
+#
+#
+# #Make sure all sequenced phage data has been retrieved
+# if (len(pdb_sequenced_phages_dict['results']) != pdb_sequenced_phages_dict['count'] or \
+#     len(pdb_sequenced_phages_dict['results']) != len(pdb_genome_dict)):
+#
+#     print "\nUnable to retrieve all phage data from phagesdb due to default retrieval parameters."
+#     print 'Update parameters in script to enable these functions.'
+#     raw_input('Press ENTER to proceed')
+#TODO temp commented out
 
 
 
@@ -2132,7 +2150,7 @@ summary_report_fields = [\
     'ncbi_genomes_with_nucleotide_errors_tally',\
     'ncbi_genomes_with_translations_errors_tally',\
     'ncbi_genomes_with_boundary_errors_tally',\
-    'ncbi_genoems_with_missing_locus_tags_tally',\
+    'ncbi_genomes_with_missing_locus_tags_tally',\
     'ncbi_genomes_with_locus_tag_typos_tally',\
 
     #Phamerator-phagesdb checks
@@ -2372,7 +2390,7 @@ summary_data_output.append(summary_object.get_ncbi_genomes_with_description_fiel
 summary_data_output.append(summary_object.get_ncbi_genomes_with_nucleotide_errors_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_translations_errors_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_boundary_errors_tally())
-summary_data_output.append(summary_object.get_ncbi_genoems_with_missing_locus_tags_tally())
+summary_data_output.append(summary_object.get_ncbi_genomes_with_missing_locus_tags_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_locus_tag_typos_tally())
 
 #Phamerator-phagesdb checks
@@ -2520,7 +2538,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
     else:
         genome_data_output.extend(['','','','','','','','','','',\
-                                    '','','','','','','','',''])
+                                    '','','','','','','','','',''])
 
     #Phamerator-phagesdb checks
     if isinstance(pdb_genome,PhagesdbGenome):
@@ -2672,4 +2690,4 @@ end_time = time.strftime("%x %X")
 print 'Start time: %s' %start_time
 print 'Stop time: %s' %end_time
 
-print "\n\n\n\Database comparison script completed."
+print "\n\n\nDatabase comparison script completed."
