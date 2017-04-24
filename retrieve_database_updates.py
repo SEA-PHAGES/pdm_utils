@@ -53,7 +53,7 @@ except:
 try:
     database = sys.argv[1] #What Phamerator database should be compared to phagesdb?
     working_dir = sys.argv[2] #What is the directory into which the report should go
-    
+
 except:
     print "\n\n\
             This is a python script to retrieve several types of Phamerator database updates.\n\
@@ -146,7 +146,7 @@ sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_si
 
 
 #Define several functions
-            
+
 #Exits MySQL
 def mdb_exit(message):
     print "\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`
@@ -171,11 +171,11 @@ def select_option(message):
         if (response.lower() == "yes" or response.lower() == "y"):
             response  = "yes"
             response_valid = True
-        elif (response.lower() == "no" or response.lower() == "n"):                         
+        elif (response.lower() == "no" or response.lower() == "n"):
             response = "no"
             response_valid = True
         else:
-            print "Invalid response."   
+            print "Invalid response."
     return response
 
 
@@ -246,7 +246,7 @@ if retrieve_field_updates == "yes":
         print "\nUnable to create output folder: %s" % field_updates_path
         close_all_files(open_file_handles_list)
         sys.exit(1)
-        
+
     #This is a dummy folder, since field updates don't have any associated genome files.
     #However, creating the folder makes it easier to run the import_script on the corrections_import_table, since this script relies on the presence of a genomes folder.
     os.mkdir(os.path.join(field_updates_path,genomes_folder))
@@ -261,7 +261,7 @@ if retrieve_field_updates == "yes":
 if retrieve_phagesdb_genomes == "yes":
 
     #Output folder
-    phagesdb_output_folder = '%s_retrieved_phagesdb_flatfiles' % date
+    phagesdb_output_folder = '%s_phagesdb_flatfiles' % date
     phagesdb_output_path = os.path.join(working_dir,phagesdb_output_folder)
 
     try:
@@ -283,7 +283,7 @@ if retrieve_phagesdb_genomes == "yes":
 if retrieve_pecaan_genomes == "yes":
 
     #Output folder
-    pecaan_output_folder = '%s_retrieved_pecaan_flatfiles' % date
+    pecaan_output_folder = '%s_pecaan_flatfiles' % date
     pecaan_output_path = os.path.join(working_dir,pecaan_output_folder)
 
     try:
@@ -295,7 +295,7 @@ if retrieve_pecaan_genomes == "yes":
 
     #Genomes folder
     os.mkdir(os.path.join(pecaan_output_path,genomes_folder))
-        
+
     #Import table
     pecaan_import_table_handle = open(os.path.join(pecaan_output_path,date + "_pecaan_import_table.csv"), "w")
     open_file_handles_list.append(pecaan_import_table_handle)
@@ -305,7 +305,7 @@ if retrieve_pecaan_genomes == "yes":
 if retrieve_ncbi_genomes == "yes":
 
     #Output folder
-    ncbi_output_folder = '%s_retrieved_ncbi_flatfiles' % date
+    ncbi_output_folder = '%s_ncbi_flatfiles' % date
     ncbi_output_path = os.path.join(working_dir,ncbi_output_folder)
 
     try:
@@ -376,7 +376,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-    #Initialize phagesdb retrieval variables 
+    #Initialize phagesdb retrieval variables
     phagesdb_retrieved_tally = 0
     phagesdb_failed_tally = 0
     phagesdb_retrieved_list = []
@@ -437,11 +437,11 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
         elif phamerator_accession.strip() == "":
             phamerator_accession = "none"
-        
+
         if phamerator_accession != "none":
             phamerator_accession = phamerator_accession.split('.')[0]
 
-            #Check for accession duplicates            
+            #Check for accession duplicates
             if phamerator_accession in phamerator_accession_set:
                 phamerator_duplicate_accessions.append(phamerator_accession)
             else:
@@ -480,7 +480,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                             phamerator_program])
 
 
-        
+
 
 
     #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
@@ -499,10 +499,10 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         for accession in phamerator_duplicate_accessions:
             print accession
         retrieve_ncbi_genomes = "no"
-        
+
         raw_input("Press ENTER to proceed")
 
-       
+
     #Retrieve a list of all sequenced phages listed on phagesdb
     print "Retrieving data from phagesdb..."
     sequenced_phages_json = urllib.urlopen(sequenced_phages_url)
@@ -513,8 +513,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     phagesdb_data_dict = {}
     for element_dict in sequenced_phages_dict["results"]:
         phagesdb_data_dict[element_dict["phage_name"]] = element_dict
-        
-        
+
+
     if (len(sequenced_phages_dict["results"]) != sequenced_phages_dict["count"] or len(sequenced_phages_dict["results"]) != len(phagesdb_data_dict)):
         print "\nUnable to retrieve all phage data from phagesdb due to default parameters."
         print "Unable to retrieve field updates or manually-annotated flatfiles from phagesdb."
@@ -522,9 +522,9 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         retrieve_field_updates = "no"
         retrieve_phagesdb_genomes = "no"
         raw_input("Press ENTER to proceed")
-        
-        
-        
+
+
+
 
     #Iterate through each phage in Phamerator
     for genome_data in modified_genome_data_list:
@@ -543,22 +543,22 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_retrieve = genome_data[7]
         phamerator_program = genome_data[8]
 
-    
+
 
 
         #For NCBI retrieval, add to dictionary if 1) the genome is set to be automatically updated and 2) if there is an accession number
         if retrieve_ncbi_genomes == "yes":
-        
+
             if phamerator_retrieve != 1:
-                print "PhageID %s is not set to be automatically updated by NCBI record." %phamerator_id
+                #print "PhageID %s is not set to be automatically updated by NCBI record." %phamerator_id
                 tally_not_auto_updated += 1
                 ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,'NA','no automatic update'])
 
             elif phamerator_accession == "none" or phamerator_accession is None:
-                print "PhageID %s is set to be automatically updated, but it does not have an accession number." %phamerator_id
+                #print "PhageID %s is set to be automatically updated, but it does not have an accession number." %phamerator_id
                 tally_no_accession += 1
                 ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,'NA','no accession'])
-            
+
             else:
 
                 #Dictionary of phage data based on unique accessions
@@ -573,35 +573,35 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                                 phamerator_accession,\
                                                                 phamerator_retrieve,\
                                                                 phamerator_program]
-    
-        
+
+
         #The next code block is only applicable if all phage data was successfully retrieved from phagesdb
         #If incomplete data was retrieved from phagesdb, the retrieve_field_updates and retrieve_phagesdb_genomes flags should have been set to "no"
-        if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes"):       
+        if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes"):
 
-            #Ensure the phageID does not have Draft appended    
+            #Ensure the phageID does not have Draft appended
             if phamerator_id[-6:].lower() == "_draft":
                 phage_id_search_name = phamerator_id[:-6]
             else:
                 phage_id_search_name = phamerator_id
 
-            #Ensure the phage name does not have Draft appended    
+            #Ensure the phage name does not have Draft appended
             if phamerator_name[-6:].lower() == "_draft":
                 phage_name_search_name = phamerator_name[:-6]
             else:
-                phage_name_search_name = phamerator_name   
+                phage_name_search_name = phamerator_name
 
             #First try to match up the phageID, and if that doesn't work, try to match up the phageName
             if phage_id_search_name in phagesdb_data_dict.keys():
                 matched_phagesdb_data = phagesdb_data_dict[phage_id_search_name]
                 matched_count += 1
-          
+
             elif phage_name_search_name in phagesdb_data_dict.keys():
                 matched_phagesdb_data = phagesdb_data_dict[phage_name_search_name]
                 matched_count += 1
 
             else:
-                print "\nError: unable to find phageID %s or phageName %s from phagesdb." %(phamerator_id,phamerator_name)
+                #print "\nError: unable to find phageID %s or phageName %s from phagesdb." %(phamerator_id,phamerator_name)
                 matched_phagesdb_data = ""
                 unmatched_count += 1
                 unmatched_phage_id_list.append(phamerator_id)
@@ -629,17 +629,17 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             if matched_phagesdb_data['pcluster'] is None:
                 #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
                 #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-                #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, the phamerator cluster is listed as 'UKN' (Unknown). 
+                #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, the phamerator cluster is listed as 'UKN' (Unknown).
                 phagesdb_cluster = 'UKN'
 
-            else: 
+            else:
                 phagesdb_cluster = matched_phagesdb_data['pcluster']['cluster']
 
             #Matched subcluster
             if matched_phagesdb_data['psubcluster'] is None:
                 #If a phage has a cluster, but not a subcluster, set subcluster to Unspecified
                 phagesdb_subcluster = 'Unspecified'
-            
+
             else:
                 phagesdb_subcluster = matched_phagesdb_data['psubcluster']['subcluster']
 
@@ -648,25 +648,25 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             #Matched program
             #On phagesdb, phages may or may not have a Program associated with it
             ###Currently, if no program is listed in phagesdb, ['program'] will be NULL with no ['program_name'] field.
-            ###For now, simply assign all these as 'NCBI'            
+            ###For now, simply assign all these as 'NCBI'
             try:
-            
+
                 #Code to retrieve program data will probably change once it all has been updated in phagesdb
                 phagesdb_program = matched_phagesdb_data['program']['program_name']
                 if phagesdb_program != "" or phagesdb_program is not None:
-                    
+
                     #See if the program is found in the current list of long program names
                     if phagesdb_program in program_long_dict.keys():
                         phagesdb_program = program_long_dict[phagesdb_program]
                     else:
-                        print "\nError: phagesdb program data for phage %s is not on list of eligible programs." %phamerator_id
+                        #print "\nError: phagesdb program data for phage %s is not on list of eligible programs." %phamerator_id
                         phagesdb_program = "none"
-                        
+
                 else:
                     phagesdb_program = "none"
 
             except:
-                print "\nError: unable to retrieve program data for phage %s from phagesdb." %phamerator_id
+                #print "\nError: unable to retrieve program data for phage %s from phagesdb." %phamerator_id
                 phagesdb_program = "NCBI"
 
 
@@ -680,16 +680,16 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 phagesdb_cluster_update = phagesdb_cluster
             else:
                 phagesdb_cluster_update = phagesdb_subcluster
-             
+
             #Compare Cluster and Subcluster
             if phagesdb_subcluster == 'Unspecified':
-            
+
                 if phamerator_cluster != phagesdb_cluster:
-                    print "\nError: Phamerator Cluster %s does not match with phagesdb Cluster %s for phageID %s." %(phamerator_cluster,phagesdb_cluster,phamerator_id)
+                    #print "\nError: Phamerator Cluster %s does not match with phagesdb Cluster %s for phageID %s." %(phamerator_cluster,phagesdb_cluster,phamerator_id)
                     field_corrections_needed += 1
-                
+
             elif phamerator_cluster != phagesdb_subcluster:
-                    print "\nError: Phamerator Cluster %s does not match with phagesdb Subcluster %s for phageID %s." %(phamerator_cluster,phagesdb_subcluster,phamerator_id)
+                    #print "\nError: Phamerator Cluster %s does not match with phagesdb Subcluster %s for phageID %s." %(phamerator_cluster,phagesdb_subcluster,phamerator_id)
                     field_corrections_needed += 1
 
             #Compare Host genus
@@ -714,27 +714,27 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
                 field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none",phagesdb_accession,phagesdb_program,"none"])
-        
-              
+
+
 
 
 
         #Determine if any new Genbank-formatted files are available
         if retrieve_phagesdb_genomes == "yes":
-        
-        
+
+
             #Retrieve the qced_genbank_file_date data and properly format it.
-            #Some phages may have a file but no associated date tagged with that file (since date tagging has only recently been implemented).        
+            #Some phages may have a file but no associated date tagged with that file (since date tagging has only recently been implemented).
             #If there is a date, it is formatted as: '2017-02-15T10:37:21Z'
             #If there is no date, it is Null, but change this to 1/1/1900.
             phagesdb_flatfile_date = matched_phagesdb_data['qced_genbank_file_date']
 
-            if phagesdb_flatfile_date is None:                
+            if phagesdb_flatfile_date is None:
 
                 phagesdb_flatfile_date = datetime.strptime('1/1/1900','%m/%d/%Y')
-                
+
             else:
-                
+
                 phagesdb_flatfile_date = phagesdb_flatfile_date.split('T')[0]
                 phagesdb_flatfile_date = datetime.strptime(phagesdb_flatfile_date,'%Y-%m-%d')
 
@@ -746,7 +746,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             #and this too could be less recent than the current version in Phamerator; however, this part gets checked during the import stage.
             if (matched_phagesdb_data['qced_genbank_file'] is None or not phagesdb_flatfile_date > phamerator_date):
 
-                print "No flatfile is available that is more recent than current phamerator version for phageID %s." % phamerator_id
+                #print "No flatfile is available that is more recent than current phamerator version for phageID %s." % phamerator_id
                 phagesdb_failed_tally += 1
                 phagesdb_failed_list.append(phamerator_id)
 
@@ -755,14 +755,14 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 #Save the file on the hard drive with the same name as stored on phagesdb
                 phagesdb_flatfile_url = matched_phagesdb_data['qced_genbank_file']
                 phagesdb_filename = phagesdb_flatfile_url.split('/')[-1]
-               
+
                 try:
                     phagesdb_flatfile_response = urllib2.urlopen(phagesdb_flatfile_url)
                     phagesdb_file_handle = open(os.path.join(phagesdb_output_path,genomes_folder,phagesdb_filename),'w')
                     phagesdb_file_handle.write(phagesdb_flatfile_response.read())
                     phagesdb_flatfile_response.close()
                     phagesdb_file_handle.close()
-                                   
+
                     #Create the new import ticket
                     phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product","retrieve","retrieve",phamerator_id])
                     phagesdb_retrieved_tally += 1
@@ -774,7 +774,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_failed_list.append(phamerator_id)
 
 
-
+#TODO output all folders the same
 
 
 
@@ -783,15 +783,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #All field updates and manually-annotated flatfiles have been retrieved from phagesdb.
     #Report retrieval results.
     if retrieve_phagesdb_genomes == "yes":
-    
-        print "\n\n%s phage(s) were successfully retrieved from phagesdb" %phagesdb_retrieved_tally
-        print "\n\n%s phage(s) failed to be retrieved from phagesdb:" %phagesdb_failed_tally
-        for element in phagesdb_failed_list:
-            print element
+
+        print "\n\n%s phage(s) were retrieved from phagesdb." %phagesdb_retrieved_tally
+        #print "\n\n%s phage(s) failed to be retrieved from phagesdb:" %phagesdb_failed_tally
+        #for element in phagesdb_failed_list:
+            #print element
 
 
     print "\nPhamerator-phagesdb matched phage tally: %s." %matched_count
-    print "\nPhamerator-phagesdb unmatched phage tally: %s." %unmatched_count    
+    print "\nPhamerator-phagesdb unmatched phage tally: %s." %unmatched_count
     if unmatched_count > 0:
         print "\nPhamerator-phagesdb unmatched phages:"
         for element in unmatched_phage_id_list:
@@ -843,13 +843,13 @@ if retrieve_ncbi_genomes == "yes":
     #For instace, if there are five accessions, batch size of two produces indices = 0,2,4
     for batch_index_start in range(0,len(unique_accession_list),batch_size):
 
-        
+
         if batch_index_start + batch_size > len(unique_accession_list):
             batch_index_stop = len(unique_accession_list)
         else:
             batch_index_stop = batch_index_start + batch_size
-        
-        current_batch_size = batch_index_stop - batch_index_start        
+
+        current_batch_size = batch_index_stop - batch_index_start
         delimiter = " | "
         esearch_term = delimiter.join(unique_accession_list[batch_index_start:batch_index_stop])
 
@@ -862,7 +862,7 @@ if retrieve_ncbi_genomes == "yes":
         search_query_key = search_record["QueryKey"]
 
 
-        
+
         #Keep track of the accessions that failed to be located in NCBI
         if search_count < current_batch_size:
             search_accession_failure = search_record["ErrorList"]["PhraseNotFound"]
@@ -870,9 +870,9 @@ if retrieve_ncbi_genomes == "yes":
             #Each element in this list is formatted "accession[ACCN]"
             for element in search_accession_failure:
                 retrieval_error_list.append(element[:-6])
-        
-        
-        
+
+
+
         #Now retrieve all records using efetch
         fetch_handle = Entrez.efetch(db = "nucleotide", rettype = "gb", retmode = "text", retstart = 0,retmax = search_count, webenv = search_webenv,query_key = search_query_key)
         fetch_records = SeqIO.parse(fetch_handle,"genbank")
@@ -908,7 +908,7 @@ if retrieve_ncbi_genomes == "yes":
     #Create the genbank-formatted file only if it is a newer genome.
     #Also create an import table.
     for retrieved_record in retrieved_record_list:
-        
+
         #Pull out the accession to get the matched Phamerator data
         retrieved_record_accession = retrieved_record.name
         retrieved_record_accession = retrieved_record_accession.split('.')[0]
@@ -934,7 +934,7 @@ if retrieve_ncbi_genomes == "yes":
         #5 Save new records in a folder and create an import table row for them
         if retrieved_record_date > phamerator_date:
 
-            print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_date)
+            #print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_date)
             tally_retrieved_for_update += 1
             ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,retrieved_record_date,'record retrieved for import'])
 
@@ -945,7 +945,7 @@ if retrieve_ncbi_genomes == "yes":
                 import_table_name = phamerator_id[:-6]
             else:
                 import_table_name = phamerator_id
-            
+
             #Determine what the status of the genome will be.
             #If the genome in Phamerator was already 'final' or 'gbk', then keep the status unchanged.
             #If the genome in Phamerator was 'draft', the status should be changed to 'final'.
@@ -960,10 +960,10 @@ if retrieve_ncbi_genomes == "yes":
 
 
         else:
-            print 'Phamerator date %s is more recent than retrieved record date %s for phage %s.' %(phamerator_date,retrieved_record_date,phamerator_id)
+            #print 'Phamerator date %s is more recent than retrieved record date %s for phage %s.' %(phamerator_date,retrieved_record_date,phamerator_id)
             tally_retrieved_not_new += 1
             ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,retrieved_record_date,'record not new'])
-            
+
 
 
     #Print summary of script
@@ -1016,8 +1016,8 @@ if retrieve_pecaan_genomes == "yes":
             pecaan_file_handle.write(pecaan_response.read())
             pecaan_response.close()
             pecaan_file_handle.close()
-            
-            
+
+
             #Create the new import ticket
             pecaan_import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none","retrieve","none"])
             print "Retrieved %s from PECAAN." %new_phage
@@ -1046,18 +1046,11 @@ if retrieve_pecaan_genomes == "yes":
 
 
 
-    
 
-    
+
+
 #Close script.
 
 print "Closing %s open file handle(s)." % len(open_file_handles_list)
 close_all_files(open_file_handles_list)
-print "\n\n\nRetrieve updates script completed."  
-
-
-
-
-
-
-
+print "\n\n\nRetrieve updates script completed."
