@@ -175,7 +175,7 @@ else:
 #Print out statements to both the terminal and to the output file
 #For SQL statements that may be long (>150 characters), don't print entire statements.
 def write_out(filename,statement):
-    if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"): 
+    if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"):
         if len(statement) > 150:
             print statement[:150] + "...(statement truncated)"
             filename.write(statement[:150] + "...(statement truncated)")
@@ -194,14 +194,14 @@ def question(message):
         value = raw_input("Is this correct? (yes or no): ")
         if (value.lower() == "yes" or value.lower() == "y"):
             number = 0
-        elif (value.lower() == "no" or value.lower() == "n"):                         
+        elif (value.lower() == "no" or value.lower() == "n"):
             write_out(output_file,message)
             number = 1
         else:
             print "Invalid response."
     #This value will be added to the current error total. If 0, no error was encountered. If 1, an error was encountered.
     return number
-            
+
 #Exits MySQL
 def mdb_exit(message):
     write_out(output_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
@@ -220,7 +220,7 @@ def mdb_exit(message):
 def create_cluster_statement(phage_name,cluster):
     cluster_statement = ""
     if cluster == "singleton":
-        cluster_statement = "UPDATE phage SET Cluster = NULL" + " WHERE PhageID = '" + phage_name + "';"	
+        cluster_statement = "UPDATE phage SET Cluster = NULL" + " WHERE PhageID = '" + phage_name + "';"
     else:
         cluster_statement = "UPDATE phage SET Cluster = '" + cluster + "' WHERE PhageID = '" + phage_name + "';"
     return cluster_statement
@@ -232,7 +232,7 @@ def create_cluster_statement(phage_name,cluster):
 #Function to split gene description field
 def retrieve_description(genbank_feature,description_field):
     description = genbank_feature.qualifiers[description_field][0].lower().strip()
-    split_description = description.split(' ')                
+    split_description = description.split(' ')
     if description == "hypothetical protein":
         description = ""
 
@@ -246,29 +246,29 @@ def retrieve_description(genbank_feature,description_field):
         description = ""
 
     elif len(split_description) == 1:
-        
-        if (split_description[0][:2] == "gp" and split_description[0][2:].isdigit()): 
+
+        if (split_description[0][:2] == "gp" and split_description[0][2:].isdigit()):
             description = ""
 
         elif (split_description[0][:3] == "orf" and split_description[0][3:].isdigit()):
             description = ""
-            
+
         else:
-            description = genbank_feature.qualifiers[description_field][0].strip()    
-  
+            description = genbank_feature.qualifiers[description_field][0].strip()
+
     elif len(split_description) == 2:
-    
-        if (split_description[0] == "orf" and split_description[1].isdigit()): 
+
+        if (split_description[0] == "orf" and split_description[1].isdigit()):
             description = ""
-        
+
         elif (split_description[0] == "putative" and split_description[1][:7] == "protein"):
             description = ""
-                        
+
         else:
-            description = genbank_feature.qualifiers[description_field][0].strip()    
+            description = genbank_feature.qualifiers[description_field][0].strip()
 
     else:
-        description = genbank_feature.qualifiers[description_field][0].strip()    
+        description = genbank_feature.qualifiers[description_field][0].strip()
     return description
 
 
@@ -365,7 +365,7 @@ write_out(output_file,"\nDatabase version: " + db_version)
 write_out(output_file,"\nTotal phages in database before changes: " + str(len(current_genome_data_tuples)))
 
 #Create data sets to compare new data with
-#Originally, a phageName_set, phageSequence_set, phageGene_set, and phageGene_dict were implemented, but I ended up not using them here. 
+#Originally, a phageName_set, phageSequence_set, phageGene_set, and phageGene_dict were implemented, but I ended up not using them here.
 #The phageGene_set get implemented later in the script.
 #The SQL query still returns these values so if I need to re-implement those, I am able to.
 phageId_set = set()
@@ -401,7 +401,7 @@ for genome_tuple in current_genome_data_tuples:
         phageAccession_set.add(modified_accession) #Only add to the accession set if there was an accession, and not if it was empty "".
     else:
         modified_accession = "none"
-       
+
 
     #If program is NULL, change to "none"
     if genome_tuple[8] is None:
@@ -421,7 +421,7 @@ for genome_tuple in current_genome_data_tuples:
                                         modified_program])
 
 
-    
+
 
 #Now that sets and dictionaries have been made, create a phamerator_data_dict
 #Key = phageID
@@ -430,7 +430,7 @@ phamerator_data_dict = {}
 for element in modified_genome_data_lists:
     phamerator_data_dict[element[0]] = element
 
-    
+
 #Set up dna and protein alphabets to verify sequence integrity
 dna_alphabet_set = set(IUPAC.IUPACUnambiguousDNA.letters)
 protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
@@ -441,7 +441,7 @@ protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
 #Remove = delete a genome without adding another.
 #Replace = delete a genome and replace it with another. Genome names can be different, but the DNA sequence cannot be different.
 #Update = make changes to HostStrain, Cluster, or status fields of phages already in the database.
-action_set = set(["add","remove","replace","update"]) 
+action_set = set(["add","remove","replace","update"])
 
 #Create set of most common gene description genbank qualifiers
 description_set = set(["product","note","function"])
@@ -528,27 +528,27 @@ for input_row in file_reader:
     if row[1].lower() == "none":
         row[1] = row[1].lower()
     if (row[2].lower() == "none" or row[2].lower() == "retrieve"):
-        row[2] = row[2].lower()        
+        row[2] = row[2].lower()
     if (row[3].lower() == "none" or row[3].lower() == "retrieve"):
-        row[3] = row[3].lower()        
+        row[3] = row[3].lower()
     row[4] = row[4].lower()
-    row[5] = row[5].lower()        
+    row[5] = row[5].lower()
     if row[6].lower() == "none":
         row[6] = row[6].lower()
     if (row[7].lower() == "none" or row[7].lower() == "retrieve"):
-        row[7] = row[7].lower()        
+        row[7] = row[7].lower()
     if (row[8].lower() == "none" or row[8].lower() == "retrieve"):
-        row[8] = row[8].lower()        
-        
-        
+        row[8] = row[8].lower()
+
+
     #If either the Host, Cluster, or Accession data needs to be retrieved, try to access the data in phagesdb before proceeding
     if (row[2] == "retrieve" or row[3] == "retrieve" or row[7] == "retrieve" or row[8] == "retrieve"):
         try:
-            #Ensure the phage name does not have Draft appended    
+            #Ensure the phage name does not have Draft appended
             if row[1][-6:].lower() == "_draft":
                 search_name = row[1][:-6]
             else:
-                search_name = row[1]        
+                search_name = row[1]
             phage_url = api_prefix + search_name + api_suffix
             online_data_json = urllib.urlopen(phage_url)
             online_data_dict = json.loads(online_data_json.read())
@@ -565,11 +565,11 @@ for input_row in file_reader:
                 row[7] = "none"
             if row[8] == "retrieve":
                 row[8] = "none"
-                
+
             table_errors += 1
-        
-        
-        
+
+
+
     #Make sure the requested action is permissible
     #This script currently only allows four actions: add, remove, replace, and update
     if row[0] in action_set:
@@ -588,7 +588,7 @@ for input_row in file_reader:
         table_errors += 1
 
 
-        
+
     #Modify fields if needed
 
     #Modify Host if needed
@@ -601,7 +601,7 @@ for input_row in file_reader:
             write_out(output_file,"\nError: unable to retrieve Host data for phage %s from phagesdb." %row[1])
             row[2] = "none"
             table_errors += 1
-           
+
     if row[2] != "none":
         row[2] = row[2].split(' ')[0] #Keep only the genus in the host data field and discard the rest
         if row[2] not in phageHost_set:
@@ -617,16 +617,16 @@ for input_row in file_reader:
             #If by accident no Cluster or Subcluster info is added at the time the genome is added to phagesdb, the Cluster may automatically be set to "Unclustered". This will be filtered out later in the script due to its character length.
             #If the phage has a Subcluster designation, take that info. Otherwise, check if there is a Cluster designation.
             if online_data_dict['psubcluster'] is None:
-            
+
                if online_data_dict['pcluster'] is None:
-               
+
                     #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
                     #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-                    #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, assign the cluster as Unknown. 
-                    row[3] = 'UKN'                 
-               else: 
+                    #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, assign the cluster as Unknown.
+                    row[3] = 'UKN'
+               else:
                 row[3] = online_data_dict['pcluster']['cluster']
-            
+
             else:
                 row[3] = online_data_dict['psubcluster']['subcluster']
 
@@ -638,7 +638,7 @@ for input_row in file_reader:
     if row[3] != "none":
         if row[3].lower() == "singleton":
             row[3] = row[3].lower()
-            
+
         if (row[3] not in phageCluster_set and row[3] != "singleton"):
             print "The Cluster %s is not currently in the database." % row[3]
             table_errors +=  question("\nError: %s is not the correct Cluster for %s." % (row[3],row[1]))
@@ -651,7 +651,7 @@ for input_row in file_reader:
     #Modify Status if needed, and PhageID if needed
     if (row[4] not in phageStatus_set and row[4] != "none"):
             print "The status %s is not currently in the database." % row[4]
-            table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))  
+            table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
     if len(row[4]) > 5:
         write_out(output_file,"\nError: the status %s exceeds character limit." % row[4])
         table_errors += 1
@@ -660,7 +660,7 @@ for input_row in file_reader:
 
 
     #Modify Description Qualifier if needed
-    if (row[5] not in description_set and row[5] != "none"):     
+    if (row[5] not in description_set and row[5] != "none"):
         print row[5] + " is an uncommon qualifier."
         table_errors += question("\nError: %s is an incorrect qualifier." % row[5])
 
@@ -676,7 +676,7 @@ for input_row in file_reader:
                 row[7] = row[7].split('.')[0] #Sometimes accession data from phagesdb have version suffix
             else:
                 row[7] = "none"
-            
+
         except:
             write_out(output_file,"\nError: unable to retrieve Accession data for phage %s from phagesdb." %row[1])
             row[7] = "none"
@@ -693,11 +693,11 @@ for input_row in file_reader:
         ###Currently, if no program is listed in phagesdb, ['program'] will be NULL with no ['program_name'] field.
         ###For now, simply assign all these as 'NCBI'
         try:
-        
+
             #Code to retrieve program data will probably change once it all has been updated in phagesdb
             row[8] = online_data_dict['program']['program_name']
             if row[8] != "" or row[8] is not None:
-                
+
                 #See if the program is found in the current list of long program names
                 if row[8] in program_long_dict.keys():
                     row[8] = program_long_dict[row[8]]
@@ -705,12 +705,12 @@ for input_row in file_reader:
                     write_out(output_file,"\nError: phagesdb program data for phage %s is not on list of eligible programs." %row[1])
                     row[8] = "none"
                     table_errors += 1
-                    
+
             else:
                 row[8] = "none"
-            
+
         except:
-            write_out(output_file,"\nError: unable to retrieve program data for phage %s from phagesdb." %row[1])
+            write_out(output_file,"\nWarning: unable to retrieve program data for phage %s from phagesdb." %row[1])
             row[8] = "NCBI"
             #table_errors += 1
 
@@ -719,14 +719,14 @@ for input_row in file_reader:
 
     elif row[8] not in phageProgram_set:
         print "The program %s is not currently in the database." % row[8]
-        table_errors +=  question("\nError: %s is not the correct program for %s." % (row[8],row[1]))  
+        table_errors +=  question("\nError: %s is not the correct program for %s." % (row[8],row[1]))
 
 
 
 
 
     #Rules for how each field is populated differs depending on each specific action
-    
+
     #Update
     if row[0] == "update":
         #FirstPhageID
@@ -738,7 +738,7 @@ for input_row in file_reader:
         if (row[2] == "none" or row[3] == "none" or row[4] == "none" or row[8] == "none"):
             write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, Status, or Program fields." %row[1])
             table_errors += 1
-        
+
         #Description
         if row[5] != "none":
             write_out(output_file,"\nError: %s does not have correctly populated Description field." %row[1])
@@ -751,7 +751,7 @@ for input_row in file_reader:
 
         #Accession = it will either be an accession or it will be "none"
 
-    
+
     #Add
     elif row[0] == "add":
         #FirstPhageID
@@ -768,7 +768,7 @@ for input_row in file_reader:
         if row[4] == "final":
             print row[1] + " to be added is listed as Final status, but no Draft (or other) genome is listed to be removed."
             table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
-            
+
         #SecondPhageID
         if row[6] != "none":
             write_out(output_file,"\nError: %s to be added should not have a genome indicated for removal." %row[1])
@@ -777,20 +777,20 @@ for input_row in file_reader:
         #Accession = it will either be an accession or it will be "none"
 
 
-    
+
     #Remove
     elif row[0] == "remove":
 
         #FirstPhageID,Host, Cluster, Status, Description, Accession, Program
         if (row[1] != "none" or row[2] != "none" or row[3] != "none" or row[4] != "none" or row[5] != "none" or row[7] != "none" or row[8] != "none"):
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
-            table_errors += 1        
+            table_errors += 1
         #SecondPhageID
         if row[6] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID. This genome cannot be dropped from the database." %row[6])
             table_errors += 1
-        
-    
+
+
     #Replace
     elif row[0] == "replace":
 
@@ -798,7 +798,7 @@ for input_row in file_reader:
         if row[1] == "none":
             write_out(output_file,"\nError: %s is not a valid PhageID. %s genome cannot be replaced." % (row[1],row[6]))
             table_errors += 1
-            
+
         #FirstPhageID. If replacing a genome, ensure that if the genome to be removed is not the same, that the new genome added has a unique name
         if (row[1] in phageId_set and row[1] != row[6]):
             write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
@@ -817,7 +817,7 @@ for input_row in file_reader:
             name_check_new = row[1][:-6]
         else:
             name_check_new = row[1]
-        
+
         if row[6][-6:].lower() == "_draft":
             name_check_old = row[6][:-6]
         else:
@@ -826,15 +826,15 @@ for input_row in file_reader:
         if name_check_new != name_check_old:
             print "%s to replace %s is not spelled the same." %(row[1],row[6])
             table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
-       
+
         #Accession = it will either be an accession or it will be "none"
 
 
-        
+
     else:
         pass
 
-        
+
     genome_data_list.append(row)
 file_object.close()
 
@@ -856,8 +856,8 @@ for genome_data in genome_data_list:
     current_action_add = (genome_data[0],genome_data[1])
     current_action_remove = (genome_data[0],genome_data[6])
     current_action_add_remove = (genome_data[0],genome_data[1],genome_data[6])
-    
-    
+
+
     #First check the one-field and two-field combinations
     if current_add[0] != "none":
         if current_add in add_set:
@@ -871,32 +871,32 @@ for genome_data in genome_data_list:
             table_errors += 1
         else:
             action_add_set.add(current_action_add)
-        
-    if current_remove[0] != "none":            
+
+    if current_remove[0] != "none":
         if current_remove in remove_set:
             print genome_data[6] + " appears to be involved in more than one step."
             table_errors += question("\nError: %s is duplicated" % str(current_remove)) #errors will be incremented if name is used more than once
         else:
             remove_set.add(current_remove)
-        
+
         if current_action_remove in action_remove_set:
             write_out(output_file,"\nError: %s is duplicated" % str(current_action_remove))
             table_errors += 1
         else:
             action_remove_set.add(current_action_remove)
 
-    #Now check the three-field combinations        
+    #Now check the three-field combinations
     if current_action_add_remove in action_add_remove_set:
         write_out(output_file,"\nError: %s is duplicated" % str(current_action_add_remove))
         table_errors += 1
     else:
         action_add_remove_set.add(current_action_add_remove)
-        
+
 #Once the sets are created, also check if genomes to be removed are found in the Add field and vice versa.
 for genome_data in genome_data_list:
     current_add = (genome_data[1],)
     current_remove = (genome_data[6],)
-    
+
     #If the phage name is not replacing itself, the Add name is not expected to be in the Remove set and vice versa.
     if current_add != current_remove:
         if (current_add in remove_set and current_add != "none"):
@@ -908,7 +908,7 @@ for genome_data in genome_data_list:
             print genome_data[6] + " appears to be involved in more than one step."
             table_errors += question("\nError: %s is duplicated" % str(current_remove)) #errors will be incremented if name is used more than once
 
-             
+
 
 #Verify there are no duplicate accessions in the import table
 importAccession_set = set()
@@ -952,9 +952,9 @@ for genome_data in update_data_list:
         matched_phamerator_data = phamerator_data_dict[genome_data[1]]
     except:
         write_out(output_file,"\nError: unable to retrieve phamerator data for %s." %genome_data[1])
-        table_errors += 1    
+        table_errors += 1
         continue
-        
+
     #Host data check
     if genome_data[2] != matched_phamerator_data[2]:
 
@@ -966,11 +966,11 @@ for genome_data in update_data_list:
 
 
     #Status data check
-    if genome_data[4] != matched_phamerator_data[4]: 
+    if genome_data[4] != matched_phamerator_data[4]:
 
         #It is not common to change from 'gbk' or 'final' to anything else
         if matched_phamerator_data[4] != 'draft':
-            
+
             print "\n\nThere is conflicting status data for genome %s" % genome_data[1]
             print "Phamerator status: %s" % matched_phamerator_data[4]
             print "Import ticket status: %s" % genome_data[4]
@@ -1042,11 +1042,11 @@ if table_errors == 0:
     write_out(output_file,"\nImport table verified with 0 errors.")
     write_out(output_file,"\nList of all actions to be implemented:")
     #write_out(output_file,"\nApplicable actions per field: " + str(column_action_headers))
-    #write_out(output_file,"\nField headers: " + str(column_headers))      
+    #write_out(output_file,"\nField headers: " + str(column_headers))
     for genome_data in genome_data_list:
         write_out(output_file,"\n" + str(genome_data))
     raw_input("\nPress ENTER to proceed to next import stage.")
-    
+
 else:
     write_out(output_file,"\n%s error(s) encountered with import file.\nNo changes have been made to the database." % table_errors)
     write_out(output_file,"\nExiting import script.")
@@ -1074,8 +1074,8 @@ for genome_data in update_data_list:
 
     if genome_data[7] == "none":
         genome_data[7] = ""
-        
-    #HostStrain, status, Accession, and Program updates.		
+
+    #HostStrain, status, Accession, and Program updates.
     update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
@@ -1088,7 +1088,7 @@ for genome_data in update_data_list:
 
 #If it looks like there is a problem with some of the genomes on the list, cancel the transaction, otherwise proceed
 if updated == update_total:
-    
+
     if run_type == "production":
         con = mdb.connect(mysqlhost, username, password, database)
         con.autocommit(False)
@@ -1103,16 +1103,16 @@ if updated == update_total:
             write_out(output_file,"\nAll update statements committed.")
             cur.close()
             con.autocommit(True)
-            
+
         except:
             success_action_file_handle.close()
             mdb_exit("\nError: problem updating genome information.\nNo changes have been made to the database.")
-            
+
         con.close()
-    
+
     else:
         write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
-        
+
 else:
     write_out(output_file,"\nError: problem processing data list to update genomes. Check input table format.\nNo changes have been made to the database.")
     write_out(output_file,"\nExiting import script.")
@@ -1122,12 +1122,21 @@ else:
 
 #Document the update actions
 for element in update_data_list:
-    success_action_file_writer.writerow(element)
-    
+    update_output_list = [element[0],\
+                            element[1],\
+                            element[2],\
+                            element[3],\
+                            element[4],\
+                            element[5],\
+                            element[7],\
+                            element[8],\
+                            element[6]]
+    success_action_file_writer.writerow(update_output_list)
+
 if run_type != "smart":
     write_out(output_file,"\nAll field update actions have been implemented.")
     raw_input("\nPress ENTER to proceed to next import stage.")
-    
+
 
 
 
@@ -1142,10 +1151,10 @@ removed = 0
 removal_statements = []
 for genome_data in remove_data_list:
     write_out(output_file,"\nPreparing: " + str(genome_data))
-    removal_statements.append("DELETE FROM phage WHERE PhageID = '" + genome_data[6] + "';")    
+    removal_statements.append("DELETE FROM phage WHERE PhageID = '" + genome_data[6] + "';")
     removed += 1
 
-#If it looks like there is a problem with some of the genomes on the list, cancel the transaction, otherwise proceed	    
+#If it looks like there is a problem with some of the genomes on the list, cancel the transaction, otherwise proceed
 if removed == remove_total:
 
     if run_type == "production":
@@ -1159,10 +1168,10 @@ if removed == remove_total:
                 cur.execute(statement)
                 write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
             cur.execute("COMMIT")
-            write_out(output_file,"\nAll remove statements committed.")        
+            write_out(output_file,"\nAll remove statements committed.")
             cur.close()
             con.autocommit(True)
-            
+
         except:
             success_action_file_handle.close()
             mdb_exit("\nError: problem removing genomes with no replacements.\nNo remove actions have been implemented.")
@@ -1177,17 +1186,26 @@ else:
     output_file.close()
     success_action_file_handle.close()
     sys.exit(1)
-    
-#Document the remove actions    
+
+#Document the remove actions
 for element in remove_data_list:
-    success_action_file_writer.writerow(element)
-    
+    remove_output_list = [element[0],\
+                            element[1],\
+                            element[2],\
+                            element[3],\
+                            element[4],\
+                            element[5],\
+                            element[7],\
+                            element[8],\
+                            element[6]]
+    success_action_file_writer.writerow(remove_output_list)
+
 if run_type != "smart":
     write_out(output_file,"\nAll genome remove actions have been implemented.")
     raw_input("\nPress ENTER to proceed to next import stage.")
 
 
-  
+
 
 
 
@@ -1202,12 +1220,12 @@ if run_type != "smart":
 #Key = PhageID
 #Value = Genome data list:
 add_replace_data_dict = {}
-for genome_data in add_replace_data_list:    
-   
+for genome_data in add_replace_data_list:
+
     #Verify there are no duplicate PhageIDs. This was checked before in a slightly different way when looking for duplicate actions.
     if genome_data[1] not in add_replace_data_dict:
         add_replace_data_dict[genome_data[1]] = genome_data
-    
+
     else:
         write_out(output_file,"\nError: problem creating genome data dictionary. PhageID %s already in dictionary. Check input table format." % genome_data[1])
         write_out(output_file,"\nNo add/replace actions have been implemented.")
@@ -1262,7 +1280,7 @@ for filename in all_files:
         raw_input("\nPress ENTER to proceed to next file.")
         continue
 
-            
+
     if parsed_records_tally == 0:
         failed_genome_files.append(filename)
         write_out(output_file,"\nBiopython was unable to parse any records from file %s. This file will not be processed." % filename)
@@ -1280,26 +1298,26 @@ for filename in all_files:
 
 
 #Iterate over each genbank-formatted genome file in the directory and parse all the needed data
-write_out(output_file,"\nA total of %s file(s) containg Genbank-formatted records will be parsed." % len(genbank_files))        
+write_out(output_file,"\nA total of %s file(s) containg Genbank-formatted records will be parsed." % len(genbank_files))
 for filename in genbank_files:
-    
+
     file_tally += 1
     write_out(output_file,"\n\nProcessing file %s: %s" % (file_tally,filename))
-    
+
     #ALLPHAGES option
     basename = filename.split('.')[0]
 
     #The file is parsed to grab the header information
     for seq_record in SeqIO.parse(os.path.join(phageListDir,filename), "genbank"):
-        
+
         add_replace_statements = []
         record_errors = 0
         record_warnings = 0
         geneID_set = set()
         missing_phage_name_tally = 0
         phage_data_list = []
-        
-        
+
+
         #Create a list to hold summary info on the genome record:
         #Record Name
         #Record ID
@@ -1316,9 +1334,9 @@ for filename in genbank_files:
             #Translation table
             #Translation
             #Processed Description (how the descriptions will look when uploaded to the database)
-        record_summary_header = [["Header Field","Data"]]      
-        
-        
+        record_summary_header = [["Header Field","Data"]]
+
+
         #Phage Name
         try:
             record_organism = seq_record.annotations["organism"]
@@ -1340,7 +1358,7 @@ for filename in genbank_files:
             phageSeq = seq_record.seq.upper()
             seqLength = len(phageSeq)
             seqGC = 100 * (float(phageSeq.count('G')) + float(phageSeq.count('C'))) / float(seqLength)
-            
+
         except:
             write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)
             record_errors += 1
@@ -1366,7 +1384,7 @@ for filename in genbank_files:
         #File header fields are retrieved to be able to check phageName and HostStrain typos
         #The Accession field, with the appended version number, is stored as the record.id
         #The Locus name at the top of the file is stored as the record.name
-        #The base accession number, without the version, is stored in the 'accession' annotation list        
+        #The base accession number, without the version, is stored in the 'accession' annotation list
         try:
             record_name = str(seq_record.name)
         except:
@@ -1374,7 +1392,7 @@ for filename in genbank_files:
             print "\nRecord does not have record Locus information."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        
+
         try:
             record_id = str(seq_record.id)
         except:
@@ -1397,7 +1415,7 @@ for filename in genbank_files:
             record_source = ""
             print "\nRecord does not have record source information."
             record_errors += question("\nError: problem with header info of file %s." % filename)
-        
+
 
         #Date of the record
         try:
@@ -1429,15 +1447,15 @@ for filename in genbank_files:
             parsed_accession = parsed_accession.split('.')[0]
         except:
             parsed_accession = "none"
-        
-                
+
+
         #ALLPHAGES option
         if use_basename == "yes":
             matchedData = add_replace_data_dict.pop(basename,"error")
         else:
-            matchedData = add_replace_data_dict.pop(phageName,"error") 
-        
-        
+            matchedData = add_replace_data_dict.pop(phageName,"error")
+
+
         if matchedData != "error":
             write_out(output_file,"\nPreparing: " + str(matchedData))
             import_action = matchedData[0]
@@ -1448,19 +1466,19 @@ for filename in genbank_files:
             import_genome_replace = matchedData[6]
             import_accession = matchedData[7]
             import_program = matchedData[8]
-            
+
         else:
-            write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))            
+            write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))
             failed_genome_files.append(filename)
             script_warnings += record_warnings
             script_errors += record_errors
             raw_input("\nPress ENTER to proceed to next file.")
             continue
-        
-                       
-        
-           
-        #Check the database to make sure the genome sequence and name matches correctly.            
+
+
+
+
+        #Check the database to make sure the genome sequence and name matches correctly.
         con = mdb.connect(mysqlhost, username, password, database)
         con.autocommit(False)
         cur = con.cursor()
@@ -1474,7 +1492,7 @@ for filename in genbank_files:
             cur.close()
             con.autocommit(True)
 
-                  
+
         except:
             success_action_file_handle.close()
             mdb_exit("\nError: retrieving genome information from database while processing file %s.\nNot all genbank files were processed." % filename)
@@ -1488,14 +1506,14 @@ for filename in genbank_files:
             if (import_action == "replace" and gene_tuple[1] == import_genome_replace):
                 continue
             all_GeneID_set.add(gene_tuple[0])
-            
-        
-        
+
+
+
         #Cross-check the import action against the current state of the database and create SQL statements
-        
+
         #If adding a new genome, no genome sequence in database is expected to match the current genome sequence
         if (import_action == "add" and len(query_results) > 0):
-            record_errors += 1 
+            record_errors += 1
             write_out(output_file,"\nError: these genome(s) in the database currently contain the same genome sequence: %s.\nUnable to upload %s." % (query_results,phageName))
 
 
@@ -1508,19 +1526,19 @@ for filename in genbank_files:
             except:
                 matched_phamerator_data = "error"
 
-               
+
             if matched_phamerator_data != "error":
                 write_out(output_file,"\nRetrieved phamerator data for phage: %s" % phageName)
-                
+
                 phamerator_host = matched_phamerator_data[2]
                 phamerator_cluster = matched_phamerator_data[5]
                 phamerator_status = matched_phamerator_data[4]
                 phamerator_datelastmod = matched_phamerator_data[6]
                 phamerator_accession = matched_phamerator_data[7]
                 phamerator_program = matched_phamerator_data[8]
-             
+
             else:
-                write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))            
+                write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))
                 failed_genome_files.append(filename)
                 script_warnings += record_warnings
                 script_errors += record_errors
@@ -1541,7 +1559,7 @@ for filename in genbank_files:
 
 
             #Import and Phamerator status data check
-            if import_status != phamerator_status: 
+            if import_status != phamerator_status:
 
                 #It is not common to change from 'gbk' or 'final' to anything else
                 if phamerator_status != 'draft':
@@ -1564,40 +1582,101 @@ for filename in genbank_files:
                     record_errors += question("\nError: incorrect status data for %s." % phageName)
 
 
+            #Verify there are no accession conflicts.
             #Phamerator may or may not have accession data.
             #Import table may or may not have accession data.
             #Genbank-formatted file may or may not have accession data.
-            #Verify all accessions match.
-            
-            #Import and Phamerator accession data check
-            if import_accession == "none" and phamerator_accession != "none":
 
+            accession_comparison_set = set()
+            if phamerator_accession != "none":
+                accession_comparison_set.add(phamerator_accession)
+            if import_accession != "none":
+                accession_comparison_set.add(import_accession)
+            if parsed_accession != "none":
+                accession_comparison_set.add(parsed_accession)
+
+            if len(accession_comparison_set) == 1:
+                accession_to_upload = list(accession_comparison_set)[0]
+            elif len(accession_comparison_set) > 1:
                 record_warnings += 1
                 write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
                 print "Phamerator accession: %s" % phamerator_accession
-                print "Import ticket accession: %s" % import_accession
-                print "The new accession data will be imported."
-                record_errors += question("\nError: incorrect accession data for %s." % phageName)
-
-            elif import_accession != "none" and phamerator_accession != "none" and import_accession != phamerator_accession:
-
-                record_warnings += 1
-                write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
-                print "Phamerator accession: %s" % phamerator_accession
-                print "Import ticket accession: %s" % import_accession
-                print "The new accession data will be imported."
-                record_errors += question("\nError: incorrect accession data for %s." % phageName)
-
-
-            #Import and parsed accession data check
-            if import_accession != "none" and import_accession != parsed_accession:
-
-                record_warnings += 1
-                write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
                 print "Import ticket accession: %s" % import_accession
                 print "Parsed accession from file: %s" % parsed_accession
-                print "The parsed accession data will be imported."
+                print "If the parsed accession is not None, it will be imported."
+                print "If the parsed accession is None, but the import ticket accession is not None, it will be imported."
                 record_errors += question("\nError: incorrect accession data for %s." % phageName)
+
+                if parsed_accession != "none":
+                    accession_to_upload = parsed_accession
+                elif import_accession != "none":
+                    accession_to_upload = import_accession
+                elif phamerator_accession != "none":
+                    accession_to_upload = phamerator_accession
+                else:
+                    accession_to_upload = ""
+            else:
+                accession_to_upload = ""
+
+
+
+
+
+            # #Import and Phamerator accession data check
+            # if import_accession == "none" and phamerator_accession != "none":
+            #
+            #     record_warnings += 1
+            #     write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
+            #     print "Phamerator accession: %s" % phamerator_accession
+            #     print "Import ticket accession: %s" % import_accession
+            #     print "The old accession data will be retained."
+            #     record_errors += question("\nError: incorrect accession data for %s." % phageName)
+            #     accession_to_upload = phamerator_accession
+            #
+            # elif import_accession != "none" and phamerator_accession != "none" and import_accession != phamerator_accession:
+            #
+            #     record_warnings += 1
+            #     write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
+            #     print "Phamerator accession: %s" % phamerator_accession
+            #     print "Import ticket accession: %s" % import_accession
+            #     print "The new accession data will be imported."
+            #     record_errors += question("\nError: incorrect accession data for %s." % phageName)
+            #     accession_to_upload = import_accession
+            #
+            # #Import and parsed accession data check
+            # if import_accession != "none" and parsed_accession != "none":
+            #
+            #     record_warnings += 1
+            #     write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
+            #     print "Import ticket accession: %s" % import_accession
+            #     print "Parsed accession from file: %s" % parsed_accession
+            #     print "The parsed accession data will be imported."
+            #     record_errors += question("\nError: incorrect accession data for %s." % phageName)
+            #
+            #
+            # elif import_accession != "none" and parsed_accession != "none" and import_accession != parsed_accession:
+            #
+            #     record_warnings += 1
+            #     write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
+            #     print "Import ticket accession: %s" % import_accession
+            #     print "Parsed accession from file: %s" % parsed_accession
+            #     print "The parsed accession data will be imported."
+            #     record_errors += question("\nError: incorrect accession data for %s." % phageName)
+            #     accession_to_upload = parsed_accession
+            #
+            #
+            # elif import_accession == "none" and parsed_accession == "none":
+            #     pass
+            # elif import_accession != "none" and parsed_accession == "none":
+            #     accession_to_upload = import_accession
+            # else:
+            #     accession_to_upload = parsed_accession
+
+
+
+
+
+
 
 
 
@@ -1615,28 +1694,28 @@ for filename in genbank_files:
 
 
 
-            #Exactly one and only one genome in the database is expected to have the same sequence.  
+            #Exactly one and only one genome in the database is expected to have the same sequence.
             if len(query_results) > 1:
-                record_errors += 1 
+                record_errors += 1
                 write_out(output_file,"\nError: the following genomes in the database currently contain the same genome sequence as %s: %s).\nUnable to perform replace action." % (phageName,query_results))
 
-            elif len(query_results) == 0: 
+            elif len(query_results) == 0:
 
                 record_warnings += 1
                 write_out(output_file,"\nWarning: %s appears to be a different genome sequence than %s. These genomes do not match." % (phageName,import_genome_replace))
                 print "The genome will still be replaced."
                 record_errors += question("\nError: %s and %s have different genome sequences." % (phageName,import_genome_replace))
-                           
+
             elif len(query_results) == 1:
 
                 #The genome to be replaced is not Draft.
-                if query_results[0][1].lower() != "draft":            
+                if query_results[0][1].lower() != "draft":
 
                     record_warnings += 1
                     write_out(output_file,"\nWarning: The genome in the database with matching sequence, %s, is listed as %s status." % (query_results[0][0],query_results[0][1]))
                     print "The genome will still be replaced."
                     record_errors +=  question("\nError: the genome to be removed, %s, was incorrect status." %import_genome_replace)
-                
+
                 #The genome to be replaced does not match the genome name in the database with the same sequence.
                 if query_results[0][0] != import_genome_replace:
                     write_out(output_file,"\nError: the genome to be removed, %s, does not match the genome name in database, %s, that has the matching genome sequence to %s." % (import_genome_replace,query_results[0][0],phageName))
@@ -1644,19 +1723,19 @@ for filename in genbank_files:
             else:
                 pass
 
-            #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)            
+            #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)
             if not seq_record_date > phamerator_datelastmod:
                 record_warnings += 1
                 write_out(output_file,"\nWarning: The date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
                 print 'Despite it being an older record, the phage %s will continue to be imported.' % phageName
                 record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
-            
-            #Create the DELETE command            
+
+            #Create the DELETE command
             add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + import_genome_replace + "';")
 
         else:
             pass
-           
+
 
         #Determine if the RetrieveRecord field setting
         #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
@@ -1694,17 +1773,23 @@ for filename in genbank_files:
             phage_data_list.append(basename)
         else:
             phage_data_list.append(phageName)
-            
-        #Decide which accession to use
-        if parsed_accession == "none":
-            if import_accession == "none":
-                accession_to_upload = ""
-            else:
-                accession_to_upload = import_accession
-        else:
-            accession_to_upload = parsed_accession      
-            
-        
+
+
+
+
+        # #TODO this may now be redundant
+        # #Decide which accession to use
+        # if parsed_accession == "none":
+        #     if import_accession == "none":
+        #         accession_to_upload = ""
+        #     else:
+        #         accession_to_upload = import_accession
+        # else:
+        #     accession_to_upload = parsed_accession
+        # #TODO redundant above?
+
+
+
         phage_data_list.append(accession_to_upload)
         phage_data_list.append(phageName)
         phage_data_list.append(import_host)
@@ -1716,8 +1801,8 @@ for filename in genbank_files:
         phage_data_list.append(ncbi_update_status)
         phage_data_list.append(annotation_qc)
         phage_data_list.append(import_program)
-        
-        
+
+
         add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, Program) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
                                         phage_data_list[1],\
@@ -1736,7 +1821,7 @@ for filename in genbank_files:
             add_replace_statements.append(create_cluster_statement(basename,import_cluster))
         else:
             add_replace_statements.append(create_cluster_statement(phageName,import_cluster))
-                
+
 
         #Next each CDS feature is parsed from the file
         #The cdsCount will increment for each CDS processed, even if it does not pass the QC filters. This way, the genome still retains the info that another CDS was originally present.
@@ -1754,65 +1839,65 @@ for filename in genbank_files:
         feature_source_host = ""
         all_features_data_list = []
         all_coordinates_set = set()
-        record_summary_cds = [["Locus Tag","Product","Function","Note","Translation Table","Translation","Assigned GeneID","Assigned Description"]]        
-        
+        record_summary_cds = [["Locus Tag","Product","Function","Note","Translation Table","Translation","Assigned GeneID","Assigned Description"]]
+
         for feature in seq_record.features:
-        
-        
+
+
             if feature.type != "CDS":
-            
+
                 #Retrieve the Source Feature info
-                if feature.type == "source":           
+                if feature.type == "source":
 
                     try:
-                        feature_source_organism = str(feature.qualifiers["organism"][0])            
+                        feature_source_organism = str(feature.qualifiers["organism"][0])
                     except:
                         feature_source_organism = ""
 
                     try:
-                        feature_source_host = str(feature.qualifiers["host"][0])            
+                        feature_source_host = str(feature.qualifiers["host"][0])
                     except:
                         feature_source_host = ""
 
                     try:
-                        feature_source_lab_host = str(feature.qualifiers["lab_host"][0])            
+                        feature_source_lab_host = str(feature.qualifiers["lab_host"][0])
                     except:
                         feature_source_lab_host = ""
 
                 continue
 
-            else:                
+            else:
                 cdsCount += 1
                 typeID = feature.type
-            
+
             #This will store all data for this feature that will be imported
             feature_data_list = []
 
-                 
+
             #GeneID
             #Feature_locus_tag is a record of the locus tag found in the file. GeneID is what will be assigned in the database.
             try:
-                feature_locus_tag = feature.qualifiers["locus_tag"][0]                
+                feature_locus_tag = feature.qualifiers["locus_tag"][0]
                 geneID = feature_locus_tag
             except:
                 feature_locus_tag = ""
                 missing_locus_tag_tally += 1
- 
-                #ALLPHAGES option           
+
+                #ALLPHAGES option
                 if use_basename == "yes":
                     geneID = basename + "_" + str(cdsCount)
                 else:
                     geneID = phageName + "_" + str(cdsCount)
-                
+
 
             #See if the geneID is already in the database
-            duplicate = False  
+            duplicate = False
             if geneID in geneID_set:
-                duplicate = True                
+                duplicate = True
                 write_out(output_file,"\nWarning: there is a duplicate geneID %s in phage %s." % (geneID,phageName))
 
             elif geneID in all_GeneID_set:
-                duplicate = True                
+                duplicate = True
                 write_out(output_file,"\nWarning: there is a duplicate geneID %s in the current database." % geneID)
             else:
                 geneID_set.add(geneID)
@@ -1820,10 +1905,10 @@ for filename in genbank_files:
             #If there is a geneID duplication conflict, try to resolve it
             old_ID = geneID
             dupe_value = 1
-            while duplicate == True and dupe_value < 20:                       
-            
+            while duplicate == True and dupe_value < 20:
+
                 geneID = old_ID + "_duplicateID" + str(dupe_value)
-                record_warnings += 1            
+                record_warnings += 1
                 #Check to see if the new geneID is found in the set of all geneIDs
                 if (geneID not in geneID_set and geneID not in all_GeneID_set):
                     duplicate = False
@@ -1834,16 +1919,16 @@ for filename in genbank_files:
                     if duplicate_answer == 1:
                         record_errors += 1
                     else:
-                        geneID_set.add(geneID)                        
+                        geneID_set.add(geneID)
                 dupe_value += 1
-                    
+
             #Once the while loop exits, check if the duplication was resolved
             if duplicate == True:
-                record_warnings += 1                
+                record_warnings += 1
                 write_out(output_file,"\nWarning: unable to resolve duplicate geneID %s conflict. This CDS will be skipped, but processing of the other genes will continue." % old_ID)
                 record_errors += question("\nError: feature %s of phage %s is a duplicate geneID and cannot be renamed to %s." % (old_ID,phageName,geneID))
                 continue
-                
+
 
 
 
@@ -1852,7 +1937,7 @@ for filename in genbank_files:
             if (geneID.split('_')[-1].isdigit()):
                 geneName = geneID.split('_')[-1]
             else:
-                geneName = cdsCount                        
+                geneName = cdsCount
 
 
 
@@ -1882,32 +1967,32 @@ for filename in genbank_files:
 
                 #Skip this compound feature if it is comprised of more than two features (too tricky to parse).
                 if len(feature.location.parts) > 2:
-                
+
                     strStart = ""
                     strStop = ""
                     record_warnings += 1
                     write_out(output_file,"\nWarning: gene %s is a compound feature that is unable to be parsed. This CDS will be skipped, but processing of the other genes will continue." % geneID)
                     record_errors += question("\nError: unable to parse gene %s of phage %s." % (geneID,phageName))
                     continue
-                
-                else:                    
+
+                else:
 
                     #Retrieve compound feature positions based on strand
                     if feature.strand == 1:
-                    
+
                         strStart = str(feature.location.parts[0].start)
                         strStop = str(feature.location.parts[1].end)
-                    
+
                     elif feature.strand == -1:
-                    
+
                         strStart = str(feature.location.parts[1].start)
                         strStop = str(feature.location.parts[0].end)
-                        
+
                     #If strand is None...
                     else:
                         strStart = ""
                         strStop = ""
-                
+
             else:
                 strStart = str(feature.location.start)
                 strStop = str(feature.location.end)
@@ -1923,13 +2008,13 @@ for filename in genbank_files:
                 continue
 
             #Test if there is a gene with the same coordinates already parsed.
-            coordinate_tuple = tuple([startCoord,stopCoord,orientation])           
+            coordinate_tuple = tuple([startCoord,stopCoord,orientation])
             if coordinate_tuple not in all_coordinates_set:
                 all_coordinates_set.add(coordinate_tuple)
             else:
                 record_warnings += 1
                 write_out(output_file,"\nWarning: multiple genes have coordinates %s. This is likely a gene feature duplication." % str(coordinate_tuple))
-                record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple))               
+                record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple))
 
 
 
@@ -1938,19 +2023,19 @@ for filename in genbank_files:
 
 
 
-                    
+
             #Translation, Gene Length (via Translation)
             try:
                 translation = feature.qualifiers["translation"][0].upper()
-                geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...                            
+                geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
             except:
                 translation = ""
                 geneLen = 0
-                record_warnings += 1                
+                record_warnings += 1
                 write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
                 continue
-                            
+
             #Check translation for possible errors
             amino_acid_set = set(translation)
             amino_acid_error_set = amino_acid_set - protein_alphabet_set
@@ -1959,13 +2044,13 @@ for filename in genbank_files:
                 write_out(output_file,"\nWarning: feature %s of %s appears to have unexpected amino acid(s)." % (geneID,phageName))
                 print "Unexpected amino acids: " + str(amino_acid_error_set)
                 record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
-                                
+
             #Translation table used
             try:
                 feature_transl_table = feature.qualifiers["transl_table"][0]
                 transl_table_set.add(feature_transl_table)
             except:
-                feature_transl_table = ""                
+                feature_transl_table = ""
                 missing_transl_table_tally += 1
 
 
@@ -1976,7 +2061,7 @@ for filename in genbank_files:
             #Gene Description
             #Use the feature qualifier from the import file.
             #If it is a generic description, leave field empty.
-            #For generic 'gp#' descriptions, make sure there is no other info in the product that is valuabe by checking for other words present. 
+            #For generic 'gp#' descriptions, make sure there is no other info in the product that is valuabe by checking for other words present.
 
 
             #First retrieve gene function, note, and product fields.
@@ -2001,25 +2086,25 @@ for filename in genbank_files:
             except:
                 feature_note = ""
 
-            
-            
-            
+
+
+
             #Now assign the appropriate description info to the assigned_description variable, as indicated from the import table.
             try:
-                
+
                 if import_cds_qualifier == "product":
-                    assigned_description = feature_product 
-                
+                    assigned_description = feature_product
+
                 elif import_cds_qualifier == "function":
-                    assigned_description = feature_function 
+                    assigned_description = feature_function
 
                 elif import_cds_qualifier == "note":
                     assigned_description = feature_note
-                           
-                #This clause allows the user to specify an uncommon feature qualifier to retrieve the gene description from.    
+
+                #This clause allows the user to specify an uncommon feature qualifier to retrieve the gene description from.
                 else:
                     assigned_description = retrieve_description(feature,import_cds_qualifier)
-                
+
             except:
                 assigned_description = ""
 
@@ -2028,15 +2113,15 @@ for filename in genbank_files:
 
 
 
-            
-            
+
+
             #Now that it has acquired all gene feature info, create list of gene data and append to list of all gene feature data
             #0 = geneID
             #1 = phageName or basename
             #2 = startCoord
-            #3 = stopCoord 
-            #4 = geneLen  
-            #5 = geneName 
+            #3 = stopCoord
+            #4 = geneLen
+            #5 = geneName
             #6 = typeID
             #7 = translation
             #8 = orientation[0]
@@ -2045,15 +2130,15 @@ for filename in genbank_files:
             #11 = feature_function
             #12 = feature_note
             addCount+= 1
-            
-            
+
+
             feature_data_list.append(geneID)
-            
-            #ALLPHAGES option            
+
+            #ALLPHAGES option
             if use_basename == "yes":
                 feature_data_list.append(basename)
             else:
-                feature_data_list.append(phageName) 
+                feature_data_list.append(phageName)
             feature_data_list.append(startCoord)
             feature_data_list.append(stopCoord)
             feature_data_list.append(geneLen)
@@ -2066,39 +2151,39 @@ for filename in genbank_files:
             feature_data_list.append(feature_function)
             feature_data_list.append(feature_note)
             all_features_data_list.append(feature_data_list)
- 
-          
+
+
             #Retrieve summary info to verify quality of file
             feature_product_trunc = feature_product
             if len(feature_product_trunc) > 15:
-                feature_product_trunc = feature_product_trunc[:15] + "..."            
-                       
+                feature_product_trunc = feature_product_trunc[:15] + "..."
+
             feature_note_trunc = feature_note
             if len(feature_note_trunc) > 15:
-                feature_note_trunc = feature_note_trunc[:15] + "..."            
+                feature_note_trunc = feature_note_trunc[:15] + "..."
 
             feature_function_trunc = feature_function
             if len(feature_function_trunc) > 15:
-                feature_function_trunc = feature_function_trunc[:15] + "..."            
+                feature_function_trunc = feature_function_trunc[:15] + "..."
 
             translation_trunc = translation
             if len(translation_trunc) > 5:
-                translation_trunc = translation_trunc[:5] + "..."            
+                translation_trunc = translation_trunc[:5] + "..."
 
             assigned_description_trunc = assigned_description
             if len(assigned_description_trunc) > 15:
-                assigned_description_trunc = assigned_description_trunc[:15] + "..."            
-    
+                assigned_description_trunc = assigned_description_trunc[:15] + "..."
+
             record_summary_cds.append([feature_locus_tag,feature_product_trunc,feature_function_trunc,feature_note_trunc,feature_transl_table,translation_trunc,geneID,assigned_description_trunc])
-            
-            
-            
-            
-            
+
+
+
+
+
 
         #Now that all CDS features are processed, run quality control on the data:
-        
-        
+
+
         #Check to see if there are any CDS features processed. If not, then the genbank record does not have any called genes.
         #The record_summary_cds list contains the column headers, so at minimum, it is length == 1
         if len(record_summary_cds) == 1:
@@ -2109,45 +2194,45 @@ for filename in genbank_files:
         #Process the source and organism fields to look for problems
 
 
-        #Print the summary of the header information        
+        #Print the summary of the header information
         record_summary_header.append(["Record Name",record_name])
         record_summary_header.append(["Record ID",record_id])
         record_summary_header.append(["Record Defintion",record_def])
         record_summary_header.append(["Record Source",record_source])
         record_summary_header.append(["Record Organism",record_organism])
         record_summary_header.append(["Source Feature Organism",feature_source_organism])
-        record_summary_header.append(["Source Feature Host",feature_source_host])        
-        record_summary_header.append(["Source Feature Lab Host",feature_source_lab_host])        
+        record_summary_header.append(["Source Feature Host",feature_source_host])
+        record_summary_header.append(["Source Feature Lab Host",feature_source_lab_host])
         print "\nSummary of record header information for %s from file %s:\n" % (phageName,filename)
         print tabulate(record_summary_header,headers = "firstrow")
         print "\n\n\n"
-        
 
 
 
-        
+
+
         #See if there are any phage name typos in the header block
         pattern1 = re.compile('^' + phageName + '$')
         pattern2 = re.compile('^' + phageName)
 
         if find_name(pattern1,record_name.split(' ')) == 0:
-            
-            if record_name.split('.')[0] != parsed_accession:            
+
+            if record_name.split('.')[0] != parsed_accession:
                 print "\nRecord Name does not have the accession number or the identical phage name as found in the record organism field."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern2,record_def.split(' ')) == 0:
-        
+
             print "\nRecord Definition does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern1,record_source.split(' ')) == 0:
-        
+
             print "\nRecord Source does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
-    
+
         if find_name(pattern1,feature_source_organism.split(' ')) == 0:
-        
+
             print "\nSource Feature does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
@@ -2159,7 +2244,7 @@ for filename in genbank_files:
             import_host_trim = import_host
             if import_host_trim == "Mycobacterium":
                 import_host_trim = import_host_trim[:-3]
-                
+
             pattern3 = re.compile('^' + import_host_trim)
 
 
@@ -2168,33 +2253,33 @@ for filename in genbank_files:
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
-            
+
                 print "\nRecord Source does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
-            
+
                 print "\nRecord Organism does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
-            
+
                 print "\nSource Feature Organism does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
-            
+
             #Host and Lab_Host data may not have been present, so skip if it is blank
             if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
-                
+
                 print "\nSource Feature Host does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
-                    
+
             if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
-                
+
                 print "\nSource Feature Lab Host does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        
-        
+
+
         #Print record summary for all CDS information for quality control
         print "\nSummary of CDS summary information for %s from file %s:\n" % (phageName,filename)
         print tabulate(record_summary_cds,headers = "firstrow")
@@ -2216,8 +2301,8 @@ for filename in genbank_files:
 
         if use_basename != "yes":
             for geneID in geneID_set:
-               
-               search_result = pattern4.search(geneID.lower())            
+
+               search_result = pattern4.search(geneID.lower())
                if search_result == None:
                     geneID_typo_tally += 1
                     geneID_typo_list.append(geneID)
@@ -2236,20 +2321,20 @@ for filename in genbank_files:
         if len(transl_table_set) > 1:
             write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
             record_errors += 1
-        
+
         elif len(transl_table_set) == 1:
             transl_table_list = list(transl_table_set)
             if transl_table_list[0] != '11':
                 write_out(output_file,"\nThe translation table used for %s is: %s." % (phageName,transl_table_list[0]))
-                record_errors += question("\nError: phage %s does not use correct translation table." % phageName)     
+                record_errors += question("\nError: phage %s does not use correct translation table." % phageName)
         else:
             pass
-            
+
         if missing_transl_table_tally > 0:
             record_warnings += 1
             write_out(output_file,"\nWarning: there are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName))
-            record_errors += question("\nError: phage %s has missing translation table information." % phageName)     
-            
+            record_errors += question("\nError: phage %s has missing translation table information." % phageName)
+
 
 
         #Check to ensure the best gene description field was retained
@@ -2257,9 +2342,9 @@ for filename in genbank_files:
         #0 = geneID
         #1 = phageName or basename
         #2 = startCoord
-        #3 = stopCoord 
-        #4 = geneLen  
-        #5 = geneName 
+        #3 = stopCoord
+        #4 = geneLen
+        #5 = geneName
         #6 = typeID
         #7 = translation
         #8 = orientation[0]
@@ -2268,21 +2353,21 @@ for filename in genbank_files:
         #11 = feature_function
         #12 = feature_note
 
-        if import_cds_qualifier not in description_set:        
-            write_out(output_file,"\nNumber of gene %s descriptions found for phage %s: %s" % (import_cds_qualifier,phageName, assigned_description_tally))     
+        if import_cds_qualifier not in description_set:
+            write_out(output_file,"\nNumber of gene %s descriptions found for phage %s: %s" % (import_cds_qualifier,phageName, assigned_description_tally))
         write_out(output_file,"\nNumber of gene product descriptions found for phage %s: %s" % (phageName, feature_product_tally))
-        write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally)) 
+        write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally))
         write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally))
-        
-        
-  
+
+
+
         #If other CDS fields contain descriptions, they can be chosen to replace the default import_cds_qualifier descriptions. Then provide option to verify changes
         changed = ""
         if (import_cds_qualifier != "product" and feature_product_tally > 0):
 
            print "\nThere are %s CDS products found. These will be ignored." % feature_product_tally
            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
-                
+
                 for feature in all_features_data_list:
                     feature[9] = feature[10]
                 changed = "product"
@@ -2309,13 +2394,13 @@ for filename in genbank_files:
         if changed != "":
              write_out(output_file,"\nCDS descriptions have been changed to the %s field." % changed)
              record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
-        
+
 
         #Add all updated gene feature data to the add_replace_statements list
         for feature in all_features_data_list:
-            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (feature[0],feature[1],feature[2],feature[3],feature[4],feature[5],feature[6],feature[7],feature[8],feature[9])) 
+            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (feature[0],feature[1],feature[2],feature[3],feature[4],feature[5],feature[6],feature[7],feature[8],feature[9]))
 
-                
+
         #If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
         if record_errors == 0:
             write_out(output_file,"\nNo errors encountered while parsing: %s." % filename)
@@ -2327,12 +2412,12 @@ for filename in genbank_files:
             failed_genome_files.append(filename)
             failed_actions.append(matchedData)
             script_warnings += record_warnings
-            script_errors += record_errors            
+            script_errors += record_errors
             raw_input("\nPress ENTER to proceed to next file.")
             continue
 
-      
-        #Execute SQL transactions        
+
+        #Execute SQL transactions
         if run_type == "production":
             con = mdb.connect(mysqlhost, username, password, database)
             con.autocommit(False)
@@ -2352,29 +2437,38 @@ for filename in genbank_files:
                 mdb_exit("\nError: problem importing the file %s with the following add/replace action: %s.\nNot all genbank files were processed." % (filename,matchedData))
 
             con.close()
-            
+
         else:
             write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
-        
+
         #Now that genome has been successfully uploaded, proceed
         try:
             shutil.move(os.path.join(phageListDir,filename),os.path.join(phageListDir,success_folder,filename))
         except:
-            print "Unable to move file %s to success file folder." % filename    
-        
+            print "Unable to move file %s to success file folder." % filename
+
         #Add the action data to the success output file, update tally of total script warnings and errors, then proceed
-        success_action_file_writer.writerow(matchedData)
+        add_replace_output_list = [matchedData[0],\
+                                matchedData[1],\
+                                matchedData[2],\
+                                matchedData[3],\
+                                matchedData[4],\
+                                matchedData[5],\
+                                matchedData[7],\
+                                matchedData[8],\
+                                matchedData[6]]
+        success_action_file_writer.writerow(add_replace_output_list)
         script_warnings += record_warnings
         script_errors += record_errors
         print "Processing of %s is complete." %filename
         #raw_input("\nPress ENTER to proceed to next file.")
-        
-      
+
+
 
 write_out(output_file,"\nAll files have been iterated through.")
-raw_input("\nPress ENTER to proceed to next import stage.")        
+raw_input("\nPress ENTER to proceed to next import stage.")
 
-        
+
 #Final verifications
 write_out(output_file,"\n\n\n\nFinal checks...")
 write_out(output_file,"\n\nAll update actions have been implemented.")
@@ -2395,27 +2489,37 @@ if len(add_replace_data_dict) > 0:
     failed_action_file_writer = csv.writer(failed_action_file_handle)
     write_out(output_file,"\n\nThe following add/replace action(s) in the import table were NOT successfully implemented:")
     for key in add_replace_data_dict:
-        write_out(output_file,"\n" + str(add_replace_data_dict[key]))
-        failed_action_file_writer.writerow(add_replace_data_dict[key])
+        failed_output_list = [add_replace_data_dict[key][0],\
+                                add_replace_data_dict[key][1],\
+                                add_replace_data_dict[key][2],\
+                                add_replace_data_dict[key][3],\
+                                add_replace_data_dict[key][4],\
+                                add_replace_data_dict[key][5],\
+                                add_replace_data_dict[key][7],\
+                                add_replace_data_dict[key][8],\
+                                add_replace_data_dict[key][6]]
+        failed_action_file_writer.writerow(failed_output_list)
+        write_out(output_file,"\n" + str(failed_output_list))
+
     failed_action_file_handle.close()
 
 else:
-    write_out(output_file,"\nAll add/replace actions have been implemented.")  
+    write_out(output_file,"\nAll add/replace actions have been implemented.")
 
 
 #Verify that none of the genbank files failed to be uploaded.
 if len(failed_genome_files) > 0:
-    
+
     write_out(output_file,"\n\nThe following genbank files were NOT successfully processed:")
     for filename in failed_genome_files:
         write_out(output_file,"\n" + filename)
-        
+
         try:
             shutil.move(os.path.join(phageListDir,filename),os.path.join(phageListDir,failed_folder,filename))
         except:
-            print "Unable to move file %s to failed file folder." % filename    
-    
-    
+            print "Unable to move file %s to failed file folder." % filename
+
+
 else:
     write_out(output_file,"\n\nAll genbank files were successfully processed.")
 
@@ -2455,11 +2559,5 @@ write_out(output_file,"\n\nTotal phages in database after changes: " + str(final
 
 #Close script.
 success_action_file_handle.close()
-write_out(output_file,"\n\n\n\nImport script completed.")  
+write_out(output_file,"\n\n\n\nImport script completed.")
 output_file.close()
-
-
-
-
-
-
