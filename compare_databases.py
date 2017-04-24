@@ -2579,7 +2579,6 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
     #Once all matched genome data has been outputted, iterate through all matched gene data
 
-    feature_data_output = [] #Will hold all data for each gene
 
     perfectly_matched_features = matched_genomes.get_phamerator_ncbi_perfect_matched_features()
     imperfectly_matched_features = matched_genomes.get_phamerator_ncbi_imperfect_matched_features()
@@ -2597,6 +2596,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     #Iterate through the list of mixed feature objects
     for mixed_feature_object in all_features_list:
 
+        feature_data_output = [] #Will hold all data for each gene
+
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
             phamerator_feature = mixed_feature_object.get_phamerator_feature()
             ncbi_feature = mixed_feature_object.get_ncbi_feature()
@@ -2606,6 +2607,10 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
         #Phamerator feature
         if isinstance(phamerator_feature,PhameratorCdsFeature):
+
+            #TODO test feature attributes are correct
+            print "Phamerator feature is True"
+            print phamerator_feature.get_phage_id()
 
             #General gene data
             feature_data_output.append(phamerator_feature.get_phage_id())# phage_id
@@ -2633,6 +2638,9 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         #NCBI feature
         if isinstance(ncbi_feature,NcbiCdsFeature):
 
+            #TODO test attributes are compute correctly
+            print "NCBI features is True"
+            print ncbi_feature.get_locus_tag()
             #General gene data
             feature_data_output.append(ncbi_feature.get_locus_tag())# locus_tag
             feature_data_output.append(ncbi_feature.get_gene_number())# gene_number
@@ -2658,7 +2666,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
                                         '','','','','',\
                                         '','','','',''])
 
-
+        #TODO verify attributes computed correctly
+        raw_input()
         #Phamerator-NCBI checks
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
             feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_descriptions())# Phamerator description in product, function, or note description
