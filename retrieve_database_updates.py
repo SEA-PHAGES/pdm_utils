@@ -713,7 +713,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
             #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
-                field_import_table_writer.writerow(["update",phamerator_id,phagesdb_host,phagesdb_cluster_update,phamerator_status,"none",phagesdb_accession,phagesdb_program,"none"])
+                field_import_table_writer.writerow(["update",\
+                                                    phamerator_id,\
+                                                    phagesdb_host,\
+                                                    phagesdb_cluster_update,\
+                                                    phamerator_status,\
+                                                    "none",\
+                                                    phagesdb_accession,\
+                                                    phagesdb_program,\
+                                                    "none"])
 
 
 
@@ -764,7 +772,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_file_handle.close()
 
                     #Create the new import ticket
-                    phagesdb_import_table_writer.writerow(["replace",phage_id_search_name,"retrieve","retrieve","final","product","retrieve","retrieve",phamerator_id])
+                    phagesdb_import_table_writer.writerow(["replace",\
+                                                            phage_id_search_name,\
+                                                            "retrieve",\
+                                                            "retrieve",\
+                                                            "final",\
+                                                            "product",\
+                                                            "retrieve",\
+                                                            "retrieve",\
+                                                            phamerator_id])
                     phagesdb_retrieved_tally += 1
                     phagesdb_retrieved_list.append(phamerator_id)
 
@@ -774,7 +790,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_failed_list.append(phamerator_id)
 
 
-#TODO output all folders the same
 
 
 
@@ -956,7 +971,15 @@ if retrieve_ncbi_genomes == "yes":
             #Now output the file and create the import ticket.
             ncbi_filename = phamerator_name.lower() + "__" + retrieved_record_accession + ".gb"
             SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,genomes_folder,ncbi_filename),"genbank")
-            ncbi_import_table_writer.writerow(['replace',import_table_name,phamerator_host,phamerator_cluster,phamerator_status,'product',phamerator_accession,phamerator_program,phamerator_id])
+            ncbi_import_table_writer.writerow(['replace',\
+                                                import_table_name,\
+                                                phamerator_host,\
+                                                phamerator_cluster,\
+                                                phamerator_status,\
+                                                'product',\
+                                                phamerator_accession,\
+                                                phamerator_program,\
+                                                phamerator_id])
 
 
         else:
@@ -1019,7 +1042,15 @@ if retrieve_pecaan_genomes == "yes":
 
 
             #Create the new import ticket
-            pecaan_import_table_writer.writerow(["add",new_phage,"retrieve","retrieve","draft","product","none","retrieve","none"])
+            pecaan_import_table_writer.writerow(["add",\
+                                                new_phage,\
+                                                "retrieve",\
+                                                "retrieve",\
+                                                "draft",\
+                                                "product",\
+                                                "none",\
+                                                "retrieve",\
+                                                "none"])
             print "Retrieved %s from PECAAN." %new_phage
             pecaan_retrieved_tally += 1
             pecaan_retrieved_list.append(new_phage)
