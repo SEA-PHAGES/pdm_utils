@@ -59,9 +59,12 @@ except:
                     1. Action to implement on the database (add, remove, replace, update)\n\
                     2. PhageID to add or update\n\
                     3. Host genus of the updated phage\n\
-                    4. Cluster of the updated phage\n\
-                    5. Field that contains the gene description information (product, note, function)\n\
-                    6. PhageID that will be removed or replaced\n\n"
+                    4. Cluster or subcluster of the updated phage\n\
+                    5. Status of the update phage (draft, final, gbk)\n\
+                    6. Gene description field of the update phage (product, note, function)\n\
+                    7. Accession of the updated phage\n\
+                    8. Program of the update phage (this will probably be removed)\n\
+                    9. PhageID that will be removed or replaced\n\n"
     sys.exit(1)
 
 
