@@ -476,14 +476,14 @@ class CdsFeature:
         #For start and end of feature, it doesn't matter whether the feature is complex with a translational
         #frameshift or not. Retrieving the "start" and "end" attributes return the very beginning and end of
         #the feature, disregarding the inner "join" coordinates.
-        self.__start_end_strand_id = (self.__left_boundary,self.__right_boundary,self.__strand)
-    def set_end_strand_id(self):
+        self.__start_end_strand_id = (str(self.__left_boundary),str(self.__right_boundary),self.__strand)
+    #def set_end_strand_id(self):
         #Since this id matched genes with different start sites,
         #the strand impacts whether the left or right boundary is used
         if self.__strand == 'forward':
-            self.__end_strand_id = (self.__right_boundary,self.__strand)
+            self.__end_strand_id = (str(self.__right_boundary),self.__strand)
         elif self.__strand == 'reverse':
-            self.__end_strand_id = (self.__left_boundary,self.__strand)
+            self.__end_strand_id = (str(self.__left_boundary),self.__strand)
         else:
             pass
     def compute_boundary_error(self):
@@ -718,11 +718,21 @@ class MatchedGenomes:
             ph_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ph_cds_list:
                 if cds.get_start_end_strand_id() not in ph_start_end_strand_id_set:
+
+                    #TODO
+                    print cds.get_start_end_strand_id()
+
                     ph_start_end_strand_id_set.add(cds.get_start_end_strand_id())
                 else:
                     ph_start_end_strand_duplicate_id_set.add(cds.get_start_end_strand_id())
             #Remove the duplicate end_strand ids from the main id_set
             ph_start_end_strand_id_set = ph_start_end_strand_id_set - ph_start_end_strand_duplicate_id_set
+
+
+            #TODO
+            print ph_start_end_strand_id_set
+            print len(ph_start_end_strand_id_set)
+            #raw_input("Press ENTER")
 
 
 
@@ -731,11 +741,20 @@ class MatchedGenomes:
             ncbi_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ncbi_cds_list:
                 if cds.get_start_end_strand_id() not in ncbi_start_end_strand_id_set:
+
                     ncbi_start_end_strand_id_set.add(cds.get_start_end_strand_id())
+                    #TODO
+                    print cds.get_start_end_strand_id()
+
                 else:
                     ncbi_start_end_strand_duplicate_id_set.add(cds.get_start_end_strand_id())
             #Remove the duplicate end_strand ids from the main id_set
             ncbi_start_end_strand_id_set = ncbi_start_end_strand_id_set - ncbi_start_end_strand_duplicate_id_set
+
+            #TODO
+            print ncbi_start_end_strand_id_set
+            print len(ncbi_start_end_strand_id_set)
+            #raw_input("Press ENTER")
 
 
             #Create the perfect matched and unmatched sets
@@ -744,6 +763,17 @@ class MatchedGenomes:
             perfect_matched_cds_id_set = ph_start_end_strand_id_set & ncbi_start_end_strand_id_set
 
 
+            #TODO
+            print ph_unmatched_start_end_strand_id_set
+            print len(ph_unmatched_start_end_strand_id_set)
+            print "\n\n"
+            print ncbi_unmatched_start_end_strand_id_set
+            print len(ncbi_unmatched_start_end_strand_id_set)
+            print "\n\n"
+            print perfect_matched_cds_id_set #Nothing in this set
+            print len(perfect_matched_cds_id_set)
+            #raw_input("Check id sets")
+            #TODO
 
 
             #From the unmatched sets, created second round of end-strand id sets
@@ -776,6 +806,10 @@ class MatchedGenomes:
             imperfect_matched_cds_id_set = ph_end_strand_id_set & ncbi_end_strand_id_set
 
 
+            #TODO
+            print imperfect_matched_cds_id_set
+            print len(imperfect_matched_cds_id_set)
+            #raw_input("Check imperfect set")
 
 
 
@@ -794,6 +828,11 @@ class MatchedGenomes:
                     ph_unmatched_cds_list.append(cds)
 
 
+            #TODO
+            print ph_perfect_matched_cds_dict
+            print ph_perfect_matched_cds_dict.keys()
+            #raw_input("Check ph perfect match dict")
+
             ncbi_perfect_matched_cds_dict = {}
             ncbi_imperfect_matched_cds_dict = {}
             ncbi_unmatched_cds_list = []
@@ -807,8 +846,17 @@ class MatchedGenomes:
                     ncbi_unmatched_cds_list.append(cds)
 
 
+
+            #TODO
+            print ncbi_perfect_matched_cds_dict
+            print ncbi_perfect_matched_cds_dict.keys()
+            #raw_input("Check ncbi perfect match dict")
+
+
             #Create MatchedCdsFeatures objects
             for start_end_strand_tup in perfect_matched_cds_id_set:
+                print start_end_strand_tup
+                print ph_perfect_matched_cds_dict[start_end_strand_tup]
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_perfect_matched_cds_dict[start_end_strand_tup])
                 matched_cds_object.set_ncbi_feature(ncbi_perfect_matched_cds_dict[start_end_strand_tup])
@@ -889,7 +937,7 @@ class MatchedGenomes:
                 print pdb_genome.get_search_name()
                 print pdb_genome.get_cluster()
                 print pdb_genome.get_subcluster()
-                raw_input("Check cluster subcluster data")
+                #raw_input("Check cluster subcluster data")
 
     def compare_phagesdb_ncbi_genomes(self):
 
@@ -1649,74 +1697,74 @@ pdb_search_name_duplicate_set = set()
 pdb_total_genome_count = len(pdb_sequenced_phages_dict['results'])
 
 #TODO temp commented out
-# for element_dict in pdb_sequenced_phages_dict['results']:
-#     print "Processing phagesdb genome %s of %s" %(pdb_genome_count,pdb_total_genome_count)
-#
-#     genome_object = PhagesdbGenome()
-#
-#     #Name, Host, Accession
-#     genome_object.set_phage_name(element_dict['phage_name'])
-#     genome_object.set_host(element_dict['isolation_host']['genus'])
-#     genome_object.set_accession(element_dict['genbank_accession'])
-#
-#     #Cluster
-#     if element_dict['pcluster'] is not None:
-#         #Sometimes cluster information is not present. In the phagesdb database, it is recorded as NULL.
-#         #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-#         #In these cases, leave cluster as ''
-#         genome_object.set_cluster(element_dict['pcluster']['cluster'])
-#
-#     #Subcluster
-#     if element_dict['psubcluster'] is not None:
-#         #A phage may be clustered but not subclustered.
-#         #In these cases, leave subcluster as ''
-#         genome_object.set_subcluster(element_dict['psubcluster']['subcluster'])
-#
-#     #Check to see if there is a fasta file stored on phagesdb for this phage
-#     if element_dict['fasta_file'] is not None:
-#         fastafile_url = element_dict['fasta_file']
-#
-#         response = urllib2.urlopen(fastafile_url)
-#         #TODO add a timeout to the urllib2 call?
-#         retrieved_fasta_file = response.read()
-#         response.close()
-#
-#         #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
-#         #If you split by newline, the header is retained in the first list element
-#         split_fasta_data = retrieved_fasta_file.split('\n')
-#         pdb_sequence = ''
-#         index = 1
-#         while index < len(split_fasta_data):
-#             pdb_sequence = pdb_sequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
-#             index += 1
-#         genome_object.set_sequence(pdb_sequence)
-#         genome_object.compute_nucleotide_errors(dna_alphabet_set)
-#
-#     pdb_search_name = genome_object.get_search_name()
-#     if pdb_search_name in pdb_search_name_set:
-#         pdb_search_name_duplicate_set.add(pdb_search_name)
-#     else:
-#         pdb_search_name_set.add(pdb_search_name)
-#         pdb_genome_dict[pdb_search_name] = genome_object
-#     pdb_genome_count += 1
-#
-#
-# #phagesdb phage names are unique, but just make sure after they are converted to a search name
-# if len(pdb_search_name_duplicate_set) > 0:
-#
-#     print 'Warning: There are duplicate phage search names in phagesdb. \
-#     Some phagesdb genomes will not be able to be matched to Phamerator:'
-#     output_to_file(list(pdb_search_name_duplicate_set),'duplicate_phage_names.csv')
-#     raw_input('Press ENTER to proceed')
-#
-#
-# #Make sure all sequenced phage data has been retrieved
-# if (len(pdb_sequenced_phages_dict['results']) != pdb_sequenced_phages_dict['count'] or \
-#     len(pdb_sequenced_phages_dict['results']) != len(pdb_genome_dict)):
-#
-#     print "\nUnable to retrieve all phage data from phagesdb due to default retrieval parameters."
-#     print 'Update parameters in script to enable these functions.'
-#     raw_input('Press ENTER to proceed')
+for element_dict in pdb_sequenced_phages_dict['results']:
+    print "Processing phagesdb genome %s of %s" %(pdb_genome_count,pdb_total_genome_count)
+
+    genome_object = PhagesdbGenome()
+
+    #Name, Host, Accession
+    genome_object.set_phage_name(element_dict['phage_name'])
+    genome_object.set_host(element_dict['isolation_host']['genus'])
+    genome_object.set_accession(element_dict['genbank_accession'])
+
+    #Cluster
+    if element_dict['pcluster'] is not None:
+        #Sometimes cluster information is not present. In the phagesdb database, it is recorded as NULL.
+        #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
+        #In these cases, leave cluster as ''
+        genome_object.set_cluster(element_dict['pcluster']['cluster'])
+
+    #Subcluster
+    if element_dict['psubcluster'] is not None:
+        #A phage may be clustered but not subclustered.
+        #In these cases, leave subcluster as ''
+        genome_object.set_subcluster(element_dict['psubcluster']['subcluster'])
+
+    #Check to see if there is a fasta file stored on phagesdb for this phage
+    if element_dict['fasta_file'] is not None:
+        fastafile_url = element_dict['fasta_file']
+
+        response = urllib2.urlopen(fastafile_url)
+        #TODO add a timeout to the urllib2 call?
+        retrieved_fasta_file = response.read()
+        response.close()
+
+        #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
+        #If you split by newline, the header is retained in the first list element
+        split_fasta_data = retrieved_fasta_file.split('\n')
+        pdb_sequence = ''
+        index = 1
+        while index < len(split_fasta_data):
+            pdb_sequence = pdb_sequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
+            index += 1
+        genome_object.set_sequence(pdb_sequence)
+        genome_object.compute_nucleotide_errors(dna_alphabet_set)
+
+    pdb_search_name = genome_object.get_search_name()
+    if pdb_search_name in pdb_search_name_set:
+        pdb_search_name_duplicate_set.add(pdb_search_name)
+    else:
+        pdb_search_name_set.add(pdb_search_name)
+        pdb_genome_dict[pdb_search_name] = genome_object
+    pdb_genome_count += 1
+
+
+#phagesdb phage names are unique, but just make sure after they are converted to a search name
+if len(pdb_search_name_duplicate_set) > 0:
+
+    print 'Warning: There are duplicate phage search names in phagesdb. \
+    Some phagesdb genomes will not be able to be matched to Phamerator:'
+    output_to_file(list(pdb_search_name_duplicate_set),'duplicate_phage_names.csv')
+    raw_input('Press ENTER to proceed')
+
+
+#Make sure all sequenced phage data has been retrieved
+if (len(pdb_sequenced_phages_dict['results']) != pdb_sequenced_phages_dict['count'] or \
+    len(pdb_sequenced_phages_dict['results']) != len(pdb_genome_dict)):
+
+    print "\nUnable to retrieve all phage data from phagesdb due to default retrieval parameters."
+    print 'Update parameters in script to enable these functions.'
+    raw_input('Press ENTER to proceed')
 #TODO temp commented out
 
 
@@ -2288,7 +2336,7 @@ genome_report_column_headers = [\
     'ph_ncbi_perfectly_matched_gene_tally',\
     'ph_ncbi_imperfectly_matched_gene_tally',\
     'ph_ncbi_unmatched_phamerator_gene_tally',\
-    'ph_ncbi_unmacthed_ncbi_gene_tally',\
+    'ph_ncbi_unmatched_ncbi_gene_tally',\
     'ph_ncbi_gene_description_error_tally',\
     'ph_ncbi_perfectly_matched_gene_translation_error_tally',\
 
@@ -2581,7 +2629,29 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
 
     perfectly_matched_features = matched_genomes.get_phamerator_ncbi_perfect_matched_features()
+    #TODO
+    if isinstance(ph_genome,PhameratorGenome) and isinstance(ncbi_genome,NcbiGenome):
+        print ph_genome.get_search_name()
+        print ncbi_genome.get_record_organism()
+        print perfectly_matched_features
+        print len(perfectly_matched_features)
+        for element in perfectly_matched_features:
+            print element
+        #raw_input("Press ENTER")
+    #TODO
+
     imperfectly_matched_features = matched_genomes.get_phamerator_ncbi_imperfect_matched_features()
+    #TODO
+    if isinstance(ph_genome,PhameratorGenome) and isinstance(ncbi_genome,NcbiGenome):
+        print ph_genome.get_search_name()
+        print ncbi_genome.get_record_organism()
+        print imperfectly_matched_features
+        print len(imperfectly_matched_features)
+        for element in imperfectly_matched_features:
+            print element
+        #raw_input("Press ENTER")
+    #TODO
+
     ph_unmatched_features = matched_genomes.get_phamerator_features_unmatched_in_ncbi()
     ncbi_unmatched_features = matched_genomes.get_ncbi_features_unmatched_in_phamerator()
 
@@ -2599,9 +2669,15 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         feature_data_output = [] #Will hold all data for each gene
 
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
+            #TODO
+            print "MatchedCdsFeatures is True"
+            #raw_input("Press ENTER")
             phamerator_feature = mixed_feature_object.get_phamerator_feature()
             ncbi_feature = mixed_feature_object.get_ncbi_feature()
         else:
+            #TODO
+            print "MatchedCdsFeatures is False"
+            print mixed_feature_object
             phamerator_feature = ''
             ncbi_feature = ''
 
@@ -2611,6 +2687,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
             #TODO test feature attributes are correct
             print "Phamerator feature is True"
             print phamerator_feature.get_phage_id()
+            #raw_input("Press ENTER")
+
 
             #General gene data
             feature_data_output.append(phamerator_feature.get_phage_id())# phage_id
@@ -2630,6 +2708,12 @@ for matched_genomes in summary_object.get_matched_genomes_list():
             feature_data_output.append(phamerator_feature.get_boundary_error())# contains std start and stop coordinates
 
         else:
+
+            #TODO test feature attributes are correct
+            print "Phamerator feature is False"
+            print phamerator_feature
+
+
             feature_data_output.extend(['','','','','',\
                                         '','','','','',\
                                         '','',''])
@@ -2641,6 +2725,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
             #TODO test attributes are compute correctly
             print "NCBI features is True"
             print ncbi_feature.get_locus_tag()
+            #raw_input("Press Enter")
             #General gene data
             feature_data_output.append(ncbi_feature.get_locus_tag())# locus_tag
             feature_data_output.append(ncbi_feature.get_gene_number())# gene_number
@@ -2662,12 +2747,14 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
 
         else:
+            #TODO test attributes are compute correctly
+            print "NCBI features is False"
+            print ncbi_feature
             feature_data_output.extend(['','','','','',\
                                         '','','','','',\
                                         '','','','',''])
 
-        #TODO verify attributes computed correctly
-        raw_input()
+
         #Phamerator-NCBI checks
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
             feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_descriptions())# Phamerator description in product, function, or note description
