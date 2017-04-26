@@ -1057,10 +1057,10 @@ class MatchedCdsFeatures:
     def compare_phamerator_ncbi_cds_features(self):
 
         if self.__phamerator_feature.get_strand() == 'forward':
-            if self.__phamerator_feature.get_left_boundary() != self.__ncbi_feature.get_left_boundary():
+            if str(self.__phamerator_feature.get_left_boundary()) != str(self.__ncbi_feature.get_left_boundary()):
                 self.__phamerator_ncbi_different_start_sites = True
         elif self.__phamerator_feature.get_strand() == 'reverse':
-            if self.__phamerator_feature.get_right_boundary() != self.__ncbi_feature.get_right_boundary():
+            if str(self.__phamerator_feature.get_right_boundary()) != str(self.__ncbi_feature.get_right_boundary()):
                 self.__phamerator_ncbi_different_start_sites = True
         else:
             pass
@@ -2425,8 +2425,9 @@ gene_report_writer.writerow([date + ' Database comparison'])
 #Create vector of column headers
 gene_report_column_headers = [\
 
-
     #Phamerator
+    'ph_search_name',\
+
     #General gene data
     'ph_phage_id',\
     'ph_search_id',\
@@ -2739,6 +2740,9 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
         feature_data_output = [] #Will hold all data for each gene
 
+        #Add Phamerator genome search name to each gene row regardless of the type of CDS data (matched or unmatched)
+        feature_data_output.append(ph_genome.get_search_name())# matched Phamerator search name
+
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
             #FIXME
             # print "MatchedCdsFeatures is True"
@@ -2749,8 +2753,16 @@ for matched_genomes in summary_object.get_matched_genomes_list():
             #FIXME
             # print "MatchedCdsFeatures is False"
             # print mixed_feature_object
-            phamerator_feature = ''
-            ncbi_feature = ''
+
+            if isinstance(mixed_feature_object,PhameratorCdsFeature):
+                phamerator_feature = mixed_feature_object
+                ncbi_feature = ''
+            elif isinstance(mixed_feature_object,NcbiCdsFeature):
+                phamerator_feature = ''
+                ncbi_feature = mixed_feature_object
+            else:
+                phamerator_feature = ''
+                ncbi_feature = ''
 
         #Phamerator feature
         if isinstance(phamerator_feature,PhameratorCdsFeature):
