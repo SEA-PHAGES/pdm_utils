@@ -608,8 +608,8 @@ class NcbiCdsFeature(CdsFeature):
 
         #If the product description is empty or generic, and the function or note descriptions are not, there is an error
         if (self.__product_description == '' or self.__product_description.lower() == 'hypothetical protein') and \
-            (self.__function_description != '' or self.__function_description.lower() != 'hypothetical protein') and \
-            (self.__note_description != '' or self.__note_description.lower() != 'hypothetical protein'):
+            ((self.__function_description != '' and self.__function_description.lower() != 'hypothetical protein') or \
+            (self.__note_description != '' and self.__note_description.lower() != 'hypothetical protein')):
 
             self.__description_field_error = True
 
@@ -656,7 +656,7 @@ class MatchedGenomes:
         self.__phamerator_features_unmatched_in_ncbi_tally = 0
         self.__ncbi_features_unmatched_in_phamerator_tally = 0
         self.__phamerator_ncbi_different_descriptions_tally = 0
-        self.__phamerator_ncbi_different_translation_tally = 0
+        self.__phamerator_ncbi_different_translations_tally = 0
 
 
 
@@ -888,7 +888,7 @@ class MatchedGenomes:
                 matched_cds_object.set_ncbi_feature(ncbi_perfect_matched_cds_dict[start_end_strand_tup])
                 matched_cds_object.compare_phamerator_ncbi_cds_features()
                 if matched_cds_object.get_phamerator_ncbi_different_translations():
-                    self.__phamerator_ncbi_different_translation_tally += 1
+                    self.__phamerator_ncbi_different_translations_tally += 1
                 if matched_cds_object.get_phamerator_ncbi_different_descriptions():
                     self.__phamerator_ncbi_different_descriptions_tally += 1
                 self.__phamerator_ncbi_perfect_matched_features.append(matched_cds_object)
@@ -924,7 +924,7 @@ class MatchedGenomes:
             # for matched_cds_object in self.__phamerator_ncbi_perfect_matched_features:
             #     matched_cds_object.compare_phamerator_ncbi_cds_features()
             #     if matched_cds_object.get_phamerator_ncbi_different_translations():
-            #         self.__phamerator_ncbi_different_translation_tally += 1
+            #         self.__phamerator_ncbi_different_translations_tally += 1
             #     if matched_cds_object.get_phamerator_ncbi_different_descriptions():
             #         self.__phamerator_ncbi_different_descriptions_tally += 1
             #
@@ -1012,7 +1012,7 @@ class MatchedGenomes:
     def get_phamerator_ncbi_different_descriptions_tally(self):
         return self.__phamerator_ncbi_different_descriptions_tally
     def get_phamerator_ncbi_different_translation_tally(self):
-        return self.__phamerator_ncbi_different_translation_tally
+        return self.__phamerator_ncbi_different_translations_tally
 
     def get_phagesdb_ncbi_sequence_mismatch(self):
         return self.__phagesdb_ncbi_sequence_mismatch
@@ -1042,7 +1042,7 @@ class MatchedCdsFeatures:
         self.__ncbi_feature = ''
 
         #Matched data comparison results
-        self.__phamerator_ncbi_different_translation = False #True = there are different translations
+        self.__phamerator_ncbi_different_translations = False #True = there are different translations
         self.__phamerator_ncbi_different_start_sites = False #True = there are different start sites
         self.__phamerator_ncbi_different_descriptions = False #True = there are different gene descriptions
 
@@ -1065,13 +1065,23 @@ class MatchedCdsFeatures:
         else:
             pass
 
-        if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description():
-        #Below is an alternative strategy, just looking in any field for the same description
-        # if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description() and \
-        #     self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_function_description() and \
-        #     self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_note_description():
 
+        product_description_set = set()
+        product_description_set.add(self.__phamerator_feature.get_notes().lower())
+        if self.__ncbi_feature.get_product_description().lower() == 'hypothetical protein':
+            product_description_set.add('')
+        else:
+            product_description_set.add(self.__ncbi_feature.get_product_description().lower())
+
+        if len(product_description_set) != 1:
             self.__phamerator_ncbi_different_descriptions = True
+
+        #FIXME old code
+        # if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description():
+        #     self.__phamerator_ncbi_different_descriptions = True
+        #FIXME old code
+
+
 
         if self.__phamerator_feature.get_translation() != self.__ncbi_feature.get_translation():
             self.__phamerator_ncbi_different_translations = True
@@ -1086,7 +1096,7 @@ class MatchedCdsFeatures:
     def get_phamerator_ncbi_different_descriptions(self):
         return self.__phamerator_ncbi_different_descriptions
     def get_phamerator_ncbi_different_translations(self):
-        return self.__phamerator_ncbi_different_translation
+        return self.__phamerator_ncbi_different_translations
 
 
 
@@ -1133,7 +1143,7 @@ class DatabaseSummary:
         self.__ph_pdb_host_mismatch_tally = 0
 
         #Phamerator-NCBI checks
-        self.__ph_ncbi_sequence_mistmatch_tally = 0
+        self.__ph_ncbi_sequence_mismatch_tally = 0
         self.__ph_ncbi_sequence_length_mismatch_tally = 0
         self.__ph_ncbi_record_header_phage_mismatch_tally = 0
         self.__ph_ncbi_record_header_host_mismatch_tally = 0
@@ -1142,7 +1152,6 @@ class DatabaseSummary:
         self.__ph_ncbi_genomes_with_unmatched_ncbi_features_tally = 0
         self.__ph_ncbi_genomes_with_different_descriptions_tally = 0
         self.__ph_ncbi_genomes_with_different_translations_tally = 0
-        self.__ph_ncbi_genomes_with_different_start_sites_tally = 0
 
         #phagesdb-NCBI checks
         self.__pdb_ncbi_sequence_mismatch_tally = 0
@@ -1242,7 +1251,7 @@ class DatabaseSummary:
 
             #Phamerator-NCBI checks
             if matched_genomes.get_phamerator_ncbi_sequence_mismatch():
-                self.__ph_ncbi_sequence_mistmatch_tally += 1
+                self.__ph_ncbi_sequence_mismatch_tally += 1
             if matched_genomes.get_phamerator_ncbi_sequence_length_mismatch():
                 self.__ph_ncbi_sequence_length_mismatch_tally += 1
             if matched_genomes.get_ncbi_record_header_fields_phage_name_mismatch():
@@ -1329,8 +1338,8 @@ class DatabaseSummary:
         return self.__ph_pdb_host_mismatch_tally
 
     #Phamerator-NCBI checks
-    def get_ph_ncbi_sequence_mistmatch_tally(self):
-        return self.__ph_ncbi_sequence_mistmatch_tally
+    def get_ph_ncbi_sequence_mismatch_tally(self):
+        return self.__ph_ncbi_sequence_mismatch_tally
     def get_ph_ncbi_sequence_length_mismatch_tally(self):
         return self.__ph_ncbi_sequence_length_mismatch_tally
     def get_ph_ncbi_record_header_phage_mismatch_tally(self):
@@ -1347,8 +1356,6 @@ class DatabaseSummary:
         return self.__ph_ncbi_genomes_with_different_descriptions_tally
     def get_ph_ncbi_genomes_with_different_translations_tally(self):
         return self.__ph_ncbi_genomes_with_different_translations_tally
-    def get_ph_ncbi_genomes_with_different_start_sites_tally(self):
-        return self.__ph_ncbi_genomes_with_different_start_sites_tally
 
     #phagesdb-NCBI checks
     def get_pdb_ncbi_sequence_mismatch_tally(self):
@@ -2269,7 +2276,7 @@ summary_report_fields = [\
     'ph_pdb_host_mismatch_tally',\
 
     #Phamerator-NCBI checks
-    'ph_ncbi_sequence_mistmatch_tally',\
+    'ph_ncbi_sequence_mismatch_tally',\
     'ph_ncbi_sequence_length_mismatch_tally',\
     'ph_ncbi_record_header_phage_mismatch_tally',\
     'ph_ncbi_record_header_host_mismatch_tally',\
@@ -2278,7 +2285,6 @@ summary_report_fields = [\
     'ph_ncbi_genomes_with_unmatched_ncbi_features_tally',\
     'ph_ncbi_genomes_with_different_descriptions_tally',\
     'ph_ncbi_genomes_with_different_translations_tally',\
-    'ph_ncbi_genomes_with_different_start_sites_tally',\
 
     #phagesdb-NCBI checks
     'pdb_ncbi_sequence_mismatch_tally',\
@@ -2512,7 +2518,7 @@ summary_data_output.append(summary_object.get_ph_pdb_accession_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_pdb_host_mismatch_tally())
 
 #Phamerator-NCBI checks
-summary_data_output.append(summary_object.get_ph_ncbi_sequence_mistmatch_tally())
+summary_data_output.append(summary_object.get_ph_ncbi_sequence_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_sequence_length_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_record_header_phage_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_record_header_host_mismatch_tally())
@@ -2521,7 +2527,6 @@ summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_unmatched_pha
 summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_unmatched_ncbi_features_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_different_descriptions_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_different_translations_tally())
-summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_different_start_sites_tally())
 
 #phagesdb-NCBI checks
 summary_data_output.append(summary_object.get_pdb_ncbi_sequence_mismatch_tally())
