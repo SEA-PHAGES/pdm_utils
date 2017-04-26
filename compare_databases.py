@@ -382,17 +382,34 @@ class NcbiGenome(AnnotatedGenome):
         self.__source_feature_lab_host = value
     def compute_ncbi_cds_feature_errors(self):
         for cds_feature in self.get_cds_features():
-            if cds_feature.get_product_description() != '':
+
+            #counting descriptions should skip if it is blank or "hypothetical protein"
+            if cds_feature.get_product_description() != '' and \
+                cds_feature.get_product_description().lower() != 'hypothetical protein':
+
                 self.__product_descriptions_tally += 1
-            if cds_feature.get_function_description() != '':
+            if cds_feature.get_function_description() != '' and \
+                cds_feature.get_function_description().lower() != 'hypothetical protein':
+
                 self.__function_descriptions_tally += 1
-            if cds_feature.get_note_description() != '':
+            if cds_feature.get_note_description() != '' and \
+                cds_feature.get_note_description().lower() != 'hypothetical protein':
+
                 self.__note_descriptions_tally += 1
             if cds_feature.get_locus_tag() == '':
                 self.__missing_locus_tags_tally += 1
             else:
                 pattern4 = re.compile(self.get_search_name())
                 search_result = pattern4.search(cds_feature.get_locus_tag().lower())
+
+                #FIXME
+                # if self.get_search_name() == 'zemlya':
+                #     print self.get_search_name()
+                #     print cds_feature.get_locus_tag().lower()
+                #     print search_result
+                #     raw_input()
+                #FIXME
+
                 if search_result == None:
                     self.__locus_tag_typos_tally += 1
             if cds_feature.get_description_field_error():
@@ -588,9 +605,11 @@ class NcbiCdsFeature(CdsFeature):
 
 
     def compute_description_error(self):
-        if self.__product_description == '' and \
-            self.__function_description != '' and \
-            self.__note_description != '':
+
+        #If the product description is empty or generic, and the function or note descriptions are not, there is an error
+        if (self.__product_description == '' or self.__product_description.lower() == 'hypothetical protein') and \
+            (self.__function_description != '' or self.__function_description.lower() != 'hypothetical protein') and \
+            (self.__note_description != '' or self.__note_description.lower() != 'hypothetical protein'):
 
             self.__description_field_error = True
 
@@ -681,6 +700,14 @@ class MatchedGenomes:
             #Compare phage names
             pattern1 = re.compile('^' + ph_genome.get_phage_name() + '$')
             pattern2 = re.compile('^' + ph_genome.get_phage_name())
+
+            #FIXME
+            # print find_name(pattern2,ncbi_genome.get_record_description().split(' '))
+            # print find_name(pattern1,ncbi_genome.get_record_source().split(' '))
+            # print find_name(pattern1,ncbi_genome.get_record_organism().split(' '))
+            # print find_name(pattern1,ncbi_genome.get_source_feature_organism().split(' '))
+            # raw_input()
+            #FIXME
 
             if find_name(pattern2,ncbi_genome.get_record_description().split(' ')) == 0 or \
                 find_name(pattern1,ncbi_genome.get_record_source().split(' ')) == 0 or \
@@ -1691,19 +1718,28 @@ for phage_id in ph_genome_object_dict.keys():
 #Retrieve a list of all sequenced phages listed on phagesdb
 #You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
 print 'Retrieving data from phagesdb...'
-pdb_sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
-pdb_sequenced_phages_json = urllib.urlopen(pdb_sequenced_phages_url)
-pdb_sequenced_phages_dict = json.loads(pdb_sequenced_phages_json.read())
-pdb_sequenced_phages_json.close()
+
+#TODO temp commented out
+# pdb_sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
+# pdb_sequenced_phages_json = urllib.urlopen(pdb_sequenced_phages_url)
+# pdb_sequenced_phages_dict = json.loads(pdb_sequenced_phages_json.read())
+# pdb_sequenced_phages_json.close()
+#TODO temp commented out
+
+
 
 #Data for each phage is stored in a dictionary per phage, and all dictionaries are stored in a list under "results"
 pdb_genome_count = 1
 pdb_genome_dict = {}
 pdb_search_name_set = set()
 pdb_search_name_duplicate_set = set()
-pdb_total_genome_count = len(pdb_sequenced_phages_dict['results'])
+
+
+
 
 #TODO temp commented out
+# pdb_total_genome_count = len(pdb_sequenced_phages_dict['results'])
+
 # for element_dict in pdb_sequenced_phages_dict['results']:
 #     print "Processing phagesdb genome %s of %s" %(pdb_genome_count,pdb_total_genome_count)
 #
@@ -1912,12 +1948,20 @@ for retrieved_record in retrieved_record_list:
 
     try:
         record_organism = retrieved_record.annotations['organism']
+        genome_object.set_record_organism(record_organism)
+
+        #Only truncate organism name for the 'phage name' field
         if record_organism.split(' ')[-1] == 'Unclassified.':
-            genome_object.set_record_organism(record_organism.split(' ')[-2])
+            genome_object.set_phage_name(record_organism.split(' ')[-2])
         else:
-            genome_object.set_record_organism(record_organism.split(' ')[-1])
+            genome_object.set_phage_name(record_organism.split(' ')[-1])
+
     except:
         genome_object.set_record_organism('')
+
+
+
+
 
     genome_object.set_sequence(retrieved_record.seq)
     genome_object.compute_nucleotide_errors(dna_alphabet_set)
@@ -2026,15 +2070,15 @@ for retrieved_record in retrieved_record_list:
     #If there was one and only one source feature present, parse certain qualifiers
     if len(source_feature_list) == 1:
         try:
-            genome_object.set_source_feature_organism(str(feature.qualifiers['organism'][0]))
+            genome_object.set_source_feature_organism(str(source_feature_list[0].qualifiers['organism'][0]))
         except:
             pass
         try:
-            genome_object.set_source_feature_host(str(feature.qualifiers['host'][0]))
+            genome_object.set_source_feature_host(str(source_feature_list[0].qualifiers['host'][0]))
         except:
             pass
         try:
-            genome_object.set_source_feature_lab_host(str(feature.qualifiers['lab_host'][0]))
+            genome_object.set_source_feature_lab_host(str(source_feature_list[0].qualifiers['lab_host'][0]))
         except:
             pass
 
@@ -2048,7 +2092,14 @@ for retrieved_record in retrieved_record_list:
 
     #If selected by user, save retrieved record to file
     if save_ncbi_records == 'yes':
-        ncbi_filename = genome_object.get_record_organism().lower() + '__' + genome_object.get_record_accession() + '.gb'
+
+        #Save the file, but use a truncated version of the full organism name
+        name_prefix = genome_object.get_record_organism().lower()
+        if name_prefix.split(' ')[-1] == 'unclassified.':
+            name_prefix = name_prefix.split(' ')[-2]
+        else:
+            name_prefix = name_prefix.split(' ')[-1]
+        ncbi_filename = name_prefix + '__' + genome_object.get_record_accession() + '.gb'
         SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,ncbi_filename),'genbank')
 
 
@@ -2307,12 +2358,14 @@ genome_report_column_headers = [\
 
     #ncbi
     #General genome data
+    'ncbi_phage_name',\
+    'ncbi_search_name',\
     'ncbi_record_id',\
     'ncbi_record_name',\
     'ncbi_record_accession',\
-    'ncbi_record_description',\
+    'ncbi_record_definition',\
     'ncbi_record_source',\
-    'ncbi_record_organisms',\
+    'ncbi_record_organism',\
     'ncbi_source_feature_organism',\
     'ncbi_source_feature_host',\
     'ncbi_source_feature_lab_host',\
@@ -2570,6 +2623,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     if isinstance(ncbi_genome,NcbiGenome):
 
         #General genome data
+        genome_data_output.append(ncbi_genome.get_phage_name())# the assigned phage name for this record
+        genome_data_output.append(ncbi_genome.get_search_name())# the assigned search phage name for this record
         genome_data_output.append(ncbi_genome.get_record_id())# record_id
         genome_data_output.append(ncbi_genome.get_record_name())# record_name
         genome_data_output.append(ncbi_genome.get_record_accession())# record_accession
@@ -2596,7 +2651,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
     else:
         genome_data_output.extend(['','','','','','','','','','',\
-                                    '','','','','','','','','',''])
+                                    '','','','','','','','','','',\
+                                    '',''])
 
     #Phamerator-phagesdb checks
     if isinstance(pdb_genome,PhagesdbGenome):
