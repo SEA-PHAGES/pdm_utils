@@ -1643,14 +1643,13 @@ os.chdir(main_output_path)
 
 
 
-###
 #Determing which types of genomes should be checked: draft, final, gbk
 analyze_database_options = [\
     'none',\
     'Phamerator and phagesdb',\
     'Phamerator and NCBI',\
     'Phamerator, phagesdb, and NCBI']
-print 'The following database can be compared:'
+print '\n\nThe following database can be compared:'
 print '0: ' + analyze_database_options[0]
 print '1: ' + analyze_database_options[1]
 print '2: ' + analyze_database_options[2]
@@ -1679,10 +1678,6 @@ else:
 
 
 
-###
-
-
-
 
 #Set up NCBI parameters if selected by user
 if 'ncbi' in valid_database_set:
@@ -1708,9 +1703,8 @@ if 'ncbi' in valid_database_set:
 
     #Determine which type of updates will be performed.
     save_ncbi_records = select_option(\
-        "\nDo you want to save retrieved NCBI records to disk? (yes or no) ", \
+        "\n\nDo you want to save retrieved NCBI records to disk? (yes or no) ", \
         set(['yes','y','no','n']))
-
 
 
     #Create a folder to store NCBI records
@@ -1722,7 +1716,7 @@ if 'ncbi' in valid_database_set:
 
 
 
-#Determing which types of genomes should be checked: draft, final, gbk
+#Determe which types of genomes should be checked: draft, final, gbk
 analyze_genome_status_options = [\
     'none',\
     'draft only',\
@@ -1732,7 +1726,7 @@ analyze_genome_status_options = [\
     'draft and gbk',\
     'final and gbk',\
     'draft, final, and gbk']
-print 'The following types of Phamerator genomes can be analyzed:'
+print '\n\nThe following types of Phamerator genomes can be analyzed:'
 print '0: ' + analyze_genome_status_options[0]
 print '1: ' + analyze_genome_status_options[1]
 print '2: ' + analyze_genome_status_options[2]
@@ -1836,7 +1830,7 @@ con.close()
 
 
 
-print 'Preparing genome data sets from the phamerator database...'
+print '\n\nPreparing genome data sets from the phamerator database...'
 ph_genome_count = 1
 processed_ph_genome_count = 0 #May not be equal to ph_genome_count
 ph_genome_object_dict = {} #Key = PhageID; #Value = genome_object
@@ -1910,7 +1904,7 @@ if len(ph_accession_duplicate_set) > 0:
 
 
 
-print 'Preparing gene data sets from the phamerator database...'
+print '\n\nPreparing gene data sets from the phamerator database...'
 ph_gene_count = 1
 ph_gene_objects_list = []
 ph_gene_data_phage_id_set = set()
@@ -1970,8 +1964,6 @@ for phage_id in ph_genome_object_dict.keys():
 
 #Now retrieve all phagesdb data
 
-
-
 #Data for each phage is stored in a dictionary per phage, and all dictionaries are stored in a list under "results"
 pdb_genome_count = 1
 pdb_genome_dict = {}
@@ -1983,10 +1975,9 @@ pdb_search_name_duplicate_set = set()
 if 'phagesdb' in valid_database_set:
     #Retrieve a list of all sequenced phages listed on phagesdb
     #You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
-    print 'Retrieving data from phagesdb...'
+    print '\n\nRetrieving data from phagesdb...'
 
 
-    #TODO temp commented out
     pdb_sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
     pdb_sequenced_phages_json = urllib.urlopen(pdb_sequenced_phages_url)
     pdb_sequenced_phages_dict = json.loads(pdb_sequenced_phages_json.read())
@@ -2064,7 +2055,6 @@ if 'phagesdb' in valid_database_set:
         print "\nUnable to retrieve all phage data from phagesdb due to default retrieval parameters."
         print 'Update parameters in script to enable these functions.'
         raw_input('Press ENTER to proceed')
-    #TODO temp commented out
 
 
 
