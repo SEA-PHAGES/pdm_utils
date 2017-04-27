@@ -83,7 +83,55 @@ def retrieve_description(description):
         description = ''
     else:
         description = description.lower().strip()
-    return description
+
+    split_description = description.split(' ')
+    if description == 'hypothetical protein':
+        search_description = ''
+
+    elif description == 'phage protein':
+        search_description = ''
+
+    elif description == 'unknown':
+        search_description = ''
+
+    elif description.isdigit():
+        search_description = ''
+
+    elif len(split_description) == 1:
+
+        if split_description[0][:2] == 'gp' and split_description[0][2:].isdigit():
+            search_description = ''
+
+        elif split_description[0][:3] == 'orf' and split_description[0][3:].isdigit():
+            search_description = ''
+
+        else:
+            search_description = description
+
+    elif len(split_description) == 2:
+
+        if split_description[0] == 'gp' and split_description[1].isdigit():
+            search_description = ''
+
+        elif split_description[0] == 'orf' and split_description[1].isdigit():
+            search_description = ''
+
+        else:
+            search_description = description
+
+    else:
+        search_description = description
+    return description,search_description
+
+
+
+#TODO make sure all references to retrieve description and hypothetical protein now account for search_description
+
+
+
+
+
+
 
 #Function to search through a list of elements using a regular expression
 def find_name(expression,list_of_items):
@@ -384,18 +432,36 @@ class NcbiGenome(AnnotatedGenome):
         for cds_feature in self.get_cds_features():
 
             #counting descriptions should skip if it is blank or "hypothetical protein"
-            if cds_feature.get_product_description() != '' and \
-                cds_feature.get_product_description().lower() != 'hypothetical protein':
-
+            if cds_feature.get_search_product_description() != '':
                 self.__product_descriptions_tally += 1
-            if cds_feature.get_function_description() != '' and \
-                cds_feature.get_function_description().lower() != 'hypothetical protein':
 
+            if cds_feature.get_search_function_description() != '':
                 self.__function_descriptions_tally += 1
-            if cds_feature.get_note_description() != '' and \
-                cds_feature.get_note_description().lower() != 'hypothetical protein':
 
+            if cds_feature.get_search_note_description() != '':
                 self.__note_descriptions_tally += 1
+
+
+            #FIXME old code
+            # if cds_feature.get_product_description() != '' and \
+            #     cds_feature.get_product_description().lower() != 'hypothetical protein':
+            #
+            #     self.__product_descriptions_tally += 1
+            #
+            # if cds_feature.get_function_description() != '' and \
+            #     cds_feature.get_function_description().lower() != 'hypothetical protein':
+            #
+            #     self.__function_descriptions_tally += 1
+            #
+            # if cds_feature.get_note_description() != '' and \
+            #     cds_feature.get_note_description().lower() != 'hypothetical protein':
+            #
+            #     self.__note_descriptions_tally += 1
+            #FIXME
+
+
+
+
             if cds_feature.get_locus_tag() == '':
                 self.__missing_locus_tags_tally += 1
             else:
@@ -505,7 +571,7 @@ class CdsFeature:
     def compute_boundary_error(self):
         #Check if start and end coordinates are fuzzy
         if not (str(self.__left_boundary).isdigit() and str(self.__right_boundary).isdigit()):
-            self.__boundary_error += True
+            self.__boundary_error = True
 
 
 
@@ -545,6 +611,7 @@ class PhameratorCdsFeature(CdsFeature):
         self.__gene_id = '' #Gene ID comprised of PhageID and Gene name
         self.__gene_name = ''
         self.__notes = ''
+        self.__search_notes = '' #non-generic gene descriptions
 
         # Computed datafields
         self.__search_id = ''
@@ -557,8 +624,10 @@ class PhameratorCdsFeature(CdsFeature):
         self.__gene_id = value
     def set_gene_name(self,name):
         self.__gene_name = name
-    def set_notes(self,value):
-        self.__notes = value
+    def set_notes(self,value1,value2):
+        self.__notes = value1
+        self.__search_notes = value2
+
 
     # Define all attribute getters:
     def get_gene_id(self):
@@ -567,6 +636,8 @@ class PhameratorCdsFeature(CdsFeature):
         return self.__gene_name
     def get_notes(self):
         return self.__notes
+    def get_search_notes(self):
+        return self.__search_notes
     def get_phage_id(self):
         return self.__phage_id
     def get_search_id(self):
@@ -586,6 +657,9 @@ class NcbiCdsFeature(CdsFeature):
         self.__product_description = ''
         self.__function_description = ''
         self.__note_description = ''
+        self.__search_product_description = ''
+        self.__search_function_description = ''
+        self.__search_note_description = ''
         self.__locus_tag_missing = False
         self.__description_field_error = False
 
@@ -596,22 +670,36 @@ class NcbiCdsFeature(CdsFeature):
             self.__locus_tag_missing = True
     def set_gene_number(self,value):
         self.__gene_number = value
-    def set_product_description(self,value):
-        self.__product_description = value
-    def set_function_description(self,value):
-        self.__function_description = value
-    def set_note_description(self,value):
-        self.__note_description = value
+    def set_product_description(self,value1,value2):
+        self.__product_description = value1
+        self.__search_product_description = value2
+    def set_function_description(self,value1,value2):
+        self.__function_description = value1
+        self.__search_function_description = value2
+    def set_note_description(self,value1,value2):
+        self.__note_description = value1
+        self.__search_note_description = value2
 
 
     def compute_description_error(self):
 
         #If the product description is empty or generic, and the function or note descriptions are not, there is an error
-        if (self.__product_description == '' or self.__product_description.lower() == 'hypothetical protein') and \
-            ((self.__function_description != '' and self.__function_description.lower() != 'hypothetical protein') or \
-            (self.__note_description != '' and self.__note_description.lower() != 'hypothetical protein')):
+        if self.__search_product_description == '' and \
+            (self.__search_function_description != '' or \
+            self.__search_note_description != ''):
 
             self.__description_field_error = True
+
+
+        #FIXME old code not needed
+        # if (self.__product_description == '' or self.__product_description.lower() == 'hypothetical protein') and \
+        #     ((self.__function_description != '' and self.__function_description.lower() != 'hypothetical protein') or \
+        #     (self.__note_description != '' and self.__note_description.lower() != 'hypothetical protein')):
+        #
+        #     self.__description_field_error = True
+        #FIXME
+
+
 
     # Define all attribute getters:
     def get_locus_tag(self):
@@ -624,6 +712,12 @@ class NcbiCdsFeature(CdsFeature):
         return self.__function_description
     def get_note_description(self):
         return self.__note_description
+    def get_search_product_description(self):
+        return self.__search_product_description
+    def get_search_function_description(self):
+        return self.__search_function_description
+    def get_search_note_description(self):
+        return self.__search_note_description
     def get_locus_tag_missing(self):
         return self.__locus_tag_missing
     def get_description_field_error(self):
@@ -689,6 +783,7 @@ class MatchedGenomes:
         #verify that there is a Phamerator and NCBI genome in the matched genome object
         ph_genome = self.__phamerator_genome
         ncbi_genome = self.__ncbi_genome
+        ph_cds_list = ph_genome.get_cds_features()
 
         if isinstance(ph_genome,PhameratorGenome) and isinstance(ncbi_genome,NcbiGenome):
 
@@ -739,7 +834,6 @@ class MatchedGenomes:
             #Compare CDS features
 
             #First find all unique start-end-strand cds identifiers for phamerator and ncbi genomes
-            ph_cds_list = ph_genome.get_cds_features()
             ph_start_end_strand_id_set = set()
             ph_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ph_cds_list:
@@ -881,8 +975,12 @@ class MatchedGenomes:
 
             #Create MatchedCdsFeatures objects
             for start_end_strand_tup in perfect_matched_cds_id_set:
-                print start_end_strand_tup
-                print ph_perfect_matched_cds_dict[start_end_strand_tup]
+
+                #FIXME
+                # print start_end_strand_tup
+                # print ph_perfect_matched_cds_dict[start_end_strand_tup]
+
+
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_perfect_matched_cds_dict[start_end_strand_tup])
                 matched_cds_object.set_ncbi_feature(ncbi_perfect_matched_cds_dict[start_end_strand_tup])
@@ -908,33 +1006,20 @@ class MatchedGenomes:
             self.__phamerator_features_unmatched_in_ncbi = ph_unmatched_cds_list
             self.__ncbi_features_unmatched_in_phamerator = ncbi_unmatched_cds_list
 
-
-
             #Now compute the number of features in each category
             self.__phamerator_ncbi_perfect_matched_features_tally = len(self.__phamerator_ncbi_perfect_matched_features)
             self.__phamerator_ncbi_imperfect_matched_features_tally = len(self.__phamerator_ncbi_imperfect_matched_features)
             self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
             self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
 
+        #If there is no matching NCBI genome, assign all Phamerator genes to Unmatched
+        else:
+
+            #Set unmatched cds lists
+            self.__phamerator_features_unmatched_in_ncbi = ph_cds_list
+            self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
 
 
-
-            # ###OLD CODE
-            # #Now compare gene descriptions and translations for perfectly matched cds features
-            # for matched_cds_object in self.__phamerator_ncbi_perfect_matched_features:
-            #     matched_cds_object.compare_phamerator_ncbi_cds_features()
-            #     if matched_cds_object.get_phamerator_ncbi_different_translations():
-            #         self.__phamerator_ncbi_different_translations_tally += 1
-            #     if matched_cds_object.get_phamerator_ncbi_different_descriptions():
-            #         self.__phamerator_ncbi_different_descriptions_tally += 1
-            #
-            # #Compare gene descriptions for imperfectly matched cds features
-            # #Since imperfect matches means different start site, the translation will be different by default
-            # for matched_cds_object in self.__phamerator_ncbi_imperfect_matched_features:
-            #     matched_cds_object.compare_phamerator_ncbi_cds_features()
-            #     if matched_cds_object.get_phamerator_ncbi_different_descriptions():
-            #         self.__phamerator_ncbi_different_descriptions_tally += 1
-            # ###OLD CODE
 
     def compare_phamerator_phagesdb_genomes(self):
 
@@ -952,17 +1037,11 @@ class MatchedGenomes:
                 self.__phamerator_phagesdb_accession_mismatch = True
             if ph_genome.get_host() != pdb_genome.get_host():
                 self.__phamerator_phagesdb_host_mismatch = True
-            if ph_genome.get_cluster_subcluster() != pdb_genome.get_cluster() and ph_genome.get_cluster_subcluster() != pdb_genome.get_subcluster():
+            if ph_genome.get_cluster_subcluster() != pdb_genome.get_cluster() and \
+                ph_genome.get_cluster_subcluster() != pdb_genome.get_subcluster():
 
                 self.__phamerator_phagesdb_cluster_subcluster_mismatch = True
 
-                #FIXME cluster subcluster check
-                # print ph_genome.get_search_name()
-                # print ph_genome.get_cluster_subcluster()
-                # print pdb_genome.get_search_name()
-                # print pdb_genome.get_cluster()
-                # print pdb_genome.get_subcluster()
-                #raw_input("Check cluster subcluster data")
 
     def compare_phagesdb_ncbi_genomes(self):
 
@@ -1067,19 +1146,24 @@ class MatchedCdsFeatures:
 
 
         product_description_set = set()
-        product_description_set.add(self.__phamerator_feature.get_notes().lower())
-        if self.__ncbi_feature.get_product_description().lower() == 'hypothetical protein':
-            product_description_set.add('')
-        else:
-            product_description_set.add(self.__ncbi_feature.get_product_description().lower())
+        product_description_set.add(self.__phamerator_feature.get_search_notes())
+        product_description_set.add(self.__ncbi_feature.get_search_product_description())
+
+
+
+
+        #FIXME old code
+        # if self.__ncbi_feature.get_search_product_description().lower() == 'hypothetical protein':
+        #     product_description_set.add('')
+        # else:
+        #     product_description_set.add(self.__ncbi_feature.get_product_description().lower())
+        #FIXME
+
 
         if len(product_description_set) != 1:
             self.__phamerator_ncbi_different_descriptions = True
 
-        #FIXME old code
-        # if self.__phamerator_feature.get_notes() != self.__ncbi_feature.get_product_description():
-        #     self.__phamerator_ncbi_different_descriptions = True
-        #FIXME old code
+
 
 
 
@@ -1117,7 +1201,7 @@ class DatabaseSummary:
 
         #Genome data checks
         self.__ph_genomes_with_nucleotide_errors_tally = 0
-        self.__ph_genomes_with_translations_errors_tally = 0
+        self.__ph_genomes_with_translation_errors_tally = 0
         self.__ph_genomes_with_boundary_errors_tally = 0
         self.__ph_status_accession_error_tally = 0
         self.__ph_status_description_error_tally = 0
@@ -1129,7 +1213,7 @@ class DatabaseSummary:
         #NCBI data
         #Genome data checks
         self.__ncbi_genomes_with_nucleotide_errors_tally = 0
-        self.__ncbi_genomes_with_translations_errors_tally = 0
+        self.__ncbi_genomes_with_translation_errors_tally = 0
         self.__ncbi_genomes_with_boundary_errors_tally = 0
         self.__ncbi_genomes_with_missing_locus_tags_tally = 0
         self.__ncbi_genomes_with_locus_tag_typos_tally = 0
@@ -1196,7 +1280,7 @@ class DatabaseSummary:
                 if ph_genome.get_nucleotide_errors():
                     self.__ph_genomes_with_nucleotide_errors_tally += 1
                 if ph_genome.get_cds_features_with_translation_error_tally() > 0:
-                    self.__ph_genomes_with_translations_errors_tally += 1
+                    self.__ph_genomes_with_translation_errors_tally += 1
                     self.__ph_translation_errors_tally += ph_genome.get_cds_features_with_translation_error_tally()
                 if ph_genome.get_cds_features_boundary_error_tally() > 0:
                     self.__ph_genomes_with_boundary_errors_tally += 1
@@ -1221,7 +1305,7 @@ class DatabaseSummary:
                 if ncbi_genome.get_nucleotide_errors():
                     self.__ncbi_genomes_with_nucleotide_errors_tally += 1
                 if ncbi_genome.get_cds_features_with_translation_error_tally() > 0:
-                    self.__ncbi_genomes_with_translations_errors_tally += 1
+                    self.__ncbi_genomes_with_translation_errors_tally += 1
                     self.__ncbi_translation_errors_tally += ncbi_genome.get_cds_features_with_translation_error_tally()
                 if ncbi_genome.get_cds_features_boundary_error_tally() > 0:
                     self.__ncbi_genomes_with_boundary_errors_tally += 1
@@ -1295,8 +1379,8 @@ class DatabaseSummary:
     #Genome data checks
     def get_ph_genomes_with_nucleotide_errors_tally(self):
         return self.__ph_genomes_with_nucleotide_errors_tally
-    def get_ph_genomes_with_translations_errors_tally(self):
-        return self.__ph_genomes_with_translations_errors_tally
+    def get_ph_genomes_with_translation_errors_tally(self):
+        return self.__ph_genomes_with_translation_errors_tally
     def get_ph_genomes_with_boundary_errors_tally(self):
         return self.__ph_genomes_with_boundary_errors_tally
     def get_ph_status_accession_error_tally(self):
@@ -1316,8 +1400,8 @@ class DatabaseSummary:
 
     def get_ncbi_genomes_with_nucleotide_errors_tally(self):
         return self.__ncbi_genomes_with_nucleotide_errors_tally
-    def get_ncbi_genomes_with_translations_errors_tally(self):
-        return self.__ncbi_genomes_with_translations_errors_tally
+    def get_ncbi_genomes_with_translation_errors_tally(self):
+        return self.__ncbi_genomes_with_translation_errors_tally
     def get_ncbi_genomes_with_boundary_errors_tally(self):
         return self.__ncbi_genomes_with_boundary_errors_tally
     def get_ncbi_genomes_with_missing_locus_tags_tally(self):
@@ -2038,19 +2122,19 @@ for retrieved_record in retrieved_record_list:
 
             #Gene function, note, and product descriptions
             try:
-                feature_product = retrieve_description(feature.qualifiers['product'][0])
-                gene_object.set_product_description(feature_product)
+                feature_product,feature_search_product = retrieve_description(feature.qualifiers['product'][0])
+                gene_object.set_product_description(feature_product,feature_search_product)
             except:
                 pass
             try:
-                feature_function = retrieve_description(feature.qualifiers['function'][0])
-                gene_object.set_function_description(feature_function)
+                feature_function,feature_search_function = retrieve_description(feature.qualifiers['function'][0])
+                gene_object.set_function_description(feature_function,feature_search_function)
             except:
                 pass
 
             try:
-                feature_note = retrieve_description(feature.qualifiers['note'][0])
-                gene_object.set_note_description(feature_note)
+                feature_note,feature_search_note = retrieve_description(feature.qualifiers['note'][0])
+                gene_object.set_note_description(feature_note,feature_search_note)
             except:
                 pass
 
@@ -2250,7 +2334,7 @@ summary_report_fields = [\
 
     #Genome data checks
     'ph_genomes_with_nucleotide_errors_tally',\
-    'ph_genomes_with_translations_errors_tally',\
+    'ph_genomes_with_translation_errors_tally',\
     'ph_genomes_with_boundary_errors_tally',\
     'ph_status_accession_error_tally',\
     'ph_status_description_error_tally',\
@@ -2263,7 +2347,7 @@ summary_report_fields = [\
     #Genome data checks
     'ncbi_genomes_with_description_field_errors_tally',\
     'ncbi_genomes_with_nucleotide_errors_tally',\
-    'ncbi_genomes_with_translations_errors_tally',\
+    'ncbi_genomes_with_translation_errors_tally',\
     'ncbi_genomes_with_boundary_errors_tally',\
     'ncbi_genomes_with_missing_locus_tags_tally',\
     'ncbi_genomes_with_locus_tag_typos_tally',\
@@ -2493,7 +2577,7 @@ summary_data_output.append(summary_object.get_ph_ncbi_update_flag_tally())
 
 #Genome data checks
 summary_data_output.append(summary_object.get_ph_genomes_with_nucleotide_errors_tally())
-summary_data_output.append(summary_object.get_ph_genomes_with_translations_errors_tally())
+summary_data_output.append(summary_object.get_ph_genomes_with_translation_errors_tally())
 summary_data_output.append(summary_object.get_ph_genomes_with_boundary_errors_tally())
 summary_data_output.append(summary_object.get_ph_status_accession_error_tally())
 summary_data_output.append(summary_object.get_ph_status_description_error_tally())
@@ -2506,7 +2590,7 @@ summary_data_output.append(summary_object.get_pdb_genomes_with_nucleotide_errors
 #Genome data checks
 summary_data_output.append(summary_object.get_ncbi_genomes_with_description_field_errors_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_nucleotide_errors_tally())
-summary_data_output.append(summary_object.get_ncbi_genomes_with_translations_errors_tally())
+summary_data_output.append(summary_object.get_ncbi_genomes_with_translation_errors_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_boundary_errors_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_missing_locus_tags_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_locus_tag_typos_tally())
@@ -2725,7 +2809,19 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     #FIXME
 
     ph_unmatched_features = matched_genomes.get_phamerator_features_unmatched_in_ncbi()
+
+
+    #TODO
+    print ph_unmatched_features
+    print len(ph_unmatched_features)
+
+
     ncbi_unmatched_features = matched_genomes.get_ncbi_features_unmatched_in_phamerator()
+
+    #TODO
+    print ncbi_unmatched_features
+    print len(ncbi_unmatched_features)
+    #raw_input()
 
     all_features_list = []
     all_features_list.extend(perfectly_matched_features)
