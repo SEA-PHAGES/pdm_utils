@@ -294,13 +294,15 @@ class PhameratorGenome(AnnotatedGenome):
         self.__status = '' #Final, Draft, Gbk version of genome data
         self.__cluster_subcluster = '' #Combined cluster_subcluster data.
         self.__ncbi_update_flag = ''
+        self.__date_last_modified = ''
 
         # Computed datafields
         self.__search_id = '' # The phage ID void of "_Draft" and converted to lowercase
         self.__status_accession_error = False
         self.__status_description_error = False
         self.__description_tally = 0
-        self.__date_last_modified = ''
+        self.__genes_with_errors_tally = 0 #How many genes in this genome have at least one error?
+
 
     # Define all attribute setters:
     def set_phage_id(self,value):
@@ -340,6 +342,18 @@ class PhameratorGenome(AnnotatedGenome):
             pass
 
 
+    #Even though this method iterates through the cds features like the compute_status_description_error does,
+    #it has to be kept separate, since you need to wait to run this method after all genome and gene matching
+    #is completed.
+    def compute_genes_with_errors_tally(self):
+        for feature in self.get_cds_features():
+            if feature.get_total_errors() > 0:
+                self.__genes_with_errors_tally += 1
+
+
+
+
+
     # Define all attribute getters:
     def get_phage_id(self):
         return self.__phage_id
@@ -359,6 +373,9 @@ class PhameratorGenome(AnnotatedGenome):
         return self.__status_accession_error
     def get_description_tally(self):
         return self.__description_tally
+    def get_genes_with_errors_tally(self):
+        return self.__genes_with_errors_tally
+
 
 class PhagesdbGenome(UnannotatedGenome):
 
@@ -410,6 +427,7 @@ class NcbiGenome(AnnotatedGenome):
         self.__missing_locus_tags_tally = 0
         self.__locus_tag_typos_tally = 0
         self.__description_field_error_tally = 0
+        self.__genes_with_errors_tally = 0 #How many genes in this genome have at least one error?
 
     #Define setter functions
     def set_record_name(self,value):
@@ -454,12 +472,23 @@ class NcbiGenome(AnnotatedGenome):
                 if search_result == None:
                     self.__locus_tag_typos_tally += 1
                     cds_feature.set_locus_tag_typo() #Sets this attribute to True
-                    #TODO at this point, I will have to add an error to the specific cds_feature
+
                     #TODO also make sure it gets implemented downstream
 
 
             if cds_feature.get_description_field_error():
                 self.__description_field_error_tally += 1
+
+    #TODO need to call this method
+    #Even though this method iterates through the cds features like the compute_ncbi_cds_feature_errors does,
+    #It has to be kept separate, since you need to wait to run this method after all genome and gene matching
+    #is completed.
+    def compute_genes_with_errors_tally(self):
+        for cds_feature in self.get_cds_features():
+            if cds_feature.get_total_errors() > 0:
+                self.__genes_with_errors_tally += 1
+
+
 
     #Define getter functions
     def get_record_name(self):
@@ -492,7 +521,8 @@ class NcbiGenome(AnnotatedGenome):
         return self.__locus_tag_typos_tally
     def get_description_field_error_tally(self):
         return self.__description_field_error_tally
-
+    def get_genes_with_errors_tally(self):
+        return self.__genes_with_errors_tally
 
 
 class CdsFeature:
@@ -961,6 +991,15 @@ class MatchedGenomes:
                 cds.set_unmatched_error()
                 cds.compute_total_errors()
 
+            #FIXME
+            # #Now that all errors have been computed for each gene, compute how many genes have errors
+            # ph_genome.compute_genes_with_errors_tally()
+            # ncbi_genome.compute_genes_with_errors_tally()
+            ###TODO
+            #Here, define new compute_genes_with_errors_tally method
+            #It should identify the total number of genes that contain at least one error in EITHER
+            #phamerator or NCBI matched gene
+
 
             #Set unmatched cds lists
             self.__phamerator_features_unmatched_in_ncbi = ph_unmatched_cds_list
@@ -981,6 +1020,45 @@ class MatchedGenomes:
             self.__phamerator_features_unmatched_in_ncbi = ph_cds_list
             #self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
 
+
+    #TODO get this working
+    def compute_genes_with_errors_tally(self):
+        #Perfectly matched genes
+        for matched_feature in self.__phamerator_ncbi_perfect_matched_features:
+            ph_feature = matched_feature.get_phamerator_feature()
+            ncbi_feature = matched_feature.get_ncbi_feature()
+
+            if ph_feature.get_total_errors() > 0 or \
+                ncbi_feature.get_total_errors() > 0:
+
+                self.__total_number_genes_with_errors += 1
+
+        #Imperfectly matched genes
+        for matched_feature in self.__phamerator_ncbi_imperfect_matched_features:
+            ph_feature = matched_feature.get_phamerator_feature()
+            ncbi_feature = matched_feature.get_ncbi_feature()
+
+            if ph_feature.get_total_errors() > 0 or \
+                ncbi_feature.get_total_errors() > 0:
+
+                self.__total_number_genes_with_errors += 1
+
+        #Unmatched phamerator features
+        for unmatched_feature in self.__phamerator_features_unmatched_in_ncbi:
+            if unmatched_feature.get_total_errors() > 0:
+                self.__total_number_genes_with_errors += 1
+
+        #Unmatched ncbi features
+        for unmatched_feature in self.__ncbi_features_unmatched_in_phamerator:
+            if unmatched_feature.get_total_errors() > 0:
+                self.__total_number_genes_with_errors += 1
+
+
+
+            #TODO
+            #Now that all errors have been computed for each gene, compute how many genes have errors
+            ph_genome.compute_genes_with_errors_tally()
+            ncbi_genome.compute_genes_with_errors_tally()
 
 
     def compare_phamerator_phagesdb_genomes(self):
@@ -1070,7 +1148,8 @@ class MatchedGenomes:
         return self.__phamerator_phagesdb_accession_mismatch
     def get_phamerator_phagesdb_cluster_subcluster_mismatch(self):
         return self.__phamerator_phagesdb_cluster_subcluster_mismatch
-
+    def get_total_number_genes_with_errors(self):
+        return self.__total_number_genes_with_errors
 
 
 class MatchedCdsFeatures:
@@ -2673,6 +2752,12 @@ genome_report_column_headers = [\
     'ph_ncbi_gene_description_error_tally',\
     'ph_ncbi_perfectly_matched_gene_translation_error_tally',\
 
+    #Number of genes with errors is computed separately for phamerator and ncbi genomes,
+    #but these numbers are dependent on how their match status, and therefore
+    #should be reported with the other ph_ncbi error tallies
+    'ph_genes_with_errors_tally',\
+    'ncbi_genes_with_errors_tally',\
+
     #phagesdb-ncbi
     'pdb_ncbi_dna_seq_error',\
     'pdb_ncbi_dna_seq_length_error']
@@ -2973,6 +3058,16 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_translation_tally())# # genes perfectly matched with different translations
     else:
         genome_data_output.extend(['','','','','','','','','',''])
+
+
+    #TODO
+    #Phamerator genes with errors
+    genome_data_output.append(ph_genome.get_genes_with_errors_tally())# # genes with at least one error
+
+    if isinstance(ncbi_genome,NcbiGenome):
+        genome_data_output.append(ncbi_genome.get_genes_with_errors_tally())# # genes with at least one error
+    else:
+        genome_data_output.append('')
 
 
     #Output phagesdb-NCBI checks
