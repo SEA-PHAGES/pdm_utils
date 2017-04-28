@@ -128,14 +128,6 @@ def retrieve_description(description):
 
 
 
-#TODO make sure all references to retrieve description and hypothetical protein now account for search_description
-
-
-
-
-
-
-
 #Function to search through a list of elements using a regular expression
 def find_name(expression,list_of_items):
     search_tally = 0
@@ -170,30 +162,12 @@ def select_option(message,valid_response_set):
 
 
 
-
-#FIXME old code
-# def select_option(message):
-#     response = 'no'
-#     response_valid = False
-#     while response_valid == False:
-#         response = raw_input(message)
-#         if (response.lower() == 'yes' or response.lower() == 'y'):
-#             response  = 'yes'
-#             response_valid = True
-#         elif (response.lower() == 'no' or response.lower() == 'n'):
-#             response = 'no'
-#             response_valid = True
-#         else:
-#             print 'Invalid response.'
-#     return response
-#FIXME
-
-
 #Output list to file
-def output_to_file(data_list,filename,genome_status_selected):
+def output_to_file(data_list,filename,genome_status_selected,database_string):
     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
     filename_writer = csv.writer(filename_fh)
     filename_writer.writerow([date + ' Database comparison'])
+    filename_writer.writerow([database_string])
     filename_writer.writerow([genome_status_selected])
     for element in data_list:
         filename_writer.writerow([element])
@@ -337,7 +311,7 @@ class PhameratorGenome(AnnotatedGenome):
 
         #Be sure to first set the accession attribute before the status attribute,
         #else this will throw an error.
-        if self.__status == 'final' and self.get_accession() == '':
+        if (self.__status == 'final' or self.__status == 'gbk') and self.get_accession() == '':
             self.__status_accession_error = True
 
 
@@ -469,43 +443,18 @@ class NcbiGenome(AnnotatedGenome):
             if cds_feature.get_search_note_description() != '':
                 self.__note_descriptions_tally += 1
 
-
-            #FIXME old code
-            # if cds_feature.get_product_description() != '' and \
-            #     cds_feature.get_product_description().lower() != 'hypothetical protein':
-            #
-            #     self.__product_descriptions_tally += 1
-            #
-            # if cds_feature.get_function_description() != '' and \
-            #     cds_feature.get_function_description().lower() != 'hypothetical protein':
-            #
-            #     self.__function_descriptions_tally += 1
-            #
-            # if cds_feature.get_note_description() != '' and \
-            #     cds_feature.get_note_description().lower() != 'hypothetical protein':
-            #
-            #     self.__note_descriptions_tally += 1
-            #FIXME
-
-
-
-
             if cds_feature.get_locus_tag() == '':
                 self.__missing_locus_tags_tally += 1
             else:
                 pattern4 = re.compile(self.get_search_name())
                 search_result = pattern4.search(cds_feature.get_locus_tag().lower())
 
-                #FIXME
-                # if self.get_search_name() == 'zemlya':
-                #     print self.get_search_name()
-                #     print cds_feature.get_locus_tag().lower()
-                #     print search_result
-                #     raw_input()
-                #FIXME
-
                 if search_result == None:
                     self.__locus_tag_typos_tally += 1
+
+                    #TODO at this point, I will have to add an error to the specific cds_feature
+
+
             if cds_feature.get_description_field_error():
                 self.__description_field_error_tally += 1
 
@@ -643,6 +592,7 @@ class PhameratorCdsFeature(CdsFeature):
 
         # Computed datafields
         self.__search_id = ''
+        self.__total_errors = 0
 
     # Define all attribute setters:
     def set_phage_id(self,value):
@@ -655,7 +605,14 @@ class PhameratorCdsFeature(CdsFeature):
     def set_notes(self,value1,value2):
         self.__notes = value1
         self.__search_notes = value2
+    def compute_total_errors(self):
+        if self.get_amino_acid_errors():
+            self.__total_errors += 1
+        if self.get_boundary_error():
+            self.__total_errors += 1
 
+
+#TODO be sure to call the compute_total_errors
 
     # Define all attribute getters:
     def get_gene_id(self):
@@ -670,6 +627,8 @@ class PhameratorCdsFeature(CdsFeature):
         return self.__phage_id
     def get_search_id(self):
         return self.__search_id
+    def get_total_errors(self):
+        return self.__total_errors
 
 
 
@@ -688,8 +647,12 @@ class NcbiCdsFeature(CdsFeature):
         self.__search_product_description = ''
         self.__search_function_description = ''
         self.__search_note_description = ''
+
+        # Inititalize all calculated attributes:
         self.__locus_tag_missing = False
         self.__description_field_error = False
+        self.__total_errors = 0
+
 
     # Define all attribute setters:
     def set_locus_tag(self,value):
@@ -707,8 +670,6 @@ class NcbiCdsFeature(CdsFeature):
     def set_note_description(self,value1,value2):
         self.__note_description = value1
         self.__search_note_description = value2
-
-
     def compute_description_error(self):
 
         #If the product description is empty or generic, and the function or note descriptions are not, there is an error
@@ -718,15 +679,17 @@ class NcbiCdsFeature(CdsFeature):
 
             self.__description_field_error = True
 
+    def compute_total_errors(self):
+        if self.get_amino_acid_errors():
+            self.__total_errors += 1
+        if self.get_boundary_error():
+            self.__total_errors += 1
+        if self.__description_field_error:
+            self.__total_errors += 1
+        if self.__locus_tag_missing:
+            self.__total_errors += 1
 
-        #FIXME old code not needed
-        # if (self.__product_description == '' or self.__product_description.lower() == 'hypothetical protein') and \
-        #     ((self.__function_description != '' and self.__function_description.lower() != 'hypothetical protein') or \
-        #     (self.__note_description != '' and self.__note_description.lower() != 'hypothetical protein')):
-        #
-        #     self.__description_field_error = True
-        #FIXME
-
+#TODO be sure to call the compute_total_errors
 
 
     # Define all attribute getters:
@@ -750,6 +713,8 @@ class NcbiCdsFeature(CdsFeature):
         return self.__locus_tag_missing
     def get_description_field_error(self):
         return self.__description_field_error
+    def get_total_errors(self):
+        return self.__total_errors
 
 
 
@@ -794,7 +759,8 @@ class MatchedGenomes:
         self.__phagesdb_ncbi_sequence_mismatch = False
         self.__phagesdb_ncbi_sequence_length_mismatch = False
 
-
+        #Total errors summary
+        self.__total_errors = 0
 
 
 
@@ -823,14 +789,6 @@ class MatchedGenomes:
             #Compare phage names
             pattern1 = re.compile('^' + ph_genome.get_phage_name() + '$')
             pattern2 = re.compile('^' + ph_genome.get_phage_name())
-
-            #FIXME
-            # print find_name(pattern2,ncbi_genome.get_record_description().split(' '))
-            # print find_name(pattern1,ncbi_genome.get_record_source().split(' '))
-            # print find_name(pattern1,ncbi_genome.get_record_organism().split(' '))
-            # print find_name(pattern1,ncbi_genome.get_source_feature_organism().split(' '))
-            # raw_input()
-            #FIXME
 
             if find_name(pattern2,ncbi_genome.get_record_description().split(' ')) == 0 or \
                 find_name(pattern1,ncbi_genome.get_record_source().split(' ')) == 0 or \
@@ -866,10 +824,6 @@ class MatchedGenomes:
             ph_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ph_cds_list:
                 if cds.get_start_end_strand_id() not in ph_start_end_strand_id_set:
-
-                    #FIXME
-                    #print cds.get_start_end_strand_id()
-
                     ph_start_end_strand_id_set.add(cds.get_start_end_strand_id())
                 else:
                     ph_start_end_strand_duplicate_id_set.add(cds.get_start_end_strand_id())
@@ -877,51 +831,22 @@ class MatchedGenomes:
             ph_start_end_strand_id_set = ph_start_end_strand_id_set - ph_start_end_strand_duplicate_id_set
 
 
-            #FIXME
-            # print ph_start_end_strand_id_set
-            # print len(ph_start_end_strand_id_set)
-            #raw_input("Press ENTER")
-
-
-
             ncbi_cds_list = ncbi_genome.get_cds_features()
             ncbi_start_end_strand_id_set = set()
             ncbi_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ncbi_cds_list:
                 if cds.get_start_end_strand_id() not in ncbi_start_end_strand_id_set:
-
                     ncbi_start_end_strand_id_set.add(cds.get_start_end_strand_id())
-                    #FIXME
-                    # print cds.get_start_end_strand_id()
 
                 else:
                     ncbi_start_end_strand_duplicate_id_set.add(cds.get_start_end_strand_id())
             #Remove the duplicate end_strand ids from the main id_set
             ncbi_start_end_strand_id_set = ncbi_start_end_strand_id_set - ncbi_start_end_strand_duplicate_id_set
 
-            #FIXME
-            # print ncbi_start_end_strand_id_set
-            # print len(ncbi_start_end_strand_id_set)
-            #raw_input("Press ENTER")
-
-
             #Create the perfect matched and unmatched sets
             ph_unmatched_start_end_strand_id_set = ph_start_end_strand_id_set - ncbi_start_end_strand_id_set
             ncbi_unmatched_start_end_strand_id_set = ncbi_start_end_strand_id_set - ph_start_end_strand_id_set
             perfect_matched_cds_id_set = ph_start_end_strand_id_set & ncbi_start_end_strand_id_set
-
-
-            #FIXME
-            # print ph_unmatched_start_end_strand_id_set
-            # print len(ph_unmatched_start_end_strand_id_set)
-            # print "\n\n"
-            # print ncbi_unmatched_start_end_strand_id_set
-            # print len(ncbi_unmatched_start_end_strand_id_set)
-            # print "\n\n"
-            # print perfect_matched_cds_id_set #Nothing in this set
-            # print len(perfect_matched_cds_id_set)
-            #raw_input("Check id sets")
-            #FIXME
 
 
             #From the unmatched sets, created second round of end-strand id sets
@@ -934,6 +859,7 @@ class MatchedGenomes:
                         ph_end_strand_id_set.add(cds.get_end_strand_id())
                     else:
                         ph_end_strand_duplicate_id_set.add(cds.get_end_strand_id())
+
             #Remove the duplicate end_strand ids from the main id_set
             ph_end_strand_id_set = ph_end_strand_id_set - ph_end_strand_duplicate_id_set
 
@@ -954,13 +880,6 @@ class MatchedGenomes:
             imperfect_matched_cds_id_set = ph_end_strand_id_set & ncbi_end_strand_id_set
 
 
-            #FIXME
-            # print imperfect_matched_cds_id_set
-            # print len(imperfect_matched_cds_id_set)
-            #raw_input("Check imperfect set")
-
-
-
             #Now go back through all cds features and assign to the appropriate dictionary or list
             ph_perfect_matched_cds_dict = {}
             ph_imperfect_matched_cds_dict = {}
@@ -976,11 +895,6 @@ class MatchedGenomes:
                     ph_unmatched_cds_list.append(cds)
 
 
-            #FIXME
-            # print ph_perfect_matched_cds_dict
-            # print ph_perfect_matched_cds_dict.keys()
-            #raw_input("Check ph perfect match dict")
-
             ncbi_perfect_matched_cds_dict = {}
             ncbi_imperfect_matched_cds_dict = {}
             ncbi_unmatched_cds_list = []
@@ -994,20 +908,8 @@ class MatchedGenomes:
                     ncbi_unmatched_cds_list.append(cds)
 
 
-
-            #FIXME
-            # print ncbi_perfect_matched_cds_dict
-            # print ncbi_perfect_matched_cds_dict.keys()
-            #raw_input("Check ncbi perfect match dict")
-
-
             #Create MatchedCdsFeatures objects
             for start_end_strand_tup in perfect_matched_cds_id_set:
-
-                #FIXME
-                # print start_end_strand_tup
-                # print ph_perfect_matched_cds_dict[start_end_strand_tup]
-
 
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_perfect_matched_cds_dict[start_end_strand_tup])
@@ -1154,6 +1056,10 @@ class MatchedCdsFeatures:
         self.__phamerator_ncbi_different_start_sites = False #True = there are different start sites
         self.__phamerator_ncbi_different_descriptions = False #True = there are different gene descriptions
 
+        #Total errors summary
+        self.__total_errors = 0
+
+
 
     # Define all attribute setters:
     def set_phamerator_feature(self,value):
@@ -1179,25 +1085,32 @@ class MatchedCdsFeatures:
         product_description_set.add(self.__ncbi_feature.get_search_product_description())
 
 
-
-
-        #FIXME old code
-        # if self.__ncbi_feature.get_search_product_description().lower() == 'hypothetical protein':
-        #     product_description_set.add('')
-        # else:
-        #     product_description_set.add(self.__ncbi_feature.get_product_description().lower())
-        #FIXME
-
-
         if len(product_description_set) != 1:
             self.__phamerator_ncbi_different_descriptions = True
 
-
-
-
-
         if self.__phamerator_feature.get_translation() != self.__ncbi_feature.get_translation():
             self.__phamerator_ncbi_different_translations = True
+
+
+
+        #Compute total errors
+        #First add all matched feature errors
+        if self.__phamerator_ncbi_different_translations:
+            self.__total_errors += 1
+
+        if self.__phamerator_ncbi_different_start_sites:
+            self.__total_errors += 1
+
+        if self.__phamerator_ncbi_different_descriptions:
+            self.__total_errors += 1
+
+        #Now add all errors from each individual feature
+        self.__total_errors += self.__phamerator_feature.get_total_errors()
+        self.__total_errors += self.__ncbi_feature.get_total_errors()
+
+
+
+
 
     # Define all attribute getters:
     def get_phamerator_feature(self):
@@ -1210,8 +1123,10 @@ class MatchedCdsFeatures:
         return self.__phamerator_ncbi_different_descriptions
     def get_phamerator_ncbi_different_translations(self):
         return self.__phamerator_ncbi_different_translations
+    def get_total_errors(self):
+        return self.__total_errors
 
-
+#TODO be sure to call the get_total_errors
 
 
 class DatabaseSummary:
@@ -1293,9 +1208,18 @@ class DatabaseSummary:
         self.__ph_ncbi_unmatched_ncbi_features_tally = 0
 
 
+        #Calculate summary metrics
+        self.__ph_total_genomes_analyzed = 0
+        self.__ph_genomes_unmatched_to_pdb_tally = 0
+        self.__ph_genomes_unmatched_to_ncbi_tally = 0
+
+
+
     #Define setter functions
     def compute_summary(self):
         for matched_genomes in self.__matched_genomes_list:
+
+            self.__ph_total_genomes_analyzed += 1
             ph_genome = matched_genomes.get_phamerator_genome()
             pdb_genome = matched_genomes.get_phagesdb_genome()
             ncbi_genome = matched_genomes.get_ncbi_genome()
@@ -1326,6 +1250,8 @@ class DatabaseSummary:
                 #Genome data checks
                 if pdb_genome.get_nucleotide_errors():
                     self.__pdb_genomes_with_nucleotide_errors_tally += 1
+            else:
+                self.__ph_genomes_unmatched_to_pdb_tally += 1
 
             #NCBI data
             if isinstance(ncbi_genome,NcbiGenome):
@@ -1348,7 +1274,8 @@ class DatabaseSummary:
                 if ncbi_genome.get_description_field_error_tally() > 0:
                     self.__ncbi_genomes_with_description_field_errors_tally += 1
                     self.__ncbi_description_field_errors_tally += ncbi_genome.get_description_field_error_tally()
-
+            else:
+                self.__ph_genomes_unmatched_to_ncbi_tally += 1
 
             #Phamerator-phagesdb checks
             if matched_genomes.get_phamerator_phagesdb_sequence_mismatch():
@@ -1508,6 +1435,16 @@ class DatabaseSummary:
     def get_ph_ncbi_unmatched_ncbi_features_tally(self):
         return self.__ph_ncbi_unmatched_ncbi_features_tally
 
+    #Database summaries
+    def get_ph_total_genomes_analyzed(self):
+        return self.__ph_total_genomes_analyzed
+    def get_ph_genomes_unmatched_to_pdb_tally(self):
+        return self.__ph_genomes_unmatched_to_pdb_tally
+    def get_ph_genomes_unmatched_to_ncbi_tally(self):
+        return self.__ph_genomes_unmatched_to_ncbi_tally
+
+
+
 #End of class definitions
 
 
@@ -1611,7 +1548,6 @@ dna_alphabet_set = set(IUPAC.IUPACUnambiguousDNA.letters)
 protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
 
 
-
 #Create output directories
 date = time.strftime("%Y%m%d")
 
@@ -1643,9 +1579,9 @@ os.chdir(main_output_path)
 
 
 
-#Determing which types of genomes should be checked: draft, final, gbk
+#Determine which database should be compared: Phamerator, phagesdb, NCBI
 analyze_database_options = [\
-    'none',\
+    'Phamerator',\
     'Phamerator and phagesdb',\
     'Phamerator and NCBI',\
     'Phamerator, phagesdb, and NCBI']
@@ -1662,7 +1598,6 @@ analyze_database_output = \
     'The following databases were compared: ' + \
     analyze_database_options[analyze_database]
 
-#TODO will need to add this to the output files if database selection works
 
 
 valid_database_set = set()
@@ -1674,8 +1609,9 @@ elif analyze_database == 3:
     valid_database_set.add('phagesdb')
     valid_database_set.add('ncbi')
 else:
+    #By default, all Phamerator genomes are checked, \
+    #so 'else' results in only Phamerator genomes checked
     pass
-
 
 
 
@@ -1716,7 +1652,7 @@ if 'ncbi' in valid_database_set:
 
 
 
-#Determe which types of genomes should be checked: draft, final, gbk
+#Determine which types of genomes should be checked: draft, final, gbk
 analyze_genome_status_options = [\
     'none',\
     'draft only',\
@@ -1727,7 +1663,7 @@ analyze_genome_status_options = [\
     'final and gbk',\
     'draft, final, and gbk']
 print '\n\nThe following types of Phamerator genomes can be analyzed:'
-print '0: ' + analyze_genome_status_options[0]
+#print '0: ' + analyze_genome_status_options[0]
 print '1: ' + analyze_genome_status_options[1]
 print '2: ' + analyze_genome_status_options[2]
 print '3: ' + analyze_genome_status_options[3]
@@ -1737,7 +1673,7 @@ print '6: ' + analyze_genome_status_options[6]
 print '7: ' + analyze_genome_status_options[7]
 analyze_genome_status = select_option(\
     "\nWhich type of analysis do you want? ", \
-    set([0,1,2,3,4,5,6,7]))
+    set([1,2,3,4,5,6,7]))
 
 analyze_genome_status_output = \
     'Genomes of the following status types were analyzed: ' + \
@@ -1844,11 +1780,6 @@ ph_total_genome_count = len(ph_genome_data_tuples)
 for genome_tuple in ph_genome_data_tuples:
     print "Processing Phamerator genome %s out of %s" %(ph_genome_count,ph_total_genome_count)
 
-    #FIXME old code
-    # if analyze_gbk_genomes == 'no' and genome_tuple[5] == 'gbk':
-    #     continue
-    #FIXME
-
     if genome_tuple[5] not in valid_genome_status_set:
         continue
     else:
@@ -1889,7 +1820,10 @@ for genome_tuple in ph_genome_data_tuples:
 if len(ph_search_name_duplicate_set) > 0:
     print 'Warning: There are duplicate phage search names in Phamerator. \
     Some Phamerator genomes will not be able to be matched to phagesdb:'
-    output_to_file(list(ph_search_name_duplicate_set),'duplicate_phage_names.csv',analyze_genome_status_output)
+    output_to_file(list(ph_search_name_duplicate_set),\
+                    'duplicate_phage_names.csv',\
+                    analyze_genome_status_output,\
+                    database + '_v' + ph_version)
     raw_input('Press ENTER to proceed')
 
 #Accessions aren't required to be unique in the Phamerator database (but they should be), so there could be duplicates
@@ -1897,7 +1831,10 @@ if len(ph_search_name_duplicate_set) > 0:
 if len(ph_accession_duplicate_set) > 0:
     print 'Warning: There are duplicate accessions in Phamerator. \
     Some Phamerator genomes will not be able to be matched to NCBI records.'
-    output_to_file(list(ph_accession_duplicate_set),'duplicate_phage_accessions.csv',analyze_genome_status_output)
+    output_to_file(list(ph_accession_duplicate_set),\
+                    'duplicate_phage_accessions.csv',\
+                    analyze_genome_status_output,\
+                    database + '_v' + ph_version)
     raw_input('Press ENTER to proceed')
 
 
@@ -1931,6 +1868,7 @@ for gene_tuple in ph_gene_data_tuples:
     gene_object.compute_amino_acid_errors(protein_alphabet_set)
     gene_object.set_start_end_strand_id()
     gene_object.compute_boundary_error()
+    gene_object.compute_total_errors()
     ph_gene_objects_list.append(gene_object)
     ph_gene_count += 1
 
@@ -2044,7 +1982,10 @@ if 'phagesdb' in valid_database_set:
 
         print 'Warning: There are duplicate phage search names in phagesdb. \
         Some phagesdb genomes will not be able to be matched to Phamerator:'
-        output_to_file(list(pdb_search_name_duplicate_set),'duplicate_phage_names.csv')
+        output_to_file(list(pdb_search_name_duplicate_set),\
+                        'duplicate_phage_names.csv',\
+                        analyze_genome_status_output,\
+                        database + '_v' + ph_version)
         raw_input('Press ENTER to proceed')
 
 
@@ -2153,6 +2094,7 @@ if 'ncbi' in valid_database_set:
     failed_accession_report_fh = open(os.path.join(main_output_path,date + '_failed_accession_retrieval.csv'), 'w')
     failed_accession_report_writer = csv.writer(failed_accession_report_fh)
     failed_accession_report_writer.writerow([date + ' Database comparison'])
+    failed_accession_report_writer.writerow([database + '_v' + ph_version])
     failed_accession_report_writer.writerow([analyze_genome_status_output])
     failed_accession_report_writer.writerow([analyze_database_output])
     failed_accession_report_writer.writerow(['Accessions unable to be retrieved from NCBI:'])
@@ -2310,7 +2252,7 @@ if 'ncbi' in valid_database_set:
                 gene_object.set_start_end_strand_id()
                 gene_object.compute_boundary_error()
                 gene_object.compute_description_error()
-
+                gene_object.compute_total_errors()
                 #Now add to full list of gene objects
                 ncbi_cds_features.append(gene_object)
 
@@ -2422,6 +2364,7 @@ for phage_id in ph_genome_object_dict.keys():
 unmatched_genome_output_fh = open(os.path.join(main_output_path,date + '_database_comparison_unmatched_genomes.csv'), 'w')
 unmatched_genome_output_writer = csv.writer(unmatched_genome_output_fh)
 unmatched_genome_output_writer.writerow([date + ' Database comparison'])
+unmatched_genome_output_writer.writerow([database + '_v' + ph_version])
 unmatched_genome_output_writer.writerow([analyze_genome_status_output])
 unmatched_genome_output_writer.writerow([analyze_database_output])
 unmatched_genome_output_writer.writerow([''])
@@ -2493,6 +2436,7 @@ database_summary_report_fh = open(os.path.join(main_output_path,date + '_databas
 file_handle_list.append(database_summary_report_fh)
 database_summary_report_writer = csv.writer(database_summary_report_fh)
 database_summary_report_writer.writerow([date + ' Database comparison'])
+database_summary_report_writer.writerow([database + '_v' + ph_version])
 database_summary_report_writer.writerow([analyze_genome_status_output])
 database_summary_report_writer.writerow([analyze_database_output])
 
@@ -2502,7 +2446,16 @@ summary_report_fields = [\
 
     '',\
     'Genome summary:',\
-    'total_genomes_analyzed',\
+
+    #Column header
+    'Database comparison metric',\
+
+
+    #Database summaries
+    'ph_total_genomes_analyzed',\
+    'ph_genomes_unmatched_to_pdb_tally',\
+    'ph_genomes_unmatched_to_ncbi_tally',\
+
 
     #Phamerator data
     #General genome data
@@ -2556,6 +2509,9 @@ summary_report_fields = [\
     '',\
     'Gene summary:',\
 
+    #Column header
+    'Database comparison metric',\
+
     #Phamerator feature
     #Gene data checks
     'ph_translation_errors_tally',\
@@ -2585,6 +2541,7 @@ genome_report_fh = open(os.path.join(main_output_path,date + '_database_comparis
 file_handle_list.append(genome_report_fh)
 genome_report_writer = csv.writer(genome_report_fh)
 genome_report_writer.writerow([date + ' Database comparison'])
+genome_report_writer.writerow([database + '_v' + ph_version])
 genome_report_writer.writerow([analyze_genome_status_output])
 genome_report_writer.writerow([analyze_database_output])
 
@@ -2692,15 +2649,18 @@ gene_report_fh = open(os.path.join(main_output_path,date + '_database_comparison
 file_handle_list.append(gene_report_fh)
 gene_report_writer = csv.writer(gene_report_fh)
 gene_report_writer.writerow([date + ' Database comparison'])
+gene_report_writer.writerow([database + '_v' + ph_version])
 gene_report_writer.writerow([analyze_genome_status_output])
 gene_report_writer.writerow([analyze_database_output])
 
 #Create vector of column headers
 gene_report_column_headers = [\
 
-    #Phamerator
+    #Gene summary
     'ph_search_name',\
+    'total_errors',\
 
+    #Phamerator
     #General gene data
     'ph_phage_id',\
     'ph_search_id',\
@@ -2757,9 +2717,15 @@ gene_report_writer.writerow(gene_report_column_headers)
 summary_data_output = []
 summary_data_output.append('')
 summary_data_output.append('')
+summary_data_output.append('tally') #Column header
 
 #First output database summary data
-summary_data_output.append(processed_ph_genome_count)
+summary_data_output.append(summary_object.get_ph_total_genomes_analyzed())
+summary_data_output.append(summary_object.get_ph_genomes_unmatched_to_pdb_tally())
+summary_data_output.append(summary_object.get_ph_genomes_unmatched_to_ncbi_tally())
+
+
+
 
 #Phamerator data
 #General genome data
@@ -2813,6 +2779,8 @@ summary_data_output.append(summary_object.get_pdb_ncbi_sequence_length_mismatch_
 #Gene summaries
 summary_data_output.append('')
 summary_data_output.append('')
+summary_data_output.append('tally') #Column header
+
 
 #Phamerator feature
 #Gene data checks
@@ -2839,7 +2807,7 @@ summary_data_output.append(summary_object.get_ph_ncbi_unmatched_ncbi_features_ta
 
 if len(summary_report_fields) == len(summary_data_output):
     summary_output_index = 0
-    database_summary_report_writer.writerow(['database_comparison_metric','tally']) #Column headers
+    #database_summary_report_writer.writerow(['database_comparison_metric','tally']) #Column headers
     while summary_output_index < len(summary_report_fields):
         database_summary_report_writer.writerow([\
             summary_report_fields[summary_output_index],\
@@ -2982,45 +2950,9 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
 
     perfectly_matched_features = matched_genomes.get_phamerator_ncbi_perfect_matched_features()
-    #FIXME
-    # if isinstance(ph_genome,PhameratorGenome) and isinstance(ncbi_genome,NcbiGenome):
-    #     print ph_genome.get_search_name()
-    #     print ncbi_genome.get_record_organism()
-    #     print perfectly_matched_features
-    #     print len(perfectly_matched_features)
-    #     for element in perfectly_matched_features:
-    #         print element
-    #     #raw_input("Press ENTER")
-    #FIXME
-
     imperfectly_matched_features = matched_genomes.get_phamerator_ncbi_imperfect_matched_features()
-    #FIXME
-    # if isinstance(ph_genome,PhameratorGenome) and isinstance(ncbi_genome,NcbiGenome):
-    #     print ph_genome.get_search_name()
-    #     print ncbi_genome.get_record_organism()
-    #     print imperfectly_matched_features
-    #     print len(imperfectly_matched_features)
-    #     for element in imperfectly_matched_features:
-    #         print element
-    #     #raw_input("Press ENTER")
-    #FIXME
-
     ph_unmatched_features = matched_genomes.get_phamerator_features_unmatched_in_ncbi()
-
-
-    #FIXME
-    # print ph_unmatched_features
-    # print len(ph_unmatched_features)
-    #FIXME
-
-
     ncbi_unmatched_features = matched_genomes.get_ncbi_features_unmatched_in_phamerator()
-
-    #FIXME
-    # print ncbi_unmatched_features
-    # print len(ncbi_unmatched_features)
-    #raw_input()
-    #FIXME
 
     all_features_list = []
     all_features_list.extend(perfectly_matched_features)
@@ -3035,19 +2967,16 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
         feature_data_output = [] #Will hold all data for each gene
 
+        #Gene summaries
         #Add Phamerator genome search name to each gene row regardless of the type of CDS data (matched or unmatched)
         feature_data_output.append(ph_genome.get_search_name())# matched Phamerator search name
+        feature_data_output.append(mixed_feature_object.get_total_errors())# total # of errors for this gene
 
+        #Now retrieve specific data
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
-            #FIXME
-            # print "MatchedCdsFeatures is True"
-            #raw_input("Press ENTER")
             phamerator_feature = mixed_feature_object.get_phamerator_feature()
             ncbi_feature = mixed_feature_object.get_ncbi_feature()
         else:
-            #FIXME
-            # print "MatchedCdsFeatures is False"
-            # print mixed_feature_object
 
             if isinstance(mixed_feature_object,PhameratorCdsFeature):
                 phamerator_feature = mixed_feature_object
@@ -3061,12 +2990,6 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
         #Phamerator feature
         if isinstance(phamerator_feature,PhameratorCdsFeature):
-
-            #FIXME
-            # print "Phamerator feature is True"
-            # print phamerator_feature.get_phage_id()
-            #raw_input("Press ENTER")
-
 
             #General gene data
             feature_data_output.append(phamerator_feature.get_phage_id())# phage_id
@@ -3087,11 +3010,6 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
         else:
 
-            #FIXME
-            # print "Phamerator feature is False"
-            # print phamerator_feature
-
-
             feature_data_output.extend(['','','','','',\
                                         '','','','','',\
                                         '','',''])
@@ -3100,10 +3018,6 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         #NCBI feature
         if isinstance(ncbi_feature,NcbiCdsFeature):
 
-            #FIXME
-            # print "NCBI features is True"
-            # print ncbi_feature.get_locus_tag()
-            #raw_input("Press Enter")
             #General gene data
             feature_data_output.append(ncbi_feature.get_locus_tag())# locus_tag
             feature_data_output.append(ncbi_feature.get_gene_number())# gene_number
@@ -3125,9 +3039,6 @@ for matched_genomes in summary_object.get_matched_genomes_list():
 
 
         else:
-            #FIXME
-            # print "NCBI features is False"
-            # print ncbi_feature
             feature_data_output.extend(['','','','','',\
                                         '','','','','',\
                                         '','','','',''])
