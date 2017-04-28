@@ -443,7 +443,9 @@ class NcbiGenome(AnnotatedGenome):
             if cds_feature.get_search_note_description() != '':
                 self.__note_descriptions_tally += 1
 
-            if cds_feature.get_locus_tag() == '':
+
+
+            if cds_feature.get_locus_tag_missing():
                 self.__missing_locus_tags_tally += 1
             else:
                 pattern4 = re.compile(self.get_search_name())
@@ -451,8 +453,9 @@ class NcbiGenome(AnnotatedGenome):
 
                 if search_result == None:
                     self.__locus_tag_typos_tally += 1
-
+                    cds_feature.set_locus_tag_typo() #Sets this attribute to True
                     #TODO at this point, I will have to add an error to the specific cds_feature
+                    #TODO also make sure it gets implemented downstream
 
 
             if cds_feature.get_description_field_error():
@@ -512,6 +515,7 @@ class CdsFeature:
         self.__start_end_strand_id = ''
         self.__end_strand_id = ''
         self.__boundary_error = False
+        self.__unmatched_error = False #keeps track if it is contains a match or not
 
     # Define all attribute setters:
     def set_left_boundary(self,value):
@@ -545,6 +549,8 @@ class CdsFeature:
             self.__end_strand_id = (str(self.__left_boundary),self.__strand)
         else:
             pass
+    def set_unmatched_error(self):
+        self.__unmatched_error = True
     def compute_boundary_error(self):
         #Check if start and end coordinates are fuzzy
         if not (str(self.__left_boundary).isdigit() and str(self.__right_boundary).isdigit()):
@@ -571,6 +577,8 @@ class CdsFeature:
         return self.__start_end_strand_id
     def get_end_strand_id(self):
         return self.__end_strand_id
+    def get_unmatched_error(self):
+        return self.__unmatched_error
     def get_boundary_error(self):
         return self.__boundary_error
 
@@ -610,9 +618,11 @@ class PhameratorCdsFeature(CdsFeature):
             self.__total_errors += 1
         if self.get_boundary_error():
             self.__total_errors += 1
+        if self.get_unmatched_error():
+            self.__total_errors += 1
 
 
-#TODO be sure to call the compute_total_errors
+
 
     # Define all attribute getters:
     def get_gene_id(self):
@@ -650,6 +660,7 @@ class NcbiCdsFeature(CdsFeature):
 
         # Inititalize all calculated attributes:
         self.__locus_tag_missing = False
+        self.__locus_tag_typo = False #This can only be computed at the genome level since it uses the phage name
         self.__description_field_error = False
         self.__total_errors = 0
 
@@ -657,7 +668,7 @@ class NcbiCdsFeature(CdsFeature):
     # Define all attribute setters:
     def set_locus_tag(self,value):
         self.__locus_tag = value
-        if value == '':
+        if self.__locus_tag == '':
             self.__locus_tag_missing = True
     def set_gene_number(self,value):
         self.__gene_number = value
@@ -670,6 +681,9 @@ class NcbiCdsFeature(CdsFeature):
     def set_note_description(self,value1,value2):
         self.__note_description = value1
         self.__search_note_description = value2
+    def set_locus_tag_typo(self):
+        self.__locus_tag_typo = True
+
     def compute_description_error(self):
 
         #If the product description is empty or generic, and the function or note descriptions are not, there is an error
@@ -688,8 +702,11 @@ class NcbiCdsFeature(CdsFeature):
             self.__total_errors += 1
         if self.__locus_tag_missing:
             self.__total_errors += 1
+        if self.__locus_tag_typo:
+            self.__total_errors += 1
+        if self.get_unmatched_error():
+            self.__total_errors += 1
 
-#TODO be sure to call the compute_total_errors
 
 
     # Define all attribute getters:
@@ -711,6 +728,8 @@ class NcbiCdsFeature(CdsFeature):
         return self.__search_note_description
     def get_locus_tag_missing(self):
         return self.__locus_tag_missing
+    def get_locus_tag_typo(self):
+        return self.__locus_tag_typo
     def get_description_field_error(self):
         return self.__description_field_error
     def get_total_errors(self):
@@ -761,6 +780,7 @@ class MatchedGenomes:
 
         #Total errors summary
         self.__total_errors = 0
+        self.__total_number_genes_with_errors = 0
 
 
 
@@ -932,6 +952,16 @@ class MatchedGenomes:
                     self.__phamerator_ncbi_different_descriptions_tally += 1
                 self.__phamerator_ncbi_imperfect_matched_features.append(matched_cds_object)
 
+
+            #Compute unmatched error for all unmatched features
+            for cds in ph_unmatched_cds_list:
+                cds.set_unmatched_error()
+                cds.compute_total_errors()
+            for cds in ncbi_unmatched_cds_list:
+                cds.set_unmatched_error()
+                cds.compute_total_errors()
+
+
             #Set unmatched cds lists
             self.__phamerator_features_unmatched_in_ncbi = ph_unmatched_cds_list
             self.__ncbi_features_unmatched_in_phamerator = ncbi_unmatched_cds_list
@@ -941,6 +971,7 @@ class MatchedGenomes:
             self.__phamerator_ncbi_imperfect_matched_features_tally = len(self.__phamerator_ncbi_imperfect_matched_features)
             self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
             self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
+
 
         #If there is no matching NCBI genome, assign all Phamerator genes to Unmatched
         else:
@@ -1105,6 +1136,11 @@ class MatchedCdsFeatures:
             self.__total_errors += 1
 
         #Now add all errors from each individual feature
+        #You first compute errors for each individual feature.
+        #This step is performed here instead of in the mainline code
+        #because you need to wait for the feature matching step after the genome matching step
+        self.__phamerator_feature.compute_total_errors()
+        self.__ncbi_feature.compute_total_errors()
         self.__total_errors += self.__phamerator_feature.get_total_errors()
         self.__total_errors += self.__ncbi_feature.get_total_errors()
 
@@ -1125,8 +1161,6 @@ class MatchedCdsFeatures:
         return self.__phamerator_ncbi_different_translations
     def get_total_errors(self):
         return self.__total_errors
-
-#TODO be sure to call the get_total_errors
 
 
 class DatabaseSummary:
@@ -1868,7 +1902,7 @@ for gene_tuple in ph_gene_data_tuples:
     gene_object.compute_amino_acid_errors(protein_alphabet_set)
     gene_object.set_start_end_strand_id()
     gene_object.compute_boundary_error()
-    gene_object.compute_total_errors()
+
     ph_gene_objects_list.append(gene_object)
     ph_gene_count += 1
 
@@ -2185,7 +2219,10 @@ if 'ncbi' in valid_database_set:
                 try:
                     gene_object.set_locus_tag(feature.qualifiers['locus_tag'][0])
                 except:
-                    pass
+                    gene_object.set_locus_tag('')
+
+
+
 
                 #Orientation
                 if feature.strand == 1:
@@ -2252,7 +2289,7 @@ if 'ncbi' in valid_database_set:
                 gene_object.set_start_end_strand_id()
                 gene_object.compute_boundary_error()
                 gene_object.compute_description_error()
-                gene_object.compute_total_errors()
+
                 #Now add to full list of gene objects
                 ncbi_cds_features.append(gene_object)
 
@@ -2698,9 +2735,11 @@ gene_report_column_headers = [\
     'ncbi_translation_error',\
     'ncbi_gene_coords_error',\
     'ncbi_missing_locus_tag',\
+    'ncbi_locus_tag_typo',\
     'ncbi_description_field_error',\
 
     #Phamerator-NCBI checks
+    'ph_ncbi_unmatched_error',\
     'ph_ncbi_description_error',\
     'ph_ncbi_start_coordinate_error',\
     'ph_ncbi_translation_error']
@@ -3035,21 +3074,27 @@ for matched_genomes in summary_object.get_matched_genomes_list():
             feature_data_output.append(ncbi_feature.get_amino_acid_errors())# translation contains std amino acids
             feature_data_output.append(ncbi_feature.get_boundary_error())# contains std start and stop coordinates
             feature_data_output.append(ncbi_feature.get_locus_tag_missing())# missing locus tag
+            feature_data_output.append(ncbi_feature.get_locus_tag_typo())# locus tag typo
             feature_data_output.append(ncbi_feature.get_description_field_error())# description in function or note but not product
 
 
         else:
             feature_data_output.extend(['','','','','',\
                                         '','','','','',\
-                                        '','','','',''])
+                                        '','','','','',''])
 
 
         #Phamerator-NCBI checks
         if isinstance(mixed_feature_object,MatchedCdsFeatures):
+
+            #If this is a matched cds feature, both phamerator and ncbi features should have identical unmatched_error value.
+            feature_data_output.append(mixed_feature_object.get_phamerator_feature().get_unmatched_error())
+
             feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_descriptions())# Phamerator description in product, function, or note description
             feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_start_sites())# same start site
             feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_translations())# same translation
         else:
+            feature_data_output.append(mixed_feature_object.get_unmatched_error())
             feature_data_output.extend(['','',''])
 
 
