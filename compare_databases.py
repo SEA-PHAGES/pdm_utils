@@ -427,7 +427,7 @@ class NcbiGenome(AnnotatedGenome):
         self.__missing_locus_tags_tally = 0
         self.__locus_tag_typos_tally = 0
         self.__description_field_error_tally = 0
-        self.__genes_with_errors_tally = 0 #How many genes in this genome have at least one error?
+
 
     #Define setter functions
     def set_record_name(self,value):
@@ -473,20 +473,8 @@ class NcbiGenome(AnnotatedGenome):
                     self.__locus_tag_typos_tally += 1
                     cds_feature.set_locus_tag_typo() #Sets this attribute to True
 
-                    #TODO also make sure it gets implemented downstream
-
-
             if cds_feature.get_description_field_error():
                 self.__description_field_error_tally += 1
-
-    #TODO need to call this method
-    #Even though this method iterates through the cds features like the compute_ncbi_cds_feature_errors does,
-    #It has to be kept separate, since you need to wait to run this method after all genome and gene matching
-    #is completed.
-    def compute_genes_with_errors_tally(self):
-        for cds_feature in self.get_cds_features():
-            if cds_feature.get_total_errors() > 0:
-                self.__genes_with_errors_tally += 1
 
 
 
@@ -521,8 +509,7 @@ class NcbiGenome(AnnotatedGenome):
         return self.__locus_tag_typos_tally
     def get_description_field_error_tally(self):
         return self.__description_field_error_tally
-    def get_genes_with_errors_tally(self):
-        return self.__genes_with_errors_tally
+
 
 
 class CdsFeature:
@@ -809,7 +796,7 @@ class MatchedGenomes:
         self.__phagesdb_ncbi_sequence_length_mismatch = False
 
         #Total errors summary
-        self.__total_errors = 0
+        self.__contains_errors = False
         self.__total_number_genes_with_errors = 0
 
 
@@ -959,12 +946,20 @@ class MatchedGenomes:
 
 
             #Create MatchedCdsFeatures objects
+            #Compute matched gene errors and tallies
+            #Perfectly matched features
             for start_end_strand_tup in perfect_matched_cds_id_set:
 
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_perfect_matched_cds_dict[start_end_strand_tup])
                 matched_cds_object.set_ncbi_feature(ncbi_perfect_matched_cds_dict[start_end_strand_tup])
                 matched_cds_object.compare_phamerator_ncbi_cds_features()
+
+                if matched_cds_object.get_total_errors() > 0:
+                    self.__total_number_genes_with_errors += 1
+
+
+
                 if matched_cds_object.get_phamerator_ncbi_different_translations():
                     self.__phamerator_ncbi_different_translations_tally += 1
                 if matched_cds_object.get_phamerator_ncbi_different_descriptions():
@@ -972,33 +967,36 @@ class MatchedGenomes:
                 self.__phamerator_ncbi_perfect_matched_features.append(matched_cds_object)
 
 
-
+            #Imperfectly matched features
             for end_strand_tup in imperfect_matched_cds_id_set:
+
                 matched_cds_object = MatchedCdsFeatures()
                 matched_cds_object.set_phamerator_feature(ph_imperfect_matched_cds_dict[end_strand_tup])
                 matched_cds_object.set_ncbi_feature(ncbi_imperfect_matched_cds_dict[end_strand_tup])
                 matched_cds_object.compare_phamerator_ncbi_cds_features()
+
+                if matched_cds_object.get_total_errors() > 0:
+                    self.__total_number_genes_with_errors += 1
+
                 if matched_cds_object.get_phamerator_ncbi_different_descriptions():
                     self.__phamerator_ncbi_different_descriptions_tally += 1
                 self.__phamerator_ncbi_imperfect_matched_features.append(matched_cds_object)
 
 
-            #Compute unmatched error for all unmatched features
+            #Compute unmatched error and gene total errors for all unmatched features
             for cds in ph_unmatched_cds_list:
                 cds.set_unmatched_error()
                 cds.compute_total_errors()
+                if cds.get_total_errors() > 0:
+                    self.__total_number_genes_with_errors += 1
+
             for cds in ncbi_unmatched_cds_list:
                 cds.set_unmatched_error()
                 cds.compute_total_errors()
+                if cds.get_total_errors() > 0:
+                    self.__total_number_genes_with_errors += 1
 
-            #FIXME
-            # #Now that all errors have been computed for each gene, compute how many genes have errors
-            # ph_genome.compute_genes_with_errors_tally()
-            # ncbi_genome.compute_genes_with_errors_tally()
-            ###TODO
-            #Here, define new compute_genes_with_errors_tally method
-            #It should identify the total number of genes that contain at least one error in EITHER
-            #phamerator or NCBI matched gene
+
 
 
             #Set unmatched cds lists
@@ -1018,47 +1016,13 @@ class MatchedGenomes:
             #Set unmatched cds lists, but do NOT count them in the unmatched tally.
             #The unmatched tally should reflect unmatched genes if there is actually a metching NCBI genome.
             self.__phamerator_features_unmatched_in_ncbi = ph_cds_list
-            #self.__phamerator_features_unmatched_in_ncbi_tally = len(self.__phamerator_features_unmatched_in_ncbi)
 
-
-    #TODO get this working
-    def compute_genes_with_errors_tally(self):
-        #Perfectly matched genes
-        for matched_feature in self.__phamerator_ncbi_perfect_matched_features:
-            ph_feature = matched_feature.get_phamerator_feature()
-            ncbi_feature = matched_feature.get_ncbi_feature()
-
-            if ph_feature.get_total_errors() > 0 or \
-                ncbi_feature.get_total_errors() > 0:
-
-                self.__total_number_genes_with_errors += 1
-
-        #Imperfectly matched genes
-        for matched_feature in self.__phamerator_ncbi_imperfect_matched_features:
-            ph_feature = matched_feature.get_phamerator_feature()
-            ncbi_feature = matched_feature.get_ncbi_feature()
-
-            if ph_feature.get_total_errors() > 0 or \
-                ncbi_feature.get_total_errors() > 0:
-
-                self.__total_number_genes_with_errors += 1
-
-        #Unmatched phamerator features
-        for unmatched_feature in self.__phamerator_features_unmatched_in_ncbi:
-            if unmatched_feature.get_total_errors() > 0:
-                self.__total_number_genes_with_errors += 1
-
-        #Unmatched ncbi features
-        for unmatched_feature in self.__ncbi_features_unmatched_in_phamerator:
-            if unmatched_feature.get_total_errors() > 0:
-                self.__total_number_genes_with_errors += 1
-
-
-
-            #TODO
             #Now that all errors have been computed for each gene, compute how many genes have errors
+            #If there is no matching NCBI genome, gene error tallies are only computed for the Phamerator genome
             ph_genome.compute_genes_with_errors_tally()
-            ncbi_genome.compute_genes_with_errors_tally()
+            self.__total_number_genes_with_errors = ph_genome.get_genes_with_errors_tally()
+
+
 
 
     def compare_phamerator_phagesdb_genomes(self):
@@ -1094,6 +1058,85 @@ class MatchedGenomes:
                 self.__phagesdb_ncbi_sequence_mismatch = True
             if pdb_genome.get_length() != ncbi_genome.get_length():
                 self.__phagesdb_ncbi_sequence_length_mismatch = True
+
+
+
+    #TODO in progress
+    def compute_total_errors(self):
+
+        ph_genome = self.__phamerator_genome
+        ncbi_genome = self.__ncbi_genome
+        pdb_genome = self.__phagesdb_genome
+
+
+        if self.__total_number_genes_with_errors > 0:
+            self.__contains_errors = True
+
+
+        #Phamerator genome
+        if ph_genome.get_nucleotide_errors():
+            self.__contains_errors = True
+        if ph_genome.get_status_description_error():
+            self.__contains_errors = True
+        if ph_genome.get_status_accession_error():
+            self.__contains_errors = True
+
+
+        #NCBI genome
+        if isinstance(ncbi_genome,NcbiGenome):
+            if ncbi_genome.get_nucleotide_errors():
+                self.__contains_errors = True
+
+        #phagesdb genome
+        if isinstance(pdb_genome,PhagesdbGenome):
+            if pdb_genome.get_nucleotide_errors():
+                self.__contains_errors = True
+
+
+        #Phamerator-NCBI
+        if self.__phamerator_ncbi_sequence_mismatch:
+            self.__contains_errors = True
+        if self.__phamerator_ncbi_sequence_length_mismatch:
+            self.__contains_errors = True
+        if self.__ncbi_record_header_fields_phage_name_mismatch:
+            self.__contains_errors = True
+        if self.__ncbi_host_mismatch:
+            self.__contains_errors = True
+        if self.__phamerator_ncbi_imperfect_matched_features_tally > 0:
+            self.__contains_errors = True
+        if self.__phamerator_features_unmatched_in_ncbi_tally > 0:
+            self.__contains_errors = True
+        if self.__ncbi_features_unmatched_in_phamerator_tally > 0:
+            self.__contains_errors = True
+        if self.__phamerator_ncbi_different_descriptions_tally > 0:
+            self.__contains_errors = True
+        if self.__phamerator_ncbi_different_translations_tally > 0:
+            self.__contains_errors = True
+
+
+        #Phamerator-phagesdb
+        if self.__phamerator_phagesdb_sequence_mismatch:
+            self.__contains_errors = True
+        if self.__phamerator_phagesdb_sequence_length_mismatch:
+            self.__contains_errors = True
+        if self.__phamerator_phagesdb_host_mismatch:
+            self.__contains_errors = True
+        if self.__phamerator_phagesdb_accession_mismatch:
+            self.__contains_errors = True
+        if self.__phamerator_phagesdb_cluster_subcluster_mismatch:
+            self.__contains_errors = True
+
+        #phagesdb-NCBI
+        if self.__phagesdb_ncbi_sequence_mismatch:
+            self.__contains_errors = True
+        if self.__phagesdb_ncbi_sequence_length_mismatch:
+            self.__contains_errors = True
+
+
+
+
+
+        #TODO
 
 
 
@@ -1150,6 +1193,8 @@ class MatchedGenomes:
         return self.__phamerator_phagesdb_cluster_subcluster_mismatch
     def get_total_number_genes_with_errors(self):
         return self.__total_number_genes_with_errors
+    def get_contains_errors(self):
+        return self.__contains_errors
 
 
 class MatchedCdsFeatures:
@@ -2520,6 +2565,7 @@ for matched_genome_object in matched_genomes_list:
     matched_genome_object.compare_phamerator_ncbi_genomes() #This method automatically calls method to match and compare cds features
     matched_genome_object.compare_phamerator_phagesdb_genomes()
     matched_genome_object.compare_phagesdb_ncbi_genomes()
+    matched_genome_object.compute_total_errors()
     comparison_count += 1
 
 #Now that all individual matched_genome_objects have all computed attributes,
@@ -2667,9 +2713,11 @@ genome_report_writer.writerow([analyze_database_output])
 #Create vector of column headers
 genome_report_column_headers = [\
 
+    'ph_phage_id',\
+    'contains_errors',\
+
     #Phamerator
     #General genome data
-    'ph_phage_id',\
     'ph_phage_name',\
     'ph_search_id',\
     'ph_search_name',\
@@ -2752,11 +2800,11 @@ genome_report_column_headers = [\
     'ph_ncbi_gene_description_error_tally',\
     'ph_ncbi_perfectly_matched_gene_translation_error_tally',\
 
-    #Number of genes with errors is computed separately for phamerator and ncbi genomes,
-    #but these numbers are dependent on how their match status, and therefore
-    #should be reported with the other ph_ncbi error tallies
-    'ph_genes_with_errors_tally',\
-    'ncbi_genes_with_errors_tally',\
+    #Number of genes with errors is computed slightly differently
+    #depending on whethere there are matching Phamerator and NCBI genoems.
+    #Therefore,this metric should be reported with the other ph_ncbi error tallies
+    #even if there is no matching NCBI genome.
+    'ph_ncbi_genes_with_errors_tally',\
 
     #phagesdb-ncbi
     'pdb_ncbi_dna_seq_error',\
@@ -2954,9 +3002,15 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     pdb_genome = matched_genomes.get_phagesdb_genome()
     ncbi_genome = matched_genomes.get_ncbi_genome()
 
+
+
+
+    #Genome summary data
+    genome_data_output.append(ph_genome.get_phage_id())# PhageID
+    genome_data_output.append(matched_genomes.get_contains_errors())# any errors detected in this genome?
+
     #Phamerator data
     #General genome data
-    genome_data_output.append(ph_genome.get_phage_id())# PhageID
     genome_data_output.append(ph_genome.get_phage_name())# Name
     genome_data_output.append(ph_genome.get_search_id())# search_id
     genome_data_output.append(ph_genome.get_search_name())# search name
@@ -3059,15 +3113,9 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     else:
         genome_data_output.extend(['','','','','','','','','',''])
 
+    #Number of genes with errors
+    genome_data_output.append(matched_genomes.get_total_number_genes_with_errors())# # genes with at least one error
 
-    #TODO
-    #Phamerator genes with errors
-    genome_data_output.append(ph_genome.get_genes_with_errors_tally())# # genes with at least one error
-
-    if isinstance(ncbi_genome,NcbiGenome):
-        genome_data_output.append(ncbi_genome.get_genes_with_errors_tally())# # genes with at least one error
-    else:
-        genome_data_output.append('')
 
 
     #Output phagesdb-NCBI checks
