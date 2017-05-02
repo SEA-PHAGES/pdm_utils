@@ -1321,6 +1321,7 @@ for filename in genbank_files:
         phage_data_list = []
 
 
+
         #Create a list to hold summary info on the genome record:
         #Record Name
         #Record ID
@@ -1443,6 +1444,13 @@ for filename in genbank_files:
 
 
         #Accession
+        #This initiates this variable. Since different things affect this variable
+        #depending on whether it is an add or replace action, it is easiest to
+        #initiate it in advance to avoid throwing an error.
+        #TODO make sure this works okay
+        accession_to_upload = ""
+
+
         try:
             #There may be a list of accessions associated with this file. I think the first accession in the list is the most recent.
             #Discard the version suffix if it is present in the Accession field (it might not be present)
@@ -1620,6 +1628,7 @@ for filename in genbank_files:
                     accession_to_upload = ""
             else:
                 accession_to_upload = ""
+
 
 
 
