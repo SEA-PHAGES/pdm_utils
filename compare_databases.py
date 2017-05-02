@@ -35,11 +35,6 @@ except:
 
 #Define several functions
 
-#Print out statements to both the terminal and to the output file
-def write_out(filename,statement):
-    print statement
-    filename.write(statement)
-
 
 #Exits MySQL
 def mdb_exit(message):
@@ -559,7 +554,7 @@ class CdsFeature:
         #frameshift or not. Retrieving the "start" and "end" attributes return the very beginning and end of
         #the feature, disregarding the inner "join" coordinates.
         self.__start_end_strand_id = (str(self.__left_boundary),str(self.__right_boundary),self.__strand)
-    #def set_end_strand_id(self):
+
         #Since this id matched genes with different start sites,
         #the strand impacts whether the left or right boundary is used
         if self.__strand == 'forward':
@@ -1973,10 +1968,10 @@ for genome_tuple in ph_genome_data_tuples:
 #Check if there are any phageName duplications. If there are, they will not be able to be compared to phagesdb data.
 #Output duplicate phage search names to file
 if len(ph_search_name_duplicate_set) > 0:
-    print 'Warning: There are duplicate phage search names in Phamerator. \
-    Some Phamerator genomes will not be able to be matched to phagesdb:'
+    print 'Warning: There are duplicate phage search names in Phamerator.'
+    print 'Some Phamerator genomes will not be able to be matched to phagesdb:'
     output_to_file(list(ph_search_name_duplicate_set),\
-                    'duplicate_phage_names.csv',\
+                    'duplicate_phamerator_phage_names.csv',\
                     analyze_genome_status_output,\
                     database + '_v' + ph_version)
     raw_input('Press ENTER to proceed')
@@ -1984,10 +1979,10 @@ if len(ph_search_name_duplicate_set) > 0:
 #Accessions aren't required to be unique in the Phamerator database (but they should be), so there could be duplicates
 #Output duplicate names to file
 if len(ph_accession_duplicate_set) > 0:
-    print 'Warning: There are duplicate accessions in Phamerator. \
-    Some Phamerator genomes will not be able to be matched to NCBI records.'
+    print 'Warning: There are duplicate accessions in Phamerator.'
+    print 'Some Phamerator genomes will not be able to be matched to NCBI records.'
     output_to_file(list(ph_accession_duplicate_set),\
-                    'duplicate_phage_accessions.csv',\
+                    'duplicate_phamerator_phage_accessions.csv',\
                     analyze_genome_status_output,\
                     database + '_v' + ph_version)
     raw_input('Press ENTER to proceed')
@@ -2131,14 +2126,15 @@ if 'phagesdb' in valid_database_set:
             pdb_genome_dict[pdb_search_name] = genome_object
         pdb_genome_count += 1
 
+    pdb_search_name_duplicate_set.add('muddy')
 
     #phagesdb phage names are unique, but just make sure after they are converted to a search name
     if len(pdb_search_name_duplicate_set) > 0:
 
-        print 'Warning: There are duplicate phage search names in phagesdb. \
-        Some phagesdb genomes will not be able to be matched to Phamerator:'
+        print 'Warning: There are duplicate phage search names in phagesdb.'
+        print 'Some phagesdb genomes will not be able to be matched to Phamerator:'
         output_to_file(list(pdb_search_name_duplicate_set),\
-                        'duplicate_phage_names.csv',\
+                        'duplicate_phagesdb_phage_names.csv',\
                         analyze_genome_status_output,\
                         database + '_v' + ph_version)
         raw_input('Press ENTER to proceed')
@@ -2311,7 +2307,7 @@ if 'ncbi' in valid_database_set:
 
 
 
-
+        #Nucleotide sequence and errors
         genome_object.set_sequence(retrieved_record.seq)
         genome_object.compute_nucleotide_errors(dna_alphabet_set)
 
