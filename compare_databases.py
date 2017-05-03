@@ -21,11 +21,15 @@ import json, urllib, urllib2
 try:
     import MySQLdb as mdb
     from Bio import SeqIO, Entrez
+    from Bio.SeqRecord import SeqRecord
+    from Bio.Seq import Seq
     from Bio.Alphabet import IUPAC
 except:
     print "\nUnable to import one or more of the following third-party modules: \n\n\
         MySQLdb\n\
         Biopython SeqIO\n\
+        Biopython Seq,\n\
+        Biopython SeqRecord,\n\
         Biopython Entrez\n\
         Biopython IUPAC\n"
     print "\n\nInstall modules and try again.\n\n"
@@ -1765,16 +1769,37 @@ else:
 
 
 
+#TODO
+#Set up phagesdb fasta file folder if selected by user
+if 'phagesdb' in valid_database_set:
+
+
+    #Determine if fasta files should be saved.
+    save_phagesdb_records = select_option(\
+        "\n\nDo you want to save retrieved phagesdb records to disk? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+
+    #Create a folder to store phagesdb records
+    phagesdb_output_folder = '%s_phagesdb_records' % date
+    phagesdb_output_path = os.path.join(main_output_path,phagesdb_output_folder)
+    os.mkdir(phagesdb_output_path)
+
+#TODO
+
+
+
+
 #Set up NCBI parameters if selected by user
 if 'ncbi' in valid_database_set:
 
     #Get email infor for NCBI
-    contact_email = raw_input('Provide email for NCBI: ')
+    contact_email = raw_input('\n\nProvide email for NCBI: ')
 
     batch_size = ''
     batch_size_valid = False
     while batch_size_valid == False:
-        batch_size = raw_input('Record retrieval batch size (must be greater than 0 and recommended is 100-200): ')
+        batch_size = raw_input('\nRecord retrieval batch size (must be greater than 0 and recommended is 100-200): ')
         print "\n\n"
         if batch_size.isdigit():
             batch_size = int(batch_size)
@@ -1787,7 +1812,7 @@ if 'ncbi' in valid_database_set:
             print 'Invalid choice.'
             print "\n\n"
 
-    #Determine which type of updates will be performed.
+    #Determine if NCBI records should be saved
     save_ncbi_records = select_option(\
         "\n\nDo you want to save retrieved NCBI records to disk? (yes or no) ", \
         set(['yes','y','no','n']))
@@ -2126,7 +2151,25 @@ if 'phagesdb' in valid_database_set:
             pdb_genome_dict[pdb_search_name] = genome_object
         pdb_genome_count += 1
 
-    pdb_search_name_duplicate_set.add('muddy')
+
+
+
+        #TODO
+        #If selected by user, save retrieved record to file
+        if save_phagesdb_records == 'yes':
+
+            phagesdb_filename = genome_object.get_search_name() + '.fasta'
+
+            #To output a fasta file, a Biopython SeqRecord must be created first
+            phagesdb_fasta_seqrecord = SeqRecord(Seq(genome_object.get_sequence()),\
+                                        id=genome_object.get_search_name(),\
+                                        description='')
+            SeqIO.write(phagesdb_fasta_seqrecord,os.path.join(phagesdb_output_path,phagesdb_filename),'fasta')
+        #TODO
+
+
+
+
 
     #phagesdb phage names are unique, but just make sure after they are converted to a search name
     if len(pdb_search_name_duplicate_set) > 0:
