@@ -1301,7 +1301,7 @@ for filename in all_files:
 
 
 #Iterate over each genbank-formatted genome file in the directory and parse all the needed data
-write_out(output_file,"\nA total of %s file(s) containg Genbank-formatted records will be parsed." % len(genbank_files))
+write_out(output_file,"\nA total of %s file(s) containing Genbank-formatted records will be parsed." % len(genbank_files))
 for filename in genbank_files:
 
     file_tally += 1

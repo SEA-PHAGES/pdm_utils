@@ -203,26 +203,42 @@ retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-an
 retrieve_pecaan_genomes = select_option("\nDo you want to retrieve auto-annotated genomes from PECAAN? (yes or no) ")
 retrieve_ncbi_genomes = select_option("\nDo you want to retrieve updated NCBI records? (yes or no) ")
 
+
+
+
+
 if retrieve_ncbi_genomes == "yes":
 
     #Get email infor for NCBI
-    contact_email = raw_input("Provide email for NCBI: ")
+    contact_email = raw_input("\n\nProvide email for NCBI: ")
 
-    batch_size = ""
-    batch_size_valid = False
-    while batch_size_valid == False:
-        batch_size = raw_input("Record retrieval batch size (must be greater than 0 and recommended is 100-200): ")
-        print "\n\n"
-        if batch_size.isdigit():
-            batch_size = int(batch_size)
-            if batch_size > 0:
-                batch_size_valid = True
-            else:
-                print "Invalid choice."
-                print "\n\n"
-        else:
-            print "Invalid choice."
-            print "\n\n"
+
+
+    #According to NCBI Entrez documentation, if large numbers of records are requested,
+    #it is recommended to split the list into smaller batches of 'around 500 records'.
+    #Instead of providing the user the option of setting the batch size, it should be
+    #set to a default size of something smaller than 500.
+    batch_size = 300
+
+
+
+    #FIXME the code block below is no longer needed, since the batch size is set to a default
+    # batch_size = ""
+    # batch_size_valid = False
+    # while batch_size_valid == False:
+    #     batch_size = raw_input("Record retrieval batch size (must be greater than 0 and recommended is 100-200): ")
+    #     print "\n\n"
+    #     if batch_size.isdigit():
+    #         batch_size = int(batch_size)
+    #         if batch_size > 0:
+    #             batch_size_valid = True
+    #         else:
+    #             print "Invalid choice."
+    #             print "\n\n"
+    #     else:
+    #         print "Invalid choice."
+    #         print "\n\n"
+    #FIXME the code block above is no longer needed, since the batch size is set to a default
 
 
 
@@ -376,6 +392,10 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
+    #Initialize phagesdb field updates variables
+    field_update_tally = 0
+
+
     #Initialize phagesdb retrieval variables
     phagesdb_retrieved_tally = 0
     phagesdb_failed_tally = 0
@@ -491,7 +511,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             print element
         retrieve_field_updates = "no"
         retrieve_phagesdb_genomes = "no"
-        raw_input("Press ENTER to proceed")
+        raw_input("\n\nPress ENTER to proceed")
 
 
     if len(phamerator_duplicate_accessions) > 0:
@@ -500,7 +520,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             print accession
         retrieve_ncbi_genomes = "no"
 
-        raw_input("Press ENTER to proceed")
+        raw_input("\n\nPress ENTER to proceed")
 
 
     #Retrieve a list of all sequenced phages listed on phagesdb
@@ -521,14 +541,13 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         print "Update parameters in script to enable these functions."
         retrieve_field_updates = "no"
         retrieve_phagesdb_genomes = "no"
-        raw_input("Press ENTER to proceed")
+        raw_input("\n\nPress ENTER to proceed")
 
 
 
 
     #Iterate through each phage in Phamerator
     for genome_data in modified_genome_data_list:
-
 
 
         field_corrections_needed = 0
@@ -674,7 +693,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
         #Determine if any fields need updated
         if retrieve_field_updates == "yes":
-
             #If the Host and/or cluster data needs updated in Phamerator, decide what the value will be to update the Cluster data.
             if phagesdb_subcluster == 'Unspecified':
                 phagesdb_cluster_update = phagesdb_cluster
@@ -694,25 +712,26 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
             #Compare Host genus
             if phamerator_host != phagesdb_host:
-                print "\nPhamerator host %s and phagesdb host %s do not match for phageID %s." %(phamerator_host,phagesdb_host,phamerator_id)
+                #print "\nPhamerator host %s and phagesdb host %s do not match for phageID %s." %(phamerator_host,phagesdb_host,phamerator_id)
                 field_corrections_needed += 1
 
 
             #Compare Accession
             #If the genome status is "gbk", then don't worry about updating the accession
             if phamerator_accession != phagesdb_accession and phamerator_status != "gbk":
-                print "\nPhamerator accession %s and phagesdb accession %s do not match for phageID %s." %(phamerator_accession,phagesdb_accession,phamerator_id)
+                #print "\nPhamerator accession %s and phagesdb accession %s do not match for phageID %s." %(phamerator_accession,phagesdb_accession,phamerator_id)
                 field_corrections_needed += 1
 
 
             #Compare Program
             if phamerator_program != phagesdb_program and phagesdb_program != "none":
-                print "\nPhamerator program %s and phagesdb program %s do not match for phageID %s." %(phamerator_program,phagesdb_program,phamerator_id)
+                #print "\nPhamerator program %s and phagesdb program %s do not match for phageID %s." %(phamerator_program,phagesdb_program,phamerator_id)
                 field_corrections_needed += 1
 
 
             #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
+                field_update_tally += 1
                 field_import_table_writer.writerow(["update",\
                                                     phamerator_id,\
                                                     phagesdb_host,\
@@ -797,12 +816,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #At this point all genomes in Phamerator have been iterated through and matched to phagesdb data
     #All field updates and manually-annotated flatfiles have been retrieved from phagesdb.
     #Report retrieval results.
-    if retrieve_phagesdb_genomes == "yes":
-
-        print "\n\n%s phage(s) were retrieved from phagesdb." %phagesdb_retrieved_tally
-        #print "\n\n%s phage(s) failed to be retrieved from phagesdb:" %phagesdb_failed_tally
-        #for element in phagesdb_failed_list:
-            #print element
 
 
     print "\nPhamerator-phagesdb matched phage tally: %s." %matched_count
@@ -812,7 +825,24 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         for element in unmatched_phage_id_list:
             print element
 
-    raw_input("Press ENTER to continue.")
+    #Field updates
+    if field_update_tally > 0:
+        print "\n\nNew field updates are available."
+    else:
+        print "\n\nNo field updates found."
+
+    #New flatfiles
+    if retrieve_phagesdb_genomes == "yes":
+
+        if phagesdb_retrieved_tally > 0:
+            print "\n\n%s phage(s) were retrieved from phagesdb." %phagesdb_retrieved_tally
+            #print "\n\n%s phage(s) failed to be retrieved from phagesdb:" %phagesdb_failed_tally
+            #for element in phagesdb_failed_list:
+                #print element
+        else:
+            print "\n\nNo new phages were retrieved from phagesdb."
+
+    raw_input("\n\nPress ENTER to continue.")
 
 
 
@@ -996,7 +1026,7 @@ if retrieve_ncbi_genomes == "yes":
     print "Number of records that failed to be retrieved: %s" %tally_retrieval_failure
     print "Number of records retrieved that are NOT more recent than Phamerator record: %s" %tally_retrieved_not_new
     print "Number of records retrieved that should be updated in Phamerator: %s" %tally_retrieved_for_update
-    raw_input("Press ENTER to continue.")
+    raw_input("\n\nPress ENTER to continue.")
 
 
 
@@ -1073,7 +1103,7 @@ if retrieve_pecaan_genomes == "yes":
         for element in pecaan_failed_list:
             print element
 
-    raw_input("Press ENTER to continue.")
+    raw_input("\n\nPress ENTER to continue.")
 
 
 
