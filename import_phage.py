@@ -1730,7 +1730,7 @@ for filename in genbank_files:
 
                 #The genome to be replaced does not match the genome name in the database with the same sequence.
                 if query_results[0][0] != import_genome_replace:
-                    write_out(output_file,"\nError: the genome to be removed, %s, does not match the genome name in database, %s, that has the matching genome sequence to %s." % (import_genome_replace,query_results[0][0],phageName))
+                    write_out(output_file,"\nError: the genome to be removed, %s, does not match the genome name in the database, %s, that has the matching genome sequence to %s." % (import_genome_replace,query_results[0][0],phageName))
                     record_errors += 1
             else:
                 pass
