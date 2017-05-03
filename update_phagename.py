@@ -1,17 +1,18 @@
 #!/usr/bin/env python
-#PYTHON code for updating cluster from CSV
-#Cbowman
+#PYTHON code for updating phage names from CSV
+#Travis Mavrich
+#Modified scripts written by Cbowman
 
 
 import MySQLdb as mdb
-import sys, os, random, colorsys, datetime
+import sys
 
 #Get the parameters
 try:
 	database = sys.argv[1]
 	infile = sys.argv[2]
 except:
-	print "Incorrect Parameters - ./update_cluster.py DATABASE CLUSTERCSV"
+	print "Incorrect Parameters - ./update_phageid.py DATABASE PHAGENAME_CSV"
 	sys.exit(1)
 
 #Get the gene information
@@ -27,8 +28,9 @@ try:
 
 	for line in lines:
 		line = line.split(',')
-		print "update phage set cluster = '" + str(line[1]) + "' where PhageID = '" + str(line[0]) + "';"
-		cur.execute("update phage set cluster = '" + str(line[1]) + "' where PhageID = '" + str(line[0]) + "';")
+		print "update phage set Name = '" + str(line[1]) + "' where PhageID = '" + str(line[0]) + "';"
+		cur.execute("update phage set Name = '" + str(line[1]) + "' where PhageID = '" + str(line[0]) + "';")
+
 	cur.execute("COMMIT")
 	con.close()
 
