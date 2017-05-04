@@ -1,5 +1,19 @@
+This is the current pipeline to update and maintain the Phamerator MySQL database (as of 20170504).
+A suite of scripts enable an interactive, automated pipeline from retrieving new data to freezing a database for publication and pushing to the Hatfull server.
 
-How to process new files (as of 20170504):
+
+Scripts:
+
+1. retrieve_database_updates.py = automatic retrieval of several types of data that is frequently updated in Phamerator
+2. import_phage.py = imports data into Phamerator using a structured csv-formatted 'import table' containing instructions on how to update the database.
+    - this script also performs many quality control checks on Genbank-formatted flatfiles
+3. cdd_pp.py = identifies conserved domains in every gene in the database using parallel processing
+4. k_phamerate.py = creates gene phams using a kmer-based approach (kclust)
+5. export_database.py = Export the updated database from MySQL and upload to the Hatfull server
+6. freeze_database.py = Freeze a version of the database and remove all 'draft' genomes for publication purposes
+7. compare_databases.py = Compares data stored in Phamerator, phagesdb, and NCBI to identify inconsistencies between the three databases
+8. Misc. single-function scripts (e.g. update_geneid.py) = a collection of short scripts to update specific fields in the database.
+    - note: these are not very robust
 
 
 
@@ -7,57 +21,60 @@ Format of import_table.csv file:
     a. Ticket action ("add", "remove", "update", "replace")
     b. PhageID (PhageID, "none")
     c. Host strain (any of the various host species, "Mycobacterium", etc..., "retrieve")
-    d. Cluster ("A1", "A2", etc., "none"; singletons should be "Singleton", "retrieve")
+    d. Cluster or Subcluster ("A1", "A2", etc., "none"; singletons should be "Singleton", "retrieve")
     e. Status ("draft", "final", "gbk", "none")
     f. Description qualifier ("product", "note", "function", "none", "retrieve")
     g. Accession (Accession, "none", "retrieve")
-    h. Program ("SEA","PHIRE","none", "retrieve")
+    h. Program ("SEA","PHIRE","NCBI","none", "retrieve") [this functionality needs to be changed to be more specific for Phamerator needs]
     i. Genome to be replaced (PhageID, "none")
 
 
 
 Important directories:
 
-1. /home/cbowman/PhameratorDB_Management/k_phamerate
+1. ~/PhameratorDB_Management/k_phamerate = git repo containing all phameration scripts/documents
 
-2. /home/cbowman/Databases/Phamerator/Actino_Draft
+2. ~/Databases/Phamerator/Actino_Draft = primary database directory for the Actino_Draft database, storing the current and backup databases and update history
 
-3. /home/cbowman/PhameratorDB_Management/MySQL_queries
-
-
+3. ~/PhameratorDB_Management/mysql_queries = contains gene and genome data for updated databases that serve as a quick reference
 
 
 
 
-In Ubuntu:
+
+
 
 1. Use current Actino_Draft database:
-	a. Open Phamerator and download most up-to-date database.
-	b. Change database in Phamerator so that the program doesn't accidentally try to download newest version while I am manually updating database.
-	c. Create new output folder to store all retrieval and import result files and folders.
-	d. Create new MySQL query output folder to store updated gene and genome data files.
+	a. Open Phamerator and ensure the most up-to-date version of the database has been downloaded into MySQL.
+	b. Change database setting in Phamerator so that the program doesn't accidentally try to download newest version during the phameration process.
+	c. Create new output folder in the Actino_Draft update_history folder to store all retrieval and import result files and folders.
 
-2. Change directory to scripts folder: /home/cbowman/Documents/PhameratorDB_Management/Updates/k_phamerate
+2. In terminal, change directory to scripts folder: ~/PhameratorDB_Management/k_phamerate
 
 
-3. Run the retrieve_database_updates.py script retrieval to check for various types of updates:
-    a. Check for newly sequenced genomes on phagesdb, and pull the auto-annotated genome from PECAAN:        
-    b. Check for new SEA-PHAGES annotated genomes on phagesdb:
+3. Run the retrieve_database_updates.py script to check for various types of updates:
+    a. Check for newly sequenced genomes on phagesdb, and pull the corresponding auto-annotated genomes from PECAAN
+    b. Check for new SEA-PHAGES (SMART or non-SMART) annotated genomes on phagesdb
     c. Check for updates to NCBI records
-    d. Check for updates to HostStrain and Cluster data from phagesdb
+    d. Check for metadata 'field' updates (for HostStrain, Cluster, Subcluster, etc.) from phagesdb
 
 
-4. Manually check for any other genomes that need imported as indicated in the Ticket Tracker:
-    a. Create the appropriate import_table.csv
+4. Manually check for any other genomes that need imported as indicated in the Online Phamerator Ticket Tracker:
+    a. Create the appropriate import_table.csv (If needed)
 
 
 5. For each type of retrieved genomes, run the import_phage.py script to import them into Phamerator:
     a. Organize all genbank-formatted files in the genomes folder
-    b. Check file extensions: ".gb", ".gbf", ".gbk", or ".txt". (If needed, change the file extensions. For example: to change gbf to gb: rename 's/\.gbf$/\.gb/' *.gbf)
+    b. Check file extensions: ".gb", ".gbf", ".gbk", or ".txt". 
     c. Make sure all fields in the import table are populated correctly and the file is in the fields folder
     d. Run ./import_phage.py
-    e. A 'test run' can be performed to verify everything is in place correctly. Then, a 'production run' can be performed to actually make the changes.
-    f. Import mode should always be set to "1".
+    e. Choose run type:
+        - 'test run' can be performed to verify everything is in place correctly. 
+        - 'production run' can be performed to actually make the changes
+        - 'smart run' provides limited functionality for SMART team members to use
+    f. Choose import mode:
+        - 'Standard' import should almost always be chosen
+        - 'All phages' import is for custom database construction and is intended for rare usage.
     g. Review the import log if needed.
 
 
@@ -68,12 +85,12 @@ In Ubuntu:
 
 After all retrieval and update scripts are executed:
 
-6. UPDATE other misc. information (if needed):
+6. Update other misc. information (if needed):
 	a. e.g. Update gene descriptions: ./update_description.py
 	b. e.g. Manually update fields in MySQL Workbench.
 
 
-7. Phamerate the database and download cdd data:
+7. Identify NCBI conserved domains and create phams:
 	a. ./cdd_pp.py Actino_Draft
 	b. ./k_phamerate.py Actino_Draft
 
@@ -81,17 +98,16 @@ After all retrieval and update scripts are executed:
 
 8. Run export_database.py to:
     a. Update version number
-    b. Run MySQL queries
-    c. Create new database and version files
+    b. Run MySQL gene and genome queries (not required, but is useful for quick reference)
+    c. Export the new database and version files
     d. Upload the new files to the webfactional server
 
 
 
-9. Ensure upload worked fine by opening Phamerator on a separate computer (and verifying it updates)
-10. Organize all files: gb files, import table, import log, MySQL queries
-11. Update online ticket tracker page
-12. Update local ticket tracker log
-13. Transfer MySQL queries to separate computer
+9. Ensure upload worked fine by opening Phamerator on a separate computer (not required, but useful to verify no errors occurred)
+10. Update Online Phamerator Ticket Tracker: move resolved tickets to the 'actino_draft_ticket_tracker' spreadsheet in the update_history folder
+11. Copy all resolved import tickets from the import tables to the 'actino_draft_ticket_tracker' spreadsheet in the update_history folder
+12. Move all import folders and files from the working directory to the update_history folder
 
 
 
@@ -117,7 +133,7 @@ Freezing Finals/Gbk_only database:
 
 1. Run freeze_database.py
     - This will create a new database, drop all 'draft' genomes, and generate the new database name (e.g. Actinobacteriophage_123)
-    - After this script runs, the 'frozen' database version is set to 0. It contains incorrect pham data, so it needs re-phamerated.
+    - After this script runs, the 'frozen' database version is set to 0. It now contains inaccurate pham data, so the database needs to be re-phamerated.
     - As a result, no .sql or .version files are generated
     - Also, the script automatically creates a directory to store Current and Backup databases
 
@@ -149,7 +165,7 @@ Freezing Finals/Gbk_only database:
 
 
 ######################
-Alternative methods of performing specific parts of the import process, in the event the code stops working
+Alternative methods of performing specific parts of the import process, in the event the code breaks
 
 
 
@@ -164,7 +180,7 @@ Generate auto-annotated genomes using DNA Master in Windows:
 	    a. for /R %i in (*.fasta) do ren "%i" "%~ni_Draft.fasta"
     3. Using DNAMaster, autoannotate FASTA files and export as gb files:
         a. Command line: DNAMas "C:\Users\Travis Mavrich\Desktop\PhameratorDB\FOLDER_NAME\" B 6047 8
-	    b. Manual in DNA Master: Be sure to choose the correct translation code before you choose to process the files!
+	    b. Or if completed manually in DNA Master GUI: Be sure to choose the correct translation code before you choose to process the files!
     4. Transfer files to Ubuntu
 
 
@@ -177,10 +193,10 @@ Changing specific fields of specific phages in MySQL:
 
 
 Update version number and create a new database file:
-    a. update version number in MySQL workbench
-    b. mysqldump -u root -p --skip-comments Actino_Draft > Actino_Draft.sql
-    c. generate genomedata and genedata files manually in MySQL command line
-    d. echo XX > Actino_Draft.version
+    a. In MySQL workbench or command line: UPDATE version SET version = #
+    b. In terminal, mysqldump -u root -p --skip-comments Actino_Draft > Actino_Draft.sql
+    c. generate genome and gene files manually in MySQL command line
+    d. In terminal, create the version file: echo # > Actino_Draft.version
 
 
 
@@ -246,7 +262,7 @@ Remove draft genomes from database in preparation for freezing:
 
 
 
-Manually drop database:
+Manually drop database from MySQL:
 This can be useful when VM Phamerator GUI encounters an error during the download process of the new database from the server.
 An error results in all data in the MySQL database getting erased, but since the database still exists Phamerator does not re-install.
 
@@ -262,6 +278,10 @@ An error results in all data in the MySQL database getting erased, but since the
 
 
 
+Manually change the file extension for a directory of flatfiles to the permissible extension:
+
+1. navigate to the folder containing flatfiles
+2. run the following command (example provided changes gbf to gb): rename 's/\.gbf$/\.gb/' *.gbf
 
 
 
