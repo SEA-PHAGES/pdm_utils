@@ -65,12 +65,17 @@ except:
             First argument: name of MySQL database that will be checked (e.g. 'Actino_Draft').\n\
             Second argument: directory path to where all reports, update import tables, and retrieved files will be generated.\n\
             All retrieval options create a genomes folder and an import table, if updates are available, with the following format (csv-formatted):\n\
-                    1. Action to implement on the database (add, remove, replace, update)\n\
-                    2. PhageID to add or update\n\
-                    3. Host genus of the updated phage\n\
-                    4. Cluster of the updated phage\n\
-                    5. Field that contains the gene description information (product, note, function)\n\
-                    6. PhageID that will be removed or replaced\n\n"
+                1. Action to implement on the database (add, remove, replace, update)\n\
+                2. PhageID to add or update\n\
+                3. Host genus of the updated phage\n\
+                4. Cluster or subcluster of the updated phage\n\
+                5. Status of the update phage (draft, final, gbk)\n\
+                6. Gene description field of the update phage (product, note, function)\n\
+                7. Accession of the updated phage\n\
+                8. Program of the update phage (this will probably be removed)\n\
+                9. PhageID that will be removed or replaced\n\n"
+
+
     sys.exit(1)
 
 
