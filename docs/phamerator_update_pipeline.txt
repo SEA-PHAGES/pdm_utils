@@ -4,7 +4,7 @@ This is the current pipeline to update and maintain the Phamerator MySQL databas
 
 Install Phamerator and dependencies as outlined in k_phamerate_instructions_CAB.pdf
 
-The only dependency that has since changes is BLAST. The cdd_pp.py script now relies on NCBI BLAST+ executables and NOT the legacy BLAST executables.
+The only dependency that has since changed is BLAST. The cdd_pp.py script now relies on NCBI BLAST+ executables and NOT the legacy BLAST executables.
 
 
 
