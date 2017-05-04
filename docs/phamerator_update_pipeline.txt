@@ -1,4 +1,20 @@
 This is the current pipeline to update and maintain the Phamerator MySQL database (as of 20170504).
+
+
+
+Install Phamerator and dependencies as outlined in k_phamerate_instructions_CAB.pdf
+
+The only dependency that has since changes is BLAST. The cdd_pp.py script now relies on NCBI BLAST+ executables and NOT the legacy BLAST executables.
+
+
+
+
+
+
+
+
+
+
 A suite of scripts enable an interactive, automated pipeline from retrieving new data to freezing a database for publication and pushing to the Hatfull server.
 
 
@@ -8,6 +24,8 @@ Scripts:
 2. import_phage.py = imports data into Phamerator using a structured csv-formatted 'import table' containing instructions on how to update the database.
     - this script also performs many quality control checks on Genbank-formatted flatfiles
 3. cdd_pp.py = identifies conserved domains in every gene in the database using parallel processing
+    - the script contains a hard-coded path to the CDD directory
+    - the script contains a hard-coded path to the BLAST+ toolkit
 4. k_phamerate.py = creates gene phams using a kmer-based approach (kclust)
 5. export_database.py = Export the updated database from MySQL and upload to the Hatfull server
 6. freeze_database.py = Freeze a version of the database and remove all 'draft' genomes for publication purposes
