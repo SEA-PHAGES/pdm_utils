@@ -1443,11 +1443,25 @@ for filename in genbank_files:
             phageNotes = ""
 
 
+        #Author list
+        try:
+            #The retrieved authors can be stored in multiple Reference elements
+            record_references_author_list = []
+            for reference in seq_record.annotations["references"]:
+                if reference.authors != "":
+                    record_references_author_list.append(reference.authors)
+            if len(record_references_author_list) > 0:
+                record_author_string = ";".join(record_references_author_list)
+            else:
+                record_author_string = ""
+        except:
+            record_author_string = ""
+
+
         #Accession
         #This initiates this variable. Since different things affect this variable
         #depending on whether it is an add or replace action, it is easiest to
         #initiate it in advance to avoid throwing an error.
-        #TODO make sure this works okay
         accession_to_upload = ""
 
 
@@ -1688,10 +1702,6 @@ for filename in genbank_files:
 
 
 
-
-
-
-
             #Program data check
             #If the current phamerator program data is NULL (which this script regards as "none"), then there is no conflict
             if import_program != phamerator_program and phamerator_program != "none":
@@ -1749,6 +1759,28 @@ for filename in genbank_files:
             pass
 
 
+
+
+
+        #Author list check
+        #For SEA-PHAGES 'final' genomes, Graham Hatfull should be an Author
+        if import_status == 'final':
+            if record_author_string == "":
+                record_warnings += 1
+                write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
+                print "The genome will continue to be imported."
+                record_errors += question("\nError: missing author data for %s." % phageName)
+            else:
+                pattern5 = re.compile('hatfull')
+                search_result = pattern5.search(record_author_string.lower())
+                if search_result == None:
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
+                    print "The genome will continue to be imported."
+                    record_errors += question("\nError: incorrect author data for %s." % phageName)
+
+
+
         #Determine if the RetrieveRecord field setting
         #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
         #If the genome is not auto-annotated (status = 'gbk') then set to 0 (OFF)
@@ -1785,20 +1817,6 @@ for filename in genbank_files:
             phage_data_list.append(basename)
         else:
             phage_data_list.append(phageName)
-
-
-
-
-        # #TODO this may now be redundant
-        # #Decide which accession to use
-        # if parsed_accession == "none":
-        #     if import_accession == "none":
-        #         accession_to_upload = ""
-        #     else:
-        #         accession_to_upload = import_accession
-        # else:
-        #     accession_to_upload = parsed_accession
-        # #TODO redundant above?
 
 
 
