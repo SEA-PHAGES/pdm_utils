@@ -420,6 +420,8 @@ class NcbiGenome(AnnotatedGenome):
         self.__source_feature_organism = ''
         self.__source_feature_host = ''
         self.__source_feature_lab_host = ''
+        self.__record_authors = ''
+
 
         #Computed data fields
         self.__function_descriptions_tally = 0
@@ -428,6 +430,7 @@ class NcbiGenome(AnnotatedGenome):
         self.__missing_locus_tags_tally = 0
         self.__locus_tag_typos_tally = 0
         self.__description_field_error_tally = 0
+
 
 
     #Define setter functions
@@ -477,6 +480,9 @@ class NcbiGenome(AnnotatedGenome):
             if cds_feature.get_description_field_error():
                 self.__description_field_error_tally += 1
 
+    def set_record_authors(self,value):
+        self.__record_authors = value
+
 
 
     #Define getter functions
@@ -510,6 +516,8 @@ class NcbiGenome(AnnotatedGenome):
         return self.__locus_tag_typos_tally
     def get_description_field_error_tally(self):
         return self.__description_field_error_tally
+    def get_record_authors(self):
+        return self.__record_authors
 
 
 
@@ -780,6 +788,9 @@ class MatchedGenomes:
         self.__ncbi_features_unmatched_in_phamerator_tally = 0
         self.__phamerator_ncbi_different_descriptions_tally = 0
         self.__phamerator_ncbi_different_translations_tally = 0
+        self.__ph_ncbi_author_error = False
+
+
 
 
 
@@ -849,9 +860,14 @@ class MatchedGenomes:
 
                 self.__ncbi_host_mismatch = True
 
-
-
-
+            #Check author list for errors
+            #If the Phamerator genome has a status of 'final', then Graham Hatfull should
+            #be an author on the NCBI record. If status is 'gbk' or 'draft', then no need to check this
+            if ph_genome.get_status() == 'final':
+                pattern5 = re.compile('hatfull')
+                search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
+                if search_result == None:
+                    self.__ph_ncbi_author_error = True
 
 
             #Compare CDS features
@@ -1086,6 +1102,8 @@ class MatchedGenomes:
             if ncbi_genome.get_nucleotide_errors():
                 self.__contains_errors = True
 
+
+
         #phagesdb genome
         if isinstance(pdb_genome,PhagesdbGenome):
             if pdb_genome.get_nucleotide_errors():
@@ -1110,6 +1128,8 @@ class MatchedGenomes:
         if self.__phamerator_ncbi_different_descriptions_tally > 0:
             self.__contains_errors = True
         if self.__phamerator_ncbi_different_translations_tally > 0:
+            self.__contains_errors = True
+        if self.__ph_ncbi_author_error:
             self.__contains_errors = True
 
 
@@ -1187,6 +1207,8 @@ class MatchedGenomes:
         return self.__total_number_genes_with_errors
     def get_contains_errors(self):
         return self.__contains_errors
+    def get_ph_ncbi_author_error(self):
+        return self.__ph_ncbi_author_error
 
 
 class MatchedCdsFeatures:
@@ -1330,6 +1352,7 @@ class DatabaseSummary:
         self.__ph_ncbi_genomes_with_unmatched_ncbi_features_tally = 0
         self.__ph_ncbi_genomes_with_different_descriptions_tally = 0
         self.__ph_ncbi_genomes_with_different_translations_tally = 0
+        self.__ph_ncbi_genomes_with_author_errors_tally = 0
 
         #phagesdb-NCBI checks
         self.__pdb_ncbi_sequence_mismatch_tally = 0
@@ -1427,6 +1450,7 @@ class DatabaseSummary:
                 if ncbi_genome.get_description_field_error_tally() > 0:
                     self.__ncbi_genomes_with_description_field_errors_tally += 1
                     self.__ncbi_description_field_errors_tally += ncbi_genome.get_description_field_error_tally()
+
             else:
                 self.__ph_genomes_unmatched_to_ncbi_tally += 1
 
@@ -1466,6 +1490,8 @@ class DatabaseSummary:
             if matched_genomes.get_phamerator_ncbi_different_translation_tally() > 0:
                 self.__ph_ncbi_genomes_with_different_translations_tally += 1
                 self.__ph_ncbi_different_translation_tally += matched_genomes.get_phamerator_ncbi_different_translation_tally()
+            if matched_genomes.get_ph_ncbi_author_error():
+                self.__ph_ncbi_genomes_with_author_errors_tally += 1
 
 
             #phagesdb-NCBI checks
@@ -1549,6 +1575,10 @@ class DatabaseSummary:
         return self.__ph_ncbi_genomes_with_different_descriptions_tally
     def get_ph_ncbi_genomes_with_different_translations_tally(self):
         return self.__ph_ncbi_genomes_with_different_translations_tally
+    def get_ph_ncbi_genomes_with_author_errors_tally(self):
+        return self.__ph_ncbi_genomes_with_author_errors_tally
+
+
 
     #phagesdb-NCBI checks
     def get_pdb_ncbi_sequence_mismatch_tally(self):
@@ -1769,7 +1799,7 @@ else:
 
 
 
-#TODO
+
 #Set up phagesdb fasta file folder if selected by user
 if 'phagesdb' in valid_database_set:
 
@@ -1784,8 +1814,6 @@ if 'phagesdb' in valid_database_set:
     phagesdb_output_folder = '%s_phagesdb_records' % date
     phagesdb_output_path = os.path.join(main_output_path,phagesdb_output_folder)
     os.mkdir(phagesdb_output_path)
-
-#TODO
 
 
 
@@ -2154,7 +2182,6 @@ if 'phagesdb' in valid_database_set:
 
 
 
-        #TODO
         #If selected by user, save retrieved record to file
         if save_phagesdb_records == 'yes':
 
@@ -2165,9 +2192,6 @@ if 'phagesdb' in valid_database_set:
                                         id=genome_object.get_search_name(),\
                                         description='')
             SeqIO.write(phagesdb_fasta_seqrecord,os.path.join(phagesdb_output_path,phagesdb_filename),'fasta')
-        #TODO
-
-
 
 
 
@@ -2348,6 +2372,16 @@ if 'ncbi' in valid_database_set:
             genome_object.set_record_organism('')
 
 
+        try:
+            #The retrieved authors can be stored in multiple Reference elements
+            record_references = retrieved_record.annotations['references']
+            record_references_author_list = []
+            for reference in record_references:
+                record_references_author_list.append(reference.authors)
+            record_author_string = ';'.join(record_references_author_list)
+            genome_object.set_record_authors(record_author_string)
+        except:
+            genome_object.set_record_authors('')
 
 
         #Nucleotide sequence and errors
@@ -2692,6 +2726,7 @@ summary_report_fields = [\
     'ph_ncbi_sequence_length_mismatch_tally',\
     'ph_ncbi_record_header_phage_mismatch_tally',\
     'ph_ncbi_record_header_host_mismatch_tally',\
+    'ph_ncbi_genomes_with_author_errors_tally',\
     'ph_ncbi_genomes_with_imperfectly_matched_features_tally',\
     'ph_ncbi_genomes_with_unmatched_phamerator_features_tally',\
     'ph_ncbi_genomes_with_unmatched_ncbi_features_tally',\
@@ -2804,6 +2839,7 @@ genome_report_column_headers = [\
     'ncbi_source_feature_organism',\
     'ncbi_source_feature_host',\
     'ncbi_source_feature_lab_host',\
+    'ncbi_authors',\
     'ncbi_dna_seq_length',\
     'ncbi_gene_tally',\
 
@@ -2830,6 +2866,13 @@ genome_report_column_headers = [\
     'ph_ncbi_dna_seq_length_error',\
     'ph_ncbi_record_header_name_error',\
     'ph_ncbi_record_header_host_error',\
+
+
+    #Author error is dependent on Phamerator genome status, so this metric
+    #should be reported with the other ph_ncbi error tallies
+    'ph_ncbi_author_error',\
+
+
     'ph_ncbi_perfectly_matched_gene_tally',\
     'ph_ncbi_imperfectly_matched_gene_tally',\
     'ph_ncbi_unmatched_phamerator_gene_tally',\
@@ -2838,10 +2881,12 @@ genome_report_column_headers = [\
     'ph_ncbi_perfectly_matched_gene_translation_error_tally',\
 
     #Number of genes with errors is computed slightly differently
-    #depending on whethere there are matching Phamerator and NCBI genoems.
+    #depending on whethere there are matching Phamerator and NCBI genomes.
     #Therefore,this metric should be reported with the other ph_ncbi error tallies
     #even if there is no matching NCBI genome.
     'ph_ncbi_genes_with_errors_tally',\
+
+
 
     #phagesdb-ncbi
     'pdb_ncbi_dna_seq_error',\
@@ -2960,6 +3005,10 @@ summary_data_output.append(summary_object.get_ncbi_genomes_with_boundary_errors_
 summary_data_output.append(summary_object.get_ncbi_genomes_with_missing_locus_tags_tally())
 summary_data_output.append(summary_object.get_ncbi_genomes_with_locus_tag_typos_tally())
 
+
+
+
+
 #Phamerator-phagesdb checks
 summary_data_output.append(summary_object.get_ph_pdb_sequence_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_pdb_sequence_length_mismatch_tally())
@@ -2972,6 +3021,7 @@ summary_data_output.append(summary_object.get_ph_ncbi_sequence_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_sequence_length_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_record_header_phage_mismatch_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_record_header_host_mismatch_tally())
+summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_author_errors_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_imperfectly_matched_features_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_unmatched_phamerator_features_tally())
 summary_data_output.append(summary_object.get_ph_ncbi_genomes_with_unmatched_ncbi_features_tally())
@@ -3104,6 +3154,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         genome_data_output.append(ncbi_genome.get_source_feature_organism())# source_feature_organism
         genome_data_output.append(ncbi_genome.get_source_feature_host())# source_feature_host
         genome_data_output.append(ncbi_genome.get_source_feature_lab_host())# source_feature_lab_host
+        genome_data_output.append(ncbi_genome.get_record_authors())# author list
         genome_data_output.append(ncbi_genome.get_length())# sequence_length
         genome_data_output.append(ncbi_genome.get_cds_features_tally())# # genes
 
@@ -3122,7 +3173,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     else:
         genome_data_output.extend(['','','','','','','','','','',\
                                     '','','','','','','','','','',\
-                                    '',''])
+                                    '','',''])
 
     #Phamerator-phagesdb checks
     if isinstance(pdb_genome,PhagesdbGenome):
@@ -3141,6 +3192,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         genome_data_output.append(matched_genomes.get_phamerator_ncbi_sequence_length_mismatch())# sequence length
         genome_data_output.append(matched_genomes.get_ncbi_record_header_fields_phage_name_mismatch())# PhageID or PhageName in record header fields mismatch
         genome_data_output.append(matched_genomes.get_ncbi_host_mismatch())# Host in record header or source feature mismatch
+        genome_data_output.append(matched_genomes.get_ph_ncbi_author_error())# Author list is missing 'Hatfull'
         genome_data_output.append(matched_genomes.get_phamerator_ncbi_perfect_matched_features_tally())# # genes perfectly matched
         genome_data_output.append(matched_genomes.get_phamerator_ncbi_imperfect_matched_features_tally())# # genes imperfectly matched (different start sites)
         genome_data_output.append(matched_genomes.get_phamerator_features_unmatched_in_ncbi_tally())# # Phamerator genes not matched
@@ -3148,7 +3200,8 @@ for matched_genomes in summary_object.get_matched_genomes_list():
         genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_descriptions_tally())# # genes with Phamerator descriptions not in NCBI description fields
         genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_translation_tally())# # genes perfectly matched with different translations
     else:
-        genome_data_output.extend(['','','','','','','','','',''])
+        genome_data_output.extend(['','','','','',\
+                                    '','','','','',''])
 
     #Number of genes with errors
     genome_data_output.append(matched_genomes.get_total_number_genes_with_errors())# # genes with at least one error
