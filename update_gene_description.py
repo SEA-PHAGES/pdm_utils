@@ -17,16 +17,16 @@ try:
 	database = sys.argv[1]
 	infile = sys.argv[2]
 except:
-	print "Incorrect Parameters - ./update_description.py DATABASE DESCRIPTION_CSV"
+	print "Incorrect Parameters - ./update_description.py DATABASE GENE_DESCRIPTION_CSV"
 	sys.exit(1)
 
 #Get the gene information
 try:
-	
+
 	f = open(infile,'r')
 	lines= f.read().splitlines()
 	f.close()
-	
+
 	#Connect
 	con = mdb.connect('localhost', username, password, database)
 	cur = con.cursor()
@@ -40,7 +40,6 @@ try:
 	con.close()
 
 except mdb.Error, e:
-  
+
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-
