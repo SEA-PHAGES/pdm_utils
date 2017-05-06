@@ -2,7 +2,7 @@
 #PYTHON code for executing iterative kClust
 #Charles Bowman
 #20150126
- 
+
 
 import MySQLdb as mdb
 import sys, os, random, colorsys, datetime, getpass
@@ -11,8 +11,12 @@ import sys, os, random, colorsys, datetime, getpass
 try:
 	database = sys.argv[1]
 except:
-	print "Incorrect Parameters - ./k_phamerate.py DATABASE"
-	sys.exit(1)
+
+    print "\n\n\
+            This is a python script to create gene phamilies in the Phamerator database.\n\
+            It requires one argument(s):\n\
+            First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n"
+    sys.exit(1)
 
 #GET u/n and pw
 
@@ -57,13 +61,13 @@ try:
 
 
 except mdb.Error, e:
-  
+
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-    
+
 finally:
-        
-    if con:    
+
+    if con:
         con.close()
 
 
@@ -74,7 +78,7 @@ try:
 	con = mdb.connect('localhost', username, password, database)
 	cur = con.cursor()
 	print "Connected to Database - Fetching GeneIDs and Translations"
-	
+
 	#Clear previous pham data
 	cur.execute("truncate table pham")
 	cur.execute("truncate table pham_color")
@@ -85,23 +89,23 @@ try:
 	tuples = cur.fetchall()
 
 	print `len(tuples)` + " total genes"
-	
+
 	#Build the query file
 	f = open('/tmp/tempquery.txt','w')
 	for tuple in tuples:
 		f.write(">" + tuple[0] + '\n')
 		f.write(tuple[1].replace('-','M') + '\n')
-	
+
 except mdb.Error, e:
-  
+
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-    
-finally:    
-        
+
+finally:
+
     f.close()
-        
-    if con:    
+
+    if con:
         con.close()
 
 #Run the first kClust iteration
@@ -127,14 +131,14 @@ geneIDs = {}
 try:
 	con = mdb.connect('localhost', username, password, database);
 	cur = con.cursor()
-    
+
     	#build the pham dictionary
 	for line in clusters:
 		line = line.split()
 		phams[line[0]] = line[1]
-		
+
 	phams.pop("#", None)
-	
+
 	#build the header dictionary
 	for line in headers:
 		line = line.split()
@@ -147,7 +151,7 @@ try:
 	#do the pham inserts
 	for key in phams:
 		#print "*****"
-		#print "Inserting Gene " + key + " - " + geneIDs[key] + " pham - " + phams[key] 
+		#print "Inserting Gene " + key + " - " + geneIDs[key] + " pham - " + phams[key]
 		#print ""
 		#f.write(`geneIDs[key]` + "\t" + `phams[key]` + "\n")
 		cur.execute("INSERT INTO pham(geneid, name) VALUES (%s, %s)" , (geneIDs[key], phams[key]))
@@ -155,13 +159,13 @@ try:
 	#f.close()
 
 except mdb.Error, e:
-  
+
     print "Error %d: %s" % (e.args[0],e.args[1])
     sys.exit(1)
-    
+
 finally:
 
-    if con:    
+    if con:
         con.close()
 
 #Do the second kClust iteration
@@ -177,10 +181,10 @@ except mdb.Error, e:
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
 
-finally:    
-	if con:    
+finally:
+	if con:
 		con.close()
-	
+
 
 phams = {}
 
@@ -192,7 +196,7 @@ for tuple in tuples:
 	else:
 		phams[tuple[0]] = []
 		phams[tuple[0]].append([tuple[1], tuple[2]])
-		
+
 #Initialize the final consensus file
 c = open('/tmp/consensi.txt','w')
 
@@ -216,7 +220,7 @@ for key in phams:
 		f.close()
 
 		#print "Aligning " + str(key)
-		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q" 
+		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
 		os.system(bashCom)
 
 		#print "Converting " + str(key)
@@ -231,7 +235,7 @@ for key in phams:
 		d.close()
 		c.write(">" + str(key) + '\n')
 		c.write(lines[2] + '\n')
-	
+
 c.close()
 
 #do the second kClust iteration
@@ -276,7 +280,7 @@ for line in headers:
 for key in phams_seconditer:
 	phams_translator[phams_firstiter[key]] = phams_seconditer[key]
 
-for tuple in tuples: 	
+for tuple in tuples:
 	#print tuple[1]
 	phams_penultimate[tuple[1]] = phams_translator[str(int(tuple[0]))]
 	#count whats in what pham
@@ -328,7 +332,7 @@ for pre_key in pre_phams:
 			continue;
 
 	for post_key in post_phams_temp:
-		
+
 		post = post_phams_temp[post_key]
 
 		if pre & post == set():
@@ -393,7 +397,7 @@ del phams_final[0]
 #f = open("/tmp/post_phams.txt", "w")
 
 for key in post_phams:
-	
+
 	#f.write(key + `post_phams[key]` + "\n")
 
 	new_key = highest_pham
@@ -418,7 +422,7 @@ for key in post_phams:
 try:
 	con = mdb.connect('localhost', username, password, database)
 	print "Connected to Database - Inserting Data"
-	cur = con.cursor() 
+	cur = con.cursor()
 
 	cur.execute("truncate table pham")
 	cur.execute("truncate table pham_color")
@@ -431,7 +435,7 @@ try:
 
 		for gene in phams_final[key]:
 			#print "*****"
-			#print "Inserting Gene " + key + " - " + phams_firstiter[key] + " pham - " + phams[key] 
+			#print "Inserting Gene " + key + " - " + phams_firstiter[key] + " pham - " + phams[key]
 			#print ""
 
 			f.write(`gene` + "\t" + `key` + "\n")
@@ -449,13 +453,13 @@ try:
 	cur.execute("COMMIT")
 
 except mdb.Error, e:
-  
+
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-    
+
 finally:
-        
-    if con:    
+
+    if con:
         con.close()
 
 #Do housekeeping on color settings for new phams or orphams
@@ -488,14 +492,14 @@ try:
 		cur.execute("update pham_color set color = %s where id = %s" , (newColor, pham_id))
 
 except mdb.Error, e:
-  
+
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-    
+
 finally:
-        
+
     cur.execute("COMMIT")
-    if con:    
+    if con:
         con.close()
 
 #build miscolored orphams
@@ -521,14 +525,14 @@ try:
 
 
 except mdb.Error, e:
-  
+
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-    
+
 finally:
-        
+
     cur.execute("COMMIT")
-    if con:    
+    if con:
         con.close()
 
 
