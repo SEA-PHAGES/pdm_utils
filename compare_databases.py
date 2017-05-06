@@ -294,6 +294,7 @@ class PhameratorGenome(AnnotatedGenome):
         self.__cluster_subcluster = '' #Combined cluster_subcluster data.
         self.__ncbi_update_flag = ''
         self.__date_last_modified = ''
+        self.__annotation_author = ''
 
         # Computed datafields
         self.__search_id = '' # The phage ID void of "_Draft" and converted to lowercase
@@ -328,6 +329,9 @@ class PhameratorGenome(AnnotatedGenome):
             self.__date_last_modified = ''
         else:
             self.__date_last_modified = value
+    def set_annotation_author(self,value):
+        self.__annotation_author = value
+
     def compute_status_description_error(self):
         #Iterate through all CDS features, see if they have descriptions, then compare to the status
         for feature in self.get_cds_features():
@@ -376,7 +380,8 @@ class PhameratorGenome(AnnotatedGenome):
         return self.__description_tally
     def get_genes_with_errors_tally(self):
         return self.__genes_with_errors_tally
-
+    def get_annotation_author(self):
+        return self.__annotation_author
 
 class PhagesdbGenome(UnannotatedGenome):
 
@@ -863,6 +868,7 @@ class MatchedGenomes:
             #Check author list for errors
             #If the Phamerator genome has a status of 'final', then Graham Hatfull should
             #be an author on the NCBI record. If status is 'gbk' or 'draft', then no need to check this
+            #TODO this logic will need to change if 'gbk' status is retired
             if ph_genome.get_status() == 'final':
                 pattern5 = re.compile('hatfull')
                 search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
@@ -1930,6 +1936,7 @@ file_handle_list = []
 #7 = Accession
 #8 = auto-update NCBI record flag
 #9 = DateLastModified
+#10 = authorship status
 
 #Retrieve current gene data in database
 #0 = PhageID
@@ -1954,7 +1961,7 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     ph_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,status,Cluster,Accession,RetrieveRecord,DateLastModified FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,status,Cluster,Accession,RetrieveRecord,DateLastModified,AnnotationAuthor FROM phage")
     ph_genome_data_tuples = cur.fetchall()
     cur.execute("SELECT PhageID,GeneID,Name,Start,Stop,Orientation,Translation,Notes from gene")
     ph_gene_data_tuples = cur.fetchall()
@@ -1996,6 +2003,7 @@ for genome_tuple in ph_genome_data_tuples:
         genome_object.set_cluster_subcluster(genome_tuple[6])
         genome_object.set_ncbi_update_flag(genome_tuple[8])
         genome_object.set_date_last_modified(genome_tuple[9])
+        genome_object.set_annotation_author(genome_tuple[10])
         genome_object.compute_nucleotide_errors(dna_alphabet_set)
         ph_genome_object_dict[genome_tuple[0]] = genome_object
 
@@ -2802,6 +2810,7 @@ genome_report_column_headers = [\
     'ph_description_tally',\
     'ph_ncbi_update_flag',\
     'ph_date_last_modified',\
+    'ph_annotation_author',\
 
 
     #Genome data checks
@@ -3110,6 +3119,7 @@ for matched_genomes in summary_object.get_matched_genomes_list():
     genome_data_output.append(ph_genome.get_description_tally()) # # genes with descriptions
     genome_data_output.append(ph_genome.get_ncbi_update_flag())# ncbi_update_flag
     genome_data_output.append(ph_genome.get_date_last_modified()) # DateLastModified
+    genome_data_output.append(ph_genome.get_annotation_author()) # AnnotationAuthor
 
 
     #Genome data checks
