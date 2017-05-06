@@ -1764,24 +1764,32 @@ for filename in genbank_files:
 
         #Author list check
         #For SEA-PHAGES 'final' genomes, Graham Hatfull should be an Author
+        #Also, with this check, determine the AnnotationAuthor field setting
         if import_status == 'final':
             if record_author_string == "":
                 record_warnings += 1
                 write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
                 print "The genome will continue to be imported."
                 record_errors += question("\nError: missing author data for %s." % phageName)
+                annotation_author = 0
             else:
-                pattern5 = re.compile('hatfull')
+                pattern5 = re.compile("hatfull")
                 search_result = pattern5.search(record_author_string.lower())
                 if search_result == None:
                     record_warnings += 1
                     write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
                     print "The genome will continue to be imported."
                     record_errors += question("\nError: incorrect author data for %s." % phageName)
+                    annotation_author = 0
+                else:
+                    annotation_author = 1
 
+        elif import_status == 'draft':
+            annotation_author = 1
+        else:
+            annotation_author = 0
 
-
-        #Determine if the RetrieveRecord field setting
+        #Determine the RetrieveRecord field setting
         #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
         #If the genome is not auto-annotated (status = 'gbk') then set to 0 (OFF)
         if genome_data[4] == "draft" or genome_data[4] == "final":
@@ -1790,7 +1798,7 @@ for filename in genbank_files:
             ncbi_update_status = '0'
 
 
-        #Determine if the AnnotationQC field setting
+        #Determine the AnnotationQC field setting
         #All new auto-annotated (status = 'draft') and non-SEA-PHAGES (status = 'gbk') genomes should be set to 0 (OFF)
         #If the genome has been manually annotated (status = 'final') then set to 1 (ON)
         if genome_data[4] == "final":
@@ -1831,9 +1839,11 @@ for filename in genbank_files:
         phage_data_list.append(ncbi_update_status)
         phage_data_list.append(annotation_qc)
         phage_data_list.append(import_program)
+        phage_data_list.append(annotation_author)
 
 
-        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, Program) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
+
+        add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, Program, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
                                         phage_data_list[1],\
                                         phage_data_list[2],\
@@ -1845,7 +1855,8 @@ for filename in genbank_files:
                                         phage_data_list[8],\
                                         phage_data_list[9],\
                                         phage_data_list[10],\
-                                        phage_data_list[11]))
+                                        phage_data_list[11],\
+                                        phage_data_list[12]))
 
         if use_basename == "yes":
             add_replace_statements.append(create_cluster_statement(basename,import_cluster))
