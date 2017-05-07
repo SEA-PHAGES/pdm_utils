@@ -288,6 +288,14 @@ def find_name(expression,list_of_items):
 
 
 
+def change_descriptions():
+   print "These will be ignored, unless this is NOT correct."
+   print "If it is NOT correct, no error will be generated."
+   print "Instead, only gene descriptions in this field will be retained."
+
+
+
+
 
 
 
@@ -1539,7 +1547,9 @@ for filename in genbank_files:
         #If adding a new genome, no genome sequence in database is expected to match the current genome sequence
         if (import_action == "add" and len(query_results) > 0):
             record_errors += 1
-            write_out(output_file,"\nError: these genome(s) in the database currently contain the same genome sequence: %s.\nUnable to upload %s." % (query_results,phageName))
+            write_out(output_file,\
+            "\nError: these genome(s) in the database currently contain the same genome sequence as %s: %s." \
+            % (phageName,query_results))
 
 
         #If replacing a genome:
@@ -1926,9 +1936,9 @@ for filename in genbank_files:
 
                 #ALLPHAGES option
                 if use_basename == "yes":
-                    geneID = basename + "_" + str(cdsCount)
+                    geneID = basename.upper() + "_" + str(cdsCount)
                 else:
-                    geneID = phageName + "_" + str(cdsCount)
+                    geneID = phageName.upper() + "_" + str(cdsCount)
 
 
             #See if the geneID is already in the database
@@ -2215,7 +2225,14 @@ for filename in genbank_files:
             if len(assigned_description_trunc) > 15:
                 assigned_description_trunc = assigned_description_trunc[:15] + "..."
 
-            record_summary_cds.append([feature_locus_tag,feature_product_trunc,feature_function_trunc,feature_note_trunc,feature_transl_table,translation_trunc,geneID,assigned_description_trunc])
+            record_summary_cds.append([feature_locus_tag,\
+                                        feature_product_trunc,\
+                                        feature_function_trunc,\
+                                        feature_note_trunc,\
+                                        feature_transl_table,\
+                                        translation_trunc,\
+                                        geneID,\
+                                        assigned_description_trunc])
 
 
 
@@ -2259,22 +2276,22 @@ for filename in genbank_files:
         if find_name(pattern1,record_name.split(' ')) == 0:
 
             if record_name.split('.')[0] != parsed_accession:
-                print "\nRecord Name does not have the accession number or the identical phage name as found in the record organism field."
+                print "\nRecord name does not have the accession number or the identical phage name as found in the record organism field."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern2,record_def.split(' ')) == 0:
 
-            print "\nRecord Definition does not have identical phage name as found in the record organism field."
+            print "\nRecord definition does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern1,record_source.split(' ')) == 0:
 
-            print "\nRecord Source does not have identical phage name as found in the record organism field."
+            print "\nRecord source does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
         if find_name(pattern1,feature_source_organism.split(' ')) == 0:
 
-            print "\nSource Feature does not have identical phage name as found in the record organism field."
+            print "\nSource feature organism does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
@@ -2290,33 +2307,33 @@ for filename in genbank_files:
 
 
             if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
-                print "\nRecord Definition does not appear to have same host data as found in import table."
+                print "\nRecord definition does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
 
-                print "\nRecord Source does not appear to have same host data as found in import table."
+                print "\nRecord source does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
 
-                print "\nRecord Organism does not appear to have same host data as found in import table."
+                print "\nRecord organism does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
 
-                print "\nSource Feature Organism does not appear to have same host data as found in import table."
+                print "\nSource feature organism does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             #Host and Lab_Host data may not have been present, so skip if it is blank
             if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
 
-                print "\nSource Feature Host does not appear to have same host data as found in import table."
+                print "\nSource feature host does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
             if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
 
-                print "\nSource Feature Lab Host does not appear to have same host data as found in import table."
+                print "\nSource feature lab host does not appear to have same host data as found in import table."
                 record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
@@ -2404,9 +2421,15 @@ for filename in genbank_files:
 
         #If other CDS fields contain descriptions, they can be chosen to replace the default import_cds_qualifier descriptions. Then provide option to verify changes
         changed = ""
+
+
         if (import_cds_qualifier != "product" and feature_product_tally > 0):
 
-           print "\nThere are %s CDS products found. These will be ignored." % feature_product_tally
+           print "\nThere are %s CDS products found." % feature_product_tally
+           change_descriptions()
+
+           #TODO insert message
+
            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
 
                 for feature in all_features_data_list:
@@ -2415,7 +2438,10 @@ for filename in genbank_files:
 
         if (import_cds_qualifier != "function" and feature_function_tally > 0):
 
-            print "\nThere are %s CDS functions found. These will be ignored." % feature_function_tally
+            print "\nThere are %s CDS functions found." % feature_function_tally
+            change_descriptions()
+
+
             if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
 
                 for feature in all_features_data_list:
@@ -2425,7 +2451,9 @@ for filename in genbank_files:
 
         if (import_cds_qualifier != "note" and feature_note_tally > 0):
 
-            print "\nThere are %s CDS notes found. These will be ignored." % feature_note_tally
+            print "\nThere are %s CDS notes found." % feature_note_tally
+            change_descriptions()
+
             if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
 
                 for feature in all_features_data_list:
@@ -2433,8 +2461,9 @@ for filename in genbank_files:
                 changed = "note"
 
         if changed != "":
-             write_out(output_file,"\nCDS descriptions have been changed to the %s field." % changed)
-             record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+            record_warnings += 1
+            write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
+            record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
 
 
         #Add all updated gene feature data to the add_replace_statements list
