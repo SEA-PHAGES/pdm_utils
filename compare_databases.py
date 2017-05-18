@@ -320,6 +320,8 @@ class PhameratorGenome(AnnotatedGenome):
     def set_cluster_subcluster(self,value):
         if value is None:
             self.__cluster_subcluster = 'Singleton'
+        elif value == 'UKN':
+            self.__cluster_subcluster = ''
         else:
             self.__cluster_subcluster = value
     def set_ncbi_update_flag(self,value):
