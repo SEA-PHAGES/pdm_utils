@@ -22,13 +22,16 @@ import getpass
 #Get the command line parameters
 try:
 	database = sys.argv[1]
+	rpsblast_db_dir = sys.argv[2]
 except:
 
-	print "\n\n"
-	print "This is a python script to identify conserved domains in phage genes.\n"
-	print "Ensure the paths to the NCBI rpsblast+ executable and the Cdd database are correct in the script.\n"
-	print "It requires one argument(s):\n"
-	print "First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n"
+	print "\n\n\
+			This is a python script to identify conserved domains in phage genes.\n\
+			Script requires two argument(s):\n\
+			First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
+			Second argument: path to conserved comain database file basename (e.g. ~/Databases/CDD/).\n\
+			Note: script assumes the CDD database basename is 'Cdd' (e.g. ~/Databases/CDD/Cdd.rps).\n\
+			Note: script assumes path to NCBI rpsblast+ executable is '/usr/bin/rpsblast+'.\n\n"
 
 	sys.exit(1)
 
@@ -36,7 +39,31 @@ except:
 
 
 
-def search(geneid, translation, database, username, password):
+
+#Verify the cdd folder exists
+
+#Expand home directory in case "~" home variable was used
+rpsblast_db_dir = os.path.expanduser(rpsblast_db_dir)
+
+#Expand the path to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+rpsblast_db_dir = os.path.abspath(rpsblast_db_dir)
+
+if os.path.isdir(rpsblast_db_dir) == False:
+    print "\n\nInvalid input for CDD folder.\n\n"
+    sys.exit(1)
+
+
+
+
+#Add the basename for all files that constitute the cdd
+rpsblast_db = os.path.join(rpsblast_db_dir,"Cdd")
+
+
+
+
+
+
+def search(geneid, translation, database, username, password, cd_db):
 
 	#IMPORT STUFF
 	import Bio
@@ -48,10 +75,10 @@ def search(geneid, translation, database, username, password):
 	from Bio.Blast import NCBIXML
 	import MySQLdb as mdb
 
-	#DEFINE STUFF - Change variables here for executable and CDD locations 
+	#DEFINE STUFF - Change variables here for executable and CDD locations
 	#rpsblast_exe = "/home/cbowman/Applications/BLAST/bin/rpsblast"                                      #NCBI Legacy Version
 	rpsblast_exe = "/usr/bin/rpsblast+"
-	rpsblast_db = "/home/cbowman/Databases/CDD/Cdd"
+	#rpsblast_db = "/home/cbowman/Databases/CDD/Cdd"
 	query_filename = "/tmp/" + geneid + ".txt"
 	output_filename = "/tmp/" + geneid + "_rps_out.xml"
 	E_VALUE_THRESH = 0.001	#Adjust the expectation cut-off here
@@ -65,18 +92,18 @@ def search(geneid, translation, database, username, password):
 
 
 	#Compile the rpsblast command that will be executed.
-	#outfmt. sets the format of the cdd data. 5 = XML format	
-	rps_command = NcbirpsblastCommandline(cmd=rpsblast_exe, db=rpsblast_db, query= query_filename, evalue=E_VALUE_THRESH,outfmt=5,out=output_filename)		
+	#outfmt. sets the format of the cdd data. 5 = XML format
+	rps_command = NcbirpsblastCommandline(cmd=rpsblast_exe, db=cd_db, query= query_filename, evalue=E_VALUE_THRESH,outfmt=5,out=output_filename)
 	rps_command()
 	output_handle = open(output_filename,"r")
 
 
 
-	
+
 	#PARSE STUFF
 	for record in NCBIXML.parse(output_handle):
-	
-	
+
+
 		if record.alignments:
 			for align in record.alignments:
 				for hsp in align.hsps:
@@ -94,10 +121,10 @@ def search(geneid, translation, database, username, password):
 						elif len(descList) == 1:
 							description = descList[0]
 							DomainID, Name = None
-						
+
 						try: DomainID, Name, description = DomainID.strip(), Name.strip(), description.strip()
 						except: pass # if DomainID, Name or description are None, strip() raises an objection
-						
+
 						#Connect to mysql and post hit
 						con = mdb.connect('localhost', username, password, database)
 						cur = con.cursor()
@@ -105,20 +132,20 @@ def search(geneid, translation, database, username, password):
 						cur.execute(sqlQuery)
 						sqlQuery = """insert into gene_domain (geneid, hit_id, expect, query_start, query_end) VALUES ("%s", "%s", %s, %s, %s)""" % (geneid, align.hit_id, float(hsp.expect), int(hsp.query_start), int(hsp.query_end))
 						cur.execute(sqlQuery)
-						
+
 					except mdb.Error, e:
-					  
+
 					  	if e[0] == 1062:
 					  		#print "Error %d: %s" % (e.args[0],e.args[1])
 					  		print "%s. This hit will be ignored." % e.args[1]
 					  	else:
 					  		sys.exit(1)
-					    
-					finally:    
-		
+
+					finally:
+
 						assert hsp.expect <= E_VALUE_THRESH
-						
-						if con:    
+
+						if con:
 							cur.execute('COMMIT')
 							con.close()
 
@@ -135,17 +162,20 @@ def search(geneid, translation, database, username, password):
 	except mdb.Error, e:
 		print "Error %d: %s" % (e.args[0],e.args[1])
 		sys.exit(1)
-	finally:    
-		if con:    
+	finally:
+		if con:
 			con.close()
-		
+
 
 
 
 
 #GET STUFF
+print "\n\n"
 username = getpass.getpass(prompt='mySQL username:')
+print "\n\n"
 password = getpass.getpass(prompt='mySQL password:')
+print "\n\n"
 con=False #initialize this variable. In case connection can't be made in the try clause, the finally clause to close con won't fail.
 try:
 	print "\n\n\nFetching Genes."
@@ -155,13 +185,13 @@ try:
 	tuples = cur.fetchall()
 
 except mdb.Error, e:
-  
+
 	print "Unable to connect to the database."
 	print "Error %d: %s" % (e.args[0],e.args[1])
 	sys.exit(1)
-    
-finally:    
-	if con:    
+
+finally:
+	if con:
 		con.close()
 
 #IF THERE IS STUFF, PROCESS STUFF
@@ -169,32 +199,25 @@ if tuples:
 	#Set up pp server
 	job_server = pp.Server(secret="password")
 	print "pp initialized, " + `job_server.get_ncpus()` + " CPUs in use"
-	
+
 	#make the jobs
 	jobs = []
 	for tuple in tuples:
-		jobs.append(job_server.submit(search, (tuple[0], tuple[1], database, username, password),(),()))
+		jobs.append(job_server.submit(search, (tuple[0], tuple[1], database, username, password, rpsblast_db),(),()))
 	numgenes = len(tuples)
 	print "%s searches submitted...\n\n\n" % numgenes
-	
+
 	#WAIT FOR STUFF TO BE DONE
-	counter = 0	
+	counter = 0
 	for job in jobs:
 		counter += 1
 		print "%s/%s" %(counter,numgenes)
 		result = job()
 else:
-	print "No genes to process."	
-	
-	
-	
-	
+	print "No genes to process."
+
+
+
+
 #Close script.
 print "\n\n\n\nCDD script completed."
-	
-	
-	
-	
-	
-	
-	
