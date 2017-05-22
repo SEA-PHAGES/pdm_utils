@@ -5,18 +5,27 @@
 #Updated 20161026 by Travis Mavrich
 #NCBI Legacy Blast toolkit no longer supported by Biopython.
 #Script has been updated to use rpsblast+ from NCBI BLAST+ toolkit.
-#For reference, lines of code used for the legacy version are commented with #NCBI Legacy Version
-#Be sure to change rpsblast_exe and rpsblast_db to fit your system
+#Be sure to change rpsblast_exe to fit your system
 #Change SQL server at 82, 107, 126 if yours differ from localhost
 
 
 
 
-#Import modules to set up parallel processing
+#Built-in libraries
 import os, sys
-import MySQLdb as mdb
-import pp
 import getpass
+
+#Third-party libraries
+try:
+	import MySQLdb as mdb
+	import pp #parallel processing
+except:
+    print "\nUnable to import one or more of the following third-party modules: MySQLdb, pp."
+    print "Install modules and try again.\n\n"
+    sys.exit(1)
+
+
+
 
 
 #Get the command line parameters
@@ -68,17 +77,13 @@ def search(geneid, translation, database, username, password, cd_db):
 	#IMPORT STUFF
 	import Bio
 
-	#from Bio.Blast import NCBIStandalone              #NCBI Legacy Version
-
 
 	from Bio.Blast.Applications import NcbirpsblastCommandline
 	from Bio.Blast import NCBIXML
 	import MySQLdb as mdb
 
-	#DEFINE STUFF - Change variables here for executable and CDD locations
-	#rpsblast_exe = "/home/cbowman/Applications/BLAST/bin/rpsblast"                                      #NCBI Legacy Version
+	#DEFINE STUFF - Change variables here for executable
 	rpsblast_exe = "/usr/bin/rpsblast+"
-	#rpsblast_db = "/home/cbowman/Databases/CDD/Cdd"
 	query_filename = "/tmp/" + geneid + ".txt"
 	output_filename = "/tmp/" + geneid + "_rps_out.xml"
 	E_VALUE_THRESH = 0.001	#Adjust the expectation cut-off here
@@ -88,7 +93,6 @@ def search(geneid, translation, database, username, password, cd_db):
 	f.write(">" + geneid + "\n" + translation)
 	f.close()
 
-	#output_handle, error_handle = NCBIStandalone.rpsblast(rpsblast_exe, rpsblast_db, query_filename, expectation=E_VALUE_THRESH)    #NCBI Legacy Version
 
 
 	#Compile the rpsblast command that will be executed.
