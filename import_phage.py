@@ -1288,7 +1288,7 @@ for filename in all_files:
 
     except:
         failed_genome_files.append(filename)
-        write_out(output_file,"\nError:Biopython is unable to parse file %s. This file will not be processed." % filename)
+        write_out(output_file,"\nError: Biopython is unable to parse file %s. This file will not be processed." % filename)
         script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
         continue
