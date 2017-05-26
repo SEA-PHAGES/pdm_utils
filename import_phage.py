@@ -1274,7 +1274,8 @@ for filename in all_files:
     #If the file extension is not admissible, then skip. Otherwise, proceed
     if filename.split('.')[-1] not in admissible_file_types:
         failed_genome_files.append(filename)
-        write_out(output_file,"\nFile %s does not have a valid file extension. This file will not be processed." % filename)
+        write_out(output_file,"\nError: file %s does not have a valid file extension. This file will not be processed." % filename)
+        script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
         continue
 
@@ -1287,19 +1288,22 @@ for filename in all_files:
 
     except:
         failed_genome_files.append(filename)
-        write_out(output_file,"\nBiopython is unable to parse file %s. This file will not be processed." % filename)
+        write_out(output_file,"\nError:Biopython is unable to parse file %s. This file will not be processed." % filename)
+        script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
         continue
 
 
     if parsed_records_tally == 0:
         failed_genome_files.append(filename)
-        write_out(output_file,"\nBiopython was unable to parse any records from file %s. This file will not be processed." % filename)
+        write_out(output_file,"\nError: Biopython was unable to parse any records from file %s. This file will not be processed." % filename)
+        script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
 
     elif parsed_records_tally > 1:
         failed_genome_files.append(filename)
-        write_out(output_file,"\nBiopython found two records in file %s. This file will not be processed." % filename)
+        write_out(output_file,"\nError: Biopython found two records in file %s. This file will not be processed." % filename)
+        script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
 
     elif parsed_records_tally == 1:
