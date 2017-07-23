@@ -730,8 +730,9 @@ for input_row in file_reader:
 
     elif row[8] not in phageProgram_set:
         print "The program %s is not currently in the database." % row[8]
+        print "The program will be set to NCBI."
         table_errors +=  question("\nError: %s is not the correct program for %s." % (row[8],row[1]))
-
+        row[8] = "NCBI"
 
 
 
