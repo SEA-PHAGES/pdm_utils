@@ -713,9 +713,9 @@ for input_row in file_reader:
                 if row[8] in program_long_dict.keys():
                     row[8] = program_long_dict[row[8]]
                 else:
-                    write_out(output_file,"\nError: phagesdb program data for phage %s is not on list of eligible programs." %row[1])
-                    row[8] = "none"
-                    table_errors += 1
+                    write_out(output_file,"\nWarning: phagesdb program data for phage %s is not on list of eligible programs." %row[1])
+                    row[8] = "NCBI"
+                    #table_errors += 1
 
             else:
                 row[8] = "none"
