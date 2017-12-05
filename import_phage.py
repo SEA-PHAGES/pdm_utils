@@ -173,6 +173,53 @@ else:
     run_mode = '1'
     smart_defaults = "yes"
 
+
+
+
+
+#Many times gbk genomes do not have consistent or specific locus tags, which complicates
+#assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
+#by joining PhageID and CDS number. Right now this is only available for the Allphages
+#run mode.
+if use_basename == "yes":
+    print "\n\nCreate GeneIDs from locus tags or PhageID?"
+    print "1: Locus tag"
+    print "2: PhageID"
+    print "\n"
+    geneid_strategy_valid = False
+    while geneid_strategy_valid == False:
+        geneid_strategy = raw_input("\nChoose GeneID strategy (1 or 2): ")
+        if geneid_strategy == '1':
+            geneid_strategy_valid = True
+        elif geneid_strategy == '2':
+            geneid_strategy_valid = True
+        else:
+            print "Invalid choice."
+
+else:
+    geneid_strategy = '1'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Define several functions
 
 #Print out statements to both the terminal and to the output file
@@ -1635,6 +1682,7 @@ for filename in genbank_files:
             if parsed_accession != "none":
                 accession_comparison_set.add(parsed_accession)
 
+
             if len(accession_comparison_set) == 1:
                 accession_to_upload = list(accession_comparison_set)[0]
             elif len(accession_comparison_set) > 1:
@@ -1771,7 +1819,12 @@ for filename in genbank_files:
             add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + import_genome_replace + "';")
 
         else:
-            pass
+            #At this point, if the genome is being added, simply assign the accession data
+            #from the import table to the accession_to_upload variable. The assignment
+            #logic is more complex if the genome is being replaced.
+            if import_accession != "none":
+                accession_to_upload = import_accession
+
 
 
 
@@ -1873,6 +1926,7 @@ for filename in genbank_files:
                                         phage_data_list[11],\
                                         phage_data_list[12]))
 
+
         if use_basename == "yes":
             add_replace_statements.append(create_cluster_statement(basename,import_cluster))
         else:
@@ -1931,10 +1985,23 @@ for filename in genbank_files:
 
 
             #GeneID
-            #Feature_locus_tag is a record of the locus tag found in the file. GeneID is what will be assigned in the database.
+            #Feature_locus_tag is a record of the locus tag found in the file.
+            #GeneID is what will be assigned in the database.
+            #If running in Allphages mode, GeneID may be set to locus tag or phageID.
             try:
                 feature_locus_tag = feature.qualifiers["locus_tag"][0]
-                geneID = feature_locus_tag
+
+
+                #ALLPHAGES option
+                if use_basename == "yes":
+                    if geneid_strategy == '1':
+                        geneID = feature_locus_tag
+                    else:
+                        geneID = basename.upper() + "_" + str(cdsCount)
+                else:
+                    geneID = feature_locus_tag
+
+
             except:
                 feature_locus_tag = ""
                 missing_locus_tag_tally += 1
@@ -1944,6 +2011,7 @@ for filename in genbank_files:
                     geneID = basename.upper() + "_" + str(cdsCount)
                 else:
                     geneID = phageName.upper() + "_" + str(cdsCount)
+
 
 
             #See if the geneID is already in the database
@@ -1961,7 +2029,7 @@ for filename in genbank_files:
             #If there is a geneID duplication conflict, try to resolve it
             old_ID = geneID
             dupe_value = 1
-            while duplicate == True and dupe_value < 20:
+            while duplicate == True and dupe_value < 99:
 
                 geneID = old_ID + "_duplicateID" + str(dupe_value)
                 record_warnings += 1
