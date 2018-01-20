@@ -666,7 +666,7 @@ for input_row in file_reader:
                     #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
                     #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
                     #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, assign the cluster as Unknown.
-                    row[3] = 'UKN'
+                    row[3] = 'UNK'
                else:
                 row[3] = online_data_dict['pcluster']['cluster']
 

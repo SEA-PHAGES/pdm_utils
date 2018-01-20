@@ -612,8 +612,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             if matched_phagesdb_data['pcluster'] is None:
                 #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
                 #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-                #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, the phamerator cluster is listed as 'UKN' (Unknown).
-                phagesdb_cluster = 'UKN'
+                #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, the phamerator cluster is listed as 'UNK' (Unknown).
+                phagesdb_cluster = 'UNK'
 
             else:
                 phagesdb_cluster = matched_phagesdb_data['pcluster']['cluster']

@@ -320,7 +320,7 @@ class PhameratorGenome(AnnotatedGenome):
     def set_cluster_subcluster(self,value):
         if value is None:
             self.__cluster_subcluster = 'Singleton'
-        elif value == 'UKN':
+        elif value == 'UNK':
             self.__cluster_subcluster = ''
         else:
             self.__cluster_subcluster = value
