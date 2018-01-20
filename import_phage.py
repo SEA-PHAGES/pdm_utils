@@ -291,6 +291,9 @@ def retrieve_description(genbank_feature,description_field):
     elif description == "unknown":
         description = ""
 
+    elif description == "conserved hypothetical protein":
+        description = ""
+
     elif description.isdigit():
         description = ""
 
