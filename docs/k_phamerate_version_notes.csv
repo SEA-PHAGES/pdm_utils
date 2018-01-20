@@ -1,0 +1,2 @@
+Tag,Functions with Phamerator database schema version,Notes,Impacted scripts
+V4.2,s2,Last commit before phage.Program field removed and all code that handles Program data is removed.,import_phage; retrieve_database_updates
