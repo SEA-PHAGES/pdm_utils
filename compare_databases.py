@@ -176,6 +176,42 @@ def output_to_file(data_list,filename,genome_status_selected,database_string):
 
 
 
+#Ensure the output filename is unique
+def create_unique_filename(filename_directory,filename_base,filename_ext):
+
+    file_exists = True
+    rename_counter = 0
+    while file_exists == True:
+
+        if rename_counter == 0:
+            unique_filename = filename_base + filename_ext
+        else:
+            unique_filename = filename_base + '_' + str(rename_counter) + filename_ext
+
+        unique_filename_path = os.path.join(filename_directory,unique_filename)
+        file_exists = os.path.isfile(unique_filename_path)
+
+        if file_exists == True:
+            print 'Warning: duplicate output file:'
+            print unique_filename_path
+            print 'Filename will be modified.'
+            raw_input('Press ENTER to proceed')
+            rename_counter += 1
+
+    return unique_filename_path
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1808,6 +1844,23 @@ else:
 
 
 
+
+#Determine if fasta files should be saved.
+save_phamerator_records = select_option(\
+    "\n\nDo you want to save retrieved phamerator records to disk? (yes or no) ", \
+    set(['yes','y','no','n']))
+
+
+#Create a folder to store phamerator records
+phamerator_output_folder = '%s_phamerator_records' % date
+phamerator_output_path = os.path.join(main_output_path,phamerator_output_folder)
+os.mkdir(phamerator_output_path)
+
+
+
+
+
+
 #Set up phagesdb fasta file folder if selected by user
 if 'phagesdb' in valid_database_set:
 
@@ -2025,6 +2078,31 @@ for genome_tuple in ph_genome_data_tuples:
                 ph_accession_set.add(genome_object.get_accession())
         ph_genome_count += 1
         processed_ph_genome_count += 1
+        #Currently, the processed_ph_genome_count variable does not appear to be used.
+
+
+        #If selected by user, save retrieved record to file
+        if save_phamerator_records == 'yes':
+
+            #To output a fasta file, a Biopython SeqRecord must be created first
+            phamerator_fasta_seqrecord = SeqRecord(Seq(genome_object.get_sequence()),\
+                                        id=genome_object.get_search_name(),\
+                                        description='')
+
+            #Create unique filename
+            phamerator_fasta_seqrecord_path = create_unique_filename(\
+                                                phamerator_output_path,
+                                                genome_object.get_search_name(),
+                                                '.fasta')
+            #Output the fasta file
+            SeqIO.write(phamerator_fasta_seqrecord,\
+                                phamerator_fasta_seqrecord_path,\
+                                'fasta')
+
+
+
+
+
 
 
 #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
