@@ -2110,7 +2110,7 @@ for genome_tuple in ph_genome_data_tuples:
 #Output duplicate phage search names to file
 if len(ph_search_name_duplicate_set) > 0:
     print 'Warning: There are duplicate phage search names in Phamerator.'
-    print 'Some Phamerator genomes will not be able to be matched to phagesdb:'
+    print 'Some Phamerator genomes will not be able to be matched to phagesdb.'
     output_to_file(list(ph_search_name_duplicate_set),\
                     'duplicate_phamerator_phage_names.csv',\
                     analyze_genome_status_output,\
@@ -2269,17 +2269,24 @@ if 'phagesdb' in valid_database_set:
 
 
 
-
         #If selected by user, save retrieved record to file
         if save_phagesdb_records == 'yes':
-
-            phagesdb_filename = genome_object.get_search_name() + '.fasta'
 
             #To output a fasta file, a Biopython SeqRecord must be created first
             phagesdb_fasta_seqrecord = SeqRecord(Seq(genome_object.get_sequence()),\
                                         id=genome_object.get_search_name(),\
                                         description='')
-            SeqIO.write(phagesdb_fasta_seqrecord,os.path.join(phagesdb_output_path,phagesdb_filename),'fasta')
+
+            #Create unique filename
+            phagesdb_fasta_seqrecord_path = create_unique_filename(\
+                                                phagesdb_output_path,
+                                                genome_object.get_search_name(),
+                                                '.fasta')
+
+            #Output the fasta file
+            SeqIO.write(phagesdb_fasta_seqrecord,\
+                                phagesdb_fasta_seqrecord_path,\
+                                'fasta')
 
 
 
@@ -2287,7 +2294,7 @@ if 'phagesdb' in valid_database_set:
     if len(pdb_search_name_duplicate_set) > 0:
 
         print 'Warning: There are duplicate phage search names in phagesdb.'
-        print 'Some phagesdb genomes will not be able to be matched to Phamerator:'
+        print 'Some phagesdb genomes will not be able to be matched to Phamerator.'
         output_to_file(list(pdb_search_name_duplicate_set),\
                         'duplicate_phagesdb_phage_names.csv',\
                         analyze_genome_status_output,\
@@ -2612,8 +2619,19 @@ if 'ncbi' in valid_database_set:
                 name_prefix = name_prefix.split(' ')[-2]
             else:
                 name_prefix = name_prefix.split(' ')[-1]
-            ncbi_filename = name_prefix + '__' + genome_object.get_record_accession() + '.gb'
-            SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,ncbi_filename),'genbank')
+
+
+            #Create unique filename
+            ncbi_gb_seqrecord_path = create_unique_filename(\
+                    ncbi_output_path,\
+                    name_prefix + '__' + genome_object.get_record_accession(),\
+                    '.gb')
+
+            #Output the fasta file
+            SeqIO.write(retrieved_record,\
+                                ncbi_gb_seqrecord_path,\
+                                'genbank')
+
 
 
         ncbi_genome_count += 1
