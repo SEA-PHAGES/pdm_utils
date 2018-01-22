@@ -1857,6 +1857,111 @@ for filename in genbank_files:
                     except:
                         feature_source_lab_host = ""
 
+                #Evaluate if tRNA is properly structured
+                elif feature.type == "tRNA":
+
+                    #Retrieve coordinates and sequence
+                    try:
+
+                        #Biopython converts coordinates to 0-index
+                        #Start(left) coordinates are 0-based inclusive (feature starts there)
+                        #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
+                        tRNA_left = int(feature.location.start)
+                        tRNA_right = int(feature.location.end)
+                        #print tRNA_left
+                        #print tRNA_right
+
+                        #Retrieve top strand of tRNA feature. It is NOT necessarily
+                        #in the correct orientation
+                        tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
+                        #print str(tRNA_seq)
+
+
+                        #Convert sequence to reverse complement if it is on bottom strand
+                        if feature.strand == 1:
+                            pass
+                        elif feature.strand == -1:
+                            tRNA_seq = tRNA_seq.reverse_complement()
+                        else:
+                            record_errors += 1
+                            write_out(output_file,"\Error: tRNA does not have proper orientation in %s phage." % phageName)
+                            continue
+
+                        #Check to see if forward strand terminal nucleotide is correct = A or C
+                        if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
+                            record_warnings += 1
+                            write_out(output_file,"\nWarning: tRNA does not appear to be have correct terminal nucleotide in %s phage." % phageName)
+                            record_errors += question("\nError: tRNA feature is not correct in %s phage." % phageName)
+
+                        tRNA_size = len(tRNA_seq)
+                        if tRNA_size < 70 or tRNA_size > 90:
+                            record_warnings += 1
+                            write_out(output_file,"\nWarning: tRNA does not appear to be the correct size in %s phage."  % phageName)
+                            record_errors += question("\nError: tRNA feature is incorrect size in %s phage." % phageName)
+
+                    except:
+                        write_out(output_file,"\nError: tRNA coordinates, orientation, or sequence is incorrect in phage %s." % phageName)
+                        record_errors += 1
+
+
+                    #Retrieve product
+                    try:
+                        tRNA_product = feature.qualifiers['product'][0].lower().strip()
+                        #print tRNA_product
+                    except:
+                        write_out(output_file,"\nError: tRNA does not have product field in phage %s." % phageName)
+                        record_errors += 1
+                        tRNA_product = ''
+
+
+                    #Retrieve note
+                    try:
+                        tRNA_note = feature.qualifiers['note'][0].lower().strip()
+                        #print tRNA_note
+                    except:
+                        #write_out(output_file,"\nError: tRNA does not have note field in phage %s." % phageName)
+                        #record_errors += 1
+                        tRNA_note = ''
+
+                    #This is an initial attempt at checking the tRNA product description
+                    #Ultimately, a regular expression would be better to use
+                    #tRNA product example = 'tRNA-Ser (AGC)'
+
+                    #TODO The code block below functions, but it does not account for
+                    #tRNA-OTHER descriptions.
+                    #The biggest problem is that the expected product and note descriptions
+                    #are expected to change after they reach NCBI, so it is not clear
+                    #how to best address that issue here, since nothing in the import
+                    #table reflects WHERE the annotated genome came from.
+                    # tRNA_product_split1_list = tRNA_product.split('-')
+                    # if len(tRNA_product_split1_list) == 2:
+                    #
+                    #     tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip()
+                    #     tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
+                    #     if len(tRNA_product_split2_list) == 2:
+                    #
+                    #         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip()
+                    #         tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
+                    #         if len(tRNA_product_split3_list) == 2:
+                    #
+                    #             tRNA_product_anticodon = tRNA_product_split3_list[0].strip()
+                    #             if len(tRNA_product_anticodon) != 3:
+                    #                 write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
+                    #                 record_errors += 1
+                    #         else:
+                    #             write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
+                    #             record_errors += 1
+                    #     else:
+                    #         write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
+                    #         record_errors += 1
+                    # else:
+                    #     write_out(output_file,"\nError: tRNA product is incorrect in %s." % phageName)
+                    #     record_errors += 1
+
+                #If feature is not CDS, Source, or tRNA, skip it
+                else:
+                    pass
+
                 continue
 
             else:
@@ -2262,8 +2367,6 @@ for filename in genbank_files:
             import_host_trim = import_host
             if import_host_trim == "Mycobacterium":
                 import_host_trim = import_host_trim[:-3]
-
-            #TODO add Microbacteriophage host trim?
 
             pattern3 = re.compile('^' + import_host_trim)
 
