@@ -1825,7 +1825,14 @@ for filename in genbank_files:
         feature_source_host = ""
         all_features_data_list = []
         all_coordinates_set = set()
-        record_summary_cds = [["Locus Tag","Product","Function","Note","Translation Table","Translation","Assigned GeneID","Assigned Description"]]
+        record_summary_cds = [["Locus Tag",\
+                                "Product",\
+                                "Function",\
+                                "Note",\
+                                "Translation Table",\
+                                "Translation",\
+                                "Assigned GeneID",\
+                                "Assigned Description"]]
 
         for feature in seq_record.features:
 
@@ -2115,7 +2122,8 @@ for filename in genbank_files:
 
 
 
-            #Now that it has acquired all gene feature info, create list of gene data and append to list of all gene feature data
+            #Now that it has acquired all gene feature info, create list of
+            #gene data and append to list of all gene feature data
             #0 = geneID
             #1 = phageName or basename
             #2 = startCoord
@@ -2129,6 +2137,7 @@ for filename in genbank_files:
             #10 = feature_product
             #11 = feature_function
             #12 = feature_note
+            #13 = feature_locus_tag
             addCount+= 1
 
 
@@ -2150,6 +2159,8 @@ for filename in genbank_files:
             feature_data_list.append(feature_product)
             feature_data_list.append(feature_function)
             feature_data_list.append(feature_note)
+            feature_data_list.append(feature_locus_tag)
+
             all_features_data_list.append(feature_data_list)
 
 
@@ -2251,6 +2262,8 @@ for filename in genbank_files:
             import_host_trim = import_host
             if import_host_trim == "Mycobacterium":
                 import_host_trim = import_host_trim[:-3]
+
+            #TODO add Microbacteriophage host trim?
 
             pattern3 = re.compile('^' + import_host_trim)
 
@@ -2377,8 +2390,6 @@ for filename in genbank_files:
            print "\nThere are %s CDS products found." % feature_product_tally
            change_descriptions()
 
-           #TODO insert message
-
            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
 
                 for feature in all_features_data_list:
@@ -2417,7 +2428,18 @@ for filename in genbank_files:
 
         #Add all updated gene feature data to the add_replace_statements list
         for feature in all_features_data_list:
-            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" % (feature[0],feature[1],feature[2],feature[3],feature[4],feature[5],feature[6],feature[7],feature[8],feature[9]))
+            add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
+                                    % (feature[0],\
+                                    feature[1],\
+                                    feature[2],\
+                                    feature[3],\
+                                    feature[4],\
+                                    feature[5],\
+                                    feature[6],\
+                                    feature[7],\
+                                    feature[8],\
+                                    feature[9],\
+                                    feature[13]))
 
 
         #If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
