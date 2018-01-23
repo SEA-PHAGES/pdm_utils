@@ -57,7 +57,7 @@ try:
 except:
     print "\n\n\
             This is a python script to retrieve several types of Phamerator database updates.\n\
-                1. It retrieves new Host and Cluster data from phagesdb.\n\
+                1. It retrieves new Host, Cluster, and Subcluster data from phagesdb.\n\
                 2. It retrieves manually annotated Genbank-formatted flatfiles from phagesdb.\n\
                 3. It retrieves updated Genbank-formatted flatfiles from NCBI.\n\
                 4. It retrieves auto-annotated Genbank-formatted flatfiles from PECAAN.\n\n\n\
@@ -68,12 +68,12 @@ except:
                 1. Action to implement on the database (add, remove, replace, update)\n\
                 2. PhageID to add or update\n\
                 3. Host genus of the updated phage\n\
-                4. Cluster or subcluster of the updated phage\n\
-                5. Status of the update phage (draft, final, gbk)\n\
-                6. Gene description field of the update phage (product, note, function)\n\
-                7. Accession of the updated phage\n\
-                8. PhageID that will be removed or replaced\n\n"
-
+                4. Cluster of the updated phage\n\
+                5. Subcluster of the updated phage\n\
+                6. Status of the update phage (draft, final, gbk)\n\
+                7. Gene description field of the update phage (product, note, function)\n\
+                8. Accession of the updated phage\n\
+                9. PhageID that will be removed or replaced\n\n"
 
     sys.exit(1)
 
@@ -193,9 +193,8 @@ def close_all_files(file_list):
 
 
 
-
 #Determine which type of updates will be performed.
-retrieve_field_updates = select_option("\nDo you want to retrieve Host, Cluster, and Accession updates? (yes or no) ")
+retrieve_field_updates = select_option("\nDo you want to retrieve Host, Cluster, Subcluster, and Accession updates? (yes or no) ")
 retrieve_phagesdb_genomes = select_option("\nDo you want to retrieve manually-annotated genomes from phagesdb? (yes or no) ")
 retrieve_pecaan_genomes = select_option("\nDo you want to retrieve auto-annotated genomes from PECAAN? (yes or no) ")
 retrieve_ncbi_genomes = select_option("\nDo you want to retrieve updated NCBI records? (yes or no) ")
@@ -337,10 +336,11 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #1 = Name
     #2 = HostStrain
     #3 = status
-    #4 = Cluster
+    #4 = Cluster2
     #5 = DateLastModified
     #6 = Accession
     #7 = RetrieveRecord
+    #8 = Subcluster2
     try:
         con = mdb.connect(mysqlhost, username, password, database)
         con.autocommit(False)
@@ -351,10 +351,11 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         sys.exit(1)
 
     try:
+
         cur.execute("START TRANSACTION")
         cur.execute("SELECT version FROM version")
         db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,status,Cluster,DateLastModified,Accession,RetrieveRecord FROM phage")
+        cur.execute("SELECT PhageID,Name,HostStrain,status,Cluster2,DateLastModified,Accession,RetrieveRecord,Subcluster2 FROM phage")
         current_genome_data_tuples = cur.fetchall()
         cur.execute("COMMIT")
         cur.close()
@@ -399,7 +400,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     phamerator_status_set = set()
     phamerator_cluster_set = set()
     phamerator_accession_set = set()
-
+    phamerator_subcluster_set = set()
 
     #Initialize data processing variables
     modified_genome_data_list = []
@@ -420,19 +421,25 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_date = genome_tuple[5]
         phamerator_accession = genome_tuple[6]
         phamerator_retrieve = genome_tuple[7]
+        phamerator_subcluster = genome_tuple[8]
+
 
         #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
         if phamerator_cluster is None:
             phamerator_cluster = 'Singleton'
 
+        #In Phamerator, if Subcluster has not been assigned, Subcluster2 is recorded as '\N'
+        if phamerator_subcluster is None:
+            phamerator_subcluster = 'none'
+
         #Accession data may have version number (e.g. XY12345.1)
         if phamerator_accession is None:
-            phamerator_accession = "none"
+            phamerator_accession = 'none'
 
         elif phamerator_accession.strip() == "":
-            phamerator_accession = "none"
+            phamerator_accession = 'none'
 
-        if phamerator_accession != "none":
+        if phamerator_accession != 'none':
             phamerator_accession = phamerator_accession.split('.')[0]
 
             #Check for accession duplicates
@@ -451,13 +458,22 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         if phamerator_date is None:
             phamerator_date = datetime.strptime('1/1/1900','%m/%d/%Y')
 
-
         phamerator_id_set.add(phamerator_id)
         phamerator_host_set.add(phamerator_host)
         phamerator_cluster_set.add(phamerator_cluster)
+        phamerator_subcluster_set.add(phamerator_subcluster)
 
 
         #Output modified genome data
+        #0 = PhageID
+        #1 = PhageName
+        #2 = Host
+        #3 = Status
+        #4 = Cluster2
+        #5 = DateLastModified
+        #6 = Accession
+        #7 = RetrieveRecord
+        #8 = Subcluster2
         modified_genome_data_list.append([phamerator_id,\
                                             phamerator_name,\
                                             phamerator_host,\
@@ -465,7 +481,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                             phamerator_cluster,\
                                             phamerator_date,\
                                             phamerator_accession,\
-                                            phamerator_retrieve])
+                                            phamerator_retrieve,\
+                                            phamerator_subcluster])
 
 
 
@@ -526,6 +543,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_date = genome_data[5]
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
 
 
 
@@ -548,6 +566,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 #Dictionary of phage data based on unique accessions
                 #Key = accession
                 #Value = phage data list
+                #0 = PhageID
+                #1 = PhageName
+                #2 = Host
+                #3 = Status
+                #4 = Cluster2
+                #5 = DateLastModified
+                #6 = Accession
+                #7 = RetrieveRecord
+                #8 = Subcluster2
                 unique_accession_dict[phamerator_accession] = [phamerator_id,\
                                                                 phamerator_name,\
                                                                 phamerator_host,\
@@ -555,7 +582,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                                 phamerator_cluster,\
                                                                 phamerator_date,\
                                                                 phamerator_accession,\
-                                                                phamerator_retrieve]
+                                                                phamerator_retrieve,\
+                                                                phamerator_subcluster]
 
 
         #The next code block is only applicable if all phage data was successfully retrieved from phagesdb
@@ -607,7 +635,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-
+            #TODO add new data
             #Matched cluster
             if matched_phagesdb_data['pcluster'] is None:
                 #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
@@ -620,8 +648,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
             #Matched subcluster
             if matched_phagesdb_data['psubcluster'] is None:
-                #If a phage has a cluster, but not a subcluster, set subcluster to Unspecified
-                phagesdb_subcluster = 'Unspecified'
+                #If a phage has a cluster, but not a subcluster, set subcluster to 'none'
+                phagesdb_subcluster = 'none'
 
             else:
                 phagesdb_subcluster = matched_phagesdb_data['psubcluster']['subcluster']
@@ -629,22 +657,17 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
         #Determine if any fields need updated
         if retrieve_field_updates == "yes":
-            #If the Host and/or cluster data needs updated in Phamerator, decide what the value will be to update the Cluster data.
-            if phagesdb_subcluster == 'Unspecified':
-                phagesdb_cluster_update = phagesdb_cluster
-            else:
-                phagesdb_cluster_update = phagesdb_subcluster
 
-            #Compare Cluster and Subcluster
-            if phagesdb_subcluster == 'Unspecified':
 
-                if phamerator_cluster != phagesdb_cluster:
-                    #print "\nError: Phamerator Cluster %s does not match with phagesdb Cluster %s for phageID %s." %(phamerator_cluster,phagesdb_cluster,phamerator_id)
-                    field_corrections_needed += 1
+            #Compare Cluster2
+            if phamerator_cluster != phagesdb_cluster:
+                field_corrections_needed += 1
 
-            elif phamerator_cluster != phagesdb_subcluster:
-                    #print "\nError: Phamerator Cluster %s does not match with phagesdb Subcluster %s for phageID %s." %(phamerator_cluster,phagesdb_subcluster,phamerator_id)
-                    field_corrections_needed += 1
+            #Compare Subcluster2
+            if phamerator_subcluster != phagesdb_subcluster:
+                field_corrections_needed += 1
+
+                #TODO add new data above
 
             #Compare Host genus
             if phamerator_host != phagesdb_host:
@@ -658,15 +681,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 #print "\nPhamerator accession %s and phagesdb accession %s do not match for phageID %s." %(phamerator_accession,phagesdb_accession,phamerator_id)
                 field_corrections_needed += 1
 
-
-            #If errors in the Host or Cluster information were identified, create an import ticket to for the import script to implement.
+            #If errors in the Host, Cluster, or Subcluster information were identified, create an import ticket to for the import script to implement.
             if field_corrections_needed > 0:
                 field_update_tally += 1
 
                 field_import_table_writer.writerow(["update",\
                                                     phamerator_id,\
                                                     phagesdb_host,\
-                                                    phagesdb_cluster_update,\
+                                                    phagesdb_cluster,\
+                                                    phagesdb_subcluster,\
                                                     phamerator_status,\
                                                     "none",\
                                                     phagesdb_accession,\
@@ -723,6 +746,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     #Create the new import ticket
                     phagesdb_import_table_writer.writerow(["replace",\
                                                             phage_id_search_name,\
+                                                            "retrieve",\
                                                             "retrieve",\
                                                             "retrieve",\
                                                             "final",\
@@ -871,10 +895,17 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_date = genome_data[5]
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
 
 
         #ncbi_results_headers = 'PhageID','PhageName','Accession','Status','PhameratorDate','RetrievedRecordDate','Result'
-        ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,'NA','retrieval failure'])
+        ncbi_results_writer.writerow([phamerator_id,\
+                                    phamerator_name,\
+                                    phamerator_accession,\
+                                    phamerator_status,\
+                                    phamerator_date,\
+                                    'NA',\
+                                    'retrieval failure'])
 
 
     #Now that all records have been retrieved, check which records are newer than the upload date of the current version in phamerator.
@@ -901,6 +932,7 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_date = genome_data[5]
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
 
 
         #5 Save new records in a folder and create an import table row for them
@@ -908,7 +940,13 @@ if retrieve_ncbi_genomes == "yes":
 
             #print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_date)
             tally_retrieved_for_update += 1
-            ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,retrieved_record_date,'record retrieved for import'])
+            ncbi_results_writer.writerow([phamerator_id,\
+                                        phamerator_name,\
+                                        phamerator_accession,\
+                                        phamerator_status,\
+                                        phamerator_date,\
+                                        retrieved_record_date,\
+                                        'record retrieved for import'])
 
 
 
@@ -929,11 +967,11 @@ if retrieve_ncbi_genomes == "yes":
             ncbi_filename = phamerator_name.lower() + "__" + retrieved_record_accession + ".gb"
             SeqIO.write(retrieved_record,os.path.join(ncbi_output_path,genomes_folder,ncbi_filename),"genbank")
 
-
             ncbi_import_table_writer.writerow(['replace',\
                                                 import_table_name,\
                                                 phamerator_host,\
                                                 phamerator_cluster,\
+                                                phamerator_subcluster,\
                                                 phamerator_status,\
                                                 'product',\
                                                 phamerator_accession,\
@@ -1002,6 +1040,7 @@ if retrieve_pecaan_genomes == "yes":
             #Create the new import ticket
             pecaan_import_table_writer.writerow(["add",\
                                                 new_phage,\
+                                                "retrieve",\
                                                 "retrieve",\
                                                 "retrieve",\
                                                 "draft",\
