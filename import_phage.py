@@ -59,13 +59,13 @@ except:
                     1. Action to implement on the database (add, remove, replace, update)\n\
                     2. PhageID to add or update\n\
                     3. Host genus of the updated phage\n\
-                    4. Cluster or subcluster of the updated phage\n\
-                    5. Status of the update phage (draft, final, gbk)\n\
-                    6. Gene description field of the update phage (product, note, function)\n\
-                    7. Accession of the updated phage\n\
-                    8. PhageID that will be removed or replaced\n\n"
+                    4. Cluster of the updated phage\n\
+                    5. Subcluster of the updated phage\n\
+                    6. Status of the update phage (draft, final, gbk)\n\
+                    7. Gene description field of the update phage (product, note, function)\n\
+                    8. Accession of the updated phage\n\
+                    9. PhageID that will be removed or replaced\n\n"
     sys.exit(1)
-
 
 
 
@@ -265,7 +265,25 @@ def mdb_exit(message):
     output_file.close()
     sys.exit(1)
 
+
+
+
+#This function decides whether Cluster2 or Subcluster2 data
+#gets assigned to the Cluster field
+def assign_cluster_field(subcluster,cluster):
+
+    cluster_field_data = ""
+    if subcluster != "none":
+        cluster_field_data = subcluster
+    else:
+        cluster_field_data = cluster
+
+    return cluster_field_data
+
+
 #If phage Cluster is Singleton, make sure MySQL statement is created correctly
+#TODO after updating subcluster, verify this function works correctly by
+#printing it out on screen
 def create_cluster_statement(phage_name,cluster):
     cluster_statement = ""
     if cluster == "singleton":
@@ -273,6 +291,31 @@ def create_cluster_statement(phage_name,cluster):
     else:
         cluster_statement = "UPDATE phage SET Cluster = '" + cluster + "' WHERE PhageID = '" + phage_name + "';"
     return cluster_statement
+
+
+
+
+#If phage Cluster is Singleton, make sure MySQL statement is created correctly
+def create_cluster2_statement(phage_name,cluster):
+    cluster2_statement = ""
+    if cluster == "singleton":
+        cluster2_statement = "UPDATE phage SET Cluster2 = NULL" + " WHERE PhageID = '" + phage_name + "';"
+    else:
+        cluster2_statement = "UPDATE phage SET Cluster2 = '" + cluster + "' WHERE PhageID = '" + phage_name + "';"
+    return cluster2_statement
+
+
+#If phage Subcluster is empty ("none"), make sure MySQL statement is created correctly
+def create_subcluster2_statement(phage_name,subcluster):
+    subcluster2_statement = ""
+    if subcluster == "none":
+        subcluster2_statement = "UPDATE phage SET Subcluster2 = NULL" + " WHERE PhageID = '" + phage_name + "';"
+    else:
+        subcluster2_statement = "UPDATE phage SET Subcluster2 = '" + subcluster + "' WHERE PhageID = '" + phage_name + "';"
+    return subcluster2_statement
+
+
+
 
 
 
@@ -392,9 +435,10 @@ write_out(output_file,"\nRun mode: " + run_mode)
 #2 = HostStrain
 #3 = Sequence
 #4 = status
-#5 = Cluster
+#5 = Cluster2
 #6 = DateLastModified
 #7 = Accession
+#8 = Subcluster2
 try:
     con = mdb.connect(mysqlhost, username, password, database)
     con.autocommit(False)
@@ -405,10 +449,11 @@ except:
     sys.exit(1)
 
 try:
+
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster,DateLastModified,Accession FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster2,DateLastModified,Accession,Subcluster2 FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -433,8 +478,7 @@ phageHost_set = set()
 phageStatus_set = set()
 phageCluster_set = set()
 phageAccession_set = set()
-
-
+phageSubcluster_set = set()
 
 modified_genome_data_lists = []
 print "Preparing genome data sets from the database..."
@@ -445,6 +489,7 @@ for genome_tuple in current_genome_data_tuples:
     phageHost_set.add(genome_tuple[2])
     phageStatus_set.add(genome_tuple[4])
     phageCluster_set.add(genome_tuple[5])
+    phageSubcluster_set.add(genome_tuple[8])
 
 
     #If there is no date in the DateLastModified field, set it to a very early date
@@ -468,9 +513,10 @@ for genome_tuple in current_genome_data_tuples:
     #2 = HostStrain
     #3 = Sequence
     #4 = status
-    #5 = Cluster
+    #5 = Cluster2
     #6 = Modified DateLastModified
     #7 = Modified Accession
+    #8 = Subcluster2
     modified_genome_data_lists.append([genome_tuple[0],\
                                         genome_tuple[1],\
                                         genome_tuple[2],\
@@ -478,7 +524,8 @@ for genome_tuple in current_genome_data_tuples:
                                         genome_tuple[4],\
                                         genome_tuple[5],\
                                         modified_datelastmod,\
-                                        modified_accession])
+                                        modified_accession,\
+                                        genome_tuple[8]])
 
 
 
@@ -500,14 +547,15 @@ protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
 #Add = add a new genome without removing another.
 #Remove = delete a genome without adding another.
 #Replace = delete a genome and replace it with another. Genome names can be different, but the DNA sequence cannot be different.
-#Update = make changes to HostStrain, Cluster, or status fields of phages already in the database.
+#Update = make changes to HostStrain, Cluster, Subcluster, or status fields of phages already in the database.
 action_set = set(["add","remove","replace","update"])
 
 #Create set of most common gene description genbank qualifiers
 description_set = set(["product","note","function"])
 
 
-#Create list of potential Host Names in the Genbank file to ignore. This is primarily for databases that contain phages of all host phyla and not just Actinobacteria
+#Create list of potential Host Names in the Genbank file to ignore.
+#This is primarily for databases that contain phages of all host phyla and not just Actinobacteria
 host_ignore = ['enterobacteria','phage','bacteriophage','cyanophage']
 
 
@@ -523,12 +571,11 @@ api_suffix = "/?format=json"
 #1 = New phage name that will be added to database
 #2 = Host of new phage
 #3 = Cluster of new phage (singletons should be reported as "singleton")
-#4 = Status of new phage
-#5 = Feature field containing gene descriptions of new phage
-#6 = Accession
-#7 = PhageID of genome to be removed from the database
-#column_action_headers = ["All","Add/Replace/Update","Add/Replace/Update","Add/Replace/Update","Add/Replace/Update","Add/Replace","Replace/Remove"]
-#column_headers = ["Action","PhageID","HostStrain","Cluster","Status","DescriptionField","PhageID"]
+#4 = Subcluster of new phage (no subcluster should be reported as "none")
+#5 = Status of new phage
+#6 = Feature field containing gene descriptions of new phage
+#7 = Accession
+#8 = PhageID of genome to be removed from the database
 
 write_out(output_file,"\n\n\n\nRetrieving import info from table in file...")
 
@@ -544,7 +591,7 @@ for input_row in file_reader:
 
 
     #Verify the row of information has the correct number of fields to parse.
-    if len(input_row) != 8:
+    if len(input_row) != 9:
         write_out(output_file,"\nRow in import table is not formatted correctly: " + str(input_row))
         table_errors += 1
         continue
@@ -562,18 +609,22 @@ for input_row in file_reader:
     #5 = Feature field (unchanged)
     #6 = PhageID to be removed
     #7 = Accession
+    #8 = Subcluster (unchanged)
     row = []
     row.append(input_row[0]) #Import action
     row.append(input_row[1]) #New phage name
     row.append(input_row[2]) #Host
     row.append(input_row[3]) #Cluster
-    row.append(input_row[4]) #Status
-    row.append(input_row[5]) #Feature field
-    row.append(input_row[7]) #PhageID to be removed
-    row.append(input_row[6]) #Accession
+    row.append(input_row[5]) #Status
+    row.append(input_row[6]) #Feature field
+    row.append(input_row[8]) #PhageID to be removed
+    row.append(input_row[7]) #Accession
+    row.append(input_row[4]) #Subcluster
 
 
-    #Make sure "none" and "retrieve" indications are lowercase, as well as "action", "status", and "feature" fields are lowercase
+
+    #Make sure "none" and "retrieve" indications are lowercase,
+    #as well as "action", "status", and "feature" fields are lowercase
     row[0] = row[0].lower()
     if row[1].lower() == "none":
         row[1] = row[1].lower()
@@ -587,10 +638,16 @@ for input_row in file_reader:
         row[6] = row[6].lower()
     if (row[7].lower() == "none" or row[7].lower() == "retrieve"):
         row[7] = row[7].lower()
+    if (row[8].lower() == "none" or row[8].lower() == "retrieve"):
+        row[8] = row[8].lower()
 
 
-    #If either the Host, Cluster, or Accession data needs to be retrieved, try to access the data in phagesdb before proceeding
-    if (row[2] == "retrieve" or row[3] == "retrieve" or row[7] == "retrieve"):
+    #If either the Host, Cluster, Subcluster or Accession data needs to be retrieved,
+    #try to access the data in phagesdb before proceeding
+    if (row[2] == "retrieve" or \
+        row[3] == "retrieve" or \
+        row[7] == "retrieve" or \
+        row[8] == "retrieve"):
         try:
             #Ensure the phage name does not have Draft appended
             if row[1][-6:].lower() == "_draft":
@@ -605,15 +662,20 @@ for input_row in file_reader:
             online_data_json = ""
             online_data_dict = {}
 
-            write_out(output_file,"\nError: unable to retrieve Host, Cluster, or Accession data for phage %s from phagesdb." %row[1])
+            write_out(output_file,"\nError: unable to retrieve Host, Cluster, Subcluster, or Accession data for phage %s from phagesdb." %row[1])
+            #Host
             if row[2] == "retrieve":
                 row[2] = "none"
+            #Cluster
             if row[3] == "retrieve":
                 row[3] = "none"
+            #Accession
             if row[7] == "retrieve":
                 row[7] = "none"
+            #Subcluster
+            if row[8] == "retrieve":
+                row[8] = "none"
             table_errors += 1
-
 
 
     #Make sure the requested action is permissible
@@ -655,32 +717,46 @@ for input_row in file_reader:
             table_errors +=  question("\nError: %s is not the correct host for %s." % (row[2],row[1])) #errors will be incremented if host was not correct
 
 
-    #Modify Cluster if needed
+    #Modify Cluster and Subcluster if needed
     if row[3] == "retrieve":
         try:
 
-            #On phagesdb, phages may have a Cluster and no Subcluster info (which is set to None). If the phage has a Subcluster, it should also have a Cluster.
-            #If by accident no Cluster or Subcluster info is added at the time the genome is added to phagesdb, the Cluster may automatically be set to "Unclustered". This will be filtered out later in the script due to its character length.
-            #If the phage has a Subcluster designation, take that info. Otherwise, check if there is a Cluster designation.
-            if online_data_dict['psubcluster'] is None:
+            #On phagesdb, phages may have a Cluster and no Subcluster info (which is set to None).
+            #If the phage has a Subcluster, it should also have a Cluster.
+            #If by accident no Cluster or Subcluster info is added at the time the
+            #genome is added to phagesdb, the Cluster may automatically be set to
+            #"Unclustered". This will be filtered out later in the script due to its character length.
 
-               if online_data_dict['pcluster'] is None:
+            #Retrieve Cluster data
+            if online_data_dict['pcluster'] is None:
 
-                    #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
-                    #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-                    #In these cases, leaving the cluster as NULL in phamerator won't work, because NULL means Singleton. Therefore, assign the cluster as Unknown.
-                    row[3] = 'UNK'
-               else:
+                #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
+                #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
+                #In these cases, leaving the cluster as NULL in phamerator won't work,
+                #because NULL means Singleton. Therefore, assign the cluster as Unknown.
+                row[3] = 'UNK'
+            else:
                 row[3] = online_data_dict['pcluster']['cluster']
 
+            #Retrieve Subcluster data
+            if online_data_dict['psubcluster'] is None:
+
+                #Subcluster could be empty if by error no Cluster/Subcluster data
+                #has yet been entered on phagesdb. But it may be empty because
+                #there is no subcluster designation yet for members of the Cluster.
+                row[8] = "none"
+
             else:
-                row[3] = online_data_dict['psubcluster']['subcluster']
+                row[8] = online_data_dict['psubcluster']['subcluster']
 
         except:
-            write_out(output_file,"\nError: unable to retrieve Cluster data for phage %s from phagesdb." %row[1])
+            write_out(output_file,"\nError: unable to retrieve Cluster and Subcluster data for phage %s from phagesdb." %row[1])
             row[3] = "none"
+            row[8] = "none"
             table_errors += 1
 
+
+    #Check Cluster data
     if row[3] != "none":
         if row[3].lower() == "singleton":
             row[3] = row[3].lower()
@@ -692,6 +768,18 @@ for input_row in file_reader:
         if (row[3] != "singleton" and len(row[3]) > 5):
             write_out(output_file,"\nError: phage %s Cluster designation %s exceeds character limit." % (row[1],row[3]))
             table_errors += 1
+
+
+    #Check Subcluster data
+    if row[8] != "none":
+        if row[8] not in phageSubcluster_set:
+            print "The Subcluster %s is not currently in the database." % row[8]
+            table_errors +=  question("\nError: %s is not the correct Subcluster for %s." % (row[8],row[1]))
+
+        if len(row[8]) > 5:
+            write_out(output_file,"\nError: phage %s Subcluster designation %s exceeds character limit." % (row[1],row[8]))
+            table_errors += 1
+
 
 
     #Modify Status if needed, and PhageID if needed
@@ -747,8 +835,11 @@ for input_row in file_reader:
             table_errors += 1
 
         #Host, Cluster, Status
-        if (row[2] == "none" or row[3] == "none" or row[4] == "none"):
-            write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, or Status fields." %row[1])
+        if (row[2] == "none" or \
+            row[3] == "none" or \
+            row[4] == "none"):
+
+            write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, Subcluster, or Status fields." %row[1])
             table_errors += 1
 
         #Description
@@ -762,7 +853,7 @@ for input_row in file_reader:
             table_errors += 1
 
         #Accession = it will either be an accession or it will be "none"
-
+        #Subcluster = it will either be a Subcluster or it will be "none"
 
     #Add
     elif row[0] == "add":
@@ -772,7 +863,12 @@ for input_row in file_reader:
             table_errors += 1
 
         #FirstPhageID, Host, Cluster, Status, Description
-        if (row[1] == "none" or row[2] == "none" or row[3] == "none" or row[4] == "none" or row[5] == "none"):
+        if (row[1] == "none" or \
+            row[2] == "none" or \
+            row[3] == "none" or \
+            row[4] == "none" or \
+            row[5] == "none"):
+
             write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
             table_errors += 1
 
@@ -787,14 +883,21 @@ for input_row in file_reader:
             table_errors += 1
 
         #Accession = it will either be an accession or it will be "none"
-
+        #Subcluster = it will either be a Subcluster or it will be "none"
 
 
     #Remove
     elif row[0] == "remove":
 
-        #FirstPhageID,Host, Cluster, Status, Description, Accession
-        if (row[1] != "none" or row[2] != "none" or row[3] != "none" or row[4] != "none" or row[5] != "none" or row[7] != "none"):
+        #FirstPhageID,Host, Cluster, Subcluster, Status, Description, Accession
+        if (row[1] != "none" or \
+            row[2] != "none" or \
+            row[3] != "none" or \
+            row[4] != "none" or \
+            row[5] != "none" or \
+            row[7] != "none" or \
+            row[8] != "none"):
+
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
             table_errors += 1
         #SecondPhageID
@@ -817,7 +920,11 @@ for input_row in file_reader:
             table_errors += 1
 
         #Host,Cluster,Status,Description
-        if (row[2] == "none" or row[3] == "none" or row[4] == "none" or row[5] == "none"):
+        if (row[2] == "none" or \
+            row[3] == "none" or \
+            row[4] == "none" or \
+            row[5] == "none"):
+
             write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
             table_errors += 1
         #SecondPhageID
@@ -840,12 +947,12 @@ for input_row in file_reader:
             table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
 
         #Accession = it will either be an accession or it will be "none"
+        #Subcluster = it will either be a Subcluster or it will be "none"
 
 
 
     else:
         pass
-
 
     genome_data_list.append(row)
     #genome_data_list elements are lists with follow index:
@@ -857,6 +964,7 @@ for input_row in file_reader:
     #5 = Feature field
     #6 = PhageID to be removed
     #7 = Accession
+    #8 = Subcluster
 
 
 file_object.close()
@@ -965,7 +1073,6 @@ for genome_data in genome_data_list:
         table_errors += 1
 
 
-
 #Check to see if there are any inconsistencies with the update data compared to current phamerator data
 for genome_data in update_data_list:
 
@@ -1027,7 +1134,8 @@ for genome_data in update_data_list:
         print "The new accession data will be imported."
         table_errors += question("\nError: incorrect accession data for %s." % genome_data[1])
 
-
+    #Cluster, Subcluster check = no need to check this, as this data may be
+    #more frequently updated than other fields.
 
 
 
@@ -1044,8 +1152,6 @@ for genome_data in remove_data_list:
 if table_errors == 0:
     write_out(output_file,"\nImport table verified with 0 errors.")
     write_out(output_file,"\nList of all actions to be implemented:")
-    #write_out(output_file,"\nApplicable actions per field: " + str(column_action_headers))
-    #write_out(output_file,"\nField headers: " + str(column_headers))
     for genome_data in genome_data_list:
         write_out(output_file,"\n" + str(genome_data))
     raw_input("\nPress ENTER to proceed to next import stage.")
@@ -1066,10 +1172,9 @@ success_action_file_writer = csv.writer(success_action_file_handle)
 
 
 
-
 #Update actions implemented
 #Prepare to update fields that are not accompanied by adding or replacing a genome.
-write_out(output_file,"\n\n\n\nUpdating Host, Cluster, and Status fields...")
+write_out(output_file,"\n\n\n\nUpdating Host, Cluster, Subcluster, and Status fields...")
 updated = 0
 update_statements = []
 for genome_data in update_data_list:
@@ -1083,8 +1188,10 @@ for genome_data in update_data_list:
     update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
-    #Create the statement to update Cluster.
-    update_statements.append(create_cluster_statement(genome_data[1],genome_data[3]))
+    #Create the statement to update Cluster, Cluster2, and Subcluster2
+    update_statements.append(create_cluster2_statement(genome_data[1],genome_data[3]))
+    update_statements.append(create_subcluster2_statementcluster_statement(genome_data[1],genome_data[8]))
+    update_statements.append(create_cluster_statement(genome_data[1],assign_cluster_field(genome_data[8],genome_data[3])))
 
     updated += 1
 
@@ -1128,6 +1235,7 @@ for element in update_data_list:
                             element[1],\
                             element[2],\
                             element[3],\
+                            element[8],\
                             element[4],\
                             element[5],\
                             element[7],\
@@ -1195,6 +1303,7 @@ for element in remove_data_list:
                             element[1],\
                             element[2],\
                             element[3],\
+                            element[8],\
                             element[4],\
                             element[5],\
                             element[7],\
@@ -1217,14 +1326,17 @@ if run_type != "smart":
 
 
 #Add and replace actions implemented
-#Now that the data list does not contain update-only or remove-only data, create a dictionary. This serves to verify that all genomes to be imported are unique, as well as to
+#Now that the data list does not contain update-only or remove-only data,
+#create a dictionary. This serves to verify that all genomes
+#to be imported are unique, as well as to
 #be able to quickly retrieve information based on the genbank file that is opened.
 #Key = PhageID
 #Value = Genome data list:
 add_replace_data_dict = {}
 for genome_data in add_replace_data_list:
 
-    #Verify there are no duplicate PhageIDs. This was checked before in a slightly different way when looking for duplicate actions.
+    #Verify there are no duplicate PhageIDs. This was checked before in a
+    #slightly different way when looking for duplicate actions.
     if genome_data[1] not in add_replace_data_dict:
         add_replace_data_dict[genome_data[1]] = genome_data
 
@@ -1493,6 +1605,7 @@ for filename in genbank_files:
             import_cds_qualifier = matchedData[5]
             import_genome_replace = matchedData[6]
             import_accession = matchedData[7]
+            import_subcluster = matchedData[8]
 
 
 
@@ -1566,7 +1679,7 @@ for filename in genbank_files:
                 phamerator_status = matched_phamerator_data[4]
                 phamerator_datelastmod = matched_phamerator_data[6]
                 phamerator_accession = matched_phamerator_data[7]
-
+                phamerator_subcluster = matched_phamerator_data[8]
 
             else:
                 write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))
@@ -1802,11 +1915,22 @@ for filename in genbank_files:
                                         phage_data_list[11]))
 
 
+        #REVIEW old code. New code uses the phage_data_list phage name, since
+        #it has already been decided based on the allphages option.
+        #This code block can be deleted once the new code is confirmed functional.
+        # if use_basename == "yes":
+        #     add_replace_statements.append(create_cluster_statement(basename,import_cluster))
+        # else:
+        #     add_replace_statements.append(create_cluster_statement(phageName,import_cluster))
 
-        if use_basename == "yes":
-            add_replace_statements.append(create_cluster_statement(basename,import_cluster))
-        else:
-            add_replace_statements.append(create_cluster_statement(phageName,import_cluster))
+
+        add_replace_statements.append(\
+                create_cluster_statement(phage_data_list[0],\
+                assign_cluster_field(import_subcluster,import_cluster)))
+        add_replace_statements.append(\
+                create_cluster2_statement(phage_data_list[0],import_cluster))
+        add_replace_statements.append(\
+                create_subcluster2_statement(phage_data_list[0],import_subcluster))
 
 
         #Next each CDS feature is parsed from the file
@@ -2597,10 +2721,12 @@ for filename in genbank_files:
                                 matchedData[1],\
                                 matchedData[2],\
                                 matchedData[3],\
+                                matchedData[8],\
                                 matchedData[4],\
                                 matchedData[5],\
                                 matchedData[7],\
                                 matchedData[6]]
+
         success_action_file_writer.writerow(add_replace_output_list)
         script_warnings += record_warnings
         script_errors += record_errors
@@ -2638,6 +2764,7 @@ if len(add_replace_data_dict) > 0:
                                 add_replace_data_dict[key][1],\
                                 add_replace_data_dict[key][2],\
                                 add_replace_data_dict[key][3],\
+                                add_replace_data_dict[key][8],\
                                 add_replace_data_dict[key][4],\
                                 add_replace_data_dict[key][5],\
                                 add_replace_data_dict[key][7],\
