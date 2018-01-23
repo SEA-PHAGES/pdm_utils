@@ -756,6 +756,17 @@ for input_row in file_reader:
             table_errors += 1
 
 
+    #Check Subcluster data
+    if row[8] != "none":
+        if row[8] not in phageSubcluster_set:
+            print "The Subcluster %s is not currently in the database." % row[8]
+            table_errors +=  question("\nError: %s is not the correct Subcluster for %s." % (row[8],row[1]))
+
+        if len(row[8]) > 5:
+            write_out(output_file,"\nError: phage %s Subcluster designation %s exceeds character limit." % (row[1],row[8]))
+            table_errors += 1
+
+
     #Check Cluster data
     if row[3] != "none":
         if row[3].lower() == "singleton":
@@ -769,16 +780,23 @@ for input_row in file_reader:
             write_out(output_file,"\nError: phage %s Cluster designation %s exceeds character limit." % (row[1],row[3]))
             table_errors += 1
 
+        #If Singleton of Unknown Cluster, there should be no Subcluster
+        if (row[3] == "singleton" or row[3] == "UNK"):
+            if row[8] != "none":
+                write_out(output_file,"\nError: phage %s Cluster and Subcluster discrepancy." % row[1])
+                table_errors += 1
 
-    #Check Subcluster data
-    if row[8] != "none":
-        if row[8] not in phageSubcluster_set:
-            print "The Subcluster %s is not currently in the database." % row[8]
-            table_errors +=  question("\nError: %s is not the correct Subcluster for %s." % (row[8],row[1]))
+        #If not Singleton or Unknown or none, then Cluster should be part
+        #of Subcluster data and the remainder should be a digit
+        elif row[8] != "none":
 
-        if len(row[8]) > 5:
-            write_out(output_file,"\nError: phage %s Subcluster designation %s exceeds character limit." % (row[1],row[8]))
-            table_errors += 1
+            if (row[8][:len(row[3])] != row[3] or \
+                row[8][len(row[3]):].isdigit() == False):
+
+                write_out(output_file,"\nError: phage %s Cluster and Subcluster discrepancy." % row[1])
+                table_errors += 1
+        else:
+            pass
 
 
 
@@ -1189,9 +1207,13 @@ for genome_data in update_data_list:
     update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
     #Create the statement to update Cluster, Cluster2, and Subcluster2
-    update_statements.append(create_cluster2_statement(genome_data[1],genome_data[3]))
-    update_statements.append(create_subcluster2_statementcluster_statement(genome_data[1],genome_data[8]))
-    update_statements.append(create_cluster_statement(genome_data[1],assign_cluster_field(genome_data[8],genome_data[3])))
+    update_statements.append(\
+            create_cluster2_statement(genome_data[1],genome_data[3]))
+    update_statements.append(\
+            create_subcluster2_statement(genome_data[1],genome_data[8]))
+    update_statements.append(\
+            create_cluster_statement(genome_data[1],\
+            assign_cluster_field(genome_data[8],genome_data[3])))
 
     updated += 1
 
