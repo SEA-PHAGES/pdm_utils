@@ -635,7 +635,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-            #TODO add new data
             #Matched cluster
             if matched_phagesdb_data['pcluster'] is None:
                 #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
@@ -667,18 +666,15 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
             if phamerator_subcluster != phagesdb_subcluster:
                 field_corrections_needed += 1
 
-                #TODO add new data above
 
             #Compare Host genus
             if phamerator_host != phagesdb_host:
-                #print "\nPhamerator host %s and phagesdb host %s do not match for phageID %s." %(phamerator_host,phagesdb_host,phamerator_id)
                 field_corrections_needed += 1
 
 
             #Compare Accession
             #If the genome status is "gbk", then don't worry about updating the accession
             if phamerator_accession != phagesdb_accession and phamerator_status != "gbk":
-                #print "\nPhamerator accession %s and phagesdb accession %s do not match for phageID %s." %(phamerator_accession,phagesdb_accession,phamerator_id)
                 field_corrections_needed += 1
 
             #If errors in the Host, Cluster, or Subcluster information were identified, create an import ticket to for the import script to implement.

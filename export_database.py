@@ -29,7 +29,7 @@ try:
     main_dir = sys.argv[2]
     backup_dir = sys.argv[3]
     mysql_query_final_dir = sys.argv[4]
-except:    
+except:
     print "\n\n\
             This is a python script to export Phamerator databases.\n\
             It requires four arguments:\n\
@@ -148,7 +148,7 @@ while dump_database_valid == False:
         dump_database = "yes"
         dump_database_valid = True
 
-    elif (dump_database.lower() == "no" or dump_database.lower() == "n"):                         
+    elif (dump_database.lower() == "no" or dump_database.lower() == "n"):
         dump_database = "no"
         dump_database_valid = True
 
@@ -191,7 +191,7 @@ if dump_database == "yes":
             version_change = "yes"
             version_change_valid = True
 
-        elif (version_change.lower() == "no" or version_change.lower() == "n"):                         
+        elif (version_change.lower() == "no" or version_change.lower() == "n"):
             version_change = "no"
             version_change_valid = True
 
@@ -218,8 +218,8 @@ if dump_database == "yes":
             print "Database version has been updated."
 
         else:
-            print "Database version will not be updated."        
-        
+            print "Database version will not be updated."
+
     except:
         mdb_exit("\nError retrieving database version.\nNo changes have been made to the database.")
 
@@ -243,7 +243,7 @@ if dump_database == "yes":
 
 
     #Now that the version has been updated, make a copy of the database in the MAIN directory, that will be uploaded to webfactional
-    #It is okay if there is already a copy of this file present. Filenames like "Actino_Draft.sql" and "Actino_Draft.version" never change.    
+    #It is okay if there is already a copy of this file present. Filenames like "Actino_Draft.sql" and "Actino_Draft.version" never change.
     print "Dumping new %s database to the Main directory..." % database
 
     dumpfile1_handle = open(main_dir + dumpfile1,'w')
@@ -263,8 +263,8 @@ if dump_database == "yes":
         print "\n\nThe backup database file already exists in the indicated backup directory."
         print "Backup file path: %s\n\n" %(backup_dir + dumpfile2)
         sys.exit(1)
-        
-    
+
+
     print "Dumping copy of %s database to the Backup directory..." % database
     dumpfile2_handle = open(backup_dir + dumpfile2,'w')
     command_string = "mysqldump -u %s -p%s --skip-comments %s" % (username,password,database)
@@ -295,7 +295,7 @@ while query_database_valid == False:
         query_database = "yes"
         query_database_valid = True
 
-    elif (query_database.lower() == "no" or query_database.lower() == "n"):                         
+    elif (query_database.lower() == "no" or query_database.lower() == "n"):
         query_database = "no"
         query_database_valid = True
 
@@ -360,10 +360,11 @@ if query_database == "yes":
     os.mkdir(query_folder)
     try:
         print "Exporting genome data..."
-        filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_export)   
-        statement1 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, phage.SequenceLength, phage.Accession, phage.DateLastModified \
-                     FROM phage INTO OUTFILE '%s/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" \
-                     % (mysql_query_default_dir,filename1)
+        filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_export)
+        statement1 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.Cluster2, phage.Subcluster2, \
+                    phage.status, phage.SequenceLength, phage.Accession, phage.DateLastModified, phage.AnnotationAuthor \
+                    FROM phage INTO OUTFILE '%s/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" \
+                    % (mysql_query_default_dir,filename1)
         cur.execute(statement1)
 
         command_string = "sudo cp %s/%s %s" % (mysql_query_default_dir,filename1,query_folder)
@@ -374,9 +375,10 @@ if query_database == "yes":
 
         print "Exporting gene data..."
         filename2 = "%s_%s_v%s_genes.csv" % (date,database,version_export)
-        statement2 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.name \
-                     FROM gene JOIN phage on gene.PhageID = phage.PhageID JOIN pham on gene.GeneID = pham.GeneID INTO OUTFILE '%s/%s' \
-                     FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % (mysql_query_default_dir,filename2)
+        statement2 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.Cluster2, phage.Subcluster2, \
+                    phage.status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.name \
+                    FROM gene JOIN phage on gene.PhageID = phage.PhageID JOIN pham on gene.GeneID = pham.GeneID INTO OUTFILE '%s/%s' \
+                    FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % (mysql_query_default_dir,filename2)
         cur.execute(statement2)
         cur.execute("COMMIT")
         cur.close()
@@ -386,7 +388,7 @@ if query_database == "yes":
         proc = subprocess.check_call(command_list)
 
         print "Genome and gene data exported."
-            
+
     except:
         mdb_exit("\nError exporting genome or gene data to file.")
 
@@ -397,7 +399,7 @@ if query_database == "yes":
     command_string = "sudo rm %s/%s" % (mysql_query_default_dir,filename1)
     command_list = command_string.split(" ")
     proc = subprocess.check_call(command_list)
-    
+
     command_string = "sudo rm %s/%s" % (mysql_query_default_dir,filename2)
     command_list = command_string.split(" ")
     proc = subprocess.check_call(command_list)
@@ -420,7 +422,7 @@ while server_upload_valid == False:
         server_upload = "yes"
         server_upload_valid = True
 
-    elif (server_upload.lower() == "no" or server_upload.lower() == "n"):                         
+    elif (server_upload.lower() == "no" or server_upload.lower() == "n"):
         server_upload = "no"
         server_upload_valid = True
 
@@ -444,7 +446,7 @@ if server_upload == "yes":
         sys.exit(1)
 
 
-    
+
     #Set up paramiko parameters
     server = 'phamerator.webfactional.com'
     server_username = getpass.getpass(prompt='Server username:')
@@ -461,7 +463,7 @@ if server_upload == "yes":
 
     try:
         transport.connect(username=server_username,password=server_password)
-        
+
         sftp = paramiko.SFTPClient.from_transport(transport)
 
     except:
@@ -469,7 +471,7 @@ if server_upload == "yes":
         print "\nThe export script did not complete."
         print "\nExiting export script."
         sys.exit(1)
-        
+
     try:
         #First upload the version file
         print "Uploading the version file..."
@@ -481,7 +483,7 @@ if server_upload == "yes":
         print "Uploading the sql database..."
         sftp.put(main_dir + dumpfile1,'/home/phamerator/webapps/htdocs/databases_Hatfull/' + dumpfile1)
         print "Database successfully uploaded."
-        
+
     except:
         print "Problems encountered with the specified local or destination directories"
         print "\nThe export script did not complete."
@@ -492,14 +494,10 @@ if server_upload == "yes":
     #Close the connections
     sftp.close()
     transport.close()
-        
+
 
 
 
 
 #Close script.
 print "\n\n\n\nExport script completed."
-
-
-
-
