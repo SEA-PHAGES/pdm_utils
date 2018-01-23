@@ -1159,11 +1159,19 @@ for genome_data in update_data_list:
 
 #Check to see if any genomes to be removed are the correct status
 for genome_data in remove_data_list:
-    matched_phamerator_data = phamerator_data_dict[genome_data[6]]
-    if matched_phamerator_data[4] != "draft":
-        print "The genome %s to be removed is currently %s status." % (genome_data[6],matched_phamerator_data[4])
-        table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],matched_phamerator_data[4]))
 
+    #The next QC check relies on the PhageID being present in the Phamerator.
+    #If it is not, this error will have already been identified, and a table_error
+    #will already have been added. However, the code will crash without
+    #here without adding an exception. So no need to add another table_error
+    #in the except clause.
+    try:
+        matched_phamerator_data = phamerator_data_dict[genome_data[6]]
+        if matched_phamerator_data[4] != "draft":
+            print "The genome %s to be removed is currently %s status." % (genome_data[6],matched_phamerator_data[4])
+            table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],matched_phamerator_data[4]))
+    except:
+        pass
 
 
 #If no errors encountered, print list of action items to be implemented and continue. Otherwise, exit the script.
