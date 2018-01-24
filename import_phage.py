@@ -282,8 +282,6 @@ def assign_cluster_field(subcluster,cluster):
 
 
 #If phage Cluster is Singleton, make sure MySQL statement is created correctly
-#TODO verify this function works correctly by
-#printing it out on screen
 def create_cluster_statement(phage_name,cluster):
     cluster_statement = ""
     if cluster == "singleton":
@@ -529,8 +527,6 @@ for genome_tuple in current_genome_data_tuples:
                                         modified_accession,\
                                         genome_tuple[8],\
                                         str(genome_tuple[9])])
-                                        #REVIEW test
-
 
 
 #Now that sets and dictionaries have been made, create a phamerator_data_dict
@@ -862,8 +858,6 @@ for input_row in file_reader:
         row[9] = "none"
     else:
         row[9] = "error"
-    #REVIEW test
-
 
 
 
@@ -1950,7 +1944,7 @@ for filename in genbank_files:
 
         #Author list check
 
-        #REVIEW delete below
+        #TODO delete below
         # if import_status == 'final':
         #     if record_author_string == "":
         #         record_warnings += 1
@@ -1974,7 +1968,7 @@ for filename in genbank_files:
         #     annotation_author = 1
         # else:
         #     annotation_author = 0
-        #REVIEW delete above
+        #TODO delete above
 
 
 
@@ -2089,7 +2083,7 @@ for filename in genbank_files:
         phage_data_list.append(import_host) #[3]
         phage_data_list.append(str(phageSeq)) #[4]
         phage_data_list.append(seqLength) #[5]
-        phage_data_list.append(seqGC) #[6] #TODO this number is many digits long and should be trimmed
+        phage_data_list.append(round(seqGC,4)) #[6] Trim down to last 4 digits
         phage_data_list.append(import_status) #[7]
         phage_data_list.append(date) #[8]
         phage_data_list.append(ncbi_update_status) #[9]
@@ -2111,7 +2105,8 @@ for filename in genbank_files:
                                         phage_data_list[11]))
 
 
-        #TODO old code. New code uses the phage_data_list phage name, since
+        #TODO old code that can be deleted.
+        #New code uses the phage_data_list phage name, since
         #it has already been decided based on the allphages option.
         #This code block can be deleted once the new code is confirmed functional.
         # if use_basename == "yes":
@@ -2930,13 +2925,11 @@ for filename in genbank_files:
                                 matchedData[5],\
                                 matchedData[7],\
                                 matchedData[6]]
-                                #REVIEW test
 
         success_action_file_writer.writerow(add_replace_output_list)
         script_warnings += record_warnings
         script_errors += record_errors
         print "Processing of %s is complete." %filename
-        #raw_input("\nPress ENTER to proceed to next file.")
 
 
 
@@ -2982,7 +2975,8 @@ if len(add_replace_data_dict) > 0:
                                 add_replace_data_dict[key][5],\
                                 add_replace_data_dict[key][7],\
                                 add_replace_data_dict[key][6]]
-                                #REVIEW test
+
+
         failed_action_file_writer.writerow(failed_output_list)
         write_out(output_file,"\n" + str(failed_output_list))
 
