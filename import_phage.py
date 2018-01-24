@@ -1943,35 +1943,6 @@ for filename in genbank_files:
 
 
         #Author list check
-
-        #TODO delete below
-        # if import_status == 'final':
-        #     if record_author_string == "":
-        #         record_warnings += 1
-        #         write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
-        #         print "The genome will continue to be imported."
-        #         record_errors += question("\nError: missing author data for %s." % phageName)
-        #         annotation_author = 0
-        #     else:
-        #         pattern5 = re.compile("hatfull")
-        #         search_result = pattern5.search(record_author_string.lower())
-        #         if search_result == None:
-        #             record_warnings += 1
-        #             write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
-        #             print "The genome will continue to be imported."
-        #             record_errors += question("\nError: incorrect author data for %s." % phageName)
-        #             annotation_author = 0
-        #         else:
-        #             annotation_author = 1
-        #
-        # elif import_status == 'draft':
-        #     annotation_author = 1
-        # else:
-        #     annotation_author = 0
-        #TODO delete above
-
-
-
         #For annotation author = hatfull
         #If annotation status is draft, author field can be missing Hatfull
         #If annotation status is final, author field should have Hatfull
@@ -1988,41 +1959,13 @@ for filename in genbank_files:
                 write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
                 print "The genome will continue to be imported."
                 record_errors += question("\nError: incorrect author data for %s." % phageName)
-                #TODO not sure if this might need to be a forced error instead of an optional error
+                #REVIEW not sure if this might need to be a forced error instead of an optional error
 
 
-
-            #TODO the code block below tests for completely empty author lists
-            #as well as author lists that lack Hatfull. It doesn't seem necessary
-            #though to make this distinction.
-            # if record_author_string == "":
-            #     record_warnings += 1
-            #     write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
-            #     print "The genome will continue to be imported."
-            #     record_errors += question("\nError: missing author data for %s." % phageName)
-            #     #The above code might need to be a forced error instead of an optional error
-            #
-            # else:
-            #     if search_result == None:
-            #         record_warnings += 1
-            #         write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
-            #         print "The genome will continue to be imported."
-            #         record_errors += question("\nError: incorrect author data for %s." % phageName)
-            #         #The above code might need to be a forced error instead of an optional error
-            #TODO delete code block above?
-
-        #For Hatfull authored draft annotations, there should not be authors listed
+        #For Hatfull authored draft annotations, it doesn't matter whether
+        #there are authors, since they will be added at the Final stage.
         elif import_author == '1' and import_status == 'draft':
-
             pass
-            #It doesn't really matter whether there are authors are an
-            #auto-annotated file. So no need to check what the author list has.
-            # if search_result != None:
-            #     record_warnings += 1
-            #     write_out(output_file,"\nWarning: Authors are listed for draft genome %s" % phageName)
-            #     print "The genome will continue to be imported."
-            #     record_errors += question("\nError: author data discrepancy for %s." % phageName)
-            #     #The above code might need to be a forced error instead of an optional error
 
         #For non-Hatfull authored annotations of any kind (draft, final, gbk),
         #Graham should not be an author
@@ -2033,8 +1976,8 @@ for filename in genbank_files:
                 record_errors += 1
 
 
-        #TODO retrieval setting should take into account current setting phamerator
-        #TODO this will require retrieving the RetrieveRecord field at the initial phamerator query
+        #TODO retrieval setting should take into account current setting phamerator.
+        # this will require retrieving the RetrieveRecord field at the initial phamerator query
         #Determine the RetrieveRecord field setting
         #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
         #If the genome is not auto-annotated (status = 'gbk') then set to 0 (OFF)
@@ -2050,7 +1993,7 @@ for filename in genbank_files:
         #(status = 'gbk') genomes should be set to 0 (OFF)
         #If the genome has been manually annotated (status = 'final') then set to 1 (ON)
         #REVIEW this may need to reference the current annotation_qc setting in phamerator database,
-        #REVIEW similar to the retrieve record setting
+        # similar to the retrieve record setting
         if import_status == 'final':
             annotation_qc = '1'
         else:
@@ -2103,16 +2046,6 @@ for filename in genbank_files:
                                         phage_data_list[9],\
                                         phage_data_list[10],\
                                         phage_data_list[11]))
-
-
-        #TODO old code that can be deleted.
-        #New code uses the phage_data_list phage name, since
-        #it has already been decided based on the allphages option.
-        #This code block can be deleted once the new code is confirmed functional.
-        # if use_basename == "yes":
-        #     add_replace_statements.append(create_cluster_statement(basename,import_cluster))
-        # else:
-        #     add_replace_statements.append(create_cluster_statement(phageName,import_cluster))
 
 
         add_replace_statements.append(\
@@ -2175,103 +2108,105 @@ for filename in genbank_files:
                 #Evaluate if tRNA is properly structured
                 elif feature.type == "tRNA":
 
-                    #Retrieve coordinates and sequence
-                    try:
-
-                        #Biopython converts coordinates to 0-index
-                        #Start(left) coordinates are 0-based inclusive (feature starts there)
-                        #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
-                        tRNA_left = int(feature.location.start)
-                        tRNA_right = int(feature.location.end)
-                        #print tRNA_left
-                        #print tRNA_right
-
-                        #Retrieve top strand of tRNA feature. It is NOT necessarily
-                        #in the correct orientation
-                        tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
-                        #print str(tRNA_seq)
-
-
-                        #Convert sequence to reverse complement if it is on bottom strand
-                        if feature.strand == 1:
-                            pass
-                        elif feature.strand == -1:
-                            tRNA_seq = tRNA_seq.reverse_complement()
-                        else:
-                            record_errors += 1
-                            write_out(output_file,"\Error: tRNA does not have proper orientation in %s phage." % phageName)
-                            continue
-
-                        #Check to see if forward strand terminal nucleotide is correct = A or C
-                        if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
-                            record_warnings += 1
-                            write_out(output_file,"\nWarning: tRNA does not appear to be have correct terminal nucleotide in %s phage." % phageName)
-                            record_errors += question("\nError: tRNA feature is not correct in %s phage." % phageName)
-
-                        tRNA_size = len(tRNA_seq)
-                        if tRNA_size < 70 or tRNA_size > 90:
-                            record_warnings += 1
-                            write_out(output_file,"\nWarning: tRNA does not appear to be the correct size in %s phage."  % phageName)
-                            record_errors += question("\nError: tRNA feature is incorrect size in %s phage." % phageName)
-
-                    except:
-                        write_out(output_file,"\nError: tRNA coordinates, orientation, or sequence is incorrect in phage %s." % phageName)
-                        record_errors += 1
-
-
-                    #Retrieve product
-                    try:
-                        tRNA_product = feature.qualifiers['product'][0].lower().strip()
-                        #print tRNA_product
-                    except:
-                        write_out(output_file,"\nError: tRNA does not have product field in phage %s." % phageName)
-                        record_errors += 1
-                        tRNA_product = ''
-
-
-                    #Retrieve note
-                    try:
-                        tRNA_note = feature.qualifiers['note'][0].lower().strip()
-                        #print tRNA_note
-                    except:
-                        #write_out(output_file,"\nError: tRNA does not have note field in phage %s." % phageName)
-                        #record_errors += 1
-                        tRNA_note = ''
-
-                    #This is an initial attempt at checking the tRNA product description
-                    #Ultimately, a regular expression would be better to use
-                    #tRNA product example = 'tRNA-Ser (AGC)'
-
-                    #TODO The code block below functions, but it does not account for
-                    #tRNA-OTHER descriptions.
-                    #The biggest problem is that the expected product and note descriptions
-                    #are expected to change after they reach NCBI, so it is not clear
-                    #how to best address that issue here, since nothing in the import
-                    #table reflects WHERE the annotated genome came from.
-                    # tRNA_product_split1_list = tRNA_product.split('-')
-                    # if len(tRNA_product_split1_list) == 2:
+                    pass
+                    # #TODO still in development
+                    # #Retrieve coordinates and sequence
+                    # try:
                     #
-                    #     tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip()
-                    #     tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
-                    #     if len(tRNA_product_split2_list) == 2:
+                    #     #Biopython converts coordinates to 0-index
+                    #     #Start(left) coordinates are 0-based inclusive (feature starts there)
+                    #     #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
+                    #     tRNA_left = int(feature.location.start)
+                    #     tRNA_right = int(feature.location.end)
+                    #     #print tRNA_left
+                    #     #print tRNA_right
                     #
-                    #         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip()
-                    #         tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
-                    #         if len(tRNA_product_split3_list) == 2:
+                    #     #Retrieve top strand of tRNA feature. It is NOT necessarily
+                    #     #in the correct orientation
+                    #     tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
+                    #     #print str(tRNA_seq)
                     #
-                    #             tRNA_product_anticodon = tRNA_product_split3_list[0].strip()
-                    #             if len(tRNA_product_anticodon) != 3:
-                    #                 write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
-                    #                 record_errors += 1
-                    #         else:
-                    #             write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
-                    #             record_errors += 1
+                    #
+                    #     #Convert sequence to reverse complement if it is on bottom strand
+                    #     if feature.strand == 1:
+                    #         pass
+                    #     elif feature.strand == -1:
+                    #         tRNA_seq = tRNA_seq.reverse_complement()
                     #     else:
-                    #         write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
                     #         record_errors += 1
-                    # else:
-                    #     write_out(output_file,"\nError: tRNA product is incorrect in %s." % phageName)
+                    #         write_out(output_file,"\Error: tRNA does not have proper orientation in %s phage." % phageName)
+                    #         continue
+                    #
+                    #     #Check to see if forward strand terminal nucleotide is correct = A or C
+                    #     if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
+                    #         record_warnings += 1
+                    #         write_out(output_file,"\nWarning: tRNA does not appear to be have correct terminal nucleotide in %s phage." % phageName)
+                    #         record_errors += question("\nError: tRNA feature is not correct in %s phage." % phageName)
+                    #
+                    #     tRNA_size = len(tRNA_seq)
+                    #     if tRNA_size < 70 or tRNA_size > 90:
+                    #         record_warnings += 1
+                    #         write_out(output_file,"\nWarning: tRNA does not appear to be the correct size in %s phage."  % phageName)
+                    #         record_errors += question("\nError: tRNA feature is incorrect size in %s phage." % phageName)
+                    #
+                    # except:
+                    #     write_out(output_file,"\nError: tRNA coordinates, orientation, or sequence is incorrect in phage %s." % phageName)
                     #     record_errors += 1
+                    #
+                    #
+                    # #Retrieve product
+                    # try:
+                    #     tRNA_product = feature.qualifiers['product'][0].lower().strip()
+                    #     #print tRNA_product
+                    # except:
+                    #     write_out(output_file,"\nError: tRNA does not have product field in phage %s." % phageName)
+                    #     record_errors += 1
+                    #     tRNA_product = ''
+                    #
+                    #
+                    # #Retrieve note
+                    # try:
+                    #     tRNA_note = feature.qualifiers['note'][0].lower().strip()
+                    #     #print tRNA_note
+                    # except:
+                    #     #write_out(output_file,"\nError: tRNA does not have note field in phage %s." % phageName)
+                    #     #record_errors += 1
+                    #     tRNA_note = ''
+                    #
+                    # #This is an initial attempt at checking the tRNA product description
+                    # #Ultimately, a regular expression would be better to use
+                    # #tRNA product example = 'tRNA-Ser (AGC)'
+                    #
+                    # #TODO The code block below functions, but it does not account for
+                    # #tRNA-OTHER descriptions.
+                    # #The biggest problem is that the expected product and note descriptions
+                    # #are expected to change after they reach NCBI, so it is not clear
+                    # #how to best address that issue here, since nothing in the import
+                    # #table reflects WHERE the annotated genome came from.
+                    # # tRNA_product_split1_list = tRNA_product.split('-')
+                    # # if len(tRNA_product_split1_list) == 2:
+                    # #
+                    # #     tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip()
+                    # #     tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
+                    # #     if len(tRNA_product_split2_list) == 2:
+                    # #
+                    # #         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip()
+                    # #         tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
+                    # #         if len(tRNA_product_split3_list) == 2:
+                    # #
+                    # #             tRNA_product_anticodon = tRNA_product_split3_list[0].strip()
+                    # #             if len(tRNA_product_anticodon) != 3:
+                    # #                 write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
+                    # #                 record_errors += 1
+                    # #         else:
+                    # #             write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
+                    # #             record_errors += 1
+                    # #     else:
+                    # #         write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
+                    # #         record_errors += 1
+                    # # else:
+                    # #     write_out(output_file,"\nError: tRNA product is incorrect in %s." % phageName)
+                    # #     record_errors += 1
 
                 #If feature is not CDS, Source, or tRNA, skip it
                 else:
@@ -2736,7 +2671,6 @@ for filename in genbank_files:
         geneID_typo_tally = 0
         geneID_typo_list = []
 
-        #REVIEW looks like there should also be an IF to see if it is hatfull or gbk author
         if use_basename != "yes":
             for geneID in geneID_set:
 

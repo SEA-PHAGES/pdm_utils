@@ -691,14 +691,10 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
             #Compare Accession
-            #If the genome status is "gbk", then don't worry about updating the accession
+            #If the genome author is "gbk", then don't worry about updating the accession
             #This used to be determined with the status field, but now it is
             #determined with the AnnotationAuthor field.
-            # if phamerator_accession != phagesdb_accession and phamerator_status != "gbk":
-            #     field_corrections_needed += 1
-
-            #TODO need to test this
-            if phamerator_accession != phagesdb_accession and phamerator_author != "gbk":
+            if phamerator_accession != phagesdb_accession and phamerator_author == "hatfull":
                 field_corrections_needed += 1
 
             #If errors in the Host, Cluster, or Subcluster information were
