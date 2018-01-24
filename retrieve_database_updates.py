@@ -70,10 +70,11 @@ except:
                 3. Host genus of the updated phage\n\
                 4. Cluster of the updated phage\n\
                 5. Subcluster of the updated phage\n\
-                6. Status of the update phage (draft, final, gbk)\n\
-                7. Gene description field of the update phage (product, note, function)\n\
-                8. Accession of the updated phage\n\
-                9. PhageID that will be removed or replaced\n\n"
+                6. Annotation status of the updated phage (draft, final, gbk)\n\
+                7. Annotation authorship of the updated phage (hatfull, gbk)\n\
+                8. Gene description field of the update phage (product, note, function)\n\
+                9. Accession of the updated phage\n\
+                10. PhageID that will be removed or replaced\n\n"
 
     sys.exit(1)
 
@@ -341,6 +342,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #6 = Accession
     #7 = RetrieveRecord
     #8 = Subcluster2
+    #9 = AnnotationAuthor
     try:
         con = mdb.connect(mysqlhost, username, password, database)
         con.autocommit(False)
@@ -355,7 +357,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         cur.execute("START TRANSACTION")
         cur.execute("SELECT version FROM version")
         db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,status,Cluster2,DateLastModified,Accession,RetrieveRecord,Subcluster2 FROM phage")
+        cur.execute("SELECT PhageID,Name,HostStrain,status,Cluster2,DateLastModified,\
+                            Accession,RetrieveRecord,Subcluster2,AnnotationAuthor FROM phage")
         current_genome_data_tuples = cur.fetchall()
         cur.execute("COMMIT")
         cur.close()
@@ -422,6 +425,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_accession = genome_tuple[6]
         phamerator_retrieve = genome_tuple[7]
         phamerator_subcluster = genome_tuple[8]
+        phamerator_author = genome_tuple[9]
+
 
 
         #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
@@ -458,6 +463,14 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         if phamerator_date is None:
             phamerator_date = datetime.strptime('1/1/1900','%m/%d/%Y')
 
+
+        #Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
+        if phamerator_author == 1:
+            phamerator_author = 'hatfull'
+        else:
+            phamerator_author = 'gbk'
+
+
         phamerator_id_set.add(phamerator_id)
         phamerator_host_set.add(phamerator_host)
         phamerator_cluster_set.add(phamerator_cluster)
@@ -474,6 +487,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         #6 = Accession
         #7 = RetrieveRecord
         #8 = Subcluster2
+        #9 = AnnotationAuthor
         modified_genome_data_list.append([phamerator_id,\
                                             phamerator_name,\
                                             phamerator_host,\
@@ -482,7 +496,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                             phamerator_date,\
                                             phamerator_accession,\
                                             phamerator_retrieve,\
-                                            phamerator_subcluster])
+                                            phamerator_subcluster,\
+                                            phamerator_author])
 
 
 
@@ -544,6 +559,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
         phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
 
 
 
@@ -575,6 +591,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 #6 = Accession
                 #7 = RetrieveRecord
                 #8 = Subcluster2
+                #9 = AnnotationAuthor
                 unique_accession_dict[phamerator_accession] = [phamerator_id,\
                                                                 phamerator_name,\
                                                                 phamerator_host,\
@@ -583,11 +600,13 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                                 phamerator_date,\
                                                                 phamerator_accession,\
                                                                 phamerator_retrieve,\
-                                                                phamerator_subcluster]
+                                                                phamerator_subcluster,\
+                                                                phamerator_author]
 
 
         #The next code block is only applicable if all phage data was successfully retrieved from phagesdb
-        #If incomplete data was retrieved from phagesdb, the retrieve_field_updates and retrieve_phagesdb_genomes flags should have been set to "no"
+        #If incomplete data was retrieved from phagesdb, the retrieve_field_updates and
+        #retrieve_phagesdb_genomes flags should have been set to "no"
         if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes"):
 
             #Ensure the phageID does not have Draft appended
@@ -612,7 +631,6 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 matched_count += 1
 
             else:
-                #print "\nError: unable to find phageID %s or phageName %s from phagesdb." %(phamerator_id,phamerator_name)
                 matched_phagesdb_data = ""
                 unmatched_count += 1
                 unmatched_phage_id_list.append(phamerator_id)
@@ -674,10 +692,17 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
             #Compare Accession
             #If the genome status is "gbk", then don't worry about updating the accession
-            if phamerator_accession != phagesdb_accession and phamerator_status != "gbk":
+            #This used to be determined with the status field, but now it is
+            #determined with the AnnotationAuthor field.
+            # if phamerator_accession != phagesdb_accession and phamerator_status != "gbk":
+            #     field_corrections_needed += 1
+
+            #TODO need to test this
+            if phamerator_accession != phagesdb_accession and phamerator_author != "gbk":
                 field_corrections_needed += 1
 
-            #If errors in the Host, Cluster, or Subcluster information were identified, create an import ticket to for the import script to implement.
+            #If errors in the Host, Cluster, or Subcluster information were
+            #identified, create an import ticket for the import script to implement.
             if field_corrections_needed > 0:
                 field_update_tally += 1
 
@@ -687,6 +712,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                     phagesdb_cluster,\
                                                     phagesdb_subcluster,\
                                                     phamerator_status,\
+                                                    phamerator_author,\
                                                     "none",\
                                                     phagesdb_accession,\
                                                     "none"])
@@ -740,12 +766,19 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                     phagesdb_file_handle.close()
 
                     #Create the new import ticket
+                    #Since the phagesdb phage has been matched to the phamerator
+                    #phage, the AnnotationAuthor field could be assigned from
+                    #the current phamerator_author variable. However, since
+                    #this genbank-formatted file is acquired through phagesdb,
+                    #both the Annotation status is expected to be 'final'
+                    #and the Annotation author is expected to be 'hatfull'.
                     phagesdb_import_table_writer.writerow(["replace",\
                                                             phage_id_search_name,\
                                                             "retrieve",\
                                                             "retrieve",\
                                                             "retrieve",\
                                                             "final",\
+                                                            "hatfull",\
                                                             "product",\
                                                             "retrieve",\
                                                             phamerator_id])
@@ -892,6 +925,7 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
         phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
 
 
         #ncbi_results_headers = 'PhageID','PhageName','Accession','Status','PhameratorDate','RetrievedRecordDate','Result'
@@ -929,12 +963,12 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_accession = genome_data[6]
         phamerator_retrieve = genome_data[7]
         phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
 
 
-        #5 Save new records in a folder and create an import table row for them
+        #Save new records in a folder and create an import table row for them
         if retrieved_record_date > phamerator_date:
 
-            #print 'Retrieved record date %s is more recent than phamerator date %s.' %(retrieved_record_date,phamerator_date)
             tally_retrieved_for_update += 1
             ncbi_results_writer.writerow([phamerator_id,\
                                         phamerator_name,\
@@ -969,6 +1003,7 @@ if retrieve_ncbi_genomes == "yes":
                                                 phamerator_cluster,\
                                                 phamerator_subcluster,\
                                                 phamerator_status,\
+                                                phamerator_author,\
                                                 'product',\
                                                 phamerator_accession,\
                                                 phamerator_id])
@@ -1040,6 +1075,7 @@ if retrieve_pecaan_genomes == "yes":
                                                 "retrieve",\
                                                 "retrieve",\
                                                 "draft",\
+                                                "hatfull",\
                                                 "product",\
                                                 "none",\
                                                 "none"])
