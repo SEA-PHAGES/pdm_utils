@@ -56,17 +56,17 @@ except:
             First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
             Second argument: directory path to the folder of genome files that will be uploaded (genbank-formatted).\n\
             Third argument: directory path to the import table file with the following columns (csv-formatted):\n\
-                    1. Action to implement on the database (add, remove, replace, update)\n\
-                    2. PhageID to add or update\n\
-                    3. Host genus of the updated phage\n\
-                    4. Cluster of the updated phage\n\
-                    5. Subcluster of the updated phage\n\
-                    6. Status of the update phage (draft, final, gbk)\n\
-                    7. Gene description field of the update phage (product, note, function)\n\
-                    8. Accession of the updated phage\n\
-                    9. PhageID that will be removed or replaced\n\n"
+                1. Action to implement on the database (add, remove, replace, update)\n\
+                2. PhageID to add or update\n\
+                3. Host genus of the updated phage\n\
+                4. Cluster of the updated phage\n\
+                5. Subcluster of the updated phage\n\
+                6. Annotation status of the updated phage (draft, final, gbk)\n\
+                7. Annotation authorship of the updated phage (hatfull, gbk)\n\
+                8. Gene description field of the update phage (product, note, function)\n\
+                9. Accession of the updated phage\n\
+                10. PhageID that will be removed or replaced\n\n"
     sys.exit(1)
-
 
 
 
@@ -282,7 +282,7 @@ def assign_cluster_field(subcluster,cluster):
 
 
 #If phage Cluster is Singleton, make sure MySQL statement is created correctly
-#TODO after updating subcluster, verify this function works correctly by
+#TODO verify this function works correctly by
 #printing it out on screen
 def create_cluster_statement(phage_name,cluster):
     cluster_statement = ""
@@ -427,7 +427,6 @@ write_out(output_file,"\nRun mode: " + run_mode)
 
 
 
-
 #Retrieve database version
 #Retrieve current data in database
 #0 = PhageID
@@ -439,6 +438,7 @@ write_out(output_file,"\nRun mode: " + run_mode)
 #6 = DateLastModified
 #7 = Accession
 #8 = Subcluster2
+#9 = AnnotationAuthor
 try:
     con = mdb.connect(mysqlhost, username, password, database)
     con.autocommit(False)
@@ -453,12 +453,13 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     db_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,Cluster2,DateLastModified,Accession,Subcluster2 FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,\
+                        Cluster2,DateLastModified,Accession,\
+                        Subcluster2,AnnotationAuthor FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
     con.autocommit(True)
-
 except:
     mdb_exit("\nUnable to access the database to retrieve genome information.\nNo changes have been made to the database.")
 
@@ -517,6 +518,7 @@ for genome_tuple in current_genome_data_tuples:
     #6 = Modified DateLastModified
     #7 = Modified Accession
     #8 = Subcluster2
+    #9 = AnnotationAuthor
     modified_genome_data_lists.append([genome_tuple[0],\
                                         genome_tuple[1],\
                                         genome_tuple[2],\
@@ -525,8 +527,9 @@ for genome_tuple in current_genome_data_tuples:
                                         genome_tuple[5],\
                                         modified_datelastmod,\
                                         modified_accession,\
-                                        genome_tuple[8]])
-
+                                        genome_tuple[8],\
+                                        str(genome_tuple[9])])
+                                        #REVIEW test
 
 
 
@@ -572,10 +575,12 @@ api_suffix = "/?format=json"
 #2 = Host of new phage
 #3 = Cluster of new phage (singletons should be reported as "singleton")
 #4 = Subcluster of new phage (no subcluster should be reported as "none")
-#5 = Status of new phage
-#6 = Feature field containing gene descriptions of new phage
-#7 = Accession
-#8 = PhageID of genome to be removed from the database
+#5 = Annotation status of new phage
+#6 = Annotation author of the new phage
+#7 = Feature field containing gene descriptions of new phage
+#8 = Accession
+#9 = PhageID of genome to be removed from the database
+
 
 write_out(output_file,"\n\n\n\nRetrieving import info from table in file...")
 
@@ -591,7 +596,7 @@ for input_row in file_reader:
 
 
     #Verify the row of information has the correct number of fields to parse.
-    if len(input_row) != 9:
+    if len(input_row) != 10:
         write_out(output_file,"\nRow in import table is not formatted correctly: " + str(input_row))
         table_errors += 1
         continue
@@ -605,26 +610,35 @@ for input_row in file_reader:
     #1 = New phage name (unchanged)
     #2 = Host (unchanged)
     #3 = Cluster (unchanged)
-    #4 = Status (unchanged)
+    #4 = Status
     #5 = Feature field (unchanged)
     #6 = PhageID to be removed
     #7 = Accession
-    #8 = Subcluster (unchanged)
+    #8 = Subcluster
+    #9 = AnnotationAuthor
     row = []
     row.append(input_row[0]) #Import action
     row.append(input_row[1]) #New phage name
     row.append(input_row[2]) #Host
     row.append(input_row[3]) #Cluster
     row.append(input_row[5]) #Status
-    row.append(input_row[6]) #Feature field
-    row.append(input_row[8]) #PhageID to be removed
-    row.append(input_row[7]) #Accession
+    row.append(input_row[7]) #Feature field
+    row.append(input_row[9]) #PhageID to be removed
+    row.append(input_row[8]) #Accession
     row.append(input_row[4]) #Subcluster
+    row.append(input_row[6]) #AnnotationAuthor
+
+
+
+
+
+
+
 
 
 
     #Make sure "none" and "retrieve" indications are lowercase,
-    #as well as "action", "status", and "feature" fields are lowercase
+    #as well as "action", "status", "feature", and "author" fields are lowercase
     row[0] = row[0].lower()
     if row[1].lower() == "none":
         row[1] = row[1].lower()
@@ -640,7 +654,7 @@ for input_row in file_reader:
         row[7] = row[7].lower()
     if (row[8].lower() == "none" or row[8].lower() == "retrieve"):
         row[8] = row[8].lower()
-
+    row[9] = row[9].lower()
 
     #If either the Host, Cluster, Subcluster or Accession data needs to be retrieved,
     #try to access the data in phagesdb before proceeding
@@ -838,12 +852,24 @@ for input_row in file_reader:
         row[7] = "none"
 
 
-
+    #Modify AnnotationAuthor
+    #Author should only be 'hatfull','gbk', or 'none'.
+    if row[9] == "hatfull":
+        row[9] = "1"
+    elif row[9] == "gbk":
+        row[9] = "0"
+    elif row[9] == "none":
+        row[9] = "none"
+    else:
+        row[9] = "error"
+    #REVIEW test
 
 
 
 
     #Rules for how each field is populated differs depending on each specific action
+
+
 
     #Update
     if row[0] == "update":
@@ -872,6 +898,13 @@ for input_row in file_reader:
 
         #Accession = it will either be an accession or it will be "none"
         #Subcluster = it will either be a Subcluster or it will be "none"
+
+        #Author
+        if row[9] != '1' and row[9] != '0':
+            write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
+            table_errors += 1
+
+
 
     #Add
     elif row[0] == "add":
@@ -903,18 +936,23 @@ for input_row in file_reader:
         #Accession = it will either be an accession or it will be "none"
         #Subcluster = it will either be a Subcluster or it will be "none"
 
+        #Author
+        if row[9] != '1' and row[9] != '0':
+            write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
+            table_errors += 1
 
     #Remove
     elif row[0] == "remove":
 
-        #FirstPhageID,Host, Cluster, Subcluster, Status, Description, Accession
+        #FirstPhageID,Host, Cluster, Subcluster, Status, Description, Accession, Author
         if (row[1] != "none" or \
             row[2] != "none" or \
             row[3] != "none" or \
             row[4] != "none" or \
             row[5] != "none" or \
             row[7] != "none" or \
-            row[8] != "none"):
+            row[8] != "none" or \
+            row[9] != "none"):
 
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
             table_errors += 1
@@ -967,6 +1005,10 @@ for input_row in file_reader:
         #Accession = it will either be an accession or it will be "none"
         #Subcluster = it will either be a Subcluster or it will be "none"
 
+        #Author
+        if row[9] != '1' and row[9] != '0':
+            write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
+            table_errors += 1
 
 
     else:
@@ -983,6 +1025,7 @@ for input_row in file_reader:
     #6 = PhageID to be removed
     #7 = Accession
     #8 = Subcluster
+    #9 = Author
 
 
 file_object.close()
@@ -998,7 +1041,9 @@ action_add_set = set()
 action_remove_set = set()
 action_add_remove_set = set()
 
-#Create each set and do initial checks for duplications. If the Add name or Remove name is "none", skip that because there are probably duplicates of those.
+#Create each set and do initial checks for duplications.
+#If the Add name or Remove name is "none", skip that because there are
+#probably duplicates of those.
 for genome_data in genome_data_list:
     current_add = (genome_data[1],)
     current_remove = (genome_data[6],)
@@ -1041,21 +1086,24 @@ for genome_data in genome_data_list:
     else:
         action_add_remove_set.add(current_action_add_remove)
 
-#Once the sets are created, also check if genomes to be removed are found in the Add field and vice versa.
+#Once the sets are created, also check if genomes to be removed are
+#found in the Add field and vice versa.
 for genome_data in genome_data_list:
     current_add = (genome_data[1],)
     current_remove = (genome_data[6],)
 
-    #If the phage name is not replacing itself, the Add name is not expected to be in the Remove set and vice versa.
+    #If the phage name is not replacing itself, the Add name is not expected
+    #to be in the Remove set and vice versa.
     if current_add != current_remove:
         if (current_add in remove_set and current_add != "none"):
             print genome_data[1] + " appears to be involved in more than one step."
-            table_errors += question("\nError: %s is duplicated" % str(current_add)) #errors will be incremented if name is used more than once
+            table_errors += question("\nError: %s is duplicated" % str(current_add))
 
 
         if (current_remove in add_set and current_remove != "none"):
             print genome_data[6] + " appears to be involved in more than one step."
-            table_errors += question("\nError: %s is duplicated" % str(current_remove)) #errors will be incremented if name is used more than once
+            table_errors += question("\nError: %s is duplicated" % str(current_remove))
+
 
 
 
@@ -1091,11 +1139,16 @@ for genome_data in genome_data_list:
         table_errors += 1
 
 
-#Check to see if there are any inconsistencies with the update data compared to current phamerator data
+#Check to see if there are any inconsistencies with the
+#update data compared to current phamerator data
 for genome_data in update_data_list:
 
+    #Initialize variable
+    matched_phamerator_data = ''
+
     #For Draft genomes in the import ticket, the phage name gets "_Draft" appended.
-    #At this point, if the phamerator genome being updated does not have the "_Draft" suffix, they will no longer be able to be matched
+    #At this point, if the phamerator genome being updated does not have
+    #the "_Draft" suffix, they will no longer be able to be matched
     try:
         matched_phamerator_data = phamerator_data_dict[genome_data[1]]
     except:
@@ -1155,9 +1208,20 @@ for genome_data in update_data_list:
     #Cluster, Subcluster check = no need to check this, as this data may be
     #more frequently updated than other fields.
 
+    #Author
+    #It is not common for authorship to change
+    if genome_data[9] != matched_phamerator_data[9]:
+
+        print "\n\nThere is conflicting author data for genome %s" % genome_data[1]
+        print "Phamerator author: %s" % matched_phamerator_data[9]
+        print "Import ticket author: %s" % genome_data[9]
+        print "1 = Hatfull"
+        print "0 = gbk"
+        print "The new author data will be imported."
+        table_errors += question("\nError: incorrect author data for %s." % genome_data[1])
 
 
-#Check to see if any genomes to be removed are the correct status
+#Check to see if genomes to be removed are the correct status
 for genome_data in remove_data_list:
 
     #The next QC check relies on the PhageID being present in the Phamerator.
@@ -1168,13 +1232,16 @@ for genome_data in remove_data_list:
     try:
         matched_phamerator_data = phamerator_data_dict[genome_data[6]]
         if matched_phamerator_data[4] != "draft":
-            print "The genome %s to be removed is currently %s status." % (genome_data[6],matched_phamerator_data[4])
-            table_errors += question("\nError: %s is %s status and should not be removed." % (genome_data[6],matched_phamerator_data[4]))
+            print "The genome %s to be removed is currently %s status." % \
+                    (genome_data[6],matched_phamerator_data[4])
+            table_errors += question("\nError: %s is %s status and should not be removed." % \
+                    (genome_data[6],matched_phamerator_data[4]))
     except:
         pass
 
 
-#If no errors encountered, print list of action items to be implemented and continue. Otherwise, exit the script.
+#If no errors encountered, print list of action items to be
+#implemented and continue. Otherwise, exit the script.
 if table_errors == 0:
     write_out(output_file,"\nImport table verified with 0 errors.")
     write_out(output_file,"\nList of all actions to be implemented:")
@@ -1209,10 +1276,11 @@ for genome_data in update_data_list:
     if genome_data[7] == "none":
         genome_data[7] = ""
 
-    #HostStrain, status, and Accession updates.
+    #HostStrain, status, Accession, Author updates.
     update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
     update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
+    update_statements.append("UPDATE phage SET AnnotationAuthor = '" + genome_data[9] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
     #Create the statement to update Cluster, Cluster2, and Subcluster2
     update_statements.append(\
@@ -1225,7 +1293,8 @@ for genome_data in update_data_list:
 
     updated += 1
 
-#If it looks like there is a problem with some of the genomes on the list, cancel the transaction, otherwise proceed
+#If it looks like there is a problem with some of the genomes on the list,
+#cancel the transaction, otherwise proceed
 if updated == update_total:
 
     if run_type == "production":
@@ -1261,17 +1330,24 @@ else:
 
 #Document the update actions
 for element in update_data_list:
+
+    #Convert the author data back to text
+    if element[9] == '1':
+        element[9] = 'hatfull'
+    else:
+        element[9] = 'gbk'
+
     update_output_list = [element[0],\
                             element[1],\
                             element[2],\
                             element[3],\
                             element[8],\
                             element[4],\
+                            element[9],\
                             element[5],\
                             element[7],\
                             element[6]]
     success_action_file_writer.writerow(update_output_list)
-
 
 if run_type != "smart":
     write_out(output_file,"\nAll field update actions have been implemented.")
@@ -1294,7 +1370,8 @@ for genome_data in remove_data_list:
     removal_statements.append("DELETE FROM phage WHERE PhageID = '" + genome_data[6] + "';")
     removed += 1
 
-#If it looks like there is a problem with some of the genomes on the list, cancel the transaction, otherwise proceed
+#If it looks like there is a problem with some of the genomes on the list,
+#cancel the transaction, otherwise proceed
 if removed == remove_total:
 
     if run_type == "production":
@@ -1329,17 +1406,18 @@ else:
 
 #Document the remove actions
 for element in remove_data_list:
+
     remove_output_list = [element[0],\
                             element[1],\
                             element[2],\
                             element[3],\
                             element[8],\
                             element[4],\
+                            element[9],\
                             element[5],\
                             element[7],\
                             element[6]]
     success_action_file_writer.writerow(remove_output_list)
-
 
 if run_type != "smart":
     write_out(output_file,"\nAll genome remove actions have been implemented.")
@@ -1412,7 +1490,8 @@ for filename in all_files:
         raw_input("\nPress ENTER to proceed to next file.")
         continue
 
-    #This try/except clause prevents the code from crashing if there is a problem with a file that Biopython has trouble parsing.
+    #This try/except clause prevents the code from crashing if there
+    #is a problem with a file that Biopython has trouble parsing.
     try:
         #Keep track of how many records Biopython parses
         parsed_records_tally = 0
@@ -1611,20 +1690,22 @@ for filename in genbank_files:
 
 
         try:
-            #There may be a list of accessions associated with this file. I think the first accession in the list is the most recent.
-            #Discard the version suffix if it is present in the Accession field (it might not be present)
+            #There may be a list of accessions associated with this file.
+            #I think the first accession in the list is the most recent.
+            #Discard the version suffix if it is present in the
+            #Accession field (it might not be present)
             parsed_accession = seq_record.annotations["accessions"][0]
             parsed_accession = parsed_accession.split('.')[0]
         except:
             parsed_accession = "none"
 
 
+        #Match up to the import ticket data
         #ALLPHAGES option
         if use_basename == "yes":
             matchedData = add_replace_data_dict.pop(basename,"error")
         else:
             matchedData = add_replace_data_dict.pop(phageName,"error")
-
 
         if matchedData != "error":
             write_out(output_file,"\nPreparing: " + str(matchedData))
@@ -1636,7 +1717,7 @@ for filename in genbank_files:
             import_genome_replace = matchedData[6]
             import_accession = matchedData[7]
             import_subcluster = matchedData[8]
-
+            import_author = matchedData[9]
 
 
         else:
@@ -1672,7 +1753,8 @@ for filename in genbank_files:
         con.close()
 
 
-        #Create a set of GeneIDs. If a genome will be replaced, do not add those GeneIDs to the set.
+        #Create a set of GeneIDs. If a genome will be replaced,
+        #do not add those GeneIDs to the set.
         all_GeneID_set = set()
         for gene_tuple in current_gene_data_tuples:
             if (import_action == "replace" and gene_tuple[1] == import_genome_replace):
@@ -1681,9 +1763,11 @@ for filename in genbank_files:
 
 
 
-        #Cross-check the import action against the current state of the database and create SQL statements
+        #Cross-check the import action against the current state of
+        #the database and create SQL statements
 
-        #If adding a new genome, no genome sequence in database is expected to match the current genome sequence
+        #If adding a new genome, no genome sequence in database is expected
+        #to match the current genome sequence
         if (import_action == "add" and len(query_results) > 0):
             record_errors += 1
             write_out(output_file,\
@@ -1710,6 +1794,7 @@ for filename in genbank_files:
                 phamerator_datelastmod = matched_phamerator_data[6]
                 phamerator_accession = matched_phamerator_data[7]
                 phamerator_subcluster = matched_phamerator_data[8]
+                phamerator_author = matched_phamerator_data[9]
 
             else:
                 write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))
@@ -1721,7 +1806,6 @@ for filename in genbank_files:
 
 
             #Import and Phamerator host data check
-            #After all features are parsed, the import and parsed host data is checked
             if import_host != phamerator_host:
 
                 record_warnings += 1
@@ -1795,12 +1879,22 @@ for filename in genbank_files:
 
 
 
+            #Author check
+            #It is not common for authorship to change
+            if import_author != phamerator_author:
+
+                write_out(output_file,"\nWarning: there is conflicting author data for genome %s." % phageName)
+                print "Phamerator author: %s" % phamerator_author
+                print "Import ticket author: %s" % import_author
+                print "1 = Hatfull"
+                print "0 = gbk"
+                print "The new author data will be imported."
+                record_errors += question("\nError: incorrect author data for %s." % phageName)
 
 
 
-
-
-            #Exactly one and only one genome in the database is expected to have the same sequence.
+            #Exactly one and only one genome in the database is
+            #expected to have the same sequence.
             if len(query_results) > 1:
                 record_errors += 1
                 write_out(output_file,"\nError: the following genomes in the database currently contain the same genome sequence as %s: %s).\nUnable to perform replace action." % (phageName,query_results))
@@ -1822,14 +1916,17 @@ for filename in genbank_files:
                     print "The genome will still be replaced."
                     record_errors +=  question("\nError: the genome to be removed, %s, was incorrect status." %import_genome_replace)
 
-                #The genome to be replaced does not match the genome name in the database with the same sequence.
+                #The genome to be replaced does not match the genome
+                #name in the database with the same sequence.
                 if query_results[0][0] != import_genome_replace:
                     write_out(output_file,"\nError: the genome to be removed, %s, does not match the genome name in the database, %s, that has the matching genome sequence to %s." % (import_genome_replace,query_results[0][0],phageName))
                     record_errors += 1
             else:
                 pass
 
-            #Check to see if the date in the new record is more recent than when the old record was uploaded into Phamerator (stored in DateLastModified)
+            #Check to see if the date in the new record is more recent
+            #than when the old record was uploaded into Phamerator
+            #(stored in DateLastModified)
             if not seq_record_date > phamerator_datelastmod:
                 record_warnings += 1
                 write_out(output_file,"\nWarning: The date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
@@ -1852,45 +1949,115 @@ for filename in genbank_files:
 
 
         #Author list check
-        #For SEA-PHAGES 'final' genomes, Graham Hatfull should be an Author
-        #Also, with this check, determine the AnnotationAuthor field setting
-        if import_status == 'final':
-            if record_author_string == "":
+
+        #REVIEW delete below
+        # if import_status == 'final':
+        #     if record_author_string == "":
+        #         record_warnings += 1
+        #         write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
+        #         print "The genome will continue to be imported."
+        #         record_errors += question("\nError: missing author data for %s." % phageName)
+        #         annotation_author = 0
+        #     else:
+        #         pattern5 = re.compile("hatfull")
+        #         search_result = pattern5.search(record_author_string.lower())
+        #         if search_result == None:
+        #             record_warnings += 1
+        #             write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
+        #             print "The genome will continue to be imported."
+        #             record_errors += question("\nError: incorrect author data for %s." % phageName)
+        #             annotation_author = 0
+        #         else:
+        #             annotation_author = 1
+        #
+        # elif import_status == 'draft':
+        #     annotation_author = 1
+        # else:
+        #     annotation_author = 0
+        #REVIEW delete above
+
+
+
+        #For annotation author = hatfull
+        #If annotation status is draft, author field can be missing Hatfull
+        #If annotation status is final, author field should have Hatfull
+        #For annotation author = gbk, author should NOT be in either field
+        pattern5 = re.compile("hatfull")
+        search_result = pattern5.search(record_author_string.lower())
+
+
+        #For Hatfull authored final annotations, Hatfull is an expected author
+        if import_author == '1' and import_status == 'final':
+
+            if search_result == None:
                 record_warnings += 1
-                write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
+                write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
                 print "The genome will continue to be imported."
-                record_errors += question("\nError: missing author data for %s." % phageName)
-                annotation_author = 0
-            else:
-                pattern5 = re.compile("hatfull")
-                search_result = pattern5.search(record_author_string.lower())
-                if search_result == None:
-                    record_warnings += 1
-                    write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
-                    print "The genome will continue to be imported."
-                    record_errors += question("\nError: incorrect author data for %s." % phageName)
-                    annotation_author = 0
-                else:
-                    annotation_author = 1
+                record_errors += question("\nError: incorrect author data for %s." % phageName)
+                #TODO not sure if this might need to be a forced error instead of an optional error
 
-        elif import_status == 'draft':
-            annotation_author = 1
+
+
+            #TODO the code block below tests for completely empty author lists
+            #as well as author lists that lack Hatfull. It doesn't seem necessary
+            #though to make this distinction.
+            # if record_author_string == "":
+            #     record_warnings += 1
+            #     write_out(output_file,"\nWarning: There are no authors listed for genome %s" % phageName)
+            #     print "The genome will continue to be imported."
+            #     record_errors += question("\nError: missing author data for %s." % phageName)
+            #     #The above code might need to be a forced error instead of an optional error
+            #
+            # else:
+            #     if search_result == None:
+            #         record_warnings += 1
+            #         write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
+            #         print "The genome will continue to be imported."
+            #         record_errors += question("\nError: incorrect author data for %s." % phageName)
+            #         #The above code might need to be a forced error instead of an optional error
+            #TODO delete code block above?
+
+        #For Hatfull authored draft annotations, there should not be authors listed
+        elif import_author == '1' and import_status == 'draft':
+
+            pass
+            #It doesn't really matter whether there are authors are an
+            #auto-annotated file. So no need to check what the author list has.
+            # if search_result != None:
+            #     record_warnings += 1
+            #     write_out(output_file,"\nWarning: Authors are listed for draft genome %s" % phageName)
+            #     print "The genome will continue to be imported."
+            #     record_errors += question("\nError: author data discrepancy for %s." % phageName)
+            #     #The above code might need to be a forced error instead of an optional error
+
+        #For non-Hatfull authored annotations of any kind (draft, final, gbk),
+        #Graham should not be an author
         else:
-            annotation_author = 0
+            if search_result != None:
+                record_warnings += 1
+                write_out(output_file,"\nError: Graham Hatfull is a listed author for genome %s" % phageName)
+                record_errors += 1
 
+
+        #TODO retrieval setting should take into account current setting phamerator
+        #TODO this will require retrieving the RetrieveRecord field at the initial phamerator query
         #Determine the RetrieveRecord field setting
         #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
         #If the genome is not auto-annotated (status = 'gbk') then set to 0 (OFF)
-        if genome_data[4] == "draft" or genome_data[4] == "final":
+
+
+        if import_author == '1':
             ncbi_update_status = '1'
         else:
             ncbi_update_status = '0'
 
-
         #Determine the AnnotationQC field setting
-        #All new auto-annotated (status = 'draft') and non-SEA-PHAGES (status = 'gbk') genomes should be set to 0 (OFF)
+        #All new auto-annotated (status = 'draft') and or unknown annotated
+        #(status = 'gbk') genomes should be set to 0 (OFF)
         #If the genome has been manually annotated (status = 'final') then set to 1 (ON)
-        if genome_data[4] == "final":
+        #REVIEW this may need to reference the current annotation_qc setting in phamerator database,
+        #REVIEW similar to the retrieve record setting
+        if import_status == 'final':
             annotation_qc = '1'
         else:
             annotation_qc = '0'
@@ -1909,7 +2076,7 @@ for filename in genbank_files:
         #8 = date
         #9 = ncbi_update_status
         #10 = annotation_qc
-        #11 = annotation_author
+        #11 = import_author
         if use_basename == "yes":
             phage_data_list.append(basename) #[0]
         else:
@@ -1920,15 +2087,14 @@ for filename in genbank_files:
         phage_data_list.append(accession_to_upload) #[1]
         phage_data_list.append(phageName) #[2]
         phage_data_list.append(import_host) #[3]
-        phage_data_list.append(phageSeq) #[4]
+        phage_data_list.append(str(phageSeq)) #[4]
         phage_data_list.append(seqLength) #[5]
-        phage_data_list.append(seqGC) #[6]
+        phage_data_list.append(seqGC) #[6] #TODO this number is many digits long and should be trimmed
         phage_data_list.append(import_status) #[7]
         phage_data_list.append(date) #[8]
         phage_data_list.append(ncbi_update_status) #[9]
         phage_data_list.append(annotation_qc) #[10]
-        phage_data_list.append(annotation_author) #[11]
-
+        phage_data_list.append(import_author) #[11]
 
         add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
@@ -1945,7 +2111,7 @@ for filename in genbank_files:
                                         phage_data_list[11]))
 
 
-        #REVIEW old code. New code uses the phage_data_list phage name, since
+        #TODO old code. New code uses the phage_data_list phage name, since
         #it has already been decided based on the allphages option.
         #This code block can be deleted once the new code is confirmed functional.
         # if use_basename == "yes":
@@ -2470,7 +2636,6 @@ for filename in genbank_files:
 
         #Process the source and organism fields to look for problems
 
-
         #Print the summary of the header information
         record_summary_header.append(["Record Name",record_name])
         record_summary_header.append(["Record ID",record_id])
@@ -2576,6 +2741,7 @@ for filename in genbank_files:
         geneID_typo_tally = 0
         geneID_typo_list = []
 
+        #REVIEW looks like there should also be an IF to see if it is hatfull or gbk author
         if use_basename != "yes":
             for geneID in geneID_set:
 
@@ -2747,15 +2913,24 @@ for filename in genbank_files:
 
 
         #Add the action data to the success output file, update tally of total script warnings and errors, then proceed
+        #Convert the author data back to text
+        if matchedData[9] == '1':
+            matchedData[9] = 'hatfull'
+        else:
+            matchedData[9] = 'gbk'
+
+
         add_replace_output_list = [matchedData[0],\
                                 matchedData[1],\
                                 matchedData[2],\
                                 matchedData[3],\
                                 matchedData[8],\
                                 matchedData[4],\
+                                matchedData[9],\
                                 matchedData[5],\
                                 matchedData[7],\
                                 matchedData[6]]
+                                #REVIEW test
 
         success_action_file_writer.writerow(add_replace_output_list)
         script_warnings += record_warnings
@@ -2790,15 +2965,24 @@ if len(add_replace_data_dict) > 0:
     write_out(output_file,"\n\nThe following add/replace action(s) in the import table were NOT successfully implemented:")
 
     for key in add_replace_data_dict:
+
+        #Convert the author data back to text
+        if add_replace_data_dict[key][9] == '1':
+            add_replace_data_dict[key][9] = 'hatfull'
+        else:
+            add_replace_data_dict[key][9] = 'gbk'
+
         failed_output_list = [add_replace_data_dict[key][0],\
                                 add_replace_data_dict[key][1],\
                                 add_replace_data_dict[key][2],\
                                 add_replace_data_dict[key][3],\
                                 add_replace_data_dict[key][8],\
                                 add_replace_data_dict[key][4],\
+                                add_replace_data_dict[key][9],\
                                 add_replace_data_dict[key][5],\
                                 add_replace_data_dict[key][7],\
                                 add_replace_data_dict[key][6]]
+                                #REVIEW test
         failed_action_file_writer.writerow(failed_output_list)
         write_out(output_file,"\n" + str(failed_output_list))
 
