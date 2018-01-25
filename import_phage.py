@@ -437,6 +437,8 @@ write_out(output_file,"\nRun mode: " + run_mode)
 #7 = Accession
 #8 = Subcluster2
 #9 = AnnotationAuthor
+#10 = AnnotationQC
+#11 = RetrieveRecord
 try:
     con = mdb.connect(mysqlhost, username, password, database)
     con.autocommit(False)
@@ -453,7 +455,8 @@ try:
     db_version = str(cur.fetchone()[0])
     cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,\
                         Cluster2,DateLastModified,Accession,\
-                        Subcluster2,AnnotationAuthor FROM phage")
+                        Subcluster2,AnnotationAuthor,\
+                        AnnotationQC,RetrieveRecord FROM phage")
     current_genome_data_tuples = cur.fetchall()
     cur.execute("COMMIT")
     cur.close()
@@ -490,7 +493,6 @@ for genome_tuple in current_genome_data_tuples:
     phageCluster_set.add(genome_tuple[5])
     phageSubcluster_set.add(genome_tuple[8])
 
-
     #If there is no date in the DateLastModified field, set it to a very early date
     if genome_tuple[6] is None:
         modified_datelastmod = datetime.strptime('1/1/1900','%m/%d/%Y')
@@ -517,6 +519,8 @@ for genome_tuple in current_genome_data_tuples:
     #7 = Modified Accession
     #8 = Subcluster2
     #9 = AnnotationAuthor
+    #10 = AnnotationQC
+    #11 = RetrieveRecord
     modified_genome_data_lists.append([genome_tuple[0],\
                                         genome_tuple[1],\
                                         genome_tuple[2],\
@@ -526,7 +530,10 @@ for genome_tuple in current_genome_data_tuples:
                                         modified_datelastmod,\
                                         modified_accession,\
                                         genome_tuple[8],\
-                                        str(genome_tuple[9])])
+                                        str(genome_tuple[9]),\
+                                        str(genome_tuple[10]),\
+                                        str(genome_tuple[11])])
+
 
 
 #Now that sets and dictionaries have been made, create a phamerator_data_dict
@@ -1789,6 +1796,8 @@ for filename in genbank_files:
                 phamerator_accession = matched_phamerator_data[7]
                 phamerator_subcluster = matched_phamerator_data[8]
                 phamerator_author = matched_phamerator_data[9]
+                phamerator_annotation_qc = matched_phamerator_data[10]
+                phamerator_retrieve_record = matched_phamerator_data[11]
 
             else:
                 write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))
@@ -1976,28 +1985,54 @@ for filename in genbank_files:
                 record_errors += 1
 
 
-        #TODO retrieval setting should take into account current setting phamerator.
-        # this will require retrieving the RetrieveRecord field at the initial phamerator query
-        #Determine the RetrieveRecord field setting
-        #All new auto-annotated (status = 'draft') and manually-annotated (status = 'final') SEA-PHAGES genomes should be set to 1 (ON)
-        #If the genome is not auto-annotated (status = 'gbk') then set to 0 (OFF)
 
 
-        if import_author == '1':
-            ncbi_update_status = '1'
+        #Determine AnnotationQC and RetrieveRecord settings
+        #AnnotationQC and RetrieveRecord settings can be carried over
+        #from the previous settings in Phamerator under specific
+        #circumstances.
+        #This enables manual updates made to the database for these two fields
+        #to be carried over as the genome is manually or automatically updated.
+
+        #Since a change in AnnotatioQC or RetrieveRecord from default settings
+        #is expected to be rare, these two fields can be updated without
+        #requiring two additional fields in the import table.
+
+        #For genome replacements, RetrieveRecord is determined based on
+        #previous setting. AnnotationQC is determined from previous setting
+        #UNLESS it is a Final genome replacing a Draft, in which the AnnotationQC
+        #must be changed from 0 to 1.
+        if import_action == "replace":
+
+            ncbi_update_status = phamerator_retrieve_record
+
+            #Only under the specific event of a Final replacing a Draft
+            #should the AnnotationQC be set to 1. All other events should simply
+            #carry it over from the previous setting.
+            if phamerator_status == 'draft' and import_status == 'final':
+                annotation_qc = '1'
+
+            else:
+                annotation_qc = phamerator_annotation_qc
+
+        #For adding a new genome, AnnotationQC is determined by the status,
+        #and the RetrieveRecord is determined by the author.
         else:
-            ncbi_update_status = '0'
 
-        #Determine the AnnotationQC field setting
-        #All new auto-annotated (status = 'draft') and or unknown annotated
-        #(status = 'gbk') genomes should be set to 0 (OFF)
-        #If the genome has been manually annotated (status = 'final') then set to 1 (ON)
-        #REVIEW this may need to reference the current annotation_qc setting in phamerator database,
-        # similar to the retrieve record setting
-        if import_status == 'final':
-            annotation_qc = '1'
-        else:
-            annotation_qc = '0'
+            if import_author == '1':
+                ncbi_update_status = '1'
+            else:
+                ncbi_update_status = '0'
+
+            if import_status == 'draft' or import_status == 'gbk':
+                annotation_qc = '0'
+            else:
+                annotation_qc = '1'
+
+
+
+
+
 
 
 
@@ -2032,6 +2067,7 @@ for filename in genbank_files:
         phage_data_list.append(ncbi_update_status) #[9]
         phage_data_list.append(annotation_qc) #[10]
         phage_data_list.append(import_author) #[11]
+
 
         add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
