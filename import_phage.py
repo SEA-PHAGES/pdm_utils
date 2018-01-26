@@ -566,6 +566,11 @@ host_ignore = ['enterobacteria','phage','bacteriophage','cyanophage']
 
 
 
+
+#Dictionary for storing authorship info
+author_dictionary = {'0':'gbk','1':'hatfull'}
+
+
 #Phagesdb API to retrieve genome information
 api_prefix = "http://phagesdb.org/api/phages/"
 api_suffix = "/?format=json"
@@ -1214,10 +1219,8 @@ for genome_data in update_data_list:
     if genome_data[9] != matched_phamerator_data[9]:
 
         print "\n\nThere is conflicting author data for genome %s" % genome_data[1]
-        print "Phamerator author: %s" % matched_phamerator_data[9]
-        print "Import ticket author: %s" % genome_data[9]
-        print "1 = Hatfull"
-        print "0 = gbk"
+        print "Phamerator author: %s" % author_dictionary[matched_phamerator_data[9]]
+        print "Import ticket author: %s" % author_dictionary[genome_data[9]]
         print "The new author data will be imported."
         table_errors += question("\nError: incorrect author data for %s." % genome_data[1])
 
@@ -1332,19 +1335,14 @@ else:
 #Document the update actions
 for element in update_data_list:
 
-    #Convert the author data back to text
-    if element[9] == '1':
-        element[9] = 'hatfull'
-    else:
-        element[9] = 'gbk'
-
+    #TODO test author_dictionary
     update_output_list = [element[0],\
                             element[1],\
                             element[2],\
                             element[3],\
                             element[8],\
                             element[4],\
-                            element[9],\
+                            author_dictionary[element[9]],\
                             element[5],\
                             element[7],\
                             element[6]]
@@ -1887,10 +1885,8 @@ for filename in genbank_files:
             if import_author != phamerator_author:
 
                 write_out(output_file,"\nWarning: there is conflicting author data for genome %s." % phageName)
-                print "Phamerator author: %s" % phamerator_author
-                print "Import ticket author: %s" % import_author
-                print "1 = Hatfull"
-                print "0 = gbk"
+                print "Phamerator author: %s" % author_dictionary[phamerator_author]
+                print "Import ticket author: %s" % author_dictionary[import_author]
                 print "The new author data will be imported."
                 record_errors += question("\nError: incorrect author data for %s." % phageName)
 
@@ -2646,7 +2642,7 @@ for filename in genbank_files:
 
 
 
-        #NCBI record definition QC
+        #Record definition QC
         #It can contain ", complete genome." or "." at the end,
         #so remove this before doing search.
         if record_def[-1:].lower() == '.':
@@ -2920,20 +2916,13 @@ for filename in genbank_files:
 
 
         #Add the action data to the success output file, update tally of total script warnings and errors, then proceed
-        #Convert the author data back to text
-        if matchedData[9] == '1':
-            matchedData[9] = 'hatfull'
-        else:
-            matchedData[9] = 'gbk'
-
-
         add_replace_output_list = [matchedData[0],\
                                 matchedData[1],\
                                 matchedData[2],\
                                 matchedData[3],\
                                 matchedData[8],\
                                 matchedData[4],\
-                                matchedData[9],\
+                                author_dictionary[matchedData[9]],\
                                 matchedData[5],\
                                 matchedData[7],\
                                 matchedData[6]]
@@ -2971,19 +2960,13 @@ if len(add_replace_data_dict) > 0:
 
     for key in add_replace_data_dict:
 
-        #Convert the author data back to text
-        if add_replace_data_dict[key][9] == '1':
-            add_replace_data_dict[key][9] = 'hatfull'
-        else:
-            add_replace_data_dict[key][9] = 'gbk'
-
         failed_output_list = [add_replace_data_dict[key][0],\
                                 add_replace_data_dict[key][1],\
                                 add_replace_data_dict[key][2],\
                                 add_replace_data_dict[key][3],\
                                 add_replace_data_dict[key][8],\
                                 add_replace_data_dict[key][4],\
-                                add_replace_data_dict[key][9],\
+                                author_dictionary[add_replace_data_dict[key][9]],\
                                 add_replace_data_dict[key][5],\
                                 add_replace_data_dict[key][7],\
                                 add_replace_data_dict[key][6]]
