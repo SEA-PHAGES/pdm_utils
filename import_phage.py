@@ -2630,24 +2630,59 @@ for filename in genbank_files:
         pattern1 = re.compile('^' + phageName + '$')
         pattern2 = re.compile('^' + phageName)
 
-        if find_name(pattern1,record_name.split(' ')) == 0:
 
-            if record_name.split('.')[0] != parsed_accession:
-                print "\nRecord name does not have the accession number or the identical phage name as found in the record organism field."
-                record_errors += question("\nError: problem with header info of file %s." % filename)
+        #REVIEW This QC check may not be necessary. It really doesn't matter
+        #for Draft genomes, since the fields are auto-populated. For NCBI genomes,
+        #the field should be an Accession. For Final genomes yet to be submitted
+        #to NCBI, even if there is a typo, it should not be retained since this
+        #field gets populated with the Accession.
+        # if find_name(pattern1,record_name.split(' ')) == 0:
+        #
+        #     if record_name.split('.')[0] != parsed_accession:
+        #         print "\nRecord name does not have the accession number or the identical phage name as found in the record organism field."
+        #         record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if find_name(pattern2,record_def.split(' ')) == 0:
 
+
+
+
+        #NCBI record definition QC
+        #It can contain ", complete genome." or "." at the end,
+        #so remove this before doing search.
+        if record_def[-1:].lower() == '.':
+            if record_def[-18:].lower() == ', complete genome.':
+                record_def_trimmed = record_def[:-18]
+            else:
+                record_def_trimmed = record_def[:-1]
+        else:
+            record_def_trimmed = record_def
+
+
+        if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
             print "\nRecord definition does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if find_name(pattern1,record_source.split(' ')) == 0:
+        #REVIEW the above Record definition check replaces the code block below
+        # if find_name(pattern1,record_def[:-18].split(' ')) == 0:
+        #     print record_def[:-18].split(' ')
+        #     print "\nRecord definition does not have identical phage name as found in the record organism field."
+        #     record_errors += question("\nError: problem with header info of file %s." % filename)
+        #
+        # else:
+        #     if find_name(pattern2,record_def.split(' ')) == 0:
+        #         print "\nRecord definition does not have identical phage name as found in the record organism field."
+        #         record_errors += question("\nError: problem with header info of file %s." % filename)
 
+
+
+        #Record source QC
+        if find_name(pattern1,record_source.split(' ')) == 0:
             print "\nRecord source does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        if find_name(pattern1,feature_source_organism.split(' ')) == 0:
 
+        #Source feature organism QC
+        if find_name(pattern1,feature_source_organism.split(' ')) == 0:
             print "\nSource feature organism does not have identical phage name as found in the record organism field."
             record_errors += question("\nError: problem with header info of file %s." % filename)
 
