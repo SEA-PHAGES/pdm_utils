@@ -393,7 +393,9 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #Initialize variables to match Phamerator and phagesdb data
     matched_count = 0
     unmatched_count = 0
+    unmatched_hatfull_count = 0
     unmatched_phage_id_list = []
+    unmatched_hatfull_phage_id_list = []
 
 
     #Initialize set variables
@@ -564,7 +566,9 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-        #For NCBI retrieval, add to dictionary if 1) the genome is set to be automatically updated and 2) if there is an accession number
+        #For NCBI retrieval, add to dictionary if
+        #1) the genome is set to be automatically updated and
+        #2) if there is an accession number
         if retrieve_ncbi_genomes == "yes":
 
             if phamerator_retrieve != 1:
@@ -634,6 +638,12 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                 matched_phagesdb_data = ""
                 unmatched_count += 1
                 unmatched_phage_id_list.append(phamerator_id)
+
+                #Only add Hatfull-author unmatched phages to list
+                if phamerator_author == 'hatfull':
+                    unmatched_hatfull_count += 1
+                    unmatched_hatfull_phage_id_list.append(phamerator_id)
+
                 continue
 
 
@@ -795,12 +805,13 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     #All field updates and manually-annotated flatfiles have been retrieved from phagesdb.
     #Report retrieval results.
 
-
     print "\nPhamerator-phagesdb matched phage tally: %s." %matched_count
     print "\nPhamerator-phagesdb unmatched phage tally: %s." %unmatched_count
-    if unmatched_count > 0:
-        print "\nPhamerator-phagesdb unmatched phages:"
-        for element in unmatched_phage_id_list:
+
+    #Only print out Hatfull-author unmatched phages.
+    if unmatched_hatfull_count > 0:
+        print "\nPhamerator-phagesdb Hatfull-author unmatched phages:"
+        for element in unmatched_hatfull_phage_id_list:
             print element
 
     #Field updates
