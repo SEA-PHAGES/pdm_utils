@@ -386,6 +386,70 @@ def change_descriptions():
 
 
 
+def check_tRNA_product(product_field):
+
+    #This is an initial attempt at checking the tRNA product description
+    #Ultimately, a regular expression would be better to use
+    #tRNA product example = 'tRNA-Ser (AGC)'
+
+    #TODO The code block below functions, but it does not fully account for
+    #tRNA-OTHER descriptions and it does not check the accuracy of
+    #the amino acid and anticodon pairing.
+    #The biggest problem is that the expected product and note descriptions
+    #are expected to change after they reach NCBI, so it is not clear
+    #how to best address that issue here, since nothing in the import
+    #table reflects WHERE the annotated genome came from.
+
+
+
+    product_error = 0
+
+
+    #product starts off as lowercase 'trna-ser (agc)'
+    tRNA_product_split1_list = product_field.split('-')
+
+    #If product is missing, an error will already have been
+    #thrown, so only parse product if there is one
+    if len(tRNA_product_split1_list) == 2:
+
+        #split1_list = 'trna' and 'ser (agc)'
+
+        tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip() #'trna'
+        tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
+
+        #split2_list = 'ser' and 'agc)'
+        if len(tRNA_product_split2_list) == 2:
+
+            tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip() #'ser'
+            tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
+
+            #split3_list = 'agc' and ''
+
+            #Only check the anticodon if the amino acid is NOT 'other'
+            if tRNA_product_amino_acid_three != 'other' and \
+                len(tRNA_product_split3_list) == 2:
+
+                tRNA_product_anticodon = tRNA_product_split3_list[0].strip() #'agc'
+                if len(tRNA_product_anticodon) != 3:
+                    product_error += 1
+            else:
+                product_error += 1
+        else:
+            product_error += 1
+    else:
+        pass
+
+    return product_error
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1335,7 +1399,6 @@ else:
 #Document the update actions
 for element in update_data_list:
 
-    #TODO test author_dictionary
     update_output_list = [element[0],\
                             element[1],\
                             element[2],\
@@ -2142,111 +2205,105 @@ for filename in genbank_files:
                 #that is replacing an auto-annotated genome.
                 #Eventually, this restriction can be loosened to evaluate tRNAs
                 #in any type of genome.
-                elif feature.type == "tRNA" and import_action == "replace":
+
+                elif feature.type == "tRNA" and import_action == "replace" and \
+                    phamerator_status == 'draft' and import_status == 'final':
 
 
-                    #Retrieve coordinates and sequence
-                    if phamerator_status == 'draft' and import_status == 'final':
+                    #Retrieve tRNA coordinates
+                    try:
 
-                        try:
+                        #Biopython converts coordinates to 0-index
+                        #Start(left) coordinates are 0-based inclusive (feature starts there)
+                        #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
+                        tRNA_left = str(feature.location.start)
+                        tRNA_right = str(feature.location.end)
 
-                            #Biopython converts coordinates to 0-index
-                            #Start(left) coordinates are 0-based inclusive (feature starts there)
-                            #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
-                            tRNA_left = int(feature.location.start)
-                            tRNA_right = int(feature.location.end)
-                            #print tRNA_left
-                            #print tRNA_right
+                    except:
+                        write_out(output_file,"\nError: a tRNA has incorrect coordinates in phage %s."\
+                                % phageName)
+                        record_errors += 1
+                        continue
 
-                            #Retrieve top strand of tRNA feature. It is NOT necessarily
-                            #in the correct orientation
-                            tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
-                            #print str(tRNA_seq)
-
-
-                            #Convert sequence to reverse complement if it is on bottom strand
-                            if feature.strand == 1:
-                                pass
-                            elif feature.strand == -1:
-                                tRNA_seq = tRNA_seq.reverse_complement()
-                            else:
-                                record_errors += 1
-                                write_out(output_file,"\Error: tRNA does not have proper orientation in %s phage." % phageName)
-                                continue
-
-                            #Check to see if forward strand terminal nucleotide is correct = A or C
-                            if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
-                                record_warnings += 1
-                                write_out(output_file,"\nWarning: tRNA does not appear to be have correct terminal nucleotide in %s phage." % phageName)
-                                record_errors += question("\nError: tRNA feature is not correct in %s phage." % phageName)
-
-                            tRNA_size = len(tRNA_seq)
-                            if tRNA_size < 70 or tRNA_size > 90:
-                                record_warnings += 1
-                                write_out(output_file,"\nWarning: tRNA does not appear to be the correct size in %s phage."  % phageName)
-                                record_errors += question("\nError: tRNA feature is incorrect size in %s phage." % phageName)
-
-                        except:
-                            write_out(output_file,"\nError: tRNA coordinates, orientation, or sequence is incorrect in phage %s." % phageName)
-                            record_errors += 1
-
-
-                        #Retrieve product
-                        try:
-                            tRNA_product = feature.qualifiers['product'][0].lower().strip()
-                            #print tRNA_product
-                        except:
-                            write_out(output_file,"\nError: tRNA does not have product field in phage %s." % phageName)
-                            record_errors += 1
-                            tRNA_product = ''
-
-
-                        #Retrieve note
-                        try:
-                            tRNA_note = feature.qualifiers['note'][0].lower().strip()
-                            #print tRNA_note
-                        except:
-                            #write_out(output_file,"\nError: tRNA does not have note field in phage %s." % phageName)
-                            #record_errors += 1
-                            tRNA_note = ''
-
-                        #This is an initial attempt at checking the tRNA product description
-                        #Ultimately, a regular expression would be better to use
-                        #tRNA product example = 'tRNA-Ser (AGC)'
-
-                        #TODO The code block below functions, but it does not account for
-                        #tRNA-OTHER descriptions.
-                        #The biggest problem is that the expected product and note descriptions
-                        #are expected to change after they reach NCBI, so it is not clear
-                        #how to best address that issue here, since nothing in the import
-                        #table reflects WHERE the annotated genome came from.
-                        # tRNA_product_split1_list = tRNA_product.split('-')
-                        # if len(tRNA_product_split1_list) == 2:
-                        #
-                        #     tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip()
-                        #     tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
-                        #     if len(tRNA_product_split2_list) == 2:
-                        #
-                        #         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip()
-                        #         tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
-                        #         if len(tRNA_product_split3_list) == 2:
-                        #
-                        #             tRNA_product_anticodon = tRNA_product_split3_list[0].strip()
-                        #             if len(tRNA_product_anticodon) != 3:
-                        #                 write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
-                        #                 record_errors += 1
-                        #         else:
-                        #             write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
-                        #             record_errors += 1
-                        #     else:
-                        #         write_out(output_file,"\nError: tRNA anticodon is incorrect in %s." % phageName)
-                        #         record_errors += 1
-                        # else:
-                        #     write_out(output_file,"\nError: tRNA product is incorrect in %s." % phageName)
-                        #     record_errors += 1
-
+                    #Now that start and stop have been parsed, check if coordinates are fuzzy or not
+                    if (tRNA_left.isdigit() and tRNA_right.isdigit()):
+                        tRNA_left = int(tRNA_left)
+                        tRNA_right = int(tRNA_right)
                     else:
+                        write_out(output_file,"\nError: tRNA starting at %s has fuzzy coordinates in phage %s."\
+                                % (tRNA_left,phageName))
+                        record_errors += 1
+                        continue
+
+                    #Retrieve top strand of tRNA feature. It is NOT necessarily
+                    #in the correct orientation
+                    tRNA_size = abs(tRNA_right - tRNA_left)
+                    tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
+                    if len(tRNA_seq) != tRNA_size:
+                        write_out(output_file,"\nError: unable to retrieve sequence for tRNA starting at %s in phage %s."\
+                                % (tRNA_left + 1,phageName))
+                        record_errors += 1
+                        continue
+
+
+                    #Convert sequence to reverse complement if it is on bottom strand
+                    if feature.strand == 1:
                         pass
+                    elif feature.strand == -1:
+                        tRNA_seq = tRNA_seq.reverse_complement()
+                    else:
+                        record_errors += 1
+                        write_out(output_file,"\Error: tRNA starting at %s does not have proper orientation in %s phage." \
+                                % (tRNA_left + 1,phageName))
+                        continue
+
+                    #Check to see if forward strand terminal nucleotide is correct = A or C
+                    if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
+                        record_warnings += 1
+                        write_out(output_file,"\nWarning: tRNA starting at %s does not appear to have correct terminal nucleotide in %s phage." \
+                                % (tRNA_left + 1,phageName))
+                        record_errors += question("\nError: tRNA starting at %s has incorrect terminal nucleotide in %s phage." \
+                                % (tRNA_left + 1,phageName))
+
+                    if tRNA_size < 70 or tRNA_size > 90:
+                        record_warnings += 1
+                        write_out(output_file,"\nWarning: tRNA starting at %s does not appear to be the correct size in %s phage."  \
+                                % (tRNA_left + 1,phageName))
+                        record_errors += question("\nError: tRNA starting at %s is incorrect size in %s phage." \
+                                % (tRNA_left + 1,phageName))
+
+
+                    #Retrieve and check product
+                    try:
+                        tRNA_product = feature.qualifiers['product'][0].lower().strip()
+
+                        if len(tRNA_product) > 0:
+                            if check_tRNA_product(tRNA_product) > 0:
+                                write_out(output_file,"\nError: tRNA starting at %s has incorrect anticodon in %s." \
+                                    % (tRNA_left + 1, phageName))
+                                record_errors += 1
+                        else:
+                            write_out(output_file,"\nError: tRNA starting at %s has incorrect product in %s." \
+                                % (tRNA_left + 1, phageName))
+                            record_errors += 1
+
+                    except:
+                        write_out(output_file,"\nError: tRNA starting at %s is missing product field in phage %s." \
+                            % (tRNA_left + 1,phageName))
+                        record_errors += 1
+                        tRNA_product = ''
+
+
+                    #Retrieve note
+                    #In the future, this field may need to be parsed in a similar
+                    #manner as the product field. For now, do nothing.
+                    try:
+                        tRNA_note = feature.qualifiers['note'][0].lower().strip()
+                    except:
+                        tRNA_note = ''
+
+
+
                 #If feature is not CDS, Source, or tRNA, skip it
                 else:
                     pass
