@@ -421,6 +421,9 @@ class PhameratorGenome(AnnotatedGenome):
     def get_annotation_author(self):
         return self.__annotation_author
 
+
+
+
 class PhagesdbGenome(UnannotatedGenome):
 
     # Initialize all attributes:
@@ -907,11 +910,23 @@ class MatchedGenomes:
             #If the Phamerator genome has a status of 'final', then Graham Hatfull should
             #be an author on the NCBI record. If status is 'gbk' or 'draft', then no need to check this
             #TODO this logic will need to change if 'gbk' status is retired
+
+            #REVIEW old code based on 'final' logic
+            # if ph_genome.get_status() == 'final':
+            #     pattern5 = re.compile('hatfull')
+            #     search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
+            #     if search_result == None:
+            #         self.__ph_ncbi_author_error = True
+
+                    #REVIEW work
+
             if ph_genome.get_status() == 'final':
                 pattern5 = re.compile('hatfull')
                 search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
                 if search_result == None:
                     self.__ph_ncbi_author_error = True
+
+
 
 
             #Compare CDS features
@@ -1252,7 +1267,7 @@ class MatchedGenomes:
     def get_contains_errors(self):
         return self.__contains_errors
     def get_ph_ncbi_author_error(self):
-        return self.__ph_ncbi_author_error
+        return self.__ph_ncbi__error
 
 
 class MatchedCdsFeatures:
@@ -1916,7 +1931,51 @@ if 'ncbi' in valid_database_set:
 
 
 
-#Determine which types of genomes should be checked: draft, final, gbk
+
+#REVIEW add new author choice
+#Determine which type of genomes should be checked based on
+#who annotated the genome: Hatfull or Gbk authors
+analyze_genome_author_options = [\
+    'none',\
+    'Hatfull only',\
+    'Genbank only',\
+    'Hatfull and Genbank']
+print '\n\nThe following types of Phamerator genomes based on authorship can be analyzed:'
+#print '0: ' + analyze_genome_author_options[0]
+print '1: ' + analyze_genome_author_options[1]
+print '2: ' + analyze_genome_author_options[2]
+print '3: ' + analyze_genome_author_options[3]
+analyze_genome_author = select_option(\
+    "\nWhich type of analysis do you want? ", \
+    set([1,2,3]))
+
+analyze_genome_author_output = \
+    'Genomes of the following author types were analyzed: ' + \
+    analyze_genome_author_options[analyze_genome_author]
+
+
+
+
+#REVIEW add 'hatfull' text or integer?
+valid_genome_author_set = set()
+if analyze_genome_author == 1:
+    valid_genome_author_set.add(1)
+elif analyze_genome_author == 2:
+    valid_genome_author_set.add(0)
+elif analyze_genome_author == 3:
+    valid_genome_author_set.add(1)
+    valid_genome_author_set.add(0)
+else:
+    pass
+
+
+
+
+
+
+#REVIEW change logic?
+#Determine which types of genomes should be checked based on
+#the status of the annotations: draft, final, gbk
 analyze_genome_status_options = [\
     'none',\
     'draft only',\
@@ -1926,7 +1985,7 @@ analyze_genome_status_options = [\
     'draft and gbk',\
     'final and gbk',\
     'draft, final, and gbk']
-print '\n\nThe following types of Phamerator genomes can be analyzed:'
+print '\n\nThe following types of Phamerator genomes based on annotation status can be analyzed:'
 #print '0: ' + analyze_genome_status_options[0]
 print '1: ' + analyze_genome_status_options[1]
 print '2: ' + analyze_genome_status_options[2]
@@ -1946,6 +2005,7 @@ analyze_genome_status_output = \
 
 
 
+#REVIEW change logic?
 valid_genome_status_set = set()
 if analyze_genome_status == 1:
     valid_genome_status_set.add('draft')
@@ -2045,7 +2105,12 @@ ph_total_genome_count = len(ph_genome_data_tuples)
 for genome_tuple in ph_genome_data_tuples:
     print "Processing Phamerator genome %s out of %s" %(ph_genome_count,ph_total_genome_count)
 
-    if genome_tuple[5] not in valid_genome_status_set:
+    #REVIEW change logic for valid_genome_status_set?
+
+    #Add conditional to account for authorship
+
+    if genome_tuple[5] not in valid_genome_status_set or \
+        genome_tuple[10] not in valid_genome_author_set:
         continue
     else:
         genome_object = PhameratorGenome()
@@ -2979,6 +3044,7 @@ genome_report_column_headers = [\
     #should be reported with the other ph_ncbi error tallies
     'ph_ncbi_author_error',\
 
+    #REVIEW check
 
     'ph_ncbi_perfectly_matched_gene_tally',\
     'ph_ncbi_imperfectly_matched_gene_tally',\
