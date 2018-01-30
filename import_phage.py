@@ -1755,7 +1755,10 @@ for filename in genbank_files:
             #There may be a list of accessions associated with this file.
             #I think the first accession in the list is the most recent.
             #Discard the version suffix if it is present in the
-            #Accession field (it might not be present)
+            #Accession field (it might not be present).
+            #If an Accession is present, the script will interpret this to mean
+            #the genome record is derived from NCBI. An empty Accession will
+            #be interpreted as a manual annotation not retrieved from NCBI.
             parsed_accession = seq_record.annotations["accessions"][0]
             parsed_accession = parsed_accession.split('.')[0]
         except:
@@ -2610,7 +2613,14 @@ for filename in genbank_files:
             feature_data_list.append(feature_product)
             feature_data_list.append(feature_function)
             feature_data_list.append(feature_note)
-            feature_data_list.append(feature_locus_tag)
+
+            #If there is a parsed accession, the file is interpreted to have
+            #been retrieved from NCBi, which means the locus tags are the official
+            #locus tags. Otherwise, do not retain the locus tags in the record.
+            if parsed_accession != 'none':
+                feature_data_list.append(feature_locus_tag)
+            else:
+                feature_data_list.append('')
 
             all_features_data_list.append(feature_data_list)
 
