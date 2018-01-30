@@ -3,7 +3,8 @@
 #University of Pittsburgh
 #Travis Mavrich
 #20170212
-#The purpose of this script is to provide an interactive environment to retrieve several types of Phamerator updates
+#The purpose of this script is to provide an interactive environment to
+#retrieve several types of Phamerator updates
 #that will be imported into Phamerator using the import_phage.py script.
 #This script has combined the following independent scripts:
 #1. compare_databases.py
@@ -96,7 +97,8 @@ if working_dir[-1] != "/":
 if working_dir[0] == "~":
     working_dir = home_dir + working_dir[1:]
 
-#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+#Expand the path, to make sure it is a complete directory path
+#(in case user inputted path with './path/to/folder')
 working_dir = os.path.abspath(working_dir)
 
 
@@ -133,7 +135,9 @@ open_file_handles_list = []
 
 
 
-#You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
+#You have to specify how many results to return at once.
+#If you set it to 1 page long and 100,000 genomes/page,
+#then this will return everything.
 sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
 
 
@@ -240,7 +244,9 @@ if retrieve_field_updates == "yes":
         sys.exit(1)
 
     #This is a dummy folder, since field updates don't have any associated genome files.
-    #However, creating the folder makes it easier to run the import_script on the corrections_import_table, since this script relies on the presence of a genomes folder.
+    #However, creating the folder makes it easier to run the import_script on
+    #the corrections_import_table, since this script relies on
+    #the presence of a genomes folder.
     os.mkdir(os.path.join(field_updates_path,genomes_folder))
 
 
@@ -328,7 +334,8 @@ if retrieve_ncbi_genomes == "yes":
 
 
 
-#The following code block parses Phamerator and phagesdb data that are required for several types of retrievals
+#The following code block parses Phamerator and phagesdb data that
+#are required for several types of retrievals.
 if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or retrieve_ncbi_genomes == "yes"):
 
     print "Retrieving Phamerator data from MySQL database..."
@@ -431,11 +438,13 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-        #In Phamerator, Singleton Clusters are recorded as '\N', but in phagesdb they are recorded as "Singleton"
+        #In Phamerator, Singleton Clusters are recorded as '\N',
+        #but in phagesdb they are recorded as "Singleton".
         if phamerator_cluster is None:
             phamerator_cluster = 'Singleton'
 
-        #In Phamerator, if Subcluster has not been assigned, Subcluster2 is recorded as '\N'
+        #In Phamerator, if Subcluster has not been assigned,
+        #Subcluster2 is recorded as '\N'.
         if phamerator_subcluster is None:
             phamerator_subcluster = 'none'
 
@@ -503,8 +512,10 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
 
 
 
-    #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
-    #Check if there are any phageName duplications. If there are, they will not be able to be compared to phagesdb data.
+    #phagesdb relies on the phageName, and not the phageID.
+    #But Phamerator does not require phageName values to be unique.
+    #Check if there are any phageName duplications. If there are,
+    #they will not be able to be compared to phagesdb data.
     if len(phamerator_duplicate_phage_names) > 0:
         print "Error: Data is not able to be matched to phagesdb because of the following non-unique phage Names in phamerator:"
         for element in phamerator_duplicate_phage_names:
@@ -529,7 +540,8 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
     sequenced_phages_dict = json.loads(sequenced_phages_json.read())
     sequenced_phages_json.close()
 
-    #Data for each phage is stored in a dictionary per phage, and all dictionaries are stored in a list under "results"
+    #Data for each phage is stored in a dictionary per phage, and all
+    #dictionaries are stored in a list under "results"
     phagesdb_data_dict = {}
     for element_dict in sequenced_phages_dict["results"]:
         phagesdb_data_dict[element_dict["phage_name"]] = element_dict
@@ -945,7 +957,8 @@ if retrieve_ncbi_genomes == "yes":
                                     'retrieval failure'])
 
 
-    #Now that all records have been retrieved, check which records are newer than the upload date of the current version in phamerator.
+    #Now that all records have been retrieved, check which records are newer
+    #than the upload date of the current version in phamerator.
     #Create the genbank-formatted file only if it is a newer genome.
     #Also create an import table.
     for retrieved_record in retrieved_record_list:
@@ -954,7 +967,7 @@ if retrieve_ncbi_genomes == "yes":
         retrieved_record_accession = retrieved_record.name
         retrieved_record_accession = retrieved_record_accession.split('.')[0]
 
-        #Convert date date to datetime object
+        #Convert date to datetime object
         retrieved_record_date = retrieved_record.annotations["date"]
         retrieved_record_date = datetime.strptime(retrieved_record_date,'%d-%b-%Y')
 
@@ -973,8 +986,13 @@ if retrieve_ncbi_genomes == "yes":
         phamerator_author = genome_data[9]
 
 
-        #Save new records in a folder and create an import table row for them
-        if retrieved_record_date > phamerator_date:
+        #Save new records in a folder and create an import table row for them.
+        #REVIEW If the genome is currently a draft annotation, create an import
+        #ticket for replacement regardless of the date in the Genbank record.
+        #This ensures that if a user fails to upload a manual annotation to
+        #phagesdb, once the Genbank accession becomes active Phamerator will
+        #get the new version.
+        if retrieved_record_date > phamerator_date or phamerator_status == 'draft':
 
             tally_retrieved_for_update += 1
             ncbi_results_writer.writerow([phamerator_id,\
@@ -1017,9 +1035,14 @@ if retrieve_ncbi_genomes == "yes":
 
 
         else:
-            #print 'Phamerator date %s is more recent than retrieved record date %s for phage %s.' %(phamerator_date,retrieved_record_date,phamerator_id)
             tally_retrieved_not_new += 1
-            ncbi_results_writer.writerow([phamerator_id,phamerator_name,phamerator_accession,phamerator_status,phamerator_date,retrieved_record_date,'record not new'])
+            ncbi_results_writer.writerow([phamerator_id,\
+                                            phamerator_name,\
+                                            phamerator_accession,\
+                                            phamerator_status,\
+                                            phamerator_date,\
+                                            retrieved_record_date,\
+                                            'record not new'])
 
 
 
