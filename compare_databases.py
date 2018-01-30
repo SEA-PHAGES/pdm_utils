@@ -160,13 +160,13 @@ def select_option(message,valid_response_set):
 
 
 
-
 #Output list to file
-def output_to_file(data_list,filename,genome_status_selected,database_string):
+def output_to_file(data_list,filename,genome_status_selected,database_string,genome_author_selected):
     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
     filename_writer = csv.writer(filename_fh)
     filename_writer.writerow([date + ' Database comparison'])
     filename_writer.writerow([database_string])
+    filename_writer.writerow([genome_author_selected])
     filename_writer.writerow([genome_status_selected])
     for element in data_list:
         filename_writer.writerow([element])
@@ -330,7 +330,7 @@ class PhameratorGenome(AnnotatedGenome):
         self.__cluster_subcluster = '' #Combined cluster_subcluster data.
         self.__ncbi_update_flag = ''
         self.__date_last_modified = ''
-        self.__annotation_author = ''
+        self.__annotation_author = '' #1 (Hatfull), 0 (Genbank)
 
         # Computed datafields
         self.__search_id = '' # The phage ID void of "_Draft" and converted to lowercase
@@ -349,8 +349,18 @@ class PhameratorGenome(AnnotatedGenome):
 
         #Be sure to first set the accession attribute before the status attribute,
         #else this will throw an error.
-        if (self.__status == 'final' or self.__status == 'gbk') and self.get_accession() == '':
+        #Now that the AnnotationAuthor field contains authorship data, the
+        #'gbk' annotation status now reflects an 'unknown' annotation (in
+        #regards to if it was auto-annotated or manually annotated).
+        #So for the status-accession error, if the status is 'gbk' ('unkown'),
+        #there is no reason to assume whether there should be an accession or not.
+        #Only for 'final' (manually annotated) genomes should there be an accession.
+        #Old code, using 'gbk':
+        # if (self.__status == 'final' or self.__status == 'gbk') and self.get_accession() == '':
+        #     self.__status_accession_error = True
+        if self.__status == 'final' and self.get_accession() == '':
             self.__status_accession_error = True
+
 
 
     def set_cluster_subcluster(self,value):
@@ -907,26 +917,19 @@ class MatchedGenomes:
                 self.__ncbi_host_mismatch = True
 
             #Check author list for errors
-            #If the Phamerator genome has a status of 'final', then Graham Hatfull should
-            #be an author on the NCBI record. If status is 'gbk' or 'draft', then no need to check this
-            #TODO this logic will need to change if 'gbk' status is retired
-
-            #REVIEW old code based on 'final' logic
-            # if ph_genome.get_status() == 'final':
-            #     pattern5 = re.compile('hatfull')
-            #     search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
-            #     if search_result == None:
-            #         self.__ph_ncbi_author_error = True
-
-                    #REVIEW work
-
-            if ph_genome.get_status() == 'final':
-                pattern5 = re.compile('hatfull')
-                search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
-                if search_result == None:
-                    self.__ph_ncbi_author_error = True
-
-
+            #For genomes with AnnotationAuthor = 1 (Hatfull), Graham is expected
+            #to be an author.
+            #For genomes with AnnotationAuthor = 0 (non-Hatfull/Genbank), Graham
+            #is NOT expected to be an author.
+            pattern5 = re.compile('hatfull')
+            search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
+            if ph_genome.get_annotation_author() == 1 and search_result == None:
+                self.__ph_ncbi_author_error = True
+            elif ph_genome.get_annotation_author() == 0 and search_result != None:
+                self.__ph_ncbi_author_error = True
+            else:
+                #Any other combination of phamerator and ncbi author can be skipped
+                pass
 
 
             #Compare CDS features
@@ -1267,7 +1270,7 @@ class MatchedGenomes:
     def get_contains_errors(self):
         return self.__contains_errors
     def get_ph_ncbi_author_error(self):
-        return self.__ph_ncbi__error
+        return self.__ph_ncbi_author_error
 
 
 class MatchedCdsFeatures:
@@ -1828,7 +1831,7 @@ analyze_database_options = [\
     'Phamerator and phagesdb',\
     'Phamerator and NCBI',\
     'Phamerator, phagesdb, and NCBI']
-print '\n\nThe following database can be compared:'
+print '\n\nThe following databases can be compared:'
 print '0: ' + analyze_database_options[0]
 print '1: ' + analyze_database_options[1]
 print '2: ' + analyze_database_options[2]
@@ -1838,7 +1841,7 @@ analyze_database = select_option(\
     set([0,1,2,3]))
 
 analyze_database_output = \
-    'The following databases were compared: ' + \
+    'Databases compared: ' + \
     analyze_database_options[analyze_database]
 
 
@@ -1930,9 +1933,6 @@ if 'ncbi' in valid_database_set:
 
 
 
-
-
-#REVIEW add new author choice
 #Determine which type of genomes should be checked based on
 #who annotated the genome: Hatfull or Gbk authors
 analyze_genome_author_options = [\
@@ -1950,13 +1950,10 @@ analyze_genome_author = select_option(\
     set([1,2,3]))
 
 analyze_genome_author_output = \
-    'Genomes of the following author types were analyzed: ' + \
+    'Annotation author analyzed: ' + \
     analyze_genome_author_options[analyze_genome_author]
 
 
-
-
-#REVIEW add 'hatfull' text or integer?
 valid_genome_author_set = set()
 if analyze_genome_author == 1:
     valid_genome_author_set.add(1)
@@ -1972,8 +1969,6 @@ else:
 
 
 
-
-#REVIEW change logic?
 #Determine which types of genomes should be checked based on
 #the status of the annotations: draft, final, gbk
 analyze_genome_status_options = [\
@@ -1999,13 +1994,10 @@ analyze_genome_status = select_option(\
     set([1,2,3,4,5,6,7]))
 
 analyze_genome_status_output = \
-    'Genomes of the following status types were analyzed: ' + \
+    'Annotation status analyzed: ' + \
     analyze_genome_status_options[analyze_genome_status]
 
 
-
-
-#REVIEW change logic?
 valid_genome_status_set = set()
 if analyze_genome_status == 1:
     valid_genome_status_set.add('draft')
@@ -2046,12 +2038,12 @@ file_handle_list = []
 #2 = HostStrain
 #3 = Sequence
 #4 = Length
-#5 = status
+#5 = annotation status
 #6 = Cluster
 #7 = Accession
 #8 = auto-update NCBI record flag
 #9 = DateLastModified
-#10 = authorship status
+#10 = annotation authorship
 
 #Retrieve current gene data in database
 #0 = PhageID
@@ -2076,7 +2068,9 @@ try:
     cur.execute("START TRANSACTION")
     cur.execute("SELECT version FROM version")
     ph_version = str(cur.fetchone()[0])
-    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,status,Cluster,Accession,RetrieveRecord,DateLastModified,AnnotationAuthor FROM phage")
+    cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,\
+                        status,Cluster,Accession,RetrieveRecord,\
+                        DateLastModified,AnnotationAuthor FROM phage")
     ph_genome_data_tuples = cur.fetchall()
     cur.execute("SELECT PhageID,GeneID,Name,Start,Stop,Orientation,Translation,Notes from gene")
     ph_gene_data_tuples = cur.fetchall()
@@ -2103,12 +2097,10 @@ ph_total_genome_count = len(ph_genome_data_tuples)
 
 #Iterate through each phamerator genome and create a genome object
 for genome_tuple in ph_genome_data_tuples:
-    print "Processing Phamerator genome %s out of %s" %(ph_genome_count,ph_total_genome_count)
+    print "Processing Phamerator genome %s out of %s" \
+            %(ph_genome_count,ph_total_genome_count)
 
-    #REVIEW change logic for valid_genome_status_set?
-
-    #Add conditional to account for authorship
-
+    #Check to see if the genome has a user-selected status and authorship
     if genome_tuple[5] not in valid_genome_status_set or \
         genome_tuple[10] not in valid_genome_author_set:
         continue
@@ -2179,7 +2171,8 @@ if len(ph_search_name_duplicate_set) > 0:
     output_to_file(list(ph_search_name_duplicate_set),\
                     'duplicate_phamerator_phage_names.csv',\
                     analyze_genome_status_output,\
-                    database + '_v' + ph_version)
+                    database + '_v' + ph_version,\
+                    analyze_genome_author_output)
     raw_input('Press ENTER to proceed')
 
 #Accessions aren't required to be unique in the Phamerator database (but they should be), so there could be duplicates
@@ -2190,9 +2183,9 @@ if len(ph_accession_duplicate_set) > 0:
     output_to_file(list(ph_accession_duplicate_set),\
                     'duplicate_phamerator_phage_accessions.csv',\
                     analyze_genome_status_output,\
-                    database + '_v' + ph_version)
+                    database + '_v' + ph_version,\
+                    analyze_genome_author_output)
     raw_input('Press ENTER to proceed')
-
 
 
 
@@ -2363,9 +2356,9 @@ if 'phagesdb' in valid_database_set:
         output_to_file(list(pdb_search_name_duplicate_set),\
                         'duplicate_phagesdb_phage_names.csv',\
                         analyze_genome_status_output,\
-                        database + '_v' + ph_version)
+                        database + '_v' + ph_version,\
+                        analyze_genome_author_output)
         raw_input('Press ENTER to proceed')
-
 
     #Make sure all sequenced phage data has been retrieved
     if (len(pdb_sequenced_phages_dict['results']) != pdb_sequenced_phages_dict['count'] or \
@@ -2473,6 +2466,7 @@ if 'ncbi' in valid_database_set:
     failed_accession_report_writer = csv.writer(failed_accession_report_fh)
     failed_accession_report_writer.writerow([date + ' Database comparison'])
     failed_accession_report_writer.writerow([database + '_v' + ph_version])
+    failed_accession_report_writer.writerow([analyze_genome_author_output])
     failed_accession_report_writer.writerow([analyze_genome_status_output])
     failed_accession_report_writer.writerow([analyze_database_output])
     failed_accession_report_writer.writerow(['Accessions unable to be retrieved from NCBI:'])
@@ -2767,6 +2761,7 @@ unmatched_genome_output_fh = open(os.path.join(main_output_path,date + '_databas
 unmatched_genome_output_writer = csv.writer(unmatched_genome_output_fh)
 unmatched_genome_output_writer.writerow([date + ' Database comparison'])
 unmatched_genome_output_writer.writerow([database + '_v' + ph_version])
+unmatched_genome_output_writer.writerow([analyze_genome_author_output])
 unmatched_genome_output_writer.writerow([analyze_genome_status_output])
 unmatched_genome_output_writer.writerow([analyze_database_output])
 unmatched_genome_output_writer.writerow([''])
@@ -2774,19 +2769,21 @@ unmatched_genome_output_writer.writerow([''])
 if 'phagesdb' in valid_database_set:
 
     unmatched_genome_output_writer.writerow(['The following Phamerator genomes were not matched to phagesdb:'])
-    unmatched_genome_output_writer.writerow(['PhageID','PhageName','Status'])
+    unmatched_genome_output_writer.writerow(['PhageID','PhageName','Author','Status'])
     for element in ph_unmatched_to_pdb_genomes:
         unmatched_genome_output_writer.writerow([element.get_phage_id(),\
                                                     element.get_phage_name(),\
+                                                    element.get_annotation_author(),\
                                                     element.get_status()])
 
 if 'ncbi' in valid_database_set:
     unmatched_genome_output_writer.writerow([''])
     unmatched_genome_output_writer.writerow(['\nThe following Phamerator genomes were not matched to NCBI:'])
-    unmatched_genome_output_writer.writerow(['PhageID','PhageName','Status','Accession'])
+    unmatched_genome_output_writer.writerow(['PhageID','PhageName','Author','Status','Accession'])
     for element in ph_unmatched_to_ncbi_genomes:
         unmatched_genome_output_writer.writerow([element.get_phage_id(),\
                                                     element.get_phage_name(),\
+                                                    element.get_annotation_author(),\
                                                     element.get_status(),\
                                                     element.get_accession()])
 unmatched_genome_output_fh.close()
@@ -2840,9 +2837,9 @@ file_handle_list.append(database_summary_report_fh)
 database_summary_report_writer = csv.writer(database_summary_report_fh)
 database_summary_report_writer.writerow([date + ' Database comparison'])
 database_summary_report_writer.writerow([database + '_v' + ph_version])
+database_summary_report_writer.writerow([analyze_genome_author_output])
 database_summary_report_writer.writerow([analyze_genome_status_output])
 database_summary_report_writer.writerow([analyze_database_output])
-
 
 #Create vector of column headers
 summary_report_fields = [\
@@ -2947,9 +2944,9 @@ file_handle_list.append(genome_report_fh)
 genome_report_writer = csv.writer(genome_report_fh)
 genome_report_writer.writerow([date + ' Database comparison'])
 genome_report_writer.writerow([database + '_v' + ph_version])
+genome_report_writer.writerow([analyze_genome_author_output])
 genome_report_writer.writerow([analyze_genome_status_output])
 genome_report_writer.writerow([analyze_database_output])
-
 
 
 
@@ -3040,12 +3037,10 @@ genome_report_column_headers = [\
     'ph_ncbi_record_header_host_error',\
 
 
-    #Author error is dependent on Phamerator genome status, so this metric
-    #should be reported with the other ph_ncbi error tallies
+    #Author error is dependent on Phamerator genome annotation author and
+    #NCBI list of authors, so this metric should be reported with
+    #the other ph_ncbi error tallies.
     'ph_ncbi_author_error',\
-
-    #REVIEW check
-
     'ph_ncbi_perfectly_matched_gene_tally',\
     'ph_ncbi_imperfectly_matched_gene_tally',\
     'ph_ncbi_unmatched_phamerator_gene_tally',\
@@ -3075,6 +3070,7 @@ file_handle_list.append(gene_report_fh)
 gene_report_writer = csv.writer(gene_report_fh)
 gene_report_writer.writerow([date + ' Database comparison'])
 gene_report_writer.writerow([database + '_v' + ph_version])
+gene_report_writer.writerow([analyze_genome_author_output])
 gene_report_writer.writerow([analyze_genome_status_output])
 gene_report_writer.writerow([analyze_database_output])
 
