@@ -1973,8 +1973,16 @@ for filename in genbank_files:
 
             elif len(query_results) == 1:
 
+                #Old conditional:
+                # if query_results[0][1].lower() != "draft":
+
+                #REVIEW potentially skip this QC is from NCBI
                 #The genome to be replaced is not Draft.
-                if query_results[0][1].lower() != "draft":
+                #If the new genome is from NCBI (accession is populated) or
+                #the old genome is a Draft then skip this.
+                #If it is a final status, and it is being automatically replaced
+                #by NCBI, then there is no need to ask the user if this is correct.
+                if query_results[0][1].lower() != "draft" and parsed_accession == 'none':
 
                     record_warnings += 1
                     write_out(output_file,"\nWarning: The genome in the database with matching sequence, %s, is listed as %s status." % (query_results[0][0],query_results[0][1]))
@@ -2550,7 +2558,8 @@ for filename in genbank_files:
 
 
 
-            #Now assign the appropriate description info to the assigned_description variable, as indicated from the import table.
+            #Now assign the appropriate description info to the
+            #assigned_description variable, as indicated from the import table.
             try:
 
                 if import_cds_qualifier == "product":
@@ -2562,7 +2571,8 @@ for filename in genbank_files:
                 elif import_cds_qualifier == "note":
                     assigned_description = feature_note
 
-                #This clause allows the user to specify an uncommon feature qualifier to retrieve the gene description from.
+                #This clause allows the user to specify an uncommon
+                #feature qualifier to retrieve the gene description from.
                 else:
                     assigned_description = retrieve_description(feature,import_cds_qualifier)
 
@@ -2806,13 +2816,15 @@ for filename in genbank_files:
             record_errors += question("\nError: problem with locus tags in file  %s." % filename)
 
 
-        #Check the phage name spelling in the locus tags. If importing non-SEA-PHAGES file, skip this step
-
+        #Check the phage name spelling in the locus tags.
+        #If importing non-SEA-PHAGES file (using ALLPHAGES option), skip this step.
+        #If the new genome is from NCBI, then skip this as well.
+        #REVIEW
         pattern4 = re.compile(phageName.lower())
         geneID_typo_tally = 0
         geneID_typo_list = []
 
-        if use_basename != "yes":
+        if use_basename != "yes" and parsed_accession == 'none':
             for geneID in geneID_set:
 
                search_result = pattern4.search(geneID.lower())
@@ -2874,49 +2886,58 @@ for filename in genbank_files:
 
 
 
-        #If other CDS fields contain descriptions, they can be chosen to replace the default import_cds_qualifier descriptions. Then provide option to verify changes
-        changed = ""
 
 
-        if (import_cds_qualifier != "product" and feature_product_tally > 0):
-
-           print "\nThere are %s CDS products found." % feature_product_tally
-           change_descriptions()
-
-           if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
-
-                for feature in all_features_data_list:
-                    feature[9] = feature[10]
-                changed = "product"
-
-        if (import_cds_qualifier != "function" and feature_function_tally > 0):
-
-            print "\nThere are %s CDS functions found." % feature_function_tally
-            change_descriptions()
+        #REVIEW
+        #If other CDS fields contain descriptions, they can be chosen to
+        #replace the default import_cds_qualifier descriptions.
+        #Then provide option to verify changes.
+        #This block is only executed if the genome is not from NCBI
+        if parsed_accession == 'none':
 
 
-            if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
-
-                for feature in all_features_data_list:
-                    feature[9] = feature[11]
-                changed = "function"
+            changed = ""
 
 
-        if (import_cds_qualifier != "note" and feature_note_tally > 0):
+            if (import_cds_qualifier != "product" and feature_product_tally > 0):
 
-            print "\nThere are %s CDS notes found." % feature_note_tally
-            change_descriptions()
+               print "\nThere are %s CDS products found." % feature_product_tally
+               change_descriptions()
 
-            if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
+               if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
 
-                for feature in all_features_data_list:
-                    feature[9] = feature[12]
-                changed = "note"
+                    for feature in all_features_data_list:
+                        feature[9] = feature[10]
+                    changed = "product"
 
-        if changed != "":
-            record_warnings += 1
-            write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
-            record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+            if (import_cds_qualifier != "function" and feature_function_tally > 0):
+
+                print "\nThere are %s CDS functions found." % feature_function_tally
+                change_descriptions()
+
+
+                if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
+
+                    for feature in all_features_data_list:
+                        feature[9] = feature[11]
+                    changed = "function"
+
+
+            if (import_cds_qualifier != "note" and feature_note_tally > 0):
+
+                print "\nThere are %s CDS notes found." % feature_note_tally
+                change_descriptions()
+
+                if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
+
+                    for feature in all_features_data_list:
+                        feature[9] = feature[12]
+                    changed = "note"
+
+            if changed != "":
+                record_warnings += 1
+                write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
+                record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
 
 
         #Add all updated gene feature data to the add_replace_statements list
