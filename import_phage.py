@@ -75,149 +75,6 @@ except:
 
 
 
-#Expand home directory
-home_dir = os.path.expanduser('~')
-
-
-#Verify the genome folder exists
-
-#Add '/' at the end if it's not there
-if phageListDir[-1] != "/":
-    phageListDir = phageListDir + "/"
-
-
-#Expand the path if it references the home directory
-if phageListDir[0] == "~":
-    phageListDir = home_dir + phageListDir[1:]
-
-#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
-phageListDir = os.path.abspath(phageListDir)
-
-
-
-if os.path.isdir(phageListDir) == False:
-    print "\n\nInvalid input for genome folder.\n\n"
-    sys.exit(1)
-
-
-
-
-
-
-#Verify the import table path exists
-#Expand the path if it references the home directory
-if updateFile[0] == "~":
-    updateFile = home_dir + updateFile[1:]
-
-#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
-updateFile = os.path.abspath(updateFile)
-
-if os.path.exists(updateFile) == False:
-    print "\n\nInvalid input for import table file.\n\n"
-    sys.exit(1)
-
-
-
-
-#Set up MySQL parameters
-mysqlhost = 'localhost'
-print "\n\n"
-username = getpass.getpass(prompt='mySQL username:')
-print "\n\n"
-password = getpass.getpass(prompt='mySQL password:')
-print "\n\n"
-
-
-#Set up run type
-
-print "\n\nAvailable run types:"
-print "Test: checks flat files for accuracy, but the database is not changed."
-print "Production: after testing files, the database is updated."
-print "SMART: same as Test, but with some defaults set."
-print "\n"
-run_type = ""
-run_type_valid = False
-while run_type_valid == False:
-    run_type = raw_input("\nIndicate run type (test, production, or smart): ")
-    run_type = run_type.lower()
-    if (run_type == 'test' or run_type == 'production' or run_type == 'smart'):
-        run_type_valid = True
-    else:
-        print "Invalid choice."
-
-
-
-
-
-#Modes
-use_basename = ""
-smart_defaults = ""
-if run_type != "smart":
-    print "\n\nAvailable import modes:"
-    print "1: Standard (e.g. Actino database)"
-    print "2: Allphages (e.g. Bacteriophages database) (PhageID is set to the file's basename, some QC steps are skipped)"
-    print "\n"
-    run_mode_valid = False
-    while run_mode_valid == False:
-        run_mode = raw_input("\nIndicate import mode (1 or 2): ")
-        if run_mode == '1':
-            run_mode_valid = True
-        elif run_mode == '2':
-            run_mode_valid = True
-            use_basename = "yes"
-        else:
-            print "Invalid choice."
-
-else:
-    run_mode = '1'
-    smart_defaults = "yes"
-
-
-
-
-
-#Many times gbk genomes do not have consistent or specific locus tags, which complicates
-#assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
-#by joining PhageID and CDS number. Right now this is only available for the Allphages
-#run mode.
-if use_basename == "yes":
-    print "\n\nCreate GeneIDs from locus tags or PhageID?"
-    print "1: Locus tag"
-    print "2: PhageID"
-    print "\n"
-    geneid_strategy_valid = False
-    while geneid_strategy_valid == False:
-        geneid_strategy = raw_input("\nChoose GeneID strategy (1 or 2): ")
-        if geneid_strategy == '1':
-            geneid_strategy_valid = True
-        elif geneid_strategy == '2':
-            geneid_strategy_valid = True
-        else:
-            print "Invalid choice."
-
-else:
-    geneid_strategy = '1'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #Define several functions
 
@@ -443,6 +300,353 @@ def check_tRNA_product(product_field):
 
 
 
+#REVIEW customization
+#Allows user to select specific options
+def select_option(message,valid_response_set):
+
+    response_valid = False
+    while response_valid == False:
+        response = raw_input(message)
+        if response.isdigit():
+            response = int(response)
+        else:
+            response = response.lower()
+
+        if response in valid_response_set:
+            response_valid = True
+            if response == 'y':
+                response  = 'yes'
+            elif response == 'n':
+                response  = 'no'
+        else:
+            print 'Invalid response.'
+    return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Expand home directory
+home_dir = os.path.expanduser('~')
+
+
+#Verify the genome folder exists
+
+#Add '/' at the end if it's not there
+if phageListDir[-1] != "/":
+    phageListDir = phageListDir + "/"
+
+
+#Expand the path if it references the home directory
+if phageListDir[0] == "~":
+    phageListDir = home_dir + phageListDir[1:]
+
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+phageListDir = os.path.abspath(phageListDir)
+
+
+
+if os.path.isdir(phageListDir) == False:
+    print "\n\nInvalid input for genome folder.\n\n"
+    sys.exit(1)
+
+
+
+
+
+
+#Verify the import table path exists
+#Expand the path if it references the home directory
+if updateFile[0] == "~":
+    updateFile = home_dir + updateFile[1:]
+
+#Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
+updateFile = os.path.abspath(updateFile)
+
+if os.path.exists(updateFile) == False:
+    print "\n\nInvalid input for import table file.\n\n"
+    sys.exit(1)
+
+
+
+
+#Set up MySQL parameters
+mysqlhost = 'localhost'
+print "\n\n"
+username = getpass.getpass(prompt='mySQL username:')
+print "\n\n"
+password = getpass.getpass(prompt='mySQL password:')
+print "\n\n"
+
+
+#Set up run type
+# print "\n\nAvailable run types:"
+# print "Test: checks flat files for accuracy, but the database is not changed."
+# print "Production: after testing files, the database is updated."
+# print "SMART: same as Test, but with some defaults set."
+# print "\n"
+# run_type = ""
+# run_type_valid = False
+# while run_type_valid == False:
+#     run_type = raw_input("\nIndicate run type (test, production, or smart): ")
+#     run_type = run_type.lower()
+#     if (run_type == 'test' or run_type == 'production' or run_type == 'smart'):
+#         run_type_valid = True
+#     else:
+#         print "Invalid choice."
+
+#REVIEW test
+run_type_options = [\
+    'none',\
+    'Test: checks flat files for accuracy, but the database is not changed.',\
+    'Production: after testing files, the database is updated.']
+print '\n\nThe following run types are available:'
+#print '0: ' + run_type_options[0]
+print '1: ' + run_type_options[1]
+print '2: ' + run_type_options[2]
+run_type = select_option(\
+    "\nWhich run type do you want? ", \
+    set(['test','production']))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Determine the run mode
+
+#REVIEW customize
+#Initialize variables
+use_basename = ""
+custom_gene_id = ""
+ignore_gene_id_typo = ""
+ignore_description_field_check = ""
+ignore_replace_warning = ""
+ignore_trna_check = ""
+ignore_locus_tag_import = ""
+
+
+
+run_mode_options = [\
+    'none',\
+    'Auto annotations (e.g. PECAAN)',\
+    'Manual annotations (e.g. phagesdb)',\
+    'Auto-updates from NCBI',\
+    'Misc. genomes from NCBI',\
+    'Customized settings']
+print '\n\nThe following run modes are available:'
+#print '0: ' + run_mode_options[0]
+print '1: ' + run_mode_options[1]
+print '2: ' + run_mode_options[2]
+print '3: ' + run_mode_options[3]
+print '4: ' + run_mode_options[4]
+print '5: ' + run_mode_options[5]
+run_mode = select_option(\
+    "\nWhich run mode do you want? ", \
+    set([1,2,3,4,5]))
+
+
+
+#TODO ultimately remove this I think
+# if run_type != "smart":
+#     print "\n\nAvailable import modes:"
+#     print "1: Standard (e.g. Actino database)"
+#
+#     #REVIEW Change to 'Custom'
+#     print "2: Custom settings"
+#     print "\n"
+#     run_mode_valid = False
+#     while run_mode_valid == False:
+#         run_mode = raw_input("\nIndicate import mode (1 or 2): ")
+#         if run_mode == '1':
+#             run_mode_valid = True
+#         elif run_mode == '2':
+#             run_mode_valid = True
+#         else:
+#             print "Invalid choice."
+#
+# else:
+#     run_mode = '1'
+#     smart_defaults = "yes"
+#TODO ultimately remove SMART option
+
+
+
+
+
+#REVIEW
+#Auto-annotations
+if run_mode == 1:
+    use_basename = 'no'
+    custom_gene_id = 'no'
+    ignore_gene_id_typo = 'no'
+    ignore_description_field_check = 'no'
+    ignore_replace_warning = 'no'
+    ignore_trna_check = 'yes'
+    ignore_locus_tag_import = 'yes'
+
+#REVIEW
+#Manual annotations
+elif run_mode == 2:
+    use_basename = 'no'
+    custom_gene_id = 'no'
+    ignore_gene_id_typo = 'no'
+    ignore_description_field_check = 'no'
+    ignore_replace_warning = 'no'
+    ignore_trna_check = 'no'
+    ignore_locus_tag_import = 'yes'
+
+#REVIEW
+#SEA-PHAGES NCBI records
+elif run_mode == 3:
+    use_basename = 'no'
+    custom_gene_id = 'no'
+    ignore_gene_id_typo = 'yes'
+    ignore_description_field_check = 'yes'
+    ignore_replace_warning = 'yes'
+    ignore_trna_check = 'yes'
+    ignore_locus_tag_import = 'no'
+
+#REVIEW
+#Misc NCBI records
+elif run_mode == 4:
+    use_basename = 'yes'
+    custom_gene_id = 'yes'
+    ignore_gene_id_typo = 'yes'
+    ignore_description_field_check = 'no'
+    ignore_replace_warning = 'yes'
+    ignore_trna_check = 'yes'
+    ignore_locus_tag_import = 'no'
+
+#REVIEW
+#Customized settings
+elif run_mode == 5:
+
+    #1. Use the file's basename as the PhageID instead of the phage name in the file
+    print "\n\nNormally, the phage name is determined from the Organism field in the record."
+    use_basename = select_option(\
+        "\nInstead, do you want to use the file name as the phage name? ", \
+        set(['yes','y','no','n']))
+
+
+    #2. Create GeneIDs from locus tags or PhageName_GeneNumber concatenation
+    #Many times non-Hatfull authored genomes do not have consistent or specific locus tags, which complicates
+    #assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
+    #by joining PhageID and CDS number.
+    print "\n\nNormally, the GeneIDs are assigned by using the Locus Tags."
+    custom_gene_id = select_option(\
+        "\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? ", \
+        set(['yes','y','no','n']))
+
+    #3. Ensure GeneIDs have phage name spelled correctly?
+    #New SEA-PHAGES annotated genomes should be check for spelling, but maybe not
+    #for other types of genomes.
+    print "\n\nNormally, the GeneIDs are required to contain the phage name without typos."
+    ignore_gene_id_typo = select_option(\
+        "\nInstead, do you want to allow missing or mispelled phage names in the GeneID? ", \
+        set(['yes','y','no','n']))
+
+
+    #4. Gene descriptions are set to import table field regardless
+    #This should be run for new SEA-PHAGES annotated genomes, but may want to
+    #be skipped if importing many genomes from NCBI
+    print "\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
+    ignore_description_field_check = select_option(\
+        "\nInstead, do you want to use the import table qualifier without verification? ", \
+        set(['yes','y','no','n']))
+
+
+    #5. Replacing final with final warning
+    #Once a genome gets in NCBI, it is expected that a Final status genome is
+    #replaced with another Final status genome, so it could get annoying to
+    #keep getting the warning, so it can be turned off.
+    print "\n\nNormally, a warning is indicated if a Final status genome is being replaced."
+    ignore_replace_warning = select_option(\
+        "\nInstead, do you want to silence these warnings? ", \
+        set(['yes','y','no','n']))
+
+    #6. tRNA QC
+    #Many genomes from NCBI, including SEA-PHAGES, may not have consistently
+    #annotated tRNAs. So the tRNA QC can be skipped.
+    print "\n\nNormally, tRNAs are checked only in new manually annotated genomes."
+    ignore_trna_check = select_option(\
+        "\nInstead, do you want to ignore the tRNA quality checks? ", \
+        set(['yes','y','no','n']))
+
+
+    #7. Retain locus tags
+    #The locus tag field in the database should only reflect 'ofiicial' locus tags from
+    #bona fide Genbank records, and not simply Genbank-formatted files.
+    #Locus tags from Pecaan auto-annotated and SMART team manually annotated
+    #genomes should not be retained.
+    print "\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
+    ignore_locus_tag_import = select_option(\
+        "\nInstead, do you want to ignore all locus tags regardless of the source of the record? ", \
+        set(['yes','y','no','n']))
+
+else:
+    pass
+
+#REVIEW ensure run_mode doesn't conflict with prior run_mode usage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -482,7 +686,9 @@ output_file = open(os.path.join(phageListDir,success_folder,date + "_phage_impor
 write_out(output_file,date + " Phamerator database updates:\n\n\n")
 write_out(output_file,"\n\n\n\nBeginning import script...")
 write_out(output_file,"\nRun type: " + run_type)
-write_out(output_file,"\nRun mode: " + run_mode)
+
+#REVIEW run mode
+write_out(output_file,"\nRun mode: %s" % run_mode_options[run_mode])
 
 
 
@@ -1411,9 +1617,10 @@ for element in update_data_list:
                             element[6]]
     success_action_file_writer.writerow(update_output_list)
 
-if run_type != "smart":
-    write_out(output_file,"\nAll field update actions have been implemented.")
-    raw_input("\nPress ENTER to proceed to next import stage.")
+#TODO remove smart option
+# if run_type != "smart":
+write_out(output_file,"\nAll field update actions have been implemented.")
+raw_input("\nPress ENTER to proceed to next import stage.")
 
 
 
@@ -1481,9 +1688,10 @@ for element in remove_data_list:
                             element[6]]
     success_action_file_writer.writerow(remove_output_list)
 
-if run_type != "smart":
-    write_out(output_file,"\nAll genome remove actions have been implemented.")
-    raw_input("\nPress ENTER to proceed to next import stage.")
+#TODO remove smart option
+# if run_type != "smart":
+write_out(output_file,"\nAll genome remove actions have been implemented.")
+raw_input("\nPress ENTER to proceed to next import stage.")
 
 
 
@@ -1593,7 +1801,6 @@ for filename in genbank_files:
     file_tally += 1
     write_out(output_file,"\n\nProcessing file %s: %s" % (file_tally,filename))
 
-    #ALLPHAGES option
     basename = filename.split('.')[0]
 
     #The file is parsed to grab the header information
@@ -1765,8 +1972,8 @@ for filename in genbank_files:
             parsed_accession = "none"
 
 
+        #REVIEW customize
         #Match up to the import ticket data
-        #ALLPHAGES option
         if use_basename == "yes":
             matchedData = add_replace_data_dict.pop(basename,"error")
         else:
@@ -1982,7 +2189,7 @@ for filename in genbank_files:
                 #the old genome is a Draft then skip this.
                 #If it is a final status, and it is being automatically replaced
                 #by NCBI, then there is no need to ask the user if this is correct.
-                if query_results[0][1].lower() != "draft" and parsed_accession == 'none':
+                if query_results[0][1].lower() != "draft" and ignore_replace_warning != 'yes':
 
                     record_warnings += 1
                     write_out(output_file,"\nWarning: The genome in the database with matching sequence, %s, is listed as %s status." % (query_results[0][0],query_results[0][1]))
@@ -2119,6 +2326,7 @@ for filename in genbank_files:
         #9 = ncbi_update_status
         #10 = annotation_qc
         #11 = import_author
+        #REVIEW customize
         if use_basename == "yes":
             phage_data_list.append(basename) #[0]
         else:
@@ -2216,9 +2424,8 @@ for filename in genbank_files:
                 #that is replacing an auto-annotated genome.
                 #Eventually, this restriction can be loosened to evaluate tRNAs
                 #in any type of genome.
-
-                elif feature.type == "tRNA" and import_action == "replace" and \
-                    phamerator_status == 'draft' and import_status == 'final':
+                #REVIEW
+                elif feature.type == "tRNA" and ignore_trna_check != "yes":
 
 
                     #Retrieve tRNA coordinates
@@ -2332,30 +2539,23 @@ for filename in genbank_files:
             #GeneID
             #Feature_locus_tag is a record of the locus tag found in the file.
             #GeneID is what will be assigned in the database.
-            #If running in Allphages mode, GeneID may be set to locus tag or phageID.
             try:
                 feature_locus_tag = feature.qualifiers["locus_tag"][0]
-
-
-                #ALLPHAGES option
-                if use_basename == "yes":
-                    if geneid_strategy == '1':
-                        geneID = feature_locus_tag
-                    else:
-                        geneID = basename.upper() + "_" + str(cdsCount)
-                else:
-                    geneID = feature_locus_tag
-
-
             except:
                 feature_locus_tag = ""
                 missing_locus_tag_tally += 1
 
-                #ALLPHAGES option
-                if use_basename == "yes":
+            #REVIEW customize
+            #If user selected customized GeneIDs, OR if there is no locus tag,
+            #then create a concatenated GeneID
+            if custom_gene_id == 'yes' or feature_locus_tag == '':
+                if use_basename == 'yes':
                     geneID = basename.upper() + "_" + str(cdsCount)
                 else:
                     geneID = phageName.upper() + "_" + str(cdsCount)
+            else:
+                geneID = feature_locus_tag
+
 
 
 
@@ -2605,32 +2805,34 @@ for filename in genbank_files:
             addCount+= 1
 
 
-            feature_data_list.append(geneID)
+            feature_data_list.append(geneID) #0
 
-            #ALLPHAGES option
+            #REVIEW customize
             if use_basename == "yes":
-                feature_data_list.append(basename)
+                feature_data_list.append(basename) #1
             else:
-                feature_data_list.append(phageName)
-            feature_data_list.append(startCoord)
-            feature_data_list.append(stopCoord)
-            feature_data_list.append(geneLen)
-            feature_data_list.append(geneName)
-            feature_data_list.append(typeID)
-            feature_data_list.append(translation)
-            feature_data_list.append(orientation[0])
-            feature_data_list.append(assigned_description)
-            feature_data_list.append(feature_product)
-            feature_data_list.append(feature_function)
-            feature_data_list.append(feature_note)
+                feature_data_list.append(phageName) #1
+
+            feature_data_list.append(startCoord) #2
+            feature_data_list.append(stopCoord) #3
+            feature_data_list.append(geneLen) #4
+            feature_data_list.append(geneName) #5
+            feature_data_list.append(typeID) #6
+            feature_data_list.append(translation) #7
+            feature_data_list.append(orientation[0]) #8
+            feature_data_list.append(assigned_description) #9
+            feature_data_list.append(feature_product) #10
+            feature_data_list.append(feature_function) #11
+            feature_data_list.append(feature_note) #12
 
             #If there is a parsed accession, the file is interpreted to have
-            #been retrieved from NCBi, which means the locus tags are the official
+            #been retrieved from NCBI, which means the locus tags are the official
             #locus tags. Otherwise, do not retain the locus tags in the record.
-            if parsed_accession != 'none':
-                feature_data_list.append(feature_locus_tag)
+            #REVIEW ignore_locus_tag_import
+            if ignore_locus_tag_import != 'yes':
+                feature_data_list.append(feature_locus_tag) #13
             else:
-                feature_data_list.append('')
+                feature_data_list.append('') #13
 
             all_features_data_list.append(feature_data_list)
 
@@ -2817,14 +3019,12 @@ for filename in genbank_files:
 
 
         #Check the phage name spelling in the locus tags.
-        #If importing non-SEA-PHAGES file (using ALLPHAGES option), skip this step.
-        #If the new genome is from NCBI, then skip this as well.
-        #REVIEW
         pattern4 = re.compile(phageName.lower())
         geneID_typo_tally = 0
         geneID_typo_list = []
 
-        if use_basename != "yes" and parsed_accession == 'none':
+        #REVIEW Now that this is a custom setting,
+        if ignore_gene_id_typo != "yes":
             for geneID in geneID_set:
 
                search_result = pattern4.search(geneID.lower())
@@ -2892,8 +3092,8 @@ for filename in genbank_files:
         #If other CDS fields contain descriptions, they can be chosen to
         #replace the default import_cds_qualifier descriptions.
         #Then provide option to verify changes.
-        #This block is only executed if the genome is not from NCBI
-        if parsed_accession == 'none':
+        #This block is skipped if user selects to do so.
+        if ignore_description_field_check != 'yes':
 
 
             changed = ""
