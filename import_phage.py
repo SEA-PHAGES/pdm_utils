@@ -263,44 +263,53 @@ def check_tRNA_product(product_field):
 
 
     #product starts off as lowercase 'trna-ser (agc)'
+    #split1_list = 'trna' and 'ser (agc)'
     tRNA_product_split1_list = product_field.split('-')
 
     #If product is missing, an error will already have been
-    #thrown, so only parse product if there is one
+    #thrown, so only parse product if a product is present
     if len(tRNA_product_split1_list) == 2:
 
-        #split1_list = 'trna' and 'ser (agc)'
-
         tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip() #'trna'
-        tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
 
         #split2_list = 'ser' and 'agc)'
-        if len(tRNA_product_split2_list) == 2:
+        tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
 
-            tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip() #'ser'
-            tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
+        tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip() #'ser'
 
-            #split3_list = 'agc' and ''
-
-            #Only check the anticodon if the amino acid is NOT 'other'
-            if tRNA_product_amino_acid_three != 'other' and \
-                len(tRNA_product_split3_list) == 2:
-
-                tRNA_product_anticodon = tRNA_product_split3_list[0].strip() #'agc'
-                if len(tRNA_product_anticodon) != 3:
-                    product_error += 1
-            else:
+        #REVIEW test
+        if tRNA_product_amino_acid_three != 'other' and \
+            len(tRNA_product_amino_acid_three) != 3:
                 product_error += 1
-        else:
-            product_error += 1
+
+        #The code block below checks for the presence of an anticodon.
+        #No need to use it currently, since there is so much variability
+        #at the tRNA product field, but retain for future use.
+        # if len(tRNA_product_split2_list) == 2:
+        #
+        #     #split3_list = 'agc' and ''
+        #     tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
+        #
+        #     #Only check the anticodon if the amino acid is NOT 'other'
+        #     if tRNA_product_amino_acid_three != 'other' and \
+        #         len(tRNA_product_split3_list) == 2:
+        #
+        #         tRNA_product_anticodon = tRNA_product_split3_list[0].strip() #'agc'
+        #         if len(tRNA_product_anticodon) != 3:
+        #             product_error += 1
+        #     else:
+        #         product_error += 1
+        #
+        # else:
+        #     product_error += 1
+
+
     else:
         pass
 
     return product_error
 
 
-
-#REVIEW customization
 #Allows user to select specific options
 def select_option(message,valid_response_set):
 
@@ -409,19 +418,20 @@ print "\n\n"
 #     else:
 #         print "Invalid choice."
 
-#REVIEW test
 run_type_options = [\
     'none',\
-    'Test: checks flat files for accuracy, but the database is not changed.',\
-    'Production: after testing files, the database is updated.']
-print '\n\nThe following run types are available:'
+    'test',\
+    'production']
+print '\n\nThe following run types are available:\n'
 #print '0: ' + run_type_options[0]
-print '1: ' + run_type_options[1]
-print '2: ' + run_type_options[2]
+# print '1: ' + run_type_options[1]
+# print '2: ' + run_type_options[2]
+print '1: ' + run_type_options[1] + ' (checks flat files for accuracy, but the database is not changed.)'
+print '2: ' + run_type_options[2] + ' (after testing files, the database is updated.)'
 run_type = select_option(\
     "\nWhich run type do you want? ", \
-    set(['test','production']))
-
+    set([1,2]))
+run_type = run_type_options[run_type]
 
 
 
@@ -440,7 +450,6 @@ run_type = select_option(\
 
 #Determine the run mode
 
-#REVIEW customize
 #Initialize variables
 use_basename = ""
 custom_gene_id = ""
@@ -449,7 +458,8 @@ ignore_description_field_check = ""
 ignore_replace_warning = ""
 ignore_trna_check = ""
 ignore_locus_tag_import = ""
-
+ignore_phage_name_typos = ""
+ignore_host_typos = ""
 
 
 run_mode_options = [\
@@ -459,7 +469,7 @@ run_mode_options = [\
     'Auto-updates from NCBI',\
     'Misc. genomes from NCBI',\
     'Customized settings']
-print '\n\nThe following run modes are available:'
+print '\n\nThe following run modes are available:\n'
 #print '0: ' + run_mode_options[0]
 print '1: ' + run_mode_options[1]
 print '2: ' + run_mode_options[2]
@@ -476,8 +486,6 @@ run_mode = select_option(\
 # if run_type != "smart":
 #     print "\n\nAvailable import modes:"
 #     print "1: Standard (e.g. Actino database)"
-#
-#     #REVIEW Change to 'Custom'
 #     print "2: Custom settings"
 #     print "\n"
 #     run_mode_valid = False
@@ -509,6 +517,10 @@ if run_mode == 1:
     ignore_replace_warning = 'no'
     ignore_trna_check = 'yes'
     ignore_locus_tag_import = 'yes'
+    ignore_phage_name_typos = 'yes'
+    ignore_host_typos = 'yes'
+
+
 
 #REVIEW
 #Manual annotations
@@ -520,6 +532,9 @@ elif run_mode == 2:
     ignore_replace_warning = 'no'
     ignore_trna_check = 'no'
     ignore_locus_tag_import = 'yes'
+    ignore_phage_name_typos = 'no'
+    ignore_host_typos = 'no'
+
 
 #REVIEW
 #SEA-PHAGES NCBI records
@@ -531,6 +546,9 @@ elif run_mode == 3:
     ignore_replace_warning = 'yes'
     ignore_trna_check = 'yes'
     ignore_locus_tag_import = 'no'
+    ignore_phage_name_typos = 'yes' #Sometimes NCBI won't change this
+    ignore_host_typos = 'no' #NCBI will correct these typos if requested
+
 
 #REVIEW
 #Misc NCBI records
@@ -542,15 +560,18 @@ elif run_mode == 4:
     ignore_replace_warning = 'yes'
     ignore_trna_check = 'yes'
     ignore_locus_tag_import = 'no'
+    ignore_phage_name_typos = 'yes'
+    ignore_host_typos = 'yes'
+
 
 #REVIEW
 #Customized settings
 elif run_mode == 5:
 
     #1. Use the file's basename as the PhageID instead of the phage name in the file
-    print "\n\nNormally, the phage name is determined from the Organism field in the record."
+    print "\n\n\n\nNormally, the phage name is determined from the Organism field in the record."
     use_basename = select_option(\
-        "\nInstead, do you want to use the file name as the phage name? ", \
+        "\nInstead, do you want to use the file name as the phage name? (yes or no) ", \
         set(['yes','y','no','n']))
 
 
@@ -558,26 +579,26 @@ elif run_mode == 5:
     #Many times non-Hatfull authored genomes do not have consistent or specific locus tags, which complicates
     #assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
     #by joining PhageID and CDS number.
-    print "\n\nNormally, the GeneIDs are assigned by using the Locus Tags."
+    print "\n\n\n\nNormally, the GeneIDs are assigned by using the Locus Tags."
     custom_gene_id = select_option(\
-        "\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? ", \
+        "\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? (yes or no) ", \
         set(['yes','y','no','n']))
 
     #3. Ensure GeneIDs have phage name spelled correctly?
     #New SEA-PHAGES annotated genomes should be check for spelling, but maybe not
     #for other types of genomes.
-    print "\n\nNormally, the GeneIDs are required to contain the phage name without typos."
+    print "\n\n\n\nNormally, the GeneIDs are required to contain the phage name without typos."
     ignore_gene_id_typo = select_option(\
-        "\nInstead, do you want to allow missing or mispelled phage names in the GeneID? ", \
+        "\nInstead, do you want to allow missing or mispelled phage names in the GeneID? (yes or no) ", \
         set(['yes','y','no','n']))
 
 
     #4. Gene descriptions are set to import table field regardless
     #This should be run for new SEA-PHAGES annotated genomes, but may want to
     #be skipped if importing many genomes from NCBI
-    print "\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
+    print "\n\n\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
     ignore_description_field_check = select_option(\
-        "\nInstead, do you want to use the import table qualifier without verification? ", \
+        "\nInstead, do you want to use the import table qualifier without verification? (yes or no) ", \
         set(['yes','y','no','n']))
 
 
@@ -585,34 +606,55 @@ elif run_mode == 5:
     #Once a genome gets in NCBI, it is expected that a Final status genome is
     #replaced with another Final status genome, so it could get annoying to
     #keep getting the warning, so it can be turned off.
-    print "\n\nNormally, a warning is indicated if a Final status genome is being replaced."
+    print "\n\n\n\nNormally, a warning is indicated if a Final status genome is being replaced."
     ignore_replace_warning = select_option(\
-        "\nInstead, do you want to silence these warnings? ", \
+        "\nInstead, do you want to silence these warnings? (yes or no) ", \
         set(['yes','y','no','n']))
 
     #6. tRNA QC
     #Many genomes from NCBI, including SEA-PHAGES, may not have consistently
     #annotated tRNAs. So the tRNA QC can be skipped.
-    print "\n\nNormally, tRNAs are checked only in new manually annotated genomes."
+    print "\n\n\n\nNormally, tRNAs are checked only in new manually annotated genomes."
     ignore_trna_check = select_option(\
-        "\nInstead, do you want to ignore the tRNA quality checks? ", \
+        "\nInstead, do you want to ignore the tRNA quality checks? (yes or no) ", \
         set(['yes','y','no','n']))
 
 
     #7. Retain locus tags
-    #The locus tag field in the database should only reflect 'ofiicial' locus tags from
+    #The locus tag field in the database should only reflect 'official' locus tags from
     #bona fide Genbank records, and not simply Genbank-formatted files.
     #Locus tags from Pecaan auto-annotated and SMART team manually annotated
     #genomes should not be retained.
-    print "\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
+    print "\n\n\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
     ignore_locus_tag_import = select_option(\
-        "\nInstead, do you want to ignore all locus tags regardless of the source of the record? ", \
+        "\nInstead, do you want to ignore all locus tags regardless of the source of the record? (yes or no) ", \
         set(['yes','y','no','n']))
+
+
+    #8. Ignore phage name typos in the header
+    #The phage name can be found in several header fields. This should be
+    #checked for new manual annotations. Since NCBI doesn't like to change these
+    #types of typos, parsing NCBI records should skip this step.
+    print "\n\n\n\nNormally, the phage name is verified only in new manual annotations."
+    ignore_phage_name_typos = select_option(\
+        "\nInstead, do you want to ignore any phage name typos in the header? (yes or no) ", \
+        set(['yes','y','no','n']))
+    #REVIEW implement this variable
+
+
+    #9. Ignore host name typos in the header
+    #The host name can be found in several header fields. This should be
+    #checked for new manual annotations and in SEA-PHAGES NCBI records.
+    print "\n\n\n\nNormally, the host name is verified in new manual annotations or SEA-PHAGES NCBI records."
+    ignore_host_typos = select_option(\
+        "\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
+        set(['yes','y','no','n']))
+    #REVIEW implement this variable
+
 
 else:
     pass
 
-#REVIEW ensure run_mode doesn't conflict with prior run_mode usage
 
 
 
@@ -686,8 +728,6 @@ output_file = open(os.path.join(phageListDir,success_folder,date + "_phage_impor
 write_out(output_file,date + " Phamerator database updates:\n\n\n")
 write_out(output_file,"\n\n\n\nBeginning import script...")
 write_out(output_file,"\nRun type: " + run_type)
-
-#REVIEW run mode
 write_out(output_file,"\nRun mode: %s" % run_mode_options[run_mode])
 
 
@@ -2254,7 +2294,8 @@ for filename in genbank_files:
             pass
 
         #For non-Hatfull authored annotations of any kind (draft, final, gbk),
-        #Graham should not be an author
+        #Graham may or may not be an author
+        #REVIEW I may want to remove this.
         else:
             if search_result != None:
                 record_warnings += 1
@@ -2902,70 +2943,72 @@ for filename in genbank_files:
 
 
         #See if there are any phage name typos in the header block
-        pattern1 = re.compile('^' + phageName + '$')
-        pattern2 = re.compile('^' + phageName)
+        #REVIEW test
+        if ignore_phage_name_typos != 'yes':
+
+            pattern1 = re.compile('^' + phageName + '$')
+            pattern2 = re.compile('^' + phageName)
 
 
-        #REVIEW This QC check may not be necessary. It really doesn't matter
-        #for Draft genomes, since the fields are auto-populated. For NCBI genomes,
-        #the field should be an Accession. For Final genomes yet to be submitted
-        #to NCBI, even if there is a typo, it should not be retained since this
-        #field gets populated with the Accession.
-        # if find_name(pattern1,record_name.split(' ')) == 0:
-        #
-        #     if record_name.split('.')[0] != parsed_accession:
-        #         print "\nRecord name does not have the accession number or the identical phage name as found in the record organism field."
-        #         record_errors += question("\nError: problem with header info of file %s." % filename)
+            #REVIEW This QC check may not be necessary. It really doesn't matter
+            #for Draft genomes, since the fields are auto-populated. For NCBI genomes,
+            #the field should be an Accession. For Final genomes yet to be submitted
+            #to NCBI, even if there is a typo, it should not be retained since this
+            #field gets populated with the Accession.
+            # if find_name(pattern1,record_name.split(' ')) == 0:
+            #
+            #     if record_name.split('.')[0] != parsed_accession:
+            #         print "\nRecord name does not have the accession number or the identical phage name as found in the record organism field."
+            #         record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
-
-
-
-        #Record definition QC
-        #It can contain ", complete genome." or "." at the end,
-        #so remove this before doing search.
-        if record_def[-1:].lower() == '.':
-            if record_def[-18:].lower() == ', complete genome.':
-                record_def_trimmed = record_def[:-18]
+            #Record definition QC
+            #It can contain ", complete genome." or "." at the end,
+            #so remove this before doing search.
+            if record_def[-1:].lower() == '.':
+                if record_def[-18:].lower() == ', complete genome.':
+                    record_def_trimmed = record_def[:-18]
+                else:
+                    record_def_trimmed = record_def[:-1]
             else:
-                record_def_trimmed = record_def[:-1]
-        else:
-            record_def_trimmed = record_def
+                record_def_trimmed = record_def
 
 
-        if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
-            print "\nRecord definition does not have identical phage name as found in the record organism field."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
+            if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
+                print "\nRecord definition does not have identical phage name as found in the record organism field."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
 
-        #REVIEW the above Record definition check replaces the code block below
-        # if find_name(pattern1,record_def[:-18].split(' ')) == 0:
-        #     print record_def[:-18].split(' ')
-        #     print "\nRecord definition does not have identical phage name as found in the record organism field."
-        #     record_errors += question("\nError: problem with header info of file %s." % filename)
-        #
-        # else:
-        #     if find_name(pattern2,record_def.split(' ')) == 0:
-        #         print "\nRecord definition does not have identical phage name as found in the record organism field."
-        #         record_errors += question("\nError: problem with header info of file %s." % filename)
+            #REVIEW the above Record definition check replaces the code block below
+            # if find_name(pattern1,record_def[:-18].split(' ')) == 0:
+            #     print record_def[:-18].split(' ')
+            #     print "\nRecord definition does not have identical phage name as found in the record organism field."
+            #     record_errors += question("\nError: problem with header info of file %s." % filename)
+            #
+            # else:
+            #     if find_name(pattern2,record_def.split(' ')) == 0:
+            #         print "\nRecord definition does not have identical phage name as found in the record organism field."
+            #         record_errors += question("\nError: problem with header info of file %s." % filename)
+
+            #Record source QC
+            if find_name(pattern1,record_source.split(' ')) == 0:
+                print "\nRecord source does not have identical phage name as found in the record organism field."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
+
+            #Source feature organism QC
+            if find_name(pattern1,feature_source_organism.split(' ')) == 0:
+                print "\nSource feature organism does not have identical phage name as found in the record organism field."
+                record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
 
-        #Record source QC
-        if find_name(pattern1,record_source.split(' ')) == 0:
-            print "\nRecord source does not have identical phage name as found in the record organism field."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
 
-
-        #Source feature organism QC
-        if find_name(pattern1,feature_source_organism.split(' ')) == 0:
-            print "\nSource feature organism does not have identical phage name as found in the record organism field."
-            record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
 
         #See if there are any host name typos in the header block.
         #Skip this step if it is a Draft genome, because it won't correctly have this information.
-        if import_status != "draft":
+        #REVIEW test
+        if import_status != 'draft' and ignore_host_typos != 'yes':
             import_host_trim = import_host
             if import_host_trim == "Mycobacterium":
                 import_host_trim = import_host_trim[:-3]
