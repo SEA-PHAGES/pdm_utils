@@ -249,7 +249,7 @@ def check_tRNA_product(product_field):
     #Ultimately, a regular expression would be better to use
     #tRNA product example = 'tRNA-Ser (AGC)'
 
-    #TODO The code block below functions, but it does not fully account for
+    #REVIEW The code block below functions, but it does not fully account for
     #tRNA-OTHER descriptions and it does not check the accuracy of
     #the amino acid and anticodon pairing.
     #The biggest problem is that the expected product and note descriptions
@@ -274,10 +274,8 @@ def check_tRNA_product(product_field):
 
         #split2_list = 'ser' and 'agc)'
         tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
-
         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip() #'ser'
 
-        #REVIEW test
         if tRNA_product_amino_acid_three != 'other' and \
             len(tRNA_product_amino_acid_three) != 3:
                 product_error += 1
@@ -482,32 +480,6 @@ run_mode = select_option(\
 
 
 
-#TODO ultimately remove this I think
-# if run_type != "smart":
-#     print "\n\nAvailable import modes:"
-#     print "1: Standard (e.g. Actino database)"
-#     print "2: Custom settings"
-#     print "\n"
-#     run_mode_valid = False
-#     while run_mode_valid == False:
-#         run_mode = raw_input("\nIndicate import mode (1 or 2): ")
-#         if run_mode == '1':
-#             run_mode_valid = True
-#         elif run_mode == '2':
-#             run_mode_valid = True
-#         else:
-#             print "Invalid choice."
-#
-# else:
-#     run_mode = '1'
-#     smart_defaults = "yes"
-#TODO ultimately remove SMART option
-
-
-
-
-
-#REVIEW
 #Auto-annotations
 if run_mode == 1:
     use_basename = 'no'
@@ -522,7 +494,6 @@ if run_mode == 1:
 
 
 
-#REVIEW
 #Manual annotations
 elif run_mode == 2:
     use_basename = 'no'
@@ -536,7 +507,6 @@ elif run_mode == 2:
     ignore_host_typos = 'no'
 
 
-#REVIEW
 #SEA-PHAGES NCBI records
 elif run_mode == 3:
     use_basename = 'no'
@@ -550,7 +520,6 @@ elif run_mode == 3:
     ignore_host_typos = 'no' #NCBI will correct these typos if requested
 
 
-#REVIEW
 #Misc NCBI records
 elif run_mode == 4:
     use_basename = 'yes'
@@ -564,7 +533,6 @@ elif run_mode == 4:
     ignore_host_typos = 'yes'
 
 
-#REVIEW
 #Customized settings
 elif run_mode == 5:
 
@@ -627,7 +595,7 @@ elif run_mode == 5:
     #genomes should not be retained.
     print "\n\n\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
     ignore_locus_tag_import = select_option(\
-        "\nInstead, do you want to ignore all locus tags regardless of the source of the record? (yes or no) ", \
+        "\nInstead, do you want to ignore all locus tags? (yes or no) ", \
         set(['yes','y','no','n']))
 
 
@@ -639,7 +607,6 @@ elif run_mode == 5:
     ignore_phage_name_typos = select_option(\
         "\nInstead, do you want to ignore any phage name typos in the header? (yes or no) ", \
         set(['yes','y','no','n']))
-    #REVIEW implement this variable
 
 
     #9. Ignore host name typos in the header
@@ -649,8 +616,6 @@ elif run_mode == 5:
     ignore_host_typos = select_option(\
         "\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
         set(['yes','y','no','n']))
-    #REVIEW implement this variable
-
 
 else:
     pass
@@ -1657,8 +1622,6 @@ for element in update_data_list:
                             element[6]]
     success_action_file_writer.writerow(update_output_list)
 
-#TODO remove smart option
-# if run_type != "smart":
 write_out(output_file,"\nAll field update actions have been implemented.")
 raw_input("\nPress ENTER to proceed to next import stage.")
 
@@ -1728,8 +1691,6 @@ for element in remove_data_list:
                             element[6]]
     success_action_file_writer.writerow(remove_output_list)
 
-#TODO remove smart option
-# if run_type != "smart":
 write_out(output_file,"\nAll genome remove actions have been implemented.")
 raw_input("\nPress ENTER to proceed to next import stage.")
 
@@ -2012,7 +1973,6 @@ for filename in genbank_files:
             parsed_accession = "none"
 
 
-        #REVIEW customize
         #Match up to the import ticket data
         if use_basename == "yes":
             matchedData = add_replace_data_dict.pop(basename,"error")
@@ -2220,15 +2180,8 @@ for filename in genbank_files:
 
             elif len(query_results) == 1:
 
-                #Old conditional:
-                # if query_results[0][1].lower() != "draft":
-
-                #REVIEW potentially skip this QC is from NCBI
-                #The genome to be replaced is not Draft.
-                #If the new genome is from NCBI (accession is populated) or
-                #the old genome is a Draft then skip this.
-                #If it is a final status, and it is being automatically replaced
-                #by NCBI, then there is no need to ask the user if this is correct.
+                #If the new genome is a Final or Gbk, this code block
+                #alerts the user, unless this warning is turned off.
                 if query_results[0][1].lower() != "draft" and ignore_replace_warning != 'yes':
 
                     record_warnings += 1
@@ -2285,7 +2238,6 @@ for filename in genbank_files:
                 write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
                 print "The genome will continue to be imported."
                 record_errors += question("\nError: incorrect author data for %s." % phageName)
-                #REVIEW not sure if this might need to be a forced error instead of an optional error
 
 
         #For Hatfull authored draft annotations, it doesn't matter whether
@@ -2295,13 +2247,12 @@ for filename in genbank_files:
 
         #For non-Hatfull authored annotations of any kind (draft, final, gbk),
         #Graham may or may not be an author
-        #REVIEW I may want to remove this.
         else:
             if search_result != None:
                 record_warnings += 1
-                write_out(output_file,"\nError: Graham Hatfull is a listed author for genome %s" % phageName)
-                record_errors += 1
-
+                write_out(output_file,"\nWarning: Graham Hatfull is a listed author for genome %s" % phageName)
+                print "The genome will continue to be imported."
+                record_errors += question("\nError: incorrect author data for %s." % phageName)
 
 
 
@@ -2367,7 +2318,6 @@ for filename in genbank_files:
         #9 = ncbi_update_status
         #10 = annotation_qc
         #11 = import_author
-        #REVIEW customize
         if use_basename == "yes":
             phage_data_list.append(basename) #[0]
         else:
@@ -2465,7 +2415,6 @@ for filename in genbank_files:
                 #that is replacing an auto-annotated genome.
                 #Eventually, this restriction can be loosened to evaluate tRNAs
                 #in any type of genome.
-                #REVIEW
                 elif feature.type == "tRNA" and ignore_trna_check != "yes":
 
 
@@ -2538,7 +2487,7 @@ for filename in genbank_files:
 
                         if len(tRNA_product) > 0:
                             if check_tRNA_product(tRNA_product) > 0:
-                                write_out(output_file,"\nError: tRNA starting at %s has incorrect anticodon in %s." \
+                                write_out(output_file,"\nError: tRNA starting at %s has incorrect amino acid or anticodon in %s." \
                                     % (tRNA_left + 1, phageName))
                                 record_errors += 1
                         else:
@@ -2586,7 +2535,6 @@ for filename in genbank_files:
                 feature_locus_tag = ""
                 missing_locus_tag_tally += 1
 
-            #REVIEW customize
             #If user selected customized GeneIDs, OR if there is no locus tag,
             #then create a concatenated GeneID
             if custom_gene_id == 'yes' or feature_locus_tag == '':
@@ -2845,10 +2793,8 @@ for filename in genbank_files:
             #13 = feature_locus_tag
             addCount+= 1
 
-
             feature_data_list.append(geneID) #0
 
-            #REVIEW customize
             if use_basename == "yes":
                 feature_data_list.append(basename) #1
             else:
@@ -2869,7 +2815,6 @@ for filename in genbank_files:
             #If there is a parsed accession, the file is interpreted to have
             #been retrieved from NCBI, which means the locus tags are the official
             #locus tags. Otherwise, do not retain the locus tags in the record.
-            #REVIEW ignore_locus_tag_import
             if ignore_locus_tag_import != 'yes':
                 feature_data_list.append(feature_locus_tag) #13
             else:
@@ -2943,7 +2888,6 @@ for filename in genbank_files:
 
 
         #See if there are any phage name typos in the header block
-        #REVIEW test
         if ignore_phage_name_typos != 'yes':
 
             pattern1 = re.compile('^' + phageName + '$')
@@ -3007,7 +2951,6 @@ for filename in genbank_files:
 
         #See if there are any host name typos in the header block.
         #Skip this step if it is a Draft genome, because it won't correctly have this information.
-        #REVIEW test
         if import_status != 'draft' and ignore_host_typos != 'yes':
             import_host_trim = import_host
             if import_host_trim == "Mycobacterium":
@@ -3066,7 +3009,6 @@ for filename in genbank_files:
         geneID_typo_tally = 0
         geneID_typo_list = []
 
-        #REVIEW Now that this is a custom setting,
         if ignore_gene_id_typo != "yes":
             for geneID in geneID_set:
 
@@ -3128,10 +3070,6 @@ for filename in genbank_files:
         write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally))
 
 
-
-
-
-        #REVIEW
         #If other CDS fields contain descriptions, they can be chosen to
         #replace the default import_cds_qualifier descriptions.
         #Then provide option to verify changes.
