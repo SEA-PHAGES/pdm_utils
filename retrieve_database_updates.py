@@ -73,9 +73,10 @@ except:
                 5. Subcluster of the updated phage\n\
                 6. Annotation status of the updated phage (draft, final, gbk)\n\
                 7. Annotation authorship of the updated phage (hatfull, gbk)\n\
-                8. Gene description field of the update phage (product, note, function)\n\
+                8. Gene description field of the updated phage (product, note, function)\n\
                 9. Accession of the updated phage\n\
-                10. PhageID that will be removed or replaced\n\n"
+                10. Run mode of the updated phage\n\
+                11. PhageID that will be removed or replaced\n\n"
 
     sys.exit(1)
 
@@ -733,6 +734,7 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                     phamerator_author,\
                                                     "none",\
                                                     phagesdb_accession,\
+                                                    "none",\
                                                     "none"])
 
 
@@ -799,7 +801,11 @@ if (retrieve_field_updates == "yes" or retrieve_phagesdb_genomes == "yes" or ret
                                                             "hatfull",\
                                                             "product",\
                                                             "retrieve",\
+                                                            "phagesdb",\
                                                             phamerator_id])
+
+
+
                     phagesdb_retrieved_tally += 1
                     phagesdb_retrieved_list.append(phamerator_id)
 
@@ -1031,6 +1037,7 @@ if retrieve_ncbi_genomes == "yes":
                                                 phamerator_author,\
                                                 'product',\
                                                 phamerator_accession,\
+                                                'ncbi_auto',\
                                                 phamerator_id])
 
 
@@ -1108,7 +1115,10 @@ if retrieve_pecaan_genomes == "yes":
                                                 "hatfull",\
                                                 "product",\
                                                 "none",\
+                                                "pecaan",\
                                                 "none"])
+                                                
+
             print "Retrieved %s from PECAAN." %new_phage
             pecaan_retrieved_tally += 1
             pecaan_retrieved_list.append(new_phage)

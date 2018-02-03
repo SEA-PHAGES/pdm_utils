@@ -1637,7 +1637,7 @@ for element in update_data_list:
 
 write_out(output_file,"\nAll field update actions have been implemented.")
 raw_input("\nPress ENTER to proceed to next import stage.")
-#TODO skip this step if there were no errors?
+
 
 
 
