@@ -336,7 +336,6 @@ def select_option(message,valid_response_set):
 
 
 #Definitions for different run mode types
-#REVIEW check
 
 #Auto-annotations
 run_mode_pecaan_dict = {\
@@ -395,119 +394,21 @@ run_mode_ncbi_misc_dict = {
     'ignore_host_typos':'yes'\
     }
 
-#Custom QC settings. User can select the settings.
+#Custom QC settings. User can select the settings, so it is initialized as
+#an empty dictionary that only gets filled if there is a ticket indicating
+#a custom set of parameters is needed.
 run_mode_custom_dict = {}
 
 
-#Customized settings
-#REVIEW check
-def decide_basename():
-    #1. Use the file's basename as the PhageID instead of the phage name in the file
-    print "\n\n\n\nNormally, the phage name is determined from the Organism field in the record."
-    use_basename = select_option(\
-        "\nInstead, do you want to use the file name as the phage name? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return use_basename
-
-
-def decide_custom_gene_id():
-    #2. Create GeneIDs from locus tags or PhageName_GeneNumber concatenation
-    #Many times non-Hatfull authored genomes do not have consistent or specific locus tags, which complicates
-    #assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
-    #by joining PhageID and CDS number.
-    print "\n\n\n\nNormally, the GeneIDs are assigned by using the Locus Tags."
-    custom_gene_id = select_option(\
-        "\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return custom_gene_id
-
-
-
-def decide_gene_id_typo():
-    #3. Ensure GeneIDs have phage name spelled correctly?
-    #New SEA-PHAGES annotated genomes should be check for spelling, but maybe not
-    #for other types of genomes.
-    print "\n\n\n\nNormally, the GeneIDs are required to contain the phage name without typos."
-    ignore_gene_id_typo = select_option(\
-        "\nInstead, do you want to allow missing or mispelled phage names in the GeneID? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_gene_id_typo
-
-
-def decide_description_check():
-    #4. Gene descriptions are set to import table field regardless
-    #This should be run for new SEA-PHAGES annotated genomes, but may want to
-    #be skipped if importing many genomes from NCBI
-    print "\n\n\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
-    ignore_description_field_check = select_option(\
-        "\nInstead, do you want to use the import table qualifier without verification? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_description_field_check
-
-
-def decide_replace_warning():
-    #5. Replacing final with final warning
-    #Once a genome gets in NCBI, it is expected that a Final status genome is
-    #replaced with another Final status genome, so it could get annoying to
-    #keep getting the warning, so it can be turned off.
-    print "\n\n\n\nNormally, a warning is indicated if a Final status genome is being replaced."
-    ignore_replace_warning = select_option(\
-        "\nInstead, do you want to silence these warnings? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_replace_warning
-
-
-
-def decide_trna_check():
-    #6. tRNA QC
-    #Many genomes from NCBI, including SEA-PHAGES, may not have consistently
-    #annotated tRNAs. So the tRNA QC can be skipped.
-    print "\n\n\n\nNormally, tRNAs are checked only in new manually annotated genomes."
-    ignore_trna_check = select_option(\
-        "\nInstead, do you want to ignore the tRNA quality checks? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_trna_check
-
-
-def decide_locus_tag_import():
-    #7. Retain locus tags
-    #The locus tag field in the database should only reflect 'official' locus tags from
-    #bona fide Genbank records, and not simply Genbank-formatted files.
-    #Locus tags from Pecaan auto-annotated and SMART team manually annotated
-    #genomes should not be retained.
-    print "\n\n\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
-    ignore_locus_tag_import = select_option(\
-        "\nInstead, do you want to ignore all locus tags? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_locus_tag_import
-
-
-
-def decide_phage_typos():
-    #8. Ignore phage name typos in the header
-    #The phage name can be found in several header fields. This should be
-    #checked for new manual annotations. Since NCBI doesn't like to change these
-    #types of typos, parsing NCBI records should skip this step.
-    print "\n\n\n\nNormally, the phage name is verified only in new manual annotations."
-    ignore_phage_name_typos = select_option(\
-        "\nInstead, do you want to ignore any phage name typos in the header? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_phage_name_typos
-
-
-def decide_host_typos():
-    #9. Ignore host name typos in the header
-    #The host name can be found in several header fields. This should be
-    #checked for new manual annotations and in SEA-PHAGES NCBI records.
-    print "\n\n\n\nNormally, the host name is verified in new manual annotations or SEA-PHAGES NCBI records."
-    ignore_host_typos = select_option(\
-        "\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
-        set(['yes','y','no','n']))
-    return ignore_host_typos
-
-
 #A dictionary that holds all the other dictionaries.
-#Import tables will use the keys to retrieve the right combination of parameters
+#Import tables will use the keys to retrieve the right combination of parameters.
+#If new options needed to be created, they need to be added to this dictionary.
+#'none': reserved for import tickets that do not need a run mode specified (such as UPDATE tickets)
+#'other': reserved for when users manually create import tickets and do not know
+#which is the best option for their needs. Currently, this defaults to the 'phagesdb'
+#run mode, since that is the most stringest criteria.
+#'custom': reserved for when the user wants to specify a unique combination of options
+#that are not reflected in the other run modes.
 run_mode_options_dict = {\
     'none':'',\
     'pecaan':run_mode_pecaan_dict,\
@@ -517,7 +418,8 @@ run_mode_options_dict = {\
     'other':run_mode_phagesdb_dict,\
     'custom':run_mode_custom_dict}
 
-#REVIEW
+
+
 #End of function definitions
 ################
 
@@ -675,10 +577,6 @@ write_out(output_file,date + " Phamerator database updates:\n\n\n")
 write_out(output_file,"\n\n\n\nBeginning import script...")
 write_out(output_file,"\nRun type: " + run_type)
 
-#No longer need to output th run mode, since it gets reported for every ticket
-# write_out(output_file,"\nRun mode: %s" % run_mode_options[run_mode])
-# #REVIEW change run_mode_options variable?
-
 
 
 
@@ -815,19 +713,6 @@ protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
 action_set = set(["add","remove","replace","update"])
 
 
-
-#Create set of all run mode options
-#REVIEW add runmode list
-run_mode_set = set([\
-    'none',\
-    'pecaan',\
-    'phagesdb',\
-    'ncbi_auto',\
-    'ncbi_misc',\
-    'other',\
-    'custom'])
-
-
 #Create set of most common gene description genbank qualifiers
 description_set = set(["product","note","function"])
 
@@ -914,8 +799,6 @@ for input_row in file_reader:
     row.append(input_row[6]) #AnnotationAuthor
     row.append(input_row[9]) #Run mode
 
-    #REVIEW rearrange for run_mode
-
 
 
 
@@ -944,7 +827,7 @@ for input_row in file_reader:
         row[8] = row[8].lower()
     row[9] = row[9].lower()
     row[10] = row[10].lower()
-    #REVIEW check run mode
+
 
     #If either the Host, Cluster, Subcluster or Accession data needs to be retrieved,
     #try to access the data in phagesdb before proceeding
@@ -1155,13 +1038,13 @@ for input_row in file_reader:
 
 
     #Make sure run mode is permissible
-
-    if row[10] not in run_mode_set:
+    if row[10] not in set(run_mode_options_dict.keys()):
         write_out(output_file,"\nError: run mode is not valid for phage %s." %row[1])
         table_errors += 1
     elif row[10] == 'custom':
         run_mode_custom_total += 1
-    #REVIEW Modify Run mode?
+    else:
+        pass
 
 
 
@@ -1203,12 +1086,11 @@ for input_row in file_reader:
             write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
             table_errors += 1
 
-
-        #REVIEW Run Mode
-        if row[10] == 'none':
+        #Run Mode
+        if row[10] != 'none':
             write_out(output_file,"\nError: %s does not have correctly populated Run Mode field." %row[1])
             table_errors += 1
-            #REVIEW should update tickets have 'none' run mode?
+
 
     #Add
     elif row[0] == "add":
@@ -1245,11 +1127,10 @@ for input_row in file_reader:
             write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
             table_errors += 1
 
-        #REVIEW Run Mode
+        #Run Mode
         if row[10] == 'none':
             write_out(output_file,"\nError: %s does not have correctly populated Run Mode field." %row[1])
             table_errors += 1
-
 
 
     #Remove
@@ -1265,7 +1146,7 @@ for input_row in file_reader:
             row[8] != "none" or \
             row[9] != "none" or \
             row[10] != "none"):
-            #REVIEW test
+
 
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
             table_errors += 1
@@ -1323,10 +1204,12 @@ for input_row in file_reader:
             write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
             table_errors += 1
 
-        #REVIEW Run Mode
+        #Run Mode
         if row[10] == 'none':
             write_out(output_file,"\nError: %s does not have correctly populated Run Mode field." %row[1])
             table_errors += 1
+
+
 
     else:
         pass
@@ -1574,22 +1457,89 @@ else:
 
 
 
-
-#REVIEW Get custom run mode if needed
 if run_mode_custom_total > 0:
 
-    run_mode_custom_dict['use_basename'] = decide_basename()
-    run_mode_custom_dict['custom_gene_id'] = decide_custom_gene_id()
-    run_mode_custom_dict['ignore_gene_id_typo'] = decide_gene_id_typo()
-    run_mode_custom_dict['ignore_description_field_check'] = decide_description_check()
-    run_mode_custom_dict['ignore_replace_warning'] = decide_replace_warning()
-    run_mode_custom_dict['ignore_trna_check'] = decide_trna_check()
-    run_mode_custom_dict['ignore_locus_tag_import'] = decide_locus_tag_import()
-    run_mode_custom_dict['ignore_phage_name_typos'] = decide_phage_typos()
-    run_mode_custom_dict['ignore_host_typos'] = decide_host_typos()
+    print "\n\nOne or more import tickets indicate custom QC parameters."
+    print "The following options will be applied to all tickets requiring a custom QC:"
 
+    #1. Use the file's basename as the PhageID instead of the phage name in the file
+    print "\n\n\n\nNormally, the phage name is determined from the Organism field in the record."
+    run_mode_custom_dict['use_basename'] = select_option(\
+        "\nInstead, do you want to use the file name as the phage name? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #2. Create GeneIDs from locus tags or PhageName_GeneNumber concatenation
+    #Many times non-Hatfull authored genomes do not have consistent or specific locus tags, which complicates
+    #assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
+    #by joining PhageID and CDS number.
+    print "\n\n\n\nNormally, the GeneIDs are assigned by using the locus tags."
+    run_mode_custom_dict['custom_gene_id'] = select_option(\
+        "\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #3. Ensure GeneIDs have phage name spelled correctly?
+    #New SEA-PHAGES annotated genomes should be check for spelling, but maybe not
+    #for other types of genomes.
+    print "\n\n\n\nNormally, the GeneIDs are required to contain the phage name without typos."
+    run_mode_custom_dict['ignore_gene_id_typo'] = select_option(\
+        "\nInstead, do you want to allow missing or mispelled phage names in the GeneID? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #4. Gene descriptions are set to import table field regardless
+    #This should be run for new SEA-PHAGES annotated genomes, but may want to
+    #be skipped if importing many genomes from NCBI
+    print "\n\n\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
+    run_mode_custom_dict['ignore_description_field_check'] = select_option(\
+        "\nInstead, do you want to use the import table qualifier without verification? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #5. Replacing final with final warning
+    #Once a genome gets in NCBI, it is expected that a Final status genome is
+    #replaced with another Final status genome, so it could get annoying to
+    #keep getting the warning, so it can be turned off.
+    print "\n\n\n\nNormally, a warning is indicated if a Final status genome is being replaced."
+    run_mode_custom_dict['ignore_replace_warning'] = select_option(\
+        "\nInstead, do you want to silence the status warnings? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #6. tRNA QC
+    #Many genomes from NCBI, including SEA-PHAGES, may not have consistently
+    #annotated tRNAs. So the tRNA QC can be skipped.
+    print "\n\n\n\nNormally, tRNAs are checked only in new manually annotated genomes."
+    run_mode_custom_dict['ignore_trna_check'] = select_option(\
+        "\nInstead, do you want to ignore the tRNA quality checks? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #7. Retain locus tags
+    #The locus tag field in the database should only reflect 'official' locus tags from
+    #bona fide Genbank records, and not simply Genbank-formatted files.
+    #Locus tags from Pecaan auto-annotated and SMART team manually annotated
+    #genomes should not be retained.
+    print "\n\n\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
+    run_mode_custom_dict['ignore_locus_tag_import'] = select_option(\
+        "\nInstead, do you want to ignore all locus tags? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #8. Ignore phage name typos in the header
+    #The phage name can be found in several header fields. This should be
+    #checked for new manual annotations. Since NCBI doesn't like to change these
+    #types of typos, parsing NCBI records should skip this step.
+    print "\n\n\n\nNormally, the phage name is verified only in new manual annotations."
+    run_mode_custom_dict['ignore_phage_name_typos'] = select_option(\
+        "\nInstead, do you want to ignore any phage name typos in the header? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+    #9. Ignore host name typos in the header
+    #The host name can be found in several header fields. This should be
+    #checked for new manual annotations and in SEA-PHAGES NCBI records.
+    print "\n\n\n\nNormally, the host name is verified in new manual annotations or SEA-PHAGES NCBI records."
+    run_mode_custom_dict['ignore_host_typos'] = select_option(\
+        "\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+
+    #Now add the customized dictionary of options to the dictionary of all run modes
     run_mode_options_dict['custom'] = run_mode_custom_dict
-
 
 
 
@@ -1668,6 +1618,9 @@ else:
 #Document the update actions
 for element in update_data_list:
 
+    if element[7] == "":
+        element[7] = "none"
+
     update_output_list = [element[0],\
                             element[1],\
                             element[2],\
@@ -1680,11 +1633,11 @@ for element in update_data_list:
                             element[10],\
                             element[6]]
     success_action_file_writer.writerow(update_output_list)
-    #REVIEW add run mode
+
 
 write_out(output_file,"\nAll field update actions have been implemented.")
 raw_input("\nPress ENTER to proceed to next import stage.")
-
+#TODO skip this step if there were no errors?
 
 
 
@@ -1751,7 +1704,6 @@ for element in remove_data_list:
                             element[10],\
                             element[6]]
     success_action_file_writer.writerow(remove_output_list)
-    #REVIEW add run mode
 
 write_out(output_file,"\nAll genome remove actions have been implemented.")
 raw_input("\nPress ENTER to proceed to next import stage.")
@@ -1869,6 +1821,7 @@ for filename in genbank_files:
     #The file is parsed to grab the header information
     for seq_record in SeqIO.parse(os.path.join(phageListDir,filename), "genbank"):
 
+        matched_by_basename = ''
         add_replace_statements = []
         record_errors = 0
         record_warnings = 0
@@ -2035,11 +1988,37 @@ for filename in genbank_files:
             parsed_accession = "none"
 
 
-        #Match up to the import ticket data
-        if use_basename == "yes":
+        #Old code used to match up to the import ticket data
+        # if use_basename == "yes":
+        #     matchedData = add_replace_data_dict.pop(basename,"error")
+        # else:
+        #     matchedData = add_replace_data_dict.pop(phageName,"error")
+
+
+
+
+        #Since the Genbank record and the import ticket hasn't been matched yet
+        #it is not clear whether it should be matched by filename or phage name
+        #If the basename is the same as the phage name, it doesn't matter.
+        #Otherwise it first checks by phage name, then the basename.
+        #Once matched, it confirms later that the matching strategy indicated in the
+        #import ticket's run mode was the same that was actually used.
+        if basename == phageName:
             matchedData = add_replace_data_dict.pop(basename,"error")
-        else:
+            matched_by_basename = 'both'
+
+        elif phageName in add_replace_data_dict.keys():
             matchedData = add_replace_data_dict.pop(phageName,"error")
+            matched_by_basename = 'no'
+
+        elif basename in add_replace_data_dict.keys():
+            matchedData = add_replace_data_dict.pop(basename,"error")
+            matched_by_basename = 'yes'
+
+        else:
+            matchedData = "error"
+            matched_by_basename = 'neither'
+
 
         if matchedData != "error":
             write_out(output_file,"\nPreparing: " + str(matchedData))
@@ -2052,8 +2031,21 @@ for filename in genbank_files:
             import_accession = matchedData[7]
             import_subcluster = matchedData[8]
             import_author = matchedData[9]
-            import_run_mode_dict = matchedData[10]
-            #REVIEW add run_mode
+            import_run_mode_dict = run_mode_options_dict[matchedData[10]]
+
+
+
+            #Assign run mode parameters according to import ticket.
+            use_basename = import_run_mode_dict['use_basename']
+            custom_gene_id = import_run_mode_dict['custom_gene_id']
+            ignore_gene_id_typo = import_run_mode_dict['ignore_gene_id_typo']
+            ignore_description_field_check = import_run_mode_dict['ignore_description_field_check']
+            ignore_replace_warning = import_run_mode_dict['ignore_replace_warning']
+            ignore_trna_check = import_run_mode_dict['ignore_trna_check']
+            ignore_locus_tag_import = import_run_mode_dict['ignore_locus_tag_import']
+            ignore_phage_name_typos = import_run_mode_dict['ignore_phage_name_typos']
+            ignore_host_typos = import_run_mode_dict['ignore_host_typos']
+
 
 
         else:
@@ -2066,22 +2058,13 @@ for filename in genbank_files:
 
 
 
-
-        #REVIEW
-        #Assign run mode parameters according to import ticket.
-        #REVIEW verify these variables haven't been used at a prior point in the script.
-        use_basename = import_run_mode_dict['use_basename']
-        custom_gene_id = import_run_mode_dict['custom_gene_id']
-        ignore_gene_id_typo = import_run_mode_dict['ignore_gene_id_typo']
-        ignore_description_field_check = import_run_mode_dict['ignore_description_field_check']
-        ignore_replace_warning = import_run_mode_dict['ignore_replace_warning']
-        ignore_trna_check = import_run_mode_dict['ignore_trna_check']
-        ignore_locus_tag_import = import_run_mode_dict['ignore_locus_tag_import']
-        ignore_phage_name_typos = import_run_mode_dict['ignore_phage_name_typos']
-        ignore_host_typos = import_run_mode_dict['ignore_host_typos']
-
-
-
+        #Now that the import ticket is matched, verify that the matching strategy
+        #indicated in the tickets is equivalent to the strategy actually used
+        if use_basename != matched_by_basename and matched_by_basename != 'both':
+            record_errors += 1
+            write_out(output_file,\
+            "\nError: the genome in file %s was not matched to the import ticket as expected in the indicated run mode." \
+            % (filename))
 
 
 
@@ -3278,7 +3261,7 @@ for filename in genbank_files:
                                 matchedData[7],\
                                 matchedData[10],\
                                 matchedData[6]]
-                                #REVIEW run mode
+
 
         success_action_file_writer.writerow(add_replace_output_list)
         script_warnings += record_warnings
@@ -3324,7 +3307,6 @@ if len(add_replace_data_dict) > 0:
                                 add_replace_data_dict[key][7],\
                                 add_replace_data_dict[key][10],\
                                 add_replace_data_dict[key][6]]
-                                #REVIEW add run mode
 
         failed_action_file_writer.writerow(failed_output_list)
         write_out(output_file,"\n" + str(failed_output_list))
