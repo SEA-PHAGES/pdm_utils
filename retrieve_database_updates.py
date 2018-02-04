@@ -993,7 +993,7 @@ if retrieve_ncbi_genomes == "yes":
 
 
         #Save new records in a folder and create an import table row for them.
-        #REVIEW If the genome is currently a draft annotation, create an import
+        #If the genome is currently a draft annotation, create an import
         #ticket for replacement regardless of the date in the Genbank record.
         #This ensures that if a user fails to upload a manual annotation to
         #phagesdb, once the Genbank accession becomes active Phamerator will
@@ -1117,7 +1117,7 @@ if retrieve_pecaan_genomes == "yes":
                                                 "none",\
                                                 "pecaan",\
                                                 "none"])
-                                                
+
 
             print "Retrieved %s from PECAAN." %new_phage
             pecaan_retrieved_tally += 1

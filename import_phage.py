@@ -249,7 +249,7 @@ def check_tRNA_product(product_field):
     #Ultimately, a regular expression would be better to use
     #tRNA product example = 'tRNA-Ser (AGC)'
 
-    #REVIEW The code block below functions, but it does not fully account for
+    #The code block below functions, but it does not fully account for
     #tRNA-OTHER descriptions and it does not check the accuracy of
     #the amino acid and anticodon pairing.
     #The biggest problem is that the expected product and note descriptions
@@ -266,8 +266,9 @@ def check_tRNA_product(product_field):
     #split1_list = 'trna' and 'ser (agc)'
     tRNA_product_split1_list = product_field.split('-')
 
-    #If product is missing, an error will already have been
-    #thrown, so only parse product if a product is present
+    #If product is missing, an error will already have been thrown.
+    #The product should have a hypthen, so only parse product if it can be
+    #split into two elements.
     if len(tRNA_product_split1_list) == 2:
 
         tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip() #'trna'
@@ -303,7 +304,7 @@ def check_tRNA_product(product_field):
 
 
     else:
-        pass
+        product_error += 1
 
     return product_error
 
