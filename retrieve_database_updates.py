@@ -1094,8 +1094,8 @@ if retrieve_pecaan_genomes == "yes":
         #PECAAN should be able to generate any phage that is listed on phagesdb
         new_phage = new_phage.strip() #Remove \t character at the end of each row
         pecaan_link = pecaan_prefix + new_phage
-        pecaan_filename = new_phage + "_Draft.txt"
 
+        pecaan_filename = new_phage + ".txt"
 
         try:
             pecaan_response = urllib2.urlopen(pecaan_link)
