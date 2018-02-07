@@ -737,7 +737,7 @@ api_suffix = "/?format=json"
 
 #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
 #0 = Type of database action to be performed (add, remove, replace, update)
-#1 = New phage name that will be added to database
+#1 = New PhageID that will be added to database
 #2 = Host of new phage
 #3 = Cluster of new phage (singletons should be reported as "singleton")
 #4 = Subcluster of new phage (no subcluster should be reported as "none")
@@ -777,7 +777,7 @@ for input_row in file_reader:
     #This prevents the entire code for needing to be re-factored to account for the new indices.
     #Internal import row structure:
     #0 = Import action (unchanged)
-    #1 = New phage name (unchanged)
+    #1 = New PhageID (unchanged)
     #2 = Host (unchanged)
     #3 = Cluster (unchanged)
     #4 = Status
@@ -789,7 +789,7 @@ for input_row in file_reader:
     #10 = Run Mode
     row = []
     row.append(input_row[0]) #Import action
-    row.append(input_row[1]) #New phage name
+    row.append(input_row[1]) #New PhageID
     row.append(input_row[2]) #Host
     row.append(input_row[3]) #Cluster
     row.append(input_row[5]) #Status
@@ -799,7 +799,6 @@ for input_row in file_reader:
     row.append(input_row[4]) #Subcluster
     row.append(input_row[6]) #AnnotationAuthor
     row.append(input_row[9]) #Run mode
-
 
 
 
@@ -837,12 +836,18 @@ for input_row in file_reader:
         row[7] == "retrieve" or \
         row[8] == "retrieve"):
         try:
-            #Ensure the phage name does not have Draft appended
-            if row[1][-6:].lower() == "_draft":
-                search_name = row[1][:-6]
-            else:
-                search_name = row[1]
-            phage_url = api_prefix + search_name + api_suffix
+
+            #Now that the PhageID does not contain the Draft suffix, the
+            #code block below is unnecessary.
+            #Ensure the PhageID does not have Draft appended
+            # if row[1][-6:].lower() == "_draft":
+            #     search_name = row[1][:-6]
+            # else:
+            #     search_name = row[1]
+            # phage_url = api_prefix + search_name + api_suffix
+
+            #REVIEW
+            phage_url = api_prefix + row[1] + api_suffix
             online_data_json = urllib.urlopen(phage_url)
             online_data_dict = json.loads(online_data_json.read())
         except:
@@ -988,15 +993,19 @@ for input_row in file_reader:
 
 
 
-    #Modify Status if needed, and PhageID if needed
+    #Modify Status if needed
     if (row[4] not in phageStatus_set and row[4] != "none"):
             print "The status %s is not currently in the database." % row[4]
             table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
     if len(row[4]) > 5:
         write_out(output_file,"\nError: the status %s exceeds character limit." % row[4])
         table_errors += 1
-    if (row[4] == "draft" and row[1][-6:].lower() != "_draft"):
-        row[1] = row[1] + "_Draft"
+
+
+    #REVIEW
+    #Now that import ticket refers to PhageID, this code block should be removed
+    # if (row[4] == "draft" and row[1][-6:].lower() != "_draft"):
+    #     row[1] = row[1] + "_Draft"
 
 
     #Modify Description Qualifier if needed
@@ -1056,6 +1065,7 @@ for input_row in file_reader:
 
     #Update
     if row[0] == "update":
+
         #FirstPhageID
         if row[1] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID in the database." %row[1])
@@ -1095,6 +1105,7 @@ for input_row in file_reader:
 
     #Add
     elif row[0] == "add":
+
         #FirstPhageID
         if row[1] in phageId_set:
             write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
@@ -1151,6 +1162,7 @@ for input_row in file_reader:
 
             write_out(output_file,"\nError: %s to be removed does not have correctly populated fields." %row[6])
             table_errors += 1
+
         #SecondPhageID
         if row[6] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID. This genome cannot be dropped from the database." %row[6])
@@ -1165,7 +1177,8 @@ for input_row in file_reader:
             write_out(output_file,"\nError: %s is not a valid PhageID. %s genome cannot be replaced." % (row[1],row[6]))
             table_errors += 1
 
-        #FirstPhageID. If replacing a genome, ensure that if the genome to be removed is not the same, that the new genome added has a unique name
+        #FirstPhageID. If replacing a genome, ensure that if the genome to
+        #be removed is not the same, that the new genome added has a unique name
         if (row[1] in phageId_set and row[1] != row[6]):
             write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
             table_errors += 1
@@ -1178,22 +1191,34 @@ for input_row in file_reader:
 
             write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
             table_errors += 1
+
         #SecondPhageID
         if row[6] not in phageId_set:
             write_out(output_file,"\nError: %s is not a valid PhageID. This genome cannot be dropped from the database." %row[6])
             table_errors += 1
-        #Compare phage names. If replacing a genome, the genome names should be spelled the same way (excluding any "_Draft" suffix).
-        if row[1][-6:].lower() == "_draft":
-            name_check_new = row[1][:-6]
-        else:
-            name_check_new = row[1]
 
-        if row[6][-6:].lower() == "_draft":
-            name_check_old = row[6][:-6]
-        else:
-            name_check_old = row[6]
 
-        if name_check_new != name_check_old:
+        #Compare phage names. This used to take into account if PhageIDs
+        #contained the "_Draft" suffix or not.
+        #If replacing a genome, the genome names
+        #should be spelled the same way (excluding any "_Draft" suffix).
+        # if row[1][-6:].lower() == "_draft":
+        #     name_check_new = row[1][:-6]
+        # else:
+        #     name_check_new = row[1]
+        #
+        #
+        # if row[6][-6:].lower() == "_draft":
+        #     name_check_old = row[6][:-6]
+        # else:
+        #     name_check_old = row[6]
+        # if name_check_new != name_check_old:
+        #     print "%s to replace %s is not spelled the same." %(row[1],row[6])
+        #     table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
+
+
+        #REVIEW test
+        if row[1] != row[6]:
             print "%s to replace %s is not spelled the same." %(row[1],row[6])
             table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
 
@@ -1218,7 +1243,7 @@ for input_row in file_reader:
     genome_data_list.append(row)
     #genome_data_list elements are lists with follow index:
     #0 = Import action
-    #1 = New phage name
+    #1 = New PhageID
     #2 = Host
     #3 = Cluster
     #4 = Status
@@ -1228,7 +1253,6 @@ for input_row in file_reader:
     #8 = Subcluster
     #9 = Author
     #10 = Run mode
-
 
 file_object.close()
 
@@ -1258,7 +1282,8 @@ for genome_data in genome_data_list:
     if current_add[0] != "none":
         if current_add in add_set:
             print genome_data[1] + " appears to be involved in more than one step."
-            table_errors += question("\nError: %s is duplicated" % str(current_add)) #errors will be incremented if name is used more than once
+            table_errors += question("\nError: %s is duplicated" % str(current_add))
+
         else:
             add_set.add(current_add)
 
@@ -1271,7 +1296,8 @@ for genome_data in genome_data_list:
     if current_remove[0] != "none":
         if current_remove in remove_set:
             print genome_data[6] + " appears to be involved in more than one step."
-            table_errors += question("\nError: %s is duplicated" % str(current_remove)) #errors will be incremented if name is used more than once
+            table_errors += question("\nError: %s is duplicated" % str(current_remove))
+
         else:
             remove_set.add(current_remove)
 
@@ -1348,9 +1374,8 @@ for genome_data in update_data_list:
     #Initialize variable
     matched_phamerator_data = ''
 
-    #For Draft genomes in the import ticket, the phage name gets "_Draft" appended.
-    #At this point, if the phamerator genome being updated does not have
-    #the "_Draft" suffix, they will no longer be able to be matched
+    #Now that the Draft suffix is no longer appended to the import ticket,
+    #this is less complications with matching to Phamerator PhageIDs
     try:
         matched_phamerator_data = phamerator_data_dict[genome_data[1]]
     except:
@@ -1464,12 +1489,12 @@ if run_mode_custom_total > 0:
     print "The following options will be applied to all tickets requiring a custom QC:"
 
     #1. Use the file's basename as the PhageID instead of the phage name in the file
-    print "\n\n\n\nNormally, the phage name is determined from the Organism field in the record."
+    print "\n\n\n\nNormally, the PhageID is determined from the Organism field in the record."
     run_mode_custom_dict['use_basename'] = select_option(\
-        "\nInstead, do you want to use the file name as the phage name? (yes or no) ", \
+        "\nInstead, do you want to use the file name as the PhageID? (yes or no) ", \
         set(['yes','y','no','n']))
 
-    #2. Create GeneIDs from locus tags or PhageName_GeneNumber concatenation
+    #2. Create GeneIDs from locus tags or PhageID_GeneNumber concatenation
     #Many times non-Hatfull authored genomes do not have consistent or specific locus tags, which complicates
     #assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
     #by joining PhageID and CDS number.
@@ -1827,7 +1852,6 @@ for filename in genbank_files:
         record_errors = 0
         record_warnings = 0
         geneID_set = set()
-        missing_phage_name_tally = 0
         phage_data_list = []
 
 
@@ -1851,13 +1875,22 @@ for filename in genbank_files:
         record_summary_header = [["Header Field","Data"]]
 
 
-        #Phage Name
+        #Parse the PhageID from the Genbank record
         try:
             record_organism = seq_record.annotations["organism"]
             if record_organism.split(' ')[-1] == "Unclassified.":
                 phageName = record_organism.split(' ')[-2]
             else:
                 phageName = record_organism.split(' ')[-1]
+
+            #REVIEW
+            #PECAAN auto-annotation adds the Draft suffix to the name
+            #in this field. Remove this suffix before proceeding.
+            if phageName[-6:].lower() == "_draft":
+                phageName = phageName[:-6]
+
+
+
         except:
             write_out(output_file,"\nError: problem retrieving phage name in file %s. This file will not be processed." % filename)
             record_errors += 1
@@ -1999,9 +2032,9 @@ for filename in genbank_files:
 
 
         #Since the Genbank record and the import ticket hasn't been matched yet
-        #it is not clear whether it should be matched by filename or phage name
-        #If the basename is the same as the phage name, it doesn't matter.
-        #Otherwise it first checks by phage name, then the basename.
+        #it is not clear whether it should be matched by filename or PhageID
+        #If the basename is the same as the PhageID, it doesn't matter.
+        #Otherwise it first checks by PhageID, then the basename.
         #Once matched, it confirms later that the matching strategy indicated in the
         #import ticket's run mode was the same that was actually used.
         if basename == phageName:
@@ -2372,9 +2405,9 @@ for filename in genbank_files:
 
 
         #Create list of phage data, then append it to the SQL statement
-        #0 = phageName or basename
+        #0 = PhageID or basename
         #1 = accession
-        #2 = phageName
+        #2 = Phage Name
         #3 = import_host
         #4 = phageSeq
         #5 = seqLength
@@ -2384,6 +2417,7 @@ for filename in genbank_files:
         #9 = ncbi_update_status
         #10 = annotation_qc
         #11 = import_author
+
         if use_basename == "yes":
             phage_data_list.append(basename) #[0]
         else:
@@ -2392,7 +2426,16 @@ for filename in genbank_files:
 
 
         phage_data_list.append(accession_to_upload) #[1]
-        phage_data_list.append(phageName) #[2]
+
+        #REVIEW
+        #For the Phage Name, append the Draft suffix if it is draft status
+        if use_basename == "yes":
+            phage_data_list.append(basename) #[2]
+        elif import_status == 'draft':
+            phage_data_list.append(phageName + "_Draft") #[2]
+        else:
+            phage_data_list.append(phageName) #[2]
+
         phage_data_list.append(import_host) #[3]
         phage_data_list.append(str(phageSeq)) #[4]
         phage_data_list.append(seqLength) #[5]
@@ -2403,6 +2446,9 @@ for filename in genbank_files:
         phage_data_list.append(annotation_qc) #[10]
         phage_data_list.append(import_author) #[11]
 
+        #REVIEW
+        print phage_data_list
+        raw_input()
 
         add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
@@ -2844,7 +2890,7 @@ for filename in genbank_files:
             #Now that it has acquired all gene feature info, create list of
             #gene data and append to list of all gene feature data
             #0 = geneID
-            #1 = phageName or basename
+            #1 = PhageID or basename
             #2 = startCoord
             #3 = stopCoord
             #4 = geneLen
@@ -2860,6 +2906,7 @@ for filename in genbank_files:
             addCount+= 1
 
             feature_data_list.append(geneID) #0
+
 
             if use_basename == "yes":
                 feature_data_list.append(basename) #1
@@ -2955,6 +3002,7 @@ for filename in genbank_files:
 
         #See if there are any phage name typos in the header block
         if ignore_phage_name_typos != 'yes':
+
 
             pattern1 = re.compile('^' + phageName + '$')
             pattern2 = re.compile('^' + phageName)
@@ -3116,7 +3164,7 @@ for filename in genbank_files:
         #Check to ensure the best gene description field was retained
         #Element indices for feature data:
         #0 = geneID
-        #1 = phageName or basename
+        #1 = PhageID or basename
         #2 = startCoord
         #3 = stopCoord
         #4 = geneLen
