@@ -837,16 +837,6 @@ for input_row in file_reader:
         row[8] == "retrieve"):
         try:
 
-            #Now that the PhageID does not contain the Draft suffix, the
-            #code block below is unnecessary.
-            #Ensure the PhageID does not have Draft appended
-            # if row[1][-6:].lower() == "_draft":
-            #     search_name = row[1][:-6]
-            # else:
-            #     search_name = row[1]
-            # phage_url = api_prefix + search_name + api_suffix
-
-            #REVIEW
             phage_url = api_prefix + row[1] + api_suffix
             online_data_json = urllib.urlopen(phage_url)
             online_data_dict = json.loads(online_data_json.read())
@@ -1000,12 +990,6 @@ for input_row in file_reader:
     if len(row[4]) > 5:
         write_out(output_file,"\nError: the status %s exceeds character limit." % row[4])
         table_errors += 1
-
-
-    #REVIEW
-    #Now that import ticket refers to PhageID, this code block should be removed
-    # if (row[4] == "draft" and row[1][-6:].lower() != "_draft"):
-    #     row[1] = row[1] + "_Draft"
 
 
     #Modify Description Qualifier if needed
@@ -1197,27 +1181,6 @@ for input_row in file_reader:
             write_out(output_file,"\nError: %s is not a valid PhageID. This genome cannot be dropped from the database." %row[6])
             table_errors += 1
 
-
-        #Compare phage names. This used to take into account if PhageIDs
-        #contained the "_Draft" suffix or not.
-        #If replacing a genome, the genome names
-        #should be spelled the same way (excluding any "_Draft" suffix).
-        # if row[1][-6:].lower() == "_draft":
-        #     name_check_new = row[1][:-6]
-        # else:
-        #     name_check_new = row[1]
-        #
-        #
-        # if row[6][-6:].lower() == "_draft":
-        #     name_check_old = row[6][:-6]
-        # else:
-        #     name_check_old = row[6]
-        # if name_check_new != name_check_old:
-        #     print "%s to replace %s is not spelled the same." %(row[1],row[6])
-        #     table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
-
-
-        #REVIEW test
         if row[1] != row[6]:
             print "%s to replace %s is not spelled the same." %(row[1],row[6])
             table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
@@ -1883,7 +1846,6 @@ for filename in genbank_files:
             else:
                 phageName = record_organism.split(' ')[-1]
 
-            #REVIEW
             #PECAAN auto-annotation adds the Draft suffix to the name
             #in this field. Remove this suffix before proceeding.
             if phageName[-6:].lower() == "_draft":
@@ -2427,7 +2389,6 @@ for filename in genbank_files:
 
         phage_data_list.append(accession_to_upload) #[1]
 
-        #REVIEW
         #For the Phage Name, append the Draft suffix if it is draft status
         if use_basename == "yes":
             phage_data_list.append(basename) #[2]
@@ -2445,10 +2406,6 @@ for filename in genbank_files:
         phage_data_list.append(ncbi_update_status) #[9]
         phage_data_list.append(annotation_qc) #[10]
         phage_data_list.append(import_author) #[11]
-
-        #REVIEW
-        print phage_data_list
-        raw_input()
 
         add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
                                         % (phage_data_list[0],\
