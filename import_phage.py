@@ -351,9 +351,9 @@ run_mode_pecaan_dict = {\
     'ignore_locus_tag_import':'yes',\
     'ignore_phage_name_typos':'yes',\
     'ignore_host_typos':'yes',\
-    'ignore_generic_author':'yes'\
+    'ignore_generic_author':'yes',\
+    'ignore_description_check':'yes'\
     }
-
 
 #Manual annotations
 run_mode_phagesdb_dict = {\
@@ -366,8 +366,10 @@ run_mode_phagesdb_dict = {\
     'ignore_locus_tag_import':'yes',\
     'ignore_phage_name_typos':'no',\
     'ignore_host_typos':'no',\
-    'ignore_generic_author':'no'\
+    'ignore_generic_author':'no',\
+    'ignore_description_check':'no'\
     }
+
 
 #SEA-PHAGES NCBI records
 run_mode_ncbi_auto_dict = {\
@@ -380,7 +382,8 @@ run_mode_ncbi_auto_dict = {\
     'ignore_locus_tag_import':'no',\
     'ignore_phage_name_typos':'yes',\
     'ignore_host_typos':'no',\
-    'ignore_generic_author':'yes'\
+    'ignore_generic_author':'yes',\
+    'ignore_description_check':'yes'\
     }
 
 
@@ -395,7 +398,8 @@ run_mode_ncbi_misc_dict = {
     'ignore_locus_tag_import':'no',\
     'ignore_phage_name_typos':'yes',\
     'ignore_host_typos':'yes',\
-    'ignore_generic_author':'yes'\
+    'ignore_generic_author':'yes',\
+    'ignore_description_check':'yes'\
     }
 
 
@@ -1535,8 +1539,19 @@ if run_mode_custom_total > 0:
     #This should be checked for new manual annotations only.
     print "\n\n\n\nNormally, the author list is checked to ensure the generic author Lastname,Firstname is absent in new manual annotations."
     run_mode_custom_dict['ignore_generic_author'] = select_option(\
-        "\nInstead, do you want to ignore any generic authors in the author list? (yes or no) ", \
+        "\nDo you want to ignore any generic authors in the author list? (yes or no) ", \
         set(['yes','y','no','n']))
+
+    #11. Ignore gene description checks
+    #The gene description may contain errors.
+    #This should be checked for new manual annotations only.
+    print "\n\n\n\nNormally, gene descriptions are checked in new manual annotations."
+    run_mode_custom_dict['ignore_description_check'] = select_option(\
+        "\nDo you want to ignore gene description checks? (yes or no) ", \
+        set(['yes','y','no','n']))
+
+
+
 
 
     #Now add the customized dictionary of options to the dictionary of all run modes
@@ -2054,6 +2069,7 @@ for filename in genbank_files:
             ignore_phage_name_typos = import_run_mode_dict['ignore_phage_name_typos']
             ignore_host_typos = import_run_mode_dict['ignore_host_typos']
             ignore_generic_author = import_run_mode_dict['ignore_generic_author']
+            ignore_description_check = import_run_mode_dict['ignore_description_check']
 
 
         else:
@@ -2873,6 +2889,24 @@ for filename in genbank_files:
 
             if assigned_description != "":
                 assigned_description_tally += 1
+
+
+
+            #Check to verify misc details about the assigned gene description field
+            #This is distinct from the ignore_description_field_check, which
+            #is used to determine which field (product, function, note) is parsed.
+
+            if ignore_description_check != 'yes':
+                if assigned_description[-1:] == '.':
+
+                    record_warnings += 1
+                    write_out(output_file,"\nWarning: the description for feature %s of %s contains a period." % (geneID,phageName))
+                    print assigned_description
+                    record_errors += question("\nError: problem with description for feature %s of %s." % (geneID,phageName))
+
+
+
+
 
 
 
