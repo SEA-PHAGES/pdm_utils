@@ -250,7 +250,8 @@ def check_tRNA_product(product_field):
     #tRNA product example = 'tRNA-Ser (AGC)'
 
     #The code block below functions, but it does not fully account for
-    #tRNA-OTHER descriptions and it does not check the accuracy of
+    #tRNA-OTHER descriptions, tRNA-Stop descriptions,
+    #and it does not check the accuracy of
     #the amino acid and anticodon pairing.
     #The biggest problem is that the expected product and note descriptions
     #are expected to change after they reach NCBI, so it is not clear
@@ -278,6 +279,7 @@ def check_tRNA_product(product_field):
         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip() #'ser'
 
         if tRNA_product_amino_acid_three != 'other' and \
+            tRNA_product_amino_acid_three != 'stop' and \
             len(tRNA_product_amino_acid_three) != 3:
                 product_error += 1
 
@@ -348,9 +350,9 @@ run_mode_pecaan_dict = {\
     'ignore_trna_check':'yes',\
     'ignore_locus_tag_import':'yes',\
     'ignore_phage_name_typos':'yes',\
-    'ignore_host_typos':'yes'\
+    'ignore_host_typos':'yes',\
+    'ignore_generic_author':'yes'\
     }
-
 
 
 #Manual annotations
@@ -363,9 +365,9 @@ run_mode_phagesdb_dict = {\
     'ignore_trna_check':'no',\
     'ignore_locus_tag_import':'yes',\
     'ignore_phage_name_typos':'no',\
-    'ignore_host_typos':'no'\
+    'ignore_host_typos':'no',\
+    'ignore_generic_author':'no'\
     }
-
 
 #SEA-PHAGES NCBI records
 run_mode_ncbi_auto_dict = {\
@@ -377,9 +379,9 @@ run_mode_ncbi_auto_dict = {\
     'ignore_trna_check':'yes',\
     'ignore_locus_tag_import':'no',\
     'ignore_phage_name_typos':'yes',\
-    'ignore_host_typos':'no'\
+    'ignore_host_typos':'no',\
+    'ignore_generic_author':'yes'\
     }
-
 
 
 #Misc NCBI records
@@ -392,8 +394,10 @@ run_mode_ncbi_misc_dict = {
     'ignore_trna_check':'yes',\
     'ignore_locus_tag_import':'no',\
     'ignore_phage_name_typos':'yes',\
-    'ignore_host_typos':'yes'\
+    'ignore_host_typos':'yes',\
+    'ignore_generic_author':'yes'\
     }
+
 
 #Custom QC settings. User can select the settings, so it is initialized as
 #an empty dictionary that only gets filled if there is a ticket indicating
@@ -1526,6 +1530,14 @@ if run_mode_custom_total > 0:
         "\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
         set(['yes','y','no','n']))
 
+    #10. Ignore generic author in the author list
+    #Sometimes the generic author 'Lastname' or 'Firstname' gets added in DNA Master
+    #This should be checked for new manual annotations only.
+    print "\n\n\n\nNormally, the author list is checked to ensure the generic author Lastname,Firstname is absent in new manual annotations."
+    run_mode_custom_dict['ignore_generic_author'] = select_option(\
+        "\nInstead, do you want to ignore any generic authors in the author list? (yes or no) ", \
+        set(['yes','y','no','n']))
+
 
     #Now add the customized dictionary of options to the dictionary of all run modes
     run_mode_options_dict['custom'] = run_mode_custom_dict
@@ -2041,7 +2053,7 @@ for filename in genbank_files:
             ignore_locus_tag_import = import_run_mode_dict['ignore_locus_tag_import']
             ignore_phage_name_typos = import_run_mode_dict['ignore_phage_name_typos']
             ignore_host_typos = import_run_mode_dict['ignore_host_typos']
-
+            ignore_generic_author = import_run_mode_dict['ignore_generic_author']
 
 
         else:
@@ -2317,6 +2329,28 @@ for filename in genbank_files:
 
 
 
+
+
+        #Check for generic author that sometimes gets added by DNA Master
+        if ignore_generic_author != 'yes':
+            pattern6 = re.compile("lastname")
+            search_result6 = pattern6.search(record_author_string.lower())
+
+            pattern7 = re.compile("firstname")
+            search_result7 = pattern7.search(record_author_string.lower())
+
+
+            if search_result6 != None or search_result7 != None:
+                record_warnings += 1
+                write_out(output_file,"\nWarning: the author list appears to contain a generic Lastname, Firstname author for genome %s" % phageName)
+                print "The genome will continue to be imported."
+                record_errors += question("\nError: incorrect author data for %s." % phageName)
+
+
+
+
+
+
         #Determine AnnotationQC and RetrieveRecord settings
         #AnnotationQC and RetrieveRecord settings can be carried over
         #from the previous settings in Phamerator under specific
@@ -2542,7 +2576,7 @@ for filename in genbank_files:
                         record_errors += question("\nError: tRNA starting at %s has incorrect terminal nucleotide in %s phage." \
                                 % (tRNA_left + 1,phageName))
 
-                    if tRNA_size < 70 or tRNA_size > 90:
+                    if tRNA_size < 60 or tRNA_size > 100:
                         record_warnings += 1
                         write_out(output_file,"\nWarning: tRNA starting at %s does not appear to be the correct size in %s phage."  \
                                 % (tRNA_left + 1,phageName))
