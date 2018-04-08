@@ -743,6 +743,62 @@ api_suffix = "/?format=json"
 
 
 
+
+
+
+
+
+#phageName typo correction Dictionary
+#Key = Phage Name as it is spelled in the Genbank record
+#Value = Phage Name as it is spelled in phagesdb and/or Phamerator, and thus
+#how it is spelled in the import ticket.
+#The phageName parsed from the Genbank record gets reassigned this corrected phageName
+#Reasons for the exceptions:
+
+phage_name_typo_dict = {
+
+    #phagesdb is unable to handle underscores
+    'ATCC29399B_C':'ATCC29399BC',\
+    'ATCC29399B_T':'ATCC29399BT',\
+
+    #ELB20 was reported as 'ELB20' in the original publication, but spelled
+    #'phiELB20' in the Genbank record.
+    'phiELB20':'ELB20',\
+
+
+    #Names are spelled differently in Genbank record compared to original publication
+    'P100_1':'P100.1',\
+    'P100_A':'P100A',\
+
+    #'LeBron' was changed to 'Bron' by ICTV. They won't change it back.
+    'Bron':'LeBron',\
+
+    #Inadvertent typos that Genbank won't correct since ICTV uses the typos
+    'BBPiebs31':'BPBiebs31',\
+    'CaptnMurica':'CapnMurica',\
+    'Fionnbarth':'Fionnbharth',\
+
+    #Remove this typo correction eventually.
+    #'TA17a':'TA17A'\
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
 #0 = Type of database action to be performed (add, remove, replace, update)
 #1 = New PhageID that will be added to database
@@ -1879,6 +1935,16 @@ for filename in genbank_files:
                 phageName = phageName[:-6]
 
 
+            #Some phage names are spelled differently in phagesdb and Phamerator
+            #compared to the Genbank record. Convert the parsed name to the
+            #expected name in these databases before proceeding.
+            if phageName in phage_name_typo_dict.keys():
+                incorrect_phageName = phageName
+                phageName = phage_name_typo_dict[phageName]
+                record_warnings += 1
+                write_out(output_file,"\nWarning: parsed phage name %s converted to %s." \
+                    % (incorrect_phageName,phageName))
+
 
         except:
             write_out(output_file,"\nError: problem retrieving phage name in file %s. This file will not be processed." % filename)
@@ -2074,6 +2140,7 @@ for filename in genbank_files:
 
         else:
             write_out(output_file,"\nError: problem matching phage %s in file %s to genome data from table. This genome was not added. Check input table format." % (phageName,filename))
+            record_errors += 1
             failed_genome_files.append(filename)
             script_warnings += record_warnings
             script_errors += record_errors
@@ -2161,6 +2228,7 @@ for filename in genbank_files:
 
             else:
                 write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))
+                record_errors += 1
                 failed_genome_files.append(filename)
                 script_warnings += record_warnings
                 script_errors += record_errors
@@ -2246,6 +2314,7 @@ for filename in genbank_files:
             #It is not common for authorship to change
             if import_author != phamerator_author:
 
+                record_warnings += 1
                 write_out(output_file,"\nWarning: there is conflicting author data for genome %s." % phageName)
                 print "Phamerator author: %s" % author_dictionary[phamerator_author]
                 print "Import ticket author: %s" % author_dictionary[import_author]
@@ -2671,10 +2740,12 @@ for filename in genbank_files:
             duplicate = False
             if geneID in geneID_set:
                 duplicate = True
+                record_warnings += 1
                 write_out(output_file,"\nWarning: there is a duplicate geneID %s in phage %s." % (geneID,phageName))
 
             elif geneID in all_GeneID_set:
                 duplicate = True
+                record_warnings += 1
                 write_out(output_file,"\nWarning: there is a duplicate geneID %s in the current database." % geneID)
             else:
                 geneID_set.add(geneID)
