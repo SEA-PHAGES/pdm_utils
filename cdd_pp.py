@@ -26,7 +26,7 @@ except ImportError:
 # Retrieve command line arguments
 try:
 	database = sys.argv[1]
-	rpsblast_db_dri = sys.argv[2]
+	rpsblast_db_dir = sys.argv[2]
 except IndexError:
 	print """
 This is a python script to identify conserved domains in phage genes.
