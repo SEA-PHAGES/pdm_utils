@@ -2055,6 +2055,40 @@ for filename in genbank_files:
         except:
             record_author_string = ""
 
+################ Christian's edit for Welkin begins here 06-27-2018 ################
+
+	#Journal field
+	#Welkin noted that she and other users were having an issue where
+	#DNAMaster isn't properly exporting the annotation files (journal field is
+	#missing the address portion but contains the submission date).
+	#This isn't really an error, as there could otherwise be nothing wrong with
+	#the file, so we are going to throw a warning, asking whether the user
+	#wants to use this file as is or not - choosing no will increment the
+	#error count for that record, so ultimately the file will not be used.
+	#The journal field containing only the submission date is 23 characters
+	#long so a simple check will be made asking whether the first journal entry
+	#is longer than 23 characters.  If yes, no warning given.  If no, warning.
+
+	try:
+            num_references = len(seq_record.annotations["references"])
+            if num_references > 0:
+                ref_we_want = seq_record.annotations["references"][0]
+                journal_we_want = ref_we_want.journal
+                if len(journal_we_want) > 23:
+                    print "\nThe following journal is formatted as expected: \n\n{}".format(journal_we_want)
+                elif len(journal_we_want) == 23:
+                    record_warnings += 1
+                    journal_message_1 = "\nWarning: the following journal appears to be missing some information following the submission date: \n\n{}\n{} will still be replaced.".format(journal_we_want, phageName)
+                    write_out(output_file, journal_message_1)
+                    record_errors += question("\nPhage {} will not be replaced.\n".format(phageName))
+                else:
+                    journal_message_2 = "\nError: the journal for phage {} is improperly formatted.".format(phageName)
+                    write_out(output_file, journal_message_2)
+                    record_errors += 1
+        except:
+            journal_message_3 = "Error in processing the journal for this flat file. Manual inspection may be in order."
+
+################ Christian's edit for Welkin ends here 06-27-2018 ##################
 
         #Accession
         #This initiates this variable. Since different things affect this variable
