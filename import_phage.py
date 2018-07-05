@@ -2087,8 +2087,9 @@ for filename in genbank_files:
                     record_errors += 1
         except:
             journal_message_3 = "Error in processing the journal for this flat file. Manual inspection may be in order."
+            write_out(output_file, journal_message_3)
 
-################ Christian's edit for Welkin ends here 06-27-2018 ##################
+################ Christian's edit for Welkin ends here 07–04-2018 ##################
 
         #Accession
         #This initiates this variable. Since different things affect this variable
