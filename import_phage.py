@@ -2365,7 +2365,7 @@ for filename in genbank_files:
 										"phage {}. The genome will " \
 										"still be replaced.".format(phageName)
 					write_out(output_file, journal_message_3)
-					record_errors += question("\nPhage {} will not be "
+					record_errors += question("\nPhage {} will not be " \
 											  "replaced".format(phageName))
 			else:
 				pass
