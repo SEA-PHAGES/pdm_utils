@@ -2358,7 +2358,7 @@ for filename in genbank_files:
 											"genome will still be replaced." \
 											".".format(phageName)
 						write_out(output_file, journal_message_2)
-						record_errors += question("\nPhage {} will not be "
+						record_errors += question("\nPhage {} will not be " \
 												  "replaced.\n".format(phageName))
 				else:
 					journal_message_3 = "\nWarning: no journals found for " \
