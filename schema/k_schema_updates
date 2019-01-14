@@ -60,4 +60,11 @@ set cdd_status = 0;
  #Or 1 if already completed for current DB
 SET SQL_SAFE_UPDATES = 1;
 
-#end file
+# 01/11/2019 Schema 4 - we now have multiple genomes each with a gene encoding a protein longer than 4000 residues. Graham approved 
+# increasing the max protein size to 5000 until the next time this needs to increase
+
+ALTER TABLE gene MODIFY translation VARCHAR(5000);
+COMMIT;
+
+# END FILE
+

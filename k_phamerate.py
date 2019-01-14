@@ -2,7 +2,7 @@
 #PYTHON code for executing iterative kClust
 #Charles Bowman
 #20150126
-
+#Updated 20190114 by Christian Gauthier to fix some SQL statements that didn't comply with mysql-5.7.24
 
 import MySQLdb as mdb
 import sys, os, random, colorsys, datetime, getpass
@@ -38,7 +38,7 @@ try:
 	print "Connected to Database - Fetching Phams, GeneIDs, and Translations"
 	print "..."
 
-	cur.execute("select a.name, a.GeneID, b.color from (Select p.name, g.GeneID from gene g inner join pham p on g.GeneID = p.GeneID) as a inner join pham_color as b on a.name = b.name order by a.name asc")
+	cur.execute("SELECT a.name, a.GeneID, b.color FROM (SELECT p.name, g.GeneID FROM gene g INNER JOIN pham p ON g.GeneID = p.GeneID) AS a INNER JOIN pham_color AS b ON a.name = b.name ORDER BY a.name ASC")
 	tuples = cur.fetchall()
 
 	print `len(tuples)` + " old genes"
@@ -80,12 +80,12 @@ try:
 	print "Connected to Database - Fetching GeneIDs and Translations"
 
 	#Clear previous pham data
-	cur.execute("truncate table pham")
-	cur.execute("truncate table pham_color")
+	cur.execute("TRUNCATE TABLE pham")
+	cur.execute("TRUNCATE TABLE pham_color")
 	cur.execute("COMMIT")
 
 	#Get gene data
-	cur.execute("select GeneID, translation from gene")
+	cur.execute("SELECT GeneID, translation FROM gene")
 	tuples = cur.fetchall()
 
 	print `len(tuples)` + " total genes"
@@ -174,7 +174,7 @@ try:
 	con = mdb.connect('localhost', username, password, database)
 	print "Connected to Database - Fetching 1st iteration phamily data"
 	cur = con.cursor()
-	cur.execute("Select p.name, g.GeneID, g.translation from gene g inner join pham p on g.GeneID = p.GeneID order by name asc")
+	cur.execute("SELECT p.name, g.GeneID, g.translation FROM gene g INNER JOIN pham p ON g.GeneID = p.GeneID ORDER BY name ASC")
 	tuples = cur.fetchall()
 
 except mdb.Error, e:
@@ -424,8 +424,8 @@ try:
 	print "Connected to Database - Inserting Data"
 	cur = con.cursor()
 
-	cur.execute("truncate table pham")
-	cur.execute("truncate table pham_color")
+	cur.execute("TRUNCATE TABLE pham")
+	cur.execute("TRUNCATE TABLE pham_color")
 	cur.execute("COMMIT")
 
 	f = open("/tmp/phinal_pham_insert_log.txt", "w")
@@ -469,8 +469,9 @@ try:
 	cur = con.cursor()
 	print "Connected to Database - Phetching Phalsely Hued Phams"
 	print "...\n"
-
-	cur.execute("Select * from (select b.id, count(GeneID) as count, a.name, b.color from pham as a inner join pham_color as b on a.name = b.name group by a.name) as c where color = '#FFFFFF' and count > 1")
+	#Fixed SQL statement to comply with new MYSQL standard where all items selected that aren't functionally dependent on "group by" must be included in "group by"
+	#Error Code: 1055.  Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'b.id' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=full_group_by_only
+	cur.execute("SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count, a.name, b.color FROM pham AS a INNER JOIN pham_color AS b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE color = '#FFFFFF' AND count > 1")
 	tuples = cur.fetchall()
 
 	print `len(tuples)` + " miscolored phamilies found."
@@ -489,7 +490,7 @@ try:
 		hexrgb = '#%02x%02x%02x' % rgb
 		newColor = hexrgb
 
-		cur.execute("update pham_color set color = %s where id = %s" , (newColor, pham_id))
+		cur.execute("UPDATE pham_color SET color = %s WHERE id = %s" , (newColor, pham_id))
 
 except mdb.Error, e:
 
@@ -509,8 +510,9 @@ try:
 	cur = con.cursor()
 	print "\nConnected to Database - Phetching Phalsely Phlagged Orphams"
 	print "...\n"
-
-	cur.execute("Select * from (select b.id, count(GeneID) as count, a.name, b.color from pham as a inner join pham_color as b on a.name = b.name group by a.name) as c where color != '#FFFFFF' and count = 1")
+	#Fixed SQL statement to comply with new MYSQL standard where all items selected that aren't functionally dependent on "group by" must be included in "group by"
+	#Error Code: 1055.  Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'b.id' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+	cur.execute("SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count, a.name, b.color FROM pham AS a INNER JOIN pham_color AS b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE color != '#FFFFFF' AND count = 1")
 	tuples = cur.fetchall()
 
 	print `len(tuples)` + " miscolored orphams found."
@@ -521,7 +523,7 @@ try:
 		pham_id, count, name, color = tuple
 		newColor = "#FFFFFF"
 
-		cur.execute("update pham_color set color = %s where id = %s" , (newColor, pham_id))
+		cur.execute("UPDATE pham_color SET color = %s WHERE id = %s" , (newColor, pham_id))
 
 
 except mdb.Error, e:

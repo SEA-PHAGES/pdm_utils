@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-#Database Export Script
-#Travis Mavrich
-#University of Pittsburgh
-#20160713
-
-#After finishing updating the database, and ready to upload to webfactional...
+# Database Export Script
+# Travis Mavrich
+# University of Pittsburgh
+# 20160713
+# Updated by Christian Gauthier 20181115 - 20190114; paramiko version was old and had been deprecated, resulting in inability to use SFTP to export SQL and version files to phamerator server
+# Paramiko version was upgraded, then some minor changes were made to the script to comply with new Paramiko standards
+# After finishing updating the database, and ready to upload to webfactional...
 
 
 
@@ -13,10 +14,11 @@
 import time, sys, os, getpass
 import subprocess
 
-#Import third-party modules
+#Import third-party modules, add log file for paramiko because it throws an error otherwise
 try:
     import MySQLdb as mdb
     import paramiko
+    paramiko.util.log_to_file("/tmp/paramiko.log") # new soft requirement for compliance with Paramiko standards
 except:
     print "\nUnable to import one or more of the following third-party modules: paramiko, MySQLdb."
     print "Install modules and try again.\n\n"
@@ -448,22 +450,21 @@ if server_upload == "yes":
 
 
     #Set up paramiko parameters
-    server = 'phamerator.webfactional.com'
-    server_username = getpass.getpass(prompt='Server username:')
-    server_password = getpass.getpass(prompt='Server password:')
+    host = 'phamerator.webfactional.com'
+    host_username = getpass.getpass(prompt='Server username:')
+    host_password = getpass.getpass(prompt='Server password:')
 
     try:
-        transport = paramiko.Transport(server)
+        transport = paramiko.Transport(host)
     except:
-        print "Unable to find server: " + server
+        print "Unable to find server: " + host
         print "\nThe export script did not complete."
         print "\nExiting export script."
         sys.exit(1)
 
 
     try:
-        transport.connect(username=server_username,password=server_password)
-
+        transport.connect(username=host_username,password=host_password)
         sftp = paramiko.SFTPClient.from_transport(transport)
 
     except:

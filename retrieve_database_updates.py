@@ -32,7 +32,7 @@
 
 #Built-in libraries
 import time, sys, os, getpass, csv, re, shutil
-import json, urllib, urllib2
+import json, urllib, urllib2 # ssl (required in case of urllib2:URLError: <urlopen error [SSL CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 from datetime import datetime
 
 
@@ -1098,7 +1098,8 @@ if retrieve_pecaan_genomes == "yes":
         pecaan_filename = new_phage + ".txt"
 
         try:
-            pecaan_response = urllib2.urlopen(pecaan_link)
+            # gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) ==> required for urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)> ==> creating new TLS context tells urllib2 to ignore certificate chain
+            pecaan_response = urllib2.urlopen(pecaan_link) # , context=gcontext) ==> BAD SECURITY, prone to man-in-the-middle attacks; have Dex Woods (WKU, Claire Rhinehart) fix certificate chain in apache
             pecaan_file_handle = open(os.path.join(pecaan_output_path,genomes_folder,pecaan_filename),'w')
             pecaan_file_handle.write(pecaan_response.read())
             pecaan_response.close()

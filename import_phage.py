@@ -2055,20 +2055,6 @@ for filename in genbank_files:
 		except:
 			record_author_string = ""
 
-		#Journal field
-		try:
-			#The retrieved journals can be stored in multiple Reference elements
-			record_references_journal_list = []
-			for reference in seq_record.annotations["references"]:
-				if reference.journal != "":
-					record_references_journal_list.append(reference.journal)
-			if len(record_references_journal_list) > 0:
-				record_journal_string = ";".join(record_references_journal_list)
-			else:
-				record_journal_string = ""
-		except:
-			record_journal_string = ""
-
 		#Accession
 		#This initiates this variable. Since different things affect this variable
 		#depending on whether it is an add or replace action, it is easiest to
@@ -2334,41 +2320,7 @@ for filename in genbank_files:
 				print "The new author data will be imported."
 				record_errors += question("\nError: incorrect author data for %s." % phageName)
 
-			#Journal check
-			#Only run if run mode is phagesdb
-			if matchedData[10] == 'phagesdb':
-				print "\nEvaluating journal data"
-				if len(record_references_journal_list) != 0:
-					journal_data = record_references_journal_list[0]
-					if len(journal_data) > 23:
-						print "\nThe following journal is formatted as " \
-							  "expected:\n\n{}".format(journal_data)
-					elif len(journal_data) == 23:
-						record_warnings += 1
-						journal_message_1 = "\nWarning: the following journal " \
-											"appears to be missing some " \
-											"information following the " \
-											"submission date: \n\n{}\n{} will still be replaced.".format(journal_data, phageName)
-						write_out(output_file, journal_message_1)
-						record_errors += question("\nPhage {} will not be "
-												  "replaced.\n".format(phageName))
-					else:
-						journal_message_2 = "\nWarning: the journal for phage {} " \
-											"is improperly formatted. The " \
-											"genome will still be replaced." \
-											".".format(phageName)
-						write_out(output_file, journal_message_2)
-						record_errors += question("\nPhage {} will not be " \
-												  "replaced.\n".format(phageName))
-				else:
-					journal_message_3 = "\nWarning: no journals found for " \
-										"phage {}. The genome will " \
-										"still be replaced.".format(phageName)
-					write_out(output_file, journal_message_3)
-					record_errors += question("\nPhage {} will not be " \
-											  "replaced".format(phageName))
-			else:
-				pass
+
 
 			#Exactly one and only one genome in the database is
 			#expected to have the same sequence.
