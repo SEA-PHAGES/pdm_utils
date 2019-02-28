@@ -129,7 +129,7 @@ print "\n\n"
 #Set up other variables
 date = time.strftime("%Y%m%d")
 genomes_folder = "genomes"
-new_phage_list_url = 'http://phagesdb.org/data/unphameratedlist'
+new_phage_list_url = 'https://phagesdb.org/data/unphameratedlist'
 pecaan_prefix = 'https://discoverdev.kbrinsgd.org/phameratoroutput/phage/'
 open_file_handles_list = []
 
@@ -139,7 +139,7 @@ open_file_handles_list = []
 #You have to specify how many results to return at once.
 #If you set it to 1 page long and 100,000 genomes/page,
 #then this will return everything.
-sequenced_phages_url = "http://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
+sequenced_phages_url = "https://phagesdb.org/api/sequenced_phages/?page=1&page_size=100000"
 
 
 

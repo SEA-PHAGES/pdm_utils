@@ -738,7 +738,7 @@ author_dictionary = {'0':'gbk','1':'hatfull'}
 
 
 #Phagesdb API to retrieve genome information
-api_prefix = "http://phagesdb.org/api/phages/"
+api_prefix = "https://phagesdb.org/api/phages/"
 api_suffix = "/?format=json"
 
 
@@ -778,10 +778,16 @@ phage_name_typo_dict = {
 	'CaptnMurica':'CapnMurica',\
 	'Fionnbarth':'Fionnbharth',\
 
+	#Weird capitalizations in the real phage names that ICTV and now GenBank have "undone"
+	'Baka':'BAKA',\
+	'CJW1':'Cjw1',\
+	'Dlane':'DLane',\
+	'Kssjeb':'KSSJEB',\
+	'Littlee':'LittleE',\
+
 	#Remove this typo correction eventually.
 	#'TA17a':'TA17A'\
 	}
-
 
 
 
