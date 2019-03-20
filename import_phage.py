@@ -784,6 +784,12 @@ phage_name_typo_dict = {
 	'Dlane':'DLane',\
 	'Kssjeb':'KSSJEB',\
 	'Littlee':'LittleE',\
+	'Billknuckles':'BillKnuckles',\
+	'Packman':'PackMan',\
+	'Mrgordo':'MrGordo',\
+	'Ericb':'EricB',\
+	'Lockley':'LockLey',\
+	'Heldan':'HelDan',\
 
 	#Remove this typo correction eventually.
 	#'TA17a':'TA17A'\
