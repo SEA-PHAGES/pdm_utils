@@ -370,7 +370,7 @@ try:
 		hexrgb = '#%02x%02x%02x' % rgb
 		newColor = hexrgb
 
-		cur.execute("UPDATE pham_color SET color = {} WHERE id = {}".format(newColor, pham_id))
+		cur.execute("UPDATE pham_color SET color = '{}' WHERE id = '{}'".format(newColor, pham_id))
 
 except mdb.Error, e:
 
@@ -402,7 +402,7 @@ try:
 		pham_id, count, name, color = t
 		newColor = "#FFFFFF"
 
-		cur.execute("UPDATE pham_color SET color = {} WHERE id = {}".format(newColor, pham_id))
+		cur.execute("UPDATE pham_color SET color = '{}' WHERE id = '{}'".format(newColor, pham_id))
 
 except mdb.Error, e:
 
