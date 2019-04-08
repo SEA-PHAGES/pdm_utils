@@ -101,12 +101,12 @@ try:
 	for t in tuples:
 		all_gs_ts.append([t[0], t[1]])
 	translations_and_geneids = {}
-	
+
 	for i in all_gs_ts:
 		geneids = translations_and_geneids.get(i[1], set())
 		geneids.add(i[0])
 		translations_and_geneids[i[1]] = geneids
-		
+
 	duplicate_groups = {}
 
 	#Build the query file
@@ -115,7 +115,7 @@ try:
 		selected_geneid = random.sample(translations_and_geneids[prot_seq], 1)[0]
 		duplicate_groups[selected_geneid] = translations_and_geneids[prot_seq]
 		f.write(">{}\n{}\n".format(selected_geneid, prot_seq.replace('-','M')))
-	
+
 	#Run without filtering duplicate protein sequences
 	#for tuple in tuples:
 	#	f.write(">" + tuple[0] + '\n')
@@ -135,7 +135,7 @@ print "MMseqs2 command: " + createdb
 os.system(createdb)
 
 #Run MMseqs2 clustering using --cascaded option
-clusterdb = ("mmseqs cluster /tmp/MMseqs2/sequenceDB /tmp/MMseqs2/clusterDB /tmp/MMseqs2 --remove-tmp-files --threads 4 -v 0 --min-seq-id 0.40 -c 0.80 --alignment-mode 3 --cov-mode 0 --cluster-mode 0")
+clusterdb = ("mmseqs cluster /tmp/MMseqs2/sequenceDB /tmp/MMseqs2/clusterDB /tmp/MMseqs2 --remove-tmp-files --threads 4 -v 0 --single-step-clustering --min-seq-id 0.40 -c 0.80 --alignment-mode 3 --cov-mode 0 --cluster-mode 0")
 print "MMseqs2 command: " + clusterdb
 os.system(clusterdb)
 
@@ -182,7 +182,7 @@ total = 0
 for pham in post_phams.keys():
 	length = len(post_phams[pham])
 	total += length
-	
+
 print total
 
 f.close()
