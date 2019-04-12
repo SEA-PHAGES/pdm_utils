@@ -135,7 +135,7 @@ print "MMseqs2 command: " + createdb
 os.system(createdb)
 
 #Run MMseqs2 clustering using --cascaded option
-clusterdb = ("mmseqs cluster /tmp/MMseqs2/sequenceDB /tmp/MMseqs2/clusterDB /tmp/MMseqs2 --remove-tmp-files --threads 4 -v 0 --single-step-clustering --min-seq-id 0.40 -c 0.80 --alignment-mode 3 --cov-mode 0 --cluster-mode 0")
+clusterdb = ("mmseqs cluster /tmp/MMseqs2/sequenceDB /tmp/MMseqs2/clusterDB /tmp/MMseqs2 --remove-tmp-files --threads 4 -v 0 --single-step-clustering --max-seqs 1000 --min-seq-id 0.40 -c 0.80 --alignment-mode 3 --cov-mode 0 --cluster-mode 0")
 print "MMseqs2 command: " + clusterdb
 os.system(clusterdb)
 
