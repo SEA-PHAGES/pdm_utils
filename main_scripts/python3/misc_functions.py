@@ -1,5 +1,3 @@
-import getpass
-import pymysql as pms
 import os
 
 
@@ -41,56 +39,3 @@ def verify_path(expanded_path, kind=None):
 	else:
 		print("{} is not a valid kind for this function. Please try again "
 			  "using one of (None, dir, file).")
-
-
-def get_mysql_login():
-	"""
-	This function asks for a mysql username and password from the user.
-	:return uname: MySQL username
-	:return pword: MySQL password
-	"""
-	uname = getpass.getpass(prompt="MySQL username: ")
-	pword = getpass.getpass(prompt="MySQL password: ")
-	return uname, pword
-
-
-def validate_mysql_login(username, password, database=None):
-	"""
-	This function tests a username and password (and database if
-	supplied) to see whether a connection can be established using
-	those parameters.
-	:param username: MySQL username
-	:param password: MySQL password
-	:param database: MySQL database, default is None
-	:return Boolean: True if connection is made, False if connection failed
-	"""
-	if database is not None:
-		try:
-			con = pms.connect("localhost", username, password, database)
-			con.close()
-			return True
-		except pms.OperationalError:
-			return False
-	else:
-		try:
-			con = pms.connect("localhost", username, password)
-			con.close()
-			return True
-		except pms.OperationalError:
-			return False
-
-
-def create_mysql_connection(username, password, database):
-	"""
-	This function creates a MySQL connection using the verified MySQL username, password, and database arguments. It
-	returns that connection if established.
-	:param username: the MySQL username
-	:param password: the MySQL password
-	:param database: the MySQL database
-	:return con: pymysql connection object
-	"""
-	try:
-		con = pms.connect("localhost", username, password, database)
-		return con
-	except pms.OperationalError:
-		print("Could not establish connection to the database")
