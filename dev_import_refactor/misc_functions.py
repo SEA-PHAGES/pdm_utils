@@ -485,3 +485,364 @@ def create_unique_filename(filename_directory,filename_base,filename_ext):
             rename_counter += 1
 
     return unique_filename_path
+
+
+
+
+
+
+
+
+
+
+######
+
+#New functions for new import script
+
+
+
+
+def parse_import_tickets(list_of_data):
+
+	list_of_tickets = []
+	for input_row in list_of_data:
+
+		#Verify the row of information has the correct number of fields to parse.
+		if len(input_row) != 11:
+
+			#TODO error handling
+			write_out(output_file,"\nRow in import table is not formatted correctly: " + str(input_row))
+			table_errors += 1
+			continue
+
+
+		ticket = ImportTicket()
+		ticket.type = input_row[0] #Import action
+		ticket.primary_phage_id = input_row[1] #New PhageID
+		ticket.host = input_row[2] #Host
+		ticket.cluster = input_row[3] #Cluster
+		ticket.subcluster = input_row[4] #Subcluster
+		ticket.status = input_row[5] #Status
+		ticket.description_field = input_row[7] #Feature field
+		ticket.accession = input_row[8] #Accession
+		ticket.annotation_author = input_row[6] #AnnotationAuthor
+		ticket.secondary_phage_id = input_row[10] #PhageID to be removed
+		ticket.run_mode = input_row[9] #Run mode
+
+		list_of_tickets.append(ticket)
+
+		return(list_of_tickets)
+
+
+
+
+
+
+
+
+def parse_phagesdb_data(phagesdb_genome,data_dict):
+
+	#Name and Search Name
+	phagesdb_genome.set_phage_name(online_data_dict['phage_name'])
+
+
+    #Host, Accession
+    phagesdb_genome.set_host(online_data_dict['isolation_host']['genus'])
+    phagesdb_genome.set_accession(online_data_dict['genbank_accession'])
+
+
+    #Cluster
+	# On phagesdb, phages may have a Cluster and no Subcluster info
+    # (which is set to None). If the phage has a Subcluster,
+    # it should also have a Cluster. If by accident no Cluster or
+    # Subcluster info is added at the time the genome is added to
+    # phagesdb, the Cluster may automatically be set to NULL,
+	# which gets converted to "Unclustered". This is problematic
+	# because in Phamerator NULL means Singleton, and the long
+	# form "Unclustered" will be filtered out later in the script
+	# due to its character length, so it needs to be abbreviated.
+	if online_data_dict['pcluster'] is None:
+		phagesdb_genome.cluster = 'UNK'
+	elif online_data_dict['pcluster']['cluster'].lower() == "singleton"
+		phagesdb_genome.cluster = online_data_dict['pcluster']['cluster'].lower()
+	else:
+		phagesdb_genome.cluster = online_data_dict['pcluster']['cluster']
+
+
+
+
+
+    #Subcluster
+	# Subcluster could be empty if by error no Cluster or
+    # Subcluster data has yet been entered on phagesdb. But
+    # it may be empty because there is no subcluster
+    # designation yet for members of the Cluster.
+	if online_data_dict['psubcluster'] is None:
+		phagesdb_genome.subcluster = "none"
+	else:
+		phagesdb_genome.subcluster = online_data_dict['psubcluster']['subcluster']
+
+
+    #Check to see if there is a fasta file stored on phagesdb for this phage
+    if online_data_dict['fasta_file'] is not None:
+        fastafile_url = online_data_dict['fasta_file']
+
+        response = urllib2.urlopen(fastafile_url)
+
+        retrieved_fasta_file = response.read()
+        response.close()
+
+		#TODO convert to Biopython object?
+        #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
+        #If you split by newline, the header is retained in the first list element
+        split_fasta_data = retrieved_fasta_file.split('\n')
+        pdb_sequence = ''
+        index = 1
+        while index < len(split_fasta_data):
+
+			#Strip off potential whitespace before appending, such as '\r'
+            pdb_sequence = pdb_sequence + split_fasta_data[index].strip()
+            index += 1
+        phagesdb_genome.sequence = pdb_sequence
+
+		#TODO do I need to return this object?
+		return(phagesdb_genome)
+
+
+
+
+
+
+
+def validate_ticket(ticket):
+
+	ticket.check_retrieve_status()
+	ticket.check_type()
+	ticket.check_host()
+	ticket.check_cluster_subcluster()
+	ticket.check_status()
+	ticket.check_description_field()
+	ticket.check_accession()
+	ticket.check_annotation_author()
+	ticket.check_run_mode()
+	ticket.check_ticket()
+
+	#TODO do I need to return this object?
+	return(ticket)
+
+
+
+
+
+
+#TODO need to complete
+# Verify there are no duplicate actions
+
+def validate_tickets(list_of_tickets):
+
+
+    # Initialize all calculated attributes:
+    add_set = set()
+    remove_set = set()
+    action_add_set = set()
+    action_remove_set = set()
+    action_add_remove_set = set()
+    import_accession_set = set()
+
+
+
+    #Create each set and do initial checks for duplications.
+    #If the Add name or Remove name is "none", skip that because there are
+    #probably duplicates of those.
+    for ticket in list_of_tickets:
+    	current_add = (ticket.primary_phage_id,)
+    	current_remove = (ticket.secondary_phage_id,)
+    	current_action_add = (ticket.type,ticket.primary_phage_id)
+    	current_action_remove = (ticket.type,ticket.secondary_phage_id)
+    	current_action_add_remove = (ticket.type,ticket.primary_phage_id,ticket.secondary_phage_id)
+
+
+    	#First check the one-field and two-field combinations
+    	if current_add[0] != "none":
+    		if current_add in add_set:
+    			print ticket.primary_phage_id + " appears to be involved in more than one step."
+
+                #TODO error handling
+                table_errors += question("\nError: %s is duplicated" % str(current_add))
+
+    		else:
+    			add_set.add(current_add)
+
+    		if current_action_add in action_add_set:
+
+                #TODO error handling
+    			write_out(output_file,"\nError: %s is duplicated" % str(current_action_add))
+    			table_errors += 1
+
+    		else:
+    			action_add_set.add(current_action_add)
+
+    	if current_remove[0] != "none":
+
+    		if current_remove in remove_set:
+
+                #TODO error handling
+    			print ticket.secondary_phage_id + " appears to be involved in more than one step."
+    			table_errors += question("\nError: %s is duplicated" % str(current_remove))
+
+    		else:
+    			remove_set.add(current_remove)
+
+    		if current_action_remove in action_remove_set:
+
+                #TODO error handling
+    			write_out(output_file,"\nError: %s is duplicated" % str(current_action_remove))
+    			table_errors += 1
+
+    		else:
+    			action_remove_set.add(current_action_remove)
+
+    	#Now check the three-field combinations
+    	if current_action_add_remove in action_add_remove_set:
+
+            #TODO error handling
+    		write_out(output_file,"\nError: %s is duplicated" % str(current_action_add_remove))
+    		table_errors += 1
+
+    	else:
+    		action_add_remove_set.add(current_action_add_remove)
+
+
+    #Once the sets are created, also check if genomes to be removed are
+    #found in the Add field and vice versa.
+    for ticket in list_of_tickets:
+    	current_add = (ticket.primary_phage_id,)
+    	current_remove = (ticket.secondary_phage_id,)
+
+    	#If the phage name is not replacing itself, the Add name is not expected
+    	#to be in the Remove set and vice versa.
+    	if current_add != current_remove:
+    		if (current_add in remove_set and current_add != "none"):
+
+                #TODO error handling
+    			print ticket.primary_phage_id + " appears to be involved in more than one step."
+    			table_errors += question("\nError: %s is duplicated" % str(current_add))
+
+
+    		if (current_remove in add_set and current_remove != "none"):
+
+                #TODO error handling
+    			print ticket.secondary_phage_id + " appears to be involved in more than one step."
+    			table_errors += question("\nError: %s is duplicated" % str(current_remove))
+
+
+
+
+    #Verify there are no duplicate accessions in the import table
+    for ticket in list_of_tickets:
+
+    	if ticket.accession != "none":
+    		if ticket.accession in import_accession_set:
+
+                #TODO error handling
+    			write_out(output_file,"\nError: Accession %s is duplicated in the import table." %ticket.accession)
+    			table_errors += 1
+    		else:
+    			import_accession_set.add(ticket.accession)
+
+
+
+
+	#TODO return proper information
+	return(pass)
+
+
+
+
+
+
+def parse_phamerator_data(phamerator_genome,data_tuple):
+
+
+	#Add all modified data into new list
+	#0 = PhageID
+	#1 = Name
+	#2 = HostStrain
+	#3 = Sequence
+	#4 = status
+	#5 = Cluster2
+	#6 = Modified DateLastModified
+	#7 = Modified Accession
+	#8 = Subcluster2
+	#9 = AnnotationAuthor
+	#10 = AnnotationQC
+	#11 = RetrieveRecord
+
+	phamerator_genome.set_phage_id(genome_tuple[0])
+	phamerator_genome.set_phage_name(genome_tuple[1])
+	phamerator_genome.set_host(genome_tuple[2])
+	phamerator_genome.set_sequence(genome_tuple[3])
+	phamerator_genome.set_status(genome_tuple[4])
+
+	#TODO singletons handled properly?
+	phamerator_genome.set_cluster(genome_tuple[5])
+
+	#TODO non-subclustered handled properly
+	phamerator_genome.set_subcluster(genome_tuple[8])
+	phamerator_genome.set_date_last_modified_filled(genome_tuple[6])
+	phamerator_genome.set_accession_filled(genome_tuple[7])
+	phamerator_genome.annotation_author = str(genome_tuple[9])
+	phamerator_genome.annotation_qc = str(genome_tuple[10])
+	phamerator_genome.retrieve_record = str(genome_tuple[11])
+
+
+	return(phamerator_genome)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Count # of ticket types
+#TODO not sure when I should re-implement this
+if row[0] in action_set:
+	if row[0] == "add":
+		add_total += 1
+	elif row[0] == "remove":
+		remove_total += 1
+	elif row[0] == "replace":
+		replace_total += 1
+	elif row[0] == "update":
+		update_total += 1
+	else:
+		pass
+
+
+
+
+
+
+
+
+
+
+###

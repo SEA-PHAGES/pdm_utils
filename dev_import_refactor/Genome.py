@@ -31,6 +31,8 @@ class Genome:
         self.ncbi_update_flag = ''
         self.date_last_modified = ''
         self.annotation_author = '' #1 (Hatfull), 0 (Genbank)
+        self.annotation_qc = '' #1 (reliable), 0, (not reliable)
+        self.retrieve_record = '' #1 (auto update), 0 (do not auto update)
 
 
 
@@ -107,20 +109,38 @@ class Genome:
         self.phage_name = value
         self.search_name = remove_draft_suffix(self.phage_name) #Todo import remove_draft_suffix func
     def set_host(self,value):
-        self.host = value #Todo improve this to parse genus species?
 
+    	if value != "none":
+
+            self.host = value.split(' ')[0]
+            #TODO improve this to parse genus species?
+
+        else:
+            self.host = ""
 
 
     def set_sequence(self,value):
         self.sequence = value.upper() #Todo should be biopython object?
         self.__length = len(self.sequence)
 
-    def set_accession(self,value):
+    def set_accession_empty(self,value):
         if value is None or value.strip() == '':
             self.accession = ''
         else:
             value = value.strip()
             self.accession = value.split('.')[0]
+
+
+	# The Accession field in Phamerator defaults to "".
+    # Some flat file accessions have the version number suffix.
+	# Process Accession data. Discard the version number.
+    def set_accession_filled(self,value):
+        if value is None or value.strip() == "":
+            self.accession = "none"
+        else:
+            value = value.strip()
+            self.accession = value.split('.')[0]
+
 
     def compute_nucleotide_errors(self,dna_alphabet_set):
         nucleotide_set = set(self.sequence)
@@ -176,11 +196,22 @@ class Genome:
     def set_ncbi_update_flag(self,value):
         self.ncbi_update_flag = value
 
-    def set_date_last_modified(self,value):
+    def set_date_last_modified_empty(self,value):
         if value is None:
             self.date_last_modified = ''
         else:
             self.date_last_modified = value
+
+
+	# If there is no date in the DateLastModified field,
+    # set it to a very early date
+    def set_date_last_modified_filled(self,value):
+        if value is None:
+            self.date_last_modified = datetime.strptime('1/1/1900','%m/%d/%Y')
+        else:
+            self.date_last_modified = value
+
+
 
     def set_annotation_author(self,value):
         self.annotation_author = value
