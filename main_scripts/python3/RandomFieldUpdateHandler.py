@@ -3,6 +3,12 @@ import pymysql as pms
 
 class RandomFieldUpdateHandler:
 	def __init__(self, connection):
+		"""
+		This object is a ticket validation/execution machine for
+		performing any number of simple, single-field database updates
+		on a Phamerator database.
+		:param connection: the connection to the MySQL Phamerator db
+		"""
 		self.connection = connection		# MySQL connection
 		self.table = ""						# database table
 		self.table_valid = False			# assume table invalid until proven
@@ -14,63 +20,6 @@ class RandomFieldUpdateHandler:
 		self.key_value = ""					# e.g. Phrann, SEA_PHRANN_29
 		self.key_value_valid = False		# assume invalid until proven
 		self.valid_ticket = False			# can't execute ticket unless True
-
-	def execute_ticket(self):
-		"""
-		This function checks whether the ticket is valid.  If it is not
-		valid, the function returns with code 0, indicating failure to
-		execute the ticket.  If the ticket is valid, request input from
-		the user to verify that they actually want to proceed with the
-		update they've proposed.  If response is in the affirmative,
-		the ticket is executed.  Otherwise, indicate that this ticket
-		will be skipped, and return 0 as the ticket was not executed.
-		If an error is encountered during execution of the ticket,
-		print error message and return 0.  If the ticket is executed
-		without issue, return 1 indicating success.
-		:return:
-		"""
-		if self.valid_ticket is False:
-			return 0
-		try:
-			print("\nCommand to execute:")
-			print("UPDATE {} SET {} = '{}' WHERE {} = '{}'".format(
-				self.table, self.field, self.value, self.key_name,
-				self.key_value))
-			proceed = input("Do you wish to proceed? (y/n) ")
-			if proceed.lower() in ["yes", "y"]:
-				cur = self.connection.cursor()
-				command = "UPDATE {} SET {} = '{}' WHERE {} = '{}'".format(
-					self.table, self.field, self.value, self.key_name,
-					self.key_value)
-				cur.execute(command)
-				cur.execute("COMMIT")
-				cur.close()
-			else:
-				print("Skipping this ticket...")
-				return 0
-		except pms.err.Error as err:
-			print("Error {}: {}".format(err[0], err[1]))
-			return 0
-		return 1
-
-	def validate_ticket(self):
-		"""
-		This function runs all 4 of the object's built-in ticket
-		validation methods, and checks whether any of the ticket inputs
-		were invalid.  If any are invalid, reject the ticket.  If none
-		are invalid, accept the ticket.
-		:return:
-		"""
-		self.validate_table()
-		self.validate_field()
-		self.validate_key_name()
-		self.validate_key_value()
-		if False in [self.table_valid, self.field_valid, self.key_name_valid,
-				self.key_value_valid]:
-			self.valid_ticket = False
-		else:
-			self.valid_ticket = True
-		return
 
 	def validate_table(self):
 		"""
@@ -172,3 +121,60 @@ class RandomFieldUpdateHandler:
 			print ("Error {}: {}".format(err.args[0], err.args[1]))
 			self.key_value_valid = False
 		return
+
+	def validate_ticket(self):
+		"""
+		This function runs all 4 of the object's built-in ticket
+		validation methods, and checks whether any of the ticket inputs
+		were invalid.  If any are invalid, reject the ticket.  If none
+		are invalid, accept the ticket.
+		:return:
+		"""
+		self.validate_table()
+		self.validate_field()
+		self.validate_key_name()
+		self.validate_key_value()
+		if False in [self.table_valid, self.field_valid, self.key_name_valid,
+				self.key_value_valid]:
+			self.valid_ticket = False
+		else:
+			self.valid_ticket = True
+		return
+
+	def execute_ticket(self):
+		"""
+		This function checks whether the ticket is valid.  If it is not
+		valid, the function returns with code 0, indicating failure to
+		execute the ticket.  If the ticket is valid, request input from
+		the user to verify that they actually want to proceed with the
+		update they've proposed.  If response is in the affirmative,
+		the ticket is executed.  Otherwise, indicate that this ticket
+		will be skipped, and return 0 as the ticket was not executed.
+		If an error is encountered during execution of the ticket,
+		print error message and return 0.  If the ticket is executed
+		without issue, return 1 indicating success.
+		:return:
+		"""
+		if self.valid_ticket is False:
+			return 0
+		try:
+			print("\nCommand to execute:")
+			print("UPDATE {} SET {} = '{}' WHERE {} = '{}'".format(
+				self.table, self.field, self.value, self.key_name,
+				self.key_value))
+			proceed = input("Do you wish to proceed? (y/n) ")
+			if proceed.lower() in ["yes", "y"]:
+				cur = self.connection.cursor()
+				command = "UPDATE {} SET {} = '{}' WHERE {} = '{}'".format(
+					self.table, self.field, self.value, self.key_name,
+					self.key_value)
+				cur.execute(command)
+				cur.execute("COMMIT")
+				cur.close()
+			else:
+				print("Skipping this ticket...")
+				return 0
+		except pms.err.Error as err:
+			print("Error {}: {}".format(err[0], err[1]))
+			return 0
+		return 1
