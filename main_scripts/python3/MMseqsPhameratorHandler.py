@@ -492,7 +492,8 @@ class MMseqsPhameratorHandler:
 					v = random.random()
 				rgb = colorsys.hsv_to_rgb(h, s, v)
 				rgb = (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
-				hexrgb = "#%02x%02x%02x" % rgb
+				hexrgb = "#{}02x{}02x{}02x".format(int(rgb[0], int(rgb[1]),
+													   int(rgb[2])))
 				new_color = hexrgb
 
 				cur.execute("UPDATE pham_color SET color = '{}' WHERE id = "
