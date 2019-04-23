@@ -227,68 +227,15 @@ for genome_data in add_replace_data_list:
 
 
 
-#Iterate over each file in the directory
-admissible_file_types = set(["gb","gbf","gbk","txt"])
-write_out(output_file,"\n\n\n\nAccessing genbank-formatted files for add/replace actions...")
-all_files =  [X for X in os.listdir(phageListDir) if os.path.isfile(os.path.join(phageListDir,X))]
-genbank_files = []
-failed_genome_files = []
-failed_actions = []
-file_tally = 0
-script_warnings = 0
-script_errors = 0
 
 
 
 
-#Files in the directory may not have the correct extension, or may contain 0, 1, or >1 parseable records.
-#When SeqIO parses files, if there are 0 Genbank-formatted records, it does not throw an error, but simply moves on.
-#The code first iterates through each file to check how many actually are valid Genbank files.
-#It's advantageous to do this first round of file iteration to identify any files with multiple records present,
-#and that the file can be successfully read by Biopython SeqIO (if not, it could crash the script).
-#Not sure how often there are multiple records present in non-SEA-PHAGES NCBI records, but it is a good idea to verify there is only one record per file before proceeding.
-write_out(output_file,"\nA total of %s file(s) present in the directory." % len(all_files))
-for filename in all_files:
 
 
-	#If the file extension is not admissible, then skip. Otherwise, proceed
-	if filename.split('.')[-1] not in admissible_file_types:
-		failed_genome_files.append(filename)
-		write_out(output_file,"\nError: file %s does not have a valid file extension. This file will not be processed." % filename)
-		script_errors += 1
-		raw_input("\nPress ENTER to proceed to next file.")
-		continue
-
-	#This try/except clause prevents the code from crashing if there
-	#is a problem with a file that Biopython has trouble parsing.
-	try:
-		#Keep track of how many records Biopython parses
-		parsed_records_tally = 0
-		for seq_record in SeqIO.parse(os.path.join(phageListDir,filename), "genbank"):
-			parsed_records_tally += 1
-
-	except:
-		failed_genome_files.append(filename)
-		write_out(output_file,"\nError: Biopython is unable to parse file %s. This file will not be processed." % filename)
-		script_errors += 1
-		raw_input("\nPress ENTER to proceed to next file.")
-		continue
 
 
-	if parsed_records_tally == 0:
-		failed_genome_files.append(filename)
-		write_out(output_file,"\nError: Biopython was unable to parse any records from file %s. This file will not be processed." % filename)
-		script_errors += 1
-		raw_input("\nPress ENTER to proceed to next file.")
 
-	elif parsed_records_tally > 1:
-		failed_genome_files.append(filename)
-		write_out(output_file,"\nError: Biopython found two records in file %s. This file will not be processed." % filename)
-		script_errors += 1
-		raw_input("\nPress ENTER to proceed to next file.")
-
-	elif parsed_records_tally == 1:
-		genbank_files.append(filename)
 
 
 
@@ -333,39 +280,6 @@ for filename in genbank_files:
 		record_summary_header = [["Header Field","Data"]]
 
 
-		#Parse the PhageID from the Genbank record
-		try:
-			record_organism = seq_record.annotations["organism"]
-			if record_organism.split(' ')[-1] == "Unclassified.":
-				phageName = record_organism.split(' ')[-2]
-			else:
-				phageName = record_organism.split(' ')[-1]
-
-			#PECAAN auto-annotation adds the Draft suffix to the name
-			#in this field. Remove this suffix before proceeding.
-			if phageName[-6:].lower() == "_draft":
-				phageName = phageName[:-6]
-
-
-			#Some phage names are spelled differently in phagesdb and Phamerator
-			#compared to the Genbank record. Convert the parsed name to the
-			#expected name in these databases before proceeding.
-			if phageName in phage_name_typo_dict.keys():
-				incorrect_phageName = phageName
-				phageName = phage_name_typo_dict[phageName]
-				record_warnings += 1
-				write_out(output_file,"\nWarning: parsed phage name %s converted to %s." \
-					% (incorrect_phageName,phageName))
-
-
-		except:
-			write_out(output_file,"\nError: problem retrieving phage name in file %s. This file will not be processed." % filename)
-			record_errors += 1
-			failed_genome_files.append(filename)
-			script_warnings += record_warnings
-			script_errors += record_errors
-			raw_input("\nPress ENTER to proceed to next file.")
-			continue
 
 		#Sequence, length, and GC
 		try:
@@ -989,150 +903,71 @@ for filename in genbank_files:
 		for feature in seq_record.features:
 
 
-			if feature.type != "CDS":
-
-				#Retrieve the Source Feature info
-				if feature.type == "source":
-
-					try:
-						feature_source_organism = str(feature.qualifiers["organism"][0])
-					except:
-						feature_source_organism = ""
-
-					try:
-						feature_source_host = str(feature.qualifiers["host"][0])
-					except:
-						feature_source_host = ""
-
-					try:
-						feature_source_lab_host = str(feature.qualifiers["lab_host"][0])
-					except:
-						feature_source_lab_host = ""
-
-				#Evaluate if tRNA is properly structured
-				#Only evaluate if it is a new manually annotated SEA-PHAGES genomes
-				#that is replacing an auto-annotated genome.
-				#Eventually, this restriction can be loosened to evaluate tRNAs
-				#in any type of genome.
-				elif feature.type == "tRNA" and ignore_trna_check != "yes":
-
-
-					#Retrieve tRNA coordinates
-					try:
-
-						#Biopython converts coordinates to 0-index
-						#Start(left) coordinates are 0-based inclusive (feature starts there)
-						#Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
-						tRNA_left = str(feature.location.start)
-						tRNA_right = str(feature.location.end)
-
-					except:
-						write_out(output_file,"\nError: a tRNA has incorrect coordinates in phage %s."\
-								% phageName)
-						record_errors += 1
-						continue
-
-					#Now that start and stop have been parsed, check if coordinates are fuzzy or not
-					if (tRNA_left.isdigit() and tRNA_right.isdigit()):
-						tRNA_left = int(tRNA_left)
-						tRNA_right = int(tRNA_right)
-					else:
-						write_out(output_file,"\nError: tRNA starting at %s has fuzzy coordinates in phage %s."\
-								% (tRNA_left,phageName))
-						record_errors += 1
-						continue
-
-					#Retrieve top strand of tRNA feature. It is NOT necessarily
-					#in the correct orientation
-					tRNA_size = abs(tRNA_right - tRNA_left)
-					tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
-					if len(tRNA_seq) != tRNA_size:
-						write_out(output_file,"\nError: unable to retrieve sequence for tRNA starting at %s in phage %s."\
-								% (tRNA_left + 1,phageName))
-						record_errors += 1
-						continue
-
-
-					#Convert sequence to reverse complement if it is on bottom strand
-					if feature.strand == 1:
-						pass
-					elif feature.strand == -1:
-						tRNA_seq = tRNA_seq.reverse_complement()
-					else:
-						record_errors += 1
-						write_out(output_file,"\Error: tRNA starting at %s does not have proper orientation in %s phage." \
-								% (tRNA_left + 1,phageName))
-						continue
-
-					#Check to see if forward strand terminal nucleotide is correct = A or C
-					if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
-						record_warnings += 1
-						write_out(output_file,"\nWarning: tRNA starting at %s does not appear to have correct terminal nucleotide in %s phage." \
-								% (tRNA_left + 1,phageName))
-						record_errors += question("\nError: tRNA starting at %s has incorrect terminal nucleotide in %s phage." \
-								% (tRNA_left + 1,phageName))
-
-					if tRNA_size < 60 or tRNA_size > 100:
-						record_warnings += 1
-						write_out(output_file,"\nWarning: tRNA starting at %s does not appear to be the correct size in %s phage."  \
-								% (tRNA_left + 1,phageName))
-						record_errors += question("\nError: tRNA starting at %s is incorrect size in %s phage." \
-								% (tRNA_left + 1,phageName))
-
-
-					#Retrieve and check product
-					try:
-						tRNA_product = feature.qualifiers['product'][0].lower().strip()
-
-						if len(tRNA_product) > 0:
-							if check_tRNA_product(tRNA_product) > 0:
-								write_out(output_file,"\nError: tRNA starting at %s has incorrect amino acid or anticodon in %s." \
-									% (tRNA_left + 1, phageName))
-								record_errors += 1
-						else:
-							write_out(output_file,"\nError: tRNA starting at %s has incorrect product in %s." \
-								% (tRNA_left + 1, phageName))
-							record_errors += 1
-
-					except:
-						write_out(output_file,"\nError: tRNA starting at %s is missing product field in phage %s." \
-							% (tRNA_left + 1,phageName))
-						record_errors += 1
-						tRNA_product = ''
-
-
-					#Retrieve note
-					#In the future, this field may need to be parsed in a similar
-					#manner as the product field. For now, do nothing.
-					try:
-						tRNA_note = feature.qualifiers['note'][0].lower().strip()
-					except:
-						tRNA_note = ''
 
 
 
-				#If feature is not CDS, Source, or tRNA, skip it
-				else:
-					pass
-
-				continue
-
-			else:
-				cdsCount += 1
-				typeID = feature.type
-
-			#This will store all data for this feature that will be imported
-			feature_data_list = []
 
 
-			#GeneID
-			#Feature_locus_tag is a record of the locus tag found in the file.
-			#GeneID is what will be assigned in the database.
-			try:
-				feature_locus_tag = feature.qualifiers["locus_tag"][0]
-			except:
-				feature_locus_tag = ""
-				missing_locus_tag_tally += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###Below: error code from import script that needs to be implemented
+
+
+		#Not sure where to put this now:
+
+
+
+		#Some phage names are spelled differently in phagesdb and Phamerator
+		#compared to the Genbank record. Convert the parsed name to the
+		#expected name in these databases before proceeding.
+		if phageName in phage_name_typo_dict.keys():
+			incorrect_phageName = phageName
+			phageName = phage_name_typo_dict[phageName]
+			record_warnings += 1
+			write_out(output_file,"\nWarning: parsed phage name %s converted to %s." \
+				% (incorrect_phageName,phageName))
+
+
+
+
+    	genome_object.compute_nucleotide_errors(dna_alphabet_set)
+
+
+
+
+		#CDS errors from compare_datases.py
+            #Compute other fields
+            gene_object.compute_amino_acid_errors(protein_alphabet_set)
+            gene_object.set_start_end_strand_id()
+            gene_object.compute_boundary_error()
+            gene_object.compute_description_error()
+
+
+		#Genome errors after all features are parsed
+	    genome_object.compute_cds_feature_errors()
+	    genome_object.compute_ncbi_cds_feature_errors()
+
+
+
+
+
+
+
+
+		#TODO decide when to re-assign gene_id if needed
 
 			#If user selected customized GeneIDs, OR if there is no locus tag,
 			#then create a concatenated GeneID
@@ -1143,9 +978,6 @@ for filename in genbank_files:
 					geneID = phageName.upper() + "_" + str(cdsCount)
 			else:
 				geneID = feature_locus_tag
-
-
-
 
 			#See if the geneID is already in the database
 			duplicate = False
@@ -1189,14 +1021,12 @@ for filename in genbank_files:
 				continue
 
 
-
-
-
 			#Name
 			if (geneID.split('_')[-1].isdigit()):
 				geneName = geneID.split('_')[-1]
 			else:
 				geneName = cdsCount
+
 
 
 
@@ -1214,47 +1044,6 @@ for filename in genbank_files:
 				record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
 				continue
 
-
-
-
-
-
-			#Gene boundary coordinates
-			#Compound features are tricky to parse.
-			if str(feature.location)[:4] == "join":
-
-
-				#Skip this compound feature if it is comprised of more than two features (too tricky to parse).
-				if len(feature.location.parts) > 2:
-
-					strStart = ""
-					strStop = ""
-					record_warnings += 1
-					write_out(output_file,"\nWarning: gene %s is a compound feature that is unable to be parsed. This CDS will be skipped, but processing of the other genes will continue." % geneID)
-					record_errors += question("\nError: unable to parse gene %s of phage %s." % (geneID,phageName))
-					continue
-
-				else:
-
-					#Retrieve compound feature positions based on strand
-					if feature.strand == 1:
-
-						strStart = str(feature.location.parts[0].start)
-						strStop = str(feature.location.parts[1].end)
-
-					elif feature.strand == -1:
-
-						strStart = str(feature.location.parts[1].start)
-						strStop = str(feature.location.parts[0].end)
-
-					#If strand is None...
-					else:
-						strStart = ""
-						strStop = ""
-
-			else:
-				strStart = str(feature.location.start)
-				strStop = str(feature.location.end)
 
 			#Now that start and stop have been parsed, check if coordinates are fuzzy or not
 			if (strStart.isdigit() and strStop.isdigit()):
@@ -1277,12 +1066,6 @@ for filename in genbank_files:
 
 
 
-
-
-
-
-
-
 			#Translation, Gene Length (via Translation)
 			try:
 				translation = feature.qualifiers["translation"][0].upper()
@@ -1295,6 +1078,13 @@ for filename in genbank_files:
 				record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
 				continue
 
+
+
+
+			#TODO error to implement - different translation tables used?
+
+
+
 			#Check translation for possible errors
 			amino_acid_set = set(translation)
 			amino_acid_error_set = amino_acid_set - protein_alphabet_set
@@ -1304,46 +1094,7 @@ for filename in genbank_files:
 				print "Unexpected amino acids: " + str(amino_acid_error_set)
 				record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
 
-			#Translation table used
-			try:
-				feature_transl_table = feature.qualifiers["transl_table"][0]
-				transl_table_set.add(feature_transl_table)
-			except:
-				feature_transl_table = ""
-				missing_transl_table_tally += 1
-
-
-
-
-
-
-			#Gene Description
-			#Use the feature qualifier from the import file.
-			#If it is a generic description, leave field empty.
-			#For generic 'gp#' descriptions, make sure there is no other info in the product that is valuabe by checking for other words present.
-
-
-			#First retrieve gene function, note, and product fields.
-			try:
-				feature_product = retrieve_description(feature,"product")
-				if feature_product != "":
-					feature_product_tally += 1
-			except:
-				feature_product = ""
-
-			try:
-				feature_function = retrieve_description(feature,"function")
-				if feature_function != "":
-					feature_function_tally += 1
-			except:
-				feature_function = ""
-
-			try:
-				feature_note = retrieve_description(feature,"note")
-				if feature_note != "":
-					feature_note_tally += 1
-			except:
-				feature_note = ""
+			#TODO compute description tally for feature, product, and note
 
 
 
@@ -1388,123 +1139,11 @@ for filename in genbank_files:
 
 
 
-
-
-
-
-
-
-			#Now that it has acquired all gene feature info, create list of
-			#gene data and append to list of all gene feature data
-			#0 = geneID
-			#1 = PhageID or basename
-			#2 = startCoord
-			#3 = stopCoord
-			#4 = geneLen
-			#5 = geneName
-			#6 = typeID
-			#7 = translation
-			#8 = orientation[0]
-			#9 = assigned_description
-			#10 = feature_product
-			#11 = feature_function
-			#12 = feature_note
-			#13 = feature_locus_tag
-			addCount+= 1
-
-			feature_data_list.append(geneID) #0
-
-
-			if use_basename == "yes":
-				feature_data_list.append(basename) #1
-			else:
-				feature_data_list.append(phageName) #1
-
-			feature_data_list.append(startCoord) #2
-			feature_data_list.append(stopCoord) #3
-			feature_data_list.append(geneLen) #4
-			feature_data_list.append(geneName) #5
-			feature_data_list.append(typeID) #6
-			feature_data_list.append(translation) #7
-			feature_data_list.append(orientation[0]) #8
-			feature_data_list.append(assigned_description) #9
-			feature_data_list.append(feature_product) #10
-			feature_data_list.append(feature_function) #11
-			feature_data_list.append(feature_note) #12
-
-			#If there is a parsed accession, the file is interpreted to have
-			#been retrieved from NCBI, which means the locus tags are the official
-			#locus tags. Otherwise, do not retain the locus tags in the record.
-			if ignore_locus_tag_import != 'yes':
-				feature_data_list.append(feature_locus_tag) #13
-			else:
-				feature_data_list.append('') #13
-
-			all_features_data_list.append(feature_data_list)
-
-
-			#Retrieve summary info to verify quality of file
-			feature_product_trunc = feature_product
-			if len(feature_product_trunc) > 15:
-				feature_product_trunc = feature_product_trunc[:15] + "..."
-
-			feature_note_trunc = feature_note
-			if len(feature_note_trunc) > 15:
-				feature_note_trunc = feature_note_trunc[:15] + "..."
-
-			feature_function_trunc = feature_function
-			if len(feature_function_trunc) > 15:
-				feature_function_trunc = feature_function_trunc[:15] + "..."
-
-			translation_trunc = translation
-			if len(translation_trunc) > 5:
-				translation_trunc = translation_trunc[:5] + "..."
-
-			assigned_description_trunc = assigned_description
-			if len(assigned_description_trunc) > 15:
-				assigned_description_trunc = assigned_description_trunc[:15] + "..."
-
-			record_summary_cds.append([feature_locus_tag,\
-										feature_product_trunc,\
-										feature_function_trunc,\
-										feature_note_trunc,\
-										feature_transl_table,\
-										translation_trunc,\
-										geneID,\
-										assigned_description_trunc])
-
-
-
-
-
-
-		#Now that all CDS features are processed, run quality control on the data:
-
-
 		#Check to see if there are any CDS features processed. If not, then the genbank record does not have any called genes.
 		#The record_summary_cds list contains the column headers, so at minimum, it is length == 1
 		if len(record_summary_cds) == 1:
 			print "\nNo CDS features were found in this record. The genome will still be added to the database."
 			record_errors += question("\nError: no CDS features found in %s." % filename)
-
-
-		#Process the source and organism fields to look for problems
-
-		#Print the summary of the header information
-		record_summary_header.append(["Record Name",record_name])
-		record_summary_header.append(["Record ID",record_id])
-		record_summary_header.append(["Record Defintion",record_def])
-		record_summary_header.append(["Record Source",record_source])
-		record_summary_header.append(["Record Organism",record_organism])
-		record_summary_header.append(["Source Feature Organism",feature_source_organism])
-		record_summary_header.append(["Source Feature Host",feature_source_host])
-		record_summary_header.append(["Source Feature Lab Host",feature_source_lab_host])
-		print "\nSummary of record header information for %s from file %s:\n" % (phageName,filename)
-		print tabulate(record_summary_header,headers = "firstrow")
-		print "\n\n\n"
-
-
-
 
 
 		#See if there are any phage name typos in the header block
@@ -1566,10 +1205,6 @@ for filename in genbank_files:
 
 
 
-
-
-
-
 		#See if there are any host name typos in the header block.
 		#Skip this step if it is a Draft genome, because it won't correctly have this information.
 		if import_status != 'draft' and ignore_host_typos != 'yes':
@@ -1612,11 +1247,6 @@ for filename in genbank_files:
 
 
 
-		#Print record summary for all CDS information for quality control
-		print "\nSummary of CDS summary information for %s from file %s:\n" % (phageName,filename)
-		print tabulate(record_summary_cds,headers = "firstrow")
-		print "\n\n\n"
-
 
 		#Check locus tag info:
 		if missing_locus_tag_tally > 0:
@@ -1646,8 +1276,6 @@ for filename in genbank_files:
 
 
 
-
-
 		#Check all translation table info:
 		if len(transl_table_set) > 1:
 			write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
@@ -1668,161 +1296,230 @@ for filename in genbank_files:
 
 
 
-		#Check to ensure the best gene description field was retained
-		#Element indices for feature data:
-		#0 = geneID
-		#1 = PhageID or basename
-		#2 = startCoord
-		#3 = stopCoord
-		#4 = geneLen
-		#5 = geneName
-		#6 = typeID
-		#7 = translation
-		#8 = orientation[0]
-		#9 = assigned_description
-		#10 = feature_product
-		#11 = feature_function
-		#12 = feature_note
 
-		if import_cds_qualifier not in description_set:
-			write_out(output_file,"\nNumber of gene %s descriptions found for phage %s: %s" % (import_cds_qualifier,phageName, assigned_description_tally))
-		write_out(output_file,"\nNumber of gene product descriptions found for phage %s: %s" % (phageName, feature_product_tally))
-		write_out(output_file,"\nNumber of gene function descriptions found for phage %s: %s" % (phageName, feature_function_tally))
-		write_out(output_file,"\nNumber of gene note descriptions found for phage %s: %s" % (phageName, feature_note_tally))
+# TODO:
+# Now that the flat file data has been retrieved and
+# FlatFile genome objects created, match them to ticket data
 
 
-		#If other CDS fields contain descriptions, they can be chosen to
-		#replace the default import_cds_qualifier descriptions.
-		#Then provide option to verify changes.
-		#This block is skipped if user selects to do so.
-		if ignore_description_field_check != 'yes':
 
 
-			changed = ""
 
 
-			if (import_cds_qualifier != "product" and feature_product_tally > 0):
-
-			   print "\nThere are %s CDS products found." % feature_product_tally
-			   change_descriptions()
-
-			   if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
-
-					for feature in all_features_data_list:
-						feature[9] = feature[10]
-					changed = "product"
-
-			if (import_cds_qualifier != "function" and feature_function_tally > 0):
-
-				print "\nThere are %s CDS functions found." % feature_function_tally
-				change_descriptions()
 
 
-				if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
-
-					for feature in all_features_data_list:
-						feature[9] = feature[11]
-					changed = "function"
 
 
-			if (import_cds_qualifier != "note" and feature_note_tally > 0):
-
-				print "\nThere are %s CDS notes found." % feature_note_tally
-				change_descriptions()
-
-				if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
-
-					for feature in all_features_data_list:
-						feature[9] = feature[12]
-					changed = "note"
-
-			if changed != "":
-				record_warnings += 1
-				write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
-				record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
 
 
-		#Add all updated gene feature data to the add_replace_statements list
-		for feature in all_features_data_list:
-			add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
-									% (feature[0],\
-									feature[1],\
-									feature[2],\
-									feature[3],\
-									feature[4],\
-									feature[5],\
-									feature[6],\
-									feature[7],\
-									feature[8],\
-									feature[9],\
-									feature[13]))
 
 
-		#If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
-		if record_errors == 0:
-			write_out(output_file,"\nNo errors encountered while parsing: %s." % filename)
-			diffCount = cdsCount - addCount
-			if record_warnings > 0:
-				write_out(output_file,"\nWarning summary: there are %s warning(s) with phage %s and %s CDS feature(s) were not added." % (record_warnings,phageName,diffCount))
-		else:
-			write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
-			failed_genome_files.append(filename)
-			failed_actions.append(matchedData)
-			script_warnings += record_warnings
-			script_errors += record_errors
-			raw_input("\nPress ENTER to proceed to next file.")
-			continue
 
 
-		#Execute SQL transactions
-		if run_type == "production":
-			con = mdb.connect(mysqlhost, username, password, database)
-			con.autocommit(False)
-			cur = con.cursor()
-			try:
-				cur.execute("START TRANSACTION")
-				for statement in add_replace_statements:
-					cur.execute(statement)
-					write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
-				cur.execute("COMMIT")
-				write_out(output_file,"\nAll add/replace statements for %s committed." % matchedData)
-				cur.close()
-				con.autocommit(True)
 
-			except:
-				success_action_file_handle.close()
-				mdb_exit("\nError: problem importing the file %s with the following add/replace action: %s.\nNot all genbank files were processed." % (filename,matchedData))
+#TODO compile all gene feature data for import
 
-			con.close()
+#Now that it has acquired all gene feature info, create list of
+#gene data and append to list of all gene feature data
+#0 = geneID
+#1 = PhageID or basename
+#2 = startCoord
+#3 = stopCoord
+#4 = geneLen
+#5 = geneName
+#6 = typeID
+#7 = translation
+#8 = orientation[0]
+#9 = assigned_description
+#10 = feature_product
+#11 = feature_function
+#12 = feature_note
+#13 = feature_locus_tag
+addCount+= 1
 
-		else:
-			write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
-
-		#Now that genome has been successfully uploaded, proceed
-		try:
-			shutil.move(os.path.join(phageListDir,filename),os.path.join(phageListDir,success_folder,filename))
-		except:
-			print "Unable to move file %s to success file folder." % filename
+feature_data_list.append(geneID) #0
 
 
-		#Add the action data to the success output file, update tally of total script warnings and errors, then proceed
-		add_replace_output_list = [matchedData[0],\
-								matchedData[1],\
-								matchedData[2],\
-								matchedData[3],\
-								matchedData[8],\
-								matchedData[4],\
-								author_dictionary[matchedData[9]],\
-								matchedData[5],\
-								matchedData[7],\
-								matchedData[10],\
-								matchedData[6]]
+if use_basename == "yes":
+	feature_data_list.append(basename) #1
+else:
+	feature_data_list.append(phageName) #1
+
+feature_data_list.append(startCoord) #2
+feature_data_list.append(stopCoord) #3
+feature_data_list.append(geneLen) #4
+feature_data_list.append(geneName) #5
+feature_data_list.append(typeID) #6
+feature_data_list.append(translation) #7
+feature_data_list.append(orientation[0]) #8
+feature_data_list.append(assigned_description) #9
+feature_data_list.append(feature_product) #10
+feature_data_list.append(feature_function) #11
+feature_data_list.append(feature_note) #12
+
+#If there is a parsed accession, the file is interpreted to have
+#been retrieved from NCBI, which means the locus tags are the official
+#locus tags. Otherwise, do not retain the locus tags in the record.
+if ignore_locus_tag_import != 'yes':
+	feature_data_list.append(feature_locus_tag) #13
+else:
+	feature_data_list.append('') #13
+
+all_features_data_list.append(feature_data_list)
 
 
-		success_action_file_writer.writerow(add_replace_output_list)
-		script_warnings += record_warnings
-		script_errors += record_errors
-		print "Processing of %s is complete." %filename
+
+
+#Add all updated gene feature data to the add_replace_statements list
+for feature in all_features_data_list:
+	add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
+							% (feature[0],\
+							feature[1],\
+							feature[2],\
+							feature[3],\
+							feature[4],\
+							feature[5],\
+							feature[6],\
+							feature[7],\
+							feature[8],\
+							feature[9],\
+							feature[13]))
+
+
+
+
+
+
+#If errors were encountered with the file parsing, do not add to the genome. Otherwise, proceed.
+if record_errors == 0:
+	write_out(output_file,"\nNo errors encountered while parsing: %s." % filename)
+	diffCount = cdsCount - addCount
+	if record_warnings > 0:
+		write_out(output_file,"\nWarning summary: there are %s warning(s) with phage %s and %s CDS feature(s) were not added." % (record_warnings,phageName,diffCount))
+else:
+	write_out(output_file,"\n%s errors were encountered with file %s. %s genome was not added to the database." % (record_errors,filename,phageName))
+	failed_genome_files.append(filename)
+	failed_actions.append(matchedData)
+	script_warnings += record_warnings
+	script_errors += record_errors
+	raw_input("\nPress ENTER to proceed to next file.")
+	continue
+
+
+#Execute SQL transactions
+if run_type == "production":
+	con = mdb.connect(mysqlhost, username, password, database)
+	con.autocommit(False)
+	cur = con.cursor()
+	try:
+		cur.execute("START TRANSACTION")
+		for statement in add_replace_statements:
+			cur.execute(statement)
+			write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
+		cur.execute("COMMIT")
+		write_out(output_file,"\nAll add/replace statements for %s committed." % matchedData)
+		cur.close()
+		con.autocommit(True)
+
+	except:
+		success_action_file_handle.close()
+		mdb_exit("\nError: problem importing the file %s with the following add/replace action: %s.\nNot all genbank files were processed." % (filename,matchedData))
+
+	con.close()
+
+else:
+	write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
+
+#Now that genome has been successfully uploaded, proceed
+try:
+	shutil.move(os.path.join(phageListDir,filename),os.path.join(phageListDir,success_folder,filename))
+except:
+	print "Unable to move file %s to success file folder." % filename
+
+
+#Add the action data to the success output file, update tally of total script warnings and errors, then proceed
+add_replace_output_list = [matchedData[0],\
+						matchedData[1],\
+						matchedData[2],\
+						matchedData[3],\
+						matchedData[8],\
+						matchedData[4],\
+						author_dictionary[matchedData[9]],\
+						matchedData[5],\
+						matchedData[7],\
+						matchedData[10],\
+						matchedData[6]]
+
+
+success_action_file_writer.writerow(add_replace_output_list)
+script_warnings += record_warnings
+script_errors += record_errors
+print "Processing of %s is complete." %filename
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###Above: error code from import script that needs to be implemented
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

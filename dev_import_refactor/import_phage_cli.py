@@ -194,6 +194,8 @@ list_of_tickets = parse_import_tickets(import_table_data_list)
 #Tickets will be matched with other genome data.
 #Ticket data will be paired with data from PhagesDB, PhameratorDB,
 #and/or a flat file.
+#TODO I may want to POP each ticket off this list as I assign to
+#matched genome objects.
 matched_data_list = []
 for ticket in list_of_tickets:
     matched_data_obj = MatchedGenomes()
@@ -285,36 +287,6 @@ validate_tickets(temp_list_of_tickets)
 
 
 
-#Create separate lists of ticket based on the indicated action: update, add/replace, remove
-
-list_of_update_tickets = []
-list_of_remove_tickets = []
-list_of_add_replace_tickets = []
-
-
-for matched_data_obj in matched_data_list:
-
-    ticket_type = matched_data_obj.ticket.type
-
-	if ticket_type == "update":
-		list_of_update_tickets.append(matched_data_obj)
-	elif ticket_type == "remove":
-		list_of_remove_tickets.append(matched_data_obj)
-	elif (ticket_type == "add" or ticket_type == "replace"):
-		list_of_add_replace_tickets.append(matched_data_obj)
-
-    #TODO error handling
-	else:
-		write_out(output_file,"\nError: during parsing of actions.")
-		table_errors += 1
-
-
-
-
-
-#TODO Compile all ticket-specific errors and ticket-group errors
-# decide how to report errors
-
 
 
 
@@ -391,7 +363,7 @@ phamerator_genome_dict = {}
 
 for genome_tuple in current_genome_data_tuples:
 
-    phamerator_genome.Genome()
+    phamerator_genome = Genome()
     phamerator_genome = parse_phamerator_data(phamerator_genome,genome_tuple)
     phamerator_genome_dict[phamerator_genome.phage_id] = phamerator_genome
 
@@ -424,9 +396,125 @@ for genome in phamerator_genome_dict.keys():
 
 
 
-
 # Now that Phamerator data has been retrieved and
 # Phamerator genome objects created, match them to ticket data
+for matched_data_obj in matched_data_list:
+	phage_id = matched_data_obj.ticket.primary_phage_id
+
+	try:
+		matched_genome = phamerator_genome_dict[phage_id]
+
+		#Now add the Phamerator data to the MatchedGenomes object
+		matched_data_obj.matched_genomes_dict["phamerator"] = matched_genome
+
+	except:
+		#TODO error handling
+
+
+
+
+
+
+
+# Parse flat files and create list of genome objects
+#Iterate over each file in the directory
+
+write_out(output_file,"\n\n\n\nAccessing genbank-formatted files for add/replace actions...")
+all_files =  [X for X in os.listdir(phageListDir) if os.path.isfile(os.path.join(phageListDir,X))]
+
+write_out(output_file,"\nA total of %s file(s) present in the directory." % len(all_files))
+
+list_of_failed_genome_files = []
+list_of_valid_genome_files = []
+
+for filename in all_files:
+
+	valid = validate_flat_file(filename)
+
+	if valid == 1:
+		list_of_valid_genome_files.append(filename)
+	else:
+		list_of_failed_genome_files.append(filename)
+
+	# TODO error handling - file might not have contained a parsable
+	# flat file. Test whether the genome object contains data.
+	# If it is empty, add filename to list of failed files.
+
+
+
+
+# Function iterates through list of files and returns
+# a list of GenBank-formatted flat files and a list of file names
+# they could not be parsed.
+list_of_flat_file_genomes = []
+for filename in list_of_valid_genome_files:
+
+	filepath = os.path.join(phageListDir,filename)
+	flat_file_genome = parse_flat_file_data(filepath)
+	list_of_flat_file_genomes.append(flat_file_genome)
+
+
+
+
+
+
+
+
+
+
+#TODO need to set strategy variable in advance
+# Now that the flat file data has been retrieved and parsed,
+# match them to ticket data
+
+
+flat_file_genome_dict = {}
+
+
+for flat_file_object in list_of_flat_file_genomes:
+
+	if strategy == "phage_id":
+		match_name = flat_file_object.phage_id
+
+
+	elif strategy == "filename":
+		match_name = flat_file_object.filename
+
+	else:
+		match_name = ""
+
+
+	if match_name not in flat_file_genome_dict.keys():
+
+		flat_file_genome_dict[match_name] = flat_file_object
+
+	else:
+		pass
+
+		#TODO throw an error - unable to create unique set of objects
+
+
+for matched_data_obj in matched_data_list:
+
+	match_name = matched_data_obj.ticket.primary_phage_id
+
+	try:
+		flat_file_genome = flat_file_genome_dict.pop(match_name)
+	except:
+
+		flat_file_genome = None
+
+	#Now add the flat file data to the MatchedGenomes object
+	matched_data_obj.matched_genomes_dict["flat_file"] = flat_file_genome
+
+
+
+
+
+
+
+#TODO
+# After parsing flat file
+# Prepare gene_id and gene_name appropriately
 
 
 
@@ -439,6 +527,104 @@ for genome in phamerator_genome_dict.keys():
 
 
 
+
+
+
+# TODO now that all data is matched, evaluate each ticket
+
+
+#Evaluate every CDS feature
+
+
+#Evaluate every tRNA feature
+
+
+
+#Evaluate every genome
+
+
+
+#Evaluate flat file genome to phagesdb genome
+
+
+
+
+#Evaluate flat file genome to phamerator genome
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Not sure what to do with this:
+failed_actions = []
+file_tally = 0
+script_warnings = 0
+script_errors = 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Now that all data has been retrieved, split objects by ticket type
+#Create separate lists of ticket based on the indicated action: update, add/replace, remove
+#TODO I should pop off each matched_object as I assign to next list.
+list_of_update_tickets = []
+list_of_remove_tickets = []
+list_of_add_replace_tickets = []
+list_of_unassigned_tickets = []
+
+
+for matched_data_obj in matched_data_list:
+
+    ticket_type = matched_data_obj.ticket.type
+
+	if ticket_type == "update":
+		list_of_update_tickets.append(matched_data_obj)
+	elif ticket_type == "remove":
+		list_of_remove_tickets.append(matched_data_obj)
+	elif (ticket_type == "add" or ticket_type == "replace"):
+		list_of_add_replace_tickets.append(matched_data_obj)
+
+    #TODO error handling
+	else:
+		write_out(output_file,"\nError: during parsing of actions.")
+		table_errors += 1
+
+
+
+
+
+#TODO Compile all ticket-specific errors and ticket-group errors
+# decide how to report errors
 
 
 

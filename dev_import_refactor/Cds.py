@@ -15,33 +15,35 @@ class CdsFeature:
         # Initialize all non-calculated attributes:
 
         #Datafields from Phamerator database:
-        self.__type_id = '' #Feature type: CDS, GenomeBoundary,or tRNA
-        self.__left_boundary = '' #Position of left boundary of feature, 0-indexed
-        self.__right_boundary = '' #Position of right boundary of feature, 0-indexed
-        self.__strand = '' #'forward', 'reverse', or 'NA'
-        self.__translation = ''
-        self.__translation_length = ''
+        self.type_id = '' #Feature type: CDS, GenomeBoundary,or tRNA
+        self.left_boundary = '' #Position of left boundary of feature, 0-indexed
+        self.right_boundary = '' #Position of right boundary of feature, 0-indexed
+        self.strand = '' #'forward', 'reverse', or 'NA'
+        self.compound_parts = 0 # number of regions that form the feature
+        self.translation = ''
+        self.gene_length = '' #stored in Phamerator
+        self.translation_table = ''
 
 
         #Common to Phamerator
-        self.__phage_id = ''
-        self.__gene_id = '' #Gene ID comprised of PhageID and Gene name
-        self.__gene_name = ''
-        self.__notes = ''
-        self.__search_notes = '' #non-generic gene descriptions
+        self.phage_id = ''
+        self.gene_id = '' #Gene ID comprised of PhageID and Gene name
+        self.gene_name = ''
+        self.notes = ''
+        self.search_notes = '' #non-generic gene descriptions
 
 
 
 
         #Common to NCBI
-        self.__locus_tag = '' #Gene ID comprised of PhageID and Gene name
-        self.__gene_number = ''
-        self.__product_description = ''
-        self.__function_description = ''
-        self.__note_description = ''
-        self.__search_product_description = ''
-        self.__search_function_description = ''
-        self.__search_note_description = ''
+        self.locus_tag = '' #Gene ID comprised of PhageID and Gene name
+        self.gene_number = ''
+        self.product_description = ''
+        self.function_description = ''
+        self.note_description = ''
+        self.processed_product_description = ''
+        self.processed__function_description = ''
+        self.processed__note_description = ''
 
 
 
@@ -51,6 +53,7 @@ class CdsFeature:
         # Computed datafields
 
         #Common to all
+        self.__translation_length = '' #computed internally
         self.__amino_acid_errors = False
         self.__start_end_strand_id = ''
         self.__end_strand_id = ''
@@ -64,12 +67,12 @@ class CdsFeature:
 
 
 
-
         #Common to NCBi
         self.__locus_tag_missing = False
         self.__locus_tag_typo = False #This can only be computed at the genome level since it uses the phage name
         self.__description_field_error = False
         self.__total_errors = 0
+        self.__compound_parts_error = False #TODO implement this error
 
 
 
@@ -87,15 +90,15 @@ class CdsFeature:
 
 
     #Common to all
-    def set_left_boundary(self,value):
-        self.__left_boundary = value
-    def set_right_boundary(self,value):
-        self.__right_boundary = value
     def set_strand(self,value):
-        self.__strand = parse_strand(value)
+        self.strand = parse_strand(value)
+
+    def set_strand_for_import(self,value):
+        self.strand = parse_strand_for_import(value)
+
     def set_translation(self,value):
-        self.__translation = value.upper()
-        self.__translation_length = len(self.__translation)
+        self.translation = value.upper()
+        self.__translation_length = len(self.translation)
     def set_type_id(self,value):
         self.__type_id = value
     def compute_amino_acid_errors(self,protein_alphabet_set):
@@ -154,20 +157,11 @@ class CdsFeature:
 
     #Common to NCBI
     def set_locus_tag(self,value):
-        self.__locus_tag = value
-        if self.__locus_tag == '':
+        self.locus_tag = value
+        if self.locus_tag == '':
             self.__locus_tag_missing = True
     def set_gene_number(self,value):
         self.__gene_number = value
-    def set_product_description(self,value1,value2):
-        self.__product_description = value1
-        self.__search_product_description = value2
-    def set_function_description(self,value1,value2):
-        self.__function_description = value1
-        self.__search_function_description = value2
-    def set_note_description(self,value1,value2):
-        self.__note_description = value1
-        self.__search_note_description = value2
     def set_locus_tag_typo(self):
         self.__locus_tag_typo = True
 

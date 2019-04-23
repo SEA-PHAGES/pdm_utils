@@ -27,6 +27,10 @@ class ImportTicket:
 
 
 
+        # Initialize calculated attributes
+        self.match_strategy = '' #phage_id or filename
+
+
 
 	#Make sure "none" and "retrieve" indications are lowercase,
 	#as well as "action", "status", "feature", and "author" fields are lowercase

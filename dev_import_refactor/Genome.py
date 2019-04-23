@@ -19,7 +19,7 @@ class Genome:
 
 
         #Common to Phamerator and PhagesDB
-        self.phage_id = ''
+        self.phage_id = '' #Case sensitive and does not contain "_Draft"
         self.status = '' #Final, Draft, Gbk version of genome data
         self.cluster = ''
         self.subcluster = ''
@@ -37,7 +37,7 @@ class Genome:
 
 
         #Common to NCBI records
-        self.record_name = '' #Todo might not need this anymore
+        self.record_name = ''
         self.record_id = '' #Todo might not need this anymore
         self.record_accession = ''
         self.record_description = ''
@@ -47,6 +47,9 @@ class Genome:
         self.source_feature_host = ''
         self.source_feature_lab_host = ''
         self.record_authors = ''
+        self.parsed_record = [] #holds parsed flat file record. TODO do I need this?
+        self.filename = '' #Case sensitive file name from which the record is derived
+        self.search_filename = '' #Lowercase file name
 
 
 
@@ -59,20 +62,29 @@ class Genome:
 
 
         # Computed datafields: common to all genomes
-        self.search_name = '' # Lowercase phage name void of "_Draft"
+        self.search_name = '' # Lowercase phage_name void of "_draft"
         self.__length = 0
         self.__nucleotide_errors = False
 
 
         #Common to annotated genomes
-        self.__cds_features = []
+        self.cds_features = []
         self.__cds_features_tally = 0
         self.__cds_features_with_translation_error_tally = 0
         self.__cds_features_boundary_error_tally = 0
 
 
+        self.trna_features = []
+        self.__trna_features_tally = 0
+
+
+        self.source_features = []
+        self.__source_features_tally = 0
+
+
+
         #Common to Phamerator
-        self.search_id = '' #Lowercase phage ID void of "_Draft" and converted
+        self.search_id = '' #Lowercase phage_id void of "_draft"
         self.__status_accession_error = False
         self.__status_description_error = False
         self.__description_tally = 0
@@ -100,14 +112,24 @@ class Genome:
 
 
 
-
+#HERE
 
     # Define all attribute setters:
+    def set_filename(self,value):
+        split_filepath = value.split('/')
+        filename = split_filepath[-1]
+        filename = filename.split('.')
+        self.filename = filename
+        self.search_filename = filename.lower()
+
 
     #common to phamerator
     def set_phage_name(self,value):
         self.phage_name = value
-        self.search_name = remove_draft_suffix(self.phage_name) #Todo import remove_draft_suffix func
+
+        #TODO original script removed draft suffix.
+        # Not sure if "_draft" should remain or not.
+        self.search_name = remove_draft_suffix(self.phage_name).lower()
     def set_host(self,value):
 
     	if value != "none":
@@ -164,8 +186,8 @@ class Genome:
 
 
     def set_phage_id(self,value):
-        self.phage_id = value
-        self.search_id = remove_draft_suffix(self.phage_id) #Todo make sure this func is imported
+        self.phage_id = remove_draft_suffix(self.phage_id)
+        self.search_id = self.phage_id.lower() #TODO make sure this func is imported
     def set_status(self,value):
         self.status = value
 
