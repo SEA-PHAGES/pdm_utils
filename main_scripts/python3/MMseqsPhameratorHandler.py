@@ -1,5 +1,7 @@
 import os
+import shutil
 import sys
+from subprocess import *
 import pymysql as pms
 import random
 import colorsys
@@ -55,6 +57,9 @@ class MMseqsPhameratorHandler:
 		self.coverage_mode = 0
 		self.cluster_mode = 0
 
+		# Log file to write output to
+		self.log = open("/tmp/MMseqsPhamerationLog.txt", "w")
+
 	def refresh_temp_dir(self):
 		"""
 		This function checks to see if there is already a directory
@@ -66,7 +71,7 @@ class MMseqsPhameratorHandler:
 		"""
 		if os.path.exists(self.temp_dir) is True:
 			try:
-				os.system("rm -r {}".format(self.temp_dir))
+				shutil.rmtree(self.temp_dir)
 				os.mkdir(self.temp_dir)
 				return
 			except OSError as e:
@@ -215,12 +220,13 @@ class MMseqsPhameratorHandler:
 		format used internally by MMseqs2 (self.mmseqs_input).
 		:return:
 		"""
-		command = "mmseqs createdb {}/{} {}/{}".format(self.temp_dir,
-													   self.fasta_input,
-													   self.temp_dir,
-													   self.mmseqs_input)
 		try:
-			os.system(command)
+			args = ["mmseqs", "createdb", "{}/{}".format(self.temp_dir,
+														 self.fasta_input),
+					"{}/{}".format(self.temp_dir, self.mmseqs_input)]
+			output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
+								   stderr=PIPE).communicate()
+			self.log.write(str(output))
 		except OSError as err:
 			print("Error {}: {}".format(err.args[0], err.args[1]))
 			sys.exit(1)
@@ -233,40 +239,38 @@ class MMseqsPhameratorHandler:
 		"""
 		if self.single_step is True:
 			try:
-				command = "mmseqs cluster {}/{} {}/{} {} --remove-tmp-files " \
-						  "--single-step-clustering --threads {} -v {} " \
-						  "--max-seqs {} --min-seq-id {} -c {} " \
-						  "--alignment-mode {} --cov-mode {} --cluster-mode " \
-						  "{}".format(self.temp_dir, self.mmseqs_input,
-									  self.temp_dir, self.mmseqs_output,
-									  self.temp_dir, self.threads,
-									  self.verbosity, self.max_seqs,
-									  self.min_seq_id, self.coverage,
-									  self.alignment_mode,
-									  self.coverage_mode, self.cluster_mode)
-				os.system(command)
+				args = ["mmseqs", "cluster", "{}/{}".format(self.temp_dir,
+														   self.mmseqs_input),
+						"{}/{}".format(self.temp_dir, self.mmseqs_output),
+						self.temp_dir, "--remove-tmp-files",
+						"--single-step-clustering", "--threads",
+						str(self.threads), "-v", str(self.verbosity),
+						"--max-seqs", str(self.max_seqs), "--min-seq-id",
+						str(self.min_seq_id), "-c", str(self.coverage),
+						"--alignment-mode", str(self.alignment_mode),
+						"--cov-mode", str(self.coverage_mode),
+						"--cluster-mode", str(self.cluster_mode)]
+				output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
+									   stderr=PIPE).communicate()
+				self.log.write(str(output))
 			except OSError as err:
 				print("Error {}: {}".format(err.args[0], err.args[1]))
 				sys.exit(1)
 		else:
 			try:
-				command = "mmseqs cluster {}/{} {}/{} {} --remove-tmp-files " \
-						  "--threads {} -v {} --max-seqs {} --min-seq-id {} " \
-						  "-c {} --alignment-mode {} --cov-mode {} " \
-						  "--cluster-mode {}".format(self.temp_dir,
-													 self.mmseqs_input,
-													 self.temp_dir,
-													 self.mmseqs_output,
-													 self.temp_dir,
-													 self.threads,
-													 self.verbosity,
-													 self.max_seqs,
-													 self.min_seq_id,
-													 self.coverage,
-													 self.alignment_mode,
-													 self.coverage_mode,
-													 self.cluster_mode)
-				os.system(command)
+				args = ["mmseqs", "cluster", "{}/{}".format(self.temp_dir,
+														   self.mmseqs_input),
+						"{}/{}".format(self.temp_dir, self.mmseqs_output),
+						self.temp_dir, "--remove-tmp-files", "--threads",
+						str(self.threads), "-v", str(self.verbosity),
+						"--max-seqs", str(self.max_seqs), "--min-seq-id",
+						str(self.min_seq_id), "-c", str(self.coverage),
+						"--alignment-mode", str(self.alignment_mode),
+						"--cov-mode", str(self.coverage_mode),
+						"--cluster-mode", str(self.cluster_mode)]
+				output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
+									   stderr=PIPE).communicate()
+				self.log.write(str(output))
 			except OSError as err:
 				print("Error {}: {}".format(err.args[0], err.args[1]))
 				sys.exit(1)
@@ -282,10 +286,13 @@ class MMseqsPhameratorHandler:
 		"""
 		# Convert the output
 		try:
-			command = "mmseqs createseqfiledb {}/{} {}/{} {}/{}".format(
-				self.temp_dir, self.mmseqs_input, self.temp_dir,
-				self.mmseqs_output, self.temp_dir, self.parseable_output)
-			os.system(command)
+			args = ["mmseqs", "createseqfiledb", "{}/{}".format(
+				self.temp_dir, self.mmseqs_input), "{}/{}".format(
+				self.temp_dir, self.mmseqs_output), "{}/{}".format(
+				self.temp_dir, self.parseable_output)]
+			output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
+								   stderr=PIPE).communicate()
+			self.log.write(str(output))
 		except OSError as err:
 			print("Error {}: {}".format(err.args[0], err.args[1]))
 			sys.exit(1)

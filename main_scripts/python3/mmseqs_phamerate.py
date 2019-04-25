@@ -56,40 +56,40 @@ pham_handler.cluster_mode = 0
 # it exists and then recreate it, because MMseqs2 will use files from
 # previous runs if they still exist.  Default temp directory is /tmp/MMseqs2/
 pham_handler.refresh_temp_dir()
-
+# print(1, datetime.datetime.now())
 # Get current pham data from the database.
 pham_handler.get_existing_pham_data()
-
+# print(2, datetime.datetime.now())
 # Get unphamerated GeneIDs.
 pham_handler.get_unphamerated_geneids()
-
+# print(3, datetime.datetime.now())
 # Write all GeneIDs and translations to fasta file or just the non-redundant
 # translations if mysql_handler.filter_redundant is True
 pham_handler.write_geneids_and_translations_to_fasta()
-
+# print(4, datetime.datetime.now())
 # Convert the fasta file to mmseqsdb internal format.
 pham_handler.convert_fasta_to_mmseqsdb()
-
+# print(5, datetime.datetime.now())
 # Cluster the database using the indicated parameters.
 pham_handler.cluster_database()
-
+# print(6, datetime.datetime.now())
 # Convert and parse the output back into a python dictionary object.
 pham_handler.convert_and_parse_output()
-
+# print(7, datetime.datetime.now())
 # Put all GeneIDs back together again, if duplicates were filtered out.
 # Nothing will happen at this stage if duplicates were not filtered out.
 pham_handler.reintroduce_duplicates()
-
+# print(8, datetime.datetime.now())
 # Preserve pham names by finding best matches from the old phams.
 pham_handler.conserve_pham_names()
-
+# print(9, datetime.datetime.now())
 # Put data back into the database.
 pham_handler.reinsert_pham_data()
-
+# print(10, datetime.datetime.now())
 # Fix miscolored phams and orphams.  Phams are miscolored if they're white,
 # orphams are miscolored if they are not white.
 pham_handler.fix_miscolored_phams()
-
+# print(11, datetime.datetime.now())
 # Record end time
 end = datetime.datetime.now()
 
