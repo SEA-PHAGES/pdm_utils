@@ -12,12 +12,22 @@ from urllib import request, error
 # Import third-party modules
 try:
 	import pymysql as pms
+	import Bio
 	from Bio import Entrez, SeqIO
 except ModuleNotFoundError as err:
 	print(err)
 	sys.exit(1)
 
 from misc_functions import ask_yes_no, close_files
+
+# Check that biopython version is 1.69 or higher (below 1.69
+# Entrez.eutilites use HTTP GET instead of POST, and then urllib.request
+# complains about the URL being too long).
+if Bio.__version__ < "1.69":
+	print("Installed version of Biopython ({}) is too low. Please install "
+		  "Biopython version 1.69 using 'sudo pip3 install "
+		  "biopython==1.69'".format(Bio.__version__))
+	sys.exit(1)
 
 # set up argparse to interact with users at the command line interface.
 script_description = """
