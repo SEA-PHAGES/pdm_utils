@@ -23,10 +23,10 @@ from misc_functions import ask_yes_no, close_files
 # Check that biopython version is 1.69 or higher (below 1.69
 # Entrez.eutilites use HTTP GET instead of POST, and then urllib.request
 # complains about the URL being too long).
-if Bio.__version__ < "1.69":
+if Bio.__version__ < "1.73":
 	print("Installed version of Biopython ({}) is too low. Please install "
-		  "Biopython version 1.69 using 'sudo pip3 install "
-		  "biopython==1.69'".format(Bio.__version__))
+		  "Biopython version 1.73 using 'sudo pip3 install "
+		  "biopython==1.73'".format(Bio.__version__))
 	sys.exit(1)
 
 # set up argparse to interact with users at the command line interface.
@@ -97,6 +97,7 @@ if retrieve_ncbi_updates is True:
 	batch_size = 200
 	Entrez.tool = "NCBIRecordRetrievalScript"
 	Entrez.email = input("\nPlease provide email address for NCBI: ")
+	Entrez.api_key = "3b6b113d973599ce1b30c2f94a38508c5908"
 
 # Create appropriate output directories.  Each update type gets its own
 # directory in working_dir, as well as a sub-directory for genomes and a
