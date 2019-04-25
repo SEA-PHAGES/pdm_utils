@@ -39,3 +39,25 @@ def verify_path(expanded_path, kind=None):
 	else:
 		print("{} is not a valid kind for this function. Please try again "
 			  "using one of (None, dir, file).")
+
+
+def ask_yes_no(prompt):
+	response = False
+	response_valid = False
+	while response_valid is False:
+		response = input(prompt)
+		if response.lower() in ["yes", "y", "t", "true"]:
+			response = True
+			response_valid = True
+		elif response.lower() in ["no", "n", "f", "false"]:
+			response = False
+			response_valid = True
+		else:
+			print("Invalid response.")
+	return response
+
+
+def close_files(list_of_filehandles):
+	for handle in list_of_filehandles:
+		handle.close()
+	return
