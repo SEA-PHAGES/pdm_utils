@@ -510,8 +510,7 @@ if (retrieve_field_updates or retrieve_phagesdb_updates or
 		# successfully retrieved from phagesdb. If incomplete data was
 		# retrieved from phagesdb, the retrieve_field_updates and
 		# retrieve_phagesdb_genomes flags should have been set to "no"
-		if retrieve_field_updates is True or retrieve_phagesdb_updates == \
-				"yes":
+		if retrieve_field_updates is True or retrieve_phagesdb_updates is True:
 
 			# Ensure the phageID does not have Draft appended
 			if phamerator_id[-6:].lower() == "_draft":
@@ -679,8 +678,10 @@ if (retrieve_field_updates or retrieve_phagesdb_updates or
 					phagesdb_file_handle = open(os.path.join(phagesdb_folder,
 															 "genomes",
 															 phagesdb_filename),'w')
+					# response comes back as a byte string that won't be
+					# processed correctly without being decoded to UTF-8
 					phagesdb_file_handle.write(
-						str(phagesdb_flatfile_response.read()))
+						phagesdb_flatfile_response.read().decode('utf-8'))
 					phagesdb_flatfile_response.close()
 					phagesdb_file_handle.close()
 
