@@ -1065,23 +1065,24 @@ for input_row in file_reader:
 			pass
 
 
-	###Eval
+	###Eval eval_status
 	#Modify Status if needed
 	if (row[4] not in phageStatus_set and row[4] != "none"):
 			print "The status %s is not currently in the database." % row[4]
 			table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
+
+	###Eval eval_field_length
 	if len(row[4]) > 5:
 		write_out(output_file,"\nError: the status %s exceeds character limit." % row[4])
 		table_errors += 1
 
-	###Eval
+	###Eval eval_description_field
 	#Modify Description Qualifier if needed
 	if (row[5] not in description_set and row[5] != "none"):
 		print row[5] + " is an uncommon qualifier."
 		table_errors += question("\nError: %s is an incorrect qualifier." % row[5])
 
 
-		###Eval
 	#Modify Accession if needed
 	if row[7] == "retrieve":
 
@@ -1094,6 +1095,7 @@ for input_row in file_reader:
 			else:
 				row[7] = "none"
 
+		###Eval eval_field_retrieval
 		except:
 			write_out(output_file,"\nError: unable to retrieve Accession data for phage %s from phagesdb." %row[1])
 			row[7] = "none"
@@ -1114,7 +1116,7 @@ for input_row in file_reader:
 	else:
 		row[9] = "error"
 
-		###Eval
+		###Eval eval_field_not_valid
 	#Make sure run mode is permissible
 	if row[10] not in set(run_mode_options_dict.keys()):
 		write_out(output_file,"\nError: run mode is not valid for phage %s." %row[1])
@@ -1133,52 +1135,57 @@ for input_row in file_reader:
 
 	#Update
 	if row[0] == "update":
-		###Eval
+		###Eval eval_phageid_not_present
 		#FirstPhageID
 		if row[1] not in phageId_set:
 			write_out(output_file,"\nError: %s is not a valid PhageID in the database." %row[1])
 			table_errors += 1
-			###Eval
 		#Host, Cluster, Status
 		if (row[2] == "none" or \
 			row[3] == "none" or \
 			row[4] == "none"):
 
+			###Eval eval_field_empty one Eval object for each field
 			write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, Subcluster, or Status fields." %row[1])
 			table_errors += 1
-			###Eval
 		#Description
 		if row[5] != "none":
+			###Eval eval_field_not_empty
 			write_out(output_file,"\nError: %s does not have correctly populated Description field." %row[1])
 			table_errors += 1
-			###Eval
+
 		#SecondPhageID
 		if row[6] != "none":
+			###Eval eval_field_not_empty
 			write_out(output_file,"\nError: %s should not have a genome listed to be removed." %row[1])
 			table_errors += 1
 
 		#Accession = it will either be an accession or it will be "none"
 		#Subcluster = it will either be a Subcluster or it will be "none"
-		###Eval
+
 		#Author
 		if row[9] != '1' and row[9] != '0':
+
+			###Eval	eval_field_not_valid
 			write_out(output_file,"\nError: %s does not have correctly populated Author field." %row[1])
 			table_errors += 1
-			###Eval
+
 		#Run Mode
 		if row[10] != 'none':
+			###Eval eval_field_not_empty
 			write_out(output_file,"\nError: %s does not have correctly populated Run Mode field." %row[1])
 			table_errors += 1
 
 
 	#Add
 	elif row[0] == "add":
-		###Eval
+
 		#FirstPhageID
 		if row[1] in phageId_set:
+			###Eval eval_phageid_present
 			write_out(output_file,"\nError: %s is already a PhageID in the database. This genome cannot be added to the database." %row[1])
 			table_errors += 1
-			###Eval
+
 		#FirstPhageID, Host, Cluster, Status, Description
 		if (row[1] == "none" or \
 			row[2] == "none" or \
@@ -1186,16 +1193,20 @@ for input_row in file_reader:
 			row[4] == "none" or \
 			row[5] == "none"):
 
+			###Eval eval_field_empty one Eval object for each field
 			write_out(output_file,"\nError: %s does not have correctly populated fields." %row[1])
 			table_errors += 1
-			###Eval
+
 		#Status
 		if row[4] == "final":
+
+			###Eval eval_status_discrepancy
 			print row[1] + " to be added is listed as Final status, but no Draft (or other) genome is listed to be removed."
 			table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
-			###Eval
+
 		#SecondPhageID
 		if row[6] != "none":
+			###Eval
 			write_out(output_file,"\nError: %s to be added should not have a genome indicated for removal." %row[1])
 			table_errors += 1
 
