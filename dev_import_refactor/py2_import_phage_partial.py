@@ -40,87 +40,6 @@ success_action_file_writer = csv.writer(success_action_file_handle)
 #Prepare to update fields that are not accompanied by adding or replacing a genome.
 write_out(output_file,"\n\n\n\nUpdating Host, Cluster, Subcluster, and Status fields...")
 updated = 0
-update_statements = []
-for genome_data in update_data_list:
-	write_out(output_file,"\nPreparing: " + str(genome_data))
-
-	if genome_data[7] == "none":
-		genome_data[7] = ""
-
-	#HostStrain, status, Accession, Author updates.
-	update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
-	update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
-	update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
-	update_statements.append("UPDATE phage SET AnnotationAuthor = '" + genome_data[9] + "' WHERE PhageID = '" + genome_data[1] + "';")
-
-	#Create the statement to update Cluster, Cluster2, and Subcluster2
-	update_statements.append(\
-			create_cluster2_statement(genome_data[1],genome_data[3]))
-	update_statements.append(\
-			create_subcluster2_statement(genome_data[1],genome_data[8]))
-	update_statements.append(\
-			create_cluster_statement(genome_data[1],\
-			assign_cluster_field(genome_data[8],genome_data[3])))
-
-	updated += 1
-
-#If it looks like there is a problem with some of the genomes on the list,
-#cancel the transaction, otherwise proceed
-if updated == update_total:
-
-	if run_type == "production":
-		con = mdb.connect(mysqlhost, username, password, database)
-		con.autocommit(False)
-		cur = con.cursor()
-
-		try:
-			cur.execute("START TRANSACTION")
-			for statement in update_statements:
-				cur.execute(statement)
-				write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
-			cur.execute("COMMIT")
-			write_out(output_file,"\nAll update statements committed.")
-			cur.close()
-			con.autocommit(True)
-
-		except:
-			success_action_file_handle.close()
-			mdb_exit("\nError: problem updating genome information.\nNo changes have been made to the database.")
-
-		con.close()
-
-	else:
-		write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
-
-else:
-	write_out(output_file,"\nError: problem processing data list to update genomes. Check input table format.\nNo changes have been made to the database.")
-	write_out(output_file,"\nExiting import script.")
-	output_file.close()
-	success_action_file_handle.close()
-	sys.exit(1)
-
-#Document the update actions
-for element in update_data_list:
-
-	if element[7] == "":
-		element[7] = "none"
-
-	update_output_list = [element[0],\
-							element[1],\
-							element[2],\
-							element[3],\
-							element[8],\
-							element[4],\
-							author_dictionary[element[9]],\
-							element[5],\
-							element[7],\
-							element[10],\
-							element[6]]
-	success_action_file_writer.writerow(update_output_list)
-
-
-write_out(output_file,"\nAll field update actions have been implemented.")
-raw_input("\nPress ENTER to proceed to next import stage.")
 
 
 
@@ -129,68 +48,8 @@ raw_input("\nPress ENTER to proceed to next import stage.")
 
 
 
-#Remove actions implemented
-#Prepare to remove any genomes that are not accompanied by a new genome
-write_out(output_file,"\n\n\n\nRemoving genomes with no replacement...")
-removed = 0
-removal_statements = []
-for genome_data in remove_data_list:
-	write_out(output_file,"\nPreparing: " + str(genome_data))
-	removal_statements.append("DELETE FROM phage WHERE PhageID = '" + genome_data[6] + "';")
-	removed += 1
 
-#If it looks like there is a problem with some of the genomes on the list,
-#cancel the transaction, otherwise proceed
-if removed == remove_total:
 
-	if run_type == "production":
-		con = mdb.connect(mysqlhost, username, password, database)
-		con.autocommit(False)
-		cur = con.cursor()
-
-		try:
-			cur.execute("START TRANSACTION")
-			for statement in removal_statements:
-				cur.execute(statement)
-				write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
-			cur.execute("COMMIT")
-			write_out(output_file,"\nAll remove statements committed.")
-			cur.close()
-			con.autocommit(True)
-
-		except:
-			success_action_file_handle.close()
-			mdb_exit("\nError: problem removing genomes with no replacements.\nNo remove actions have been implemented.")
-
-		con.close()
-
-	else:
-		write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
-
-else:
-	write_out(output_file,"\nError: problem processing data list to remove genomes. Check input table format.\nNo remove actions have been implemented.")
-	output_file.close()
-	success_action_file_handle.close()
-	sys.exit(1)
-
-#Document the remove actions
-for element in remove_data_list:
-
-	remove_output_list = [element[0],\
-							element[1],\
-							element[2],\
-							element[3],\
-							element[8],\
-							element[4],\
-							element[9],\
-							element[5],\
-							element[7],\
-							element[10],\
-							element[6]]
-	success_action_file_writer.writerow(remove_output_list)
-
-write_out(output_file,"\nAll genome remove actions have been implemented.")
-raw_input("\nPress ENTER to proceed to next import stage.")
 
 
 
@@ -1368,22 +1227,6 @@ else:
 all_features_data_list.append(feature_data_list)
 
 
-
-
-#Add all updated gene feature data to the add_replace_statements list
-for feature in all_features_data_list:
-	add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
-							% (feature[0],\
-							feature[1],\
-							feature[2],\
-							feature[3],\
-							feature[4],\
-							feature[5],\
-							feature[6],\
-							feature[7],\
-							feature[8],\
-							feature[9],\
-							feature[13]))
 
 
 

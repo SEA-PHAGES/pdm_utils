@@ -12,33 +12,33 @@ class ImportTicket:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
-        self.type = '' # Add, Replace, Remove, UPDATE
-        self.primary_phage_id = '' # Genome that will be added or updated
-        self.host = ''
-        self.cluster = '' # Singleton should be reported as 'singleton'
-        self.subcluster = ''
-        self.status = ''
-        self.annotation_author = ''
-        self.description_field = ''
-        self.accession = ''
-        self.run_mode = ''
-        self.secondary_phage_id = '' # Genome that will be removed or replaced
+        self.type = "" # Add, Replace, Remove, UPDATE
+        self.primary_phage_id = "" # Genome that will be added or updated
+        self.host = ""
+        self.cluster = "" # Singleton should be reported as 'singleton'
+        self.subcluster = ""
+        self.status = ""
+        self.annotation_author = ""
+        self.description_field = ""
+        self.accession = ""
+        self.run_mode = ""
+        self.secondary_phage_id = "" # Genome that will be removed or replaced
 
 
 
 
         # Initialize calculated attributes
-        self.match_strategy = '' # phage_id or filename
+        self.match_strategy = "" # phage_id or filename
         self.evaluations = []
 
 
 
 
 
-    def set_evaluation(self, type, message1, message2 = None):
+    def set_evaluation(self, type, message1 = None, message2 = None):
 
         if type == "warning":
-            eval_object = Eval.construct_warning(message1,message2)
+            eval_object = Eval.construct_warning(message1, message2)
 
         elif type == "error":
             eval_object = Eval.construct_error(message1)
@@ -56,7 +56,7 @@ class ImportTicket:
     # "action", "status", "feature", and "author" fields are lowercase.
 
 
-    def check_case(self):
+    def set_case(self):
 
         self.type = self.type.lower()
 
@@ -87,7 +87,7 @@ class ImportTicket:
 
             self.accession = self.accession.lower()
 
-            self.annotation_author = self.annotation_author.lower()
+        self.annotation_author = self.annotation_author.lower()
 
         if self.secondary_phage_id.lower() == "none":
             self.secondary_phage_id = self.secondary_phage_id.lower()
@@ -100,7 +100,7 @@ class ImportTicket:
     # If either the Host, Cluster, Subcluster or Accession data needs to be
     # retrieved, try to access the data in phagesdb before proceeding
 
-    def check_retrieve_status(self):
+    def clear_retrieve_status(self):
 
         #Host
         if self.host == "retrieve":
@@ -157,7 +157,7 @@ class ImportTicket:
     # Modify fields if needed
 
     # Modify Host if needed
-    def check_host(self,value,host_set):
+    def check_host(self, host_set):
 
 
         #TODO this error is needed unless elsewhere in script an error is thrown if unable to retrieve data from phagesdb
@@ -186,13 +186,19 @@ class ImportTicket:
 
 
 
-	# Modify Cluster and Subcluster if needed
-    def check_cluster_subcluster(self):
 
-        # Check Subcluster data
+
+
+
+
+
+
+    # Check Subcluster data
+    def check_subcluster(self, phage_subcluster_set):
+
         if self.subcluster != "none":
 
-            if self.subcluster not in phageSubcluster_set:
+            if self.subcluster not in phage_subcluster_set:
 
                 self.set_evaluation("warning", \
                     "The Subcluster %s is not currently in the database." % \
@@ -207,56 +213,83 @@ class ImportTicket:
                     self.subcluster)
 
 
+
+
+
+
+
+
+	# Modify Cluster and Subcluster if needed
+    def check_cluster(self, phage_cluster_set):
+
         # Check Cluster data
         if self.cluster != "none":
-            if self.cluster.lower() == "singleton":
-                self.cluster = self.cluster.lower()
 
-            if (self.cluster not in phageCluster_set and \
-                self.cluster != "singleton"):
+            if self.cluster.lower() != "singleton":
 
+                if self.cluster not in phage_cluster_set:
 
-                self.set_evaluation("warning", \
-                    "The Cluster %s is not currently in the database." % \
-                    self.cluster, \
-                    "The Cluster %s is not correct." % self.cluster)
+                    self.set_evaluation("warning", \
+                        "The Cluster %s is not currently in the database." % \
+                        self.cluster, \
+                        "The Cluster %s is not correct." % self.cluster)
 
-
-            if (self.cluster != "singleton" and len(self.cluster) > 5):
-
-                self.set_evaluation("error", \
-                    "The Cluster designation %s exceeds the character limit." % \
-                    self.cluster)
-
-
-            # If Singleton of Unknown Cluster, there should be no Subcluster
-            if (self.cluster == "singleton" or self.cluster == "UNK"):
-                if self.subcluster != "none":
+                if len(self.cluster) > 5:
 
                     self.set_evaluation("error", \
-                        "There is a discrepancy between the Cluster and Subcluster \
-                        designations.")
-
-
-
-            # If not Singleton or Unknown or none, then Cluster should be part
-            # of Subcluster data and the remainder should be a digit
-            elif self.subcluster != "none":
-
-                if (self.subcluster[:len(self.cluster)] != self.cluster or \
-                    self.subcluster[len(self.cluster):].isdigit() == False):
-
-                    self.set_evaluation("error", \
-                        "There is a discrepancy between the Cluster and Subcluster \
-                        designations.")
+                        "The Cluster designation %s exceeds the character limit." % \
+                        self.cluster)
 
             else:
-                pass
+                self.cluster = self.cluster.lower()
+
+
+
+
+
+	# Compare Cluster and Subcluster if needed
+    def check_cluster_subcluster(self):
+
+        # If Singleton or Unknown Cluster, there should be no Subcluster
+        if (self.cluster == "singleton" or \
+            self.cluster == "UNK" or \
+            self.cluster == "none"):
+
+            if self.subcluster != "none":
+
+                self.set_evaluation("error", \
+                    "There is a discrepancy between the Cluster and Subcluster \
+                    designations.")
+
+        # If not Singleton or Unknown or none, then Cluster should be part
+        # of Subcluster data and the remainder should be a digit
+        elif self.subcluster != "none":
+
+            if (self.subcluster[:len(self.cluster)] != self.cluster or \
+                self.subcluster[len(self.cluster):].isdigit() == False):
+
+                self.set_evaluation("error", \
+                    "There is a discrepancy between the Cluster and Subcluster \
+                    designations.")
+
+        else:
+            pass
+
+
+
+
+
+
+
+
+
+
+
 
 	# Modify Status if needed
-    def check_status(self):
+    def check_status(self, phage_status_set):
 
-        if (self.status not in phageStatus_set and self.status != "none"):
+        if (self.status not in phage_status_set and self.status != "none"):
 
             self.set_evaluation("warning", \
                 "The status %s is not currently in the database." % self.status, \
@@ -270,9 +303,10 @@ class ImportTicket:
 
 
     #Modify Description Qualifier if needed
-    def check_description_field(self):
+    def check_description_field(self, description_set):
 
-        if (self.description_field not in description_set and self.description_field != "none"):
+        if (self.description_field not in description_set and \
+            self.description_field != "none"):
 
             self.set_evaluation("warning", \
                 "The description field %s is not commonly used." % self.description_field, \

@@ -3,6 +3,8 @@
 
 
 
+
+
 def parse_import_tickets(list_of_data):
 
 	list_of_tickets = []
@@ -33,14 +35,6 @@ def parse_import_tickets(list_of_data):
 		list_of_tickets.append(ticket)
 
 		return(list_of_tickets)
-
-
-
-
-
-
-
-
 
 
 
@@ -166,3 +160,47 @@ def validate_tickets(list_of_tickets):
 
 	#TODO return proper information
 	return pass
+
+
+
+
+
+
+# For each ticket, retrieve any data from PhagesDB genome if necessary.
+def retrieve_online_data(ticket_list):
+
+    for ticket in ticket_list:
+
+        if (ticket.host == "retrieve" or \
+            ticket.cluster == "retrieve" or \
+            ticket.subcluster == "retrieve" or \
+            ticket.accession == "retrieve"):
+
+            phagesdb_genome = Genome()
+
+            #TODO make sure api_prefix and api_suffix variables are set
+            phage_url = api_prefix + ticket.primary_phage_id + api_suffix
+
+
+            try:
+                online_data_json = urllib.urlopen(phage_url)
+                online_data_dict = json.loads(online_data_json.read())
+
+                #Returns a genome object
+                phagesdb_genome = parse_phagesdb_data(phagesdb_genome,online_data_dict)
+
+            except:
+                online_data_json = ""
+                online_data_dict = {}
+
+                #TODO handle error better
+                write_out(output_file,"\nError: unable to retrieve Host, Cluster, Subcluster, or Accession data for phage %s from phagesdb." %row[1])
+
+            if ticket.host == "retrieve":
+                ticket.host = phagesdb_genome.host
+            if ticket.cluster == "retrieve":
+                ticket.cluster = phagesdb_genome.cluster
+            if ticket.subcluster == "retrieve":
+                ticket.subcluster = phagesdb_genome.subcluster
+            if ticket.accession == "retrieve":
+                ticket.accession = phagesdb_genome.accession
