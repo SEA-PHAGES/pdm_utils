@@ -20,22 +20,20 @@ except ModuleNotFoundError as err:
 from misc_functions import ask_yes_no, close_files
 
 # set up argparse to interact with users at the command line interface.
-script_description = """
-This is a script intended to retrieve Phamerator database updates from 
-phagesdb, PECAAN, and Genbank.
-"""
+script_description = "Retrieve Phamerator database updates from phagesdb, " \
+                     "PECAAN, and Genbank."
 
 parser = argparse.ArgumentParser(description=script_description)
-parser.add_argument("-db", dest="database", type=str, nargs=1, required=True,
-                    help="name of the Phamerator database to be phamerated")
-parser.add_argument("-wd", dest="working_dir", type=str, nargs=1,
-                    required=True, help="path to the directory where updates "
-                                        "will be stored")
+parser.add_argument("database", metavar="db", type=str, nargs=1,
+                    help="name of the Phamerator database to find updates for")
+parser.add_argument("working_dir", metavar="wd", type=str, nargs=1,
+                    help="path to the directory where updates will be stored")
 
 # Parse command line arguments
 args = parser.parse_args()
 database = args.database[0]
 working_dir = os.path.abspath(args.working_dir[0])
+print(database, working_dir)
 
 # Check if the working directory is real. If it isn't, kill the script.
 if not os.path.exists(working_dir):
