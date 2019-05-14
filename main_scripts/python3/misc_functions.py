@@ -78,7 +78,7 @@ def close_files(list_of_filehandles):
 	"""
 	Closes all the files in a list of open file handles.
 	:param list_of_filehandles: A list of open file handles
-	:return: 
+	:return:
 	"""
 	for handle in list_of_filehandles:
 		handle.close()
