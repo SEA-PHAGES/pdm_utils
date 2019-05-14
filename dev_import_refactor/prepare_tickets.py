@@ -95,7 +95,7 @@ def main(ticket_file):
 
     #TODO not sure if I should pass a list of valid types to this function.
     for ticket in ticket_list:
-        validate(ticket)
+        ticket.validate()
 
 
 
