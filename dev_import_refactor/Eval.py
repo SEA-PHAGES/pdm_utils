@@ -12,11 +12,15 @@ class EvalResult:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
-        self.status = "" #correct, warning, error, etc.
+
+        # correct, warning, error, etc.
+        self.status = ""
+
+        # Keys should match the possible status options
         self.messages = {\
-        "correct":"empty",\
-        "warning":"empty",\
-        "error":"empty"} #Keys should match the possible status options
+            "correct":"empty",\
+            "warning":"empty",\
+            "error":"empty"}
 
 
     def current_message(self):
@@ -34,15 +38,7 @@ class EvalResult:
 
 
 
-
-
-
-
-
-
-
-
-def construct_warning(message_warning,message_error):
+def construct_warning(message_warning, message_error):
 
     eval = EvalResult()
     eval.status = "warning"
@@ -62,6 +58,13 @@ def construct_error(message_error):
 
 
 
+def construct_other(status_other, message_other):
+
+    eval = EvalResult()
+    eval.status = status_other
+    eval.messages[status_other] = message_other
+
+    return eval
 
 
 
