@@ -160,12 +160,14 @@ class ImportTicket:
     def check_host(self, host_set):
 
 
-        #TODO this error is needed unless elsewhere in script an error is thrown if unable to retrieve data from phagesdb
+        #TODO this error is needed unless elsewhere in script an error is
+        # thrown if unable to retrieve data from phagesdb
         # if self.host == "retrieve":
         #
         #     self.host = value
         #
-        #     write_out(output_file,"\nError: unable to retrieve Host data for phage %s from phagesdb." %self.primary_phage_id)
+        #     write_out(output_file,"\nError: unable to retrieve Host data
+        #       for phage %s from phagesdb." %self.primary_phage_id)
         #     self.host = "none"
         #     table_errors += 1
 
@@ -309,8 +311,10 @@ class ImportTicket:
             self.description_field != "none"):
 
             self.set_evaluation("warning", \
-                "The description field %s is not commonly used." % self.description_field, \
-                "The description field %s is not correct." % self.description_field)
+                "The description field %s is not commonly used." % \
+                self.description_field, \
+                "The description field %s is not correct." % \
+                self.description_field)
 
 
 
@@ -337,8 +341,8 @@ class ImportTicket:
             self.annotation_author = "none"
         else:
             self.set_evaluation("error", \
-                "The annotation author designation %s is not correct." % \
-                self.annotation_author)
+                "The annotation author designation %s is not correct." \
+                % self.annotation_author)
 
             self.annotation_author = "error"
 
@@ -376,31 +380,33 @@ class ImportTicket:
 
         if self.primary_phage_id not in phage_id_set:
             self.set_evaluation("error", \
-                "The %s is not a valid PhageID in the database." % self.primary_phage_id)
+                "The %s is not a valid PhageID in the database." \
+                % self.primary_phage_id)
 
         if self.host == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Host field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Host field." \
+                % self.primary_phage_id)
 
         if self.cluster == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Cluster field." % self.primary_phage_id)
-
-        # if self.subcluster == "none":
-        #     self.set_evaluation("error", \
-        #         "Phage %s does not have correctly populated Subcluster field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Cluster field." \
+                % self.primary_phage_id)
 
         if self.status == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Status field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Status field." \
+                % self.primary_phage_id)
 
         if self.description_field != "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Description field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Description field." \
+                % self.primary_phage_id)
 
         if self.secondary_phage_id != "none":
             self.set_evaluation("error", \
-                "Phage %s should not have a genome listed to be removed." % self.primary_phage_id)
+                "Phage %s should not have a genome listed to be removed." \
+                % self.primary_phage_id)
 
 
         #Accession = it will either be an accession or it will be "none"
@@ -408,11 +414,13 @@ class ImportTicket:
 
         if (self.annotation_author != "1" and self.annotation_author != "0"):
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Author field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Author field." \
+                % self.primary_phage_id)
 
         if self.run_mode != "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Run Mode field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Run Mode field." \
+                % self.primary_phage_id)
 
 
 
@@ -422,96 +430,110 @@ class ImportTicket:
 
             self.set_evaluation("error", \
                 "Phage %s is already a PhageID in the database. \
-                This genome cannot be added to the database." % self.primary_phage_id)
+                This genome cannot be added to the database." \
+                % self.primary_phage_id)
 
         if self.primary_phage_id == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Primary PhageID field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Primary PhageID field." \
+                % self.primary_phage_id)
 
         if self.host == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Host field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Host field." \
+                % self.primary_phage_id)
 
         if self.cluster == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Cluster field." % self.primary_phage_id)
-
-        # if self.subcluster == "none":
-        #     self.set_evaluation("error", \
-        #         "Phage %s does not have correctly populated Subcluster field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Cluster field." \
+                % self.primary_phage_id)
 
         if self.status == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Status field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Status field." \
+                % self.primary_phage_id)
 
         if self.status == "final":
+            warning_msg = "The phage %s to be added is listed " + \
+            "as Final status, but no Draft (or other) genome is listed to be removed."
+
             self.set_evaluation("warning", \
-                "The phage %s to be added is listed as Final status, but no Draft (or other) genome is listed to be removed." % self.primary_phage_id,
-                "The phage %s does not have the correct status" % self.primary_phage_id)
+                warning_msg % self.primary_phage_id,
+                "The phage %s does not have the correct status" \
+                % self.primary_phage_id)
 
         if self.description_field == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Description field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Description field." \
+                % self.primary_phage_id)
 
         if self.secondary_phage_id != "none":
             self.set_evaluation("error", \
-                "Phage %s to be added should not have a genome indicated for removal." % self.primary_phage_id)
+                "Phage %s to be added should not have a genome indicated for removal." \
+                % self.primary_phage_id)
 
         #Accession = it will either be an accession or it will be "none"
         #Subcluster = it will either be a Subcluster or it will be "none"
 
         if self.annotation_author != '1' and self.annotation_author != '0':
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Author field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Author field." \
+                % self.primary_phage_id)
 
         if self.run_mode == 'none':
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Run Mode field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Run Mode field." \
+                % self.primary_phage_id)
 
 
 
 
     def check_remove_ticket(self,phage_id_set):
+        error_msg4 = "Secondary Phage %s does not have correctly " + \
+        "populated %s field."
 
         if self.primary_phage_id != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Primary PhageID field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Primary PhageID"))
 
         if self.host != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Host field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Host"))
 
         if self.cluster != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Cluster field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Cluster"))
 
         if self.subcluster != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Subcluster field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4
+                % (self.secondary_phage_id, "Subcluster"))
 
         if self.status != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Status field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Status"))
 
         if self.description_field != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Description Field field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Description Field"))
 
         if self.accession != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Accession field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Accession"))
 
         if self.annotation_author != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated AnnotationAuthor field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "AnnotationAuthor"))
 
         if self.run_mode != "none":
-            self.set_evaluation("error", \
-                "Secondary Phage %s does not have correctly populated Run Mode field." % self.secondary_phage_id)
+            self.set_evaluation("error", error_msg4 \
+                % (self.secondary_phage_id, "Run Mode"))
 
         if self.secondary_phage_id not in phage_id_set:
+            error_msg1 = "Secondary Phage %s is not a valid PhageID. " + \
+            "This genome cannot be dropped from the database."
             self.set_evaluation("error", \
-                "Secondary Phage %s is not a valid PhageID. This genome cannot be dropped from the database." % self.secondary_phage_id)
+                error_msg1 \
+                % self.secondary_phage_id)
 
 
 
@@ -522,40 +544,48 @@ class ImportTicket:
         if self.primary_phage_id == "none":
 
             self.set_evaluation("error", \
-                "Primary Phage %s is not a valid PhageID. %s genome cannot be replaced." % (self.primary_phage_id,self.secondary_phage_id))
+                "Primary Phage %s is not a valid PhageID. %s genome cannot be replaced."
+                % (self.primary_phage_id,self.secondary_phage_id))
 
         if self.primary_phage_id != self.secondary_phage_id:
 
             self.set_evaluation("warning", \
-                "The Primary Phage %s and Secondary phage %s are not spelled the same." % (self.primary_phage_id,self.secondary_phage_id),
-                "The Primary Phage %s and Secondary phage %s are not spelled the same." % (self.primary_phage_id,self.secondary_phage_id))
+                "The Primary Phage %s and Secondary phage %s are not spelled the same."
+                % (self.primary_phage_id,self.secondary_phage_id),
+                "The Primary Phage %s and Secondary phage %s are not spelled the same."
+                % (self.primary_phage_id,self.secondary_phage_id))
 
             #FirstPhageID. If replacing a genome, ensure that if the genome to
             #be removed is not the same, that the new genome added has a unique name
             if self.primary_phage_id in phage_id_set:
-
-                self.set_evaluation("error", \
-                    "Primary Phage %s is already a PhageID in the database. This genome cannot be added to the database." % self.primary_phage_id)
+                error_msg2 = "Primary Phage %s is already a PhageID " + \
+                "in the database. This genome cannot be added to the database."
+                self.set_evaluation("error", error_msg2 % self.primary_phage_id)
 
         if self.host == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Host field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Host field." \
+                % self.primary_phage_id)
 
         if self.cluster == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Cluster field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Cluster field." \
+                % self.primary_phage_id)
 
         if self.status == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Status field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Status field." \
+                % self.primary_phage_id)
 
         if self.description_field == "none":
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Description Field field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Description Field field." \
+                % self.primary_phage_id)
 
         if self.secondary_phage_id not in phage_id_set:
-            self.set_evaluation("error", \
-                "Secondary Phage %s is not a valid PhageID. This genome cannot be dropped from the database." % self.secondary_phage_id)
+            error_msg3 = "Secondary Phage %s is not a valid PhageID. " + \
+            "This genome cannot be dropped from the database."
+            self.set_evaluation("error", error_msg3 % self.secondary_phage_id)
 
 
 
@@ -564,11 +594,13 @@ class ImportTicket:
 
         if self.annotation_author != '1' and self.annotation_author != '0':
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Author field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Author field." \
+                % self.primary_phage_id)
 
         if self.run_mode == 'none':
             self.set_evaluation("error", \
-                "Phage %s does not have correctly populated Run Mode field." % self.primary_phage_id)
+                "Phage %s does not have correctly populated Run Mode field." \
+                % self.primary_phage_id)
 
 
 
@@ -576,7 +608,8 @@ class ImportTicket:
 
 
 
-    # Rules for how each field is populated differs depending on each specific action
+    # Rules for how each field is populated differs depending on
+    # each specific action.
     def check_ticket(self,phage_id_set):
 
         if self.type == "update":
