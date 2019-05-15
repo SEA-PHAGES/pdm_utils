@@ -1,12 +1,13 @@
+"""Misc. general functions.
+"""
 
 
 
 
-
-#Define several functions
-
+#TODO unit test
 #Print out statements to both the terminal and to the output file
-#For SQL statements that may be long (>150 characters), don't print entire statements.
+#For SQL statements that may be long (>150 characters), don't print
+# entire statements.
 def write_out(filename,statement):
 	if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"):
 		if len(statement) > 150:
@@ -20,6 +21,10 @@ def write_out(filename,statement):
 		filename.write(statement)
 
 
+
+
+
+#TODO unit test
 #For questionable data, user is requested to clarify if the data is correct or not
 def question(message):
 	number = -1
@@ -35,6 +40,9 @@ def question(message):
 	#This value will be added to the current error total. If 0, no error was encountered. If 1, an error was encountered.
 	return number
 
+
+
+#TODO unit test
 #Exits MySQL
 def mdb_exit(message):
 	write_out(output_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
@@ -62,7 +70,7 @@ def mdb_exit(message):
 
 
 
-
+#TODO unit test
 #Function to search through a list of elements using a regular expression
 def find_name(expression,list_of_items):
 	search_tally = 0
@@ -74,7 +82,7 @@ def find_name(expression,list_of_items):
 
 
 
-
+#TODO unit test
 def change_descriptions():
    print "These will be ignored, unless this is NOT correct."
    print "If it is NOT correct, no error will be generated."
@@ -85,7 +93,7 @@ def change_descriptions():
 
 
 
-
+#TODO unit test
 #Allows user to select specific options
 def select_option(message,valid_response_set):
 
@@ -116,7 +124,7 @@ def select_option(message,valid_response_set):
 
 
 
-
+#TODO unit test
 #Set up MySQL parameters
 mysqlhost = 'localhost'
 print "\n\n"
@@ -130,7 +138,7 @@ print "\n\n"
 
 
 
-
+#TODO unit test
 #Set up run type
 run_type_options = [\
 	'none',\
@@ -157,7 +165,7 @@ run_type = run_type_options[run_type]
 
 ###Pasted misc functions from compare_databases.py
 
-
+#TODO unit test
 #Exits MySQL
 def mdb_exit(message):
     print "\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`
@@ -170,11 +178,15 @@ def mdb_exit(message):
     print "\nExiting import script."
     sys.exit(1)
 
+
+#TODO unit test
 #Closes all file handles currently open
 def close_all_files(file_list):
     for file_handle in file_list:
         file_handle.close()
 
+
+#TODO unit test
 #Make sure there is no "_Draft" suffix
 def remove_draft_suffix(value):
     # Is the word "_Draft" appended to the end of the name?
@@ -182,6 +194,8 @@ def remove_draft_suffix(value):
         value = value[:-6]
     return(value)
 
+
+#TODO unit test
 def parse_strand(value):
 
     value = value.lower()
@@ -194,7 +208,7 @@ def parse_strand(value):
     return(value)
 
 
-
+#TODO unit test
 def parse_strand_for_import(value):
 
     #Orientation
@@ -217,7 +231,7 @@ def parse_strand_for_import(value):
 
 
 
-
+#TODO unit test
 #Function to split gene description field
 def retrieve_description(description):
 
@@ -298,7 +312,7 @@ def retrieve_description(description):
 
 
 
-
+#TODO unit test
 #Function to search through a list of elements using a regular expression
 def find_name(expression,list_of_items):
     search_tally = 0
@@ -309,6 +323,8 @@ def find_name(expression,list_of_items):
     return search_tally
 
 
+
+#TODO unit test
 #Allows user to select specific options
 def select_option(message,valid_response_set):
 
@@ -331,7 +347,7 @@ def select_option(message,valid_response_set):
     return response
 
 
-
+#TODO unit test
 #Output list to file
 def output_to_file(data_list,filename,genome_status_selected,database_string,genome_author_selected):
     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
@@ -347,7 +363,7 @@ def output_to_file(data_list,filename,genome_status_selected,database_string,gen
 
 
 
-
+#TODO unit test
 #Ensure the output filename is unique
 def create_unique_filename(filename_directory,filename_base,filename_ext):
 
@@ -394,7 +410,7 @@ def create_unique_filename(filename_directory,filename_base,filename_ext):
 
 
 
-
+#TODO unit test
 def parse_phagesdb_data(phagesdb_genome,data_dict):
 
 	#Name and Search Name
@@ -471,8 +487,8 @@ def parse_phagesdb_data(phagesdb_genome,data_dict):
 
 
 
-
-match_phamerator_to_tickets(list_of_matched_objects, all_phamerator_data):
+#TODO unit test
+def match_phamerator_to_tickets(list_of_matched_objects, all_phamerator_data):
 
 	for matched_data_obj in list_of_matched_objects:
 		phage_id = matched_data_obj.ticket.primary_phage_id
@@ -492,7 +508,7 @@ match_phamerator_to_tickets(list_of_matched_objects, all_phamerator_data):
 
 
 
-
+#TODO unit test
 def assign_match_strategy(list_of_matched_objects):
 
 	for matched_object in list_of_matched_objects:
@@ -503,7 +519,7 @@ def assign_match_strategy(list_of_matched_objects):
 	pass
 
 
-
+#TODO unit test
 def match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data):
 
 	flat_file_genome_dict = {}
@@ -592,33 +608,6 @@ def create_matched_object_dict(list_of_matched_objects):
 	return dictionary
 
 
-
-
-
-
-
-
-
-
-###copied below from compare_databases script
-
-
-
-#
-# #Count # of ticket types
-# #TODO not sure when I should re-implement this
-# if row[0] in action_set:
-# 	if row[0] == "add":
-# 		add_total += 1
-# 	elif row[0] == "remove":
-# 		remove_total += 1
-# 	elif row[0] == "replace":
-# 		replace_total += 1
-# 	elif row[0] == "update":
-# 		update_total += 1
-# 	else:
-# 		pass
-#
 
 
 
