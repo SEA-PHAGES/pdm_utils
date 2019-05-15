@@ -175,96 +175,364 @@ class TestTicketFunctionsClass(unittest.TestCase):
 
 
 
-    def test_identify_duplicate_primary_ids_1(self):
-        """Verify duplicate Primary Phage IDs generate an error."""
-        ticket1 = Ticket.ImportTicket()
-        ticket1.primary_phage_id = "Trixie"
-        ticket2 = Ticket.ImportTicket()
-        ticket2.primary_phage_id = "Trixie"
-        list_of_tickets = [ticket1,ticket2]
+
+
+
+    def test_identify_duplicates1_1(self):
+        """Verify duplicate items generates an error."""
         eval_object = \
-            functions_tickets.identify_duplicate_primary_ids(list_of_tickets)
+            functions_tickets.identify_duplicates1(["Trixie", "Trixie"], "temp")
         with self.subTest():
             self.assertIsNotNone(eval_object)
         with self.subTest():
             self.assertIsInstance(eval_object,Eval.EvalResult)
 
-    def test_identify_duplicate_primary_ids_2(self):
-        """Verify non-duplicate Primary Phage IDs do not generate an error."""
+    def test_identify_duplicates1_2(self):
+        """Verify non-duplicate items do not generate an error."""
+        eval_object = \
+            functions_tickets.identify_duplicates1(["Trixie", "L5"], "temp")
+        with self.subTest():
+            self.assertIsNone(eval_object)
+        with self.subTest():
+            self.assertNotIsInstance(eval_object,Eval.EvalResult)
+
+
+
+
+
+
+
+
+
+
+
+    def test_identify_duplicates2_1(self):
+        """Verify duplicate items in two lists generate an error."""
+        list1 = ["Trixie", "L5"]
+        list2 = ["Trixie", "RedRock"]
+        eval_object = \
+            functions_tickets.identify_duplicates2(list1, list2, "temp")
+        with self.subTest():
+            self.assertIsNotNone(eval_object)
+        with self.subTest():
+            self.assertIsInstance(eval_object,Eval.EvalResult)
+
+
+
+
+    def test_identify_duplicates2_2(self):
+        """Verify non-duplicate items in two lists do not generate an error."""
+        list1 = ["Trixie", "L5"]
+        list2 = ["D29", "RedRock"]
+        eval_object = \
+            functions_tickets.identify_duplicates2(list1, list2, "temp")
+        with self.subTest():
+            self.assertIsNone(eval_object)
+        with self.subTest():
+            self.assertNotIsInstance(eval_object,Eval.EvalResult)
+
+
+
+
+    def test_validate_tickets_1(self):
+        """Verify no duplicates do not generate an error."""
+
         ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "Trixie"
+        ticket1.accession = "ABC123"
+
         ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
         ticket2.primary_phage_id = "L5"
-        list_of_tickets = [ticket1,ticket2]
-        eval_object = \
-            functions_tickets.identify_duplicate_primary_ids(list_of_tickets)
-        with self.subTest():
-            self.assertIsNone(eval_object)
-        with self.subTest():
-            self.assertNotIsInstance(eval_object,Eval.EvalResult)
-
-
-
-
-    def test_identify_duplicate_primary_ids_3(self):
-        """Verify "none" Primary Phage IDs do not generate an error."""
-        ticket1 = Ticket.ImportTicket()
-        ticket1.primary_phage_id = "none"
-        ticket2 = Ticket.ImportTicket()
-        ticket2.primary_phage_id = "none"
-        list_of_tickets = [ticket1,ticket2]
-        eval_object = \
-            functions_tickets.identify_duplicate_primary_ids(list_of_tickets)
-        with self.subTest():
-            self.assertIsNone(eval_object)
-        with self.subTest():
-            self.assertNotIsInstance(eval_object,Eval.EvalResult)
-
-
-
-
-
-    def test_identify_duplicate_secondary_ids_1(self):
-        """Verify duplicate Secondary Phage IDs generate an error."""
-        ticket1 = Ticket.ImportTicket()
-        ticket1.secondary_phage_id = "Trixie"
-        ticket2 = Ticket.ImportTicket()
-        ticket2.secondary_phage_id = "Trixie"
-        list_of_tickets = [ticket1,ticket2]
-        eval_object = \
-            functions_tickets.identify_duplicate_secondary_ids(list_of_tickets)
-        with self.subTest():
-            self.assertIsNotNone(eval_object)
-        with self.subTest():
-            self.assertIsInstance(eval_object,Eval.EvalResult)
-
-    def test_identify_duplicate_secondary_ids_2(self):
-        """Verify non-duplicate Secondary Phage IDs do not generate an error."""
-        ticket1 = Ticket.ImportTicket()
-        ticket1.secondary_phage_id = "Trixie"
-        ticket2 = Ticket.ImportTicket()
         ticket2.secondary_phage_id = "L5"
-        list_of_tickets = [ticket1,ticket2]
-        eval_object = \
-            functions_tickets.identify_duplicate_secondary_ids(list_of_tickets)
-        with self.subTest():
-            self.assertIsNone(eval_object)
-        with self.subTest():
-            self.assertNotIsInstance(eval_object,Eval.EvalResult)
+        ticket2.accession = "DEF456"
 
-    def test_identify_duplicate_secondary_ids_3(self):
-        """Verify "none" Secondary Phage IDs do not generate an error."""
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 0)
+
+    def test_validate_tickets_2(self):
+        """Verify 'none' duplicates do not generate an error."""
+
         ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "none"
+        ticket1.accession = "none"
+
         ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
+        ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "none"
-        list_of_tickets = [ticket1,ticket2]
-        eval_object = \
-            functions_tickets.identify_duplicate_secondary_ids(list_of_tickets)
-        with self.subTest():
-            self.assertIsNone(eval_object)
-        with self.subTest():
-            self.assertNotIsInstance(eval_object,Eval.EvalResult)
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 0)
+
+
+
+
+    def test_validate_tickets_3(self):
+        """Verify Primary Phage ID duplicates do generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
+        ticket2.primary_phage_id = "Trixie"
+        ticket2.secondary_phage_id = "none"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+
+    def test_validate_tickets_4(self):
+        """Verify Secondary Phage ID duplicates generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "none"
+        ticket1.secondary_phage_id = "Trixie"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "Trixie"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+
+    def test_validate_tickets_5(self):
+        """Verify Accession duplicates generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "none"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "ABC123"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "none"
+        ticket2.accession = "ABC123"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+
+    def test_validate_tickets_6(self):
+        """Verify multiple duplicates generate multiple errors."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "Trixie"
+        ticket1.accession = "ABC123"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
+        ticket2.primary_phage_id = "Trixie"
+        ticket2.secondary_phage_id = "Trixie"
+        ticket2.accession = "ABC123"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 3)
+
+
+
+
+
+
+
+
+    def test_validate_tickets_7(self):
+        """Verify duplicate Primary Phage ID from non-standard ticket type
+        does not generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "other"
+        ticket2.primary_phage_id = "Trixie"
+        ticket2.secondary_phage_id = "none"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 0)
+
+    def test_validate_tickets_8(self):
+        """Verify duplicate Secondary Phage ID from non-standard ticket type
+        does not generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "none"
+        ticket1.secondary_phage_id = "Trixie"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "other"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "Trixie"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 0)
+
+    def test_validate_tickets_9(self):
+        """Verify Primary Phage ID duplicates from different ticket
+        types generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "add"
+        ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "replace"
+        ticket2.primary_phage_id = "Trixie"
+        ticket2.secondary_phage_id = "none"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+    def test_validate_tickets_10(self):
+        """Verify Secondary Phage ID duplicates from different ticket
+        types generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "none"
+        ticket1.secondary_phage_id = "Trixie"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "remove"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "Trixie"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+    def test_validate_tickets_11(self):
+        """Verify Accession duplicates from different ticket
+        types generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "none"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "ABC123"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "remove"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "none"
+        ticket2.accession = "ABC123"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+        self.assertEqual(len(result_list), 1)
+
+    def test_validate_tickets_12(self):
+        """Verify a conflict between an update/add Primary Phage ID and all
+        Secondary Phage IDs generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "add"
+        ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "remove"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "Trixie"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+    def test_validate_tickets_13(self):
+        """Verify a conflict between a replace Primary Phage ID and a remove
+        Secondary Phage ID generate an error."""
+
+        ticket1 = Ticket.ImportTicket()
+        ticket1.type = "replace"
+        ticket1.primary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "none"
+        ticket1.accession = "none"
+
+        ticket2 = Ticket.ImportTicket()
+        ticket2.type = "remove"
+        ticket2.primary_phage_id = "none"
+        ticket2.secondary_phage_id = "Trixie"
+        ticket2.accession = "none"
+
+        list_of_tickets = [ticket1, ticket2]
+        result_list = \
+            functions_tickets.validate_tickets(list_of_tickets)
+
+        self.assertEqual(len(result_list), 1)
+
+
+
+
+
+
+
+
 
 
 

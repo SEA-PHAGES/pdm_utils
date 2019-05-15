@@ -85,7 +85,8 @@ def main(ticket_file):
 
 
     # Some data may need to be retrieved from PhagesDB.
-    ticket_list = retrieve_online_data(ticket_list)
+    for ticket in ticket_list:
+        ticket, eval_object = retrieve_online_data(ticket)
 
 
 
