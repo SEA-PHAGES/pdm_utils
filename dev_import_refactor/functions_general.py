@@ -1,299 +1,141 @@
-"""Misc. general functions.
-"""
+"""Misc. general functions."""
 
+import Eval
 
+#Note: used to be 'find_name' function.
+def find_expression(expression,list_of_items):
+    """Searches through a list of items and counts the number of items
+    that match the expression.
+    """
 
+    search_tally = 0
+    for element in list_of_items:
+        search_result = expression.search(element)
+        if search_result:
+            search_tally += 1
+    return search_tally
 
-#TODO unit test
-#Print out statements to both the terminal and to the output file
-#For SQL statements that may be long (>150 characters), don't print
-# entire statements.
-def write_out(filename,statement):
-	if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"):
-		if len(statement) > 150:
-			print statement[:150] + "...(statement truncated)"
-			filename.write(statement[:150] + "...(statement truncated)")
-		else:
-			print statement
-			filename.write(statement)
-	else:
-		print statement
-		filename.write(statement)
 
 
-
-
-
-#TODO unit test
-#For questionable data, user is requested to clarify if the data is correct or not
-def question(message):
-	number = -1
-	while number < 0:
-		value = raw_input("Is this correct? (yes or no): ")
-		if (value.lower() == "yes" or value.lower() == "y"):
-			number = 0
-		elif (value.lower() == "no" or value.lower() == "n"):
-			write_out(output_file,message)
-			number = 1
-		else:
-			print "Invalid response."
-	#This value will be added to the current error total. If 0, no error was encountered. If 1, an error was encountered.
-	return number
-
-
-
-#TODO unit test
-#Exits MySQL
-def mdb_exit(message):
-	write_out(output_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
-	write_out(output_file,message)
-	write_out(output_file,"\nThe import script did not complete.")
-	write_out(output_file,"\nExiting MySQL.")
-	cur.execute("ROLLBACK")
-	cur.execute("SET autocommit = 1")
-	cur.close()
-	con.close()
-	write_out(output_file,"\nExiting import script.")
-	output_file.close()
-	sys.exit(1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#TODO unit test
-#Function to search through a list of elements using a regular expression
-def find_name(expression,list_of_items):
-	search_tally = 0
-	for element in list_of_items:
-		search_result = expression.search(element)
-		if search_result:
-			search_tally += 1
-	return search_tally
-
-
-
-#TODO unit test
-def change_descriptions():
-   print "These will be ignored, unless this is NOT correct."
-   print "If it is NOT correct, no error will be generated."
-   print "Instead, only gene descriptions in this field will be retained."
-
-
-
-
-
-
-#TODO unit test
-#Allows user to select specific options
-def select_option(message,valid_response_set):
-
-	response_valid = False
-	while response_valid == False:
-		response = raw_input(message)
-		if response.isdigit():
-			response = int(response)
-		else:
-			response = response.lower()
-
-		if response in valid_response_set:
-			response_valid = True
-			if response == 'y':
-				response  = 'yes'
-			elif response == 'n':
-				response  = 'no'
-		else:
-			print 'Invalid response.'
-	return response
-
-
-
-
-
-
-
-
-
-
-#TODO unit test
-#Set up MySQL parameters
-mysqlhost = 'localhost'
-print "\n\n"
-username = getpass.getpass(prompt='mySQL username:')
-print "\n\n"
-password = getpass.getpass(prompt='mySQL password:')
-print "\n\n"
-
-
-
-
-
-
-#TODO unit test
-#Set up run type
-run_type_options = [\
-	'none',\
-	'test',\
-	'production']
-print '\n\nThe following run types are available:\n'
-#print '0: ' + run_type_options[0]
-# print '1: ' + run_type_options[1]
-# print '2: ' + run_type_options[2]
-print '1: ' + run_type_options[1] + ' (checks flat files for accuracy, but the database is not changed.)'
-print '2: ' + run_type_options[2] + ' (after testing files, the database is updated.)'
-run_type = select_option(\
-	"\nWhich run type do you want? ", \
-	set([1,2]))
-run_type = run_type_options[run_type]
-
-
-
-
-
-
-
-
-
-###Pasted misc functions from compare_databases.py
-
-#TODO unit test
-#Exits MySQL
-def mdb_exit(message):
-    print "\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`
-    print "\nThe import script did not complete."
-    print "\nExiting MySQL."
-    cur.execute("ROLLBACK")
-    cur.execute("SET autocommit = 1")
-    cur.close()
-    con.close()
-    print "\nExiting import script."
-    sys.exit(1)
-
-
-#TODO unit test
-#Closes all file handles currently open
-def close_all_files(file_list):
-    for file_handle in file_list:
-        file_handle.close()
-
-
-#TODO unit test
-#Make sure there is no "_Draft" suffix
 def remove_draft_suffix(value):
-    # Is the word "_Draft" appended to the end of the name?
+    """Removes the '_Draft' suffix if present."""
+
     if value[-6:].lower() == "_draft":
         value = value[:-6]
     return(value)
 
 
-#TODO unit test
-def parse_strand(value):
 
-    value = value.lower()
-    if value == "f" or value == "forward":
+#Old 'parse_strand' function and 'parse_strand_for_import' function combined.
+# Note: parse_strand_for_import used to convert numeric to long string format.
+# E.g. 1 == forward
+def reformat_strand(input_value, format):
+    """Converts common strand orientation formats, including
+    'long' ('forward'), 'short' ('f'), and numeric (1)."""
+
+    value = input_value
+
+    if isinstance(value, str):
+        value = value.lower()
+
+    # First standardize all possible input values
+    if (value == "f" or value == "forward" or value == 1):
         value = "forward"
-    elif value == "r" or value == "reverse":
+    elif (value == "r" or value == "reverse" or value == -1):
         value = "reverse"
     else:
         value = "NA"
+
+    # Now convert the standardized format to the requested format.
+    if format == "long":
+        if value == "forward":
+            value = "forward"
+        elif value == "reverse":
+            value = "reverse"
+        else:
+            value = "NA"
+
+    elif format == "short":
+        if value == "forward":
+            value = "f"
+        elif value == "reverse":
+            value = "r"
+        else:
+            value = "NA"
+
+    elif format == "numeric":
+        if value == "forward":
+            value = 1
+        elif value == "reverse":
+            value = -1
+        else:
+            value = 0
+
+    #If requested format not valid, simply return the original value.
+    else:
+        value = input_value
+
     return(value)
 
 
-#TODO unit test
-def parse_strand_for_import(value):
 
-    #Orientation
-    if value == 1:
-		value = "forward"
-	elif value == -1:
-		value = "reverse"
-	else:
-	    #Some features have no orientation
-		value = "NA"
-
-	return(value)
-
-
-
-
-
-
-
-
-
-
-#TODO unit test
-#Function to split gene description field
-def retrieve_description(description):
-
-
-
+#Note: used to be 'retrieve_description' function.
+def reformat_description(description):
+    """Removes leading and trailing whitespace from text and returns this value.
+    Then it assesses whether the description is informative or not, processes
+    it if it is too generic (converting it to an empty value), then returning
+    this second value.
+    """
 
     if description is None:
-        description = ''
+        description = ""
 
     description = description.strip()
     processed_description = description.lower()
-    split_description = processed_description.split(' ')
+    split_description = processed_description.split(" ")
 
-    if processed_description == 'hypothetical protein':
-        processed_description = ''
-
-    elif processed_description == 'phage protein':
-        processed_description = ''
-
-    elif processed_description == 'unknown':
-        processed_description = ''
-
-    elif processed_description == 'conserved hypothetical protein':
-        processed_description = ''
-
-    elif processed_description == '\\n':
-        processed_description = ''
-
-    elif processed_description == '.':
-        processed_description = ''
-
+    if processed_description == "hypothetical protein":
+        processed_description = ""
+    elif processed_description == "phage protein":
+        processed_description = ""
+    elif processed_description == "unknown":
+        processed_description = ""
+    elif processed_description == "conserved hypothetical protein":
+        processed_description = ""
+    elif processed_description == "\\n":
+        processed_description = ""
+    elif processed_description == ".":
+        processed_description = ""
     elif processed_description.isdigit():
-        processed_description = ''
+        processed_description = ""
 
     elif len(split_description) == 1:
 
-        if split_description[0][:2] == 'gp' and split_description[0][2:].isdigit():
-            processed_description = ''
-
-        elif split_description[0][:3] == 'orf' and split_description[0][3:].isdigit():
-            processed_description = ''
-
+        if split_description[0][:2] == "gp" and \
+            split_description[0][2:].isdigit():
+            processed_description = ""
+        elif split_description[0][:3] == "orf" and \
+            split_description[0][3:].isdigit():
+            processed_description = ""
         else:
             processed_description = description
 
     elif len(split_description) == 2:
 
-        if split_description[0] == 'gp' and split_description[1].isdigit():
-            processed_description = ''
-
-        elif split_description[0] == 'orf' and split_description[1].isdigit():
-            processed_description = ''
-
-        elif (split_description[0] == "putative" and split_description[1][:7] == "protein"):
+        if split_description[0] == "gp" and \
+            split_description[1].isdigit():
             processed_description = ""
-
+        elif split_description[0] == "orf" and \
+            split_description[1].isdigit():
+            processed_description = ""
+        elif (split_description[0] == "putative" and \
+            split_description[1][:7] == "protein"):
+            processed_description = ""
         else:
             processed_description = description
 
     else:
         processed_description = description
-
 
     return(description,processed_description)
 
@@ -312,81 +154,6 @@ def retrieve_description(description):
 
 
 
-#TODO unit test
-#Function to search through a list of elements using a regular expression
-def find_name(expression,list_of_items):
-    search_tally = 0
-    for element in list_of_items:
-        search_result = expression.search(element)
-        if search_result:
-            search_tally += 1
-    return search_tally
-
-
-
-#TODO unit test
-#Allows user to select specific options
-def select_option(message,valid_response_set):
-
-    response_valid = False
-    while response_valid == False:
-        response = raw_input(message)
-        if response.isdigit():
-            response = int(response)
-        else:
-            response = response.lower()
-
-        if response in valid_response_set:
-            response_valid = True
-            if response == 'y':
-                response  = 'yes'
-            elif response == 'n':
-                response  = 'no'
-        else:
-            print 'Invalid response.'
-    return response
-
-
-#TODO unit test
-#Output list to file
-def output_to_file(data_list,filename,genome_status_selected,database_string,genome_author_selected):
-    filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
-    filename_writer = csv.writer(filename_fh)
-    filename_writer.writerow([date + ' Database comparison'])
-    filename_writer.writerow([database_string])
-    filename_writer.writerow([genome_author_selected])
-    filename_writer.writerow([genome_status_selected])
-    for element in data_list:
-        filename_writer.writerow([element])
-    filename_fh.close()
-
-
-
-
-#TODO unit test
-#Ensure the output filename is unique
-def create_unique_filename(filename_directory,filename_base,filename_ext):
-
-    file_exists = True
-    rename_counter = 0
-    while file_exists == True:
-
-        if rename_counter == 0:
-            unique_filename = filename_base + filename_ext
-        else:
-            unique_filename = filename_base + '_' + str(rename_counter) + filename_ext
-
-        unique_filename_path = os.path.join(filename_directory,unique_filename)
-        file_exists = os.path.isfile(unique_filename_path)
-
-        if file_exists == True:
-            print 'Warning: duplicate output file:'
-            print unique_filename_path
-            print 'Filename will be modified.'
-            raw_input('Press ENTER to proceed')
-            rename_counter += 1
-
-    return unique_filename_path
 
 
 
@@ -396,10 +163,7 @@ def create_unique_filename(filename_directory,filename_base,filename_ext):
 
 
 
-
-######
-
-#New functions for new import script
+#TODO Unit test below
 
 
 
@@ -407,79 +171,98 @@ def create_unique_filename(filename_directory,filename_base,filename_ext):
 
 
 
-
-
-
-#TODO unit test
-def parse_phagesdb_data(phagesdb_genome,data_dict):
-
-	#Name and Search Name
-	phagesdb_genome.set_phage_name(online_data_dict['phage_name'])
-
-
-    #Host, Accession
-    phagesdb_genome.set_host(online_data_dict['isolation_host']['genus'])
-    phagesdb_genome.set_accession(online_data_dict['genbank_accession'])
-
-
-    #Cluster
-	# On phagesdb, phages may have a Cluster and no Subcluster info
-    # (which is set to None). If the phage has a Subcluster,
-    # it should also have a Cluster. If by accident no Cluster or
-    # Subcluster info is added at the time the genome is added to
-    # phagesdb, the Cluster may automatically be set to NULL,
-	# which gets converted to "Unclustered". This is problematic
-	# because in Phamerator NULL means Singleton, and the long
-	# form "Unclustered" will be filtered out later in the script
-	# due to its character length, so it needs to be abbreviated.
-	if online_data_dict['pcluster'] is None:
-		phagesdb_genome.cluster = 'UNK'
-	elif online_data_dict['pcluster']['cluster'].lower() == "singleton"
-		phagesdb_genome.cluster = online_data_dict['pcluster']['cluster'].lower()
-	else:
-		phagesdb_genome.cluster = online_data_dict['pcluster']['cluster']
-
-
-
-
-
-    #Subcluster
-	# Subcluster could be empty if by error no Cluster or
-    # Subcluster data has yet been entered on phagesdb. But
-    # it may be empty because there is no subcluster
-    # designation yet for members of the Cluster.
-	if online_data_dict['psubcluster'] is None:
-		phagesdb_genome.subcluster = "none"
-	else:
-		phagesdb_genome.subcluster = online_data_dict['psubcluster']['subcluster']
-
-
-    #Check to see if there is a fasta file stored on phagesdb for this phage
-    if online_data_dict['fasta_file'] is not None:
-        fastafile_url = online_data_dict['fasta_file']
-
-        response = urllib2.urlopen(fastafile_url)
-
-        retrieved_fasta_file = response.read()
-        response.close()
-
-		#TODO convert to Biopython object?
-        #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
-        #If you split by newline, the header is retained in the first list element
-        split_fasta_data = retrieved_fasta_file.split('\n')
-        pdb_sequence = ''
-        index = 1
-        while index < len(split_fasta_data):
-
-			#Strip off potential whitespace before appending, such as '\r'
-            pdb_sequence = pdb_sequence + split_fasta_data[index].strip()
-            index += 1
-        phagesdb_genome.sequence = pdb_sequence
-
-		#TODO do I need to return this object?
-		return(phagesdb_genome)
-
-
+#
+# #TODO unit test
+# def parse_phagesdb_data(genome_obj,data_dict):
+#     """Parses a dictionary of genome data retrieved from PhagesDB into a
+#     Genome object.
+#     """
+#
+#     list_of_evals = []
+#     #Name and Search Name
+#     try:
+#         phage_name = online_data_dict['phage_name']
+#     except:
+#         phage_name = ""
+#         eval_obj = #HERE
+#
+#
+#         #TODO create eval obj
+#         pass
+#
+#     genome_obj.set_phage_name(phage_name)
+#
+#     #Host, Accession
+#
+#
+#
+#
+#
+#     genome_obj.set_host(online_data_dict['isolation_host']['genus'])
+#
+#
+#
+#
+#     genome_obj.set_accession(online_data_dict['genbank_accession'])
+#
+#     #Cluster
+#     # On phagesdb, phages may have a Cluster and no Subcluster info
+#     # (which is set to None). If the phage has a Subcluster,
+#     # it should also have a Cluster. If by accident no Cluster or
+#     # Subcluster info is added at the time the genome is added to
+#     # phagesdb, the Cluster may automatically be set to NULL,
+#     # which gets converted to "Unclustered". This is problematic
+#     # because in Phamerator NULL means Singleton, and the long
+#     # form "Unclustered" will be filtered out later in the script
+#     # due to its character length, so it needs to be abbreviated.
+#     if online_data_dict['pcluster'] is None:
+#         genome_obj.cluster = 'UNK'
+#
+#     elif online_data_dict['pcluster']['cluster'].lower() == "singleton":
+#         genome_obj.cluster = online_data_dict['pcluster']['cluster'].lower()
+#
+#     else:
+#         genome_obj.cluster = online_data_dict['pcluster']['cluster']
+#
+#
+#     #Subcluster
+#     # Subcluster could be empty if by error no Cluster or
+#     # Subcluster data has yet been entered on phagesdb. But
+#     # it may be empty because there is no subcluster
+#     # designation yet for members of the Cluster.
+#     if online_data_dict['psubcluster'] is None:
+#         genome_obj.subcluster = "none"
+#
+#     else:
+#         genome_obj.subcluster = online_data_dict['psubcluster']['subcluster']
+#
+#     #Check to see if there is a fasta file stored on phagesdb for this phage
+#     if online_data_dict['fasta_file'] is not None:
+#         fastafile_url = online_data_dict['fasta_file']
+#
+#         response = urllib2.urlopen(fastafile_url)
+#         retrieved_fasta_file = response.read()
+#         response.close()
+#
+#         #TODO convert to Biopython object?
+#         #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
+#         #If you split by newline, the header is retained in the first list element
+#         split_fasta_data = retrieved_fasta_file.split('\n')
+#         pdb_sequence = ''
+#         index = 1
+#
+#         while index < len(split_fasta_data):
+#
+#             #Strip off potential whitespace before appending, such as '\r'
+#             pdb_sequence = pdb_sequence + split_fasta_data[index].strip()
+#             index += 1
+#
+#         genome_obj.sequence = pdb_sequence
+#
+#     #TODO do I need to return this object?
+#     return genome_obj
+#
+#
 
 
 
@@ -490,19 +273,20 @@ def parse_phagesdb_data(phagesdb_genome,data_dict):
 #TODO unit test
 def match_phamerator_to_tickets(list_of_matched_objects, all_phamerator_data):
 
-	for matched_data_obj in list_of_matched_objects:
-		phage_id = matched_data_obj.ticket.primary_phage_id
+    for matched_data_obj in list_of_matched_objects:
+        phage_id = matched_data_obj.ticket.primary_phage_id
 
-		try:
-			matched_genome = phamerator_genome_dict[phage_id]
+        try:
+            matched_genome = phamerator_genome_dict[phage_id]
 
-			#Now add the Phamerator data to the MatchedGenomes object
-			matched_data_obj.matched_genomes_dict["phamerator"] = matched_genome
+            #Now add the Phamerator data to the MatchedGenomes object
+            matched_data_obj.matched_genomes_dict["phamerator"] = matched_genome
 
-		except:
-			#TODO error handling
+        except:
+            pass
+            #TODO error handling
 
-	return list_of_matched_objects
+    return list_of_matched_objects
 
 
 
@@ -576,36 +360,251 @@ def match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data):
 
 
 
-
+#TODO unit test
 def create_matched_object_dict(list_of_matched_objects):
 
-	dictionary = {}
-	list_of_update_objects = []
-	list_of_remove_objects = []
-	list_of_add_replace_objects = []
+    dictionary = {}
+    list_of_update_objects = []
+    list_of_remove_objects = []
+    list_of_add_replace_objects = []
+
+    for matched_object in list_of_matched_objects:
+        type = matched_object.ticket.ticket_type
+
+        if type == "update":
+            list_of_update_objects.append(matched_object)
+
+        elif type == "remove":
+            list_of_remove_objects.append(matched_object)
+
+        elif (type == "add" or type == "replace"):
+            list_of_add_replace_objects.append(matched_object)
+
+        else:
+            pass
+            # TODO if ticket type is none of the above, thrown an error?
+
+    dictionary["update"] = list_of_update_objects
+    dictionary["remove"] = list_of_remove_objects
+    dictionary["add_replace"] = list_of_add_replace_objects
+
+    return dictionary
 
 
-	for matched_object in list_of_matched_objects:
-		type = matched_object.ticket.ticket_type
 
-		if type == "update":
-			list_of_update_objects.append(matched_object)
 
-		elif type == "remove":
-			list_of_remove_objects.append(matched_object)
 
-		elif (type = "add" or type == "replace"):
-			list_of_add_replace_objects.append(matched_object)
 
-		else:
-			pass
-			# TODO if ticket type is none of the above, thrown an error?
 
-	dictionary["update"] = list_of_update_objects
-	dictionary["remove"] = list_of_remove_objects
-	dictionary["add_replace"] = list_of_add_replace_objects
 
-	return dictionary
+
+
+
+
+
+
+
+
+#TODO set up and unit test
+# #Print out statements to both the terminal and to the output file
+# #For SQL statements that may be long (>150 characters), don't print
+# # entire statements.
+# def write_out(filename,statement):
+# 	if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"):
+# 		if len(statement) > 150:
+# 			print statement[:150] + "...(statement truncated)"
+# 			filename.write(statement[:150] + "...(statement truncated)")
+# 		else:
+# 			print statement
+# 			filename.write(statement)
+# 	else:
+# 		print statement
+# 		filename.write(statement)
+
+
+
+
+
+#TODO set up and unit test
+# #For questionable data, user is requested to clarify if the data is correct or not
+# def question(message):
+# 	number = -1
+# 	while number < 0:
+# 		value = raw_input("Is this correct? (yes or no): ")
+# 		if (value.lower() == "yes" or value.lower() == "y"):
+# 			number = 0
+# 		elif (value.lower() == "no" or value.lower() == "n"):
+# 			write_out(output_file,message)
+# 			number = 1
+# 		else:
+# 			print "Invalid response."
+# 	#This value will be added to the current error total. If 0, no error was encountered. If 1, an error was encountered.
+# 	return number
+
+
+
+#TODO set up and unit test
+# def change_descriptions():
+#
+#
+#     print "These will be ignored, unless this is NOT correct."
+#     print "If it is NOT correct, no error will be generated."
+#     print "Instead, only gene descriptions in this field will be retained."
+
+
+
+#TODO set up and unit test
+# #Allows user to select specific options
+# def select_option(message,valid_response_set):
+#
+# 	response_valid = False
+# 	while response_valid == False:
+# 		response = raw_input(message)
+# 		if response.isdigit():
+# 			response = int(response)
+# 		else:
+# 			response = response.lower()
+#
+# 		if response in valid_response_set:
+# 			response_valid = True
+# 			if response == 'y':
+# 				response  = 'yes'
+# 			elif response == 'n':
+# 				response  = 'no'
+# 		else:
+# 			print 'Invalid response.'
+# 	return response
+#
+
+
+
+
+
+#TODO unit test - this may no longer be needed.
+# #Closes all file handles currently open
+# def close_all_files(file_list):
+#     for file_handle in file_list:
+#         file_handle.close()
+
+
+#TODO unit test - this may no longer be needed
+# def choose_run_type():
+#
+#     run_type_options = [\
+#     	'none',\
+#     	'test',\
+#     	'production']
+#     print '\n\nThe following run types are available:\n'
+#     #print '0: ' + run_type_options[0]
+#     # print '1: ' + run_type_options[1]
+#     # print '2: ' + run_type_options[2]
+#     print '1: ' + run_type_options[1] + ' (checks flat files for accuracy, but the database is not changed.)'
+#     print '2: ' + run_type_options[2] + ' (after testing files, the database is updated.)'
+#     run_type = select_option(\
+#     	"\nWhich run type do you want? ", \
+#     	set([1,2]))
+#     run_type = run_type_options[run_type]
+
+
+
+#TODO unit test - this may no longer be needed
+# #Output list to file
+# def output_to_file(data_list,filename,genome_status_selected,database_string,genome_author_selected):
+#     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
+#     filename_writer = csv.writer(filename_fh)
+#     filename_writer.writerow([date + ' Database comparison'])
+#     filename_writer.writerow([database_string])
+#     filename_writer.writerow([genome_author_selected])
+#     filename_writer.writerow([genome_status_selected])
+#     for element in data_list:
+#         filename_writer.writerow([element])
+#     filename_fh.close()
+
+
+
+
+#TODO unit test - this may no longer be needed.
+# #Ensure the output filename is unique
+# def create_unique_filename(filename_directory,filename_base,filename_ext):
+#
+#     file_exists = True
+#     rename_counter = 0
+#     while file_exists == True:
+#
+#         if rename_counter == 0:
+#             unique_filename = filename_base + filename_ext
+#         else:
+#             unique_filename = filename_base + '_' + str(rename_counter) + filename_ext
+#
+#         unique_filename_path = os.path.join(filename_directory,unique_filename)
+#         file_exists = os.path.isfile(unique_filename_path)
+#
+#         if file_exists == True:
+#             print 'Warning: duplicate output file:'
+#             print unique_filename_path
+#             print 'Filename will be modified.'
+#             raw_input('Press ENTER to proceed')
+#             rename_counter += 1
+#
+#     return unique_filename_path
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Functions that Christian has probably created
+
+#TODO unit test - this may have already been set up
+# #Exits MySQL
+# def mdb_exit(message):
+# 	write_out(output_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
+# 	write_out(output_file,message)
+# 	write_out(output_file,"\nThe import script did not complete.")
+# 	write_out(output_file,"\nExiting MySQL.")
+# 	cur.execute("ROLLBACK")
+# 	cur.execute("SET autocommit = 1")
+# 	cur.close()
+# 	con.close()
+# 	write_out(output_file,"\nExiting import script.")
+# 	output_file.close()
+# 	sys.exit(1)
+
+
+
+
+
+#TODO unit test - this may already have been set up
+#Set up MySQL parameters
+# def setup_mysql():
+#
+#     mysqlhost = 'localhost'
+#     print "\n\n"
+#     username = getpass.getpass(prompt='mySQL username:')
+#     print "\n\n"
+#     password = getpass.getpass(prompt='mySQL password:')
+#     print "\n\n"
+
 
 
 
