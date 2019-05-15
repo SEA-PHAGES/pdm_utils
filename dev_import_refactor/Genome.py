@@ -264,9 +264,16 @@ class Genome:
 
     #Common to Phamerator and phagesdb
     def set_cluster(self,value):
-        self.cluster = value #Todo need to handle singletons better?
+
+        if value.lower() == "singleton":
+            self.cluster = value.lower()
+        else:
+            self.cluster = value
+
+
+    #Todo need to handle non-subclustered data better?
     def set_subcluster(self,value):
-        self.subcluster = value #Todo need to handle non-subclustered data better
+        self.subcluster = value
 
 
     #Common to NCBI records

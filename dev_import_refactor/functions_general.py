@@ -145,10 +145,26 @@ def reformat_description(description):
 
 
 
+#TODO unit test
+def parse_fasta_file(fasta_file):
+    """Parses sequence data from a fasta-formatted file.
+    """
 
+    # TODO convert to Biopython object?
+    # All sequence rows in the fasta file may not have equal widths,
+    # so some processing of the data is required. If you split by newline,
+    # the header is retained in the first list element.
+    split_fasta_data = fasta_file.split('\n')
 
+    sequence = ""
+    index = 1
+    while index < len(split_fasta_data):
 
+        # Strip off potential whitespace before appending, such as '\r'.
+        sequence = sequence + split_fasta_data[index].strip()
+        index += 1
 
+    return sequence
 
 
 
@@ -168,101 +184,6 @@ def reformat_description(description):
 
 
 
-
-
-
-#
-# #TODO unit test
-# def parse_phagesdb_data(genome_obj,data_dict):
-#     """Parses a dictionary of genome data retrieved from PhagesDB into a
-#     Genome object.
-#     """
-#
-#     list_of_evals = []
-#     #Name and Search Name
-#     try:
-#         phage_name = online_data_dict['phage_name']
-#     except:
-#         phage_name = ""
-#         eval_obj = #HERE
-#
-#
-#         #TODO create eval obj
-#         pass
-#
-#     genome_obj.set_phage_name(phage_name)
-#
-#     #Host, Accession
-#
-#
-#
-#
-#
-#     genome_obj.set_host(online_data_dict['isolation_host']['genus'])
-#
-#
-#
-#
-#     genome_obj.set_accession(online_data_dict['genbank_accession'])
-#
-#     #Cluster
-#     # On phagesdb, phages may have a Cluster and no Subcluster info
-#     # (which is set to None). If the phage has a Subcluster,
-#     # it should also have a Cluster. If by accident no Cluster or
-#     # Subcluster info is added at the time the genome is added to
-#     # phagesdb, the Cluster may automatically be set to NULL,
-#     # which gets converted to "Unclustered". This is problematic
-#     # because in Phamerator NULL means Singleton, and the long
-#     # form "Unclustered" will be filtered out later in the script
-#     # due to its character length, so it needs to be abbreviated.
-#     if online_data_dict['pcluster'] is None:
-#         genome_obj.cluster = 'UNK'
-#
-#     elif online_data_dict['pcluster']['cluster'].lower() == "singleton":
-#         genome_obj.cluster = online_data_dict['pcluster']['cluster'].lower()
-#
-#     else:
-#         genome_obj.cluster = online_data_dict['pcluster']['cluster']
-#
-#
-#     #Subcluster
-#     # Subcluster could be empty if by error no Cluster or
-#     # Subcluster data has yet been entered on phagesdb. But
-#     # it may be empty because there is no subcluster
-#     # designation yet for members of the Cluster.
-#     if online_data_dict['psubcluster'] is None:
-#         genome_obj.subcluster = "none"
-#
-#     else:
-#         genome_obj.subcluster = online_data_dict['psubcluster']['subcluster']
-#
-#     #Check to see if there is a fasta file stored on phagesdb for this phage
-#     if online_data_dict['fasta_file'] is not None:
-#         fastafile_url = online_data_dict['fasta_file']
-#
-#         response = urllib2.urlopen(fastafile_url)
-#         retrieved_fasta_file = response.read()
-#         response.close()
-#
-#         #TODO convert to Biopython object?
-#         #All sequence rows in the fasta file may not have equal widths, so some processing of the data is required
-#         #If you split by newline, the header is retained in the first list element
-#         split_fasta_data = retrieved_fasta_file.split('\n')
-#         pdb_sequence = ''
-#         index = 1
-#
-#         while index < len(split_fasta_data):
-#
-#             #Strip off potential whitespace before appending, such as '\r'
-#             pdb_sequence = pdb_sequence + split_fasta_data[index].strip()
-#             index += 1
-#
-#         genome_obj.sequence = pdb_sequence
-#
-#     #TODO do I need to return this object?
-#     return genome_obj
-#
-#
 
 
 
