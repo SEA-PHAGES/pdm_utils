@@ -10,7 +10,7 @@ import unittest
 
 
 
-class TestTicketFunctionsClass(unittest.TestCase):
+class TestTicketFunctions(unittest.TestCase):
 
 
     def setUp(self):

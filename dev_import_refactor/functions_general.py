@@ -140,12 +140,6 @@ def reformat_description(description):
     return(description,processed_description)
 
 
-
-
-
-
-
-#TODO unit test
 def parse_fasta_file(fasta_file):
     """Parses sequence data from a fasta-formatted file.
     """
@@ -226,57 +220,48 @@ def assign_match_strategy(list_of_matched_objects):
 
 #TODO unit test
 def match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data):
+    flat_file_genome_dict = {}
 
-	flat_file_genome_dict = {}
+    # TODO:
+    # Iterate through all tickets and determine what the strategy is to
+    # match tickets to flat files.
+    strategy = assign_match_strategy(list_of_matched_objects)
 
-
-
-	# TODO:
-	# Iterate through all tickets and determine what the strategy is to
-	# match tickets to flat files.
-	strategy = assign_match_strategy(list_of_matched_objects)
-
-	#TODO need to set strategy variable in advance
-	# Now that the flat file data has been retrieved and parsed,
-	# match them to ticket data
-
-	for flat_file_object in list_of_flat_file_genomes:
-
-		if strategy == "phage_id":
-			match_name = flat_file_object.phage_id
-
-		elif strategy == "filename":
-			match_name = flat_file_object.filename
-
-		else:
-			match_name = ""
+    #TODO need to set strategy variable in advance
+    # Now that the flat file data has been retrieved and parsed,
+    # match them to ticket data
 
 
-		if match_name not in flat_file_genome_dict.keys():
+    for flat_file_object in list_of_flat_file_genomes:
 
-			flat_file_genome_dict[match_name] = flat_file_object
+        if strategy == "phage_id":
+            match_name = flat_file_object.phage_id
 
-		else:
-			pass
+        elif strategy == "filename":
+            match_name = flat_file_object.filename
 
-			#TODO throw an error - unable to create unique set of objects
+        else:
+            match_name = ""
 
+        if match_name not in flat_file_genome_dict.keys():
+            flat_file_genome_dict[match_name] = flat_file_object
+        else:
+            pass
+            #TODO throw an error - unable to create unique set of objects
 
-	for matched_data_obj in matched_data_list:
+    for matched_data_obj in matched_data_list:
+        match_name = matched_data_obj.ticket.primary_phage_id
 
-		match_name = matched_data_obj.ticket.primary_phage_id
+        try:
+            flat_file_genome = flat_file_genome_dict.pop(match_name)
 
-		try:
-			flat_file_genome = flat_file_genome_dict.pop(match_name)
-		except:
+        except:
+            flat_file_genome = None
 
-			flat_file_genome = None
+        #Now add the flat file data to the MatchedGenomes object
+        matched_data_obj.matched_genomes_dict["flat_file"] = flat_file_genome
 
-		#Now add the flat file data to the MatchedGenomes object
-		matched_data_obj.matched_genomes_dict["flat_file"] = flat_file_genome
-
-
-	return list_of_matched_objects
+    return list_of_matched_objects
 
 
 

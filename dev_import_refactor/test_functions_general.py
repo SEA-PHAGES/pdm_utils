@@ -4,12 +4,12 @@
 import functions_general
 import unittest
 import re
-import Genome
+#import Genome
 
 
 
 
-class TestGeneralFunctionsClass(unittest.TestCase):
+class TestGeneralFunctions(unittest.TestCase):
 
 
     def setUp(self):
@@ -282,6 +282,25 @@ class TestGeneralFunctionsClass(unittest.TestCase):
         list_of_items = ["L5", "D29"]
         value = functions_general.find_expression(pattern, list_of_items)
         self.assertEqual(value, 0)
+
+
+
+
+
+
+
+    def test_parse_fasta_file_1(self):
+        """Verify it fasta file data is parsed correctly."""
+        fasta_data = ">Trixie     \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG"
+        expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
+        sequence = functions_general.parse_fasta_file(fasta_data)
+        self.assertEqual(expected_sequence, sequence)
+
+
+
+
+
+
 
 
 
