@@ -29,53 +29,60 @@ def remove_draft_suffix(value):
 #Old 'parse_strand' function and 'parse_strand_for_import' function combined.
 # Note: parse_strand_for_import used to convert numeric to long string format.
 # E.g. 1 == forward
-def reformat_strand(input_value, format):
-    """Converts common strand orientation formats, including
-    'long' ('forward'), 'short' ('f'), and numeric (1)."""
+def reformat_strand(input_value, format, case = False):
+    """Converts common strand orientation formats, including:
+    'fr_long' ('forward', 'reverse')
+    'fr_short' ('f', 'r')
+    'tb_long' ('top', 'bottom')
+    'tb_short' ('t', 'b')
+    'wc_long' ('watson', 'crick')
+    'wc_short' ('w','c')
+    'operator' ('+', '-')
+    'numeric' (1, -1)."""
 
-    value = input_value
+    format_dict = {"fr_long":["forward", "reverse"], \
+                    "fr_short":["f", "r"], \
+                    "tb_long":["top", "bottom"], \
+                    "tb_short":["t", "b"], \
+                    "wc_long":["watson", "crick"], \
+                    "wc_short":["w", "c"], \
+                    "operator":["+", "-"], \
+                    "numeric":[1, -1]}
 
-    if isinstance(value, str):
-        value = value.lower()
+    strand1_values = set()
+    strand2_values = set()
+    for values in format_dict.values():
 
-    # First standardize all possible input values
-    if (value == "f" or value == "forward" or value == 1):
-        value = "forward"
-    elif (value == "r" or value == "reverse" or value == -1):
-        value = "reverse"
+        strand1_values.add(values[0])
+        strand2_values.add(values[1])
+
+
+    if format in format_dict.keys():
+
+        if isinstance(input_value, str):
+            new_value = input_value.lower()
+        else:
+            new_value = input_value
+
+        if new_value in strand1_values:
+            new_value = format_dict[format][0]
+
+        elif new_value in strand2_values:
+            new_value = format_dict[format][1]
+
+        else:
+            new_value = "NA"
+
     else:
-        value = "NA"
+        new_value = "NA"
 
-    # Now convert the standardized format to the requested format.
-    if format == "long":
-        if value == "forward":
-            value = "forward"
-        elif value == "reverse":
-            value = "reverse"
-        else:
-            value = "NA"
 
-    elif format == "short":
-        if value == "forward":
-            value = "f"
-        elif value == "reverse":
-            value = "r"
-        else:
-            value = "NA"
+    if isinstance(new_value, str):
+        if case == True:
+            new_value = new_value.capitalize()
 
-    elif format == "numeric":
-        if value == "forward":
-            value = 1
-        elif value == "reverse":
-            value = -1
-        else:
-            value = 0
+    return new_value
 
-    #If requested format not valid, simply return the original value.
-    else:
-        value = input_value
-
-    return(value)
 
 
 

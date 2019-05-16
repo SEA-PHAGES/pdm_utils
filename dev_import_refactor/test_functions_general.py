@@ -38,72 +38,72 @@ class TestGeneralFunctions(unittest.TestCase):
 
     def test_reformat_strand_1(self):
         """Verify 'Forward' strand is converted to long format."""
-        new_value = functions_general.reformat_strand("Forward", "long")
+        new_value = functions_general.reformat_strand("Forward", "fr_long")
         self.assertEqual(new_value, "forward")
 
     def test_reformat_strand_2(self):
         """Verify 'F' strand is converted to long format."""
-        new_value = functions_general.reformat_strand("F", "long")
+        new_value = functions_general.reformat_strand("F", "fr_long")
         self.assertEqual(new_value, "forward")
 
     def test_reformat_strand_3(self):
         """Verify '1' strand is converted to long format."""
-        new_value = functions_general.reformat_strand(1, "long")
+        new_value = functions_general.reformat_strand(1, "fr_long")
         self.assertEqual(new_value, "forward")
 
     def test_reformat_strand_4(self):
         """Verify 'Reverse' strand is converted to long format."""
-        new_value = functions_general.reformat_strand("Reverse", "long")
+        new_value = functions_general.reformat_strand("Reverse", "fr_long")
         self.assertEqual(new_value, "reverse")
 
     def test_reformat_strand_5(self):
         """Verify 'R' strand is converted to long format."""
-        new_value = functions_general.reformat_strand("R", "long")
+        new_value = functions_general.reformat_strand("R", "fr_long")
         self.assertEqual(new_value, "reverse")
 
     def test_reformat_strand_6(self):
         """Verify '-1' strand is converted to long format."""
-        new_value = functions_general.reformat_strand(-1, "long")
+        new_value = functions_general.reformat_strand(-1, "fr_long")
         self.assertEqual(new_value, "reverse")
 
     def test_reformat_strand_7(self):
         """Verify non-standard strand is not converted."""
-        new_value = functions_general.reformat_strand("None", "long")
+        new_value = functions_general.reformat_strand("None", "fr_long")
         self.assertEqual(new_value, "NA")
 
     def test_reformat_strand_8(self):
         """Verify 'Forward' strand is converted to short format."""
-        new_value = functions_general.reformat_strand("Forward", "short")
+        new_value = functions_general.reformat_strand("Forward", "fr_short")
         self.assertEqual(new_value, "f")
 
     def test_reformat_strand_9(self):
         """Verify 'F' strand is converted to short format."""
-        new_value = functions_general.reformat_strand("F", "short")
+        new_value = functions_general.reformat_strand("F", "fr_short")
         self.assertEqual(new_value, "f")
 
     def test_reformat_strand_10(self):
         """Verify '1' strand is converted to short format."""
-        new_value = functions_general.reformat_strand(1, "short")
+        new_value = functions_general.reformat_strand(1, "fr_short")
         self.assertEqual(new_value, "f")
 
     def test_reformat_strand_11(self):
         """Verify 'Reverse' strand is converted to short format."""
-        new_value = functions_general.reformat_strand("Reverse", "short")
+        new_value = functions_general.reformat_strand("Reverse", "fr_short")
         self.assertEqual(new_value, "r")
 
     def test_reformat_strand_12(self):
         """Verify 'R' strand is converted to short format."""
-        new_value = functions_general.reformat_strand("R", "short")
+        new_value = functions_general.reformat_strand("R", "fr_short")
         self.assertEqual(new_value, "r")
 
     def test_reformat_strand_13(self):
         """Verify '-1' strand is converted to short format."""
-        new_value = functions_general.reformat_strand(-1, "short")
+        new_value = functions_general.reformat_strand(-1, "fr_short")
         self.assertEqual(new_value, "r")
 
     def test_reformat_strand_14(self):
         """Verify non-standard strand is not converted."""
-        new_value = functions_general.reformat_strand("None", "short")
+        new_value = functions_general.reformat_strand("None", "fr_short")
         self.assertEqual(new_value, "NA")
 
     def test_reformat_strand_15(self):
@@ -139,20 +139,42 @@ class TestGeneralFunctions(unittest.TestCase):
     def test_reformat_strand_21(self):
         """Verify non-standard strand is not converted."""
         new_value = functions_general.reformat_strand("None", "numeric")
-        self.assertEqual(new_value, 0)
+        self.assertEqual(new_value, "NA")
 
     def test_reformat_strand_22(self):
         """Verify non-standard format does not convert strand."""
         new_value = functions_general.reformat_strand("Forward", "other")
-        self.assertEqual(new_value, "Forward")
+        self.assertEqual(new_value, "NA")
 
+    def test_reformat_strand_23(self):
+        """Verify 'Watson' strand is converted to numeric format."""
+        new_value = functions_general.reformat_strand("Watson", "numeric")
+        self.assertEqual(new_value, 1)
 
+    def test_reformat_strand_24(self):
+        """Verify 'Crick' strand is converted to operator format."""
+        new_value = functions_general.reformat_strand("Crick", "operator")
+        self.assertEqual(new_value, "-")
 
+    def test_reformat_strand_25(self):
+        """Verify 'operator' strand is converted to wc_long format."""
+        new_value = functions_general.reformat_strand("+", "wc_long")
+        self.assertEqual(new_value, "watson")
 
+    def test_reformat_strand_26(self):
+        """Verify capitalization for strings."""
+        new_value = functions_general.reformat_strand("+", "wc_long", True)
+        self.assertEqual(new_value, "Watson")
 
+    def test_reformat_strand_27(self):
+        """Verify capitalization does not impact numeric format."""
+        new_value = functions_general.reformat_strand("+", "numeric", True)
+        self.assertEqual(new_value, 1)
 
-
-
+    def test_reformat_strand_28(self):
+        """Verify capitalization does not impact operator format."""
+        new_value = functions_general.reformat_strand("w", "operator", True)
+        self.assertEqual(new_value, "+")
 
 
 
