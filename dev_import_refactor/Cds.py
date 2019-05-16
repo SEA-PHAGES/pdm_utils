@@ -104,19 +104,16 @@ class CdsFeature:
             eval_object = Eval.EvalResult()
         self.evaluations.append(eval_object)
 
-    def set_strand(self, value, format):
-        """Sets strand based on indicated format.
-        """
-        self.strand = functions_general.reformat_strand(value, format)
-
     def set_translation(self, value):
         """Sets translation and determines length of translation.
         """
         self.translation = value.upper()
         self._translation_length = len(self.translation)
 
-
-
+    def set_strand(self, value, format):
+        """Sets strand based on indicated format.
+        """
+        self.strand = functions_general.reformat_strand(value, format)
 
     def set_start_end(self):
         """Determines which boundary coordinate is the start and end of
@@ -124,7 +121,7 @@ class CdsFeature:
         """
 
         # Ensure format of strand info.
-        strand = functions_general.reformat_strand(self.strand, "long")
+        strand = functions_general.reformat_strand(self.strand, "fr_long")
 
         if strand == "forward":
 
@@ -138,21 +135,6 @@ class CdsFeature:
 
         else:
             pass
-
-
-
-
-
-    def check_translation(self, protein_alphabet_set):
-        """Check whether all amino acids in the translation are valid.
-        """
-        amino_acid_set = set(self.translation)
-        amino_acid_error_set = amino_acid_set - protein_alphabet_set
-
-        if len(amino_acid_error_set) > 0:
-            message = "There are unexpected amino acids in the translation: " \
-                + str(amino_acid_error_set)
-            self.set_evaluation("error", "message")
 
     def set_location_id(self):
         """ Create a tuple of feature location data.
@@ -168,6 +150,23 @@ class CdsFeature:
         self._end_strand_id = (self.end, self.strand)
 
 
+    def check_translation(self, protein_alphabet_set):
+        """Check whether all amino acids in the translation are valid.
+        """
+        amino_acid_set = set(self.translation)
+        amino_acid_error_set = amino_acid_set - protein_alphabet_set
+
+        if len(amino_acid_error_set) > 0:
+            message = "There are unexpected amino acids in the translation: " \
+                + str(amino_acid_error_set)
+            self.set_evaluation("error", "message")
+
+
+
+
+
+
+    ###TODO below is in progress
 
 
     #TODO Unit test

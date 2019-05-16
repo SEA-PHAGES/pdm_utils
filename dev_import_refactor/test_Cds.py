@@ -16,11 +16,11 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
     def test_set_strand_1(self):
-        self.feature.set_strand("f", "long")
+        self.feature.set_strand("f", "fr_long")
         self.assertEqual(self.feature.strand, "forward")
 
     def test_set_strand_2(self):
-        self.feature.set_strand("reverse", "short")
+        self.feature.set_strand("reverse", "fr_short")
         self.assertEqual(self.feature.strand, "r")
 
 
@@ -130,6 +130,38 @@ class TestCdsFeatureClass(unittest.TestCase):
             self.assertEqual(self.feature.start, start)
         with self.subTest():
             self.assertEqual(self.feature.end, end)
+
+    def test_set_start_end_5(self):
+        """Operator strand feature."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = 10
+        self.feature.strand = "+"
+        start = 5
+        end = 10
+        self.feature.set_start_end()
+        with self.subTest():
+            self.assertEqual(self.feature.start, start)
+        with self.subTest():
+            self.assertEqual(self.feature.end, end)
+
+    def test_set_start_end_5(self):
+        """Numeric strand feature."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = 10
+        self.feature.strand = -1
+        start = 10
+        end = 5
+        self.feature.set_start_end()
+        with self.subTest():
+            self.assertEqual(self.feature.start, start)
+        with self.subTest():
+            self.assertEqual(self.feature.end, end)
+
+
+
+
+
+
 
 
 
