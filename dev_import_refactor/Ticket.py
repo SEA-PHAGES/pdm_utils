@@ -329,6 +329,8 @@ class ImportTicket:
             self.accession = "none"
 
 
+    # TODO improve this method = create separate, general function to convert
+    # author value same way as with strand.
 	# Modify AnnotationAuthor
     def check_annotation_author(self):
 
