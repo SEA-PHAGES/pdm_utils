@@ -818,12 +818,13 @@ if retrieve_ncbi_updates is True:
 										 webenv=search_webenv)
 		summary_records = Entrez.read(summary_handle)
 		for doc_sum in summary_records:
+			doc_sum_name = doc_sum["Title"]
 			doc_sum_accession = doc_sum["Caption"]
 			doc_sum_date = datetime.datetime.strptime(doc_sum["UpdateDate"],
 													  "%Y/%m/%d")
-			phamerator_data = unique_accession_dict[doc_sum_accession]
-			phamerator_date = phamerator_data[5]
-			phamerator_status = phamerator_data[3]
+			genome_data = unique_accession_dict[doc_sum_accession]
+			phamerator_date = genome_data[5]
+			phamerator_status = genome_data[3]
 
 			# If Document Summary date is newer than the phamerator date,
 			# or if the genome being evaluated is currently draft status but
@@ -838,6 +839,7 @@ if retrieve_ncbi_updates is True:
 			else:
 				# We need more information about the phamerator data for
 				# this genome
+
 				phamerator_id = genome_data[0]
 				phamerator_name = genome_data[1]
 				phamerator_host = genome_data[2]
@@ -1013,10 +1015,10 @@ if retrieve_pecaan_updates is True:
 			# certificate verify failed (_ssl.c:590)> ==> creating new TLS
 			# context tells urllib2 to ignore certificate chain
 			# NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
-			pecaan_response = request.urlopen(pecaan_link) #
+			pecaan_response = request.urlopen(pecaan_link)
 			pecaan_file_handle = open(os.path.join(
-				pecaan_folder, "genomes",pecaan_filename), 'w')
-			pecaan_file_handle.write(pecaan_response.read())
+				pecaan_folder, "genomes", pecaan_filename), 'w')
+			pecaan_file_handle.write(str(pecaan_response.read()))
 			pecaan_response.close()
 			pecaan_file_handle.close()
 
