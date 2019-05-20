@@ -779,18 +779,26 @@ phage_name_typo_dict = {
 	'Fionnbarth':'Fionnbharth',\
 
 	#Weird capitalizations in the real phage names that ICTV and now GenBank have "undone"
-	'Baka':'BAKA',\
-	'CJW1':'Cjw1',\
-	'Dlane':'DLane',\
-	'Kssjeb':'KSSJEB',\
-	'Littlee':'LittleE',\
-	'Billknuckles':'BillKnuckles',\
-	'Packman':'PackMan',\
-	'Mrgordo':'MrGordo',\
-	'Ericb':'EricB',\
-	'lockley':'Lockley',\
-	'Heldan':'HelDan',\
-	'Ta17a':'TA17a'\
+	'Baka':'BAKA',
+	'CJW1':'Cjw1',
+	'Dlane':'DLane',
+	'Kssjeb':'KSSJEB',
+	'Littlee':'LittleE',
+	'Billknuckles':'BillKnuckles',
+	'Packman':'PackMan',
+	'Mrgordo':'MrGordo',
+	'Ericb':'EricB',
+	'lockley':'Lockley',
+	'Heldan':'HelDan',
+	'Ta17a':'TA17a',
+	'Crimd':'CrimD',
+	'Deadp':'DeadP',
+	'Dotproduct':'DotProduct',
+	'Gumbie':'GUmbie',
+	'Jaws':'JAWS',
+	'Joedirt':'JoeDirt',
+	'Macncheese':'MacnCheese',
+	'Rockyhorror':'RockyHorror'
 	}
 
 
