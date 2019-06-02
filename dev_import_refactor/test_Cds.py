@@ -144,7 +144,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.end, end)
 
-    def test_set_start_end_5(self):
+    def test_set_start_end_6(self):
         """Numeric strand feature."""
         self.feature.left_boundary = 5
         self.feature.right_boundary = 10
@@ -223,6 +223,129 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+    def test_check_boundaries_1(self):
+        """Test correct boundaries."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = 10
+        self.feature.check_boundaries()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+
+    def test_check_boundaries_2(self):
+        """Test incorrect left boundary."""
+        self.feature.left_boundary = "a"
+        self.feature.right_boundary = 10
+        self.feature.check_boundaries()
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+    def test_check_boundaries_3(self):
+        """Test incorrect right boundary."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = "a"
+        self.feature.check_boundaries()
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
+
+
+    def test_set_phage_id_1(self):
+        """Test no draft suffix."""
+        phage_id = "Trixie"
+        self.feature.set_phage_id(phage_id)
+        with self.subTest():
+            self.assertEqual(self.feature.phage_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(self.feature._search_id, "Trixie")
+
+    def test_set_phage_id_2(self):
+        """Test draft suffix."""
+        phage_id = "Trixie_Draft"
+        self.feature.set_phage_id(phage_id)
+        with self.subTest():
+            self.assertEqual(self.feature.phage_id, "Trixie_Draft")
+        with self.subTest():
+            self.assertEqual(self.feature._search_id, "Trixie")
+
+
+    #TODO: remove this unit test after I decide whether or not to keep
+    # the set_primary_description function.
+    # def test_set_primary_description_1(self):
+    #     """Test primary description."""
+    #     description1 = "ABCD"
+    #     description2 = "EFGH"
+    #     self.feature.set_primary_description(description1, description2)
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.primary_description, "ABCD")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.processed_primary_description, "EFGH")
+
+
+
+
+    def test_check_locus_tag_present_1(self):
+        """Check if absent locus tag is expected to be absent."""
+        self.feature.locus_tag = ""
+        self.feature.check_locus_tag_present("absent")
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_locus_tag_present_2(self):
+        """Check if absent locus tag is expected to be present."""
+        self.feature.locus_tag = ""
+        self.feature.check_locus_tag_present("present")
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+    def test_check_locus_tag_present_3(self):
+        """Check if present locus tag is expected to be present."""
+        self.feature.locus_tag = "ABCD"
+        self.feature.check_locus_tag_present("present")
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_locus_tag_present_4(self):
+        """Check if present locus tag is expected to be absent."""
+        self.feature.locus_tag = "ABCD"
+        self.feature.check_locus_tag_present("absent")
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
+
+
+
+    def test_check_description_1(self):
+        """Product is present and function is present."""
+        self.feature.processed_product_description = "ABC"
+        self.feature.processed_function_description = "EFG"
+        self.feature.check_description()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_description_2(self):
+        """Product is present and function is absent."""
+        self.feature.processed_product_description = "ABC"
+        self.feature.check_description()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_description_3(self):
+        """Product is absent and function is present."""
+        self.feature.processed_function_description = "EFG"
+        self.feature.check_description()
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
+
+
+    def test_check_locus_tag_typo_1(self):
+        """The locus_tag does not contain a typo."""
+        self.feature.locus_tag = "ABC_TRIXIE_123"
+        self.feature.check_locus_tag_typo("Trixie")
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_locus_tag_typo_2(self):
+        """The locus_tag contains a typo."""
+        self.feature.locus_tag = "ABC_TRIXE_123"
+        self.feature.check_locus_tag_typo("Trixie")
+        self.assertEqual(len(self.feature.evaluations), 1)
 
 
 
@@ -230,15 +353,32 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+    def test_check_gene_length_1(self):
+        """The gene length is correct."""
+        self.feature.compound_parts = 1
+        self.feature.left_boundary = 0
+        self.feature.right_boundary = 11
+        self.feature.set_translation("ABC")
+        self.feature.check_gene_length()
+        self.assertEqual(len(self.feature.evaluations), 0)
 
+    def test_check_gene_length_2(self):
+        """The gene length is not correct."""
+        self.feature.compound_parts = 1
+        self.feature.left_boundary = 0
+        self.feature.right_boundary = 12
+        self.feature.set_translation("ABC")
+        self.feature.check_gene_length()
+        self.assertEqual(len(self.feature.evaluations), 1)
 
-
-
-
-
-
-
-
+    def test_check_gene_length_3(self):
+        """Compound feature is not computed."""
+        self.feature.compound_parts = 2
+        self.feature.left_boundary = 0
+        self.feature.right_boundary = 12
+        self.feature.set_translation("ABC")
+        self.feature.check_gene_length()
+        self.assertEqual(len(self.feature.evaluations), 0)
 
 
 if __name__ == '__main__':

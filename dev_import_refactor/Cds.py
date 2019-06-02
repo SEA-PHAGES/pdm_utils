@@ -4,6 +4,7 @@ to maintain and update SEA-PHAGES phage genomics data.
 
 import functions_general
 import Eval
+import re
 
 
 
@@ -24,16 +25,24 @@ class CdsFeature:
         self.strand = "" #'forward', 'reverse', or 'NA'
         self.compound_parts = 0 # Number of regions that form the feature
         self.translation = ""
-        self.gene_length = "" # Value stored in Phamerator
+        # self.gene_length = "" # Value stored in Phamerator. TODO I don't
+        # think this is needed anymore. Replaced by _translation_length
         self.translation_table = ""
 
 
         # Common to Phamerator.
         self.phage_id = ""
-        self.gene_id = "" # Gene ID comprised of PhageID and Gene name = change this probably
+
+        # TODO: eventually change how Gene_ID is computed.
+        self.gene_id = "" # Gene ID comprised of PhageID and Gene name
         self.gene_name = ""
-        self.notes = ""
-        self.search_notes = "" # Non-generic gene descriptions
+        self.primary_description = ""
+        self.processed_primary_description = "" # Non-generic gene descriptions
+
+        # TODO: I don't think I need these anymore, since they have
+        # been replaced by 'primary_description'
+        # self.notes = ""
+        # self.search_notes = "" # Non-generic gene descriptions
 
 
         # Common to NCBI.
@@ -53,9 +62,9 @@ class CdsFeature:
 
         # Computed attributes:
 
-        #Common to all.
+        #Common to all. Computed internally.
         self._search_id = ""
-        self._translation_length = "" # Computed internally
+        self._translation_length = ""
         self._left_right_strand_id = ()
         self._end_strand_id = ()
 
@@ -104,6 +113,26 @@ class CdsFeature:
             eval_object = Eval.EvalResult()
         self.evaluations.append(eval_object)
 
+    def set_phage_id(self, value):
+        """Set the phage_id and search_id at the same time, removing
+        '_Draft' suffix if present."""
+
+        self.phage_id = value
+        self._search_id = functions_general.remove_draft_suffix(self.phage_id)
+
+
+
+    # TODO: I don't think I need this function.
+    # def set_primary_description(self, value1, value2):
+    #     """Set original and processed primary description
+    #     (no generic descriptions)."""
+    #     self.primary_description = value1
+    #     self.processed_primary_description = value2
+
+
+
+
+
     def set_translation(self, value):
         """Sets translation and determines length of translation.
         """
@@ -150,6 +179,11 @@ class CdsFeature:
         self._end_strand_id = (self.end, self.strand)
 
 
+
+
+
+    # Evaluations.
+
     def check_translation(self, protein_alphabet_set):
         """Check whether all amino acids in the translation are valid.
         """
@@ -159,51 +193,92 @@ class CdsFeature:
         if len(amino_acid_error_set) > 0:
             message = "There are unexpected amino acids in the translation: " \
                 + str(amino_acid_error_set)
-            self.set_evaluation("error", "message")
+            self.set_evaluation("error", message)
+
+
+
+    def check_boundaries(self):
+        """Check if start and end coordinates are fuzzy."""
+        if not (str(self.left_boundary).isdigit() and \
+            str(self.right_boundary).isdigit()):
+
+            message = "The feature boundaries are not determined: " \
+                + str((self.left_boundary, self.right_boundary))
+            self.set_evaluation("error", message)
+
+
+    def check_locus_tag_present(self, expectation):
+        """Check is status of locus tag matches expectations."""
+        if expectation == "present":
+            if self.locus_tag == "":
+                message = "The feature has no locus tag."
+                self.set_evaluation("error", message)
+
+        elif expectation == "absent":
+            if self.locus_tag != "":
+                message = "The feature has a locus tag."
+                self.set_evaluation("error", message)
+
+        else:
+            pass
+
+
+
+
+    def check_locus_tag_typo(self, value):
+        """Check is the locus tag contains potential typos."""
+        pattern = re.compile(value.lower())
+        search_result = pattern.search(self.locus_tag.lower())
+
+        if search_result == None:
+
+            message = "The feature locus tag has a typo."
+            self.set_evaluation("error", message)
+
+
+
+    def check_description(self):
+        """If the product description is empty or generic, and the
+        function or note descriptions are not, there is an error."""
+        if self.processed_product_description == '' and \
+            (self.processed_function_description != '' or \
+            self.processed_note_description != ''):
+
+                message = "The feature is missing a product description."
+                self.set_evaluation("error", message)
+
+
+
+    def check_gene_length(self):
+        """Confirm coordinates match translation length."""
+        # This method can only be used on non-compound features.
+
+        if self.compound_parts == 1:
+            length1 = self.right_boundary - self.left_boundary + 1
+            length2 = (self._translation_length * 3) + 3
+
+            if length1 != length2:
+
+                message = "The translation length is incorrect."
+                self.set_evaluation("error", message)
 
 
 
 
 
 
-    ###TODO below is in progress
 
-
+    #TODO this function cannot be implemented easily within the CDS feature,
+    #since several of these require parameters that are determined by other
+    #parts of the script, such as the amino acid alphabet and the _locus_tag
+    #reference value.
     #TODO Unit test
-    def compute_boundary_error(self):
-        #Check if start and end coordinates are fuzzy
-        if not (str(self.left_boundary).isdigit() and str(self.right_boundary).isdigit()):
-            self._boundary_error = True
-
-
-
-
-
-
-    #Common to Phamerator
-    #TODO Unit test
-    def set_phage_id(self,value):
-        self.phage_id = value
-        self._search_id = remove_draft_suffix(self.phage_id)
-
-
-    #TODO Unit test
-    def set_notes(self,value1,value2):
-        self.notes = value1
-        self.search_notes = value2
-
-
-
-
-
-    # Compute errors.
-
-    #TODO Revamp.
-    #TODO Unit test
-    def set_locus_tag(self,value):
-        self.locus_tag = value
-        if self.locus_tag == '':
-            self._locus_tag_missing = True
+    # def check_feature(self):
+    #     self.check_translation(alphabet)
+    #     self.check_boundaries()
+    #     self.check_locus_tag_present()
+    #     self.check_description()
+    #     self.check_locus_tag_typo(value)
 
 
 
@@ -212,51 +287,11 @@ class CdsFeature:
 
 
 
-
-    # Methods that need revamped to create eval.
-
-
-
-
-    #TODO revamp
-    #TODO Unit test
-    def compute_total_cds_errors(self):
-        if self.get_amino_acid_errors():
-            self._total_errors += 1
-        if self.get_boundary_error():
-            self._total_errors += 1
-        if self.get_unmatched_error():
-            self._total_errors += 1
+        # TODO: I will need to re-implement this for database_comparison script.
+        # if self.get_unmatched_error():
+        #     self._total_errors += 1
 
 
-    #TODO revamp
-    #TODO Unit test
-    def compute_description_error(self):
-
-        # If the product description is empty or generic, and the
-        # function or note descriptions are not, there is an error
-        if self.__search_product_description == '' and \
-            (self.__search_function_description != '' or \
-            self.__search_note_description != ''):
-
-            self._description_field_error = True
-
-
-    #TODO revamp
-    #TODO Unit test
-    def compute_total_cds_errors(self):
-        if self.get_amino_acid_errors():
-            self._total_errors += 1
-        if self.get_boundary_error():
-            self._total_errors += 1
-        if self._description_field_error:
-            self._total_errors += 1
-        if self._locus_tag_missing:
-            self._total_errors += 1
-        if self._locus_tag_typo:
-            self._total_errors += 1
-        if self.get_unmatched_error():
-            self._total_errors += 1
 
 
 
