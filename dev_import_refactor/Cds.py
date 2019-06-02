@@ -30,6 +30,10 @@ class CdsFeature:
         self.translation_table = ""
 
 
+        # TODO: create coordinate indexing attribute, to be able to switch
+        # coordinates between different types of indexing strategies.
+
+
         # Common to Phamerator.
         self.phage_id = ""
 
