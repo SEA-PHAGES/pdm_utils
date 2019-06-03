@@ -56,8 +56,8 @@ class CdsFeature:
         self.function_description = ""
         self.note_description = ""
         self.processed_product_description = ""
-        self.processed__function_description = ""
-        self.processed__note_description = ""
+        self.processed_function_description = ""
+        self.processed_note_description = ""
 
         # Common to all.
         self.evaluations = []
