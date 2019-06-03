@@ -2,7 +2,7 @@
 to maintain and update SEA-PHAGES phage genomics data.
 """
 
-import functions_general
+import FunctionsSimple
 import Eval
 import re
 
@@ -122,7 +122,7 @@ class CdsFeature:
         '_Draft' suffix if present."""
 
         self.phage_id = value
-        self._search_id = functions_general.remove_draft_suffix(self.phage_id)
+        self._search_id = FunctionsSimple.remove_draft_suffix(self.phage_id)
 
 
 
@@ -146,7 +146,7 @@ class CdsFeature:
     def set_strand(self, value, format):
         """Sets strand based on indicated format.
         """
-        self.strand = functions_general.reformat_strand(value, format)
+        self.strand = FunctionsSimple.reformat_strand(value, format)
 
     def set_start_end(self):
         """Determines which boundary coordinate is the start and end of
@@ -154,7 +154,7 @@ class CdsFeature:
         """
 
         # Ensure format of strand info.
-        strand = functions_general.reformat_strand(self.strand, "fr_long")
+        strand = FunctionsSimple.reformat_strand(self.strand, "fr_long")
 
         if strand == "forward":
 

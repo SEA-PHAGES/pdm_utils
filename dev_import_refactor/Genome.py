@@ -1,7 +1,7 @@
 """Represents a collection of data about a genome that are commonly used to
 maintain and update SEA-PHAGES phage genomics data.
 """
-import functions_general
+import FunctionsSimple
 import Eval
 from datetime import datetime
 
@@ -127,7 +127,7 @@ class Genome:
     def set_phage_id(self, value):
         """Set the phage_id and search_id."""
 
-        self.phage_id = functions_general.remove_draft_suffix(value)
+        self.phage_id = FunctionsSimple.remove_draft_suffix(value)
         self.search_id = self.phage_id.lower()
 
 
@@ -146,7 +146,7 @@ class Genome:
     #     self.phage_name = value
     #
     #     self.search_name = \
-    #           functions_general.remove_draft_suffix(self.phage_name).lower()
+    #           FunctionsSimple.remove_draft_suffix(self.phage_name).lower()
 
 
     def set_host(self, value):
