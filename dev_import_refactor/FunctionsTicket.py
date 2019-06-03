@@ -209,6 +209,132 @@ def validate_tickets(list_of_tickets):
 
 
 
+
+
+
+#TODO unit test below
+
+
+
+
+
+
+
+#TODO unit test
+def match_phamerator_to_tickets(list_of_matched_objects, phamerator_genome_dict):
+
+    for matched_data_obj in list_of_matched_objects:
+        phage_id = matched_data_obj.ticket.primary_phage_id
+
+        try:
+            matched_genome = phamerator_genome_dict[phage_id]
+
+            #Now add the Phamerator data to the MatchedGenomes object
+            matched_data_obj.matched_genomes_dict["phamerator"] = matched_genome
+
+        except:
+            pass
+            #TODO error handling
+
+    return list_of_matched_objects
+
+
+
+
+
+#TODO unit test
+def assign_match_strategy(list_of_matched_objects):
+
+	for matched_object in list_of_matched_objects:
+		ticket = matched_object.ticket
+
+
+		#TODO complete this function
+	pass
+
+
+#TODO unit test
+def match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data):
+    flat_file_genome_dict = {}
+
+    # TODO:
+    # Iterate through all tickets and determine what the strategy is to
+    # match tickets to flat files.
+    strategy = assign_match_strategy(list_of_matched_objects)
+
+    #TODO need to set strategy variable in advance
+    # Now that the flat file data has been retrieved and parsed,
+    # match them to ticket data
+
+
+    for flat_file_object in list_of_flat_file_genomes:
+
+        if strategy == "phage_id":
+            match_name = flat_file_object.phage_id
+
+        elif strategy == "filename":
+            match_name = flat_file_object.filename
+
+        else:
+            match_name = ""
+
+        if match_name not in flat_file_genome_dict.keys():
+            flat_file_genome_dict[match_name] = flat_file_object
+        else:
+            pass
+            #TODO throw an error - unable to create unique set of objects
+
+    for matched_data_obj in matched_data_list:
+        match_name = matched_data_obj.ticket.primary_phage_id
+
+        try:
+            flat_file_genome = flat_file_genome_dict.pop(match_name)
+
+        except:
+            flat_file_genome = None
+
+        #Now add the flat file data to the MatchedGenomes object
+        matched_data_obj.matched_genomes_dict["flat_file"] = flat_file_genome
+
+    return list_of_matched_objects
+
+
+
+
+#TODO unit test
+def create_matched_object_dict(list_of_matched_objects):
+
+    dictionary = {}
+    list_of_update_objects = []
+    list_of_remove_objects = []
+    list_of_add_replace_objects = []
+
+    for matched_object in list_of_matched_objects:
+        type = matched_object.ticket.ticket_type
+
+        if type == "update":
+            list_of_update_objects.append(matched_object)
+
+        elif type == "remove":
+            list_of_remove_objects.append(matched_object)
+
+        elif (type == "add" or type == "replace"):
+            list_of_add_replace_objects.append(matched_object)
+
+        else:
+            pass
+            # TODO if ticket type is none of the above, thrown an error?
+
+    dictionary["update"] = list_of_update_objects
+    dictionary["remove"] = list_of_remove_objects
+    dictionary["add_replace"] = list_of_add_replace_objects
+
+    return dictionary
+
+
+
+
+
 #TODO unit test after unit tested nested functions.
 # For each ticket, retrieve any data from PhagesDB genome if necessary.
 def retrieve_online_data(ticket):
@@ -251,7 +377,8 @@ def retrieve_online_data(ticket):
             eval_object = Eval.construct_error(message)
 
 
-    # Does the ticket need to be returned as well?
+    # TODO Does the ticket need to be returned as well?
+    # TODO return the online dictionary as well
     return eval_object
 
 

@@ -4,7 +4,6 @@
 import FunctionsSimple
 import unittest
 import re
-#import Genome
 
 
 
