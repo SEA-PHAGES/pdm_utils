@@ -99,6 +99,22 @@ class Genome:
 
 
 
+        # TODO create functions to compute these values. Not sure if they
+        # need distinct attributes instead of simply EvalResult objects.
+        self.record_header_fields_phage_name_error = False
+        self.record_header_fields_host_error = False
+
+        self.cds_features_unique_ids = set()
+        self.cds_features_duplicate_ids = set()
+
+
+
+
+
+
+
+
+
     def set_evaluation(self, type, message1 = None, message2 = None):
         """Creates an EvalResult object and adds it to the list of all
         evaluations."""
@@ -354,6 +370,111 @@ class Genome:
 
         else:
             pass
+
+
+
+
+
+    # TODO need to implement this function. Pasted from original
+    # MatchedGenomes object.
+    def check_header_phage_name_typos_xxxxx(self):
+
+        #Compare phage names
+        pattern1 = re.compile('^' + ph_genome.get_phage_name() + '$')
+        pattern2 = re.compile('^' + ph_genome.get_phage_name())
+
+        if find_name(pattern2,ncbi_genome.get_record_description().split(' ')) == 0 or \
+            find_name(pattern1,ncbi_genome.get_record_source().split(' ')) == 0 or \
+            find_name(pattern1,ncbi_genome.get_record_organism().split(' ')) == 0 or \
+            find_name(pattern1,ncbi_genome.get_source_feature_organism().split(' ')) == 0:
+
+            self.__ncbi_record_header_fields_phage_name_mismatch = True
+
+
+
+
+
+
+    # TODO need to implement this function. Pasted from original
+    # MatchedGenomes object.
+    def check_header_host_name_typos_xxxxx(self):
+
+        #Compare host data
+        search_host = ph_genome.get_host()
+        if search_host == 'Mycobacterium':
+            search_host = search_host[:-3]
+        pattern3 = re.compile('^' + search_host)
+
+        if (find_name(pattern3,ncbi_genome.get_record_description().split(' ')) == 0 or \
+            find_name(pattern3,ncbi_genome.get_record_source().split(' ')) == 0 or \
+            find_name(pattern3,ncbi_genome.get_record_organism().split(' ')) == 0 or \
+            find_name(pattern3,ncbi_genome.get_source_feature_organism().split(' ')) == 0) or \
+            (ncbi_genome.get_source_feature_host() != '' and find_name(pattern3,ncbi_genome.get_source_feature_host().split(' ')) == 0) or \
+            (ncbi_genome.get_source_feature_lab_host() != '' and find_name(pattern3,ncbi_genome.get_source_feature_lab_host().split(' ')) == 0):
+
+            self.__ncbi_host_mismatch = True
+
+
+
+
+
+
+    # TODO need to implement this function. Pasted from original
+    # MatchedGenomes object.
+    def check_author_xxxxx(self):
+
+        #Check author list for errors
+        #For genomes with AnnotationAuthor = 1 (Hatfull), Graham is expected
+        #to be an author.
+        #For genomes with AnnotationAuthor = 0 (non-Hatfull/Genbank), Graham
+        #is NOT expected to be an author.
+        pattern5 = re.compile('hatfull')
+        search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
+        if ph_genome.get_annotation_author() == 1 and search_result == None:
+            self.__ph_ncbi_author_error = True
+        elif ph_genome.get_annotation_author() == 0 and search_result != None:
+            self.__ph_ncbi_author_error = True
+        else:
+            #Any other combination of phamerator and ncbi author can be skipped
+            pass
+
+
+
+
+
+    # TODO create methods to compute this:
+    # TODO unit test
+    def compare_feature_identifiers(self):
+
+        # This set will contain all unique feature identifiers created
+        # by concatenating the start coordinate,
+        # stop coordinate, and strand into a tuple.
+        feature_set1 = set()
+
+
+        # This will will contain all feature identifiers that do not
+        # have a unique tuple identifier.
+        feature_set1_duplicate_set = set()
+
+
+        for feature in self.cds_features:
+
+            if feature._left_right_strand_id not in feature_set1:
+                feature_set1.add(feature._left_right_strand_id)
+            else:
+                feature_set1_duplicate_set.add(feature._left_right_strand_id)
+
+
+        # Remove the duplicate end_strand ids from the main id_set
+        feature_set1 = feature_set1 - feature_set1_duplicate_set
+
+        self.cds_features_unique_ids = feature_set1
+        self.cds_features_duplicate_ids = feature_set1_duplicate_set
+
+
+
+
+
 
 
 

@@ -17,35 +17,39 @@ class TestDataGroupClass(unittest.TestCase):
         self.genome1 = Genome.Genome()
         self.genome2 = Genome.Genome()
         self.ticket = Ticket.ImportTicket()
+        self.dict_name = "misc"
+        self.data_group.evaluations_dict[self.dict_name] = []
+
 
 
 
 
     def test_set_evaluation_1(self):
-        self.data_group.set_evaluation("none")
-        self.assertEqual(len(self.data_group.evaluations), 1)
+        """Check that empty EvalResult is appended to a evaluation list
+        in the dictionary of evaluations."""
+
+        self.data_group.set_evaluation(self.dict_name, "none")
+        self.assertEqual( \
+            len(self.data_group.evaluations_dict[self.dict_name]), 1)
 
     def test_set_evaluation_2(self):
-        self.data_group.set_evaluation("warning","message1")
-        self.assertEqual(len(self.data_group.evaluations), 1)
+        """Check that 'warning' EvalResult is appended to a evaluation list
+        in the dictionary of evaluations."""
+
+        self.data_group.set_evaluation(self.dict_name, "warning", "message1")
+        self.assertEqual( \
+            len(self.data_group.evaluations_dict[self.dict_name]), 1)
 
     def test_set_evaluation_3(self):
-        self.data_group.set_evaluation("error","message1","message2")
-        self.assertEqual(len(self.data_group.evaluations), 1)
+        """Check that 'error' EvalResult is appended to a evaluation list
+        in the dictionary of evaluations."""
+
+        self.data_group.set_evaluation(self.dict_name, "error", "message1", "message2")
+        self.assertEqual( \
+            len(self.data_group.evaluations_dict[self.dict_name]), 1)
 
 
 
-
-    # def test_parse_import_ticket_2(self):
-    #     """Verify improperly structured data is not parsed."""
-    #     ticket, eval = \
-    #         FunctionsTicket.parse_import_ticket(self.short_ticket_list)
-    #     with self.subTest():
-    #         self.assertIsNotNone(eval)
-    #     with self.subTest():
-    #         self.assertIsNone(ticket)
-    #     with self.subTest():
-    #         self.assertEqual(eval.status, "error")
 
 
 
