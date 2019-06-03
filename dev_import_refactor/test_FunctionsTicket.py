@@ -3,7 +3,7 @@
 
 import Ticket
 import Eval
-import functions_tickets
+import FunctionsTicket
 import unittest
 
 
@@ -69,7 +69,7 @@ class TestTicketFunctions(unittest.TestCase):
     def test_parse_import_ticket_1(self):
         """Verify properly structured data is parsed correctly."""
         ticket, eval = \
-            functions_tickets.parse_import_ticket(self.normal_ticket_list)
+            FunctionsTicket.parse_import_ticket(self.normal_ticket_list)
         with self.subTest():
             self.assertIsNone(eval)
         with self.subTest():
@@ -100,7 +100,7 @@ class TestTicketFunctions(unittest.TestCase):
     def test_parse_import_ticket_2(self):
         """Verify improperly structured data is not parsed."""
         ticket, eval = \
-            functions_tickets.parse_import_ticket(self.short_ticket_list)
+            FunctionsTicket.parse_import_ticket(self.short_ticket_list)
         with self.subTest():
             self.assertIsNotNone(eval)
         with self.subTest():
@@ -111,7 +111,7 @@ class TestTicketFunctions(unittest.TestCase):
     def test_parse_import_ticket_3(self):
         """Verify improperly structured data is not parsed."""
         ticket, eval = \
-            functions_tickets.parse_import_ticket(self.long_ticket_list)
+            FunctionsTicket.parse_import_ticket(self.long_ticket_list)
         with self.subTest():
             self.assertIsNotNone(eval)
         with self.subTest():
@@ -135,7 +135,7 @@ class TestTicketFunctions(unittest.TestCase):
         list_of_lists = [self.normal_ticket_list,
                          self.remove_ticket_list]
         list_of_tickets, list_of_evals = \
-            functions_tickets.parse_import_tickets(list_of_lists)
+            FunctionsTicket.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_evals), 0)
         with self.subTest():
@@ -153,7 +153,7 @@ class TestTicketFunctions(unittest.TestCase):
         list_of_lists = [self.short_ticket_list,
                          self.long_ticket_list]
         list_of_tickets, list_of_evals = \
-            functions_tickets.parse_import_tickets(list_of_lists)
+            FunctionsTicket.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_evals), 2)
         with self.subTest():
@@ -166,7 +166,7 @@ class TestTicketFunctions(unittest.TestCase):
                         self.normal_ticket_list,
                          self.long_ticket_list]
         list_of_tickets, list_of_evals = \
-            functions_tickets.parse_import_tickets(list_of_lists)
+            FunctionsTicket.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_evals), 2)
         with self.subTest():
@@ -181,7 +181,7 @@ class TestTicketFunctions(unittest.TestCase):
     def test_identify_duplicates1_1(self):
         """Verify duplicate items generates an error."""
         eval_object = \
-            functions_tickets.identify_duplicates1(["Trixie", "Trixie"], "temp")
+            FunctionsTicket.identify_duplicates1(["Trixie", "Trixie"], "temp")
         with self.subTest():
             self.assertIsNotNone(eval_object)
         with self.subTest():
@@ -190,7 +190,7 @@ class TestTicketFunctions(unittest.TestCase):
     def test_identify_duplicates1_2(self):
         """Verify non-duplicate items do not generate an error."""
         eval_object = \
-            functions_tickets.identify_duplicates1(["Trixie", "L5"], "temp")
+            FunctionsTicket.identify_duplicates1(["Trixie", "L5"], "temp")
         with self.subTest():
             self.assertIsNone(eval_object)
         with self.subTest():
@@ -211,7 +211,7 @@ class TestTicketFunctions(unittest.TestCase):
         list1 = ["Trixie", "L5"]
         list2 = ["Trixie", "RedRock"]
         eval_object = \
-            functions_tickets.identify_duplicates2(list1, list2, "temp")
+            FunctionsTicket.identify_duplicates2(list1, list2, "temp")
         with self.subTest():
             self.assertIsNotNone(eval_object)
         with self.subTest():
@@ -225,7 +225,7 @@ class TestTicketFunctions(unittest.TestCase):
         list1 = ["Trixie", "L5"]
         list2 = ["D29", "RedRock"]
         eval_object = \
-            functions_tickets.identify_duplicates2(list1, list2, "temp")
+            FunctionsTicket.identify_duplicates2(list1, list2, "temp")
         with self.subTest():
             self.assertIsNone(eval_object)
         with self.subTest():
@@ -251,7 +251,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -272,7 +272,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -296,7 +296,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -318,7 +318,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -340,7 +340,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -362,7 +362,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 3)
 
@@ -391,7 +391,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -413,7 +413,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -435,7 +435,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -457,7 +457,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -479,7 +479,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
         self.assertEqual(len(result_list), 1)
 
     def test_validate_tickets_12(self):
@@ -500,7 +500,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -522,7 +522,7 @@ class TestTicketFunctions(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            functions_tickets.validate_tickets(list_of_tickets)
+            FunctionsTicket.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
