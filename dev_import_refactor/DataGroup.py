@@ -1,6 +1,6 @@
 """Represents a structure to directly compare data between two or more genomes."""
 
-
+import Eval
 
 class DataGroup:
 
@@ -8,13 +8,47 @@ class DataGroup:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
-        self.ticket = ''
-        self.matched_genomes_dict = {}
-        self.__list_of_errors = [] #Todo not sure if this is list of messages or error objects
-        self.__list_of_sql_queries = [] #Todo not sure if this should be here or not
+        self.ticket = ""
+        self.genome1 = None
+        self.genome2 = None
+        self.genome3 = None
+        self.genome4 = None
+
+        #self.matched_genomes_dict = {}
 
 
 
+
+        # Initialize calculated attributes
+        self.evaluations1 = []
+        self.evaluations2 = []
+        self.evaluations3 = []
+        self.evaluations4 = []
+        self.evaluations5 = []
+
+
+
+
+
+        self._list_of_sql_queries = []
+
+
+
+
+
+
+    def set_evaluation(self, type, message1 = None, message2 = None):
+
+        if type == "warning":
+            eval_object = Eval.construct_warning(message1, message2)
+
+        elif type == "error":
+            eval_object = Eval.construct_error(message1)
+
+        else:
+            eval_object = Eval.EvalResult()
+
+        self.evaluations.append(eval_object)
 
 
 

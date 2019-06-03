@@ -2,6 +2,9 @@
 
 
 import DataGroup
+import Genome
+import Ticket
+import Eval
 import unittest
 
 
@@ -9,14 +12,26 @@ class TestDataGroupClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.normal_ticket_list = ["add",
-                                "Trixe",
-                                "Mycobacterium",
-                                "A",]
+
+        self.data_group = DataGroup.DataGroup()
+        self.genome1 = Genome.Genome()
+        self.genome2 = Genome.Genome()
+        self.ticket = Ticket.ImportTicket()
 
 
 
 
+    def test_set_evaluation_1(self):
+        self.data_group.set_evaluation("none")
+        self.assertEqual(len(self.data_group.evaluations), 1)
+
+    def test_set_evaluation_2(self):
+        self.data_group.set_evaluation("warning","message1")
+        self.assertEqual(len(self.data_group.evaluations), 1)
+
+    def test_set_evaluation_3(self):
+        self.data_group.set_evaluation("error","message1","message2")
+        self.assertEqual(len(self.data_group.evaluations), 1)
 
 
 
