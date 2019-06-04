@@ -185,18 +185,59 @@ def parse_fasta_file(fasta_file):
 
 
 
+    # TODO finish revamping code for matching features.
+    # TODO unit test
+    def identify_unique_items(self, complete_list):
+        """Iterate over a list of items and generate two lists.
+        The first list contains items that are unique in the original list.
+        The second list contains items that are not unique in the original
+        list, although non-duplicated items are returned."""
+
+        unique_set = set(complete_list) # Set of all unique items.
+        duplicate_set = set() # Set of all duplicated items.
+
+        for item in complete_list:
+            if item not in unique_set:
+                duplicate_set.add(item)
+
+        return (list(unique_set), list(duplicate_set))
 
 
+    # TODO finish revamping code for matching features.
+    # TODO unit test.
+    def analyze_sets(set1, set2):
+        """Compute the intersection and differences between two sets."""
+
+        set_intersection = set1 & set2
+        set1_diff = set1 - set2
+        set2_diff = set2 - set1
+
+        return (set_intersection, set1_diff, set2_diff)
+
+    # TODO finish revamping code for matching features.
+    # TODO unit test.
+    def match_items(self, list1, list2):
+        """Match values of two lists. Return the matched value list,
+        and a list of unmatched values from each original list."""
+
+        # Determine the unique values in each list.
+        list1_items_unique, list1_items_duplicate = \
+            identify_unique_items(list1_items)
+
+        list2_items_unique, list2_items_duplicate = \
+            identify_unique_items(list2_items)
+
+        # Create matched and difference sets.
+        items_matched, list1_items_unmatched, list2_items_unmatched = \
+            analyze_sets( \
+                list1_items_unique, list2_items_unique)
 
 
+        items_matched = list(items_matched)
+        list1_items_unmatched = list(list1_items_unmatched)
+        list2_items_unmatched = list(list2_items_unmatched)
 
-
-
-
-
-
-
-
+        return (items_matched, list1_items_unmatched, list2_items_unmatched)
 
 
 

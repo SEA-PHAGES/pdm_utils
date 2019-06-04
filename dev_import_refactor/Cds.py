@@ -71,6 +71,7 @@ class CdsFeature:
         self._translation_length = ""
         self._left_right_strand_id = ()
         self._end_strand_id = ()
+        self._start_end_id = ()
 
 
 
@@ -175,12 +176,21 @@ class CdsFeature:
         whether the feature is complex with a translational frameshift or not.
         Retrieving the "left" and "right" boundary attributes return the very
         beginning and end of the feature, disregarding the
-        inner "join" coordinates."""
+        inner "join" coordinates.
+        If only the feature "end" coordinate is used, strand information is
+        required.
+        If "start" and "end" coordinates are used instead of "left" and "right"
+        coordinates, no strand information is required."""
         self._left_right_strand_id = (self.left_boundary, \
                                     self.right_boundary, \
                                     self.strand)
-
         self._end_strand_id = (self.end, self.strand)
+        self._start_end_id = (self.start, self.end)
+
+
+
+
+
 
 
 

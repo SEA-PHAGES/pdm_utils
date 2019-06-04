@@ -161,52 +161,59 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-
-
-
-
-
     def test_set_location_id_1(self):
         """Forward strand feature, both values should be set."""
         self.feature.left_boundary = 5
         self.feature.right_boundary = 10
         self.feature.strand = "forward"
+        self.feature.start = 5
         self.feature.end = 10
         location_id_1 = (5, 10, "forward")
         location_id_2 = (10, "forward")
+        location_id_3 = (5, 10)
         self.feature.set_location_id()
         with self.subTest():
             self.assertEqual(self.feature._left_right_strand_id, location_id_1)
         with self.subTest():
             self.assertEqual(self.feature._end_strand_id, location_id_2)
+        with self.subTest():
+            self.assertEqual(self.feature._start_end_id, location_id_3)
 
     def test_set_location_id_2(self):
         """Reverse strand feature, both values should be set."""
         self.feature.left_boundary = 5
         self.feature.right_boundary = 10
         self.feature.strand = "reverse"
+        self.feature.start = 10
         self.feature.end = 5
         location_id_1 = (5, 10, "reverse")
         location_id_2 = (5, "reverse")
+        location_id_3 = (10, 5)
         self.feature.set_location_id()
         with self.subTest():
             self.assertEqual(self.feature._left_right_strand_id, location_id_1)
         with self.subTest():
             self.assertEqual(self.feature._end_strand_id, location_id_2)
+        with self.subTest():
+            self.assertEqual(self.feature._start_end_id, location_id_3)
 
     def test_set_location_id_3(self):
         """Test forward strand numeric format."""
         self.feature.left_boundary = 5
         self.feature.right_boundary = 10
         self.feature.strand = 1
+        self.feature.start = 5
         self.feature.end = 10
         location_id_1 = (5, 10, 1)
         location_id_2 = (10, 1)
+        location_id_3 = (5, 10)
         self.feature.set_location_id()
         with self.subTest():
             self.assertEqual(self.feature._left_right_strand_id, location_id_1)
         with self.subTest():
             self.assertEqual(self.feature._end_strand_id, location_id_2)
+        with self.subTest():
+            self.assertEqual(self.feature._start_end_id, location_id_3)
 
     def test_set_location_id_4(self):
         """Test non-standard strand format."""
@@ -214,12 +221,26 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.right_boundary = 10
         self.feature.strand = "abcd"
         location_id_1 = (5, 10, "abcd")
-        location_id_2 = ("","abcd")
+        location_id_2 = ("", "abcd")
+        location_id_3 = ("", "")
         self.feature.set_location_id()
         with self.subTest():
             self.assertEqual(self.feature._left_right_strand_id, location_id_1)
         with self.subTest():
             self.assertEqual(self.feature._end_strand_id, location_id_2)
+        with self.subTest():
+            self.assertEqual(self.feature._start_end_id, location_id_3)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -229,7 +250,6 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.right_boundary = 10
         self.feature.check_boundaries()
         self.assertEqual(len(self.feature.evaluations), 0)
-
 
     def test_check_boundaries_2(self):
         """Test incorrect left boundary."""

@@ -130,26 +130,43 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     def test_set_cds_features_1(self):
         """Check that CDS feature list is set and length is computed."""
-        features_list = [0,1,2,3]
+        features_list = [0, 1, 2, 3]
         self.genome.set_cds_features(features_list)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 4)
         with self.subTest():
             self.assertEqual(self.genome._cds_features_tally, 4)
+
+
+
+
+    def test_set_cds_ids_1(self):
+        """Check that CDS feature identifier lists are set."""
+        cds1 = Cds.CdsFeature()
+        cds1._start_end_id = (1, 5)
+        cds1._end_strand_id = (5, "forward")
+
+        cds2 = Cds.CdsFeature()
+        cds2._start_end_id = (21, 2)
+        cds2._end_strand_id = (2, "reverse")
+
+        features_list = [cds1, cds2]
+        self.genome.set_cds_features(features_list)
+        self.genome.set_cds_ids()
+
+        start_end_id_list = [(1,5), (21,2)]
+        end_strand_id_list = [(5, "forward"), (2, "reverse")]
+
+        with self.subTest():
+            self.assertEqual(self.genome._cds_start_end_ids, \
+            start_end_id_list)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_end_strand_ids, \
+            end_strand_id_list)
+
+
 
 
     def test_set_trna_features_1(self):
@@ -162,6 +179,8 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 4)
 
 
+
+
     def test_set_source_features_1(self):
         """Check that source feature list is set and length is computed."""
         features_list = [0,1,2,3]
@@ -170,11 +189,6 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(len(self.genome.source_features), 4)
         with self.subTest():
             self.assertEqual(self.genome._source_features_tally, 4)
-
-
-
-
-
 
 
 
@@ -544,6 +558,275 @@ class TestGenomeClass(unittest.TestCase):
         self.genome._cds_processed_primary_descriptions_tally = 1
         self.genome.check_status_descriptions()
         self.assertEqual(len(self.genome.evaluations), 0)
+
+
+
+
+
+
+
+    def test_check_phage_name_typos_1(self):
+        """Check that no warning is produced."""
+        phage_name = "Trixie"
+        string = "Mycobacterium phage Trixie"
+        self.genome.record_description = string
+        self.genome.record_source = string
+        self.genome.record_organism = string
+        self.genome.source_feature_organism = string
+        self.genome.check_phage_name_typos(phage_name)
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_phage_name_typos_2(self):
+        """Check that warning is produced from record_description."""
+        phage_name = "Trixie"
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium phage Trixi"
+        self.genome.record_description = string2
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.check_phage_name_typos(phage_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_phage_name_typos_3(self):
+        """Check that warning is produced from record_source."""
+        phage_name = "Trixie"
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium phage Trixi"
+        self.genome.record_description = string1
+        self.genome.record_source = string2
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.check_phage_name_typos(phage_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_phage_name_typos_4(self):
+        """Check that warning is produced from record_organism."""
+        phage_name = "Trixie"
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium phage Trixi"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string2
+        self.genome.source_feature_organism = string1
+        self.genome.check_phage_name_typos(phage_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_phage_name_typos_5(self):
+        """Check that warning is produced from source_feature_organism."""
+        phage_name = "Trixie"
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium phage Trixi"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string2
+        self.genome.check_phage_name_typos(phage_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_phage_name_typos_6(self):
+        """Check that only one warning is produced."""
+        phage_name = "Trixie"
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium phage Trixi"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string2
+        self.genome.source_feature_organism = string2
+        self.genome.check_phage_name_typos(phage_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+
+
+
+
+
+
+
+
+    def test_check_host_name_typos_1(self):
+        """Check that no warning is produced."""
+        host_name = "Gordonia"
+        string = "Gordonia phage Trixie"
+        self.genome.record_description = string
+        self.genome.record_source = string
+        self.genome.record_organism = string
+        self.genome.source_feature_organism = string
+        self.genome.source_feature_host = string
+        self.genome.source_feature_lab_host = string
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_host_name_typos_2(self):
+        """Check that warning is produced from record_description."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string2
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.source_feature_host = string1
+        self.genome.source_feature_lab_host = string1
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_3(self):
+        """Check that warning is produced from record_source."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string1
+        self.genome.record_source = string2
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.source_feature_host = string1
+        self.genome.source_feature_lab_host = string1
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_4(self):
+        """Check that warning is produced from record_organism."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string2
+        self.genome.source_feature_organism = string1
+        self.genome.source_feature_host = string1
+        self.genome.source_feature_lab_host = string1
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_5(self):
+        """Check that warning is produced from source_feature_organism."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string2
+        self.genome.source_feature_host = string1
+        self.genome.source_feature_lab_host = string1
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_6(self):
+        """Check that warning is produced from source_feature_host."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.source_feature_host = string2
+        self.genome.source_feature_lab_host = string1
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_7(self):
+        """Check that warning is produced from source_feature_lab_host."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.source_feature_host = string1
+        self.genome.source_feature_lab_host = string2
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_8(self):
+        """Check that only one warning is produced."""
+        host_name = "Gordonia"
+        string1 = "Gordonia phage Trixie"
+        string2 = "Gordoni phage Trixie"
+        self.genome.record_description = string1
+        self.genome.record_source = string1
+        self.genome.record_organism = string1
+        self.genome.source_feature_organism = string1
+        self.genome.source_feature_host = string2
+        self.genome.source_feature_lab_host = string2
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_host_name_typos_9(self):
+        """Check that Mycobacterium does not produce a warning."""
+        host_name = "Mycobacterium"
+        string = "Mycobacteriophage Trixie"
+        self.genome.record_description = string
+        self.genome.record_source = string
+        self.genome.record_organism = string
+        self.genome.source_feature_organism = string
+        self.genome.source_feature_host = string
+        self.genome.source_feature_lab_host = string
+        self.genome.check_host_name_typos(host_name)
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+
+
+
+
+
+
+
+
+
+
+    def test_check_author_1(self):
+        """Check that no warning is produced when author is expected
+        and present."""
+        self.genome.author = "Hatfull"
+        self.genome.record_authors = "abcd; efgh; hatfull; xyz"
+        self.genome.annotation_author = 1
+        self.genome.check_author()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_author_2(self):
+        """Check that no warning is produced when author is not expected
+        and not present."""
+        self.genome.author = "Hatfull"
+        self.genome.record_authors = "abcd; efgh; xyz"
+        self.genome.annotation_author = 0
+        self.genome.check_author()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_author_3(self):
+        """Check that warning is produced when author is expected
+        and not present."""
+        self.genome.author = "Hatfull"
+        self.genome.record_authors = "abcd; efgh; xyz"
+        self.genome.annotation_author = 1
+        self.genome.check_author()
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+    def test_check_author_4(self):
+        """Check that warning is produced when author is not expected
+        and present."""
+        self.genome.author = "Hatfull"
+        self.genome.record_authors = "abcd; efgh; hatfull; xyz"
+        self.genome.annotation_author = 0
+        self.genome.check_author()
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

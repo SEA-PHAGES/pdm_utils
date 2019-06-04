@@ -4,6 +4,7 @@ maintain and update SEA-PHAGES phage genomics data.
 import FunctionsSimple
 import Eval
 from datetime import datetime
+import re
 
 
 class Genome:
@@ -18,7 +19,7 @@ class Genome:
         self.host = ""
         self.sequence = "" # TODO should this be a Biopython Seq object?
         self.accession = ""
-
+        self.author = ""
 
 
 
@@ -73,6 +74,8 @@ class Genome:
         #Common to annotated genomes
         self.cds_features = [] # List of all parsed CDS features
         self._cds_features_tally = 0
+        self._cds_start_end_ids = []
+        self._cds_end_strand_ids = []
         self._cds_processed_primary_descriptions_tally = 0
 
 
@@ -104,8 +107,11 @@ class Genome:
         self.record_header_fields_phage_name_error = False
         self.record_header_fields_host_error = False
 
-        self.cds_features_unique_ids = set()
-        self.cds_features_duplicate_ids = set()
+        self.cds_unique_start_stop_ids = set()
+
+
+        self.cds_duplicate_start_stop_ids = set()
+        self.cds_duplicate_stop_ids = set()
 
 
 
@@ -211,11 +217,33 @@ class Genome:
             self.accession = value
 
 
+
     def set_cds_features(self, value):
-        """Set and tally the CDS features."""
+        """Set the CDS features. Tally the CDS features."""
 
         self.cds_features = value # Should be a list
         self._cds_features_tally = len(self.cds_features)
+
+
+    def set_cds_ids(self):
+        """
+        Create a list of CDS feature identifiers using the
+        start and end coordinates.
+        Create a list of CDS feature identifiers using the
+        end coordinate and strand information.
+        """
+
+        start_end_id_list = []
+        end_strand_id_list = []
+
+        for cds in self.cds_features:
+            start_end_id_list.append(cds._start_end_id)
+            end_strand_id_list.append(cds._end_strand_id)
+
+        self._cds_start_end_ids = start_end_id_list
+        self._cds_end_strand_ids = end_strand_id_list
+
+
 
 
     def set_trna_features(self, value):
@@ -375,73 +403,168 @@ class Genome:
 
 
 
-    # TODO need to implement this function. Pasted from original
-    # MatchedGenomes object.
-    def check_header_phage_name_typos_xxxxx(self):
+    # TODO this method could be improved and refined.
+    def check_phage_name_typos(self, phage_name):
+        """Check phage name spelling in various fields."""
 
-        #Compare phage names
-        pattern1 = re.compile('^' + ph_genome.get_phage_name() + '$')
-        pattern2 = re.compile('^' + ph_genome.get_phage_name())
-
-        if find_name(pattern2,ncbi_genome.get_record_description().split(' ')) == 0 or \
-            find_name(pattern1,ncbi_genome.get_record_source().split(' ')) == 0 or \
-            find_name(pattern1,ncbi_genome.get_record_organism().split(' ')) == 0 or \
-            find_name(pattern1,ncbi_genome.get_source_feature_organism().split(' ')) == 0:
-
-            self.__ncbi_record_header_fields_phage_name_mismatch = True
+        # Compare phage names
+        pattern1 = re.compile("^" + phage_name + "$")
+        pattern2 = re.compile("^" + phage_name)
 
 
+        split_description = self.record_description.split(" ")
+        split_source = self.record_source.split(" ")
+        split_organism1 = self.record_organism.split(" ")
+        split_organism2 = self.source_feature_organism.split(" ")
 
 
+        if FunctionsSimple.find_expression(pattern2, split_description) == 0 \
+            or \
+            FunctionsSimple.find_expression(pattern1, split_source) == 0 \
+            or \
+            FunctionsSimple.find_expression(pattern1, split_organism1) == 0 \
+            or \
+            FunctionsSimple.find_expression(pattern1, split_organism2) == 0:
+
+            message1 = "There appears to be a phage name discrepancy."
+            message2 = "There is a phage name discrepancy."
+            self.set_evaluation("warning", message1, message2)
 
 
-    # TODO need to implement this function. Pasted from original
-    # MatchedGenomes object.
-    def check_header_host_name_typos_xxxxx(self):
+    # TODO this method could be improved and refined.
+    def check_host_name_typos(self, host_name):
+        """Check host name spelling in various fields."""
 
-        #Compare host data
-        search_host = ph_genome.get_host()
-        if search_host == 'Mycobacterium':
-            search_host = search_host[:-3]
-        pattern3 = re.compile('^' + search_host)
+        if host_name == 'Mycobacterium':
+            host_name = host_name[:-3]
+        pattern = re.compile('^' + host_name)
 
-        if (find_name(pattern3,ncbi_genome.get_record_description().split(' ')) == 0 or \
-            find_name(pattern3,ncbi_genome.get_record_source().split(' ')) == 0 or \
-            find_name(pattern3,ncbi_genome.get_record_organism().split(' ')) == 0 or \
-            find_name(pattern3,ncbi_genome.get_source_feature_organism().split(' ')) == 0) or \
-            (ncbi_genome.get_source_feature_host() != '' and find_name(pattern3,ncbi_genome.get_source_feature_host().split(' ')) == 0) or \
-            (ncbi_genome.get_source_feature_lab_host() != '' and find_name(pattern3,ncbi_genome.get_source_feature_lab_host().split(' ')) == 0):
-
-            self.__ncbi_host_mismatch = True
+        split_description = self.record_description.split(" ")
+        split_source = self.record_source.split(" ")
+        split_organism1 = self.record_organism.split(" ")
+        split_organism2 = self.source_feature_organism.split(" ")
+        split_host1 = self.source_feature_host.split(" ")
+        split_host2 = self.source_feature_lab_host.split(" ")
 
 
+        if (FunctionsSimple.find_expression(pattern,split_description) == 0 \
+            or \
+            FunctionsSimple.find_expression(pattern,split_source) == 0 \
+            or \
+            FunctionsSimple.find_expression(pattern,split_organism1) == 0 \
+            or \
+            FunctionsSimple.find_expression(pattern,split_organism2) == 0) \
+            or \
+            (self.source_feature_host != "" and \
+                FunctionsSimple.find_expression(pattern,split_host1) == 0) \
+            or \
+            (self.source_feature_lab_host != "" and \
+                FunctionsSimple.find_expression(pattern,split_host2) == 0):
 
 
+            message1 = "There appears to be a host name discrepancy."
+            message2 = "There is a host name discrepancy."
+            self.set_evaluation("warning", message1, message2)
 
 
-    # TODO need to implement this function. Pasted from original
-    # MatchedGenomes object.
-    def check_author_xxxxx(self):
+    def check_author(self):
+        """Check author name spelling.
+        When AnnotationAuthor is set to 1, it will expect to find the
+        provided author in the list of authors.
+        When AnnotationAuthor is set to 0, it will expect to NOT find the
+        provided author in the list of authors."""
 
-        #Check author list for errors
-        #For genomes with AnnotationAuthor = 1 (Hatfull), Graham is expected
-        #to be an author.
-        #For genomes with AnnotationAuthor = 0 (non-Hatfull/Genbank), Graham
-        #is NOT expected to be an author.
-        pattern5 = re.compile('hatfull')
-        search_result = pattern5.search(ncbi_genome.get_record_authors().lower())
-        if ph_genome.get_annotation_author() == 1 and search_result == None:
-            self.__ph_ncbi_author_error = True
-        elif ph_genome.get_annotation_author() == 0 and search_result != None:
-            self.__ph_ncbi_author_error = True
+        authors = self.record_authors.lower()
+        pattern = re.compile(self.author.lower())
+        search_result = pattern.search(authors)
+
+        if self.annotation_author == 1 and search_result == None:
+
+            message1 = "The expected author is not listed."
+            message2 = "The expected author is not listed."
+            self.set_evaluation("warning", message1, message2)
+
+        elif self.annotation_author == 0 and search_result != None:
+
+            message1 = "The author is not expected to be present."
+            message2 = "The author is not expected to be present."
+            self.set_evaluation("warning", message1, message2)
+
         else:
-            #Any other combination of phamerator and ncbi author can be skipped
             pass
 
 
 
 
 
+
+
+
+
+
+
+    # TODO finish revamping code for matching features.
+    # TODO create methods to compute this:
+    # TODO unit test
+    def check_cds_coordinates(self):
+
+        # This set will contain all unique feature identifiers created
+        # by concatenating the start coordinate,
+        # stop coordinate, and strand into a tuple.
+        feature_set1 = set()
+
+
+        # This will will contain all feature identifiers that do not
+        # have a unique tuple identifier.
+        feature_set1_duplicate_set = set()
+
+
+        for feature in self.cds_features:
+
+            if feature._left_right_strand_id not in feature_set1:
+                feature_set1.add(feature._left_right_strand_id)
+            else:
+                feature_set1_duplicate_set.add(feature._left_right_strand_id)
+
+
+        # Remove the duplicate end_strand ids from the main id_set
+        feature_set1 = feature_set1 - feature_set1_duplicate_set
+
+        self.cds_features_unique_ids = feature_set1
+        self.cds_features_duplicate_ids = feature_set1_duplicate_set
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # TODO finish revamping code for matching features.
     # TODO create methods to compute this:
     # TODO unit test
     def compare_feature_identifiers(self):
@@ -478,6 +601,26 @@ class Genome:
 
 
 
+
+
+
+
+
+
+
+    # TODO finish revamping code for matching features.
+    # TODO I may not need this anymore, since I have a setter method that
+    # computes this.
+    # TODO unit test
+    def get_cds_start_stop_ids(self):
+        """Returns a list of tuples containing the start coordinate,
+        stop coordinate, and strand of each CDS feature."""
+
+        id_list = []
+
+        for cds in self.cds_features:
+            id_list.append(cds._start_end_id)
+        return id_list
 
 
     # TODO decide how to assess whether CDS features contain any issues and
