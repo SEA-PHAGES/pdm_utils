@@ -95,6 +95,39 @@ class Genome:
         # Computed datafields: common to flat file (NCBI) records
         self.search_filename = "" # Lowercase file name
 
+
+
+        self._record_description_phage_name = ""
+        self._record_source_phage_name = ""
+        self._record_organism_phage_name = ""
+        self._source_feature_organism_phage_name = ""
+
+        self._record_description_host_name = ""
+        self._record_source_host_name = ""
+        self._record_organism_host_name = ""
+        self._source_feature_organism_host_name = ""
+        self._source_feature_host_host_name = ""
+        self._source_feature_lab_host_host_name = ""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         self._cds_processed_product_descriptions_tally = 0
         self._cds_processed_function_descriptions_tally = 0
         self._cds_processed_note_descriptions_tally = 0
@@ -107,13 +140,13 @@ class Genome:
         self.record_header_fields_phage_name_error = False
         self.record_header_fields_host_error = False
 
-        self.cds_unique_start_stop_ids = set()
 
 
-        self.cds_duplicate_start_stop_ids = set()
-        self.cds_duplicate_stop_ids = set()
 
-
+        self._cds_unique_start_end_ids = set()
+        self._cds_duplicate_start_end_ids = set()
+        self._cds_unique_end_strand_ids = set()
+        self._cds_duplicate_end_strand_ids = set()
 
 
 
@@ -155,8 +188,79 @@ class Genome:
 
 
 
+
+
+
+    # TODO create this function.
+    # TODO unit test.
+    def parse_phage_name_from_record(self):
+        pass
+
+
+
+        #
+        # pattern1 = re.compile("^" + phage_name + "$")
+        # pattern2 = re.compile("^" + phage_name)
+        #
+        # split_description = self.record_description.split(" ")
+        # split_source = self.record_source.split(" ")
+        # split_organism1 = self.record_organism.split(" ")
+        # split_organism2 = self.source_feature_organism.split(" ")
+        #
+        # if FunctionsSimple.find_expression(pattern2, split_description) == 0 \
+        #     or \
+        #     FunctionsSimple.find_expression(pattern1, split_source) == 0 \
+        #     or \
+        #     FunctionsSimple.find_expression(pattern1, split_organism1) == 0 \
+        #     or \
+        #     FunctionsSimple.find_expression(pattern1, split_organism2) == 0:
+        #
+        #
+        #
+        # self._record_description_phage_name
+        # self._record_source_phage_name
+        # self._record_organism_phage_name
+        # self._source_feature_organism_phage_name
+
+
+
+    # TODO create this function.
+    # TODO unit test.
+    def parse_host_name_from_record(self):
+        pass
+
+
+        # self._record_description_host_name
+        # self._record_source_host_name
+        # self._record_organism_host_name
+        # self._source_feature_organism_host_name
+        # self._source_feature_host_host_name
+        # self._source_feature_lab_host_host_name
+
+
+
+
+
+
+
+
+
+
     # TODO create method to choose how to set phage name from NCBI record.
     # Can choose between Organism, Description, etc.
+    def set_phage_name_from_file(self, value):
+        pass
+        # TODO finish this after I create the parse_from_record functions.
+        # TODO afterwards, revamp check_phage_name_typos and host_name_typos
+        # methods?
+
+
+
+
+
+
+
+
 
 
 
@@ -342,6 +446,27 @@ class Genome:
                 self._cds_processed_note_descriptions_tally += 1
 
 
+    def identify_unique_cds_start_end_ids(self):
+        """Identify which CDS features contain unique start-end
+        coordinates."""
+
+        unique_id_tuples, duplicate_id_tuples = \
+            FunctionsSimple.identify_unique_items(self._cds_start_end_ids)
+
+        self._cds_unique_start_end_ids = set(unique_id_tuples)
+        self._cds_duplicate_start_end_ids = set(duplicate_id_tuples)
+
+
+    def identify_unique_cds_end_strand_ids(self):
+        """Identify which CDS features contain unique end-strand
+        coordinates."""
+
+        unique_id_tuples, duplicate_id_tuples = \
+            FunctionsSimple.identify_unique_items(self._cds_end_strand_ids)
+
+        self._cds_unique_end_strand_ids = set(unique_id_tuples)
+        self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
+
 
 
 
@@ -361,6 +486,7 @@ class Genome:
                 + str(nucleotide_error_set)
             self.set_evaluation("error", message)
 
+
     def check_status_accession(self):
         """Compare genome status and accession.
         Now that the AnnotationAuthor field contains authorship data, the
@@ -374,6 +500,7 @@ class Genome:
         if self.status == 'final' and self.accession == '':
             message = "The genome is final but does not have an accession. "
             self.set_evaluation("error", message)
+
 
     def check_status_descriptions(self):
         """Depending on the status of the genome, CDS features are expected
@@ -400,23 +527,17 @@ class Genome:
             pass
 
 
-
-
-
     # TODO this method could be improved and refined.
     def check_phage_name_typos(self, phage_name):
         """Check phage name spelling in various fields."""
 
-        # Compare phage names
         pattern1 = re.compile("^" + phage_name + "$")
         pattern2 = re.compile("^" + phage_name)
-
 
         split_description = self.record_description.split(" ")
         split_source = self.record_source.split(" ")
         split_organism1 = self.record_organism.split(" ")
         split_organism2 = self.source_feature_organism.split(" ")
-
 
         if FunctionsSimple.find_expression(pattern2, split_description) == 0 \
             or \
@@ -481,57 +602,40 @@ class Genome:
         if self.annotation_author == 1 and search_result == None:
 
             message1 = "The expected author is not listed."
-            message2 = "The expected author is not listed."
-            self.set_evaluation("warning", message1, message2)
+            self.set_evaluation("warning", message1, message1)
 
         elif self.annotation_author == 0 and search_result != None:
 
-            message1 = "The author is not expected to be present."
             message2 = "The author is not expected to be present."
-            self.set_evaluation("warning", message1, message2)
+            self.set_evaluation("warning", message2, message2)
 
         else:
             pass
 
 
+    def check_cds_start_end_ids(self):
+        """Check if there are any duplicate start-end coordinates.
+        Duplicated start-end coordinates may represent
+        unintentional duplicate CDS features."""
+
+        if len(self._cds_duplicate_start_end_ids) > 0:
+
+            message = "There are multiple CDS features with the same " + \
+                "start and end coordinates."
+            self.set_evaluation("warning", message, message)
 
 
+    def check_cds_end_strand_ids(self):
+        """Check if there are any duplicate end-strand coordinates.
+        Duplicated end-strand coordinates may represent
+        unintentional duplicate CDS features with slightly
+        different start coordinates."""
 
+        if len(self._cds_duplicate_end_strand_ids) > 0:
 
-
-
-
-
-
-    # TODO finish revamping code for matching features.
-    # TODO create methods to compute this:
-    # TODO unit test
-    def check_cds_coordinates(self):
-
-        # This set will contain all unique feature identifiers created
-        # by concatenating the start coordinate,
-        # stop coordinate, and strand into a tuple.
-        feature_set1 = set()
-
-
-        # This will will contain all feature identifiers that do not
-        # have a unique tuple identifier.
-        feature_set1_duplicate_set = set()
-
-
-        for feature in self.cds_features:
-
-            if feature._left_right_strand_id not in feature_set1:
-                feature_set1.add(feature._left_right_strand_id)
-            else:
-                feature_set1_duplicate_set.add(feature._left_right_strand_id)
-
-
-        # Remove the duplicate end_strand ids from the main id_set
-        feature_set1 = feature_set1 - feature_set1_duplicate_set
-
-        self.cds_features_unique_ids = feature_set1
-        self.cds_features_duplicate_ids = feature_set1_duplicate_set
+            message = "There are multiple CDS features with the same " + \
+                "end coordinate and strand."
+            self.set_evaluation("warning", message, message)
 
 
 
@@ -542,57 +646,6 @@ class Genome:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # TODO finish revamping code for matching features.
-    # TODO create methods to compute this:
-    # TODO unit test
-    def compare_feature_identifiers(self):
-
-        # This set will contain all unique feature identifiers created
-        # by concatenating the start coordinate,
-        # stop coordinate, and strand into a tuple.
-        feature_set1 = set()
-
-
-        # This will will contain all feature identifiers that do not
-        # have a unique tuple identifier.
-        feature_set1_duplicate_set = set()
-
-
-        for feature in self.cds_features:
-
-            if feature._left_right_strand_id not in feature_set1:
-                feature_set1.add(feature._left_right_strand_id)
-            else:
-                feature_set1_duplicate_set.add(feature._left_right_strand_id)
-
-
-        # Remove the duplicate end_strand ids from the main id_set
-        feature_set1 = feature_set1 - feature_set1_duplicate_set
-
-        self.cds_features_unique_ids = feature_set1
-        self.cds_features_duplicate_ids = feature_set1_duplicate_set
 
 
 

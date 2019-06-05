@@ -169,6 +169,195 @@ def parse_fasta_file(fasta_file):
 
 
 
+def identify_unique_items(complete_list):
+    """Iterate over a list of items and generate two lists.
+    The first list contains items that are unique and non-duplicated
+    in the original list.
+    The second list contains items that are not unique in the original
+    list, although non-duplicated items are returned."""
+
+    unique_set = set() # Set of all non-duplicated unique items.
+    duplicate_set = set() # Set of all duplicated items.
+
+    for item in complete_list:
+        if item not in unique_set:
+            unique_set.add(item)
+        else:
+            duplicate_set.add(item)
+
+    # Remove items from the unique list that eventually were duplicated.
+    unique_set = unique_set - duplicate_set
+
+    return (list(unique_set), list(duplicate_set))
+
+
+
+
+
+
+def trim_generic_characters(string):
+    """.
+    """
+
+    characters = set([".", ",", ";", "-"])
+
+    if len(string) > 0:
+
+        # Trim non-specific trailing characters.
+        value = True
+        while value:
+
+            if string[-1] in characters:
+                string = string[:-1]
+            else:
+                value = False
+
+
+        # Trim non-specific leading characters.
+        value = True
+        while value:
+
+            if string[0] in characters:
+                string = string[1:]
+            else:
+                value = False
+
+
+    return string
+
+
+
+
+
+
+
+
+
+
+# TODO unit test.
+def parse_names_from_record_field(description):
+    """Parse string of text from GenBank-formatted flat file to
+    identify the phage name and host name.
+    """
+
+    characters = set([".", ",", ";", "-"])
+
+    host_name = ""
+    phage_name = ""
+
+    # Remove trailing whitespace.
+    description = description.strip()
+    split_description = description.split(" ")
+
+
+
+    # Remove non-specific characters.
+    index = 0
+    while index < len(split_description):
+
+        word = split_description[index]
+
+        # Continue trimming non-specific trailing characters.
+        value = True
+        while value:
+
+            if word[-1] in characters:
+                word = word[:-1]
+            else:
+                value = False
+
+        # Continue trimming non-specific leading characters.
+        value = True
+        while value:
+
+            if word[0] in characters:
+                word = word[1:]
+            else:
+                value = False
+
+        split_description[index] = word
+        index += 1
+
+
+    # Remove 'complete' and 'genome' words
+    # e.g. 'Mycobacterium phage Trixie, complete genome'.
+    if len(split_description) > 1:
+        if (split_description[-2] == "complete" and
+            split_description[-1] == "genome"):
+
+            # Pop 'genome'.
+            split_description.pop()
+
+            # Now pop the last element 'complete'.
+            split_description.pop()
+
+
+
+    # Iterate through the list of processed words and attempt to
+    # identify the host name and phage name.
+    index = 0
+    while index < len(split_description):
+
+        word = split_description[index]
+
+        word_lower = word.lower()
+
+        # Attempt to identify the host.
+
+        # Sometimes the host name is the word preceding 'phage' or 'virus'.
+        # e.g. 'Mycobacterium phage'.
+        if index > 0:
+            if (word_lower == "phage" or word_lower == "virus"):
+                host_name = split_description[index - 1]
+
+        # Sometimes the host name is merged with 'phage'.
+        # e.g. 'Mycobacteriophage'.
+        elif (len(word) > 5 and word_lower[-5:] == "phage"):
+            host_name = word[:-5]
+
+        else:
+            pass
+
+
+
+
+        # Attempt to identify the phage.
+
+        # Sometimes the phage name is the word following 'phage' or 'virus'.
+        # e.g. 'Mycobacterium phage Trixie' or 'Mycobacteriophage Trixie'
+        if index < (len(split_description) - 1):
+            if (word_lower[-5:] == "phage" or \
+                word_lower[-5:] == "virus"):
+
+                phage_name = split_description[index + 1]
+
+        index += 1
+
+
+    return (phage_name, host_name)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -182,62 +371,41 @@ def parse_fasta_file(fasta_file):
 #TODO Unit test below
 
 
+# TODO finish revamping code for matching features.
+# TODO unit test.
+def analyze_sets(set1, set2):
+    """Compute the intersection and differences between two sets."""
+
+    set_intersection = set1 & set2
+    set1_diff = set1 - set2
+    set2_diff = set2 - set1
+
+    return (set_intersection, set1_diff, set2_diff)
+
+# TODO finish revamping code for matching features.
+# TODO unit test.
+def match_items(self, list1, list2):
+    """Match values of two lists. Return the matched value list,
+    and a list of unmatched values from each original list."""
+
+    # Determine the unique values in each list.
+    list1_items_unique, list1_items_duplicate = \
+        identify_unique_items(list1_items)
+
+    list2_items_unique, list2_items_duplicate = \
+        identify_unique_items(list2_items)
+
+    # Create matched and difference sets.
+    items_matched, list1_items_unmatched, list2_items_unmatched = \
+        analyze_sets( \
+            list1_items_unique, list2_items_unique)
 
 
+    items_matched = list(items_matched)
+    list1_items_unmatched = list(list1_items_unmatched)
+    list2_items_unmatched = list(list2_items_unmatched)
 
-    # TODO finish revamping code for matching features.
-    # TODO unit test
-    def identify_unique_items(self, complete_list):
-        """Iterate over a list of items and generate two lists.
-        The first list contains items that are unique in the original list.
-        The second list contains items that are not unique in the original
-        list, although non-duplicated items are returned."""
-
-        unique_set = set(complete_list) # Set of all unique items.
-        duplicate_set = set() # Set of all duplicated items.
-
-        for item in complete_list:
-            if item not in unique_set:
-                duplicate_set.add(item)
-
-        return (list(unique_set), list(duplicate_set))
-
-
-    # TODO finish revamping code for matching features.
-    # TODO unit test.
-    def analyze_sets(set1, set2):
-        """Compute the intersection and differences between two sets."""
-
-        set_intersection = set1 & set2
-        set1_diff = set1 - set2
-        set2_diff = set2 - set1
-
-        return (set_intersection, set1_diff, set2_diff)
-
-    # TODO finish revamping code for matching features.
-    # TODO unit test.
-    def match_items(self, list1, list2):
-        """Match values of two lists. Return the matched value list,
-        and a list of unmatched values from each original list."""
-
-        # Determine the unique values in each list.
-        list1_items_unique, list1_items_duplicate = \
-            identify_unique_items(list1_items)
-
-        list2_items_unique, list2_items_duplicate = \
-            identify_unique_items(list2_items)
-
-        # Create matched and difference sets.
-        items_matched, list1_items_unmatched, list2_items_unmatched = \
-            analyze_sets( \
-                list1_items_unique, list2_items_unique)
-
-
-        items_matched = list(items_matched)
-        list1_items_unmatched = list(list1_items_unmatched)
-        list2_items_unmatched = list(list2_items_unmatched)
-
-        return (items_matched, list1_items_unmatched, list2_items_unmatched)
+    return (items_matched, list1_items_unmatched, list2_items_unmatched)
 
 
 

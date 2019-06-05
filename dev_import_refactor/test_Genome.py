@@ -823,12 +823,64 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_identify_unique_cds_start_end_ids_1(self):
+        """Verify that both sets are computed."""
+        self.genome._cds_start_end_ids = \
+            [(1, 5), (2, 10), (10, 2), (2, 10)]
+        expected_unique_set = set([(1, 5), (10, 2)])
+        expected_duplicate_set = set([(2, 10)])
+        self.genome.identify_unique_cds_start_end_ids()
+        with self.subTest():
+            self.assertEqual(self.genome._cds_unique_start_end_ids, \
+                expected_unique_set)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_duplicate_start_end_ids, \
+                expected_duplicate_set)
 
 
 
 
+    def test_identify_unique_cds_end_strand_ids_1(self):
+        """Verify that both sets are computed."""
+        self.genome._cds_end_strand_ids = \
+            [(1, "forward"), (2, "reverse"), (2, "forward"), (2, "reverse")]
+        expected_unique_set = set([(1, "forward"), (2, "forward")])
+        expected_duplicate_set = set([(2, "reverse")])
+        self.genome.identify_unique_cds_end_strand_ids()
+        with self.subTest():
+            self.assertEqual(self.genome._cds_unique_end_strand_ids, \
+                expected_unique_set)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_duplicate_end_strand_ids, \
+                expected_duplicate_set)
 
 
+
+
+    def test_check_cds_start_end_ids_1(self):
+        """Verify that no warning is produced."""
+        self.genome.check_cds_start_end_ids()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_cds_start_end_ids_2(self):
+        """Verify that a warning is produced."""
+        self.genome._cds_duplicate_start_end_ids = set([(2, 10)])
+        self.genome.check_cds_start_end_ids()
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+
+
+
+    def test_check_cds_end_strand_ids_1(self):
+        """Verify that no warning is produced."""
+        self.genome.check_cds_end_strand_ids()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_cds_end_strand_ids_2(self):
+        """Verify that a warning is produced."""
+        self.genome._cds_duplicate_end_strand_ids = set([(2, "forward")])
+        self.genome.check_cds_end_strand_ids()
+        self.assertEqual(len(self.genome.evaluations), 1)
 
 
 

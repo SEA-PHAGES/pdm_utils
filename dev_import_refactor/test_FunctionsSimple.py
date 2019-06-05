@@ -307,15 +307,129 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-
-
-
     def test_parse_fasta_file_1(self):
         """Verify it fasta file data is parsed correctly."""
         fasta_data = ">Trixie     \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG"
         expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
         sequence = FunctionsSimple.parse_fasta_file(fasta_data)
         self.assertEqual(expected_sequence, sequence)
+
+
+
+
+    def test_identify_unique_items_1(self):
+        """Verify the same list is returned."""
+        input_list = ['a','b','c']
+        unique_list, duplicate_list = \
+            FunctionsSimple.identify_unique_items(input_list)
+        unique_list.sort()
+        with self.subTest():
+            self.assertEqual(len(unique_list), 3)
+        with self.subTest():
+            self.assertEqual(unique_list, input_list)
+        with self.subTest():
+            self.assertEqual(len(duplicate_list), 0)
+
+    def test_identify_unique_items_2(self):
+        """Verify a unique list with no duplicates is returned, and a
+        duplicate list is returned with one item."""
+        input_list = ['a','b','c','c']
+        expected_unique_list = ['a','b']
+        expected_duplicate_list = ['c']
+        unique_list, duplicate_list = \
+            FunctionsSimple.identify_unique_items(input_list)
+        unique_list.sort()
+        with self.subTest():
+            self.assertEqual(len(unique_list), 2)
+        with self.subTest():
+            self.assertEqual(unique_list, expected_unique_list)
+        with self.subTest():
+            self.assertEqual(duplicate_list, expected_duplicate_list)
+
+    def test_identify_unique_items_3(self):
+        """Verify a unique list with no items is returned, and a
+        duplicate list is returned with three items."""
+        input_list = ['a','b','c','c', 'a','b']
+        expected_unique_list = []
+        expected_duplicate_list = ['a','b','c']
+        unique_list, duplicate_list = \
+            FunctionsSimple.identify_unique_items(input_list)
+        duplicate_list.sort()
+        with self.subTest():
+            self.assertEqual(len(unique_list), 0)
+        with self.subTest():
+            self.assertEqual(unique_list, expected_unique_list)
+        with self.subTest():
+            self.assertEqual(duplicate_list, expected_duplicate_list)
+
+    def test_identify_unique_items_4(self):
+        """Verify the function works with a different object type than
+        strings."""
+        input_list = [('a','b'), ('a','c'), ('c','a'), ('a','c')]
+        expected_unique_list = [('a','b'), ('c','a')]
+        expected_duplicate_list = [('a','c')]
+        unique_list, duplicate_list = \
+            FunctionsSimple.identify_unique_items(input_list)
+        unique_list.sort()
+        with self.subTest():
+            self.assertEqual(len(unique_list), 2)
+        with self.subTest():
+            self.assertEqual(unique_list, expected_unique_list)
+        with self.subTest():
+            self.assertEqual(duplicate_list, expected_duplicate_list)
+
+
+
+
+
+    def test_trim_generic_characters_1(self):
+        """Verify empty string is not changed."""
+        input_string = ""
+        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        self.assertEqual(output_string, "")
+
+
+    def test_trim_generic_characters_2(self):
+        """Verify string is not changed."""
+        input_string = "abc"
+        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        self.assertEqual(output_string, input_string)
+
+    def test_trim_generic_characters_3(self):
+        """Verify string with one leading character is trimmed."""
+        input_string = ".abc"
+        expected_output_string = "abc"
+        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        self.assertEqual(output_string, expected_output_string)
+
+    def test_trim_generic_characters_4(self):
+        """Verify string with two leading characters is trimmed."""
+        input_string = ";.abc"
+        expected_output_string = "abc"
+        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        self.assertEqual(output_string, expected_output_string)
+
+
+
+
+
+    #
+    # def test_parse_names_from_record_field_1(self):
+    #     """."""
+    #     string = ""
+    #     expected_phage = ""
+    #     expected_host = ""
+    #     output_phage, output_host = \
+    #         FunctionsSimple.parse_names_from_record_field(string)
+    #     with self.subTest():
+    #         self.assertEqual(output_phage, "")
+    #     with self.subTest():
+    #         self.assertEqual(output_host, "")
+
+
+
+
+
 
 
 
