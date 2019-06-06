@@ -382,61 +382,216 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-    def test_trim_generic_characters_1(self):
+    def test_trim_characters_1(self):
         """Verify empty string is not changed."""
         input_string = ""
-        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        output_string = FunctionsSimple.trim_characters(input_string)
         self.assertEqual(output_string, "")
 
-
-    def test_trim_generic_characters_2(self):
+    def test_trim_characters_2(self):
         """Verify string is not changed."""
         input_string = "abc"
-        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        output_string = FunctionsSimple.trim_characters(input_string)
         self.assertEqual(output_string, input_string)
 
-    def test_trim_generic_characters_3(self):
+    def test_trim_characters_3(self):
         """Verify string with one leading character is trimmed."""
         input_string = ".abc"
         expected_output_string = "abc"
-        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        output_string = FunctionsSimple.trim_characters(input_string)
         self.assertEqual(output_string, expected_output_string)
 
-    def test_trim_generic_characters_4(self):
+    def test_trim_characters_4(self):
         """Verify string with two leading characters is trimmed."""
         input_string = ";.abc"
         expected_output_string = "abc"
-        output_string = FunctionsSimple.trim_generic_characters(input_string)
+        output_string = FunctionsSimple.trim_characters(input_string)
+        self.assertEqual(output_string, expected_output_string)
+
+    def test_trim_characters_5(self):
+        """Verify string with leading and trailing characters is trimmed."""
+        input_string = ".,;-.,;-.,;-abc.,;-.,;-.,;-"
+        expected_output_string = "abc"
+        output_string = FunctionsSimple.trim_characters(input_string)
         self.assertEqual(output_string, expected_output_string)
 
 
 
 
 
-    #
-    # def test_parse_names_from_record_field_1(self):
-    #     """."""
-    #     string = ""
-    #     expected_phage = ""
-    #     expected_host = ""
-    #     output_phage, output_host = \
-    #         FunctionsSimple.parse_names_from_record_field(string)
-    #     with self.subTest():
-    #         self.assertEqual(output_phage, "")
-    #     with self.subTest():
-    #         self.assertEqual(output_host, "")
 
 
 
+    def test_parse_names_from_record_field_1(self):
+        """Test empty string."""
+        string = ""
+        expected_phage = ""
+        expected_host = ""
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_2(self):
+        """Verify host before 'phage' is identified."""
+        string = "Mycobacterium phage"
+        expected_phage = ""
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_3(self):
+        """Verify host before 'virus' is identified."""
+        string = "Mycobacterium virus"
+        expected_phage = ""
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_4(self):
+        """Verify phage after 'phage' is identified."""
+        string = "phage Trixie"
+        expected_phage = "Trixie"
+        expected_host = ""
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_5(self):
+        """Verify phage after 'virus' is identified."""
+        string = "virus Trixie"
+        expected_phage = "Trixie"
+        expected_host = ""
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_6(self):
+        """Verify both host and phage are identified."""
+        string = "Mycobacterium phage Trixie"
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_7(self):
+        """Verify both host and phage are identified from long description."""
+        string = "skdj sjakl Mycobacterium phage Trixie skdjfl ksjd ksjdk"
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_8(self):
+        """Verify host is identified from messy description."""
+        string = ".;Mycobacterium.., phage"
+        expected_phage = ""
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_9(self):
+        """Verify phage is identified from messy description."""
+        string = "phage .,;Trixie..;;,"
+        expected_phage = "Trixie"
+        expected_host = ""
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
+    def test_parse_names_from_record_field_10(self):
+        """Verify host is identified from messy 'phage'."""
+        string = ".;Mycobacterium.., .phage;"
+        expected_phage = ""
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
+
+    def test_parse_names_from_record_field_11(self):
+        """Verify host and phage are identified from string with
+        multiple whitespace characters."""
+        string = "  Mycobacterium       phage   Trixie   "
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
+
+    def test_parse_names_from_record_field_12(self):
+        """Verify both host and phage are identified from
+        long messy complex description."""
+        string = " .kl;; .,Mycobacterium...  ;phage  Trixie,. complete genome."
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
+
+    def test_parse_names_from_record_field_13(self):
+        """Verify host joined with 'phage' is identified from one word
+        string."""
+        string = "Mycobacteriophage"
+        expected_phage = ""
+        expected_host = "Mycobacterio"
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
+
+    def test_parse_names_from_record_field_14(self):
+        """Verify phage is identified from short description."""
+        string = "Trixie"
+        expected_phage = "Trixie"
+        expected_host = ""
+        output_phage, output_host = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
 
 

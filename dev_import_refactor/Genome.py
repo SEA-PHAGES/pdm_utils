@@ -88,13 +88,12 @@ class Genome:
 
 
 
-        #Common to Phamerator
+        # Common to Phamerator
         self.search_id = '' #Lowercase phage_id void of "_draft"
 
 
         # Computed datafields: common to flat file (NCBI) records
         self.search_filename = "" # Lowercase file name
-
 
 
         self._record_description_phage_name = ""
@@ -110,46 +109,15 @@ class Genome:
         self._source_feature_lab_host_host_name = ""
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         self._cds_processed_product_descriptions_tally = 0
         self._cds_processed_function_descriptions_tally = 0
         self._cds_processed_note_descriptions_tally = 0
-
-
-
-
-        # TODO create functions to compute these values. Not sure if they
-        # need distinct attributes instead of simply EvalResult objects.
-        self.record_header_fields_phage_name_error = False
-        self.record_header_fields_host_error = False
-
-
 
 
         self._cds_unique_start_end_ids = set()
         self._cds_duplicate_start_end_ids = set()
         self._cds_unique_end_strand_ids = set()
         self._cds_duplicate_end_strand_ids = set()
-
-
-
 
 
 
@@ -191,68 +159,64 @@ class Genome:
 
 
 
-    # TODO create this function.
-    # TODO unit test.
-    def parse_phage_name_from_record(self):
-        pass
+    def parse_record_description(self):
+        """Retrieve the phage name and host name from the record's
+        'description' field."""
+        string = self.record_description
+        phage_name, host_name = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        self._record_description_phage_name = phage_name
+        self._record_description_host_name = host_name
+
+    def parse_record_source(self):
+        """Retrieve the phage name and host name from the record's
+        'source' field."""
+        string = self.record_source
+        phage_name, host_name = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        self._record_source_phage_name = phage_name
+        self._record_source_host_name = host_name
+
+    def parse_record_organism(self):
+        """Retrieve the phage name and host name from the record's
+        'organism' field."""
+        string = self.record_organism
+        phage_name, host_name = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        self._record_organism_phage_name = phage_name
+        self._record_organism_host_name = host_name
+
+    def parse_source_feature_organism(self):
+        """Retrieve the phage name and host name from the 'organism'
+        field in the record's annotated 'source' feature."""
+        string = self.source_feature_organism
+        phage_name, host_name = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        self._source_feature_organism_phage_name = phage_name
+        self._source_feature_organism_host_name = host_name
+
+    def parse_source_feature_host(self):
+        """Retrieve the host name from the 'host'
+        field in the record's annotated 'source' feature."""
+        string = self.source_feature_host
+        phage_name, host_name = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        self._source_feature_host_host_name = host_name
+        # Note: no need to assign phage name, since this field is only
+        # expected to contain host information.
+
+    def parse_source_feature_lab_host(self):
+        """Retrieve the host name from the 'lab_host'
+        field in the record's annotated 'source' feature."""
+        string = self.source_feature_lab_host
+        phage_name, host_name = \
+            FunctionsSimple.parse_names_from_record_field(string)
+        self._source_feature_lab_host_host_name = host_name
+        # Note: no need to assign phage name, since this field is only
+        # expected to contain host information.
 
 
 
-        #
-        # pattern1 = re.compile("^" + phage_name + "$")
-        # pattern2 = re.compile("^" + phage_name)
-        #
-        # split_description = self.record_description.split(" ")
-        # split_source = self.record_source.split(" ")
-        # split_organism1 = self.record_organism.split(" ")
-        # split_organism2 = self.source_feature_organism.split(" ")
-        #
-        # if FunctionsSimple.find_expression(pattern2, split_description) == 0 \
-        #     or \
-        #     FunctionsSimple.find_expression(pattern1, split_source) == 0 \
-        #     or \
-        #     FunctionsSimple.find_expression(pattern1, split_organism1) == 0 \
-        #     or \
-        #     FunctionsSimple.find_expression(pattern1, split_organism2) == 0:
-        #
-        #
-        #
-        # self._record_description_phage_name
-        # self._record_source_phage_name
-        # self._record_organism_phage_name
-        # self._source_feature_organism_phage_name
-
-
-
-    # TODO create this function.
-    # TODO unit test.
-    def parse_host_name_from_record(self):
-        pass
-
-
-        # self._record_description_host_name
-        # self._record_source_host_name
-        # self._record_organism_host_name
-        # self._source_feature_organism_host_name
-        # self._source_feature_host_host_name
-        # self._source_feature_lab_host_host_name
-
-
-
-
-
-
-
-
-
-
-    # TODO create method to choose how to set phage name from NCBI record.
-    # Can choose between Organism, Description, etc.
-    def set_phage_name_from_file(self, value):
-        pass
-        # TODO finish this after I create the parse_from_record functions.
-        # TODO afterwards, revamp check_phage_name_typos and host_name_typos
-        # methods?
 
 
 
@@ -527,7 +491,10 @@ class Genome:
             pass
 
 
-    # TODO this method could be improved and refined.
+
+
+    # TODO now that the parse_field methods are created,
+    # I can improve or refine this method.
     def check_phage_name_typos(self, phage_name):
         """Check phage name spelling in various fields."""
 
@@ -552,7 +519,8 @@ class Genome:
             self.set_evaluation("warning", message1, message2)
 
 
-    # TODO this method could be improved and refined.
+    # TODO now that the parse_field methods are created,
+    # I can improve or refine this method.
     def check_host_name_typos(self, host_name):
         """Check host name spelling in various fields."""
 
@@ -645,43 +613,4 @@ class Genome:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # TODO finish revamping code for matching features.
-    # TODO I may not need this anymore, since I have a setter method that
-    # computes this.
-    # TODO unit test
-    def get_cds_start_stop_ids(self):
-        """Returns a list of tuples containing the start coordinate,
-        stop coordinate, and strand of each CDS feature."""
-
-        id_list = []
-
-        for cds in self.cds_features:
-            id_list.append(cds._start_end_id)
-        return id_list
-
-
-    # TODO decide how to assess whether CDS features contain any issues and
-    # how to report that at the genome level.
-    # TODO unit test
-    # def compute_cds_feature_errors(self):
-    #     for cds_feature in self._cds_features:
-    #         if cds_feature.get_amino_acid_errors():
-    #             self.__cds_features_with_translation_error_tally += 1
-    #         if cds_feature.get_boundary_error():
-    #             self.__cds_features_boundary_error_tally += 1
+###

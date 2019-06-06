@@ -193,104 +193,55 @@ def identify_unique_items(complete_list):
 
 
 
-
-
-def trim_generic_characters(string):
-    """.
+def trim_characters(string):
+    """Remove leading and trailing generic characters from a string.
     """
 
-    characters = set([".", ",", ";", "-"])
+    generic_characters = set([".", ",", ";", "-"])
 
     if len(string) > 0:
 
         # Trim non-specific trailing characters.
-        value = True
-        while value:
-
-            if string[-1] in characters:
+        value1 = True
+        while value1:
+            if string[-1] in generic_characters:
                 string = string[:-1]
             else:
-                value = False
-
+                value1 = False
 
         # Trim non-specific leading characters.
-        value = True
-        while value:
-
-            if string[0] in characters:
+        value2 = True
+        while value2:
+            if string[0] in generic_characters:
                 string = string[1:]
             else:
-                value = False
-
+                value2 = False
 
     return string
 
 
 
-
-
-
-
-
-
-
-# TODO unit test.
+# TODO this can probably be improved.
 def parse_names_from_record_field(description):
     """Parse string of text from GenBank-formatted flat file to
     identify the phage name and host name.
     """
 
-    characters = set([".", ",", ";", "-"])
+    generic_words = set(["complete", "genome", "phage"])
 
     host_name = ""
     phage_name = ""
 
-    # Remove trailing whitespace.
+    # Remove trailing whitespace and split into a list.
     description = description.strip()
-    split_description = description.split(" ")
+    split_description = description.split()
 
 
-
-    # Remove non-specific characters.
+    # Trim leading and trailing generic characters.
     index = 0
     while index < len(split_description):
-
-        word = split_description[index]
-
-        # Continue trimming non-specific trailing characters.
-        value = True
-        while value:
-
-            if word[-1] in characters:
-                word = word[:-1]
-            else:
-                value = False
-
-        # Continue trimming non-specific leading characters.
-        value = True
-        while value:
-
-            if word[0] in characters:
-                word = word[1:]
-            else:
-                value = False
-
-        split_description[index] = word
+        split_description[index] = trim_characters(split_description[index])
         index += 1
-
-
-    # Remove 'complete' and 'genome' words
-    # e.g. 'Mycobacterium phage Trixie, complete genome'.
-    if len(split_description) > 1:
-        if (split_description[-2] == "complete" and
-            split_description[-1] == "genome"):
-
-            # Pop 'genome'.
-            split_description.pop()
-
-            # Now pop the last element 'complete'.
-            split_description.pop()
-
 
 
     # Iterate through the list of processed words and attempt to
@@ -319,9 +270,20 @@ def parse_names_from_record_field(description):
             pass
 
 
-
-
         # Attempt to identify the phage.
+
+        # If there is one non-generic word in the string, assign it as the
+        # phage name.
+        if len(split_description) == 1:
+
+            if (len(word) > 5 and word_lower[-5:] == "phage"):
+                host_name = word[:-5]
+
+            elif word_lower not in generic_words:
+                phage_name = word
+
+            else:
+                pass
 
         # Sometimes the phage name is the word following 'phage' or 'virus'.
         # e.g. 'Mycobacterium phage Trixie' or 'Mycobacteriophage Trixie'

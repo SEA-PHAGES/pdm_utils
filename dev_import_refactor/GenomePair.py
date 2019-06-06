@@ -36,29 +36,6 @@ class GenomePair:
 
 
 
-
-        # TODO instead of setting attributes, should probably
-        # just create EvalResult objects.
-        self._host_mismatch = False
-        self._accession_mismatch = False
-        self._cluster_mismatch = False
-        self._subcluster_mismatch = False
-        self._author_mismatch = False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def set_evaluation(self, type, message1 = None, message2 = None):
 
         if type == "warning":
@@ -73,35 +50,26 @@ class GenomePair:
         self.evaluations.append(eval_object)
 
 
-
-
-
-
-
-
-
-
     def compare_genome_sequence(self):
         """Compare the sequence of each genome."""
 
         if self.genome1.sequence != self.genome2.sequence:
-
             message = "The two genomes have different sequences."
             self.set_evaluation("warning", message, message)
+
 
     def compare_genome_length(self):
         """Compare the sequence length of each genome."""
 
         if self.genome1._length != self.genome2._length:
-
             message = "The two genomes have different sequence lengths."
             self.set_evaluation("warning", message, message)
+
 
     def compare_cluster(self):
         """Compare the cluster of each genome."""
 
         if self.genome1.cluster != self.genome2.cluster:
-
             message = "The two genomes are assigned to different clusters."
             self.set_evaluation("warning", message, message)
 
@@ -110,28 +78,31 @@ class GenomePair:
         """Compare the subcluster of each genome."""
 
         if self.genome1.subcluster != self.genome2.subcluster:
-
             message = "The two genomes are assigned to different subclusters."
             self.set_evaluation("warning", message, message)
+
 
     def compare_accession(self):
         """Compare the accession of each genome."""
 
         if self.genome1.accession != self.genome2.accession:
-
             message = "The two genomes have different accessions."
             self.set_evaluation("warning", message, message)
+
 
     def compare_host(self):
         """Compare the host of each genome."""
 
         if self.genome1.host != self.genome2.host:
-
             message = "The two genomes have different hosts."
             self.set_evaluation("warning", message, message)
 
 
-
+    # TODO implement this method. Since authorship is not as straightforward
+    # as other fields, it is tricky.
+    def compare_author(self):
+        """Compare the authorship of each genome."""
+        pass
 
 
 

@@ -885,6 +885,169 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_parse_record_description_1(self):
+        """Verify empty string is parsed correctly."""
+        self.genome.record_description = ""
+        self.genome.parse_record_description()
+        expected_phage = ""
+        expected_host = ""
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_description_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_description_host_name, expected_host)
+
+    def test_parse_record_description_2(self):
+        """Verify string is parsed correctly."""
+        self.genome.record_description = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_record_description()
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_description_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_description_host_name, expected_host)
+
+
+
+
+    def test_parse_record_source_1(self):
+        """Verify empty string is parsed correctly."""
+        self.genome.record_source = ""
+        self.genome.parse_record_source()
+        expected_phage = ""
+        expected_host = ""
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_source_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_source_host_name, expected_host)
+
+    def test_parse_record_source_2(self):
+        """Verify string is parsed correctly."""
+        self.genome.record_source = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_record_source()
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_source_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_source_host_name, expected_host)
+
+
+
+
+    def test_parse_record_organism_1(self):
+        """Verify empty string is parsed correctly."""
+        self.genome.record_organism = ""
+        self.genome.parse_record_organism()
+        expected_phage = ""
+        expected_host = ""
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_organism_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_organism_host_name, expected_host)
+
+    def test_parse_record_organism_2(self):
+        """Verify string is parsed correctly."""
+        self.genome.record_organism = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_record_organism()
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_organism_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._record_organism_host_name, expected_host)
+
+
+
+
+    def test_parse_source_feature_organism_1(self):
+        """Verify empty string is parsed correctly."""
+        self.genome.source_feature_organism = ""
+        self.genome.parse_source_feature_organism()
+        expected_phage = ""
+        expected_host = ""
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._source_feature_organism_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._source_feature_organism_host_name, expected_host)
+
+    def test_parse_source_feature_organism_2(self):
+        """Verify string is parsed correctly."""
+        self.genome.source_feature_organism = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_source_feature_organism()
+        expected_phage = "Trixie"
+        expected_host = "Mycobacterium"
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._source_feature_organism_phage_name, expected_phage)
+        with self.subTest():
+            self.assertEqual(\
+                self.genome._source_feature_organism_host_name, expected_host)
+
+
+
+
+    def test_parse_source_feature_host_1(self):
+        """Verify empty string is parsed correctly."""
+        self.genome.source_feature_host = ""
+        self.genome.parse_source_feature_host()
+        expected_host = ""
+        self.assertEqual(\
+            self.genome._source_feature_host_host_name, expected_host)
+
+    def test_parse_source_feature_host_2(self):
+        """Verify string is parsed correctly."""
+        self.genome.source_feature_host = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_source_feature_host()
+        expected_host = "Mycobacterium"
+        self.assertEqual(\
+            self.genome._source_feature_host_host_name, expected_host)
+
+
+
+
+    def test_parse_source_feature_lab_host_1(self):
+        """Verify empty string is parsed correctly."""
+        self.genome.source_feature_lab_host = ""
+        self.genome.parse_source_feature_lab_host()
+        expected_host = ""
+        self.assertEqual(\
+            self.genome._source_feature_lab_host_host_name, expected_host)
+
+    def test_parse_source_feature_lab_host_2(self):
+        """Verify string is parsed correctly."""
+        self.genome.source_feature_lab_host = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_source_feature_lab_host()
+        expected_host = "Mycobacterium"
+        self.assertEqual(\
+            self.genome._source_feature_lab_host_host_name, expected_host)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
