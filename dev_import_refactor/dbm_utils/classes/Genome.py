@@ -14,8 +14,11 @@ class Genome:
 
         # Non-computed datafields:
 
+
+
         # Common to all genomes
-        self.phage_name = "" # Case sensitive and contains "_Draft"
+        self.phage_id = "" # Unique identifier. Case sensitive, no "_Draft".
+        self.phage_name = "" # Case sensitive and contains "_Draft".
         self.host = ""
         self.sequence = "" # TODO should this be a Biopython Seq object?
         self.accession = ""
@@ -24,7 +27,6 @@ class Genome:
 
 
         # Common to Phamerator and PhagesDB
-        self.phage_id = "" # Case sensitive and does not contain "_Draft"
         self.status = "" # Final, Draft, Gbk version of genome data
         self.cluster = ""
         self.subcluster = ""
@@ -66,7 +68,8 @@ class Genome:
 
 
         # Computed datafields: common to all genomes
-        self.search_name = '' # Lowercase phage_name void of "_draft"
+        self.search_id = '' # Lowercase phage_id
+        self.search_name = '' # Lowercase phage_name
         self._length = 0 # Size of the nucleotide sequence
         self.evaluations = [] # List of warnings and errors about the genome
 
@@ -88,8 +91,6 @@ class Genome:
 
 
 
-        # Common to Phamerator
-        self.search_id = '' #Lowercase phage_id void of "_draft"
 
 
         # Computed datafields: common to flat file (NCBI) records

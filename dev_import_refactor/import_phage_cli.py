@@ -209,7 +209,9 @@ for ticket in list_of_tickets:
 
 # Now that Phamerator data has been retrieved and
 # Phamerator genome objects created, match them to ticket data
-list_of_matched_objects = match_phamerator_to_tickets(list_of_matched_objects, all_phamerator_data)
+list_of_match_evals = match_genomes_to_tickets(list_of_matched_objects,
+                                                    all_phamerator_data,
+                                                    "phamerator")
 
 
 

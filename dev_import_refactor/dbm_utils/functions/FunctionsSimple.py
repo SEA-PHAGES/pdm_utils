@@ -346,7 +346,7 @@ def analyze_sets(set1, set2):
 
 # TODO finish revamping code for matching features.
 # TODO unit test.
-def match_items(self, list1, list2):
+def match_items(list1, list2):
     """Match values of two lists. Return the matched value list,
     and a list of unmatched values from each original list."""
 

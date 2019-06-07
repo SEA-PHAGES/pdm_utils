@@ -80,6 +80,7 @@ def parse_import_tickets(list_of_lists):
 
 #TODO this function should probably be moved to the general functions module.
 def identify_duplicates1(item_list, message):
+    """Verifies there are no duplicate items in a list."""
 
     item_set = set(item_list)
     if len(item_set) != len(item_list):
@@ -92,6 +93,7 @@ def identify_duplicates1(item_list, message):
 
 #TODO this function should probably be moved to the general functions module.
 def identify_duplicates2(item1_list, item2_list, message):
+    """Verifies there are no duplicate items between two lists."""
 
     item1_set = set(item1_list)
     item2_set = set(item2_list)
@@ -202,10 +204,26 @@ def validate_tickets(list_of_tickets):
 
 
 
+def match_genomes_to_tickets(list_of_group_objects, genome_dict, key):
+    """Match genome objects to tickets using phage_id.
+    All tickets are expected to be matched."""
 
+    list_of_evals = []
 
+    for group_obj in list_of_group_objects:
+        phage_id = group_obj.ticket.primary_phage_id
 
+        if phage_id in genome_dict.keys():
+            matched_genome = genome_dict[phage_id]
+            group_obj.genomes_dict[key] = matched_genome
 
+        else:
+            message = "Ticket was not able to be matched with a genome."
+            eval_object = Eval.construct_error(message)
+
+            list_of_evals.append(eval_object)
+
+    return list_of_evals
 
 
 
@@ -216,58 +234,66 @@ def validate_tickets(list_of_tickets):
 
 
 
+#TODO unit test
+def assign_match_strategy(list_of_group_objects):
+
+    strategy = ""
+    strategies = set()
+    eval_result = None
+
+	for group_obj in list_of_group_objects:
+        strategies.add(group_obj.ticket.match_strategy)
+
+
+    if len(strategies) > 1:
+        message = "Unable to match genomes in files to tickets, " + \
+                    "since more than one match strategy is indicated."
+        eval_result = Eval.construct_error(message)
+
+    else:
+        strategy = list(strategies)[0]
+
+    return strategy, eval_result
 
 
 
 
 #TODO unit test
-def match_phamerator_to_tickets(list_of_matched_objects, phamerator_genome_dict):
+def match_files_to_tickets(list_of_datagroup_objects, all_flat_file_data, key):
 
-    for matched_data_obj in list_of_matched_objects:
-        phage_id = matched_data_obj.ticket.primary_phage_id
-
-        try:
-            matched_genome = phamerator_genome_dict[phage_id]
-
-            #Now add the Phamerator data to the MatchedGenomes object
-            matched_data_obj.matched_genomes_dict["phamerator"] = matched_genome
-
-        except:
-            pass
-            #TODO error handling
-
-    return list_of_matched_objects
-
-
-
-
-
-#TODO unit test
-def assign_match_strategy(list_of_matched_objects):
-
-	for matched_object in list_of_matched_objects:
-		ticket = matched_object.ticket
-
-
-		#TODO complete this function
-	pass
-
-
-#TODO unit test
-def match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data):
-    flat_file_genome_dict = {}
-
-    # TODO:
+    eval_results = []
     # Iterate through all tickets and determine what the strategy is to
     # match tickets to flat files.
-    strategy = assign_match_strategy(list_of_matched_objects)
+    strategy, strategy_eval = assign_match_strategy(list_of_datagroup_objects)
 
-    #TODO need to set strategy variable in advance
-    # Now that the flat file data has been retrieved and parsed,
-    # match them to ticket data
+    if strategy_eval not None:
+        eval_results.append(strategy_eval)
 
 
-    for flat_file_object in list_of_flat_file_genomes:
+    # TODO use FunctionsSimple.match_items() function to identify whether
+    # tickets can be matched to flat file genomes instead of using the text
+    # below.
+
+    # Confirm all ticket primary_ids are unique.
+    ticket_primary_ids = set()
+    for group_obj in list_of_datagroup_objects:
+
+        ticket = group_obj.ticket
+        primary_id = ticket.primary_phage_id
+
+        if primary_id not in ticket_primary_ids:
+            ticket_primary_ids.add(primary_id)
+
+        else:
+            message = "Unable to match genomes to tickets " + \
+                    "since there are multiple tickets with the same identifier."
+            eval_result = Eval.construct_error(message)
+            eval_results.append(eval_result)
+
+
+    # Confirm that all genomes contain unique matching identifiers.
+    flat_file_genome_dict = {}
+    for flat_file_object in all_flat_file_data:
 
         if strategy == "phage_id":
             match_name = flat_file_object.phage_id
@@ -281,35 +307,43 @@ def match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data):
         if match_name not in flat_file_genome_dict.keys():
             flat_file_genome_dict[match_name] = flat_file_object
         else:
-            pass
-            #TODO throw an error - unable to create unique set of objects
+            message = "Unable to match genome to a ticket " + \
+                    "since there is another genome with the same identifier."
+            eval_result = Eval.construct_error(message)
+            eval_results.append(eval_result)
 
-    for matched_data_obj in matched_data_list:
-        match_name = matched_data_obj.ticket.primary_phage_id
+
+
+
+    # Now match tickets to flat file genomes.
+    for group_obj in matched_data_list:
+        match_name = group_obj.ticket.primary_phage_id
 
         try:
             flat_file_genome = flat_file_genome_dict.pop(match_name)
+            group_obj.genomes_dict[key] = flat_file_genome
+
 
         except:
-            flat_file_genome = None
+            message = "There is no matching genome for this ticket."
+            eval_result = Eval.construct_error(message)
+            eval_results.append(eval_result)
 
-        #Now add the flat file data to the MatchedGenomes object
-        matched_data_obj.matched_genomes_dict["flat_file"] = flat_file_genome
 
-    return list_of_matched_objects
+    return eval_results
 
 
 
 
 #TODO unit test
-def create_matched_object_dict(list_of_matched_objects):
+def create_matched_object_dict(list_of_datagroup_objects):
 
     dictionary = {}
     list_of_update_objects = []
     list_of_remove_objects = []
     list_of_add_replace_objects = []
 
-    for matched_object in list_of_matched_objects:
+    for matched_object in list_of_datagroup_objects:
         type = matched_object.ticket.ticket_type
 
         if type == "update":

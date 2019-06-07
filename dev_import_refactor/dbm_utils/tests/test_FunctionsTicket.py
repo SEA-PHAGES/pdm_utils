@@ -1,6 +1,7 @@
 """ Unit tests for misc. ticket functions"""
 
-
+from classes import DataGroup
+from classes import Genome
 from classes import Ticket
 from classes import Eval
 from functions import FunctionsTicket
@@ -10,7 +11,7 @@ import unittest
 
 
 
-class TestTicketFunctions(unittest.TestCase):
+class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
@@ -59,11 +60,6 @@ class TestTicketFunctions(unittest.TestCase):
                                     "none",
                                     "none",
                                     "Trixe"]
-
-        # self.list_of_tickets = [add_ticket_list, remove_ticket_list]
-
-
-
 
 
     def test_parse_import_ticket_1(self):
@@ -529,6 +525,215 @@ class TestTicketFunctions(unittest.TestCase):
 
 
 
+
+
+
+class TestTicketFunctions2(unittest.TestCase):
+
+
+    def setUp(self):
+
+
+        self.genome1 = Genome.Genome()
+        self.genome2 = Genome.Genome()
+        self.genome3 = Genome.Genome()
+
+        self.genome1.phage_id = "Trixie"
+        self.genome2.phage_id = "L5"
+        self.genome3.phage_id = "D29"
+
+        self.genome_dict = {self.genome1.phage_id:self.genome1,
+                            self.genome2.phage_id:self.genome2,
+                            self.genome3.phage_id:self.genome3}
+
+        self.ticket1 = Ticket.ImportTicket()
+        self.ticket2 = Ticket.ImportTicket()
+        self.ticket3 = Ticket.ImportTicket()
+        self.ticket4 = Ticket.ImportTicket()
+        self.ticket5 = Ticket.ImportTicket()
+
+
+        self.ticket1.primary_phage_id = "Trixie"
+        self.ticket2.primary_phage_id = "L5"
+        self.ticket3.primary_phage_id = "D29"
+        self.ticket4.primary_phage_id = "RedRock"
+        self.ticket5.primary_phage_id = "EagleEye"
+
+
+        self.datagroup1 = DataGroup.DataGroup()
+        self.datagroup2 = DataGroup.DataGroup()
+        self.datagroup3 = DataGroup.DataGroup()
+        self.datagroup4 = DataGroup.DataGroup()
+        self.datagroup5 = DataGroup.DataGroup()
+
+        self.datagroup1.ticket = self.ticket1
+        self.datagroup2.ticket = self.ticket2
+        self.datagroup3.ticket = self.ticket3
+        self.datagroup4.ticket = self.ticket4
+        self.datagroup5.ticket = self.ticket5
+
+
+    def test_match_genomes_to_tickets_1(self):
+        """Verify that one genome is matched to ticket correctly."""
+
+        list1 = [self.datagroup1] # Trixie
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        matched_genome = list1[0].genomes_dict["phamerator"]
+        id = matched_genome.phage_id
+        expected_id = "Trixie"
+        with self.subTest():
+            self.assertEqual(id, expected_id)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+
+
+
+
+    def test_match_genomes_to_tickets_2(self):
+        """Verify that no genome is matched to empty ticket list."""
+
+        list1 = []
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        self.assertEqual(len(eval_list), 0)
+
+
+
+
+    def test_match_genomes_to_tickets_3(self):
+        """Verify that genome is not matched to ticket."""
+
+        list1 = [self.datagroup4] # RedRock
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        num_dict_keys = len(list1[0].genomes_dict.keys())
+
+        with self.subTest():
+            self.assertEqual(num_dict_keys, 0)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 1)
+
+
+
+
+
+
+    def test_match_genomes_to_tickets_4(self):
+        """Verify that two genomes are matched to tickets correctly."""
+
+        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        matched_genome1 = list1[0].genomes_dict["phamerator"]
+        matched_genome2 = list1[1].genomes_dict["phamerator"]
+
+        id1 = matched_genome1.phage_id
+        expected_id1 = "Trixie"
+
+        id2 = matched_genome2.phage_id
+        expected_id2 = "L5"
+
+        with self.subTest():
+            self.assertEqual(id1, expected_id1)
+        with self.subTest():
+            self.assertEqual(id2, expected_id2)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+
+
+
+    def test_match_genomes_to_tickets_4(self):
+        """Verify that first genome is not matched to ticket correctly."""
+
+        list1 = [self.datagroup4, self.datagroup2] # RedRock, L5
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        num_dict_keys1 = len(list1[0].genomes_dict.keys())
+        matched_genome2 = list1[1].genomes_dict["phamerator"]
+
+        id2 = matched_genome2.phage_id
+        expected_id2 = "L5"
+
+
+        with self.subTest():
+            self.assertEqual(num_dict_keys1, 0)
+        with self.subTest():
+            self.assertEqual(id2, expected_id2)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 1)
+
+
+
+    def test_match_genomes_to_tickets_5(self):
+        """Verify that second genome is not matched to ticket correctly."""
+
+        list1 = [self.datagroup2, self.datagroup4] # L5, RedRock
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        matched_genome1 = list1[0].genomes_dict["phamerator"]
+        num_dict_keys2 = len(list1[1].genomes_dict.keys())
+
+        id1 = matched_genome1.phage_id
+        expected_id1 = "L5"
+
+
+        with self.subTest():
+            self.assertEqual(num_dict_keys2, 0)
+        with self.subTest():
+            self.assertEqual(id1, expected_id1)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 1)
+
+
+
+
+
+    def test_match_genomes_to_tickets_6(self):
+        """Verify that two genomes are not matched to tickets."""
+
+        list1 = [self.datagroup4, self.datagroup5] # RedRock, EagleEye
+
+        eval_list = \
+            FunctionsTicket.match_genomes_to_tickets(list1,
+                                                    self.genome_dict,
+                                                    "phamerator")
+
+        num_dict_keys1 = len(list1[0].genomes_dict.keys())
+        num_dict_keys2 = len(list1[1].genomes_dict.keys())
+
+        with self.subTest():
+            self.assertEqual(num_dict_keys1, 0)
+        with self.subTest():
+            self.assertEqual(num_dict_keys2, 0)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 2)
 
 
 
