@@ -1,7 +1,7 @@
 """Represents a structure to contain directions for how to parse and import
 genomes into Phamerator."""
 
-import Eval
+from classes import Eval
 
 
 

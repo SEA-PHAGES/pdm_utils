@@ -1,10 +1,10 @@
 """ Unit tests for the DataGroup Class."""
 
 
-import DataGroup
-import Genome
-import Ticket
-import Eval
+from classes import DataGroup
+from classes import Genome
+from classes import Ticket
+from classes import Eval
 import unittest
 
 

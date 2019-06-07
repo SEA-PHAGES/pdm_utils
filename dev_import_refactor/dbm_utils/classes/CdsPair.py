@@ -4,6 +4,17 @@ features.
 
 
 
+
+
+#Old python2 code
+class CdsPair:
+
+    # Initialize all attributes:
+    def __init__(self):
+        pass
+
+
+
 #Old python2 code
 class MatchedCdsFeatures:
 

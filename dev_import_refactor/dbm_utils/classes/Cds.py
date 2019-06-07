@@ -2,8 +2,8 @@
 to maintain and update SEA-PHAGES phage genomics data.
 """
 
-import FunctionsSimple
-import Eval
+from functions import FunctionsSimple
+from classes import Eval
 import re
 
 

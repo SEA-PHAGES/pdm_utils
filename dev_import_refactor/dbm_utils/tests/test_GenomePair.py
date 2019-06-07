@@ -1,10 +1,10 @@
 """ Unit tests for the GenomePair Class."""
 
 
-import GenomePair
-import Genome
-import Ticket
-import Eval
+from classes import GenomePair
+from classes import Genome
+from classes import Ticket
+from classes import Eval
 import unittest
 
 

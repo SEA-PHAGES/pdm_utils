@@ -1,7 +1,7 @@
 """Represents a structure to pair two Genome objects and
 perform comparisons between them to identify inconsistencies."""
 
-import Eval
+from classes import Eval
 
 
 

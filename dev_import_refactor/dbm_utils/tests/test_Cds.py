@@ -1,6 +1,6 @@
 """ Unit tests for the CDS class."""
 
-import Cds
+from classes import Cds
 import unittest
 
 

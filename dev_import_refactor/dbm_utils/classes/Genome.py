@@ -1,8 +1,8 @@
 """Represents a collection of data about a genome that are commonly used to
 maintain and update SEA-PHAGES phage genomics data.
 """
-import FunctionsSimple
-import Eval
+from functions import FunctionsSimple
+from classes import Eval
 from datetime import datetime
 import re
 

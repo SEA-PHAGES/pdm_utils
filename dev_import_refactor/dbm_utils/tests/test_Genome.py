@@ -2,8 +2,8 @@
 
 
 import unittest
-import Genome
-import Cds
+from classes import Genome
+from classes import Cds
 from datetime import datetime
 
 

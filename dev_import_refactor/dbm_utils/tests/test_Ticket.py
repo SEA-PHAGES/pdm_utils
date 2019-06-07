@@ -2,7 +2,7 @@
 
 
 
-import Ticket
+from classes import Ticket
 import unittest
 
 

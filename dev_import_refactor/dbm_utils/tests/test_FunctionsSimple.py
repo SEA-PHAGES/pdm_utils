@@ -1,7 +1,7 @@
 """ Unit tests for general functions."""
 
 
-import FunctionsSimple
+from functions import FunctionsSimple
 import unittest
 import re
 

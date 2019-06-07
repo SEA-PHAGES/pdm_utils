@@ -1,8 +1,8 @@
 """Misc. functions to manipulate tickets."""
 
 
-import Eval
-import Ticket
+from classes import Eval
+from classes import Ticket
 
 
 

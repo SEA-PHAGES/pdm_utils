@@ -1,9 +1,9 @@
 """ Unit tests for misc. ticket functions"""
 
 
-import Ticket
-import Eval
-import FunctionsTicket
+from classes import Ticket
+from classes import Eval
+from functions import FunctionsTicket
 import unittest
 
 
@@ -247,7 +247,7 @@ class TestTicketFunctions(unittest.TestCase):
         ticket2.type = "replace"
         ticket2.primary_phage_id = "L5"
         ticket2.secondary_phage_id = "L5"
-        ticket2.accession = "DEF456"
+        ticket2.accession = "EFG456"
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \

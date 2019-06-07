@@ -1,7 +1,7 @@
 """Represents a structure to directly compare data between two or more genomes."""
 
-import Eval
-import GenomePair
+from classes import Eval
+from classes import GenomePair
 
 class DataGroup:
 
