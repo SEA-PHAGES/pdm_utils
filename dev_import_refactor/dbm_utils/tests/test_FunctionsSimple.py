@@ -318,65 +318,62 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
     def test_identify_unique_items_1(self):
-        """Verify the same list is returned."""
+        """Verify the same set is returned."""
         input_list = ['a','b','c']
-        unique_list, duplicate_list = \
+        unique_set, duplicate_set = \
             FunctionsSimple.identify_unique_items(input_list)
-        unique_list.sort()
+        expected_unique_set = set(input_list)
         with self.subTest():
-            self.assertEqual(len(unique_list), 3)
+            self.assertEqual(len(unique_set), 3)
         with self.subTest():
-            self.assertEqual(unique_list, input_list)
+            self.assertEqual(unique_set, expected_unique_set)
         with self.subTest():
-            self.assertEqual(len(duplicate_list), 0)
+            self.assertEqual(len(duplicate_set), 0)
 
     def test_identify_unique_items_2(self):
-        """Verify a unique list with no duplicates is returned, and a
-        duplicate list is returned with one item."""
+        """Verify a unique set with no duplicates is returned, and a
+        duplicate set is returned with one item."""
         input_list = ['a','b','c','c']
-        expected_unique_list = ['a','b']
-        expected_duplicate_list = ['c']
-        unique_list, duplicate_list = \
+        expected_unique_set = set(['a','b'])
+        expected_duplicate_set = set(['c'])
+        unique_set, duplicate_set = \
             FunctionsSimple.identify_unique_items(input_list)
-        unique_list.sort()
         with self.subTest():
-            self.assertEqual(len(unique_list), 2)
+            self.assertEqual(len(unique_set), 2)
         with self.subTest():
-            self.assertEqual(unique_list, expected_unique_list)
+            self.assertEqual(unique_set, expected_unique_set)
         with self.subTest():
-            self.assertEqual(duplicate_list, expected_duplicate_list)
+            self.assertEqual(duplicate_set, expected_duplicate_set)
 
     def test_identify_unique_items_3(self):
-        """Verify a unique list with no items is returned, and a
-        duplicate list is returned with three items."""
+        """Verify a unique set with no items is returned, and a
+        duplicate set is returned with three items."""
         input_list = ['a','b','c','c', 'a','b']
-        expected_unique_list = []
-        expected_duplicate_list = ['a','b','c']
-        unique_list, duplicate_list = \
+        expected_unique_set = set([])
+        expected_duplicate_set = set(['a','b','c'])
+        unique_set, duplicate_set = \
             FunctionsSimple.identify_unique_items(input_list)
-        duplicate_list.sort()
         with self.subTest():
-            self.assertEqual(len(unique_list), 0)
+            self.assertEqual(len(unique_set), 0)
         with self.subTest():
-            self.assertEqual(unique_list, expected_unique_list)
+            self.assertEqual(unique_set, expected_unique_set)
         with self.subTest():
-            self.assertEqual(duplicate_list, expected_duplicate_list)
+            self.assertEqual(duplicate_set, expected_duplicate_set)
 
     def test_identify_unique_items_4(self):
         """Verify the function works with a different object type than
         strings."""
         input_list = [('a','b'), ('a','c'), ('c','a'), ('a','c')]
-        expected_unique_list = [('a','b'), ('c','a')]
-        expected_duplicate_list = [('a','c')]
-        unique_list, duplicate_list = \
+        expected_unique_set = set([('a','b'), ('c','a')])
+        expected_duplicate_set = set([('a','c')])
+        unique_set, duplicate_set = \
             FunctionsSimple.identify_unique_items(input_list)
-        unique_list.sort()
         with self.subTest():
-            self.assertEqual(len(unique_list), 2)
+            self.assertEqual(len(unique_set), 2)
         with self.subTest():
-            self.assertEqual(unique_list, expected_unique_list)
+            self.assertEqual(unique_set, expected_unique_set)
         with self.subTest():
-            self.assertEqual(duplicate_list, expected_duplicate_list)
+            self.assertEqual(duplicate_set, expected_duplicate_set)
 
 
 
@@ -600,6 +597,200 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
+
+
+
+    def test_compare_sets_1(self):
+        """Verify output when there is no intersection."""
+        set1 = set(['a', 'b', 'c'])
+        set2 = set(['d', 'e', 'f'])
+
+        expected_set1_diff = set1
+        expected_set2_diff = set2
+        expected_set_int = set([])
+
+        set_intersection, set1_diff, set2_diff = \
+            FunctionsSimple.compare_sets(set1, set2)
+        with self.subTest():
+            self.assertEqual(set_intersection, expected_set_int)
+        with self.subTest():
+            self.assertEqual(set1_diff, expected_set1_diff)
+        with self.subTest():
+            self.assertEqual(set2_diff, expected_set2_diff)
+
+    def test_compare_sets_2(self):
+        """Verify output when there is one shared item."""
+        set1 = set(['a', 'b', 'c'])
+        set2 = set(['a', 'e', 'f'])
+
+        expected_set1_diff = set(['b', 'c'])
+        expected_set2_diff = set(['e', 'f'])
+        expected_set_int = set(['a'])
+
+        set_intersection, set1_diff, set2_diff = \
+            FunctionsSimple.compare_sets(set1, set2)
+        with self.subTest():
+            self.assertEqual(set_intersection, expected_set_int)
+        with self.subTest():
+            self.assertEqual(set1_diff, expected_set1_diff)
+        with self.subTest():
+            self.assertEqual(set2_diff, expected_set2_diff)
+
+    def test_compare_sets_3(self):
+        """Verify output when there is all items in one set are shared."""
+        set1 = set(['a', 'b', 'c'])
+        set2 = set(['a', 'b', 'c'])
+
+        expected_set1_diff = set([])
+        expected_set2_diff = set([])
+        expected_set_int = set1
+
+        set_intersection, set1_diff, set2_diff = \
+            FunctionsSimple.compare_sets(set1, set2)
+        with self.subTest():
+            self.assertEqual(set_intersection, expected_set_int)
+        with self.subTest():
+            self.assertEqual(set1_diff, expected_set1_diff)
+        with self.subTest():
+            self.assertEqual(set2_diff, expected_set2_diff)
+
+
+    def test_compare_sets_4(self):
+        """Verify output when there all items are shared."""
+        set1 = set(['a', 'b', 'c'])
+        set2 = set(['a', 'b', 'c', 'd'])
+
+        expected_set1_diff = set([])
+        expected_set2_diff = set(['d'])
+        expected_set_int = set(['a', 'b', 'c'])
+
+        set_intersection, set1_diff, set2_diff = \
+            FunctionsSimple.compare_sets(set1, set2)
+        with self.subTest():
+            self.assertEqual(set_intersection, expected_set_int)
+        with self.subTest():
+            self.assertEqual(set1_diff, expected_set1_diff)
+        with self.subTest():
+            self.assertEqual(set2_diff, expected_set2_diff)
+
+
+
+
+    def test_match_items_1(self):
+        """Verify all unique items are matched."""
+        input_list1 = ['a', 'b', 'c']
+        input_list2 = ['a', 'b', 'c']
+
+        exp_matched_unique = set(['a', 'b', 'c'])
+        exp_set1_unmatched_unique = set([])
+        exp_set2_unmatched_unique = set([])
+        exp_set1_duplicate = set([])
+        exp_set2_duplicate = set([])
+
+        matched_unique, \
+        set1_unmatched_unique, \
+        set2_unmatched_unique, \
+        set1_duplicate, \
+        set2_duplicate = \
+            FunctionsSimple.match_items(input_list1, input_list2)
+
+        with self.subTest():
+            self.assertEqual(matched_unique, exp_matched_unique)
+        with self.subTest():
+            self.assertEqual(set1_unmatched_unique, exp_set1_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set2_unmatched_unique, exp_set2_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set1_duplicate, exp_set1_duplicate)
+        with self.subTest():
+            self.assertEqual(set2_duplicate, exp_set2_duplicate)
+
+    def test_match_items_2(self):
+        """Verify no unique items are matched."""
+        input_list1 = ['a', 'b', 'c']
+        input_list2 = ['d', 'e', 'f']
+
+        exp_matched_unique = set([])
+        exp_set1_unmatched_unique = set(input_list1)
+        exp_set2_unmatched_unique = set(input_list2)
+        exp_set1_duplicate = set([])
+        exp_set2_duplicate = set([])
+
+        matched_unique, \
+        set1_unmatched_unique, \
+        set2_unmatched_unique, \
+        set1_duplicate, \
+        set2_duplicate = \
+            FunctionsSimple.match_items(input_list1, input_list2)
+
+        with self.subTest():
+            self.assertEqual(matched_unique, exp_matched_unique)
+        with self.subTest():
+            self.assertEqual(set1_unmatched_unique, exp_set1_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set2_unmatched_unique, exp_set2_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set1_duplicate, exp_set1_duplicate)
+        with self.subTest():
+            self.assertEqual(set2_duplicate, exp_set2_duplicate)
+
+    def test_match_items_3(self):
+        """Verify no non-unique items are matched."""
+        input_list1 = ['a', 'b', 'c'] + ['a', 'b', 'c']
+        input_list2 = ['d', 'e', 'f'] + ['d', 'e', 'f']
+
+        exp_matched_unique = set([])
+        exp_set1_unmatched_unique = set([])
+        exp_set2_unmatched_unique = set([])
+        exp_set1_duplicate = set(input_list1)
+        exp_set2_duplicate = set(input_list2)
+
+        matched_unique, \
+        set1_unmatched_unique, \
+        set2_unmatched_unique, \
+        set1_duplicate, \
+        set2_duplicate = \
+            FunctionsSimple.match_items(input_list1, input_list2)
+
+        with self.subTest():
+            self.assertEqual(matched_unique, exp_matched_unique)
+        with self.subTest():
+            self.assertEqual(set1_unmatched_unique, exp_set1_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set2_unmatched_unique, exp_set2_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set1_duplicate, exp_set1_duplicate)
+        with self.subTest():
+            self.assertEqual(set2_duplicate, exp_set2_duplicate)
+
+    def test_match_items_4(self):
+        """Verify unique and non-unique items are sorted."""
+        input_list1 = ['a', 'b', 'c'] + ['a', 'b', 'c'] + ['z'] + ['x']
+        input_list2 = ['d', 'e', 'f'] + ['d', 'e', 'f'] + ['z'] + ['y']
+
+        exp_matched_unique = set(['z'])
+        exp_set1_unmatched_unique = set(['x'])
+        exp_set2_unmatched_unique = set(['y'])
+        exp_set1_duplicate = set(['a', 'b', 'c'])
+        exp_set2_duplicate = set(['d', 'e', 'f'])
+
+        matched_unique, \
+        set1_unmatched_unique, \
+        set2_unmatched_unique, \
+        set1_duplicate, \
+        set2_duplicate = \
+            FunctionsSimple.match_items(input_list1, input_list2)
+
+        with self.subTest():
+            self.assertEqual(matched_unique, exp_matched_unique)
+        with self.subTest():
+            self.assertEqual(set1_unmatched_unique, exp_set1_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set2_unmatched_unique, exp_set2_unmatched_unique)
+        with self.subTest():
+            self.assertEqual(set1_duplicate, exp_set1_duplicate)
+        with self.subTest():
+            self.assertEqual(set2_duplicate, exp_set2_duplicate)
 
 if __name__ == '__main__':
     unittest.main()

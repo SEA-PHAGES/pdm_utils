@@ -188,7 +188,7 @@ def identify_unique_items(complete_list):
     # Remove items from the unique list that eventually were duplicated.
     unique_set = unique_set - duplicate_set
 
-    return (list(unique_set), list(duplicate_set))
+    return (unique_set, duplicate_set)
 
 
 
@@ -300,28 +300,43 @@ def parse_names_from_record_field(description):
 
 
 
+def compare_sets(set1, set2):
+    """Compute the intersection and differences between two sets."""
+
+    set_intersection = set1 & set2
+    set1_diff = set1 - set2
+    set2_diff = set2 - set1
+
+    return (set_intersection, set1_diff, set2_diff)
 
 
+def match_items(list1, list2):
+    """Match values of two lists and return several results.
+    First, return the set of matched unique values.
+    Second, return the set of unmatched unique values from the first list.
+    Third, return the set of unmatched unique values from the second list.
+    Fourth, return the set of duplicate values from the first list.
+    Fifth, return the set of unmatched unique values from the second list.
+    """
 
+    # Determine the unique values in each list.
+    set1_unique_items, set1_duplicate_items = \
+        identify_unique_items(list1)
 
+    set2_unique_items, set2_duplicate_items = \
+        identify_unique_items(list2)
 
+    # Create matched and difference sets.
+    matched_unique_items, \
+    set1_unmatched_unique_items, \
+    set2_unmatched_unique_items = \
+        compare_sets(set1_unique_items, set2_unique_items)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return (matched_unique_items,
+            set1_unmatched_unique_items,
+            set2_unmatched_unique_items,
+            set1_duplicate_items,
+            set2_duplicate_items)
 
 
 
@@ -331,50 +346,6 @@ def parse_names_from_record_field(description):
 
 
 #TODO Unit test below
-
-
-# TODO finish revamping code for matching features.
-# TODO unit test.
-def analyze_sets(set1, set2):
-    """Compute the intersection and differences between two sets."""
-
-    set_intersection = set1 & set2
-    set1_diff = set1 - set2
-    set2_diff = set2 - set1
-
-    return (set_intersection, set1_diff, set2_diff)
-
-# TODO finish revamping code for matching features.
-# TODO unit test.
-def match_items(list1, list2):
-    """Match values of two lists. Return the matched value list,
-    and a list of unmatched values from each original list."""
-
-    # Determine the unique values in each list.
-    list1_items_unique, list1_items_duplicate = \
-        identify_unique_items(list1_items)
-
-    list2_items_unique, list2_items_duplicate = \
-        identify_unique_items(list2_items)
-
-    # Create matched and difference sets.
-    items_matched, list1_items_unmatched, list2_items_unmatched = \
-        analyze_sets( \
-            list1_items_unique, list2_items_unique)
-
-
-    items_matched = list(items_matched)
-    list1_items_unmatched = list(list1_items_unmatched)
-    list2_items_unmatched = list(list2_items_unmatched)
-
-    return (items_matched, list1_items_unmatched, list2_items_unmatched)
-
-
-
-
-
-
-
 
 
 #TODO set up and unit test

@@ -1,6 +1,7 @@
 """Misc. functions to manipulate tickets."""
 
 
+from functions import FunctionsSimple
 from classes import Eval
 from classes import Ticket
 
@@ -210,38 +211,31 @@ def match_genomes_to_tickets(list_of_group_objects, genome_dict, key):
 
     list_of_evals = []
 
-    for group_obj in list_of_group_objects:
+    index = 0
+    while index < len(list_of_group_objects):
+
+        group_obj = list_of_group_objects[index]
         phage_id = group_obj.ticket.primary_phage_id
 
         if phage_id in genome_dict.keys():
             matched_genome = genome_dict[phage_id]
             group_obj.genomes_dict[key] = matched_genome
-
         else:
             message = "Ticket was not able to be matched with a genome."
             eval_object = Eval.construct_error(message)
-
             list_of_evals.append(eval_object)
+
+        index += 1
 
     return list_of_evals
 
-
-
-
-
-
-#TODO unit test below
-
-
-
-#TODO unit test
 def assign_match_strategy(list_of_group_objects):
 
     strategy = ""
     strategies = set()
     eval_result = None
 
-	for group_obj in list_of_group_objects:
+    for group_obj in list_of_group_objects:
         strategies.add(group_obj.ticket.match_strategy)
 
 
@@ -258,92 +252,146 @@ def assign_match_strategy(list_of_group_objects):
 
 
 
+
+
+
+
+
+
+
+
+
+
+#TODO unit test below
+
+
+
+
+
+
+
 #TODO unit test
-def match_files_to_tickets(list_of_datagroup_objects, all_flat_file_data, key):
+def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
+    """Match genome objects parsed from files to tickets."""
 
-    eval_results = []
-    # Iterate through all tickets and determine what the strategy is to
-    # match tickets to flat files.
-    strategy, strategy_eval = assign_match_strategy(list_of_datagroup_objects)
+    # Determine what the strategy is to match tickets to flat files.
+    strategy, strategy_eval = assign_match_strategy(list_of_group_objects)
 
-    if strategy_eval not None:
-        eval_results.append(strategy_eval)
-
-
-    # TODO use FunctionsSimple.match_items() function to identify whether
-    # tickets can be matched to flat file genomes instead of using the text
-    # below.
-
-    # Confirm all ticket primary_ids are unique.
-    ticket_primary_ids = set()
-    for group_obj in list_of_datagroup_objects:
-
-        ticket = group_obj.ticket
-        primary_id = ticket.primary_phage_id
-
-        if primary_id not in ticket_primary_ids:
-            ticket_primary_ids.add(primary_id)
-
-        else:
-            message = "Unable to match genomes to tickets " + \
-                    "since there are multiple tickets with the same identifier."
-            eval_result = Eval.construct_error(message)
-            eval_results.append(eval_result)
+    # Create list of all ticket identifiers.
+    ticket_id_list = []
+    for group_obj in list_of_group_objects:
+        ticket_id_list.append(group_obj.ticket.primary_phage_id)
 
 
-    # Confirm that all genomes contain unique matching identifiers.
-    flat_file_genome_dict = {}
-    for flat_file_object in all_flat_file_data:
+    # Create list of all genome identifiers.
+    genome_dict = {}
+    genome_id_list = []
+    index1 = 0
+    while index1 < len(all_flat_file_data):
+        genome_object = all_flat_file_data[index1]
 
         if strategy == "phage_id":
-            match_name = flat_file_object.phage_id
-
+            genome_id = genome_object.phage_id
         elif strategy == "filename":
-            match_name = flat_file_object.filename
-
+            genome_id = genome_object.filename
         else:
-            match_name = ""
+            genome_id = ""
 
-        if match_name not in flat_file_genome_dict.keys():
-            flat_file_genome_dict[match_name] = flat_file_object
-        else:
-            message = "Unable to match genome to a ticket " + \
-                    "since there is another genome with the same identifier."
-            eval_result = Eval.construct_error(message)
-            eval_results.append(eval_result)
+        genome_id_list.append(genome_id)
+        genome_dict[genome_id] = genome_object
+
+        index1 += 1
 
 
+    matched_unique_ids, \
+    ticket_unmatched_unique_ids, \
+    genome_unmatched_unique_ids, \
+    ticket_duplicate_ids, \
+    genome_duplicate_ids = \
+        FunctionsSimple.match_items(ticket_id_list, genome_id_list)
 
 
-    # Now match tickets to flat file genomes.
-    for group_obj in matched_data_list:
-        match_name = group_obj.ticket.primary_phage_id
+    # Match genomes to tickets using the unique identifiers.
+    index2 = 0
+    while index2 < len(list_of_group_objects):
 
-        try:
-            flat_file_genome = flat_file_genome_dict.pop(match_name)
-            group_obj.genomes_dict[key] = flat_file_genome
+        group_obj = list_of_group_objects[index2]
+        match_id = group_obj.ticket.primary_phage_id
+
+        if match_id in matched_unique_ids:
+            genome_object = genome_dict.pop(match_id)
+            group_obj.genomes_dict[key] = genome_object
+
+        index2 += 1
 
 
-        except:
-            message = "There is no matching genome for this ticket."
-            eval_result = Eval.construct_error(message)
-            eval_results.append(eval_result)
 
+    # Check for the various errors that could have been encountered.
+    eval_results = []
+
+    if strategy_eval is not None:
+        eval_results.append(strategy_eval)
+
+    if len(ticket_duplicate_ids) > 0:
+        message = "Unable to match genomes to tickets " + \
+                "since there are multiple tickets with the same identifier."
+        eval_result = Eval.construct_error(message)
+        eval_results.append(eval_result)
+
+    if len(genome_duplicate_ids) > 0:
+        message = "Unable to match genome to a ticket " + \
+                "since there is another genome with the same identifier."
+        eval_result = Eval.construct_error(message)
+        eval_results.append(eval_result)
+
+    if len(ticket_unmatched_unique_ids) > 0:
+        message = "There is no matching genome for this ticket."
+        eval_result = Eval.construct_error(message)
+        eval_results.append(eval_result)
+
+    if len(genome_unmatched_unique_ids) > 0:
+        message = "There is no matching ticket for this genome."
+        eval_result = Eval.construct_error(message)
+        eval_results.append(eval_result)
 
     return eval_results
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #TODO unit test
-def create_matched_object_dict(list_of_datagroup_objects):
+def create_matched_object_dict(list_of_group_objects):
 
     dictionary = {}
     list_of_update_objects = []
     list_of_remove_objects = []
     list_of_add_replace_objects = []
 
-    for matched_object in list_of_datagroup_objects:
+    for matched_object in list_of_group_objects:
         type = matched_object.ticket.ticket_type
 
         if type == "update":
