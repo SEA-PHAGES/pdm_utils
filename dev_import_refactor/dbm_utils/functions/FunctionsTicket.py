@@ -1,7 +1,7 @@
 """Misc. functions to manipulate tickets."""
 
 
-from functions import FunctionsSimple
+from functions import basic
 from classes import Eval
 from classes import Ticket
 
@@ -288,7 +288,7 @@ def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
     genome_unmatched_unique_ids, \
     ticket_duplicate_ids, \
     genome_duplicate_ids = \
-        FunctionsSimple.match_items(ticket_id_list, genome_id_list)
+        basic.match_items(ticket_id_list, genome_id_list)
 
 
     # Match genomes to tickets using the unique identifiers.

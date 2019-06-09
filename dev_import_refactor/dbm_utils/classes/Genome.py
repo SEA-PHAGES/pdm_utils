@@ -1,7 +1,7 @@
 """Represents a collection of data about a genome that are commonly used to
 maintain and update SEA-PHAGES phage genomics data.
 """
-from functions import FunctionsSimple
+from functions import basic
 from classes import Eval
 from datetime import datetime
 import re
@@ -151,7 +151,7 @@ class Genome:
     def set_phage_id(self, value):
         """Set the phage_id and search_id."""
 
-        self.phage_id = FunctionsSimple.remove_draft_suffix(value)
+        self.phage_id = basic.remove_draft_suffix(value)
         self.search_id = self.phage_id.lower()
 
 
@@ -165,7 +165,7 @@ class Genome:
         'description' field."""
         string = self.record_description
         phage_name, host_name = \
-            FunctionsSimple.parse_names_from_record_field(string)
+            basic.parse_names_from_record_field(string)
         self._record_description_phage_name = phage_name
         self._record_description_host_name = host_name
 
@@ -174,7 +174,7 @@ class Genome:
         'source' field."""
         string = self.record_source
         phage_name, host_name = \
-            FunctionsSimple.parse_names_from_record_field(string)
+            basic.parse_names_from_record_field(string)
         self._record_source_phage_name = phage_name
         self._record_source_host_name = host_name
 
@@ -183,7 +183,7 @@ class Genome:
         'organism' field."""
         string = self.record_organism
         phage_name, host_name = \
-            FunctionsSimple.parse_names_from_record_field(string)
+            basic.parse_names_from_record_field(string)
         self._record_organism_phage_name = phage_name
         self._record_organism_host_name = host_name
 
@@ -192,7 +192,7 @@ class Genome:
         field in the record's annotated 'source' feature."""
         string = self.source_feature_organism
         phage_name, host_name = \
-            FunctionsSimple.parse_names_from_record_field(string)
+            basic.parse_names_from_record_field(string)
         self._source_feature_organism_phage_name = phage_name
         self._source_feature_organism_host_name = host_name
 
@@ -201,7 +201,7 @@ class Genome:
         field in the record's annotated 'source' feature."""
         string = self.source_feature_host
         phage_name, host_name = \
-            FunctionsSimple.parse_names_from_record_field(string)
+            basic.parse_names_from_record_field(string)
         self._source_feature_host_host_name = host_name
         # Note: no need to assign phage name, since this field is only
         # expected to contain host information.
@@ -211,7 +211,7 @@ class Genome:
         field in the record's annotated 'source' feature."""
         string = self.source_feature_lab_host
         phage_name, host_name = \
-            FunctionsSimple.parse_names_from_record_field(string)
+            basic.parse_names_from_record_field(string)
         self._source_feature_lab_host_host_name = host_name
         # Note: no need to assign phage name, since this field is only
         # expected to contain host information.
@@ -237,7 +237,7 @@ class Genome:
     #     self.phage_name = value
     #
     #     self.search_name = \
-    #           FunctionsSimple.remove_draft_suffix(self.phage_name).lower()
+    #           basic.remove_draft_suffix(self.phage_name).lower()
 
 
     def set_host(self, value):
@@ -416,7 +416,7 @@ class Genome:
         coordinates."""
 
         unique_id_tuples, duplicate_id_tuples = \
-            FunctionsSimple.identify_unique_items(self._cds_start_end_ids)
+            basic.identify_unique_items(self._cds_start_end_ids)
 
         self._cds_unique_start_end_ids = set(unique_id_tuples)
         self._cds_duplicate_start_end_ids = set(duplicate_id_tuples)
@@ -427,7 +427,7 @@ class Genome:
         coordinates."""
 
         unique_id_tuples, duplicate_id_tuples = \
-            FunctionsSimple.identify_unique_items(self._cds_end_strand_ids)
+            basic.identify_unique_items(self._cds_end_strand_ids)
 
         self._cds_unique_end_strand_ids = set(unique_id_tuples)
         self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
@@ -507,13 +507,13 @@ class Genome:
         split_organism1 = self.record_organism.split(" ")
         split_organism2 = self.source_feature_organism.split(" ")
 
-        if FunctionsSimple.find_expression(pattern2, split_description) == 0 \
+        if basic.find_expression(pattern2, split_description) == 0 \
             or \
-            FunctionsSimple.find_expression(pattern1, split_source) == 0 \
+            basic.find_expression(pattern1, split_source) == 0 \
             or \
-            FunctionsSimple.find_expression(pattern1, split_organism1) == 0 \
+            basic.find_expression(pattern1, split_organism1) == 0 \
             or \
-            FunctionsSimple.find_expression(pattern1, split_organism2) == 0:
+            basic.find_expression(pattern1, split_organism2) == 0:
 
             message1 = "There appears to be a phage name discrepancy."
             message2 = "There is a phage name discrepancy."
@@ -537,19 +537,19 @@ class Genome:
         split_host2 = self.source_feature_lab_host.split(" ")
 
 
-        if (FunctionsSimple.find_expression(pattern,split_description) == 0 \
+        if (basic.find_expression(pattern,split_description) == 0 \
             or \
-            FunctionsSimple.find_expression(pattern,split_source) == 0 \
+            basic.find_expression(pattern,split_source) == 0 \
             or \
-            FunctionsSimple.find_expression(pattern,split_organism1) == 0 \
+            basic.find_expression(pattern,split_organism1) == 0 \
             or \
-            FunctionsSimple.find_expression(pattern,split_organism2) == 0) \
+            basic.find_expression(pattern,split_organism2) == 0) \
             or \
             (self.source_feature_host != "" and \
-                FunctionsSimple.find_expression(pattern,split_host1) == 0) \
+                basic.find_expression(pattern,split_host1) == 0) \
             or \
             (self.source_feature_lab_host != "" and \
-                FunctionsSimple.find_expression(pattern,split_host2) == 0):
+                basic.find_expression(pattern,split_host2) == 0):
 
 
             message1 = "There appears to be a host name discrepancy."
