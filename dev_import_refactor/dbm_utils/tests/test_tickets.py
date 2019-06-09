@@ -4,7 +4,7 @@ from classes import DataGroup
 from classes import Genome
 from classes import Ticket
 from classes import Eval
-from functions import FunctionsTicket
+from functions import tickets
 import unittest
 
 
@@ -65,7 +65,7 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_parse_import_ticket_1(self):
         """Verify properly structured data is parsed correctly."""
         ticket, eval = \
-            FunctionsTicket.parse_import_ticket(self.normal_ticket_list)
+            tickets.parse_import_ticket(self.normal_ticket_list)
         with self.subTest():
             self.assertIsNone(eval)
         with self.subTest():
@@ -96,7 +96,7 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_parse_import_ticket_2(self):
         """Verify improperly structured data is not parsed."""
         ticket, eval = \
-            FunctionsTicket.parse_import_ticket(self.short_ticket_list)
+            tickets.parse_import_ticket(self.short_ticket_list)
         with self.subTest():
             self.assertIsNotNone(eval)
         with self.subTest():
@@ -107,7 +107,7 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_parse_import_ticket_3(self):
         """Verify improperly structured data is not parsed."""
         ticket, eval = \
-            FunctionsTicket.parse_import_ticket(self.long_ticket_list)
+            tickets.parse_import_ticket(self.long_ticket_list)
         with self.subTest():
             self.assertIsNotNone(eval)
         with self.subTest():
@@ -131,7 +131,7 @@ class TestTicketFunctions1(unittest.TestCase):
         list_of_lists = [self.normal_ticket_list,
                          self.remove_ticket_list]
         list_of_tickets, list_of_evals = \
-            FunctionsTicket.parse_import_tickets(list_of_lists)
+            tickets.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_evals), 0)
         with self.subTest():
@@ -149,7 +149,7 @@ class TestTicketFunctions1(unittest.TestCase):
         list_of_lists = [self.short_ticket_list,
                          self.long_ticket_list]
         list_of_tickets, list_of_evals = \
-            FunctionsTicket.parse_import_tickets(list_of_lists)
+            tickets.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_evals), 2)
         with self.subTest():
@@ -162,7 +162,7 @@ class TestTicketFunctions1(unittest.TestCase):
                         self.normal_ticket_list,
                          self.long_ticket_list]
         list_of_tickets, list_of_evals = \
-            FunctionsTicket.parse_import_tickets(list_of_lists)
+            tickets.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_evals), 2)
         with self.subTest():
@@ -177,7 +177,7 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_identify_duplicates1_1(self):
         """Verify duplicate items generates an error."""
         eval_object = \
-            FunctionsTicket.identify_duplicates1(["Trixie", "Trixie"], "temp")
+            tickets.identify_duplicates1(["Trixie", "Trixie"], "temp")
         with self.subTest():
             self.assertIsNotNone(eval_object)
         with self.subTest():
@@ -186,7 +186,7 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_identify_duplicates1_2(self):
         """Verify non-duplicate items do not generate an error."""
         eval_object = \
-            FunctionsTicket.identify_duplicates1(["Trixie", "L5"], "temp")
+            tickets.identify_duplicates1(["Trixie", "L5"], "temp")
         with self.subTest():
             self.assertIsNone(eval_object)
         with self.subTest():
@@ -207,7 +207,7 @@ class TestTicketFunctions1(unittest.TestCase):
         list1 = ["Trixie", "L5"]
         list2 = ["Trixie", "RedRock"]
         eval_object = \
-            FunctionsTicket.identify_duplicates2(list1, list2, "temp")
+            tickets.identify_duplicates2(list1, list2, "temp")
         with self.subTest():
             self.assertIsNotNone(eval_object)
         with self.subTest():
@@ -221,7 +221,7 @@ class TestTicketFunctions1(unittest.TestCase):
         list1 = ["Trixie", "L5"]
         list2 = ["D29", "RedRock"]
         eval_object = \
-            FunctionsTicket.identify_duplicates2(list1, list2, "temp")
+            tickets.identify_duplicates2(list1, list2, "temp")
         with self.subTest():
             self.assertIsNone(eval_object)
         with self.subTest():
@@ -247,7 +247,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -268,7 +268,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -292,7 +292,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -314,7 +314,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -336,7 +336,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -358,7 +358,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 3)
 
@@ -387,7 +387,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -409,7 +409,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
@@ -431,7 +431,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -453,7 +453,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -475,7 +475,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
         self.assertEqual(len(result_list), 1)
 
     def test_validate_tickets_12(self):
@@ -496,7 +496,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -518,7 +518,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            FunctionsTicket.validate_tickets(list_of_tickets)
+            tickets.validate_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
@@ -585,7 +585,7 @@ class TestTicketFunctions2(unittest.TestCase):
 
         list1 = [self.datagroup1] # Trixie
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -602,7 +602,7 @@ class TestTicketFunctions2(unittest.TestCase):
 
         list1 = []
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -614,7 +614,7 @@ class TestTicketFunctions2(unittest.TestCase):
         list1 = [self.datagroup4] # RedRock
 
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -631,7 +631,7 @@ class TestTicketFunctions2(unittest.TestCase):
         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
 
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -657,7 +657,7 @@ class TestTicketFunctions2(unittest.TestCase):
         list1 = [self.datagroup4, self.datagroup2] # RedRock, L5
 
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -680,7 +680,7 @@ class TestTicketFunctions2(unittest.TestCase):
         list1 = [self.datagroup2, self.datagroup4] # L5, RedRock
 
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -703,7 +703,7 @@ class TestTicketFunctions2(unittest.TestCase):
         list1 = [self.datagroup4, self.datagroup5] # RedRock, EagleEye
 
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets1(list1,
+            tickets.match_genomes_to_tickets1(list1,
                                                     self.genome_dict,
                                                     "phamerator")
 
@@ -727,7 +727,7 @@ class TestTicketFunctions2(unittest.TestCase):
         self.datagroup2.ticket.match_strategy = input_strategy
         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
         output_strategy, eval_result = \
-            FunctionsTicket.assign_match_strategy(list1)
+            tickets.assign_match_strategy(list1)
         with self.subTest():
             self.assertEqual(output_strategy, input_strategy)
         with self.subTest():
@@ -741,7 +741,7 @@ class TestTicketFunctions2(unittest.TestCase):
         self.datagroup2.ticket.match_strategy = input_strategy2
         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
         output_strategy, eval_result = \
-            FunctionsTicket.assign_match_strategy(list1)
+            tickets.assign_match_strategy(list1)
         expected_strategy = ""
         with self.subTest():
             self.assertEqual(output_strategy, expected_strategy)
@@ -795,7 +795,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1] # Trixie
         list2 = [self.genome1] # Trixie
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "phamerator")
 
@@ -817,7 +817,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1] # Trixie
         list2 = [self.genome1] # Trixie
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -842,7 +842,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1] # Trixie
         list2 = [self.genome1, self.genome2] # Trixie, L5
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -869,7 +869,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list2 = [self.genome1] # Trixie
 
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -897,7 +897,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
         list2 = [self.genome1, self.genome2] # Trixie, L5
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -931,7 +931,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
         list2 = [self.genome1, self.genome2] # Trixie, L5
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -961,7 +961,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1, self.datagroup2, self.datagroup3]
         list2 = [self.genome1, self.genome2, self.genome3]
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -1009,7 +1009,7 @@ class TestTicketFunctions3(unittest.TestCase):
                 self.datagroup3, self.datagroup4]
         list2 = [self.genome1, self.genome2]
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -1051,7 +1051,7 @@ class TestTicketFunctions3(unittest.TestCase):
         list1 = [self.datagroup1, self.datagroup2]
         list2 = [self.genome1, self.genome2, self.genome3, self.genome4]
         eval_list = \
-            FunctionsTicket.match_genomes_to_tickets2(list1,
+            tickets.match_genomes_to_tickets2(list1,
                                                     list2,
                                                     "flat_file")
 
@@ -1115,7 +1115,7 @@ class TestTicketFunctions4(unittest.TestCase):
         list = [self.datagroup1, self.datagroup2,
                 self.datagroup3, self.datagroup4]
 
-        result_dict = FunctionsTicket.create_matched_object_dict(list)
+        result_dict = tickets.create_matched_object_dict(list)
         update_list = result_dict["update"]
 
         with self.subTest():
@@ -1129,7 +1129,7 @@ class TestTicketFunctions4(unittest.TestCase):
         list = [self.datagroup1, self.datagroup2,
                 self.datagroup3, self.datagroup4]
 
-        result_dict = FunctionsTicket.create_matched_object_dict(list)
+        result_dict = tickets.create_matched_object_dict(list)
         update_list = result_dict[""]
 
         with self.subTest():
@@ -1149,7 +1149,7 @@ class TestTicketFunctions4(unittest.TestCase):
         list = [self.datagroup1, self.datagroup2,
                 self.datagroup3, self.datagroup4]
 
-        result_dict = FunctionsTicket.create_matched_object_dict(list)
+        result_dict = tickets.create_matched_object_dict(list)
         update_list = result_dict["update"]
         add_list = result_dict["add"]
         replace_list = result_dict["replace"]
