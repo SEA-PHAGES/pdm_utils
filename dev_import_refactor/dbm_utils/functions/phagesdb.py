@@ -1,35 +1,13 @@
 """Functions to interact with PhagesDB"""
 
 
-import Eval
-import functions_general
+from classes import Eval
+from functions import basic
+import constants
+import urllib.request
+import json
 
 
-
-#TODO complete function
-
-def retrieve_phagesdb_data(phage_url):
-    """Retrieve all data from PhagesDB for a specific phage."""
-    #TODO retrieve json data, then convert to dictionary
-    pass
-
-
-
-
-
-#TODO unit test
-def retrieve_phagesdb_fasta(fastafile_url):
-    """Retrieve fasta file from PhagesDB."""
-
-    response = urllib2.urlopen(fastafile_url)
-    retrieved_fasta_file = response.read()
-    response.close()
-
-    return retrieved_fasta_file
-
-
-
-#TODO unit test
 def parse_phagesdb_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB."""
     try:
@@ -45,25 +23,23 @@ def parse_phagesdb_phage_name(data_dict):
 
 
 
-#TODO unit test
 def parse_phagesdb_cluster(data_dict):
     """Retrieve Cluster from PhagesDB.
-    On PhagesDB, phages may have a Cluster and no Subcluster info
-    (which is set to None). If the phage has a Subcluster,
-    it should also have a Cluster. If by accident no Cluster or
-    Subcluster info is added at the time the genome is added to
-    PhagesDB, the Cluster may automatically be set to NULL,
-    which gets converted to "Unclustered" during retrieval.
-    This is problematic because in Phamerator NULL means Singleton,
-    and the long form "Unclustered" will be filtered out later in the script
-    due to its character length, so it needs to be abbreviated.
-     """
+    If the phage is clustered, 'pcluster' is a dictionary, and one key is
+    the Cluster data (Cluster or 'Singleton').
+    If for some reason no Cluster info is added at the time
+    the genome is added to PhagesDB, 'pcluster' may automatically be
+    set to NULL, which gets converted to "Unclustered" during retrieval.
+    In Phamerator NULL means Singleton, and the long form
+    "Unclustered" is invalid due to its character length,
+    so this value is converted to 'UNK' ('Unknown').
+    """
 
     try:
-        if data_dict['pcluster'] is None:
+        if data_dict["pcluster"] is None:
             cluster = 'UNK'
         else:
-            cluster = data_dict['pcluster']['cluster']
+            cluster = data_dict["pcluster"]["cluster"]
         eval_object = None
 
     except:
@@ -74,18 +50,21 @@ def parse_phagesdb_cluster(data_dict):
     return (cluster, eval_object)
 
 
-
-#TODO unit test
 def parse_phagesdb_subcluster(data_dict):
-    """Retrieve Subcluster from PhagesDB. Subcluster could be empty
-    if by error no Cluster or Subcluster data has yet been entered
-    on PhagesDB. But it may be empty because there is no subcluster
-    designation yet for members of the Cluster."""
+    """Retrieve Subcluster from PhagesDB.
+    If for some reason no cluster info is added at the time
+    the genome is added to PhagesDB, 'psubcluster' may automatically be
+    set to NULL, which gets returned as None.
+    If the phage is a Singleton, 'psubcluster' is None.
+    If the phage is clustered but not subclustered, 'psubcluster' is None.
+    If the phage is clustered and subclustered, 'psubcluster'
+    is a dictionary, and one key is the Subcluster data."""
+
     try:
-        if data_dict['psubcluster'] is None:
+        if data_dict["psubcluster"] is None:
             subcluster = "none"
         else:
-            subcluster = data_dict['psubcluster']['subcluster']
+            subcluster = data_dict["psubcluster"]["subcluster"]
         eval_object = None
 
     except:
@@ -96,14 +75,10 @@ def parse_phagesdb_subcluster(data_dict):
     return (subcluster, eval_object)
 
 
-
-
-
-#TODO unit test
 def parse_phagesdb_host(data_dict):
     """Retrieve Host from PhagesDB."""
     try:
-        host = data_dict['isolation_host']['genus']
+        host = data_dict["isolation_host"]["genus"]
         eval_object = None
 
     except:
@@ -114,13 +89,10 @@ def parse_phagesdb_host(data_dict):
     return (host, eval_object)
 
 
-
-
-#TODO unit test
 def parse_phagesdb_accession(data_dict):
     """Retrieve Accession from PhagesDB."""
     try:
-        accession = data_dict['genbank_accession']
+        accession = data_dict["genbank_accession"]
         eval_object = None
 
     except:
@@ -131,6 +103,68 @@ def parse_phagesdb_accession(data_dict):
     return (accession, eval_object)
 
 
+def retrieve_phagesdb_fasta(fastafile_url):
+    """Retrieve fasta file from PhagesDB."""
+
+    try:
+        request = urllib.request.Request(fastafile_url)
+        with urllib.request.urlopen(request) as response:
+            fasta_data = response.read()
+            fasta_data = fasta_data.decode("utf-8")
+        eval_object = None
+
+    except:
+        fasta_data = ""
+        eval_object = Eval.construct_error( \
+            "Unable to retrieve fasta data from PhagesDB.")
+
+    return (fasta_data, eval_object)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO unit test below
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -138,10 +172,8 @@ def parse_phagesdb_accession(data_dict):
 def parse_phagesdb_sequence(data_dict):
     """Retrieve genome sequence from PhagesDB."""
 
-    # Note: old code first tested  "online_data_dict['fasta_file'] is not None".
-    # May need to re-implement this logic.
     try:
-        fastafile_url = data_dict['fasta_file']
+        fastafile_url = data_dict["fasta_file"]
         retrieved_fasta_file = retrieve_phagesdb_fasta(fastafile_url)
         sequence = functions_general.parse_fasta_file(retrieved_fasta_file)
         eval_object = None
@@ -156,6 +188,12 @@ def parse_phagesdb_sequence(data_dict):
 
 
 
+
+
+
+
+
+
 #TODO unit test
 def parse_phagesdb_data(genome_obj,data_dict):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
@@ -166,7 +204,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
 
     # Phage Name and Search Name
-    phage_name, result1 = parse_phagesdb_phage_name(data_dict):
+    phage_name, result1 = parse_phagesdb_phage_name(data_dict)
     genome_obj.set_phage_name(phage_name)
     list_of_results.append(result1)
 
@@ -210,6 +248,39 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
 
 
+
+
+
+# TODO complete function
+# TODO unit test.
+def retrieve_phagesdb_genome(phage_id):
+    """Retrieve all data from PhagesDB for a specific phage."""
+
+
+    phage_url = constants.API_PREFIX + \
+                phage_id + \
+                constants.API_SUFFIX
+
+
+    try:
+        online_data_json = request.urlopen(phage_url)
+        online_data_dict = json.loads(online_data_json.read())
+
+        #Returns a genome object
+        phagesdb_genome = \
+            phagesdb.parse_phagesdb_data(phagesdb_genome, online_data_dict)
+
+        if ticket.host == "retrieve":
+            ticket.host = phagesdb_genome.host
+        if ticket.cluster == "retrieve":
+            ticket.cluster = phagesdb_genome.cluster
+        if ticket.subcluster == "retrieve":
+            ticket.subcluster = phagesdb_genome.subcluster
+        if ticket.accession == "retrieve":
+            ticket.accession = phagesdb_genome.accession
+
+    except:
+        pass
 
 
 

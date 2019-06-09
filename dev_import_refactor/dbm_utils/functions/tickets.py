@@ -395,7 +395,7 @@ def retrieve_online_data(ticket):
 
             #Returns a genome object
             phagesdb_genome = \
-                parse_phagesdb_data(phagesdb_genome, online_data_dict)
+                phagesdb.parse_phagesdb_data(phagesdb_genome, online_data_dict)
 
             if ticket.host == "retrieve":
                 ticket.host = phagesdb_genome.host
