@@ -205,7 +205,7 @@ def validate_tickets(list_of_tickets):
 
 
 
-def match_genomes_to_tickets(list_of_group_objects, genome_dict, key):
+def match_genomes_to_tickets1(list_of_group_objects, genome_dict, key):
     """Match genome objects to tickets using phage_id.
     All tickets are expected to be matched."""
 
@@ -250,27 +250,7 @@ def assign_match_strategy(list_of_group_objects):
     return strategy, eval_result
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-#TODO unit test below
-
-
-
-
-
-
-
-#TODO unit test
+# TODO this function may be able to be combined with match_genomes_to_tickets1.
 def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
     """Match genome objects parsed from files to tickets."""
 
@@ -283,7 +263,7 @@ def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
         ticket_id_list.append(group_obj.ticket.primary_phage_id)
 
 
-    # Create list of all genome identifiers.
+    # Create list of all genome identifiers based on the strategy.
     genome_dict = {}
     genome_id_list = []
     index1 = 0
@@ -339,82 +319,59 @@ def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
         eval_results.append(eval_result)
 
     if len(genome_duplicate_ids) > 0:
-        message = "Unable to match genome to a ticket " + \
-                "since there is another genome with the same identifier."
+        message = "Unable to match genomes to tickets " + \
+                "since there are multiple genomes with the same identifier."
         eval_result = Eval.construct_error(message)
         eval_results.append(eval_result)
 
     if len(ticket_unmatched_unique_ids) > 0:
-        message = "There is no matching genome for this ticket."
+        message = "There is no matching genome for one or more tickets."
         eval_result = Eval.construct_error(message)
         eval_results.append(eval_result)
 
     if len(genome_unmatched_unique_ids) > 0:
-        message = "There is no matching ticket for this genome."
+        message = "There is no matching ticket for one or more genomes."
         eval_result = Eval.construct_error(message)
         eval_results.append(eval_result)
 
     return eval_results
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#TODO unit test
 def create_matched_object_dict(list_of_group_objects):
+    """Create a dictionary of DataGroup objects based on their ticket type.
+    Key = ticket type (e.g. update, add, etc.).
+    Value = list of DataGroup objects."""
 
-    dictionary = {}
-    list_of_update_objects = []
-    list_of_remove_objects = []
-    list_of_add_replace_objects = []
-
+    type_set = set()
     for matched_object in list_of_group_objects:
-        type = matched_object.ticket.ticket_type
+        type_set.add(matched_object.ticket.type)
 
-        if type == "update":
-            list_of_update_objects.append(matched_object)
+    ticket_type_dict = {}
+    for type in type_set:
+        group_object_list = []
+        index = 0
+        while index < len(list_of_group_objects):
+            matched_object = list_of_group_objects[index]
+            if matched_object.ticket.type == type:
+                group_object_list.append(matched_object)
+            index += 1
+        ticket_type_dict[type] = group_object_list
 
-        elif type == "remove":
-            list_of_remove_objects.append(matched_object)
-
-        elif (type == "add" or type == "replace"):
-            list_of_add_replace_objects.append(matched_object)
-
-        else:
-            pass
-            # TODO if ticket type is none of the above, thrown an error?
-
-    dictionary["update"] = list_of_update_objects
-    dictionary["remove"] = list_of_remove_objects
-    dictionary["add_replace"] = list_of_add_replace_objects
-
-    return dictionary
+    return ticket_type_dict
 
 
 
+
+
+
+
+
+
+
+
+
+
+#TODO unit test below
 
 
 #TODO unit test after unit tested nested functions.
