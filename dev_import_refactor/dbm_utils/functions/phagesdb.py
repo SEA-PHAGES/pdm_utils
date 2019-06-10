@@ -247,67 +247,27 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO unit test below
-
-
-
-
-# TODO complete function
-# TODO unit test.
-def retrieve_phagesdb_genome(phage_id):
+def retrieve_phagesdb_data(phage_url):
     """Retrieve all data from PhagesDB for a specific phage."""
 
-
-    phage_url = constants.API_PREFIX + \
-                phage_id + \
-                constants.API_SUFFIX
-
-
     try:
-        online_data_json = request.urlopen(phage_url)
-        online_data_dict = json.loads(online_data_json.read())
-
-        #Returns a genome object
-        phagesdb_genome = \
-            phagesdb.parse_phagesdb_data(phagesdb_genome, online_data_dict)
-
-        if ticket.host == "retrieve":
-            ticket.host = phagesdb_genome.host
-        if ticket.cluster == "retrieve":
-            ticket.cluster = phagesdb_genome.cluster
-        if ticket.subcluster == "retrieve":
-            ticket.subcluster = phagesdb_genome.subcluster
-        if ticket.accession == "retrieve":
-            ticket.accession = phagesdb_genome.accession
-
+        data_json = urllib.request.urlopen(phage_url)
+        data_dict = json.loads(data_json.read())
+        eval_object = None
     except:
-        pass
+        data_dict = {}
+        eval_object = Eval.construct_error( \
+            "Unable to retrieve data from PhagesDB.")
+
+    return (data_dict, eval_object)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
+def construct_phage_url(phage_name):
+    """Create URL to retrieve phage-specific data from PhagesDB."""
+    phage_url = constants.API_PREFIX + phage_name + constants.API_SUFFIX
+    return phage_url
 
 
 

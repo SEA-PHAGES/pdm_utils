@@ -1169,5 +1169,105 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
 
+
+
+class TestTicketFunctions5(unittest.TestCase):
+
+    def setUp(self):
+
+        self.ticket = Ticket.ImportTicket()
+        self.ticket.primary_phage_id = "L5"
+
+
+
+
+    def test_complete_ticket_1(self):
+        """Verify host field is retrieved correctly."""
+        self.ticket.host = "retrieve"
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_value = "Mycobacterium"
+        with self.subTest():
+            self.assertEqual(self.ticket.host, expected_value)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+    def test_complete_ticket_2(self):
+        """Verify cluster field is retrieved correctly."""
+        self.ticket.cluster = "retrieve"
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_value = "A"
+        with self.subTest():
+            self.assertEqual(self.ticket.cluster, expected_value)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+    def test_complete_ticket_3(self):
+        """Verify subcluster field is retrieved correctly."""
+        self.ticket.subcluster = "retrieve"
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_value = "A2"
+        with self.subTest():
+            self.assertEqual(self.ticket.subcluster, expected_value)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+    def test_complete_ticket_4(self):
+        """Verify accession field is retrieved correctly."""
+        self.ticket.accession = "retrieve"
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_value = "Z18946"
+        with self.subTest():
+            self.assertEqual(self.ticket.accession, expected_value)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+    def test_complete_ticket_5(self):
+        """Verify no fields are retrieved."""
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_value = ""
+        with self.subTest():
+            self.assertEqual(self.ticket.host, expected_value)
+        with self.subTest():
+            self.assertEqual(self.ticket.cluster, expected_value)
+        with self.subTest():
+            self.assertEqual(self.ticket.subcluster, expected_value)
+        with self.subTest():
+            self.assertEqual(self.ticket.accession, expected_value)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+    def test_complete_ticket_6(self):
+        """Verify all fields are retrieved."""
+        self.ticket.host = "retrieve"
+        self.ticket.cluster = "retrieve"
+        self.ticket.subcluster = "retrieve"
+        self.ticket.accession = "retrieve"
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_host = "Mycobacterium"
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_accession = "Z18946"
+        with self.subTest():
+            self.assertEqual(self.ticket.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.ticket.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.ticket.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.ticket.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 0)
+
+    def test_complete_ticket_7(self):
+        """Verify no fields are retrieved and an error is produced."""
+        self.ticket.primary_phage_id = "L5_x"
+        self.ticket.host = "retrieve"
+        eval_list = tickets.complete_ticket(self.ticket)
+        expected_host = ""
+        with self.subTest():
+            self.assertEqual(self.ticket.host, expected_host)
+        with self.subTest():
+            self.assertEqual(len(eval_list), 7)
+
 if __name__ == '__main__':
     unittest.main()

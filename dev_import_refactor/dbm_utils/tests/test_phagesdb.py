@@ -6,6 +6,7 @@
 # from classes import Eval
 from functions import phagesdb
 from classes import Genome
+import constants
 import unittest
 import urllib.request
 import json
@@ -16,8 +17,13 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
     def setUp(self):
-        self.API_PREFIX = "https://phagesdb.org/api/phages/"
-        self.API_SUFFIX = "/?format=json"
+
+        self.API_PREFIX = constants.API_PREFIX
+        self.API_SUFFIX = constants.API_SUFFIX
+
+
+        # self.API_PREFIX = "https://phagesdb.org/api/phages/"
+        # self.API_SUFFIX = "/?format=json"
 
         self.genome = Genome.Genome()
 
@@ -197,10 +203,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
-
-
-
-
     def test_retrieve_phagesdb_fasta_1(self):
         """Verify fasta data is retrieved and no error is produced."""
 
@@ -222,7 +224,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(fasta_data, expected_fasta_data_header)
         with self.subTest():
             self.assertIsNotNone(eval_result)
-
 
 
 
@@ -271,7 +272,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
     def test_parse_phagesdb_data_1(self):
-        """Verify genome object is parsed from phagesdb."""
+        """Verify genome object is parsed from PhagesDB."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -700,6 +701,43 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
             self.assertEqual(len(eval_results), 6)
+
+
+
+
+    def test_retrieve_phagesdb_data_1(self):
+        """Verify data is retrieved from PhagesDB with no error produced."""
+
+        url = self.API_PREFIX + "L5" + self.API_SUFFIX
+        data_dict, eval_result = phagesdb.retrieve_phagesdb_data(url)
+        expected_phage_name = "L5"
+        with self.subTest():
+            self.assertEqual(data_dict["phage_name"], expected_phage_name)
+        with self.subTest():
+            self.assertIsNone(eval_result)
+
+    def test_retrieve_phagesdb_data_2(self):
+        """Verify data is not retrieved from PhagesDB and an error produced."""
+
+        url = self.API_PREFIX + "L5_x" + self.API_SUFFIX
+        data_dict, eval_result = phagesdb.retrieve_phagesdb_data(url)
+        with self.subTest():
+            self.assertEqual(len(data_dict.keys()), 0)
+        with self.subTest():
+            self.assertIsNotNone(eval_result)
+
+
+
+
+    def test_construct_phage_url_1(self):
+        """Verify URL is constructed correctly."""
+
+        phage_name = "L5"
+        expected_url = self.API_PREFIX + "L5" + self.API_SUFFIX
+        url = phagesdb.construct_phage_url(phage_name)
+        self.assertEqual(url, expected_url)
+
+
 
 
 

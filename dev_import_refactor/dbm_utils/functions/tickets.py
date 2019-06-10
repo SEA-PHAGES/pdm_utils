@@ -2,9 +2,10 @@
 
 
 from functions import basic
+from functions import phagesdb
 from classes import Eval
 from classes import Ticket
-
+from classes import Genome
 
 
 
@@ -360,65 +361,39 @@ def create_matched_object_dict(list_of_group_objects):
     return ticket_type_dict
 
 
+def complete_ticket(ticket):
+    """If the ticket has fields that are set to be auto-completed,
+    retrieve the data from PhagesDB to complete the ticket."""
 
-
-
-
-
-
-
-
-
-
-
-#TODO unit test below
-
-
-#TODO unit test after unit tested nested functions.
-# For each ticket, retrieve any data from PhagesDB genome if necessary.
-def retrieve_online_data(ticket):
-
+    eval_list1 = []
     if (ticket.host == "retrieve" or \
         ticket.cluster == "retrieve" or \
         ticket.subcluster == "retrieve" or \
         ticket.accession == "retrieve"):
 
-        phagesdb_genome = Genome()
+        genome = Genome.Genome()
 
-        #TODO make sure api_prefix and api_suffix variables are set
-        phage_url = api_prefix + ticket.primary_phage_id + api_suffix
+        phage_url = phagesdb.construct_phage_url(ticket.primary_phage_id)
 
+        data_dict, eval_object1 = phagesdb.retrieve_phagesdb_data(phage_url)
 
-        try:
-            online_data_json = urllib.urlopen(phage_url)
-            online_data_dict = json.loads(online_data_json.read())
+        if eval_object1 is not None:
+            eval_list1 += [eval_object1]
 
-            #Returns a genome object
-            phagesdb_genome = \
-                phagesdb.parse_phagesdb_data(phagesdb_genome, online_data_dict)
+        eval_list2 = phagesdb.parse_phagesdb_data(genome, data_dict)
 
-            if ticket.host == "retrieve":
-                ticket.host = phagesdb_genome.host
-            if ticket.cluster == "retrieve":
-                ticket.cluster = phagesdb_genome.cluster
-            if ticket.subcluster == "retrieve":
-                ticket.subcluster = phagesdb_genome.subcluster
-            if ticket.accession == "retrieve":
-                ticket.accession = phagesdb_genome.accession
+        eval_list1 += eval_list2
 
-        except:
-            # online_data_json = ""
-            # online_data_dict = {}
+        if ticket.host == "retrieve":
+            ticket.host = genome.host
+        if ticket.cluster == "retrieve":
+            ticket.cluster = genome.cluster
+        if ticket.subcluster == "retrieve":
+            ticket.subcluster = genome.subcluster
+        if ticket.accession == "retrieve":
+            ticket.accession = genome.accession
 
-
-            message = "Unable to retrieve data for phage %s from phagesdb." \
-                        % ticket.primary_phage_id
-            eval_object = Eval.construct_error(message)
-
-
-    # TODO Does the ticket need to be returned as well?
-    # TODO return the online dictionary as well
-    return eval_object
+    return eval_list1
 
 
 
