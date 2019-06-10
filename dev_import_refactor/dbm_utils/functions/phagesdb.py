@@ -3,7 +3,7 @@
 
 from classes import Eval
 from functions import basic
-import constants
+from constants import constants
 import urllib.request
 import json
 

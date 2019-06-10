@@ -6,7 +6,7 @@
 # from classes import Eval
 from functions import phagesdb
 from classes import Genome
-import constants
+from constants import constants
 import unittest
 import urllib.request
 import json
