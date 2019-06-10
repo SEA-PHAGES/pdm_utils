@@ -307,16 +307,6 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-    def test_parse_fasta_file_1(self):
-        """Verify it fasta file data is parsed correctly."""
-        fasta_data = ">Trixie     \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG"
-        expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
-        sequence = basic.parse_fasta_file(fasta_data)
-        self.assertEqual(expected_sequence, sequence)
-
-
-
-
     def test_identify_unique_items_1(self):
         """Verify the same set is returned."""
         input_list = ['a','b','c']

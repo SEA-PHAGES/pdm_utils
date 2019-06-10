@@ -5,6 +5,7 @@
 # from classes import Ticket
 # from classes import Eval
 from functions import phagesdb
+from classes import Genome
 import unittest
 import urllib.request
 import json
@@ -18,7 +19,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         self.API_PREFIX = "https://phagesdb.org/api/phages/"
         self.API_SUFFIX = "/?format=json"
 
-
+        self.genome = Genome.Genome()
 
 
     def test_parse_phagesdb_phage_name_1(self):
@@ -169,6 +170,37 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
+    def test_parse_phagesdb_filename_1(self):
+        """Verify fasta filename is retrieved and no error is produced."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"fasta_file": url}
+        filename, eval_result = phagesdb.parse_phagesdb_filename(data_dict)
+        expected_filename = url
+        with self.subTest():
+            self.assertEqual(filename, expected_filename)
+        with self.subTest():
+            self.assertIsNone(eval_result)
+
+    def test_parse_phagesdb_filename_2(self):
+        """Verify fasta filename is not retrieved and an error is produced."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"fasta_file_x": url}
+        filename, eval_result = phagesdb.parse_phagesdb_filename(data_dict)
+        expected_filename = ""
+        with self.subTest():
+            self.assertEqual(filename, expected_filename)
+        with self.subTest():
+            self.assertIsNotNone(eval_result)
+
+
+
+
+
+
+
+
     def test_retrieve_phagesdb_fasta_1(self):
         """Verify fasta data is retrieved and no error is produced."""
 
@@ -190,6 +222,484 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(fasta_data, expected_fasta_data_header)
         with self.subTest():
             self.assertIsNotNone(eval_result)
+
+
+
+
+
+    def test_parse_fasta_file_1(self):
+        """Verify it fasta file data is parsed correctly."""
+        fasta_data = ">Trixie  \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG\n\n"
+        expected_header = "Trixie"
+        expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
+        result_list, eval_result = phagesdb.parse_fasta_file(fasta_data)
+        with self.subTest():
+            self.assertEqual(result_list[0], expected_header)
+        with self.subTest():
+            self.assertEqual(result_list[1], expected_sequence)
+        with self.subTest():
+            self.assertIsNone(eval_result)
+
+    def test_parse_fasta_file_2(self):
+        """Verify it incorrect fasta file format (no ">") produces an error."""
+        fasta_data = "Trixie  \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG\n\n"
+        expected_header = "Trixie"
+        expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
+        result_list, eval_result = phagesdb.parse_fasta_file(fasta_data)
+        with self.subTest():
+            self.assertEqual(result_list[0], expected_header)
+        with self.subTest():
+            self.assertEqual(result_list[1], expected_sequence)
+        with self.subTest():
+            self.assertIsNotNone(eval_result)
+
+    def test_parse_fasta_file_3(self):
+        """Verify it incorrect fasta file format (no new lines) produces
+        an error."""
+        fasta_data = "Trixie  AAAAAAAAAA   TTTTTTT CCCGGGGGGGGGGG"
+        expected_header = ""
+        expected_sequence = ""
+        result_list, eval_result = phagesdb.parse_fasta_file(fasta_data)
+        with self.subTest():
+            self.assertEqual(result_list[0], expected_header)
+        with self.subTest():
+            self.assertEqual(result_list[1], expected_sequence)
+        with self.subTest():
+            self.assertIsNotNone(eval_result)
+
+
+
+
+    def test_parse_phagesdb_data_1(self):
+        """Verify genome object is parsed from phagesdb."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_host = "Mycobacterium"
+        expected_accession = "ABC123"
+        expected_filename = url
+        expected_seq_start = "GGTCGGTT"
+        expected_seq_end =   "GTCGGTTA"
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 2)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 0)
+
+
+    def test_parse_phagesdb_data_2(self):
+        """Verify error is produced from no phage_name key."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name_x":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = ""
+        expected_phage_id = ""
+        expected_search_id = ""
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_host = "Mycobacterium"
+        expected_accession = "ABC123"
+        expected_filename = url
+        expected_seq_start = "GGTCGGTT"
+        expected_seq_end =   "GTCGGTTA"
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 2)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_3(self):
+        """Verify error is produced from no pcluster key."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster_x": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = ""
+        expected_subcluster = "A2"
+        expected_host = "Mycobacterium"
+        expected_accession = "ABC123"
+        expected_filename = url
+        expected_seq_start = "GGTCGGTT"
+        expected_seq_end =   "GTCGGTTA"
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 2)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_4(self):
+        """Verify error is produced from no psubcluster key."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster_x": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = "A"
+        expected_subcluster = "none"
+        expected_host = "Mycobacterium"
+        expected_accession = "ABC123"
+        expected_filename = url
+        expected_seq_start = "GGTCGGTT"
+        expected_seq_end =   "GTCGGTTA"
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 2)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_5(self):
+        """Verify error is produced from no isolation_host key."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host_x": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_host = ""
+        expected_accession = "ABC123"
+        expected_filename = url
+        expected_seq_start = "GGTCGGTT"
+        expected_seq_end =   "GTCGGTTA"
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 2)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_6(self):
+        """Verify error is produced from no genbank_accession key."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession_x": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_host = "Mycobacterium"
+        expected_accession = "none"
+        expected_filename = url
+        expected_seq_start = "GGTCGGTT"
+        expected_seq_end =   "GTCGGTTA"
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 2)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_7(self):
+        """Verify error is produced from no fasta_file key."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file_x": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_host = "Mycobacterium"
+        expected_accession = "ABC123"
+        expected_filename = ""
+        expected_seq = ""
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 0)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, expected_seq)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_8(self):
+        """Verify error is produced from incorrect fasta_file URL."""
+
+        url = "https://phagesdb.org/media/fastas/L5_x.fasta"
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = "Trixie"
+        expected_phage_id = "Trixie"
+        expected_search_id = "trixie"
+        expected_cluster = "A"
+        expected_subcluster = "A2"
+        expected_host = "Mycobacterium"
+        expected_accession = "ABC123"
+        expected_filename = url
+        expected_seq = ""
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 0)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, expected_seq)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 1)
+
+
+    def test_parse_phagesdb_data_9(self):
+        """Verify that errors accumulate."""
+
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        data_dict = {"phage_name_x":"Trixie",
+                    "pcluster_x": {"cluster": "A"},
+                    "psubcluster_x": {"subcluster": "A2"},
+                    "isolation_host_x": {"genus": "Mycobacterium"},
+                    "genbank_accession_x": "ABC123",
+                    "fasta_file_x": url}
+        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+
+        expected_phage_name = ""
+        expected_phage_id = ""
+        expected_search_id = ""
+        expected_cluster = ""
+        expected_subcluster = "none"
+        expected_host = ""
+        expected_accession = "none"
+        expected_filename = ""
+        expected_seq = ""
+
+        with self.subTest():
+            self.assertEqual(self.genome.phage_name, expected_phage_name)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id, expected_phage_id)
+        with self.subTest():
+            self.assertEqual(self.genome.search_id, expected_search_id)
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, expected_cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, expected_subcluster)
+        with self.subTest():
+            self.assertEqual(self.genome.host, expected_host)
+        with self.subTest():
+            self.assertEqual(self.genome.accession, expected_accession)
+        with self.subTest():
+            self.assertEqual(self.genome.filename, expected_filename)
+        with self.subTest():
+            self.assertEqual(len(self.genome.parsed_record), 0)
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, expected_seq)
+        with self.subTest():
+            self.assertEqual(len(eval_results), 6)
 
 
 

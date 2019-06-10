@@ -146,25 +146,7 @@ def reformat_description(description):
     return(description,processed_description)
 
 
-def parse_fasta_file(fasta_file):
-    """Parses sequence data from a fasta-formatted file.
-    """
 
-    # TODO convert to Biopython object?
-    # All sequence rows in the fasta file may not have equal widths,
-    # so some processing of the data is required. If you split by newline,
-    # the header is retained in the first list element.
-    split_fasta_data = fasta_file.split('\n')
-
-    sequence = ""
-    index = 1
-    while index < len(split_fasta_data):
-
-        # Strip off potential whitespace before appending, such as '\r'.
-        sequence = sequence + split_fasta_data[index].strip()
-        index += 1
-
-    return sequence
 
 
 

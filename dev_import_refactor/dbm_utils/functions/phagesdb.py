@@ -103,6 +103,22 @@ def parse_phagesdb_accession(data_dict):
     return (accession, eval_object)
 
 
+
+def parse_phagesdb_filename(data_dict):
+    """Retrieve fasta filename from PhagesDB."""
+
+    try:
+        fastafile_url = data_dict["fasta_file"]
+        eval_object = None
+
+    except:
+        fastafile_url = ""
+        eval_object = Eval.construct_error( \
+            "Unable to retrieve fasta filename from PhagesDB.")
+
+    return (fastafile_url, eval_object)
+
+
 def retrieve_phagesdb_fasta(fastafile_url):
     """Retrieve fasta file from PhagesDB."""
 
@@ -123,7 +139,111 @@ def retrieve_phagesdb_fasta(fastafile_url):
 
 
 
+# TODO this function could probably be improved.
+def parse_fasta_file(fasta_file):
+    """Parses sequence data from a fasta-formatted file.
+    """
 
+    # TODO convert to Biopython object?
+    # All sequence rows in the fasta file may not have equal widths,
+    # so some processing of the data is required. If you split by newline,
+    # the header is retained in the first list element.
+    split_fasta_data = fasta_file.split('\n')
+
+    header = ""
+    sequence = ""
+    eval_object = None
+
+    if len(split_fasta_data) > 1:
+
+        header = split_fasta_data[0]
+        if header[0] == ">":
+            header = header[1:] # remove '>' symbol.
+        else:
+            eval_object = Eval.construct_error( \
+                "Record is not fasta-formatted.")
+
+        header = header.strip() # remove any whitespace
+        index = 1
+        while index < len(split_fasta_data):
+
+            # Strip off potential whitespace before appending, such as '\r'.
+            sequence = sequence + split_fasta_data[index].strip()
+            index += 1
+
+    else:
+        eval_object = Eval.construct_error( \
+            "Record is not fasta-formatted.")
+
+
+    result = [header, sequence]
+
+    return (result, eval_object)
+
+
+
+
+
+def parse_phagesdb_data(genome_obj,data_dict):
+    """Parses a dictionary of genome data retrieved from PhagesDB into a
+    Genome object.
+    """
+
+    list_of_results = []
+
+
+    # Phage Name, PhageID and SearchID
+    phage_name, result1 = parse_phagesdb_phage_name(data_dict)
+    genome_obj.phage_name = phage_name
+    genome_obj.set_phage_id(phage_name)
+    list_of_results.append(result1)
+
+    # Host
+    host, result2 = parse_phagesdb_host(data_dict)
+    genome_obj.set_host(host)
+    list_of_results.append(result2)
+
+    # Accession
+    accession, result3 = parse_phagesdb_accession(data_dict)
+    genome_obj.set_accession(accession, "none_string")
+    list_of_results.append(result3)
+
+    # Cluster
+    cluster, result4 = parse_phagesdb_cluster(data_dict)
+    genome_obj.set_cluster(cluster)
+    list_of_results.append(result4)
+
+    #Subcluster
+    subcluster, result5 = parse_phagesdb_subcluster(data_dict)
+    genome_obj.set_subcluster(subcluster, "none_string")
+    list_of_results.append(result5)
+
+    # Fasta file URL
+    fastafile_url, result6 = parse_phagesdb_filename(data_dict)
+    genome_obj.filename = fastafile_url
+    list_of_results.append(result6)
+
+
+    # Fasta file record
+    if genome_obj.filename != "":
+        fasta_file, result7 = retrieve_phagesdb_fasta(genome_obj.filename)
+        list_of_results.append(result7)
+
+        # TODO unit test - not sure how to test this, since this function
+        # retrieves and parses files from PhagesDB.
+        # Genome sequence and parsed record
+        if fasta_file != "":
+            fasta_record, result8 = parse_fasta_file(fasta_file)
+            genome_obj.parsed_record = fasta_record
+            genome_obj.sequence = fasta_record[1]
+            list_of_results.append(result8)
+
+    list_of_evals = []
+    for result in list_of_results:
+        if result is not None:
+            list_of_evals.append(result)
+
+    return list_of_evals
 
 
 
@@ -140,113 +260,6 @@ def retrieve_phagesdb_fasta(fastafile_url):
 
 
 # TODO unit test below
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#TODO unit test
-def parse_phagesdb_sequence(data_dict):
-    """Retrieve genome sequence from PhagesDB."""
-
-    try:
-        fastafile_url = data_dict["fasta_file"]
-        retrieved_fasta_file = retrieve_phagesdb_fasta(fastafile_url)
-        sequence = functions_general.parse_fasta_file(retrieved_fasta_file)
-        eval_object = None
-
-    except:
-        sequence = ""
-        eval_object = Eval.construct_error( \
-            "Unable to retrieve genome sequence data from PhagesDB.")
-
-    return (sequence, eval_object)
-
-
-
-
-
-
-
-
-
-
-#TODO unit test
-def parse_phagesdb_data(genome_obj,data_dict):
-    """Parses a dictionary of genome data retrieved from PhagesDB into a
-    Genome object.
-    """
-
-    list_of_results = []
-
-
-    # Phage Name and Search Name
-    phage_name, result1 = parse_phagesdb_phage_name(data_dict)
-    genome_obj.set_phage_name(phage_name)
-    list_of_results.append(result1)
-
-    # Host
-    host, result2 = parse_phagesdb_host(data_dict)
-    genome_obj.set_host(host)
-    list_of_results.append(result2)
-
-    # Accession
-    accession, result3 = parse_phagesdb_accession(data_dict)
-    genome_obj.set_accession(accession)
-    list_of_results.append(result3)
-
-    # Cluster
-    cluster, result4 = parse_phagesdb_cluster(data_dict)
-    genome_obj.set_cluster(cluster)
-    list_of_results.append(result4)
-
-
-    #Subcluster
-    subcluster, result5 = parse_phagesdb_subcluster(data_dict)
-    genome_obj.set_subcluster(subcluster)
-    list_of_results.append(result5)
-
-
-    # Genome sequence
-    pdb_sequence, result6 = parse_phagesdb_sequence(data_dict)
-    genome_obj.sequence = pdb_sequence
-    list_of_results.append(result6)
-
-
-    list_of_evals = []
-    for result in list_of_results:
-        if result is not None:
-            list_of_evals.append(result)
-
-    #TODO do I need to return this object?
-    return (genome_obj, list_of_evals)
-
-
-
-
 
 
 

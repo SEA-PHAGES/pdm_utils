@@ -226,8 +226,51 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.set_cluster(cluster)
         self.assertEqual(self.genome.cluster, "singleton")
 
+    def test_set_cluster_3(self):
+        """Check that whitespace is removed."""
+        cluster = " A   "
+        self.genome.set_cluster(cluster)
+        self.assertEqual(self.genome.cluster, "A")
 
 
+
+
+    def test_set_subcluster_1(self):
+        """Check that standard Subcluster is set appropriately."""
+        subcluster = "A2"
+        self.genome.set_subcluster(subcluster, "none_string")
+        self.assertEqual(self.genome.subcluster, "A2")
+
+    def test_set_subcluster_2(self):
+        """Check that whitespace is removed."""
+        subcluster = "    A2    "
+        self.genome.set_subcluster(subcluster, "none_string")
+        self.assertEqual(self.genome.subcluster, "A2")
+
+    def test_set_subcluster_3(self):
+        """Check that None subcluster is set appropriately from None."""
+        subcluster = None
+        self.genome.set_subcluster(subcluster, "none_object")
+        self.assertIsNone(self.genome.subcluster)
+
+    def test_set_subcluster_4(self):
+        """Check that none_string subcluster is set appropriately from None."""
+        subcluster = None
+        self.genome.set_subcluster(subcluster, "none_string")
+        self.assertEqual(self.genome.subcluster, "none")
+
+    def test_set_subcluster_5(self):
+        """Check that empty_string subcluster is set appropriately from
+        none_string."""
+        subcluster = "none"
+        self.genome.set_subcluster(subcluster, "empty_string")
+        self.assertEqual(self.genome.subcluster, "")
+
+    def test_set_subcluster_6(self):
+        """Check that case is accounted for."""
+        subcluster = "NONE"
+        self.genome.set_subcluster(subcluster, "empty_string")
+        self.assertEqual(self.genome.subcluster, "")
 
 
 

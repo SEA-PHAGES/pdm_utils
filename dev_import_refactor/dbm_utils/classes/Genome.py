@@ -337,10 +337,42 @@ class Genome:
     def set_cluster(self,value):
         """Set the cluster, and modify singleton if needed."""
 
+        value = value.strip()
+
         if value.lower() == "singleton":
             self.cluster = value.lower()
         else:
             self.cluster = value
+
+
+    def set_subcluster(self, value, strategy):
+        """Set the subcluster. Strategy indicates how an empty subcluster value
+        should be stored:
+        'empty_string' = empty string.
+        'none_string' = 'none' string.
+        'none_object' = None object."""
+
+        if (value is None or value.lower() == "none"):
+            value = ""
+
+        value = value.strip()
+
+        if value == "":
+
+            if strategy == "empty_string":
+                self.subcluster = ""
+            elif strategy == "none_string":
+                self.subcluster = "none"
+            elif strategy == "none_object":
+                self.subcluster = None
+            else:
+                pass
+
+        else:
+            self.subcluster = value
+
+
+
 
     def set_cluster_subcluster(self, cluster, subcluster):
         """Set the combined Cluster-Subcluster field."""
