@@ -323,7 +323,37 @@ def match_items(list1, list2):
 
 
 
+def split_string(string):
+    """Iterates through a string, identifies the first position
+    in which the character is a digit, and creates two strings at this
+    position. The first string returned contains only alphabetic characters.
+    The second string returned contains only numberic characters.
+    If there are no numeric characters present,
+    the second string will be empty.
+    If there are no alphabetic characters present,
+    the first string will be empty."""
 
+    left = ""
+    right = ""
+
+    if string.isalpha():
+        left = string
+    elif string.isdigit():
+        right = string
+    else:
+        index = 0
+        value = False
+        while (value == False and index < len(string)):
+            if (string[:index].isalpha() and \
+                string[index:].isdigit()):
+
+                left = string[:index]
+                right = string[index:]
+                value = True
+
+            index += 1
+
+    return (left, right)
 
 
 

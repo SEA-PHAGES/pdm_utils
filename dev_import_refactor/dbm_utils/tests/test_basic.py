@@ -32,9 +32,6 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-
-
-
     def test_reformat_strand_1(self):
         """Verify 'Forward' strand is converted to long format."""
         new_value = basic.reformat_strand("Forward", "fr_long")
@@ -781,6 +778,60 @@ class TestGeneralFunctions(unittest.TestCase):
             self.assertEqual(set1_duplicate, exp_set1_duplicate)
         with self.subTest():
             self.assertEqual(set2_duplicate, exp_set2_duplicate)
+
+
+
+
+    def test_split_string_1(self):
+        """Verify non-numeric string is not split."""
+
+        input = "ABCD"
+        left, right = basic.split_string(input)
+        expected_left = "ABCD"
+        expected_right = ""
+        with self.subTest():
+            self.assertEqual(left, expected_left)
+        with self.subTest():
+            self.assertEqual(right, expected_right)
+
+    def test_split_string_2(self):
+        """Verify numeric string is not split."""
+
+        input = "1234"
+        left, right = basic.split_string(input)
+        expected_left = ""
+        expected_right = "1234"
+        with self.subTest():
+            self.assertEqual(left, expected_left)
+        with self.subTest():
+            self.assertEqual(right, expected_right)
+
+    def test_split_string_3(self):
+        """Verify alphanumeric string is split correctly."""
+
+        input = "ABC123"
+        left, right = basic.split_string(input)
+        expected_left = "ABC"
+        expected_right = "123"
+        with self.subTest():
+            self.assertEqual(left, expected_left)
+        with self.subTest():
+            self.assertEqual(right, expected_right)
+
+    def test_split_string_4(self):
+        """Verify mixed alphanumeric string is not split."""
+
+        input = "A1B2C3"
+        left, right = basic.split_string(input)
+        expected_left = ""
+        expected_right = ""
+        with self.subTest():
+            self.assertEqual(left, expected_left)
+        with self.subTest():
+            self.assertEqual(right, expected_right)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

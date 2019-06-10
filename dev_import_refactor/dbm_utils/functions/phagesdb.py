@@ -200,7 +200,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
     # Host
     host, result2 = parse_phagesdb_host(data_dict)
-    genome_obj.set_host(host)
+    genome_obj.set_host(host, "none_string")
     list_of_results.append(result2)
 
     # Accession

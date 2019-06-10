@@ -1263,7 +1263,7 @@ class TestTicketFunctions5(unittest.TestCase):
         self.ticket.primary_phage_id = "L5_x"
         self.ticket.host = "retrieve"
         eval_list = tickets.complete_ticket(self.ticket)
-        expected_host = ""
+        expected_host = "none"
         with self.subTest():
             self.assertEqual(self.ticket.host, expected_host)
         with self.subTest():

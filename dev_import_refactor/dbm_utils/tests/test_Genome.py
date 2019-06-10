@@ -65,20 +65,28 @@ class TestGenomeClass(unittest.TestCase):
     def test_set_host_1(self):
         """Check that host name is split appropriately."""
         host = "Mycobacterium smegmatis"
-        self.genome.set_host(host)
+        self.genome.set_host(host, "none_string")
         self.assertEqual(self.genome.host, "Mycobacterium")
 
     def test_set_host_2(self):
         """Check that whitespace is removed."""
         host = "  Mycobacterium smegmatis  "
-        self.genome.set_host(host)
+        self.genome.set_host(host, "none_string")
         self.assertEqual(self.genome.host, "Mycobacterium")
 
     def test_set_host_3(self):
         """Check that none is set appropriately."""
-        host = "  none  "
-        self.genome.set_host(host)
-        self.assertEqual(self.genome.host, "")
+        host = ""
+        self.genome.set_host(host, "none_string")
+        self.assertEqual(self.genome.host, "none")
+
+    def test_set_host_4(self):
+        """Check that None object is set appropriately."""
+        host = ""
+        self.genome.set_host(host, "none_object")
+        self.assertIsNone(self.genome.host)
+
+
 
 
 
@@ -304,8 +312,19 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.set_cluster_subcluster(cluster, subcluster)
         self.assertEqual(self.genome.cluster_subcluster, "A1")
 
+    def test_set_cluster_subcluster_5(self):
+        """Check that Cluster is set when subcluster is None."""
+        subcluster = None
+        cluster = "A"
+        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.assertEqual(self.genome.cluster_subcluster, "A")
 
-
+    def test_set_cluster_subcluster_6(self):
+        """Check that Cluster is set when subcluster is empty string."""
+        subcluster = ""
+        cluster = "A"
+        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.assertEqual(self.genome.cluster_subcluster, "A")
 
 
     def test_set_date_last_modified_1(self):

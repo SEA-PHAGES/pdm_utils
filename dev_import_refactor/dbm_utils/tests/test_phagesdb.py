@@ -484,7 +484,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = "A2"
-        expected_host = ""
+        expected_host = "none"
         expected_accession = "ABC123"
         expected_filename = url
         expected_seq_start = "GGTCGGTT"
@@ -674,7 +674,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_search_id = ""
         expected_cluster = ""
         expected_subcluster = "none"
-        expected_host = ""
+        expected_host = "none"
         expected_accession = "none"
         expected_filename = ""
         expected_seq = ""

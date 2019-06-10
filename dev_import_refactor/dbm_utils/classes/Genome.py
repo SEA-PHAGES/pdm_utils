@@ -240,14 +240,39 @@ class Genome:
     #           basic.remove_draft_suffix(self.phage_name).lower()
 
 
-    def set_host(self, value):
-        """Set the host genus and discard the species."""
+    def set_host(self, value, strategy):
+        """Set the host genus and discard the species.
+        'empty_string' = '' string.
+        'none_string' = 'none' string.
+        'none_object' = None object."""
+
+        if (value is None or value.lower() == "none"):
+            value = ""
 
         value = value.strip()
-        if value != "none":
-            self.host = value.split(" ")[0]
+
+        if value == "":
+
+            if strategy == "empty_string":
+                self.host = ""
+            elif strategy == "none_string":
+                self.host = "none"
+            elif strategy == "none_object":
+                self.host = None
+            else:
+                pass
+
         else:
-            self.host = ""
+            self.host = value.split(" ")[0]
+
+
+
+
+
+
+
+
+
 
     def set_sequence(self, value):
         """Set the nucleotide sequence and compute the length."""
@@ -348,7 +373,7 @@ class Genome:
     def set_subcluster(self, value, strategy):
         """Set the subcluster. Strategy indicates how an empty subcluster value
         should be stored:
-        'empty_string' = empty string.
+        'empty_string' = '' string.
         'none_string' = 'none' string.
         'none_object' = None object."""
 
@@ -374,16 +399,78 @@ class Genome:
 
 
 
+    # TODO I think that this method should be implemented on
+    # self.cluster and self.subcluster attributes.
     def set_cluster_subcluster(self, cluster, subcluster):
         """Set the combined Cluster-Subcluster field."""
 
-        if subcluster == "":
+        if (subcluster is None or \
+            subcluster.lower() == "none" or \
+            subcluster == ""):
+
             if cluster is None:
                 self.cluster_subcluster = "singleton"
             else:
                 self.cluster_subcluster = cluster
         else:
             self.cluster_subcluster = subcluster
+
+
+    # TODO either make this parallel to set_cluster_subcluster regarding
+    # inputs, or vice versa.
+    # TODO unit test.
+    def split_cluster_subcluster(self, strategy):
+        """From the combined cluster_subcluster value,
+        set the Cluster and Subcluster fields.
+        Strategy indicates how an empty subcluster value should be stored:
+        'empty_string' = '' string.
+        'none_string' = 'none' string.
+        'none_object' = None object."""
+
+        if (self.cluster_subcluster is None or \
+            self.cluster_subcluster.lower() == "none" or \
+            self.cluster_subcluster == ""):
+
+            pass
+
+        else:
+            left, right = basic.split_string(self.cluster_subcluster)
+
+            if self.cluster_subcluster == left:
+                self.cluster = left
+                self.subcluster = ""
+
+            elif self.cluster_subcluster == left + right:
+                self.cluster = left
+                self.subcluster = left + right
+
+            else:
+                self.cluster = ""
+                self.subcluster = ""
+
+        if self.cluster == "":
+            if strategy == "empty_string":
+                self.cluster = ""
+            elif strategy == "none_string":
+                self.cluster = "none"
+            elif strategy == "none_object":
+                self.cluster = None
+            else:
+                pass
+        else:
+            self.cluster = value
+
+        if self.subcluster == "":
+            if strategy == "empty_string":
+                self.subcluster = ""
+            elif strategy == "none_string":
+                self.subcluster = "none"
+            elif strategy == "none_object":
+                self.subcluster = None
+            else:
+                pass
+        else:
+            self.subcluster = value
 
 
 
