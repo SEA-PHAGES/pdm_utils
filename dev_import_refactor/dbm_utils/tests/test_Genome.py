@@ -285,46 +285,48 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_cluster_subcluster_1(self):
         """Check that None Cluster is set as singleton cluster_subcluster."""
-        subcluster = ""
-        cluster = None
-        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.genome.subcluster = ""
+        self.genome.cluster = None
+        self.genome.set_cluster_subcluster()
         self.assertEqual(self.genome.cluster_subcluster, "singleton")
 
     def test_set_cluster_subcluster_2(self):
         """Check that singleton Cluster is set as
         singleton cluster_subcluster."""
-        subcluster = ""
-        cluster = "singleton"
-        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.genome.subcluster = ""
+        self.genome.cluster = "singleton"
+        self.genome.set_cluster_subcluster()
         self.assertEqual(self.genome.cluster_subcluster, "singleton")
 
     def test_set_cluster_subcluster_3(self):
         """Check that Cluster is set as cluster_subcluster."""
-        subcluster = ""
-        cluster = "A"
-        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.genome.subcluster = ""
+        self.genome.cluster = "A"
+        self.genome.set_cluster_subcluster()
         self.assertEqual(self.genome.cluster_subcluster, "A")
 
     def test_set_cluster_subcluster_4(self):
         """Check that Subcluster is set as cluster_subcluster."""
-        subcluster = "A1"
-        cluster = "A"
-        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.genome.subcluster = "A1"
+        self.genome.cluster = "A"
+        self.genome.set_cluster_subcluster()
         self.assertEqual(self.genome.cluster_subcluster, "A1")
 
     def test_set_cluster_subcluster_5(self):
         """Check that Cluster is set when subcluster is None."""
-        subcluster = None
-        cluster = "A"
-        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.genome.subcluster = None
+        self.genome.cluster = "A"
+        self.genome.set_cluster_subcluster()
         self.assertEqual(self.genome.cluster_subcluster, "A")
 
     def test_set_cluster_subcluster_6(self):
         """Check that Cluster is set when subcluster is empty string."""
-        subcluster = ""
-        cluster = "A"
-        self.genome.set_cluster_subcluster(cluster, subcluster)
+        self.genome.subcluster = ""
+        self.genome.cluster = "A"
+        self.genome.set_cluster_subcluster()
         self.assertEqual(self.genome.cluster_subcluster, "A")
+
+
 
 
     def test_set_date_last_modified_1(self):
@@ -344,7 +346,7 @@ class TestGenomeClass(unittest.TestCase):
         """Check that filled date_last_modified is set appropriately
         from None."""
         date_last_modified1 = None
-        date_last_modified2 = datetime.strptime('1/1/1900', '%m/%d/%Y')
+        date_last_modified2 = datetime.strptime('1/1/0001', '%m/%d/%Y')
         self.genome.set_date_last_modified(date_last_modified1, \
                                             "empty_datetime_obj")
         self.assertEqual(self.genome.date_last_modified, date_last_modified2)
@@ -368,7 +370,7 @@ class TestGenomeClass(unittest.TestCase):
         incorrect strategy."""
         date_last_modified = None
         self.genome.set_date_last_modified(date_last_modified, "invalid")
-        self.assertEqual(self.genome.date_last_modified, "")
+        self.assertEqual(self.genome.date_last_modified, None)
 
 
 
@@ -1110,11 +1112,123 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_split_cluster_subcluster_1(self):
+        """Verify split to only cluster, and subcluster is 'none'."""
+        self.genome.cluster_subcluster = "A"
+        self.genome.split_cluster_subcluster()
+        cluster = "A"
+        subcluster = "none"
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
 
+    def test_split_cluster_subcluster_2(self):
+        """Verify split to only cluster, and subcluster is None."""
+        self.genome.cluster_subcluster = "A"
+        self.genome.split_cluster_subcluster("none_object")
+        cluster = "A"
+        subcluster = None
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertIsNone(self.genome.subcluster)
 
+    def test_split_cluster_subcluster_3(self):
+        """Verify split to only cluster, and subcluster is ''."""
+        self.genome.cluster_subcluster = "A"
+        self.genome.split_cluster_subcluster("empty_string")
+        cluster = "A"
+        subcluster = ""
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
 
+    def test_split_cluster_subcluster_4(self):
+        """Verify singleton split to only cluster."""
+        self.genome.cluster_subcluster = "singleton"
+        self.genome.split_cluster_subcluster("empty_string")
+        cluster = "singleton"
+        subcluster = ""
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
 
+    def test_split_cluster_subcluster_5(self):
+        """Verify split to both cluster and subcluster."""
+        self.genome.cluster_subcluster = "A15"
+        self.genome.split_cluster_subcluster("empty_string")
+        cluster = "A"
+        subcluster = "A15"
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
 
+    def test_split_cluster_subcluster_6(self):
+        """Verify no split, and output is 'none'."""
+        self.genome.cluster_subcluster = "A1B2"
+        self.genome.split_cluster_subcluster()
+        cluster = "none"
+        subcluster = "none"
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
+
+    def test_split_cluster_subcluster_7(self):
+        """Verify no split, and output is ''."""
+        self.genome.cluster_subcluster = "A1B2"
+        self.genome.cluster = ""
+        self.genome.subcluster = ""
+        self.genome.split_cluster_subcluster("empty_string")
+        cluster = ""
+        subcluster = ""
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
+
+    def test_split_cluster_subcluster_8(self):
+        """Verify no split, and output is None."""
+        self.genome.cluster_subcluster = "A1B2"
+        self.genome.cluster = ""
+        self.genome.subcluster = ""
+        self.genome.split_cluster_subcluster("none_object")
+        cluster = None
+        subcluster = None
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
+
+    def test_split_cluster_subcluster_9(self):
+        """Verify no change to cluster and subcluster."""
+        self.genome.cluster_subcluster = ""
+        self.genome.cluster = "B"
+        self.genome.subcluster = "B10"
+        self.genome.split_cluster_subcluster("none_object")
+        cluster = "B"
+        subcluster = "B10"
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
+
+    def test_split_cluster_subcluster_10(self):
+        """Verify no change to cluster and subcluster."""
+        self.genome.cluster_subcluster = None
+        self.genome.cluster = "B"
+        self.genome.subcluster = "B10"
+        self.genome.split_cluster_subcluster("none_object")
+        cluster = "B"
+        subcluster = "B10"
+        with self.subTest():
+            self.assertEqual(self.genome.cluster, cluster)
+        with self.subTest():
+            self.assertEqual(self.genome.subcluster, subcluster)
 
 
 

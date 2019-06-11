@@ -2,6 +2,7 @@
 
 
 from functions import basic
+from datetime import datetime
 import unittest
 import re
 
@@ -171,6 +172,115 @@ class TestGeneralFunctions(unittest.TestCase):
         """Verify capitalization does not impact operator format."""
         new_value = basic.reformat_strand("w", "operator", True)
         self.assertEqual(new_value, "+")
+
+
+
+
+    def test_convert_empty_1(self):
+        """Verify '' is converted to 'none'."""
+        new_value = basic.convert_empty("", "none_string")
+        self.assertEqual(new_value, "none")
+
+    def test_convert_empty_2(self):
+        """Verify '' is converted to 'null'."""
+        new_value = basic.convert_empty("", "null_string")
+        self.assertEqual(new_value, "null")
+
+    def test_convert_empty_3(self):
+        """Verify '' is converted to None."""
+        new_value = basic.convert_empty("", "none_object")
+        self.assertEqual(new_value, None)
+
+    def test_convert_empty_4(self):
+        """Verify '' is converted to 'not applicable'."""
+        new_value = basic.convert_empty("", "na_long")
+        self.assertEqual(new_value, "not applicable")
+
+    def test_convert_empty_5(self):
+        """Verify '' is converted to 'na'."""
+        new_value = basic.convert_empty("", "na_short")
+        self.assertEqual(new_value, "na")
+
+    def test_convert_empty_6(self):
+        """Verify '' is converted to '0'."""
+        new_value = basic.convert_empty("", "zero_string")
+        self.assertEqual(new_value, "0")
+
+    def test_convert_empty_7(self):
+        """Verify '' is converted to 0."""
+        new_value = basic.convert_empty("", "zero_num")
+        self.assertEqual(new_value, 0)
+
+    def test_convert_empty_8(self):
+        """Verify 'NA' is converted to 0."""
+        new_value = basic.convert_empty("NA", "zero_num")
+        self.assertEqual(new_value, 0)
+
+    def test_convert_empty_9(self):
+        """Verify 'NONE' is converted to 0."""
+        new_value = basic.convert_empty("NONE", "zero_num")
+        self.assertEqual(new_value, 0)
+
+    def test_convert_empty_10(self):
+        """Verify None is converted to 0."""
+        new_value = basic.convert_empty(None, "zero_num")
+        self.assertEqual(new_value, 0)
+
+    def test_convert_empty_11(self):
+        """Verify 0 is converted to '0'."""
+        new_value = basic.convert_empty(0, "zero_string")
+        self.assertEqual(new_value, "0")
+
+    def test_convert_empty_12(self):
+        """Verify 0 is converted to uppercased 'NA'."""
+        new_value = basic.convert_empty(0, "na_short", upper = True)
+        self.assertEqual(new_value, "NA")
+
+    def test_convert_empty_13(self):
+        """Verify 'NONE' is not converted due to invalid format."""
+        new_value = basic.convert_empty("NONE", "asdf")
+        self.assertEqual(new_value, "NONE")
+
+    def test_convert_empty_14(self):
+        """Verify 0 is not converted due to invalid format."""
+        new_value = basic.convert_empty(0, "asdf")
+        self.assertEqual(new_value, 0)
+
+    def test_convert_empty_15(self):
+        """Verify None is not converted due to invalid format."""
+        new_value = basic.convert_empty(None, "asdf")
+        self.assertEqual(new_value, None)
+
+    def test_convert_empty_16(self):
+        """Verify 'asdf' is not converted due to invalid input value."""
+        new_value = basic.convert_empty("Asdf", "none_string")
+        self.assertEqual(new_value, "Asdf")
+
+    def test_convert_empty_17(self):
+        """Verify 'NA' is converted to empty date."""
+        empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        new_value = basic.convert_empty("NA", "empty_datetime_obj")
+        self.assertEqual(new_value, empty_date)
+
+    def test_convert_empty_18(self):
+        """Verify empty date is converted to "none"."""
+        empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        new_value = basic.convert_empty(empty_date, "none_string")
+        self.assertEqual(new_value, "none")
+
+    def test_convert_empty_19(self):
+        """Verify 'NONE' is converted to 'N/A'."""
+        new_value = basic.convert_empty("NONE", "n/a", upper = True)
+        self.assertEqual(new_value, "N/A")
+
+    def test_convert_empty_20(self):
+        """Verify 'N/A' is converted to ""."""
+        new_value = basic.convert_empty("N/A", "empty_string")
+        self.assertEqual(new_value, "")
+
+
+
+
 
 
 

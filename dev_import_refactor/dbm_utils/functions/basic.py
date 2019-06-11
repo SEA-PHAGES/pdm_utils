@@ -1,6 +1,8 @@
 """Misc. base/simple functions. These should not require import of other
 k_phamerate modules to prevent circular imports."""
 
+from datetime import datetime
+
 #Note: used to be 'find_name' function.
 def find_expression(expression,list_of_items):
     """Searches through a list of items and counts the number of items
@@ -82,6 +84,61 @@ def reformat_strand(input_value, format, case = False):
 
     return new_value
 
+
+def convert_empty(input_value, format, upper = False):
+    """Converts common NULL value formats, including:
+    'empty_string' = ''
+    'none_string' = 'none'
+    'null_string' = 'null'
+    'none_object' = None
+    'na_long' = 'not applicable'
+    'na_short' = 'na'
+    'n/a' = 'n/a'
+    'zero_string' = '0'
+    'zero_num' = 0
+    'empty_datetime_obj' = datetime object with arbitrary early date, '1/1/0001'
+    """
+
+    empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+
+    format_dict = {"empty_string": "", \
+                    "none_string": "none", \
+                    "null_string": "null", \
+                    "none_object": None, \
+                    "na_long": "not applicable", \
+                    "na_short": "na", \
+                    "n/a": "n/a", \
+                    "zero_string": "0", \
+                    "zero_num": 0, \
+                    "empty_datetime_obj": empty_date}
+
+    output_values = set(format_dict.values())
+
+    if format in format_dict.keys():
+
+        # Convert input value to ensure it matches the formatting of
+        # all possible output values.
+        if isinstance(input_value, str):
+            new_value = input_value.lower()
+        else:
+            new_value = input_value
+
+        # Now check to see if the value is present in among all possible
+        # output values, and convert.
+        if new_value in output_values:
+            new_value = format_dict[format]
+
+        else:
+            new_value = input_value
+
+    else:
+        new_value = input_value
+
+    if isinstance(new_value, str):
+        if upper == True:
+            new_value = new_value.upper()
+
+    return new_value
 
 
 
@@ -354,6 +411,15 @@ def split_string(string):
             index += 1
 
     return (left, right)
+
+
+
+
+
+
+
+
+
 
 
 

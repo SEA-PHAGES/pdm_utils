@@ -240,36 +240,21 @@ class Genome:
     #           basic.remove_draft_suffix(self.phage_name).lower()
 
 
-    def set_host(self, value, strategy):
-        """Set the host genus and discard the species.
-        'empty_string' = '' string.
-        'none_string' = 'none' string.
-        'none_object' = None object."""
+    def set_host(self, value, format = "empty_string"):
+        """Set the host genus and discard the species."""
 
-        if (value is None or value.lower() == "none"):
-            value = ""
+        if isinstance(value, str):
+            value = value.strip()
 
-        value = value.strip()
+        # The host value may need to be split. But don't split until
+        # it is determined if the value is a null value.
+        value = basic.convert_empty(value, "empty_string")
 
-        if value == "":
-
-            if strategy == "empty_string":
-                self.host = ""
-            elif strategy == "none_string":
-                self.host = "none"
-            elif strategy == "none_object":
-                self.host = None
-            else:
-                pass
-
-        else:
+        if value != "":
             self.host = value.split(" ")[0]
 
-
-
-
-
-
+        else:
+            self.host = basic.convert_empty(value, format)
 
 
 
@@ -281,34 +266,17 @@ class Genome:
         self._length = len(self.sequence)
 
 
-    def set_accession(self, value, strategy):
+    def set_accession(self, value, format = "empty_string"):
         """Set the accession. The Accession field in Phamerator defaults to "".
         Some flat file accessions have the version number suffix, so discard
-        the version number. Strategy indicates how an empty accession value
-        should be stored:
-        'empty_string' = empty string.
-        'none_string' = 'none' string.
-        'none_object' = None object."""
+        the version number."""
 
-        if value is None:
-            value = ""
+        if isinstance(value, str):
+            value = value.strip()
+            value = value.split(".")[0]
 
-        value = value.strip()
-        value = value.split(".")[0]
+        self.accession = basic.convert_empty(value, format)
 
-        if value == "":
-
-            if strategy == "empty_string":
-                self.accession = ""
-            elif strategy == "none_string":
-                self.accession = "none"
-            elif strategy == "none_object":
-                self.accession = None
-            else:
-                pass
-
-        else:
-            self.accession = value
 
 
 
@@ -363,69 +331,42 @@ class Genome:
         """Set the cluster, and modify singleton if needed."""
 
         value = value.strip()
-
         if value.lower() == "singleton":
             self.cluster = value.lower()
         else:
             self.cluster = value
 
 
-    def set_subcluster(self, value, strategy):
-        """Set the subcluster. Strategy indicates how an empty subcluster value
-        should be stored:
-        'empty_string' = '' string.
-        'none_string' = 'none' string.
-        'none_object' = None object."""
+    def set_subcluster(self, value, format = "empty_string"):
+        """Set the subcluster."""
 
-        if (value is None or value.lower() == "none"):
-            value = ""
-
-        value = value.strip()
-
-        if value == "":
-
-            if strategy == "empty_string":
-                self.subcluster = ""
-            elif strategy == "none_string":
-                self.subcluster = "none"
-            elif strategy == "none_object":
-                self.subcluster = None
-            else:
-                pass
-
-        else:
-            self.subcluster = value
+        if isinstance(value, str):
+            value = value.strip()
+        self.subcluster = basic.convert_empty(value, format)
 
 
+    def set_cluster_subcluster(self):
+        """Set the combined Cluster-Subcluster field using the Cluster
+        and Subcluster designations."""
 
+        if (self.subcluster is None or \
+            self.subcluster.lower() == "none" or \
+            self.subcluster == ""):
 
-    # TODO I think that this method should be implemented on
-    # self.cluster and self.subcluster attributes.
-    def set_cluster_subcluster(self, cluster, subcluster):
-        """Set the combined Cluster-Subcluster field."""
-
-        if (subcluster is None or \
-            subcluster.lower() == "none" or \
-            subcluster == ""):
-
-            if cluster is None:
+            if self.cluster is None:
                 self.cluster_subcluster = "singleton"
             else:
-                self.cluster_subcluster = cluster
+                self.cluster_subcluster = self.cluster
         else:
-            self.cluster_subcluster = subcluster
+            self.cluster_subcluster = self.subcluster
 
 
-    # TODO either make this parallel to set_cluster_subcluster regarding
-    # inputs, or vice versa.
-    # TODO unit test.
-    def split_cluster_subcluster(self, strategy):
+    def split_cluster_subcluster(self, format = "none_string"):
         """From the combined cluster_subcluster value,
         set the Cluster and Subcluster fields.
-        Strategy indicates how an empty subcluster value should be stored:
-        'empty_string' = '' string.
-        'none_string' = 'none' string.
-        'none_object' = None object."""
+        If the combined cluster_subcluster value is None, "none", or "",
+        no changes are implemented to the current cluster and subcluster
+        attributes."""
 
         if (self.cluster_subcluster is None or \
             self.cluster_subcluster.lower() == "none" or \
@@ -434,81 +375,38 @@ class Genome:
             pass
 
         else:
+
             left, right = basic.split_string(self.cluster_subcluster)
 
+            # If splitting produces only an alphabetic string,
+            # set only the cluster.
             if self.cluster_subcluster == left:
                 self.cluster = left
                 self.subcluster = ""
 
+            # If splitting produces an alphabetic string and a
+            # numberic string, set the cluster and subcluster.
             elif self.cluster_subcluster == left + right:
                 self.cluster = left
                 self.subcluster = left + right
 
+            # If the value can't be split into alphabetic and numeric strings,
+            # cluster and subcluster should be set to empty.
             else:
-                self.cluster = ""
-                self.subcluster = ""
+                self.cluster == ""
+                self.subcluster == ""
 
-        if self.cluster == "":
-            if strategy == "empty_string":
-                self.cluster = ""
-            elif strategy == "none_string":
-                self.cluster = "none"
-            elif strategy == "none_object":
-                self.cluster = None
-            else:
-                pass
-        else:
-            self.cluster = value
-
-        if self.subcluster == "":
-            if strategy == "empty_string":
-                self.subcluster = ""
-            elif strategy == "none_string":
-                self.subcluster = "none"
-            elif strategy == "none_object":
-                self.subcluster = None
-            else:
-                pass
-        else:
-            self.subcluster = value
+        # Now format the cluster and subclusters if they are empty.
+        self.cluster = basic.convert_empty(self.cluster, format)
+        self.subcluster = basic.convert_empty(self.subcluster, format)
 
 
-
-    # TODO this method may need to be improved. May be better to structure
-    # it more similarly to the general strand format conversion function
-    # that utilizes a dictionary. Also, if input value is None, it gets
-    # converted first to empty string, which may not be ideal. And if an
-    # invalid strategy is chosen, it converts to an empty string, which
-    # may not be ideal.
-    def set_date_last_modified(self, value, strategy):
+    def set_date_last_modified(self, value, format = "empty_datetime_obj"):
         """Set the date_last_modified field. Originally this field in
         Phamerator was not used, so for many genomes this field is empty.
-        Strategy indicates how an empty accession value
-        should be stored:
-        'empty_string' = empty string.
-        'empty_datetime_obj' = datetime object with an arbitrary early date.
-        'none_object' = None object.
-        'none_string' = 'none' string."""
+        """
 
-        if value is None:
-            value = ""
-
-        if value == "":
-
-            if strategy == "empty_string":
-                self.date_last_modified = ""
-            elif strategy == "empty_datetime_obj":
-                self.date_last_modified = \
-                    datetime.strptime('1/1/1900', '%m/%d/%Y')
-            elif strategy == "none_object":
-                self.date_last_modified = None
-            elif strategy == "none_string":
-                self.date_last_modified = "none"
-            else:
-                self.date_last_modified = ""
-
-        else:
-            self.date_last_modified = value
+        self.date_last_modified = basic.convert_empty(value, format)
 
 
     def tally_descriptions(self):
