@@ -176,6 +176,94 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
+
+
+
+    def test_check_empty_1(self):
+        """Verify 'a' is not in the empty set."""
+        result = basic.check_empty("a")
+        self.assertFalse(result)
+
+    def test_check_empty_2(self):
+        """Verify '' is in the empty set."""
+        result = basic.check_empty("")
+        self.assertTrue(result)
+
+    def test_check_empty_3(self):
+        """Verify 'none' is in the empty set."""
+        result = basic.check_empty("none")
+        self.assertTrue(result)
+
+    def test_check_empty_4(self):
+        """Verify 'null' is in the empty set."""
+        result = basic.check_empty("null")
+        self.assertTrue(result)
+
+    def test_check_empty_5(self):
+        """Verify None is in the empty set."""
+        result = basic.check_empty(None)
+        self.assertTrue(result)
+
+    def test_check_empty_6(self):
+        """Verify 'not applicable' is in the empty set."""
+        result = basic.check_empty("not applicable")
+        self.assertTrue(result)
+
+    def test_check_empty_7(self):
+        """Verify 'na' is in the empty set."""
+        result = basic.check_empty("na")
+        self.assertTrue(result)
+
+    def test_check_empty_8(self):
+        """Verify 'n/a' is in the empty set."""
+        result = basic.check_empty("n/a")
+        self.assertTrue(result)
+
+    def test_check_empty_9(self):
+        """Verify '0' is in the empty set."""
+        result = basic.check_empty("0")
+        self.assertTrue(result)
+
+    def test_check_empty_10(self):
+        """Verify 0 is in the empty set."""
+        result = basic.check_empty(0)
+        self.assertTrue(result)
+
+    def test_check_empty_11(self):
+        """Verify empty datetime object is in the empty set."""
+        empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        result = basic.check_empty(empty_date)
+        self.assertTrue(result)
+
+    def test_check_empty_12(self):
+        """Verify 'NA' is in the empty set."""
+        result = basic.check_empty("NA")
+        self.assertTrue(result)
+
+    def test_check_empty_13(self):
+        """Verify 'NA' is now not in the empty set."""
+        result = basic.check_empty("NA", lower = False)
+        self.assertFalse(result)
+
+    def test_check_empty_14(self):
+        """Verify None is still in the empty set."""
+        result = basic.check_empty(None, lower = False)
+        self.assertTrue(result)
+
+    def test_check_empty_15(self):
+        """Verify 0 is still in the empty set."""
+        result = basic.check_empty(0, lower = False)
+        self.assertTrue(result)
+
+    def test_check_empty_16(self):
+        """Verify empty datetime object is still in the empty set."""
+        empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        result = basic.check_empty(empty_date, lower = False)
+        self.assertTrue(result)
+
+
+
+
     def test_convert_empty_1(self):
         """Verify '' is converted to 'none'."""
         new_value = basic.convert_empty("", "none_string")

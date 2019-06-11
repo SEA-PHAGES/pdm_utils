@@ -41,13 +41,13 @@ def reformat_strand(input_value, format, case = False):
     'operator' ('+', '-')
     'numeric' (1, -1)."""
 
-    format_dict = {"fr_long":["forward", "reverse"], \
-                    "fr_short":["f", "r"], \
-                    "tb_long":["top", "bottom"], \
-                    "tb_short":["t", "b"], \
-                    "wc_long":["watson", "crick"], \
-                    "wc_short":["w", "c"], \
-                    "operator":["+", "-"], \
+    format_dict = {"fr_long":["forward", "reverse"],
+                    "fr_short":["f", "r"],
+                    "tb_long":["top", "bottom"],
+                    "tb_short":["t", "b"],
+                    "wc_long":["watson", "crick"],
+                    "wc_short":["w", "c"],
+                    "operator":["+", "-"],
                     "numeric":[1, -1]}
 
     strand1_values = set()
@@ -85,6 +85,31 @@ def reformat_strand(input_value, format, case = False):
     return new_value
 
 
+def check_empty(value, lower = True):
+    """Checks if the value represents a null value."""
+
+    empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+    empty_set = set(["",
+                    "none",
+                    "null",
+                    None,
+                    "not applicable",
+                    "na",
+                    "n/a",
+                    "0",
+                    0,
+                    empty_date])
+
+    if (lower == True and isinstance(value, str)):
+        value = value.lower()
+
+    if value in empty_set:
+        result = True
+    else:
+        result = False
+    return result
+
+
 def convert_empty(input_value, format, upper = False):
     """Converts common NULL value formats, including:
     'empty_string' = ''
@@ -101,15 +126,15 @@ def convert_empty(input_value, format, upper = False):
 
     empty_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
 
-    format_dict = {"empty_string": "", \
-                    "none_string": "none", \
-                    "null_string": "null", \
-                    "none_object": None, \
-                    "na_long": "not applicable", \
-                    "na_short": "na", \
-                    "n/a": "n/a", \
-                    "zero_string": "0", \
-                    "zero_num": 0, \
+    format_dict = {"empty_string": "",
+                    "none_string": "none",
+                    "null_string": "null",
+                    "none_object": None,
+                    "na_long": "not applicable",
+                    "na_short": "na",
+                    "n/a": "n/a",
+                    "zero_string": "0",
+                    "zero_num": 0,
                     "empty_datetime_obj": empty_date}
 
     output_values = set(format_dict.values())

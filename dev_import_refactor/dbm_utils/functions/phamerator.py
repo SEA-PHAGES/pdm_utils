@@ -1,8 +1,8 @@
 """Functions to interact with PhameratorDB."""
 
 
-
-
+from classes import Genome
+from functions import basic
 
 
 
@@ -26,18 +26,106 @@ def parse_phamerator_data(genome, data_tuple):
 
     genome.set_phage_id(data_tuple[0])
     genome.phage_name = data_tuple[1]
-    genome.set_host(data_tuple[2], "none_string")
+    genome.set_host(data_tuple[2])
     genome.set_sequence(data_tuple[3])
     genome.status = data_tuple[4]
     genome.set_cluster(data_tuple[5])
-    genome.set_subcluster(data_tuple[8], "none_string")
-    genome.set_date_last_modified(data_tuple[6], "empty_datetime_obj")
-    genome.set_accession(data_tuple[7], "none_string")
+    genome.set_subcluster(data_tuple[8])
+    genome.set_date_last_modified(data_tuple[6])
+    genome.set_accession(data_tuple[7])
     genome.annotation_author = str(data_tuple[9])
     genome.annotation_qc = str(data_tuple[10])
     genome.retrieve_record = str(data_tuple[11])
 
-    return genome
+
+
+
+def create_phamerator_dict(phamerator_data_tuples):
+    """
+    Returns a dictionary of Phamerator data retrieved from MySQL query.
+    Key = PhageID.
+    Value = Genome object containing parsed MySQL data.
+    """
+
+    genome_dict = {}
+    for genome_tuple in phamerator_data_tuples:
+        genome = Genome.Genome()
+        parse_phamerator_data(genome,genome_tuple)
+        genome_dict[genome.phage_id] = genome
+
+    return genome_dict
+
+
+def create_data_sets(genome_dict):
+    """
+    Create sets of all unique values for several fields in the Phamerator data.
+    """
+    phage_id_set = set()
+    host_set = set()
+    status_set = set()
+    cluster_set = set()
+    accession_set = set()
+    subcluster_set = set()
+
+    for genome_id in genome_dict.keys():
+
+        genome = genome_dict[genome_id]
+        phage_id_set.add(genome.phage_id)
+        host_set.add(genome.host)
+        status_set.add(genome.status)
+        cluster_set.add(genome.cluster)
+
+        # TODO this was not implemented in original import script,
+        # so maybe the subcluster 'empty check' is not needed.
+        # Only add to the accession set if there was an accession,
+        # and not if it was empty.
+        if basic.check_empty(genome.subcluster) == False:
+            subcluster_set.add(genome.subcluster)
+
+        # Only add to the accession set if there was an accession,
+        # and not if it was empty.
+        if basic.check_empty(genome.accession) == False:
+            accession_set.add(genome.accession)
+
+    dictionary_of_sets = {}
+    dictionary_of_sets["phage_id"] = phage_id_set
+    dictionary_of_sets["host"] = host_set
+    dictionary_of_sets["status"] = status_set
+    dictionary_of_sets["cluster"] = cluster_set
+    dictionary_of_sets["subcluster"] = subcluster_set
+    dictionary_of_sets["accession"] = accession_set
+
+    return dictionary_of_sets
+
+
+
+
+
+
+
+
+
+#If phage Cluster is Singleton, make sure MySQL statement is created correctly
+def create_cluster_statement(phage_id,cluster):
+    """Create MySQL statement to update Cluster data.
+    If Cluster is 'singleton', Cluster is set to NULL."""
+
+    part1 = """UPDATE phage SET Cluster = """
+    part3 = """ WHERE PhageID = '""" + phage_id + """';"""
+
+    if cluster.lower() == "singleton":
+        part2 = """NULL"""
+    else:
+        part2 = """'""" + cluster + """'"""
+
+    cluster_statement = part1 + part2 + part3
+
+    return cluster_statement
+
+
+
+
+
 
 
 
@@ -129,62 +217,6 @@ def parse_phamerator_data(genome, data_tuple):
 
 
 
-#Parse Phamerator genome data
-def parse_phamerator_genomes():
-
-    #Now that sets and dictionaries have been made, create a phamerator_data_dict
-    #Key = phageID
-    #Value = Genome object of Phamerator data
-    phamerator_genome_dict = {}
-
-    for genome_tuple in current_genome_data_tuples:
-
-        phamerator_genome = Genome()
-        phamerator_genome = parse_phamerator_data(phamerator_genome,genome_tuple)
-        phamerator_genome_dict[phamerator_genome.phage_id] = phamerator_genome
-
-    return phamerator_genome_dict
-
-
-
-def create_data_sets(phamerator_genome_dict):
-
-    #Create data sets to compare new data with
-    #Originally, a phageName_set, phageSequence_set, phageGene_set, and phageGene_dict were implemented, but I ended up not using them here.
-    #The phageGene_set get implemented later in the script.
-    #The SQL query still returns these values so if I need to re-implement those, I am able to.
-    phage_id_set = set()
-    phage_host_set = set()
-    phage_status_set = set()
-    phage_cluster_set = set()
-    phage_accession_set = set()
-    phage_subcluster_set = set()
-
-
-    for genome in phamerator_genome_dict.keys():
-
-
-        phage_id_set.add(genome.phage_id)
-        phage_host_set.add(genome.host)
-        phage_status_set.add(genome.status)
-        phage_cluster_set.add(genome.cluster)
-        phage_subcluster_set.add(genome.subcluster)
-
-
-        #TODO I will need to modify this, since accessions are now "none" instead of ""
-        #Only add to the accession set if there was an accession, and not if it was empty "".
-        phage_accession_set.add(genome.accession)
-
-
-    dictionary_of_sets = {}
-    dictionary_of_sets["id"] = phage_id_set
-    dictionary_of_sets["host"] = phage_host_set
-    dictionary_of_sets["status"] = phage_status_set
-    dictionary_of_sets["cluster"] = phage_cluster_set
-    dictionary_of_sets["subcluster"] = phage_subcluster_set
-
-
-    return dictionary_of_sets
 
 
 
@@ -193,16 +225,6 @@ def create_data_sets(phamerator_genome_dict):
 
 
 
-
-
-#If phage Cluster is Singleton, make sure MySQL statement is created correctly
-def create_cluster_statement(phage_name,cluster):
-    cluster_statement = ""
-    if cluster == "singleton":
-        cluster_statement = "UPDATE phage SET Cluster = NULL" + " WHERE PhageID = '" + phage_name + "';"
-    else:
-        cluster_statement = "UPDATE phage SET Cluster = '" + cluster + "' WHERE PhageID = '" + phage_name + "';"
-    return cluster_statement
 
 
 

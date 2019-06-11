@@ -11,12 +11,61 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.genome = Genome.Genome()
+        self.genome1 = Genome.Genome()
+        self.genome2 = Genome.Genome()
+        self.genome3 = Genome.Genome()
 
+        self.data_tuple1 = ("L5",
+                            "L5",
+                            "Mycobacterium",
+                            "ATCG",
+                            "final",
+                            "A",
+                            "1/1/1900",
+                            "ABC123",
+                            "A2",
+                            "1",
+                            "1",
+                            "1")
 
+        self.data_tuple2 = ("Trixie",
+                            "Trixie",
+                            "Mycobacterium",
+                            "TTTT",
+                            "final",
+                            "A",
+                            "1/1/1900",
+                            "EFG123",
+                            "A2",
+                            "1",
+                            "1",
+                            "1")
 
+        self.data_tuple3 = ("KatherineG",
+                            "KatherineG",
+                            "Gordonia",
+                            "CCCC",
+                            "final",
+                            "A",
+                            "1/1/1900",
+                            "XYZ123",
+                            "A15",
+                            "1",
+                            "1",
+                            "1")
 
-
+        self.data_tuple4 = ("XYZ",
+                            "XYZ_Draft",
+                            "Arthrobacter",
+                            "GGGG",
+                            "gbk",
+                            "X",
+                            "1/1/1900",
+                            "none",
+                            "",
+                            "0",
+                            "0",
+                            "0")
 
 
     def test_parse_phamerator_data_1(self):
@@ -48,7 +97,7 @@ class TestTicketFunctions1(unittest.TestCase):
                         input_annotation_qc,
                         input_retrieve_record)
 
-        phamerator.parse_phamerator_data(self.genome, data_tuple)
+        phamerator.parse_phamerator_data(self.genome1, data_tuple)
 
         output_phage_id = "Trixie"
         output_phage_name = "Trixie_Draft"
@@ -67,36 +116,36 @@ class TestTicketFunctions1(unittest.TestCase):
         output_seq_length = 4
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, output_phage_id)
+            self.assertEqual(self.genome1.phage_id, output_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, output_phage_name)
+            self.assertEqual(self.genome1.phage_name, output_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.host, output_host)
+            self.assertEqual(self.genome1.host, output_host)
         with self.subTest():
-            self.assertEqual(self.genome.sequence, output_sequence)
+            self.assertEqual(self.genome1.sequence, output_sequence)
         with self.subTest():
-            self.assertEqual(self.genome.status, output_status)
+            self.assertEqual(self.genome1.status, output_status)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, output_cluster)
+            self.assertEqual(self.genome1.cluster, output_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, output_subcluster)
+            self.assertEqual(self.genome1.subcluster, output_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.date_last_modified, \
+            self.assertEqual(self.genome1.date_last_modified, \
                 output_date_last_modified)
         with self.subTest():
-            self.assertEqual(self.genome.accession, output_accession)
+            self.assertEqual(self.genome1.accession, output_accession)
         with self.subTest():
-            self.assertEqual(self.genome.annotation_author, \
+            self.assertEqual(self.genome1.annotation_author, \
                 output_annotation_author)
         with self.subTest():
-            self.assertEqual(self.genome.annotation_qc, output_annotation_qc)
+            self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
         with self.subTest():
-            self.assertEqual(self.genome.retrieve_record, \
+            self.assertEqual(self.genome1.retrieve_record, \
                 output_retrieve_record)
         with self.subTest():
-            self.assertEqual(self.genome.search_id, output_search_id)
+            self.assertEqual(self.genome1.search_id, output_search_id)
         with self.subTest():
-            self.assertEqual(self.genome._length, output_seq_length)
+            self.assertEqual(self.genome1._length, output_seq_length)
 
 
     def test_parse_phamerator_data_2(self):
@@ -128,17 +177,17 @@ class TestTicketFunctions1(unittest.TestCase):
                         input_annotation_qc,
                         input_retrieve_record)
 
-        phamerator.parse_phamerator_data(self.genome, data_tuple)
+        phamerator.parse_phamerator_data(self.genome1, data_tuple)
 
         output_phage_id = "Trixie"
         output_phage_name = "Trixie_Draft"
-        output_host = "none"
+        output_host = ""
         output_sequence = "ATCG"
         output_status = "final"
         output_cluster = "singleton"
-        output_subcluster = "none"
-        output_date_last_modified = datetime.strptime('1/1/1900', '%m/%d/%Y')
-        output_accession = "none"
+        output_subcluster = ""
+        output_date_last_modified = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        output_accession = ""
         output_annotation_author = "1"
         output_annotation_qc = "1"
         output_retrieve_record = "1"
@@ -147,41 +196,120 @@ class TestTicketFunctions1(unittest.TestCase):
         output_seq_length = 4
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, output_phage_id)
+            self.assertEqual(self.genome1.phage_id, output_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, output_phage_name)
+            self.assertEqual(self.genome1.phage_name, output_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.host, output_host)
+            self.assertEqual(self.genome1.host, output_host)
         with self.subTest():
-            self.assertEqual(self.genome.sequence, output_sequence)
+            self.assertEqual(self.genome1.sequence, output_sequence)
         with self.subTest():
-            self.assertEqual(self.genome.status, output_status)
+            self.assertEqual(self.genome1.status, output_status)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, output_cluster)
+            self.assertEqual(self.genome1.cluster, output_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, output_subcluster)
+            self.assertEqual(self.genome1.subcluster, output_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.date_last_modified, \
+            self.assertEqual(self.genome1.date_last_modified, \
                 output_date_last_modified)
         with self.subTest():
-            self.assertEqual(self.genome.accession, output_accession)
+            self.assertEqual(self.genome1.accession, output_accession)
         with self.subTest():
-            self.assertEqual(self.genome.annotation_author, \
+            self.assertEqual(self.genome1.annotation_author, \
                 output_annotation_author)
         with self.subTest():
-            self.assertEqual(self.genome.annotation_qc, output_annotation_qc)
+            self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
         with self.subTest():
-            self.assertEqual(self.genome.retrieve_record, \
+            self.assertEqual(self.genome1.retrieve_record, \
                 output_retrieve_record)
         with self.subTest():
-            self.assertEqual(self.genome.search_id, output_search_id)
+            self.assertEqual(self.genome1.search_id, output_search_id)
         with self.subTest():
-            self.assertEqual(self.genome._length, output_seq_length)
+            self.assertEqual(self.genome1._length, output_seq_length)
 
 
 
 
 
+
+
+
+
+    def test_create_phamerator_dict_1(self):
+        """Verify Phamerator MySQL query output is parsed correctly."""
+
+        data_tuples = (self.data_tuple1, self.data_tuple2, self.data_tuple3)
+        genome_dict = phamerator.create_phamerator_dict(data_tuples)
+        genome_l5 = genome_dict["L5"]
+        genome_trixie = genome_dict["Trixie"]
+        genome_katherineg = genome_dict["KatherineG"]
+
+        with self.subTest():
+            self.assertEqual(len(genome_dict.keys()), 3)
+        with self.subTest():
+            self.assertEqual(genome_l5.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(genome_trixie.accession, "EFG123")
+        with self.subTest():
+            self.assertEqual(genome_katherineg.accession, "XYZ123")
+
+
+
+
+
+
+    def test_create_data_sets_1(self):
+        """Verify multiple sets of unique Phamerator data are produced.
+        Verify that empty accession is not added.
+        Verify that empty subcluster is not added."""
+
+        data_tuples = (self.data_tuple1,
+                        self.data_tuple2,
+                        self.data_tuple3,
+                        self.data_tuple4)
+        genome_dict = phamerator.create_phamerator_dict(data_tuples)
+        returned_dict = phamerator.create_data_sets(genome_dict)
+
+        exp_ids = set(["L5","Trixie","KatherineG","XYZ"])
+        exp_host = set(["Mycobacterium","Gordonia","Arthrobacter"])
+        exp_status = set(["final","gbk"])
+        exp_cluster = set(["A","X"])
+        exp_subcluster = set(["A2","A15"])
+        exp_accession = set(["ABC123","EFG123","XYZ123"])
+
+        with self.subTest():
+            self.assertEqual(len(returned_dict.keys()), 6)
+        with self.subTest():
+            self.assertEqual(returned_dict["phage_id"], exp_ids)
+        with self.subTest():
+            self.assertEqual(returned_dict["host"], exp_host)
+        with self.subTest():
+            self.assertEqual(returned_dict["status"], exp_status)
+        with self.subTest():
+            self.assertEqual(returned_dict["cluster"], exp_cluster)
+        with self.subTest():
+            self.assertEqual(returned_dict["subcluster"], exp_subcluster)
+        with self.subTest():
+            self.assertEqual(returned_dict["accession"], exp_accession)
+
+
+
+
+    def test_create_cluster_statement_1(self):
+        """Verify correct cluster statement is created for a non-singleton."""
+        statement = phamerator.create_cluster_statement("L5", "A")
+        exp_statement = \
+            """UPDATE phage SET Cluster = 'A' WHERE PhageID = 'L5';"""
+        with self.subTest():
+            self.assertEqual(statement, exp_statement)
+
+    def test_create_cluster_statement_2(self):
+        """Verify correct cluster statement is created for a singleton."""
+        statement = phamerator.create_cluster_statement("L5", "SINGLETON")
+        exp_statement = \
+            """UPDATE phage SET Cluster = NULL WHERE PhageID = 'L5';"""
+        with self.subTest():
+            self.assertEqual(statement, exp_statement)
 
 
 
