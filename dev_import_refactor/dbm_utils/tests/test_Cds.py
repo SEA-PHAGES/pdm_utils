@@ -54,18 +54,18 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-    def test_check_translation_1(self):
+    def test_check_amino_acids_1(self):
         """All amino acids in alphabet."""
         alphabet = set(["A","B","C"])
         self.feature.translation = "AB"
-        self.feature.check_translation(alphabet)
+        self.feature.check_amino_acids(alphabet)
         self.assertEqual(len(self.feature.evaluations), 0)
 
-    def test_check_translation_2(self):
+    def test_check_amino_acids_2(self):
         """Some amino acids not in alphabet."""
         alphabet = set(["A","B","C"])
         self.feature.translation = "AD"
-        self.feature.check_translation(alphabet)
+        self.feature.check_amino_acids(alphabet)
         self.assertEqual(len(self.feature.evaluations), 1)
 
 
@@ -373,32 +373,71 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-    def test_check_gene_length_1(self):
-        """The gene length is correct."""
+    def test_check_lengths_1(self):
+        """The translation length is correct."""
         self.feature.compound_parts = 1
         self.feature.left_boundary = 0
         self.feature.right_boundary = 11
         self.feature.set_translation("ABC")
-        self.feature.check_gene_length()
+        self.feature.check_lengths()
         self.assertEqual(len(self.feature.evaluations), 0)
 
-    def test_check_gene_length_2(self):
-        """The gene length is not correct."""
+    def test_check_lengths_2(self):
+        """The translation length is not correct."""
         self.feature.compound_parts = 1
         self.feature.left_boundary = 0
         self.feature.right_boundary = 12
         self.feature.set_translation("ABC")
-        self.feature.check_gene_length()
+        self.feature.check_lengths()
         self.assertEqual(len(self.feature.evaluations), 1)
 
-    def test_check_gene_length_3(self):
+    def test_check_lengths_3(self):
         """Compound feature is not computed."""
         self.feature.compound_parts = 2
         self.feature.left_boundary = 0
         self.feature.right_boundary = 12
         self.feature.set_translation("ABC")
-        self.feature.check_gene_length()
+        self.feature.check_lengths()
         self.assertEqual(len(self.feature.evaluations), 0)
+
+
+
+
+    def test_set_nucleotide_length_1(self):
+        """Verify the nucleotide length is correct."""
+        self.feature.left_boundary = 0
+        self.feature.right_boundary = 11
+        self.feature.set_nucleotide_length()
+        exp = 12
+        self.assertEqual(self.feature._nucleotide_length, 12)
+
+
+
+    # TODO add more set_nucleotide_length unit tests.
+
+
+
+
+    def test_check_translation_length_1(self):
+        """Verify a present translation does not produce an error."""
+        self.feature._translation_length = 1
+        self.feature.check_translation_length()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_translation_length_2(self):
+        """Verify a present translation does not produce an error."""
+        self.feature._translation_length = 100
+        self.feature.check_translation_length()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_translation_length_3(self):
+        """Verify that no translation produces an error."""
+        self.feature._translation_length = 0
+        self.feature.check_translation_length()
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
 
 
 if __name__ == '__main__':

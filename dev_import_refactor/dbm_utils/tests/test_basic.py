@@ -775,9 +775,17 @@ class TestGeneralFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(output_host, expected_host)
 
-
-
-
+    def test_parse_names_from_record_field_15(self):
+        """Verify 'Unclassified' is not identified."""
+        string = "Unclassified."
+        expected_phage = ""
+        expected_host = ""
+        output_phage, output_host = \
+            basic.parse_names_from_record_field(string)
+        with self.subTest():
+            self.assertEqual(output_phage, expected_phage)
+        with self.subTest():
+            self.assertEqual(output_host, expected_host)
 
 
 

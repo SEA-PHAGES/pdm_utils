@@ -25,10 +25,8 @@ class CdsFeature:
         self.strand = "" #'forward', 'reverse', or 'NA'
         self.compound_parts = 0 # Number of regions that form the feature
         self.translation = ""
-        # self.gene_length = "" # Value stored in Phamerator. TODO I don't
-        # think this is needed anymore. Replaced by _translation_length
         self.translation_table = ""
-
+        self.coordinate_format = "" # Indexing format for coordinates.
 
         # TODO: create coordinate indexing attribute, to be able to switch
         # coordinates between different types of indexing strategies.
@@ -68,7 +66,8 @@ class CdsFeature:
 
         #Common to all. Computed internally.
         self._search_id = ""
-        self._translation_length = ""
+        self._translation_length = 0
+        self._nucleotide_length = 0 # Replaces gene_length, stored in Phamerator?
         self._left_right_strand_id = ()
         self._end_strand_id = ()
         self._start_end_id = ()
@@ -126,13 +125,24 @@ class CdsFeature:
         self._search_id = basic.remove_draft_suffix(self.phage_id)
 
 
+    # TODO unit test.
+    def choose_description(self, value):
+        """Set the primary description and processed primary description."""
 
-    # TODO: I don't think I need this function.
-    # def set_primary_description(self, value1, value2):
-    #     """Set original and processed primary description
-    #     (no generic descriptions)."""
-    #     self.primary_description = value1
-    #     self.processed_primary_description = value2
+        if value = "product":
+            self.primary_description = self.product_description
+            self.processed_primary_description = \
+                self.processed_primary_description
+
+        if value = "function":
+            self.primary_description = self.function_description
+            self.processed_primary_description = \
+                self.processed_function_description
+        if value = "note":
+            self.primary_description = self.note_description
+            self.processed_primary_description = \
+                self.processed_note_description
+
 
 
 
@@ -188,6 +198,15 @@ class CdsFeature:
         self._start_end_id = (self.start, self.end)
 
 
+    # TODO this method can be improved by taking account coordinate
+    # indexing format. The current implementation assumes only one format.
+    def set_nucleotide_length(self):
+        """From the set coordinates, determine the length of the
+        nucleotide sequence. This method is not correct for
+        non-compound features.
+        """
+        self._nucleotide_length = self.right_boundary - self.left_boundary + 1
+
 
 
 
@@ -198,7 +217,7 @@ class CdsFeature:
 
     # Evaluations.
 
-    def check_translation(self, protein_alphabet_set):
+    def check_amino_acids(self, protein_alphabet_set):
         """Check whether all amino acids in the translation are valid.
         """
         amino_acid_set = set(self.translation)
@@ -209,6 +228,30 @@ class CdsFeature:
                 + str(amino_acid_error_set)
             self.set_evaluation("error", message)
 
+    def check_translation_length(self):
+        """Confirm that a translation is present."""
+        if self._translation_length < 1:
+            message = "There is no translation."
+            self.set_evaluation("error", message)
+
+
+    # TODO this method can be improved by taking account coordinate
+    # indexing format. The current implementation assumes only one format.
+    # Also, instead of computing the nucleotide length, this can now
+    # reference the self._nucleotide_length attribute.
+    def check_lengths(self):
+        """Confirm coordinates match translation length.
+        This method can only be used on non-compound features."""
+
+        if self.compound_parts == 1:
+            length1 = self.right_boundary - self.left_boundary + 1
+            length2 = (self._translation_length * 3) + 3
+
+            if length1 != length2:
+
+                message = "The translation length and nucleotide length " + \
+                            "do not match."
+                self.set_evaluation("error", message)
 
 
     def check_boundaries(self):
@@ -258,26 +301,40 @@ class CdsFeature:
             (self.processed_function_description != '' or \
             self.processed_note_description != ''):
 
-                message = "The feature is missing a product description."
-                self.set_evaluation("error", message)
+            message = "The feature is missing a product description."
+            self.set_evaluation("error", message)
 
 
 
-    def check_gene_length(self):
-        """Confirm coordinates match translation length."""
-        # This method can only be used on non-compound features.
-
-        if self.compound_parts == 1:
-            length1 = self.right_boundary - self.left_boundary + 1
-            length2 = (self._translation_length * 3) + 3
-
-            if length1 != length2:
-
-                message = "The translation length is incorrect."
-                self.set_evaluation("error", message)
 
 
 
+
+
+
+
+
+    # TODO implement.
+    # TODO unit test.
+    def check_translation(self):
+        """Check that the current translation matches the expected
+        translation."""
+        # Using Biopython, retrieve the nucleotide sequence, translate the
+        # sequence, and compare to the current value stored in the
+        # translation attribute.
+        pass
+
+
+
+    # TODO implement.
+    # TODO unit test.
+    def reformat_coordinates(self, format):
+        """Convert left and right boundary coordinates between
+        different indexing strategies."""
+        # Using the self.coordinate_format and a format dictionary in
+        # the basic functions module, update the coordinates so they
+        # reflect the desired format.
+        pass
 
 
 

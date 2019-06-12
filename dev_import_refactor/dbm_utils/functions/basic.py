@@ -225,7 +225,7 @@ def reformat_description(description):
     else:
         processed_description = description
 
-    return(description,processed_description)
+    return (description, processed_description)
 
 
 
@@ -291,7 +291,7 @@ def parse_names_from_record_field(description):
     identify the phage name and host name.
     """
 
-    generic_words = set(["complete", "genome", "phage"])
+    generic_words = set(["complete", "genome", "phage", "unclassified"])
 
     host_name = ""
     phage_name = ""
