@@ -142,9 +142,9 @@ for filename in genbank_files:
 
 		#Sequence, length, and GC
 		try:
-			phageSeq = seq_record.seq.upper()
-			seqLength = len(phageSeq)
-			seqGC = 100 * (float(phageSeq.count('G')) + float(phageSeq.count('C'))) / float(seqLength)
+			# phageSeq = seq_record.seq.upper()
+			# seqLength = len(phageSeq)
+			# seqGC = 100 * (float(phageSeq.count('G')) + float(phageSeq.count('C'))) / float(seqLength)
 
 		except:
 			write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)

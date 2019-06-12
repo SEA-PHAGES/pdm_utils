@@ -8,7 +8,7 @@ from classes import Cds
 from datetime import datetime
 
 
-class TestTicketFunctions1(unittest.TestCase):
+class TestPhameratorFunctions(unittest.TestCase):
 
 
     def setUp(self):
