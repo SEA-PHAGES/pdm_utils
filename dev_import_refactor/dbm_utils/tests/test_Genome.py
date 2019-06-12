@@ -92,12 +92,14 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_sequence_1(self):
         """Check that sequence is set appropriately."""
-        seq = "abcd"
+        seq = "aaggcga"
         self.genome.set_sequence(seq)
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ABCD")
+            self.assertEqual(self.genome.sequence, "AAGGCGA")
         with self.subTest():
-            self.assertEqual(self.genome._length, 4)
+            self.assertEqual(self.genome._length, 7)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 57.1429)
 
 
 

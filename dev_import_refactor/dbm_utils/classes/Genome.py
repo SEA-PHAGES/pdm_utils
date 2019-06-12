@@ -22,7 +22,7 @@ class Genome:
         self.host = ""
         self.sequence = "" # TODO should this be a Biopython Seq object?
         self.accession = ""
-        self.author = ""
+        self.author = "" # TODO do I need this in addition to annotation_author?
 
 
 
@@ -71,6 +71,7 @@ class Genome:
         self.search_id = '' # Lowercase phage_id
         self.search_name = '' # Lowercase phage_name
         self._length = 0 # Size of the nucleotide sequence
+        self._gc = 0 # %GC content
         self.evaluations = [] # List of warnings and errors about the genome
 
 
@@ -264,6 +265,14 @@ class Genome:
 
         self.sequence = value.upper() #TODO should this be biopython object?
         self._length = len(self.sequence)
+
+        gc = 100 * \
+            (float(self.sequence.count("G")) + \
+            float(self.sequence.count("C"))) \
+            / float(self._length)
+
+        self._gc = round(gc, 4)
+
 
 
     def set_accession(self, value, format = "empty_string"):
