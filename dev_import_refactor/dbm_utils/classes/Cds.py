@@ -129,16 +129,16 @@ class CdsFeature:
     def choose_description(self, value):
         """Set the primary description and processed primary description."""
 
-        if value = "product":
+        if value == "product":
             self.primary_description = self.product_description
             self.processed_primary_description = \
                 self.processed_primary_description
 
-        if value = "function":
+        if value == "function":
             self.primary_description = self.function_description
             self.processed_primary_description = \
                 self.processed_function_description
-        if value = "note":
+        if value == "note":
             self.primary_description = self.note_description
             self.processed_primary_description = \
                 self.processed_note_description

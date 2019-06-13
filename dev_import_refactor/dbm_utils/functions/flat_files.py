@@ -38,7 +38,7 @@ from functions import basic
 
 
 # TODO create function to retrieve_flatfile_record
-def retrieve_flatfile_record(filepath)
+def retrieve_flatfile_record(filepath):
 
 
     #
@@ -403,11 +403,11 @@ def parse_flat_file_data(filepath):
     genome_obj.source_features = source_feature_list
 
     for feature in cds_feature_list:
-    genome_obj.cds_features = cds_object_list
+        genome_obj.cds_features = cds_object_list
 
 
     for feature in trna_feature_list:
-    genome_obj.trna_features = trna_object_list
+        genome_obj.trna_features = trna_object_list
 
 
 
@@ -442,7 +442,7 @@ def parse_flat_file_data(filepath):
 
     # TODO return object
 
-    return pass
+    # return pass
 
 
 
@@ -485,7 +485,7 @@ def validate_flat_file(filename):
         write_out(output_file,"\nError: file %s does not have a valid file extension. This file will not be processed." % filename)
         script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
-        continue
+        #continue
 
     #This try/except clause prevents the code from crashing if there
     #is a problem with a file that Biopython has trouble parsing.
@@ -501,7 +501,7 @@ def validate_flat_file(filename):
         write_out(output_file,"\nError: Biopython is unable to parse file %s. This file will not be processed." % filename)
         script_errors += 1
         raw_input("\nPress ENTER to proceed to next file.")
-        continue
+        #continue
 
     if parsed_records_tally == 0:
         # TODO error handling
