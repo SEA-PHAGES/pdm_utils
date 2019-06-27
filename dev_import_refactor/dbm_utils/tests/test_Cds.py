@@ -290,7 +290,7 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     #TODO: remove this unit test after I decide whether or not to keep
     # the set_primary_description function.
-    # def test_set_primary_description_1(self):
+    # de test_set_primary_description_1(self):
     #     """Test primary description."""
     #     description1 = "ABCD"
     #     description2 = "EFGH"
@@ -435,6 +435,58 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature._translation_length = 0
         self.feature.check_translation_length()
         self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
+
+
+
+
+
+    def test_choose_description_1(self):
+        """Verify product description is assigned to primary description."""
+        self.feature.product_description = "ABCD"
+        self.feature.processed_primary_description = "EFGH"
+        self.feature.choose_description("product")
+        with self.subTest():
+            self.assertEqual(self.feature.primary_description, "ABCD")
+        with self.subTest():
+            self.assertEqual(self.feature.processed_primary_description, "EFGH")
+
+    def test_choose_description_2(self):
+        """Verify function description is assigned to primary description."""
+        self.feature.function_description = "ABCD"
+        self.feature.processed_function_description = "EFGH"
+        self.feature.choose_description("function")
+        with self.subTest():
+            self.assertEqual(self.feature.primary_description, "ABCD")
+        with self.subTest():
+            self.assertEqual(self.feature.processed_primary_description, "EFGH")
+
+    def test_choose_description_3(self):
+        """Verify note description is assigned to primary description."""
+        self.feature.note_description = "ABCD"
+        self.feature.processed_note_description = "EFGH"
+        self.feature.choose_description("note")
+        with self.subTest():
+            self.assertEqual(self.feature.primary_description, "ABCD")
+        with self.subTest():
+            self.assertEqual(self.feature.processed_primary_description, "EFGH")
+
+    def test_choose_description_4(self):
+        """Verify no description is assigned to primary description."""
+        self.feature.note_description = "ABCD"
+        self.feature.processed_note_description = "EFGH"
+        self.feature.choose_description("invalid")
+        with self.subTest():
+            self.assertEqual(self.feature.primary_description, "")
+        with self.subTest():
+            self.assertEqual(self.feature.processed_primary_description, "")
+
+
+
+
+
 
 
 

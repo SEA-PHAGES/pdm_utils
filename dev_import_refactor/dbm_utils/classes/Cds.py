@@ -134,16 +134,18 @@ class CdsFeature:
             self.processed_primary_description = \
                 self.processed_primary_description
 
-        if value == "function":
+        elif value == "function":
             self.primary_description = self.function_description
             self.processed_primary_description = \
                 self.processed_function_description
-        if value == "note":
+
+        elif value == "note":
             self.primary_description = self.note_description
             self.processed_primary_description = \
                 self.processed_note_description
 
-
+        else:
+            pass
 
 
 
