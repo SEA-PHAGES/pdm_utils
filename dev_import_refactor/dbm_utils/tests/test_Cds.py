@@ -418,6 +418,67 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+
+
+
+    def test_reformat_left_and_right_boundaries_1(self):
+        """Verify the coordinates are converted to 1-based closed interval."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = 11
+        self.feature.coordinate_format = "0_half_open"
+        new_format = "1_closed"
+        self.feature.reformat_left_and_right_boundaries(new_format)
+        with self.subTest():
+            self.assertEqual(self.feature.left_boundary, 6)
+        with self.subTest():
+            self.assertEqual(self.feature.right_boundary, 11)
+        with self.subTest():
+            self.assertEqual(self.feature.coordinate_format, new_format)
+
+    def test_reformat_left_and_right_boundaries_2(self):
+        """Verify the coordinates are converted to 0-based half open interval."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = 11
+        self.feature.coordinate_format = "1_closed"
+        new_format = "0_half_open"
+        self.feature.reformat_left_and_right_boundaries(new_format)
+        with self.subTest():
+            self.assertEqual(self.feature.left_boundary, 4)
+        with self.subTest():
+            self.assertEqual(self.feature.right_boundary, 11)
+        with self.subTest():
+            self.assertEqual(self.feature.coordinate_format, new_format)
+
+    def test_reformat_left_and_right_boundaries_3(self):
+        """Verify the coordinates are not converted."""
+        self.feature.left_boundary = 5
+        self.feature.right_boundary = 11
+        self.feature.coordinate_format = "1_closed"
+        new_format = "invalid"
+        self.feature.reformat_left_and_right_boundaries(new_format)
+        with self.subTest():
+            self.assertEqual(self.feature.left_boundary, 5)
+        with self.subTest():
+            self.assertEqual(self.feature.right_boundary, 11)
+        with self.subTest():
+            self.assertEqual(self.feature.coordinate_format, "1_closed")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def test_check_translation_length_1(self):
         """Verify a present translation does not produce an error."""
         self.feature._translation_length = 1

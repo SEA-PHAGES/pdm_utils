@@ -89,6 +89,86 @@ def reformat_strand(input_value, format, case = False):
     return new_value
 
 
+
+
+
+
+# TODO unit test
+# TODO this function can probably be improved. Maybe it should return
+# an eval object?
+# TODO also, coordinates in CdsFeature object can be stored as strings,
+# so this function needs to take that into account.
+def reformat_coordinates(left, right, current, new):
+    """Converts common coordinate formats, including:
+    '0_half_open' = 0-based half-open intervals that is the common format
+                    for BAM files and UCSC Browser database. This format seems
+                    to be more efficient when performing genomics
+                    computations.
+    '1_closed' = 1-based closed intervals that is the common format
+                    for the Phamerator Database, UCSC Browser,
+                    the Ensembl genomics database,
+                    VCF files, GFF files. This format seems to be more
+                    intuitive and used for visualization.
+    The function assumes coordinates reflect the left and right
+    boundaries (where the left coordinates is smaller than the right
+    coordinate), instead of gene start and stop coordinates."""
+
+
+    format_set = set(["0_half_open", "1_closed"])
+
+
+    if (current in format_set and new in format_set):
+
+        if current == "0_half_open":
+
+            if new == "1_closed":
+                new_left = left + 1
+                new_right = right
+            elif new == "0_half_open":
+                new_left = left
+                new_right = right
+            else:
+                new_left = ""
+                new_right = ""
+
+        elif current == "1_closed":
+
+            if new == "1_closed":
+                new_left = left
+                new_right = right
+            elif new == "0_half_open":
+                new_left = left - 1
+                new_right = right
+            else:
+                new_left = ""
+                new_right = ""
+
+        else:
+            new_left = ""
+            new_right = ""
+
+    else:
+        new_left = ""
+        new_right = ""
+
+
+    return new_left, new_right
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
+
+
 def check_empty(value, lower = True):
     """Checks if the value represents a null value."""
 
@@ -440,7 +520,6 @@ def split_string(string):
             index += 1
 
     return (left, right)
-
 
 
 

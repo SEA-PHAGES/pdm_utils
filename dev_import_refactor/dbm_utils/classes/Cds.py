@@ -26,7 +26,10 @@ class CdsFeature:
         self.compound_parts = 0 # Number of regions that form the feature
         self.translation = ""
         self.translation_table = ""
-        self.coordinate_format = "" # Indexing format for coordinates.
+
+        # Indexing format for coordinates. Current valid formats:
+        # 0-based half open (stored in Phamerator), 1-based closed.
+        self.coordinate_format = ""
 
         # TODO: create coordinate indexing attribute, to be able to switch
         # coordinates between different types of indexing strategies.
@@ -156,10 +159,10 @@ class CdsFeature:
         self.translation = value.upper()
         self._translation_length = len(self.translation)
 
-    def set_strand(self, value, format):
+    def set_strand(self, value, format, case = False):
         """Sets strand based on indicated format.
         """
-        self.strand = basic.reformat_strand(value, format)
+        self.strand = basic.reformat_strand(value, format, case)
 
     def set_start_end(self):
         """Determines which boundary coordinate is the start and end of
@@ -210,10 +213,21 @@ class CdsFeature:
         self._nucleotide_length = self.right_boundary - self.left_boundary + 1
 
 
+    def reformat_left_and_right_boundaries(self, new_format):
+        """Convert left and right boundaries to new coordinate format.
+        This also updates the coordinate format attribute to reflect
+        change. However, it does not update start and end attributes."""
 
+        new_left, new_right = \
+            basic.reformat_coordinates(self.left_boundary, \
+                                        self.right_boundary, \
+                                        self.coordinate_format, \
+                                        new_format)
 
-
-
+        if (new_left != "" and new_right != ""):
+            self.left_boundary = new_left
+            self.right_boundary = new_right
+            self.coordinate_format = new_format
 
 
 

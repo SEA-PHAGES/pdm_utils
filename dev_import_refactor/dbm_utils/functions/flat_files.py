@@ -6,6 +6,7 @@ GenBank-formatted flat files."""
 
 
 from Bio import SeqIO
+from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from classes import Genome
 from classes import Eval
 from classes import Cds
@@ -17,19 +18,195 @@ from functions import basic
 
 
 
+# TODO this function may need to be improved.
+# The coordinates are
+# returned as integers, but it is possible that coordinates from Biopython
+# SeqFeature object are not integers, so this needs to be accounted for.
+# Also, this function doesn't test to confirm that coordinates are
+# ExactPosition objects (i.e. non-fuzzy coordinates.
+def parse_coordinates(feature):
+    """Parse the boundary coordinates for a biopython feature object
+    derived from a GenBank-formatted flat file.
+    Parsing these coordinates can be tricky.
+    There can be more than one set of coordinates if it is
+    a compound location. Also, the boundaries may not be precise;
+    instead they may be open or fuzzy.
+    """
+
+
+    if (isinstance(feature.location, FeatureLocation) or \
+        isinstance(feature.location, CompoundLocation)):
+
+        if feature.strand is None:
+            left_boundary = -1
+            right_boundary = 0
+            parts = 0
+            message = \
+                "Unable to parse coordinates since strand is undefined."
+            eval_result = Eval.construct_error(message)
+
+        elif isinstance(feature.location, FeatureLocation):
+            left_boundary = int(feature.location.start)
+            right_boundary = int(feature.location.end)
+            parts = 1
+            eval_result = None
+
+        elif isinstance(feature.location, CompoundLocation):
+
+            parts = len(feature.location.parts)
+
+            # Skip this compound feature if it is comprised of more
+            # than two features (too tricky to parse).
+            if parts == 2:
+
+                # Retrieve compound feature positions based on strand.
+                if feature.strand == 1:
+                    left_boundary = int(feature.location.parts[0].start)
+                    right_boundary = int(feature.location.parts[1].end)
+                    eval_result = None
+
+                elif feature.strand == -1:
+                    left_boundary = int(feature.location.parts[1].start)
+                    right_boundary = int(feature.location.parts[0].end)
+                    eval_result = None
+
+                else:
+                    pass
+            else:
+                left_boundary = -1
+                right_boundary = 0
+                message = \
+                    "This is a compound feature that is unable to be parsed."
+                eval_result = Eval.construct_warning(message, message)
+
+    else:
+        left_boundary = -1
+        right_boundary = 0
+        parts = 0
+        message = \
+            "This is feature is not a standard Biopython SeqFeature " + \
+            "and it is unable to be parsed."
+        eval_result = Eval.construct_warning(message, message)
+
+    return (left_boundary, right_boundary, parts, eval_result)
+
+
+def parse_cds_feature(cds, feature):
+    """Parses a Biopython CDS Feature.
+    """
+
+    cds.type_id = "CDS"
+
+    try:
+        cds.locus_tag = feature.qualifiers["locus_tag"][0]
+    except:
+        cds.locus_tag = ""
+
+
+    # Orientation
+    cds.set_strand(feature.strand, "fr_short", case = True)
+
+
+    cds.left_boundary, \
+    cds.right_boundary, \
+    cds.compound_parts, \
+    eval_result = parse_coordinates(feature)
+
+
+    # Coordinate format for GenBank flat file features parsed by Biopython
+    # are 0-based half open intervals.
+    cds.coordinate_format = "0_half_open"
+
+    try:
+        cds.set_translation(feature.qualifiers["translation"][0])
+    except:
+        cds.set_translation("")
+
+    cds.set_nucleotide_length()
+
+
+    try:
+        cds.translation_table = feature.qualifiers["transl_table"][0]
+    except:
+        cds.translation_table = ""
+
+    try:
+        cds.product_description, \
+        cds.processed_product_description = \
+            basic.reformat_description(feature.qualifiers["product"][0])
+
+    except:
+        cds.product_description = ""
+        cds.processed_product_description = ""
+
+    try:
+        cds.function_description, \
+        cds.processed_function_description = \
+            basic.reformat_description(feature.qualifiers["function"][0])
+
+    except:
+        cds.function_description = ""
+        cds.processed_function_description = ""
+
+    try:
+        cds.note_description, \
+        cds.processed_note_description = \
+            basic.reformat_description(feature.qualifiers["note"][0])
+
+    except:
+        cds.note_description = ""
+        cds.processed_note_description = ""
+
+    try:
+        cds.gene_number = feature.qualifiers["gene"][0]
+    except:
+        cds.gene_number = ""
+
+    return eval_result
 
 
 
+def create_cds_objects(biopython_feature_list):
+    """Convert all Biopython CDS SeqFeatures to CdsFeature objects."""
+    cds_object_list = []
+
+    for feature in biopython_feature_list:
+        cds = Cds.CdsFeature()
+        eval_result = parse_cds_feature(cds, feature)
+
+        if eval_result is None:
+            cds_object_list.append(cds)
+
+    return cds_object_list
 
 
+def create_feature_dictionary(feature_list):
+    """From a list of all Biopython SeqFeatures derived from a GenBank-formatted
+    flat file, create a dictionary of SeqFeatures based on their type.
+    Key = feature type (source, tRNA, CDS, other).
+    Value = list of features."""
 
+    feature_type_set = set()
+    feature_dict = {}
 
+    for feature in feature_list:
+        feature_type_set.add(feature.type)
 
+    for type in feature_type_set:
+        feature_sublist = []
 
+        index = 0
+        while index < len(feature_list):
 
+            feature = feature_list[index]
 
+            if feature.type == type:
+                feature_sublist.append(feature)
+            index += 1
 
+        feature_dict[type] = feature_sublist
 
+    return feature_dict
 
 
 # TODO unit test below.
@@ -48,165 +225,6 @@ def retrieve_flatfile_record(filepath):
 
 
 
-# TODO unit test.
-def retrieve_flat_file_features(retrieved_record):
-    """Groups different types of features from a GenBank-formatted
-    flat file into separate lists.
-    This function returns a dictionary.
-    Key = feature type (source, tRNA, CDS, other).
-    Value = list of features.
-    """
-
-    # List of all Biopython feature objects parsed from record.
-    biopython_feature_dict = {}
-
-    sources = []
-    cdss = []
-    trnas = []
-    others = []
-
-    for feature in retrieved_record.features:
-        if feature.type == "source":
-            sources.append(feature)
-        elif feature.type == "tRNA":
-            trnas.append(feature)
-        elif feature.type == "CDS":
-            cdss.append(feature)
-        else:
-            others.append(feature)
-
-    biopython_feature_dict["source"] = sources
-    biopython_feature_dict["tRNA"] = trnas
-    biopython_feature_dict["CDS"] = cdss
-    biopython_feature_dict["other"] = others
-
-    return biopython_feature_dict
-
-
-
-# TODO unit test.
-def parse_coordinates(feature):
-    """Parse the boundary coordinates for a feature derived from a
-    GenBank-formatted flat file. Parsing these coordinates can be tricky.
-    There can be more than one set of coordinates if it is
-    a compound location. Also, the boundaries may not be precise;
-    instead they may be open or fuzzy.
-    """
-
-    if str(feature.location)[:4] == 'join':
-
-        compound_parts = len(feature.location.parts)
-
-        # Skip this compound feature if it is comprised of more
-        # than two features (too tricky to parse).
-        if compound_parts <= 2:
-
-            # Retrieve compound feature positions based on strand.
-            if feature.strand == 1:
-                left_boundary = str(feature.location.parts[0].start)
-                right_boundary = str(feature.location.parts[1].end)
-
-            elif feature.strand == -1:
-                left_boundary = str(feature.location.parts[1].start)
-                right_boundary = str(feature.location.parts[0].end)
-
-            else:
-                left_boundary = 0
-                right_boundary = 0
-                message = \
-                    "Unable to parse coordinates since strand is undefined."
-                eval_result = Eval.construct_error(message)
-        else:
-
-            left_boundary = 0
-            right_boundary = 0
-            message = \
-                "This is a compound feature that is unable to be parsed."
-            eval_result = Eval.construct_warning(message, message)
-
-    else:
-        left_boundary = str(feature.location.start)
-        right_boundary = str(feature.location.end)
-        compound_parts = 1
-
-    return (left_boundary, right_boundary, compound_parts)
-
-
-
-
-
-# TODO unit test.
-def parse_cds_feature(feature):
-    """Parses a Biopython CDS Feature.
-    """
-
-
-    cds = Cds.CdsFeature()
-
-    cds.type_id = "CDS"
-
-    try:
-        cds.locus_tag = feature.qualifiers["locus_tag"][0]
-    except:
-        cds.locus_tag = ""
-
-
-    # Orientation
-    # TODO confirm strand formatting is correct.
-    cds.set_strand(feature.strand, "fr_long")
-
-
-    cds.left_boundary, cds.right_boundary, cds.compound_parts = \
-        parse_coordinates(feature)
-
-    cds.coordinate_format = "" # TODO create name for this value.
-
-    try:
-        cds.set_translation(feature.qualifiers["translation"][0])
-    except:
-        cds.set_translation("")
-
-    cds.set_nucleotide_length()
-
-
-    try:
-        cds.translation_table = feature.qualifiers["transl_table"][0]
-    except:
-        pass
-
-    try:
-        product, processed_product = \
-            basic.reformat_description(feature.qualifiers["product"][0])
-        cds.product_description = product
-        cds.processed_product_description = processed_product
-
-    except:
-        pass
-
-    try:
-        function, processed_function = \
-            basic.reformat_description(feature.qualifiers["function"][0])
-        cds.function_description = function
-        cds.processed_function_description = processed_function
-
-    except:
-        pass
-
-    try:
-        note, processed_note = \
-            basic.reformat_description(feature.qualifiers["note"][0])
-        cds.note_description = note
-        cds.processed_note_description = processed_note
-
-    except:
-        pass
-
-    try:
-        cds.gene_number = feature.qualifiers["gene"][0]
-    except:
-        pass
-
-    return cds
 
 
 
@@ -214,43 +232,6 @@ def parse_cds_feature(feature):
 
 
 
-# TODO unit test.
-def create_feature_dictionary(feature_list):
-    """From a list of all features derived from a GenBank-formatted
-    flat file, create a dictionary of features based on their type."""
-
-    feature_type_set = set()
-    feature_dict = {}
-
-    for feature in feature_list:
-        feature_type_set.add(feature.type)
-
-    for type in feature_type_set:
-        subfeature_list = []
-
-        index = 0
-        while index < len(feature_list):
-
-            if feature.type == type:
-                subfeature_list.append(feature)
-            index += 1
-
-        feature_dict[type] = subfeature_list
-
-    return feature_dict
-
-
-
-
-# TODO implement.
-# TODO unit test.
-def create_cds_objects(feature_list):
-    """."""
-    object_list = []
-    for feature in feature_list:
-        cds_object = parse_cds_feature(feature)
-        object_list.append(cds_object)
-    return object_list
 
 
 
