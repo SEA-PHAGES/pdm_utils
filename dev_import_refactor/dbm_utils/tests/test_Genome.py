@@ -1037,7 +1037,8 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
+    # TODO now that source feature object is created, these unit tests
+    # can probably be deleted.
     def test_parse_source_feature_organism_1(self):
         """Verify empty string is parsed correctly."""
         self.genome.source_feature_organism = ""
@@ -1051,6 +1052,8 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(\
                 self.genome._source_feature_organism_host_name, expected_host)
 
+    # TODO now that source feature object is created, these unit tests
+    # can probably be deleted.
     def test_parse_source_feature_organism_2(self):
         """Verify string is parsed correctly."""
         self.genome.source_feature_organism = "asdf Mycobacterium phage Trixie."
@@ -1067,6 +1070,8 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    # TODO now that source feature object is created, these unit tests
+    # can probably be deleted.
     def test_parse_source_feature_host_1(self):
         """Verify empty string is parsed correctly."""
         self.genome.source_feature_host = ""
@@ -1075,6 +1080,8 @@ class TestGenomeClass(unittest.TestCase):
         self.assertEqual(\
             self.genome._source_feature_host_host_name, expected_host)
 
+    # TODO now that source feature object is created, these unit tests
+    # can probably be deleted.
     def test_parse_source_feature_host_2(self):
         """Verify string is parsed correctly."""
         self.genome.source_feature_host = "asdf Mycobacterium phage Trixie."
@@ -1086,6 +1093,8 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    # TODO now that source feature object is created, these unit tests
+    # can probably be deleted.
     def test_parse_source_feature_lab_host_1(self):
         """Verify empty string is parsed correctly."""
         self.genome.source_feature_lab_host = ""
@@ -1094,6 +1103,8 @@ class TestGenomeClass(unittest.TestCase):
         self.assertEqual(\
             self.genome._source_feature_lab_host_host_name, expected_host)
 
+    # TODO now that source feature object is created, these unit tests
+    # can probably be deleted.
     def test_parse_source_feature_lab_host_2(self):
         """Verify string is parsed correctly."""
         self.genome.source_feature_lab_host = "asdf Mycobacterium phage Trixie."

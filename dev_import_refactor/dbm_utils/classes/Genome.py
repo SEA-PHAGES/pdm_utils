@@ -50,9 +50,14 @@ class Genome:
         self.record_description = ""
         self.record_source = ""
         self.record_organism = ""
+
+
+        # TODO source feature object now has these attributes.
         self.source_feature_organism = ""
         self.source_feature_host = ""
         self.source_feature_lab_host = ""
+
+
         self.record_authors = ""
         self.parsed_record = [] # Holds parsed flat file record.
         self.filename = "" # The file name from which the record is derived
@@ -64,7 +69,7 @@ class Genome:
 
 
 
-        #Computed datafields
+        # Computed datafields
 
 
         # Computed datafields: common to all genomes
@@ -101,11 +106,16 @@ class Genome:
         self._record_description_phage_name = ""
         self._record_source_phage_name = ""
         self._record_organism_phage_name = ""
+
+        # TODO source feature object now has this attribute.
         self._source_feature_organism_phage_name = ""
 
         self._record_description_host_name = ""
         self._record_source_host_name = ""
         self._record_organism_host_name = ""
+
+
+        # TODO source feature object now has these attributes.
         self._source_feature_organism_host_name = ""
         self._source_feature_host_host_name = ""
         self._source_feature_lab_host_host_name = ""
@@ -188,6 +198,8 @@ class Genome:
         self._record_organism_phage_name = phage_name
         self._record_organism_host_name = host_name
 
+
+    # TODO source feature object now has this method, so it is redundant.
     def parse_source_feature_organism(self):
         """Retrieve the phage name and host name from the 'organism'
         field in the record's annotated 'source' feature."""
@@ -197,6 +209,7 @@ class Genome:
         self._source_feature_organism_phage_name = phage_name
         self._source_feature_organism_host_name = host_name
 
+    # TODO source feature object now has this method, so it is redundant.
     def parse_source_feature_host(self):
         """Retrieve the host name from the 'host'
         field in the record's annotated 'source' feature."""
@@ -207,6 +220,7 @@ class Genome:
         # Note: no need to assign phage name, since this field is only
         # expected to contain host information.
 
+    # TODO source feature object now has this method, so it is redundant.
     def parse_source_feature_lab_host(self):
         """Retrieve the host name from the 'lab_host'
         field in the record's annotated 'source' feature."""

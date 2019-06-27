@@ -5,6 +5,7 @@ GenBank-formatted flat files."""
 import unittest
 from functions import flat_files
 from classes import Cds
+from classes import Source
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition
@@ -15,7 +16,7 @@ class TestFlatFileFunctions(unittest.TestCase):
     def setUp(self):
         self.cds = Cds.CdsFeature()
 
-
+        self.source = Source.SourceFeature()
 
 
     def test_parse_coordinates_1(self):
@@ -876,6 +877,183 @@ class TestFlatFileFunctions(unittest.TestCase):
 
 
 
+
+
+
+
+
+
+
+    def test_parse_source_feature_1(self):
+        """Verify source feature is parsed."""
+
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium smegmatis"
+        string3 = "Gordonia terrae"
+
+        qualifier_dict = {"organism": [string1], \
+                            "host": [string2], \
+                            "lab_host": [string3]}
+
+        seqfeature = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "source", \
+                    qualifiers = qualifier_dict)
+
+        flat_files.parse_source_feature(self.source, seqfeature)
+
+        with self.subTest():
+            self.assertEqual(self.source.organism, string1)
+        with self.subTest():
+            self.assertEqual(self.source.host, string2)
+        with self.subTest():
+            self.assertEqual(self.source.lab_host, string3)
+
+
+    def test_parse_source_feature_2(self):
+        """Verify source feature is parsed with no organism qualifier."""
+
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium smegmatis"
+        string3 = "Gordonia terrae"
+
+        qualifier_dict = {"organism_x": [string1], \
+                            "host": [string2], \
+                            "lab_host": [string3]}
+
+        seqfeature = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "source", \
+                    qualifiers = qualifier_dict)
+
+        flat_files.parse_source_feature(self.source, seqfeature)
+
+        with self.subTest():
+            self.assertEqual(self.source.organism, "")
+        with self.subTest():
+            self.assertEqual(self.source.host, string2)
+        with self.subTest():
+            self.assertEqual(self.source.lab_host, string3)
+
+
+    def test_parse_source_feature_3(self):
+        """Verify source feature is parsed with no host qualifier."""
+
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium smegmatis"
+        string3 = "Gordonia terrae"
+
+        qualifier_dict = {"organism": [string1], \
+                            "host_x": [string2], \
+                            "lab_host": [string3]}
+
+        seqfeature = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "source", \
+                    qualifiers = qualifier_dict)
+
+        flat_files.parse_source_feature(self.source, seqfeature)
+
+        with self.subTest():
+            self.assertEqual(self.source.organism, string1)
+        with self.subTest():
+            self.assertEqual(self.source.host, "")
+        with self.subTest():
+            self.assertEqual(self.source.lab_host, string3)
+
+
+    def test_parse_source_feature_4(self):
+        """Verify source feature is parsed with no lab_host qualifier."""
+
+        string1 = "Mycobacterium phage Trixie"
+        string2 = "Mycobacterium smegmatis"
+        string3 = "Gordonia terrae"
+
+        qualifier_dict = {"organism": [string1], \
+                            "host": [string2], \
+                            "lab_host_x": [string3]}
+
+        seqfeature = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "source", \
+                    qualifiers = qualifier_dict)
+
+        flat_files.parse_source_feature(self.source, seqfeature)
+
+        with self.subTest():
+            self.assertEqual(self.source.organism, string1)
+        with self.subTest():
+            self.assertEqual(self.source.host, string2)
+        with self.subTest():
+            self.assertEqual(self.source.lab_host, "")
+
+
+
+
+
+
+
+
+
+
+###
+
+
+
+    def test_create_source_objects_1(self):
+        """Verify source objects list is constructed from empty Biopython
+        source feature list."""
+        biopython_feature_list = []
+        source_object_list = \
+            flat_files.create_source_objects(biopython_feature_list)
+        self.assertEqual(len(source_object_list), 0)
+
+
+
+
+    def test_create_source_objects_2(self):
+        """Verify source objects list is constructed from list of
+        one Biopython source feature."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "source", \
+                    strand = 1)
+
+        biopython_feature_list = [seqfeature1]
+
+        source_object_list = \
+            flat_files.create_source_objects(biopython_feature_list)
+        self.assertEqual(len(source_object_list), 1)
+
+
+
+    def test_create_source_objects_3(self):
+        """Verify source objects list is constructed from list of
+        three Biopython source features."""
+
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(80)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(5), ExactPosition(6)), \
+                    type = "source", \
+                    strand = 1)
+
+
+        biopython_feature_list = [seqfeature1, seqfeature2, seqfeature3]
+
+        source_object_list = \
+            flat_files.create_source_objects(biopython_feature_list)
+        self.assertEqual(len(source_object_list), 3)
 
 
 

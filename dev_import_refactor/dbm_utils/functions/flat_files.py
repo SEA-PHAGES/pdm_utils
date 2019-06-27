@@ -11,6 +11,7 @@ from classes import Genome
 from classes import Eval
 from classes import Cds
 from classes import Trna
+from classes import Source
 from functions import basic
 
 
@@ -95,7 +96,7 @@ def parse_cds_feature(cds, feature):
     """Parses a Biopython CDS Feature.
     """
 
-    cds.type_id = "CDS"
+    cds.type_id = "CDS" #TODO can probably make this ID default in Object.
 
     try:
         cds.locus_tag = feature.qualifiers["locus_tag"][0]
@@ -180,6 +181,47 @@ def create_cds_objects(biopython_feature_list):
     return cds_object_list
 
 
+
+
+
+
+
+
+def parse_source_feature(source, feature):
+    """Parses a Biopython Source Feature.
+    """
+
+    try:
+        source.organism = str(feature.qualifiers["organism"][0])
+    except:
+        source.organism = ""
+    try:
+        source.host = str(feature.qualifiers["host"][0])
+    except:
+        source.host = ""
+    try:
+        source.lab_host = str(feature.qualifiers["lab_host"][0])
+    except:
+        source.lab_host = ""
+
+
+def create_source_objects(biopython_feature_list):
+    """Convert all Biopython Source SeqFeatures to SourceFeature objects."""
+    source_object_list = []
+
+    for feature in biopython_feature_list:
+        source = Source.SourceFeature()
+        parse_source_feature(source, feature)
+        source_object_list.append(source)
+
+    return source_object_list
+
+
+
+
+
+
+
 def create_feature_dictionary(feature_list):
     """From a list of all Biopython SeqFeatures derived from a GenBank-formatted
     flat file, create a dictionary of SeqFeatures based on their type.
@@ -209,6 +251,35 @@ def create_feature_dictionary(feature_list):
     return feature_dict
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # TODO unit test below.
 
 
@@ -235,25 +306,6 @@ def retrieve_flatfile_record(filepath):
 
 
 
-# TODO implement.
-# TODO unit test.
-def create_trna_objects(feature_list):
-    """."""
-    object_list = []
-    for feature in feature_list:
-        cds_object = parse_trna_feature(feature)
-        object_list.append(cds_object)
-    return object_list
-
-# TODO implement.
-# TODO unit test.
-def create_source_objects(feature_list):
-    """."""
-    object_list = []
-    for feature in feature_list:
-        cds_object = parse_source_feature(feature)
-        object_list.append(cds_object)
-    return object_list
 
 
 
@@ -267,24 +319,11 @@ def create_source_objects(feature_list):
 
 
 
-
-
-
-
-#TODO import appropriate classes
-#Input = GenBank record object parsed from Biopython
-def parse_flat_file_data(filepath):
+#TODO unit test.
+def parse_flat_file_data(genome_obj, retrieved_record):
     """Parses a GenBank-formatted flat file into a Genome object using
     data that has already been parsed by Bio.SeqIO.
     """
-
-    genome_obj = Genome.Genome()
-
-    # TODO this line probably doesn't work right.
-    retrieved_record = SeqIO.read(filepath, "genbank")
-
-    #Keep track of the file from which the record is derived.
-    genome_obj.set_filename(filepath)
 
     try:
         genome_obj.record_name = retrieved_record.name
@@ -365,33 +404,34 @@ def parse_flat_file_data(filepath):
     genome_obj.set_sequence(retrieved_record.seq)
 
 
+    # Create lists of parsed features.
+    feature_dict = create_feature_dictionary(retrieved_record.features)
+
+    if "CDS" in feature_dict.keys():
+        cds_object_list = create_cds_objects(feature_dict["CDS"])
+    else:
+        cds_object_list = []
+
+    if "source" in feature_dict.keys():
+        source_object_list = create_source_objects(feature_dict["source"])
+    else:
+        source_object_list = []
+
+    if "tRNA" in feature_dict.keys():
+        trna_object_list = create_trna_objects(feature_dict["tRNA"])
+    else:
+        trna_object_list = []
+
+    if "tmrna" in feature_dict.keys():
+        tmrna_object_list = create_tmrna_objects(feature_dict["tmrna"])
+    else:
+        tmrna_object_list = []
 
 
-
-    ### TODO BELOW IN PROGRESS OF RE-FACTORING, PAUSED
-    # TO DEVELOP FEATURE LIST RETRIEVAL
-
-
-    # TODO create a dictionary of all features.
-
-    # TODO create a list of CDS objects.
-
-    # TODO create a list of tRNA objects.
-
-    # TODO create a list of source objects.
-
-    #Parse the features and assign to the genome object
-    genome_obj.source_features = source_feature_list
-
-    for feature in cds_feature_list:
-        genome_obj.cds_features = cds_object_list
-
-
-    for feature in trna_feature_list:
-        genome_obj.trna_features = trna_object_list
-
-
-
+    genome_obj.cds_features = cds_object_list
+    genome_obj.source_features = source_object_list
+    genome_obj.trna_features = trna_object_list
+    # genome_obj.tmrna_features = tmrna_object_list
 
 
 
@@ -421,9 +461,6 @@ def parse_flat_file_data(filepath):
         except:
             pass
 
-    # TODO return object
-
-    # return pass
 
 
 
@@ -432,8 +469,20 @@ def parse_flat_file_data(filepath):
 
 
 
+# TODO implement.
+# TODO unit test.
+def retrieve_flat_file_data(filepath):
+    """Parses data from a GenBank-formatted flat file using Bio.SeqIO.
+    """
 
+    # TODO genome_obj should probably be passed to function as a parameter
+    # analogous to other parse functions.
+    genome_obj = Genome.Genome()
 
+    retrieved_record = SeqIO.read(filepath, "genbank")
+
+    #Keep track of the file from which the record is derived.
+    genome_obj.set_filename(filepath)
 
 
 
@@ -566,6 +615,59 @@ def parse_all_flat_files():
 
 
 
+
+
+# TODO need to implement. Christian is developing tRNA object.
+# TODO unit test.
+def parse_trna_feature(trna, feature):
+    """Parses a Biopython tRNA Feature.
+    """
+
+    pass
+
+
+# TODO need to implement. Christian is developing tRNA object.
+# TODO unit test.
+def create_trna_objects(biopython_feature_list):
+    """Convert all Biopython tRNA SeqFeatures to tRNAFeature objects."""
+    trna_object_list = []
+
+    for feature in biopython_feature_list:
+        trna = ""
+        # trna = Trna.TrnaFeature()
+        eval_result = parse_trna_feature(trna, feature)
+
+        if eval_result is None:
+            trna_object_list.append(cds)
+
+    return trna_object_list
+
+
+
+# TODO need to implement. Christian is developing tRNA object.
+# TODO unit test.
+def parse_tmrna_feature(tmrna, feature):
+    """Parses a Biopython tRNA Feature.
+    """
+
+    pass
+
+
+# TODO need to implement. Christian is developing tRNA object.
+# TODO unit test.
+def create_tmrna_objects(biopython_feature_list):
+    """Convert all Biopython tRNA SeqFeatures to tRNAFeature objects."""
+    tmrna_object_list = []
+
+    for feature in biopython_feature_list:
+        tmrna = ""
+        # trna = Trna.TrnaFeature()
+        eval_result = parse_trna_feature(tmrna, feature)
+
+        if eval_result is None:
+            tmrna_object_list.append(cds)
+
+    return tmrna_object_list
 
 
 
