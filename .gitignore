@@ -1,4 +1,3 @@
 .idea/
 main_scripts/python3/*.pyc
 main_scripts/python3/__pycache__/
-main_scripts/python3/test_update_ticket.csv
