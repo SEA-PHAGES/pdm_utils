@@ -1,0 +1,11 @@
+conda create --name phamerator mysql python pip biopython
+source activate phamerator
+
+
+
+
+Current versions:
+
+conda 4.5.11
+mysql  Ver 14.14 Distrib 5.7.24, for osx10.9 (x86_64) using  EditLine wrapper
+Python 3.7.3
