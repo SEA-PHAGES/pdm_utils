@@ -34,6 +34,8 @@ def reformat_strand(input_value, format, case = False):
     """Converts common strand orientation formats, including:
     'fr_long' ('forward', 'reverse')
     'fr_short' ('f', 'r')
+    'fr_abbrev1' ('for', 'rev')
+    'fr_abbrev2' ('fwd', 'rev')
     'tb_long' ('top', 'bottom')
     'tb_short' ('t', 'b')
     'wc_long' ('watson', 'crick')
@@ -43,6 +45,8 @@ def reformat_strand(input_value, format, case = False):
 
     format_dict = {"fr_long":["forward", "reverse"],
                     "fr_short":["f", "r"],
+                    "fr_abbrev1":["for", "rev"],
+                    "fr_abbrev2":["fwd", "rev"],
                     "tb_long":["top", "bottom"],
                     "tb_short":["t", "b"],
                     "wc_long":["watson", "crick"],

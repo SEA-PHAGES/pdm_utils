@@ -173,6 +173,19 @@ class TestGeneralFunctions(unittest.TestCase):
         new_value = basic.reformat_strand("w", "operator", True)
         self.assertEqual(new_value, "+")
 
+    def test_reformat_strand_29(self):
+        """Verify 'F' strand is converted to first abbreviated format."""
+        new_value = basic.reformat_strand("F", "fr_abbrev1")
+        self.assertEqual(new_value, "for")
+
+    def test_reformat_strand_30(self):
+        """Verify 'F' strand is converted to second abbreviated format."""
+        new_value = basic.reformat_strand("F", "fr_abbrev2")
+        self.assertEqual(new_value, "fwd")
+
+
+
+
 
 
 
