@@ -143,7 +143,7 @@ class Genome:
     def set_phage_id(self, value):
         """Set the phage_id and search_id."""
 
-        self.phage_id = basic.remove_draft_suffix(value)
+        self.phage_id = basic.edit_draft_suffix(value, "remove")
         self.search_id = self.phage_id.lower()
 
 
@@ -199,7 +199,7 @@ class Genome:
     #     self.phage_name = value
     #
     #     self.search_name = \
-    #           basic.remove_draft_suffix(self.phage_name).lower()
+    #           basic.edit_draft_suffix(self.phage_name, "remove").lower()
 
 
     def set_host(self, value, format = "empty_string"):

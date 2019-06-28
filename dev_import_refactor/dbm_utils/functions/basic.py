@@ -18,12 +18,32 @@ def find_expression(expression,list_of_items):
 
 
 
-def remove_draft_suffix(value):
-    """Removes the '_Draft' suffix if present."""
 
-    if value[-6:].lower() == "_draft":
-        value = value[:-6]
+def edit_draft_suffix(value, option):
+    """Adds or removes the '_Draft' suffix to a genome name.
+    The suffix is not added if the input value already has the suffix."""
+
+    if option.lower() == "add":
+        if value[-6:].lower() != "_draft":
+            value += "_Draft"
+
+    elif option.lower() == "remove":
+        if value[-6:].lower() == "_draft":
+            value = value[:-6]
+
+    else:
+        pass
+
     return(value)
+
+
+
+
+
+
+
+
+
 
 
 

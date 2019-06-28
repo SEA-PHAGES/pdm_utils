@@ -19,16 +19,39 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-    def test_remove_draft_suffix_1(self):
+    def test_edit_draft_suffix_1(self):
         """Verify '_Draft' suffix is removed."""
-        new_value = basic.remove_draft_suffix("Phage_Draft")
+        new_value = basic.edit_draft_suffix("Phage_Draft", "remove")
         self.assertEqual(new_value, "Phage")
 
-
-    def test_remove_draft_suffix_2(self):
+    def test_edit_draft_suffix_2(self):
         """Verify important data is not removed."""
-        new_value = basic.remove_draft_suffix("PhageDraft")
+        new_value = basic.edit_draft_suffix("PhageDraft", "remove")
         self.assertEqual(new_value, "PhageDraft")
+
+    def test_edit_draft_suffix_3(self):
+        """Verify '_Draft' suffix is added."""
+        new_value = basic.edit_draft_suffix("Phage", "add")
+        self.assertEqual(new_value, "Phage_Draft")
+
+    def test_edit_draft_suffix_4(self):
+        """Verify suffix is not added."""
+        new_value = basic.edit_draft_suffix("Phage_Draft", "add")
+        self.assertEqual(new_value, "Phage_Draft")
+
+    def test_edit_draft_suffix_5(self):
+        """Verify '_Draft' suffix is added."""
+        new_value = basic.edit_draft_suffix("PhageDraft", "add")
+        self.assertEqual(new_value, "PhageDraft_Draft")
+
+    def test_edit_draft_suffix_6(self):
+        """Verify value is not changed due to invalid option."""
+        new_value = basic.edit_draft_suffix("Phage_Draft", "invalid")
+        self.assertEqual(new_value, "Phage_Draft")
+
+
+
+
 
 
 

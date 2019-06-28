@@ -125,7 +125,7 @@ class CdsFeature:
         '_Draft' suffix if present."""
 
         self.phage_id = value
-        self._search_id = basic.remove_draft_suffix(self.phage_id)
+        self._search_id = basic.edit_draft_suffix(self.phage_id, "remove")
 
 
     # TODO unit test.
