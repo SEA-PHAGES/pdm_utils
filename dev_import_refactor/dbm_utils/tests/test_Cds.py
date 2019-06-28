@@ -404,16 +404,31 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
     def test_set_nucleotide_length_1(self):
-        """Verify the nucleotide length is correct."""
+        """Verify the nucleotide length is correct for a 0-based
+        half-open interval."""
         self.feature.left_boundary = 0
         self.feature.right_boundary = 11
+        self.feature.coordinate_format = "0_half_open"
         self.feature.set_nucleotide_length()
-        exp = 12
+        self.assertEqual(self.feature._nucleotide_length, 11)
+
+    def test_set_nucleotide_length_2(self):
+        """Verify the nucleotide length is correct for a 1-based
+        closed interval."""
+        self.feature.left_boundary = 0
+        self.feature.right_boundary = 11
+        self.feature.coordinate_format = "1_closed"
+        self.feature.set_nucleotide_length()
         self.assertEqual(self.feature._nucleotide_length, 12)
 
-
-
-    # TODO add more set_nucleotide_length unit tests.
+    def test_set_nucleotide_length_3(self):
+        """Verify the nucleotide length is not set for invalid
+        coordinate format."""
+        self.feature.left_boundary = 0
+        self.feature.right_boundary = 11
+        self.feature.coordinate_format = "invalid"
+        self.feature.set_nucleotide_length()
+        self.assertEqual(self.feature._nucleotide_length, -1)
 
 
 

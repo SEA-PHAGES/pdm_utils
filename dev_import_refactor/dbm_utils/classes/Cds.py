@@ -203,14 +203,23 @@ class CdsFeature:
         self._start_end_id = (self.start, self.end)
 
 
-    # TODO this method can be improved by taking account coordinate
-    # indexing format. The current implementation assumes only one format.
     def set_nucleotide_length(self):
         """From the set coordinates, determine the length of the
         nucleotide sequence. This method is not correct for
         non-compound features.
         """
-        self._nucleotide_length = self.right_boundary - self.left_boundary + 1
+
+        if self.coordinate_format == "0_half_open":
+            self._nucleotide_length = \
+                self.right_boundary - self.left_boundary
+
+        elif self.coordinate_format == "1_closed":
+            self._nucleotide_length = \
+                self.right_boundary - self.left_boundary + 1
+
+        else:
+            self._nucleotide_length = -1
+
 
 
     def reformat_left_and_right_boundaries(self, new_format):
