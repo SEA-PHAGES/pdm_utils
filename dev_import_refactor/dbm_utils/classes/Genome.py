@@ -227,13 +227,15 @@ class Genome:
         self.sequence = value.upper() #TODO should this be biopython object?
         self._length = len(self.sequence)
 
-        gc = 100 * \
-            (float(self.sequence.count("G")) + \
-            float(self.sequence.count("C"))) \
-            / float(self._length)
+        if self._length > 0:
+            gc = 100 * \
+                (float(self.sequence.count("G")) + \
+                float(self.sequence.count("C"))) \
+                / float(self._length)
+            self._gc = round(gc, 4)
 
-        self._gc = round(gc, 4)
-
+        else:
+            self._gc = -1
 
 
     def set_accession(self, value, format = "empty_string"):
@@ -529,6 +531,13 @@ class Genome:
             self.set_evaluation("warning", message1, message2)
 
 
+
+    # TODO this could be improved by simply creating a set of authors
+    # from the long string of authors, then searching whether a specific
+    # author is present or not. It could be improved even further by
+    # allowing a list of author names to be provided so that more
+    # than one author can be searched for in the long author string
+    # parsed from the record.
     def check_author(self):
         """Check author name spelling.
         When AnnotationAuthor is set to 1, it will expect to find the

@@ -6,18 +6,19 @@ import unittest
 from functions import flat_files
 from classes import Cds
 from classes import Source
+from classes import Genome
 from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqFeature import ExactPosition
+from Bio.SeqFeature import ExactPosition, Reference
 
 class TestFlatFileFunctions(unittest.TestCase):
 
 
     def setUp(self):
         self.cds = Cds.CdsFeature()
-
         self.source = Source.SourceFeature()
-
+        self.genome = Genome.Genome()
 
     def test_parse_coordinates_1(self):
         """Verify non-compound location is parsed correctly."""
@@ -115,7 +116,7 @@ class TestFlatFileFunctions(unittest.TestCase):
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = -1
-        exp_right = 0
+        exp_right = -1
         exp_parts = 0
 
         with self.subTest():
@@ -145,7 +146,7 @@ class TestFlatFileFunctions(unittest.TestCase):
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = -1
-        exp_right = 0
+        exp_right = -1
         exp_parts = 3
 
         with self.subTest():
@@ -167,7 +168,7 @@ class TestFlatFileFunctions(unittest.TestCase):
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = -1
-        exp_right = 0
+        exp_right = -1
         exp_parts = 0
 
         with self.subTest():
@@ -223,7 +224,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -282,7 +283,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -334,7 +335,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.left_boundary, -1)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 0)
+            self.assertEqual(self.cds.right_boundary, -1)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 3)
         with self.subTest():
@@ -346,7 +347,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 2)
+            self.assertEqual(self.cds._nucleotide_length, 0)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -405,7 +406,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 0)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -464,7 +465,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "")
         with self.subTest():
@@ -523,7 +524,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -582,7 +583,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -641,7 +642,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -700,7 +701,7 @@ class TestFlatFileFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 9)
+            self.assertEqual(self.cds._nucleotide_length, 8)
         with self.subTest():
             self.assertEqual(self.cds.translation_table, "11")
         with self.subTest():
@@ -1054,6 +1055,1605 @@ class TestFlatFileFunctions(unittest.TestCase):
         source_object_list = \
             flat_files.create_source_objects(biopython_feature_list)
         self.assertEqual(len(source_object_list), 3)
+
+
+
+
+    def test_parse_flat_file_data_1(self):
+        """Verify retrieved flat file data is parsed correctly."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_2(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        record name."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_3(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        record organism."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, "")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, "")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, "")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_4(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        record id."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_5(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        accession."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = { \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_6(self):
+        """Verify retrieved flat file data is parsed correctly with more
+        than one accession."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 ", "TUV456"], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_7(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        record description."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, "")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_8(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        record source."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, "")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, "")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, "")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_9(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        references."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_10(self):
+        """Verify retrieved flat file data is parsed correctly with
+        references that contain no authors."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference2 = Reference()
+        reference3 = Reference()
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_11(self):
+        """Verify retrieved flat file data is parsed correctly with an
+        empty sequence."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq(""), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 0)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, -1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_12(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        CDS features."""
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        feature_list = [seqfeature2, seqfeature3]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 0)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 0)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_13(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        source features."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 0)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 0)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_14(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        tRNA features."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 0)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 0)
+
+
+    def test_parse_flat_file_data_15(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        features."""
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 0)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 0)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 0)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 0)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 0)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 0)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

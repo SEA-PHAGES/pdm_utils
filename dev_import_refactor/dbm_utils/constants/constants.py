@@ -45,7 +45,8 @@ API_SUFFIX = "/?format=json"
 
 
 
-
+# Set of valid file extensions for flat files to be evaluated.
+ADMISSIBLE_FILE_TYPES = set(["gb","gbf","gbk","txt"])
 
 
 

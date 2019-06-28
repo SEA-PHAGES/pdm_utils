@@ -111,9 +111,6 @@ def reformat_strand(input_value, format, case = False):
 
 
 
-
-
-# TODO unit test
 # TODO this function can probably be improved. Maybe it should return
 # an eval object?
 # TODO also, coordinates in CdsFeature object can be stored as strings,
@@ -178,15 +175,6 @@ def reformat_coordinates(left, right, current, new):
 
 
 
-
-
-
-
-
-
-
-
-###
 
 
 def check_empty(value, lower = True):
@@ -271,7 +259,6 @@ def convert_empty(input_value, format, upper = False):
 
 
 
-#Note: used to be 'retrieve_description' function.
 def reformat_description(description):
     """Removes leading and trailing whitespace from text and returns this value.
     Then it assesses whether the description is informative or not, processes
@@ -540,6 +527,8 @@ def split_string(string):
             index += 1
 
     return (left, right)
+
+
 
 
 
