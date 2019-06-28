@@ -50,14 +50,6 @@ class Genome:
         self.record_description = ""
         self.record_source = ""
         self.record_organism = ""
-
-
-        # TODO source feature object now has these attributes.
-        self.source_feature_organism = ""
-        self.source_feature_host = ""
-        self.source_feature_lab_host = ""
-
-
         self.record_authors = ""
         self.parsed_record = [] # Holds parsed flat file record.
         self.filename = "" # The file name from which the record is derived
@@ -106,25 +98,14 @@ class Genome:
         self._record_description_phage_name = ""
         self._record_source_phage_name = ""
         self._record_organism_phage_name = ""
-
-        # TODO source feature object now has this attribute.
-        self._source_feature_organism_phage_name = ""
-
         self._record_description_host_name = ""
         self._record_source_host_name = ""
         self._record_organism_host_name = ""
 
 
-        # TODO source feature object now has these attributes.
-        self._source_feature_organism_host_name = ""
-        self._source_feature_host_host_name = ""
-        self._source_feature_lab_host_host_name = ""
-
-
         self._cds_processed_product_descriptions_tally = 0
         self._cds_processed_function_descriptions_tally = 0
         self._cds_processed_note_descriptions_tally = 0
-
 
         self._cds_unique_start_end_ids = set()
         self._cds_duplicate_start_end_ids = set()
@@ -197,40 +178,6 @@ class Genome:
             basic.parse_names_from_record_field(string)
         self._record_organism_phage_name = phage_name
         self._record_organism_host_name = host_name
-
-
-    # TODO source feature object now has this method, so it is redundant.
-    def parse_source_feature_organism(self):
-        """Retrieve the phage name and host name from the 'organism'
-        field in the record's annotated 'source' feature."""
-        string = self.source_feature_organism
-        phage_name, host_name = \
-            basic.parse_names_from_record_field(string)
-        self._source_feature_organism_phage_name = phage_name
-        self._source_feature_organism_host_name = host_name
-
-    # TODO source feature object now has this method, so it is redundant.
-    def parse_source_feature_host(self):
-        """Retrieve the host name from the 'host'
-        field in the record's annotated 'source' feature."""
-        string = self.source_feature_host
-        phage_name, host_name = \
-            basic.parse_names_from_record_field(string)
-        self._source_feature_host_host_name = host_name
-        # Note: no need to assign phage name, since this field is only
-        # expected to contain host information.
-
-    # TODO source feature object now has this method, so it is redundant.
-    def parse_source_feature_lab_host(self):
-        """Retrieve the host name from the 'lab_host'
-        field in the record's annotated 'source' feature."""
-        string = self.source_feature_lab_host
-        phage_name, host_name = \
-            basic.parse_names_from_record_field(string)
-        self._source_feature_lab_host_host_name = host_name
-        # Note: no need to assign phage name, since this field is only
-        # expected to contain host information.
-
 
 
 
@@ -545,15 +492,12 @@ class Genome:
         split_description = self.record_description.split(" ")
         split_source = self.record_source.split(" ")
         split_organism1 = self.record_organism.split(" ")
-        split_organism2 = self.source_feature_organism.split(" ")
 
         if basic.find_expression(pattern2, split_description) == 0 \
             or \
             basic.find_expression(pattern1, split_source) == 0 \
             or \
-            basic.find_expression(pattern1, split_organism1) == 0 \
-            or \
-            basic.find_expression(pattern1, split_organism2) == 0:
+            basic.find_expression(pattern1, split_organism1) == 0:
 
             message1 = "There appears to be a phage name discrepancy."
             message2 = "There is a phage name discrepancy."
@@ -572,24 +516,12 @@ class Genome:
         split_description = self.record_description.split(" ")
         split_source = self.record_source.split(" ")
         split_organism1 = self.record_organism.split(" ")
-        split_organism2 = self.source_feature_organism.split(" ")
-        split_host1 = self.source_feature_host.split(" ")
-        split_host2 = self.source_feature_lab_host.split(" ")
-
 
         if (basic.find_expression(pattern,split_description) == 0 \
             or \
             basic.find_expression(pattern,split_source) == 0 \
             or \
-            basic.find_expression(pattern,split_organism1) == 0 \
-            or \
-            basic.find_expression(pattern,split_organism2) == 0) \
-            or \
-            (self.source_feature_host != "" and \
-                basic.find_expression(pattern,split_host1) == 0) \
-            or \
-            (self.source_feature_lab_host != "" and \
-                basic.find_expression(pattern,split_host2) == 0):
+            basic.find_expression(pattern,split_organism1) == 0):
 
 
             message1 = "There appears to be a host name discrepancy."

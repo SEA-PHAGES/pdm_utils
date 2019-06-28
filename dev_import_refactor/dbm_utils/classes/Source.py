@@ -23,6 +23,8 @@ class SourceFeature:
         self.lab_host = ""
 
 
+        # Common to Phamerator.
+        self.phage_id = ""
 
 
         # Computed data fields.
@@ -77,7 +79,17 @@ class SourceFeature:
 
 
 
+    # TODO implement.
+    # TODO unit test.
+    def check_phage_name_typos(self, phage_name):
+        """Check phage name spelling in various fields."""
+        pass
 
+    # TODO implement.
+    # TODO unit test.
+    def check_host_name_typos(self, host_name):
+        """Check host name spelling in various fields."""
+        pass
 
 
 

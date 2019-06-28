@@ -638,7 +638,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string
         self.genome.record_source = string
         self.genome.record_organism = string
-        self.genome.source_feature_organism = string
         self.genome.check_phage_name_typos(phage_name)
         self.assertEqual(len(self.genome.evaluations), 0)
 
@@ -650,7 +649,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string2
         self.genome.record_source = string1
         self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
         self.genome.check_phage_name_typos(phage_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
@@ -662,7 +660,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string1
         self.genome.record_source = string2
         self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
         self.genome.check_phage_name_typos(phage_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
@@ -674,23 +671,10 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string1
         self.genome.record_source = string1
         self.genome.record_organism = string2
-        self.genome.source_feature_organism = string1
         self.genome.check_phage_name_typos(phage_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
     def test_check_phage_name_typos_5(self):
-        """Check that warning is produced from source_feature_organism."""
-        phage_name = "Trixie"
-        string1 = "Mycobacterium phage Trixie"
-        string2 = "Mycobacterium phage Trixi"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.source_feature_organism = string2
-        self.genome.check_phage_name_typos(phage_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_phage_name_typos_6(self):
         """Check that only one warning is produced."""
         phage_name = "Trixie"
         string1 = "Mycobacterium phage Trixie"
@@ -698,7 +682,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string1
         self.genome.record_source = string1
         self.genome.record_organism = string2
-        self.genome.source_feature_organism = string2
         self.genome.check_phage_name_typos(phage_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
@@ -717,9 +700,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string
         self.genome.record_source = string
         self.genome.record_organism = string
-        self.genome.source_feature_organism = string
-        self.genome.source_feature_host = string
-        self.genome.source_feature_lab_host = string
         self.genome.check_host_name_typos(host_name)
         self.assertEqual(len(self.genome.evaluations), 0)
 
@@ -731,9 +711,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string2
         self.genome.record_source = string1
         self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
-        self.genome.source_feature_host = string1
-        self.genome.source_feature_lab_host = string1
         self.genome.check_host_name_typos(host_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
@@ -745,9 +722,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string1
         self.genome.record_source = string2
         self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
-        self.genome.source_feature_host = string1
-        self.genome.source_feature_lab_host = string1
         self.genome.check_host_name_typos(host_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
@@ -759,78 +733,27 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_description = string1
         self.genome.record_source = string1
         self.genome.record_organism = string2
-        self.genome.source_feature_organism = string1
-        self.genome.source_feature_host = string1
-        self.genome.source_feature_lab_host = string1
         self.genome.check_host_name_typos(host_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
     def test_check_host_name_typos_5(self):
-        """Check that warning is produced from source_feature_organism."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.source_feature_organism = string2
-        self.genome.source_feature_host = string1
-        self.genome.source_feature_lab_host = string1
-        self.genome.check_host_name_typos(host_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_host_name_typos_6(self):
-        """Check that warning is produced from source_feature_host."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
-        self.genome.source_feature_host = string2
-        self.genome.source_feature_lab_host = string1
-        self.genome.check_host_name_typos(host_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_host_name_typos_7(self):
-        """Check that warning is produced from source_feature_lab_host."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
-        self.genome.source_feature_host = string1
-        self.genome.source_feature_lab_host = string2
-        self.genome.check_host_name_typos(host_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_host_name_typos_8(self):
         """Check that only one warning is produced."""
         host_name = "Gordonia"
         string1 = "Gordonia phage Trixie"
         string2 = "Gordoni phage Trixie"
         self.genome.record_description = string1
         self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.source_feature_organism = string1
-        self.genome.source_feature_host = string2
-        self.genome.source_feature_lab_host = string2
+        self.genome.record_organism = string2
         self.genome.check_host_name_typos(host_name)
         self.assertEqual(len(self.genome.evaluations), 1)
 
-    def test_check_host_name_typos_9(self):
+    def test_check_host_name_typos_6(self):
         """Check that Mycobacterium does not produce a warning."""
         host_name = "Mycobacterium"
         string = "Mycobacteriophage Trixie"
         self.genome.record_description = string
         self.genome.record_source = string
         self.genome.record_organism = string
-        self.genome.source_feature_organism = string
-        self.genome.source_feature_host = string
-        self.genome.source_feature_lab_host = string
         self.genome.check_host_name_typos(host_name)
         self.assertEqual(len(self.genome.evaluations), 0)
 
@@ -1034,93 +957,6 @@ class TestGenomeClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_organism_host_name, expected_host)
-
-
-
-    # TODO now that source feature object is created, these unit tests
-    # can probably be deleted.
-    def test_parse_source_feature_organism_1(self):
-        """Verify empty string is parsed correctly."""
-        self.genome.source_feature_organism = ""
-        self.genome.parse_source_feature_organism()
-        expected_phage = ""
-        expected_host = ""
-        with self.subTest():
-            self.assertEqual(\
-                self.genome._source_feature_organism_phage_name, expected_phage)
-        with self.subTest():
-            self.assertEqual(\
-                self.genome._source_feature_organism_host_name, expected_host)
-
-    # TODO now that source feature object is created, these unit tests
-    # can probably be deleted.
-    def test_parse_source_feature_organism_2(self):
-        """Verify string is parsed correctly."""
-        self.genome.source_feature_organism = "asdf Mycobacterium phage Trixie."
-        self.genome.parse_source_feature_organism()
-        expected_phage = "Trixie"
-        expected_host = "Mycobacterium"
-        with self.subTest():
-            self.assertEqual(\
-                self.genome._source_feature_organism_phage_name, expected_phage)
-        with self.subTest():
-            self.assertEqual(\
-                self.genome._source_feature_organism_host_name, expected_host)
-
-
-
-
-    # TODO now that source feature object is created, these unit tests
-    # can probably be deleted.
-    def test_parse_source_feature_host_1(self):
-        """Verify empty string is parsed correctly."""
-        self.genome.source_feature_host = ""
-        self.genome.parse_source_feature_host()
-        expected_host = ""
-        self.assertEqual(\
-            self.genome._source_feature_host_host_name, expected_host)
-
-    # TODO now that source feature object is created, these unit tests
-    # can probably be deleted.
-    def test_parse_source_feature_host_2(self):
-        """Verify string is parsed correctly."""
-        self.genome.source_feature_host = "asdf Mycobacterium phage Trixie."
-        self.genome.parse_source_feature_host()
-        expected_host = "Mycobacterium"
-        self.assertEqual(\
-            self.genome._source_feature_host_host_name, expected_host)
-
-
-
-
-    # TODO now that source feature object is created, these unit tests
-    # can probably be deleted.
-    def test_parse_source_feature_lab_host_1(self):
-        """Verify empty string is parsed correctly."""
-        self.genome.source_feature_lab_host = ""
-        self.genome.parse_source_feature_lab_host()
-        expected_host = ""
-        self.assertEqual(\
-            self.genome._source_feature_lab_host_host_name, expected_host)
-
-    # TODO now that source feature object is created, these unit tests
-    # can probably be deleted.
-    def test_parse_source_feature_lab_host_2(self):
-        """Verify string is parsed correctly."""
-        self.genome.source_feature_lab_host = "asdf Mycobacterium phage Trixie."
-        self.genome.parse_source_feature_lab_host()
-        expected_host = "Mycobacterium"
-        self.assertEqual(\
-            self.genome._source_feature_lab_host_host_name, expected_host)
-
-
-
-
-
-
-
-
-
 
 
 
