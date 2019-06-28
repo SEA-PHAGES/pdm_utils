@@ -18,7 +18,7 @@ except ModuleNotFoundError as err:
 	print(err)
 	sys.exit(1)
 
-from main_scripts.python3.misc_functions import ask_yes_no, close_files
+from misc_functions import ask_yes_no, close_files
 
 # set up argparse to interact with users at the command line interface.
 script_description = "Retrieve Phamerator database updates from phagesdb, " \
@@ -999,7 +999,8 @@ if retrieve_pecaan_updates is True:
 
 		# PECAAN should be able to generate any phage that is listed on
 		# phagesdb
-		new_phage = new_phage.strip()  # Remove \t character at the end of each row
+		new_phage = new_phage.strip()  # Remove \t at end of each row
+		new_phage = new_phage.decode("utf-8")  # convert bytes object to str
 		pecaan_link = pecaan_prefix + new_phage
 
 		pecaan_filename = new_phage + ".txt"
@@ -1012,14 +1013,11 @@ if retrieve_pecaan_updates is True:
 			# NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
 
 			pecaan_response = request.urlopen(pecaan_link)
-			pecaan_file_handle = open(os.path.join(
-				pecaan_folder, "genomes", pecaan_filename), 'w')
-			pecaan_file_handle.write(str(pecaan_response.read()))
 
-			pecaan_response = request.urlopen(pecaan_link)  #
 			pecaan_file_handle = open(os.path.join(
 				pecaan_folder, "genomes", pecaan_filename), 'w')
-			pecaan_file_handle.write(pecaan_response.read())
+			pecaan_file_handle.write(str(pecaan_response.read().decode(
+				"utf-8")))
 
 			pecaan_response.close()
 			pecaan_file_handle.close()
