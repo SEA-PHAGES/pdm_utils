@@ -12,7 +12,12 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
 
-class TestFlatFileFunctions(unittest.TestCase):
+
+# For integration testing.
+import os
+
+
+class TestFlatFileFunctions1(unittest.TestCase):
 
 
     def setUp(self):
@@ -1115,10 +1120,14 @@ class TestFlatFileFunctions(unittest.TestCase):
                             )
 
 
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
-        flat_files.parse_flat_file_data(self.genome, record)
 
-
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1228,9 +1237,14 @@ class TestFlatFileFunctions(unittest.TestCase):
 
 
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "")
         with self.subTest():
@@ -1337,8 +1351,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1446,9 +1465,13 @@ class TestFlatFileFunctions(unittest.TestCase):
 
 
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
-
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1557,8 +1580,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1667,8 +1695,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1775,8 +1808,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1883,8 +1921,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1978,8 +2021,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2083,8 +2131,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2193,8 +2246,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2293,8 +2351,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2398,8 +2461,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2503,8 +2571,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2590,8 +2663,13 @@ class TestFlatFileFunctions(unittest.TestCase):
                             description = description, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2644,6 +2722,397 @@ class TestFlatFileFunctions(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 0)
 
 
+
+
+    def test_parse_flat_file_data_16(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        filepath provided."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+        flat_files.parse_flat_file_data(self.genome, record)
+
+
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "")
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+
+
+    def test_check_flat_file_type_1(self):
+        """Verify valid file does not produce an error."""
+        filepath = "/path/to/file/l5.gb"
+        result = flat_files.check_flat_file_type(filepath)
+        self.assertIsNone(result)
+
+    def test_check_flat_file_type_2(self):
+        """Verify invalid file produces an error."""
+        filepath = "/path/to/file/l5.exe"
+        result = flat_files.check_flat_file_type(filepath)
+        self.assertIsNotNone(result)
+
+
+
+
+
+# TODO integration testing below. It may be better to move this to a new file.
+class TestFlatFileFunctions2(unittest.TestCase):
+
+
+    def setUp(self):
+        pass
+
+
+    def test_parse_flat_file_1(self):
+        """Verify file with one record is parsed."""
+
+        test_filepath = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+
+        record, eval_object = flat_files.parse_flat_file(test_filepath)
+
+        with self.subTest():
+            self.assertIsNotNone(record)
+        with self.subTest():
+            self.assertIsNone(eval_object)
+
+
+    def test_parse_flat_file_2(self):
+        """Verify file with incorrect path is not parsed."""
+
+        test_filepath = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_x.gb")
+
+        record, eval_object = flat_files.parse_flat_file(test_filepath)
+        eval_message = eval_object.messages["error"][:28]
+        exp_message = "Biopython is unable to parse"
+
+        with self.subTest():
+            self.assertIsNone(record)
+        with self.subTest():
+            self.assertIsNotNone(eval_object)
+        with self.subTest():
+            self.assertEqual(eval_message, exp_message)
+
+
+    def test_parse_flat_file_3(self):
+        """Verify empty file with no records is not parsed."""
+
+        test_filepath = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_2.gb")
+
+        record, eval_object = flat_files.parse_flat_file(test_filepath)
+        eval_message = eval_object.messages["error"][:22]
+        exp_message = "Biopython did not find"
+
+        with self.subTest():
+            self.assertIsNone(record)
+        with self.subTest():
+            self.assertIsNotNone(eval_object)
+        with self.subTest():
+            self.assertEqual(eval_message, exp_message)
+
+
+    def test_parse_flat_file_4(self):
+        """Verify fasta file with no GenBank-formatted flat file
+        records is not parsed."""
+
+        test_filepath = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_3.gb")
+
+        record, eval_object = flat_files.parse_flat_file(test_filepath)
+        eval_message = eval_object.messages["error"][:22]
+        exp_message = "Biopython did not find"
+
+        with self.subTest():
+            self.assertIsNone(record)
+        with self.subTest():
+            self.assertIsNotNone(eval_object)
+        with self.subTest():
+            self.assertEqual(eval_message, exp_message)
+
+
+    def test_parse_flat_file_5(self):
+        """Verify file with empty GenBank-formatted flat file
+        record is not parsed."""
+
+        test_filepath = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_4.gb")
+
+        record, eval_object = flat_files.parse_flat_file(test_filepath)
+        eval_message = eval_object.messages["error"][:28]
+        exp_message = "Biopython is unable to parse"
+
+        with self.subTest():
+            self.assertIsNone(record)
+        with self.subTest():
+            self.assertIsNotNone(eval_object)
+        with self.subTest():
+            self.assertEqual(eval_message, exp_message)
+
+
+    def test_parse_flat_file_6(self):
+        """Verify file with two GenBank-formatted flat file
+        records is not parsed."""
+
+        test_filepath = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_5.gb")
+
+        record, eval_object = flat_files.parse_flat_file(test_filepath)
+        eval_message = eval_object.messages["error"][:24]
+        exp_message = "Biopython found multiple"
+
+        with self.subTest():
+            self.assertIsNone(record)
+        with self.subTest():
+            self.assertIsNotNone(eval_object)
+        with self.subTest():
+            self.assertEqual(eval_message, exp_message)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def test_create_parsed_flat_file_list_1(self):
+        """Verify file with one GenBank-formatted flat file
+        record is correctly parsed."""
+
+        test_filepath1 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+        files = [test_filepath1]
+        genomes, results, successes, fails = \
+            flat_files.create_parsed_flat_file_list(files)
+
+        with self.subTest():
+            self.assertEqual(len(genomes), 1)
+        with self.subTest():
+            self.assertEqual(len(results), 0)
+        with self.subTest():
+            self.assertEqual(len(successes), 1)
+        with self.subTest():
+            self.assertEqual(len(fails), 0)
+
+
+    def test_create_parsed_flat_file_list_1(self):
+        """Verify file with no GenBank-formatted flat file
+        record is correctly parsed."""
+
+        test_filepath1 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_2.gb")
+        files = [test_filepath1]
+        genomes, results, successes, fails = \
+            flat_files.create_parsed_flat_file_list(files)
+
+        with self.subTest():
+            self.assertEqual(len(genomes), 0)
+        with self.subTest():
+            self.assertEqual(len(results), 1)
+        with self.subTest():
+            self.assertEqual(len(successes), 0)
+        with self.subTest():
+            self.assertEqual(len(fails), 1)
+
+
+
+
+    def test_create_parsed_flat_file_list_3(self):
+        """Verify one file with GenBank-formatted flat file
+        record and one with no record is correctly parsed."""
+
+        test_filepath1 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+        test_filepath2 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_2.gb")
+        files = [test_filepath1, test_filepath2]
+        genomes, results, successes, fails = \
+            flat_files.create_parsed_flat_file_list(files)
+
+        with self.subTest():
+            self.assertEqual(len(genomes), 1)
+        with self.subTest():
+            self.assertEqual(len(results), 1)
+        with self.subTest():
+            self.assertEqual(len(successes), 1)
+        with self.subTest():
+            self.assertEqual(len(fails), 1)
+
+
+
+
+
+    def test_create_parsed_flat_file_list_4(self):
+        """Verify two files with GenBank-formatted flat file
+        records are correctly parsed."""
+
+        test_filepath1 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+        files = [test_filepath1, test_filepath1]
+        genomes, results, successes, fails = \
+            flat_files.create_parsed_flat_file_list(files)
+
+        with self.subTest():
+            self.assertEqual(len(genomes), 2)
+        with self.subTest():
+            self.assertEqual(len(results), 0)
+        with self.subTest():
+            self.assertEqual(len(successes), 2)
+        with self.subTest():
+            self.assertEqual(len(fails), 0)
+
+
+
+    def test_create_parsed_flat_file_list_5(self):
+        """Verify two files with GenBank-formatted flat file
+        record and one with no record is correctly parsed."""
+
+        test_filepath1 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+
+        test_filepath2 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_2.gb")
+
+        test_filepath3 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+
+        files = [test_filepath1, test_filepath2, test_filepath3]
+
+        genomes, results, successes, fails = \
+            flat_files.create_parsed_flat_file_list(files)
+
+        with self.subTest():
+            self.assertEqual(len(genomes), 2)
+        with self.subTest():
+            self.assertEqual(len(results), 1)
+        with self.subTest():
+            self.assertEqual(len(successes), 2)
+        with self.subTest():
+            self.assertEqual(len(fails), 1)
 
 
 
