@@ -7,11 +7,7 @@ GenBank-formatted flat files."""
 
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
-from classes import Genome
-from classes import Eval
-from classes import Cds
-from classes import Trna
-from classes import Source
+from classes import Genome, Eval, Cds, Trna, Source
 from functions import basic
 from constants import constants
 
@@ -168,6 +164,7 @@ def parse_cds_feature(cds, feature):
 
 
 
+
 def create_cds_objects(biopython_feature_list):
     """Convert all Biopython CDS SeqFeatures to CdsFeature objects."""
     cds_object_list = []
@@ -180,10 +177,6 @@ def create_cds_objects(biopython_feature_list):
             cds_object_list.append(cds)
 
     return cds_object_list
-
-
-
-
 
 
 
@@ -206,6 +199,8 @@ def parse_source_feature(source, feature):
         source.lab_host = ""
 
 
+
+
 def create_source_objects(biopython_feature_list):
     """Convert all Biopython Source SeqFeatures to SourceFeature objects."""
     source_object_list = []
@@ -216,9 +211,6 @@ def create_source_objects(biopython_feature_list):
         source_object_list.append(source)
 
     return source_object_list
-
-
-
 
 
 
@@ -393,8 +385,6 @@ def parse_flat_file_data(genome_obj, retrieved_record, filepath = ""):
 
 
 
-
-
 def check_flat_file_type(filepath):
     """Verify that the file contains a file extension common to
     GenBank-formatted flat files."""
@@ -461,23 +451,6 @@ def parse_flat_file(filepath):
 
 
 
-
-
-
-
-
-
-
-
-
-# TODO unit test below.
-
-
-
-
-
-
-# TODO unit test.
 def create_parsed_flat_file_list(all_files):
     """Create a list of genome objects containing data parsed from
     flat files."""
@@ -524,6 +497,9 @@ def create_parsed_flat_file_list(all_files):
 
 
 
+
+
+# TODO unit test below.
 
 
 
