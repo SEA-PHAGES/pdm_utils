@@ -51,6 +51,7 @@ class Genome:
         self.record_source = ""
         self.record_organism = ""
         self.record_authors = ""
+        self.record_date = ""
         self.parsed_record = [] # Holds parsed flat file record.
         self.filename = "" # The file name from which the record is derived
 

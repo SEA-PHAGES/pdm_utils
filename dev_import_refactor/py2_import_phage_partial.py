@@ -141,29 +141,29 @@ for filename in genbank_files:
 
 
 		#Sequence, length, and GC
-		try:
+		# try:
 			# phageSeq = seq_record.seq.upper()
 			# seqLength = len(phageSeq)
 			# seqGC = 100 * (float(phageSeq.count('G')) + float(phageSeq.count('C'))) / float(seqLength)
 
-		except:
-			write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)
-			record_errors += 1
-			failed_genome_files.append(filename)
-			script_warnings += record_warnings
-			script_errors += record_errors
-			raw_input("\nPress ENTER to proceed to next file.")
-			continue
+		# except:
+		# 	write_out(output_file,"\nError: problem retrieving DNA sequence information in file %s. This file will not be processed." % filename)
+		# 	record_errors += 1
+		# 	failed_genome_files.append(filename)
+		# 	script_warnings += record_warnings
+		# 	script_errors += record_errors
+		# 	raw_input("\nPress ENTER to proceed to next file.")
+		# 	continue
 
-		#Check DNA sequence for possible errors
-		nucleotide_set = set(phageSeq)
-		nucleotide_error_set = nucleotide_set - dna_alphabet_set
-		if len(nucleotide_error_set) > 0:
-			record_warnings += 1
-			write_out(output_file,"\nWarning: phage %s contains unexpected nucleotide(s): %s" % (phageName,str(nucleotide_error_set)))
-			for element in nucleotide_error_set:
-				print "\nThere are %s unexpected %s nucleotides in %s." % (phageSeq.count(element),element,phageName)
-			record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName)
+		# #Check DNA sequence for possible errors
+		# nucleotide_set = set(phageSeq)
+		# nucleotide_error_set = nucleotide_set - dna_alphabet_set
+		# if len(nucleotide_error_set) > 0:
+		# 	record_warnings += 1
+		# 	write_out(output_file,"\nWarning: phage %s contains unexpected nucleotide(s): %s" % (phageName,str(nucleotide_error_set)))
+		# 	for element in nucleotide_error_set:
+		# 		print "\nThere are %s unexpected %s nucleotides in %s." % (phageSeq.count(element),element,phageName)
+		# 	record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName)
 
 
 
@@ -172,36 +172,36 @@ for filename in genbank_files:
 		#The Accession field, with the appended version number, is stored as the record.id
 		#The Locus name at the top of the file is stored as the record.name
 		#The base accession number, without the version, is stored in the 'accession' annotation list
-		try:
-			record_name = str(seq_record.name)
-		except:
-			record_name = ""
-			print "\nRecord does not have record Locus information."
-			record_errors += question("\nError: problem with header info of file %s." % filename)
+		# try:
+		# 	record_name = str(seq_record.name)
+		# except:
+		# 	record_name = ""
+		# 	print "\nRecord does not have record Locus information."
+		# 	record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
-		try:
-			record_id = str(seq_record.id)
-		except:
-			record_id = ""
-			print "\nRecord does not have record ID information."
-			record_errors += question("\nError: problem with header info of file %s." % filename)
+		# try:
+		# 	record_id = str(seq_record.id)
+		# except:
+		# 	record_id = ""
+		# 	print "\nRecord does not have record ID information."
+		# 	record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
-		try:
-			record_def = str(seq_record.description)
-		except:
-			record_def = ""
-			print "\nRecord does not have record definition information."
-			record_errors += question("\nError: problem with header info of file %s." % filename)
+		# try:
+		# 	record_def = str(seq_record.description)
+		# except:
+		# 	record_def = ""
+		# 	print "\nRecord does not have record definition information."
+		# 	record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
-		try:
-			record_source = str(seq_record.annotations["source"])
-		except:
-			record_source = ""
-			print "\nRecord does not have record source information."
-			record_errors += question("\nError: problem with header info of file %s." % filename)
+		# try:
+		# 	record_source = str(seq_record.annotations["source"])
+		# except:
+		# 	record_source = ""
+		# 	print "\nRecord does not have record source information."
+		# 	record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
 		#Date of the record

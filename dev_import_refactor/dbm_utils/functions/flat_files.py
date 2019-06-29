@@ -10,6 +10,7 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from classes import Genome, Eval, Cds, Trna, Source
 from functions import basic
 from constants import constants
+from datetime import datetime
 
 
 
@@ -322,6 +323,7 @@ def parse_flat_file_data(genome_obj, retrieved_record, filepath = ""):
     genome_obj.parse_record_source()
 
 
+
     try:
         # The retrieved authors can be stored in multiple Reference elements.
         refs = retrieved_record.annotations['references']
@@ -348,6 +350,16 @@ def parse_flat_file_data(genome_obj, retrieved_record, filepath = ""):
     # no need to test whether the seq attribute is present or not.
     # Nucleotide sequence, length, and % GC.
     genome_obj.set_sequence(retrieved_record.seq)
+
+
+
+    try:
+        date = retrieved_record.annotations["date"]
+        genome_obj.record_date = datetime.strptime(date,'%d-%b-%Y')
+    except:
+        genome_obj.record_date = basic.convert_empty("", "empty_datetime_obj")
+        # TODO throw an error if no date?
+
 
 
     # Create lists of parsed features.

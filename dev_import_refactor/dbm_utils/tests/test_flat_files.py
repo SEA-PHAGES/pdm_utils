@@ -3,6 +3,8 @@ GenBank-formatted flat files."""
 
 
 import unittest
+from datetime import datetime
+from functions import basic
 from functions import flat_files
 from classes import Cds
 from classes import Source
@@ -1105,11 +1107,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1123,6 +1127,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1166,6 +1171,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1222,11 +1229,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1240,6 +1249,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
 
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1283,6 +1293,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1338,10 +1350,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
         description = "Mycobacterium phage L5 complete genome"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1353,6 +1367,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1394,6 +1410,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1450,11 +1468,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             name = "XYZ123", \
@@ -1467,6 +1487,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1510,6 +1532,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1566,11 +1590,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = { \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1582,6 +1608,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1625,6 +1653,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1681,11 +1711,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 ", "TUV456"], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1697,6 +1729,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1740,6 +1774,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1795,11 +1831,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1810,6 +1848,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1853,6 +1893,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -1908,10 +1950,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
         description = "Mycobacterium phage L5 complete genome"
         organism = "Gordonia phage KatherineG"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -1923,6 +1967,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1964,6 +2010,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -2008,10 +2056,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2023,6 +2073,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2066,6 +2118,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -2117,11 +2171,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2133,6 +2189,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2176,6 +2234,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -2232,11 +2292,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq(""), \
                             id = "OPQ123.1", \
@@ -2248,6 +2310,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2291,6 +2355,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 0)
         with self.subTest():
             self.assertEqual(self.genome._gc, -1)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -2337,11 +2403,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2353,6 +2421,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2396,6 +2466,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 0)
         with self.subTest():
@@ -2447,11 +2519,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2463,6 +2537,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2506,6 +2582,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -2557,11 +2635,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2573,6 +2653,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2616,6 +2698,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
@@ -2650,11 +2734,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2665,6 +2751,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
         flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -2708,6 +2796,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 0)
         with self.subTest():
@@ -2766,11 +2856,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
+        date = "23-JAN-2014"
+
         annotation_dict = {"accessions": [" ABC123.1 "], \
                             "source": source, \
                             "organism": organism, \
                             "references": refs_list, \
-                            }
+                            "date": date}
 
         record = SeqRecord(seq = Seq("atgc"), \
                             id = "OPQ123.1", \
@@ -2782,6 +2874,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         flat_files.parse_flat_file_data(self.genome, record)
 
+        exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "")
@@ -2825,6 +2918,128 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
             self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
+        with self.subTest():
+            self.assertEqual(len(self.genome.cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(self.genome.source_features), 1)
+        with self.subTest():
+            self.assertEqual(len(self.genome.trna_features), 1)
+        with self.subTest():
+            self.assertEqual(self.genome._cds_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(self.genome._source_features_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.genome._trna_features_tally, 1)
+
+
+    def test_parse_flat_file_data_17(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        date provided."""
+
+        seqfeature1 = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        seqfeature2 = SeqFeature(FeatureLocation( \
+                    ExactPosition(50), ExactPosition(55)), \
+                    type = "tRNA", \
+                    strand = 1)
+
+        seqfeature3 = SeqFeature(FeatureLocation( \
+                    ExactPosition(20), ExactPosition(30)), \
+                    type = "source", \
+                    strand = 1)
+
+        seqfeature4 = SeqFeature(FeatureLocation( \
+                    ExactPosition(100), ExactPosition(1000)), \
+                    type = "CDS", \
+                    strand = 1)
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+
+        reference1 = Reference()
+        reference1.authors = "Jane"
+
+        reference2 = Reference()
+        reference2.authors = "Doe"
+
+        reference3 = Reference()
+        reference3.authors = "Smith"
+
+        refs_list = [reference1, reference2, reference3]
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            "references": refs_list, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            features = feature_list, \
+                            )
+
+
+        filepath = "/path/to/file/Phage_ZZZ.gb"
+        flat_files.parse_flat_file_data(self.genome, record, filepath)
+
+        exp_date = basic.convert_empty("","empty_datetime_obj")
+
+        with self.subTest():
+            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(self.genome.search_filename, "phage_zzz")
+        with self.subTest():
+            self.assertEqual(self.genome.record_name, "XYZ123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_organism, organism)
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_phage_name, \
+                                "KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome._record_organism_host_name, \
+                                "Gordonia")
+        with self.subTest():
+            self.assertEqual(self.genome.record_id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(self.genome.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome.record_description, description)
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_phage_name, \
+                                "L5")
+        with self.subTest():
+            self.assertEqual(self.genome._record_description_host_name, \
+                                "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome.record_source, source)
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_phage_name, \
+                                "phiC31")
+        with self.subTest():
+            self.assertEqual(self.genome._record_source_host_name, \
+                                "Streptomyces")
+        with self.subTest():
+            self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
+        with self.subTest():
+            self.assertEqual(self.genome.sequence, "ATGC")
+        with self.subTest():
+            self.assertEqual(self.genome._length, 4)
+        with self.subTest():
+            self.assertEqual(self.genome._gc, 50.00)
+        with self.subTest():
+            self.assertEqual(self.genome.record_date, exp_date)
         with self.subTest():
             self.assertEqual(len(self.genome.cds_features), 2)
         with self.subTest():
