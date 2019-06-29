@@ -564,6 +564,16 @@ class Genome:
             pass
 
 
+
+    # TODO unit test.
+    def check_cds_feature_tally(self):
+        """Check to confirm that CDS features have been parsed."""
+
+        if self._cds_features_tally == 0:
+            message = "There are no CDS features for this genome."
+            self.set_evaluation("warning", message, message)
+
+
     def check_cds_start_end_ids(self):
         """Check if there are any duplicate start-end coordinates.
         Duplicated start-end coordinates may represent

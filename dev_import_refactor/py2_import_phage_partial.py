@@ -204,41 +204,41 @@ for filename in genbank_files:
 		# 	record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
-		#Date of the record
-		try:
-			seq_record_date = seq_record.annotations["date"]
-			seq_record_date = datetime.strptime(seq_record_date,'%d-%b-%Y')
-
-		except:
-			write_out(output_file,"\nError: problem retrieving date in file %s. This file will not be processed." % filename)
-			record_errors += 1
-			failed_genome_files.append(filename)
-			script_warnings += record_warnings
-			script_errors += record_errors
-			raw_input("\nPress ENTER to proceed to next file.")
-			continue
-
-
-		#PhageNotes
-		try:
-			phageNotes = str(seq_record.annotations["comment"])
-		except:
-			phageNotes = ""
+		# #Date of the record
+		# try:
+		# 	seq_record_date = seq_record.annotations["date"]
+		# 	seq_record_date = datetime.strptime(seq_record_date,'%d-%b-%Y')
+        #
+		# except:
+		# 	write_out(output_file,"\nError: problem retrieving date in file %s. This file will not be processed." % filename)
+		# 	record_errors += 1
+		# 	failed_genome_files.append(filename)
+		# 	script_warnings += record_warnings
+		# 	script_errors += record_errors
+		# 	raw_input("\nPress ENTER to proceed to next file.")
+		# 	continue
 
 
-		#Author list
-		try:
-			#The retrieved authors can be stored in multiple Reference elements
-			record_references_author_list = []
-			for reference in seq_record.annotations["references"]:
-				if reference.authors != "":
-					record_references_author_list.append(reference.authors)
-			if len(record_references_author_list) > 0:
-				record_author_string = ";".join(record_references_author_list)
-			else:
-				record_author_string = ""
-		except:
-			record_author_string = ""
+		# #PhageNotes
+		# try:
+		# 	phageNotes = str(seq_record.annotations["comment"])
+		# except:
+		# 	phageNotes = ""
+
+
+		# #Author list
+		# try:
+		# 	#The retrieved authors can be stored in multiple Reference elements
+		# 	record_references_author_list = []
+		# 	for reference in seq_record.annotations["references"]:
+		# 		if reference.authors != "":
+		# 			record_references_author_list.append(reference.authors)
+		# 	if len(record_references_author_list) > 0:
+		# 		record_author_string = ";".join(record_references_author_list)
+		# 	else:
+		# 		record_author_string = ""
+		# except:
+		# 	record_author_string = ""
 
 		#Accession
 		#This initiates this variable. Since different things affect this variable
@@ -246,19 +246,19 @@ for filename in genbank_files:
 		#initiate it in advance to avoid throwing an error.
 		accession_to_upload = ""
 
-
-		try:
-			#There may be a list of accessions associated with this file.
-			#I think the first accession in the list is the most recent.
-			#Discard the version suffix if it is present in the
-			#Accession field (it might not be present).
-			#If an Accession is present, the script will interpret this to mean
-			#the genome record is derived from NCBI. An empty Accession will
-			#be interpreted as a manual annotation not retrieved from NCBI.
-			parsed_accession = seq_record.annotations["accessions"][0]
-			parsed_accession = parsed_accession.split('.')[0]
-		except:
-			parsed_accession = "none"
+        #
+		# try:
+		# 	#There may be a list of accessions associated with this file.
+		# 	#I think the first accession in the list is the most recent.
+		# 	#Discard the version suffix if it is present in the
+		# 	#Accession field (it might not be present).
+		# 	#If an Accession is present, the script will interpret this to mean
+		# 	#the genome record is derived from NCBI. An empty Accession will
+		# 	#be interpreted as a manual annotation not retrieved from NCBI.
+		# 	parsed_accession = seq_record.annotations["accessions"][0]
+		# 	parsed_accession = parsed_accession.split('.')[0]
+		# except:
+		# 	parsed_accession = "none"
 
 
 		#Old code used to match up to the import ticket data
@@ -838,39 +838,39 @@ for filename in genbank_files:
 				record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
 				continue
 
+            #
+			# #Now that start and stop have been parsed, check if coordinates are fuzzy or not
+			# if (strStart.isdigit() and strStop.isdigit()):
+			# 	startCoord = int(strStart)
+			# 	stopCoord = int(strStop)
+			# else:
+			# 	record_warnings += 1
+			# 	write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue." % (geneID,strStart,strStop))
+			# 	record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
+			# 	continue
 
-			#Now that start and stop have been parsed, check if coordinates are fuzzy or not
-			if (strStart.isdigit() and strStop.isdigit()):
-				startCoord = int(strStart)
-				stopCoord = int(strStop)
-			else:
-				record_warnings += 1
-				write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue." % (geneID,strStart,strStop))
-				record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
-				continue
-
-			#Test if there is a gene with the same coordinates already parsed.
-			coordinate_tuple = tuple([startCoord,stopCoord,orientation])
-			if coordinate_tuple not in all_coordinates_set:
-				all_coordinates_set.add(coordinate_tuple)
-			else:
-				record_warnings += 1
-				write_out(output_file,"\nWarning: multiple genes have coordinates %s. This is likely a gene feature duplication." % str(coordinate_tuple))
-				record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple))
+			# #Test if there is a gene with the same coordinates already parsed.
+			# coordinate_tuple = tuple([startCoord,stopCoord,orientation])
+			# if coordinate_tuple not in all_coordinates_set:
+			# 	all_coordinates_set.add(coordinate_tuple)
+			# else:
+			# 	record_warnings += 1
+			# 	write_out(output_file,"\nWarning: multiple genes have coordinates %s. This is likely a gene feature duplication." % str(coordinate_tuple))
+			# 	record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple))
 
 
 
-			#Translation, Gene Length (via Translation)
-			try:
-				translation = feature.qualifiers["translation"][0].upper()
-				geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
-			except:
-				translation = ""
-				geneLen = 0
-				record_warnings += 1
-				write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
-				record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
-				continue
+			# #Translation, Gene Length (via Translation)
+			# try:
+			# 	translation = feature.qualifiers["translation"][0].upper()
+			# 	geneLen = (len(translation) * 3) + 3  #Add 3 for the stop codon...
+			# except:
+			# 	translation = ""
+			# 	geneLen = 0
+			# 	record_warnings += 1
+			# 	write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
+			# 	record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
+			# 	continue
 
 
 
@@ -879,14 +879,14 @@ for filename in genbank_files:
 
 
 
-			#Check translation for possible errors
-			amino_acid_set = set(translation)
-			amino_acid_error_set = amino_acid_set - protein_alphabet_set
-			if len(amino_acid_error_set) > 0:
-				record_warnings += 1
-				write_out(output_file,"\nWarning: feature %s of %s appears to have unexpected amino acid(s)." % (geneID,phageName))
-				print "Unexpected amino acids: " + str(amino_acid_error_set)
-				record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
+			# #Check translation for possible errors
+			# amino_acid_set = set(translation)
+			# amino_acid_error_set = amino_acid_set - protein_alphabet_set
+			# if len(amino_acid_error_set) > 0:
+			# 	record_warnings += 1
+			# 	write_out(output_file,"\nWarning: feature %s of %s appears to have unexpected amino acid(s)." % (geneID,phageName))
+			# 	print "Unexpected amino acids: " + str(amino_acid_error_set)
+			# 	record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
 
 			#TODO compute description tally for feature, product, and note
 
@@ -935,9 +935,9 @@ for filename in genbank_files:
 
 		#Check to see if there are any CDS features processed. If not, then the genbank record does not have any called genes.
 		#The record_summary_cds list contains the column headers, so at minimum, it is length == 1
-		if len(record_summary_cds) == 1:
-			print "\nNo CDS features were found in this record. The genome will still be added to the database."
-			record_errors += question("\nError: no CDS features found in %s." % filename)
+		# if len(record_summary_cds) == 1:
+		# 	print "\nNo CDS features were found in this record. The genome will still be added to the database."
+		# 	record_errors += question("\nError: no CDS features found in %s." % filename)
 
 
 		#See if there are any phage name typos in the header block
@@ -963,29 +963,19 @@ for filename in genbank_files:
 			#Record definition QC
 			#It can contain ", complete genome." or "." at the end,
 			#so remove this before doing search.
-			if record_def[-1:].lower() == '.':
-				if record_def[-18:].lower() == ', complete genome.':
-					record_def_trimmed = record_def[:-18]
-				else:
-					record_def_trimmed = record_def[:-1]
-			else:
-				record_def_trimmed = record_def
+			# if record_def[-1:].lower() == '.':
+			# 	if record_def[-18:].lower() == ', complete genome.':
+			# 		record_def_trimmed = record_def[:-18]
+			# 	else:
+			# 		record_def_trimmed = record_def[:-1]
+			# else:
+			# 	record_def_trimmed = record_def
 
 
 			if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
 				print "\nRecord definition does not have identical phage name as found in the record organism field."
 				record_errors += question("\nError: problem with header info of file %s." % filename)
 
-			#REVIEW the above Record definition check replaces the code block below
-			# if find_name(pattern1,record_def[:-18].split(' ')) == 0:
-			#     print record_def[:-18].split(' ')
-			#     print "\nRecord definition does not have identical phage name as found in the record organism field."
-			#     record_errors += question("\nError: problem with header info of file %s." % filename)
-			#
-			# else:
-			#     if find_name(pattern2,record_def.split(' ')) == 0:
-			#         print "\nRecord definition does not have identical phage name as found in the record organism field."
-			#         record_errors += question("\nError: problem with header info of file %s." % filename)
 
 			#Record source QC
 			if find_name(pattern1,record_source.split(' ')) == 0:
@@ -1042,31 +1032,31 @@ for filename in genbank_files:
 
 
 
-		#Check locus tag info:
-		if missing_locus_tag_tally > 0:
-			record_warnings += 1
-			write_out(output_file,"\nWarning: phage %s from file %s is missing %s CDS locus tag(s)." % (phageName, filename, missing_locus_tag_tally))
-			record_errors += question("\nError: problem with locus tags in file  %s." % filename)
+		# #Check locus tag info:
+		# if missing_locus_tag_tally > 0:
+		# 	record_warnings += 1
+		# 	write_out(output_file,"\nWarning: phage %s from file %s is missing %s CDS locus tag(s)." % (phageName, filename, missing_locus_tag_tally))
+		# 	record_errors += question("\nError: problem with locus tags in file  %s." % filename)
 
 
-		#Check the phage name spelling in the locus tags.
-		pattern4 = re.compile(phageName.lower())
-		geneID_typo_tally = 0
-		geneID_typo_list = []
-
-		if ignore_gene_id_typo != "yes":
-			for geneID in geneID_set:
-
-			   search_result = pattern4.search(geneID.lower())
-			   if search_result == None:
-					geneID_typo_tally += 1
-					geneID_typo_list.append(geneID)
-
-			if geneID_typo_tally > 0:
-				record_warnings += 1
-				write_out(output_file,"\nWarning: there are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
-				print geneID_typo_list
-				record_errors += question("\nError: problem with locus tags of file %s." % filename)
+		# #Check the phage name spelling in the locus tags.
+		# pattern4 = re.compile(phageName.lower())
+		# geneID_typo_tally = 0
+		# geneID_typo_list = []
+        #
+		# if ignore_gene_id_typo != "yes":
+		# 	for geneID in geneID_set:
+        #
+		# 	   search_result = pattern4.search(geneID.lower())
+		# 	   if search_result == None:
+		# 			geneID_typo_tally += 1
+		# 			geneID_typo_list.append(geneID)
+        #
+		# 	if geneID_typo_tally > 0:
+		# 		record_warnings += 1
+		# 		write_out(output_file,"\nWarning: there are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
+		# 		print geneID_typo_list
+		# 		record_errors += question("\nError: problem with locus tags of file %s." % filename)
 
 
 

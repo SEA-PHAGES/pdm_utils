@@ -331,9 +331,11 @@ class CdsFeature:
 
 
 
-
-
-
+    # TODO implement.
+    # TODO unittest.
+    def check_translation_table(self):
+        """Check that translation table data is present."""
+        pass
 
 
 
@@ -350,16 +352,6 @@ class CdsFeature:
         pass
 
 
-
-    # TODO implement.
-    # TODO unit test.
-    def reformat_coordinates(self, format):
-        """Convert left and right boundary coordinates between
-        different indexing strategies."""
-        # Using the self.coordinate_format and a format dictionary in
-        # the basic functions module, update the coordinates so they
-        # reflect the desired format.
-        pass
 
 
 
