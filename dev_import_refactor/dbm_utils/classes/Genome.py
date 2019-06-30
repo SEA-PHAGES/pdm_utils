@@ -57,7 +57,7 @@ class Genome:
 
 
 
-
+        self.translation_table = ""
 
 
 

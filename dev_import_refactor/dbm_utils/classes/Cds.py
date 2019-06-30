@@ -38,6 +38,10 @@ class CdsFeature:
         # Common to Phamerator.
         self.phage_id = ""
 
+
+        self.parent_translation_table = ""
+
+
         # TODO: eventually change how Gene_ID is computed.
         self.gene_id = "" # Gene ID comprised of PhageID and Gene name
         self.gene_name = ""
@@ -330,14 +334,20 @@ class CdsFeature:
             self.set_evaluation("error", message)
 
 
-
-    # TODO implement.
-    # TODO unittest.
-    def check_translation_table(self):
+    def check_translation_table_present(self):
         """Check that translation table data is present."""
-        pass
+        if self.translation_table == "":
+            message = "The feature is missing a translation table."
+            self.set_evaluation("error", message)
 
 
+    def check_translation_table_typo(self):
+        """Check that translation table data matches data from parent Genome."""
+
+        if self.translation_table != self.parent_translation_table:
+            message = "The feature contains a translation table that " + \
+                        "is different from the parent Genome translation table."
+            self.set_evaluation("error", message)
 
 
 

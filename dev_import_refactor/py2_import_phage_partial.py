@@ -1060,23 +1060,23 @@ for filename in genbank_files:
 
 
 
-		#Check all translation table info:
-		if len(transl_table_set) > 1:
-			write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
-			record_errors += 1
-
-		elif len(transl_table_set) == 1:
-			transl_table_list = list(transl_table_set)
-			if transl_table_list[0] != '11':
-				write_out(output_file,"\nThe translation table used for %s is: %s." % (phageName,transl_table_list[0]))
-				record_errors += question("\nError: phage %s does not use correct translation table." % phageName)
-		else:
-			pass
-
-		if missing_transl_table_tally > 0:
-			record_warnings += 1
-			write_out(output_file,"\nWarning: there are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName))
-			record_errors += question("\nError: phage %s has missing translation table information." % phageName)
+		# #Check all translation table info:
+		# if len(transl_table_set) > 1:
+		# 	write_out(output_file,"\nError: more than one translation table used in file %s." % filename)
+		# 	record_errors += 1
+        #
+		# elif len(transl_table_set) == 1:
+		# 	transl_table_list = list(transl_table_set)
+		# 	if transl_table_list[0] != '11':
+		# 		write_out(output_file,"\nThe translation table used for %s is: %s." % (phageName,transl_table_list[0]))
+		# 		record_errors += question("\nError: phage %s does not use correct translation table." % phageName)
+		# else:
+		# 	pass
+        #
+		# if missing_transl_table_tally > 0:
+		# 	record_warnings += 1
+		# 	write_out(output_file,"\nWarning: there are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName))
+		# 	record_errors += question("\nError: phage %s has missing translation table information." % phageName)
 
 
 

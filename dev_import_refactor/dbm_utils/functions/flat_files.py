@@ -90,7 +90,7 @@ def parse_coordinates(feature):
     return (left_boundary, right_boundary, parts, eval_result)
 
 
-def parse_cds_feature(cds, feature):
+def parse_cds_feature(cds, feature, parent_translation_table = 11):
     """Parses a Biopython CDS Feature.
     """
 
@@ -160,6 +160,10 @@ def parse_cds_feature(cds, feature):
         cds.gene_number = feature.qualifiers["gene"][0]
     except:
         cds.gene_number = ""
+
+
+
+    cds.parent_translation_table = parent_translation_table
 
     return eval_result
 
@@ -247,7 +251,10 @@ def create_feature_dictionary(feature_list):
 
 
 
-def parse_flat_file_data(genome_obj, retrieved_record, filepath = ""):
+def parse_flat_file_data(genome_obj, \
+                            retrieved_record, \
+                            filepath = "", \
+                            translation_table = 11):
     """Parses a GenBank-formatted flat file into a Genome object using
     data that has already been parsed by Bio.SeqIO.
     """
@@ -388,7 +395,7 @@ def parse_flat_file_data(genome_obj, retrieved_record, filepath = ""):
     else:
         tmrna_object_list = []
 
-
+    genome_obj.translation_table = translation_table
     genome_obj.set_cds_features(cds_object_list)
     genome_obj.set_source_features(source_object_list)
     genome_obj.set_trna_features(trna_object_list)

@@ -562,6 +562,40 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+    def test_check_translation_table_present_1(self):
+        """Verify no error is produced."""
+        self.feature.translation_table = "11"
+        self.feature.check_translation_table_present()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_translation_table_present_2(self):
+        """Verify an error is produced."""
+        self.feature.translation_table = ""
+        self.feature.check_translation_table_present()
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
+
+    def test_check_translation_table_typo_1(self):
+        """Verify no error is produced."""
+        self.feature.translation_table = "11"
+        self.feature.parent_translation_table = "11"
+        self.feature.check_translation_table_typo()
+        self.assertEqual(len(self.feature.evaluations), 0)
+
+    def test_check_translation_table_typo_2(self):
+        """Verify an error is produced."""
+        self.feature.translation_table = ""
+        self.feature.parent_translation_table = "11"
+        self.feature.check_translation_table_typo()
+        self.assertEqual(len(self.feature.evaluations), 1)
+
+
+
+
+
+
 
 
 
