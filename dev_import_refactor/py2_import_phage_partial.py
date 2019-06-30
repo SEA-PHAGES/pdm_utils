@@ -941,11 +941,11 @@ for filename in genbank_files:
 
 
 		#See if there are any phage name typos in the header block
-		if ignore_phage_name_typos != 'yes':
-
-
-			pattern1 = re.compile('^' + phageName + '$')
-			pattern2 = re.compile('^' + phageName)
+		# if ignore_phage_name_typos != 'yes':
+        #
+        #
+		# 	pattern1 = re.compile('^' + phageName + '$')
+		# 	pattern2 = re.compile('^' + phageName)
 
 
 			#REVIEW This QC check may not be necessary. It really doesn't matter
