@@ -644,138 +644,109 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_phage_name_typos_1(self):
+
+
+
+
+
+    def test_check_record_description_phage_name_1(self):
         """Check that no warning is produced."""
-        phage_name = "Trixie"
-        string = "Mycobacterium phage Trixie"
-        self.genome.record_description = string
-        self.genome.record_source = string
-        self.genome.record_organism = string
-        self.genome.check_phage_name_typos(phage_name)
+        self.genome.phage_id = "Trixie"
+        self.genome._record_description_phage_name = "Trixie"
+        self.genome.check_record_description_phage_name()
         self.assertEqual(len(self.genome.evaluations), 0)
 
-    def test_check_phage_name_typos_2(self):
-        """Check that warning is produced from record_description."""
-        phage_name = "Trixie"
-        string1 = "Mycobacterium phage Trixie"
-        string2 = "Mycobacterium phage Trixi"
-        self.genome.record_description = string2
-        self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.check_phage_name_typos(phage_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_phage_name_typos_3(self):
-        """Check that warning is produced from record_source."""
-        phage_name = "Trixie"
-        string1 = "Mycobacterium phage Trixie"
-        string2 = "Mycobacterium phage Trixi"
-        self.genome.record_description = string1
-        self.genome.record_source = string2
-        self.genome.record_organism = string1
-        self.genome.check_phage_name_typos(phage_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_phage_name_typos_4(self):
-        """Check that warning is produced from record_organism."""
-        phage_name = "Trixie"
-        string1 = "Mycobacterium phage Trixie"
-        string2 = "Mycobacterium phage Trixi"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string2
-        self.genome.check_phage_name_typos(phage_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_check_phage_name_typos_5(self):
-        """Check that only one warning is produced."""
-        phage_name = "Trixie"
-        string1 = "Mycobacterium phage Trixie"
-        string2 = "Mycobacterium phage Trixi"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string2
-        self.genome.check_phage_name_typos(phage_name)
+    def test_check_record_description_phage_name_2(self):
+        """Check that a warning is produced."""
+        self.genome.phage_id = "L5"
+        self.genome._record_description_phage_name = "Trixie"
+        self.genome.check_record_description_phage_name()
         self.assertEqual(len(self.genome.evaluations), 1)
 
 
 
 
-
-
-
-
-
-    def test_check_host_name_typos_1(self):
+    def test_check_record_source_phage_name_1(self):
         """Check that no warning is produced."""
-        host_name = "Gordonia"
-        string = "Gordonia phage Trixie"
-        self.genome.record_description = string
-        self.genome.record_source = string
-        self.genome.record_organism = string
-        self.genome.check_host_name_typos(host_name)
+        self.genome.phage_id = "Trixie"
+        self.genome._record_source_phage_name = "Trixie"
+        self.genome.check_record_source_phage_name()
         self.assertEqual(len(self.genome.evaluations), 0)
 
-    def test_check_host_name_typos_2(self):
-        """Check that warning is produced from record_description."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string2
-        self.genome.record_source = string1
-        self.genome.record_organism = string1
-        self.genome.check_host_name_typos(host_name)
+    def test_check_record_source_phage_name_2(self):
+        """Check that a warning is produced."""
+        self.genome.phage_id = "L5"
+        self.genome._record_source_phage_name = "Trixie"
+        self.genome.check_record_source_phage_name()
         self.assertEqual(len(self.genome.evaluations), 1)
 
-    def test_check_host_name_typos_3(self):
-        """Check that warning is produced from record_source."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string1
-        self.genome.record_source = string2
-        self.genome.record_organism = string1
-        self.genome.check_host_name_typos(host_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
 
-    def test_check_host_name_typos_4(self):
-        """Check that warning is produced from record_organism."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string2
-        self.genome.check_host_name_typos(host_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
 
-    def test_check_host_name_typos_5(self):
-        """Check that only one warning is produced."""
-        host_name = "Gordonia"
-        string1 = "Gordonia phage Trixie"
-        string2 = "Gordoni phage Trixie"
-        self.genome.record_description = string1
-        self.genome.record_source = string1
-        self.genome.record_organism = string2
-        self.genome.check_host_name_typos(host_name)
-        self.assertEqual(len(self.genome.evaluations), 1)
 
-    def test_check_host_name_typos_6(self):
-        """Check that Mycobacterium does not produce a warning."""
-        host_name = "Mycobacterium"
-        string = "Mycobacteriophage Trixie"
-        self.genome.record_description = string
-        self.genome.record_source = string
-        self.genome.record_organism = string
-        self.genome.check_host_name_typos(host_name)
+    def test_check_record_organism_phage_name_1(self):
+        """Check that no warning is produced."""
+        self.genome.phage_id = "Trixie"
+        self.genome._record_organism_phage_name = "Trixie"
+        self.genome.check_record_organism_phage_name()
         self.assertEqual(len(self.genome.evaluations), 0)
 
+    def test_check_record_organism_phage_name_2(self):
+        """Check that a warning is produced."""
+        self.genome.phage_id = "L5"
+        self.genome._record_organism_phage_name = "Trixie"
+        self.genome.check_record_organism_phage_name()
+        self.assertEqual(len(self.genome.evaluations), 1)
 
 
 
 
+    def test_check_record_description_host_name_1(self):
+        """Check that no warning is produced."""
+        self.genome.host = "Mycobacterium"
+        self.genome._record_description_host_name = "Mycobacterium"
+        self.genome.check_record_description_host_name()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_record_description_host_name_2(self):
+        """Check that a warning is produced."""
+        self.genome.host = "Gordonia"
+        self.genome._record_description_host_name = "Mycobacterium"
+        self.genome.check_record_description_host_name()
+        self.assertEqual(len(self.genome.evaluations), 1)
 
 
+
+
+    def test_check_record_source_host_name_1(self):
+        """Check that no warning is produced."""
+        self.genome.host = "Mycobacterium"
+        self.genome._record_source_host_name = "Mycobacterium"
+        self.genome.check_record_source_host_name()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_record_source_host_name_2(self):
+        """Check that a warning is produced."""
+        self.genome.host = "Gordonia"
+        self.genome._record_source_host_name = "Mycobacterium"
+        self.genome.check_record_source_host_name()
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+
+
+
+    def test_check_record_organism_host_name_1(self):
+        """Check that no warning is produced."""
+        self.genome.host = "Mycobacterium"
+        self.genome._record_organism_host_name = "Mycobacterium"
+        self.genome.check_record_organism_host_name()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_record_organism_host_name_2(self):
+        """Check that a warning is produced."""
+        self.genome.host = "Gordonia"
+        self.genome._record_organism_host_name = "Mycobacterium"
+        self.genome.check_record_organism_host_name()
+        self.assertEqual(len(self.genome.evaluations), 1)
 
 
 
@@ -1091,6 +1062,25 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(self.genome.cluster, cluster)
         with self.subTest():
             self.assertEqual(self.genome.subcluster, subcluster)
+
+
+
+
+    def test_check_cds_feature_tally_1(self):
+        """Verify no error is encountered when there is one CDS feature."""
+        self.genome._cds_features_tally = 1
+        self.genome.check_cds_feature_tally()
+        self.assertEqual(len(self.genome.evaluations), 0)
+
+    def test_check_cds_feature_tally_2(self):
+        """Verify error is encountered when there is no CDS feature."""
+        self.genome._cds_features_tally = 0
+        self.genome.check_cds_feature_tally()
+        self.assertEqual(len(self.genome.evaluations), 1)
+
+
+
+
 
 
 

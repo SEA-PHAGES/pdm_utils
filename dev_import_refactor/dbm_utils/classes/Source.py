@@ -24,7 +24,8 @@ class SourceFeature:
 
 
         # Common to Phamerator.
-        self.phage_id = ""
+        self.parent_phage_id = ""
+        self.parent_host = ""
 
 
         # Computed data fields.
@@ -35,16 +36,22 @@ class SourceFeature:
 
 
 
+        self.evaluations = [] # List of warnings and errors about source feature
 
 
 
 
+    def set_evaluation(self, type, message1 = None, message2 = None):
+        """Creates an EvalResult object and adds it to the list of all
+        evaluations."""
 
-
-
-
-
-
+        if type == "warning":
+            eval_object = Eval.construct_warning(message1, message2)
+        elif type == "error":
+            eval_object = Eval.construct_error(message1)
+        else:
+            eval_object = Eval.EvalResult()
+        self.evaluations.append(eval_object)
 
     def parse_organism(self):
         """Retrieve the phage name and host name from the 'organism' field."""
@@ -69,6 +76,37 @@ class SourceFeature:
         # expected to contain host information.
 
 
+    def check_organism_phage_name(self):
+        """Check phage name spelling in the organism field."""
+
+        if self.parent_phage_id != self._organism_phage_name:
+            message1 = "The phage name in the organism field " + \
+                        "does not match the parent_phage_id."
+            self.set_evaluation("warning", message1, message1)
+
+    def check_organism_host_name(self):
+        """Check host name spelling in the organism field."""
+
+        if self.parent_host != self._organism_host_name:
+            message1 = "The host name in the organism field " + \
+                        "does not match the parent_host."
+            self.set_evaluation("warning", message1, message1)
+
+    def check_host_host_name(self):
+        """Check host name spelling in the host field."""
+
+        if self.parent_host != self._host_host_name:
+            message1 = "The host name in the host field " + \
+                        "does not match the parent_host."
+            self.set_evaluation("warning", message1, message1)
+
+    def check_lab_host_host_name(self):
+        """Check host name spelling in the lab_host field."""
+
+        if self.parent_host != self._lab_host_host_name:
+            message1 = "The host name in the lab_host field " + \
+                        "does not match the parent_host."
+            self.set_evaluation("warning", message1, message1)
 
 
 
@@ -79,17 +117,17 @@ class SourceFeature:
 
 
 
-    # TODO implement.
-    # TODO unit test.
-    def check_phage_name_typos(self, phage_name):
-        """Check phage name spelling in various fields."""
-        pass
 
-    # TODO implement.
-    # TODO unit test.
-    def check_host_name_typos(self, host_name):
-        """Check host name spelling in various fields."""
-        pass
+
+
+
+
+
+
+
+
+
+
 
 
 

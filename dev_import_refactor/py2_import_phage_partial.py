@@ -971,63 +971,63 @@ for filename in genbank_files:
 			# else:
 			# 	record_def_trimmed = record_def
 
-
-			if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
-				print "\nRecord definition does not have identical phage name as found in the record organism field."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-
-			#Record source QC
-			if find_name(pattern1,record_source.split(' ')) == 0:
-				print "\nRecord source does not have identical phage name as found in the record organism field."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-			#Source feature organism QC
-			if find_name(pattern1,feature_source_organism.split(' ')) == 0:
-				print "\nSource feature organism does not have identical phage name as found in the record organism field."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
+            #
+			# if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
+			# 	print "\nRecord definition does not have identical phage name as found in the record organism field."
+			# 	record_errors += question("\nError: problem with header info of file %s." % filename)
+            #
+            #
+			# #Record source QC
+			# if find_name(pattern1,record_source.split(' ')) == 0:
+			# 	print "\nRecord source does not have identical phage name as found in the record organism field."
+			# 	record_errors += question("\nError: problem with header info of file %s." % filename)
+            #
+			# #Source feature organism QC
+			# if find_name(pattern1,feature_source_organism.split(' ')) == 0:
+			# 	print "\nSource feature organism does not have identical phage name as found in the record organism field."
+			# 	record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
 
 		#See if there are any host name typos in the header block.
 		#Skip this step if it is a Draft genome, because it won't correctly have this information.
-		if import_status != 'draft' and ignore_host_typos != 'yes':
-			import_host_trim = import_host
-			if import_host_trim == "Mycobacterium":
-				import_host_trim = import_host_trim[:-3]
-
-			pattern3 = re.compile('^' + import_host_trim)
-
-
-			if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
-				print "\nRecord definition does not appear to have same host data as found in import table."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-			if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
-
-				print "\nRecord source does not appear to have same host data as found in import table."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-			if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
-
-				print "\nRecord organism does not appear to have same host data as found in import table."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-			if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
-
-				print "\nSource feature organism does not appear to have same host data as found in import table."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-			#Host and Lab_Host data may not have been present, so skip if it is blank
-			if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
-
-				print "\nSource feature host does not appear to have same host data as found in import table."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
-
-			if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
-
-				print "\nSource feature lab host does not appear to have same host data as found in import table."
-				record_errors += question("\nError: problem with header info of file %s." % filename)
+		# if import_status != 'draft' and ignore_host_typos != 'yes':
+		# 	import_host_trim = import_host
+		# 	if import_host_trim == "Mycobacterium":
+		# 		import_host_trim = import_host_trim[:-3]
+        #
+		# 	pattern3 = re.compile('^' + import_host_trim)
+        #
+        #
+		# 	if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
+		# 		print "\nRecord definition does not appear to have same host data as found in import table."
+		# 		record_errors += question("\nError: problem with header info of file %s." % filename)
+        #
+		# 	if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
+        #
+		# 		print "\nRecord source does not appear to have same host data as found in import table."
+		# 		record_errors += question("\nError: problem with header info of file %s." % filename)
+        #
+		# 	if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
+        #
+		# 		print "\nRecord organism does not appear to have same host data as found in import table."
+		# 		record_errors += question("\nError: problem with header info of file %s." % filename)
+        #
+		# 	if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
+        #
+		# 		print "\nSource feature organism does not appear to have same host data as found in import table."
+		# 		record_errors += question("\nError: problem with header info of file %s." % filename)
+        #
+		# 	#Host and Lab_Host data may not have been present, so skip if it is blank
+		# 	if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
+        #
+		# 		print "\nSource feature host does not appear to have same host data as found in import table."
+		# 		record_errors += question("\nError: problem with header info of file %s." % filename)
+        #
+		# 	if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
+        #
+		# 		print "\nSource feature lab host does not appear to have same host data as found in import table."
+		# 		record_errors += question("\nError: problem with header info of file %s." % filename)
 
 
 

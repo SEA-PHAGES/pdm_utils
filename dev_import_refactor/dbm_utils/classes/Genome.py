@@ -481,55 +481,54 @@ class Genome:
         else:
             pass
 
+    def check_record_description_phage_name(self):
+        """Check phage name spelling in the record description field."""
 
+        if self.phage_id != self._record_description_phage_name:
+            message1 = "The phage name in the record_description field " + \
+                        "does not match the phage_id."
+            self.set_evaluation("warning", message1, message1)
 
+    def check_record_source_phage_name(self):
+        """Check phage name spelling in the record source field."""
 
-    # TODO now that the parse_field methods are created,
-    # I can improve or refine this method.
-    def check_phage_name_typos(self, phage_name):
-        """Check phage name spelling in various fields."""
+        if self.phage_id != self._record_source_phage_name:
+            message1 = "The phage name in the record_source field " + \
+                        "does not match the phage_id."
+            self.set_evaluation("warning", message1, message1)
 
-        pattern1 = re.compile("^" + phage_name + "$")
-        pattern2 = re.compile("^" + phage_name)
+    def check_record_organism_phage_name(self):
+        """Check phage name spelling in the record source field."""
 
-        split_description = self.record_description.split(" ")
-        split_source = self.record_source.split(" ")
-        split_organism1 = self.record_organism.split(" ")
+        if self.phage_id != self._record_organism_phage_name:
+            message1 = "The phage name in the record_organism field " + \
+                        "does not match the phage_id."
+            self.set_evaluation("warning", message1, message1)
 
-        if basic.find_expression(pattern2, split_description) == 0 \
-            or \
-            basic.find_expression(pattern1, split_source) == 0 \
-            or \
-            basic.find_expression(pattern1, split_organism1) == 0:
+    def check_record_description_host_name(self):
+        """Check host name spelling in the record description field."""
 
-            message1 = "There appears to be a phage name discrepancy."
-            message2 = "There is a phage name discrepancy."
-            self.set_evaluation("warning", message1, message2)
+        if self.host != self._record_description_host_name:
+            message1 = "The host name in the record_description field " + \
+                        "does not match the host."
+            self.set_evaluation("warning", message1, message1)
 
+    def check_record_source_host_name(self):
+        """Check host name spelling in the record source field."""
 
-    # TODO now that the parse_field methods are created,
-    # I can improve or refine this method.
-    def check_host_name_typos(self, host_name):
-        """Check host name spelling in various fields."""
+        if self.host != self._record_source_host_name:
+            message1 = "The host name in the record_source field " + \
+                        "does not match the host."
+            self.set_evaluation("warning", message1, message1)
 
-        if host_name == 'Mycobacterium':
-            host_name = host_name[:-3]
-        pattern = re.compile('^' + host_name)
+    def check_record_organism_host_name(self):
+        """Check host name spelling in the record source field."""
 
-        split_description = self.record_description.split(" ")
-        split_source = self.record_source.split(" ")
-        split_organism1 = self.record_organism.split(" ")
+        if self.host != self._record_organism_host_name:
+            message1 = "The host name in the record_organism field " + \
+                        "does not match the host."
+            self.set_evaluation("warning", message1, message1)
 
-        if (basic.find_expression(pattern,split_description) == 0 \
-            or \
-            basic.find_expression(pattern,split_source) == 0 \
-            or \
-            basic.find_expression(pattern,split_organism1) == 0):
-
-
-            message1 = "There appears to be a host name discrepancy."
-            message2 = "There is a host name discrepancy."
-            self.set_evaluation("warning", message1, message2)
 
 
 
@@ -564,8 +563,6 @@ class Genome:
             pass
 
 
-
-    # TODO unit test.
     def check_cds_feature_tally(self):
         """Check to confirm that CDS features have been parsed."""
 
