@@ -36,7 +36,7 @@ class CdsFeature:
 
 
         # Common to Phamerator.
-        self.phage_id = ""
+        self.parent_phage_id = ""
 
 
         self.parent_translation_table = ""
@@ -128,8 +128,9 @@ class CdsFeature:
         """Set the phage_id and search_id at the same time, removing
         '_Draft' suffix if present."""
 
-        self.phage_id = value
-        self._search_id = basic.edit_draft_suffix(self.phage_id, "remove")
+        self.parent_phage_id = value
+        self._search_id = \
+            basic.edit_draft_suffix(self.parent_phage_id, "remove")
 
 
     # TODO unit test.

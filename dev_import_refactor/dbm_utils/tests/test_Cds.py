@@ -274,7 +274,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         phage_id = "Trixie"
         self.feature.set_phage_id(phage_id)
         with self.subTest():
-            self.assertEqual(self.feature.phage_id, "Trixie")
+            self.assertEqual(self.feature.parent_phage_id, "Trixie")
         with self.subTest():
             self.assertEqual(self.feature._search_id, "Trixie")
 
@@ -283,7 +283,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         phage_id = "Trixie_Draft"
         self.feature.set_phage_id(phage_id)
         with self.subTest():
-            self.assertEqual(self.feature.phage_id, "Trixie_Draft")
+            self.assertEqual(self.feature.parent_phage_id, "Trixie_Draft")
         with self.subTest():
             self.assertEqual(self.feature._search_id, "Trixie")
 
