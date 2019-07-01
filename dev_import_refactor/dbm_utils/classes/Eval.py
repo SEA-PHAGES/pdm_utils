@@ -69,4 +69,34 @@ def construct_other(status_other, message_other):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class EvalResult2:
+
+    def __init__(self):
+
+        self.id = "" # Unique identifier for the specific evaluation.
+        self.definition = "" # Description of what was evaluated.
+        self.status = "" # Not_evaluated, Ignored, Correct, Warning, Error.
+        self.result = "" # Customized message reporting details of the evaluation.
+
+
+
 ###
