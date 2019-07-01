@@ -736,23 +736,23 @@ for filename in genbank_files:
 
 
 
-
-    	genome_object.compute_nucleotide_errors(dna_alphabet_set)
-
+        #
+    	# genome_object.compute_nucleotide_errors(dna_alphabet_set)
+        #
 
 
 
 		#CDS errors from compare_datases.py
             #Compute other fields
-            gene_object.compute_amino_acid_errors(protein_alphabet_set)
-            gene_object.set_start_end_strand_id()
-            gene_object.compute_boundary_error()
-            gene_object.compute_description_error()
+            # gene_object.compute_amino_acid_errors(protein_alphabet_set)
+            # gene_object.set_start_end_strand_id()
+            # gene_object.compute_boundary_error()
+            # gene_object.compute_description_error()
 
 
 		#Genome errors after all features are parsed
-	    genome_object.compute_cds_feature_errors()
-	    genome_object.compute_ncbi_cds_feature_errors()
+	    # genome_object.compute_cds_feature_errors()
+	    # genome_object.compute_ncbi_cds_feature_errors()
 
 
 
@@ -895,27 +895,27 @@ for filename in genbank_files:
 
 			#Now assign the appropriate description info to the
 			#assigned_description variable, as indicated from the import table.
-			try:
-
-				if import_cds_qualifier == "product":
-					assigned_description = feature_product
-
-				elif import_cds_qualifier == "function":
-					assigned_description = feature_function
-
-				elif import_cds_qualifier == "note":
-					assigned_description = feature_note
-
-				#This clause allows the user to specify an uncommon
-				#feature qualifier to retrieve the gene description from.
-				else:
-					assigned_description = retrieve_description(feature,import_cds_qualifier)
-
-			except:
-				assigned_description = ""
-
-			if assigned_description != "":
-				assigned_description_tally += 1
+			# try:
+            #
+			# 	if import_cds_qualifier == "product":
+			# 		assigned_description = feature_product
+            #
+			# 	elif import_cds_qualifier == "function":
+			# 		assigned_description = feature_function
+            #
+			# 	elif import_cds_qualifier == "note":
+			# 		assigned_description = feature_note
+            #
+			# 	#This clause allows the user to specify an uncommon
+			# 	#feature qualifier to retrieve the gene description from.
+			# 	else:
+			# 		assigned_description = retrieve_description(feature,import_cds_qualifier)
+            #
+			# except:
+			# 	assigned_description = ""
+            #
+			# if assigned_description != "":
+			# 	assigned_description_tally += 1
 
 
 
