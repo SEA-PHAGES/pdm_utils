@@ -35,18 +35,18 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-
-    def test_set_evaluation_1(self):
-        self.feature.set_evaluation("none")
-        self.assertEqual(len(self.feature.evaluations), 1)
-
-    def test_set_evaluation_2(self):
-        self.feature.set_evaluation("warning","message1")
-        self.assertEqual(len(self.feature.evaluations), 1)
-
-    def test_set_evaluation_3(self):
-        self.feature.set_evaluation("error","message1","message2")
-        self.assertEqual(len(self.feature.evaluations), 1)
+    # TODO probably don't need these now.
+    # def test_set_evaluation_1(self):
+    #     self.feature.set_evaluation("none")
+    #     self.assertEqual(len(self.feature.evaluations), 1)
+    #
+    # def test_set_evaluation_2(self):
+    #     self.feature.set_evaluation("warning","message1")
+    #     self.assertEqual(len(self.feature.evaluations), 1)
+    #
+    # def test_set_evaluation_3(self):
+    #     self.feature.set_evaluation("error","message1","message2")
+    #     self.assertEqual(len(self.feature.evaluations), 1)
 
 
 
@@ -59,14 +59,15 @@ class TestCdsFeatureClass(unittest.TestCase):
         alphabet = set(["A","B","C"])
         self.feature.translation = "AB"
         self.feature.check_amino_acids(alphabet)
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_amino_acids_2(self):
         """Some amino acids not in alphabet."""
         alphabet = set(["A","B","C"])
         self.feature.translation = "AD"
         self.feature.check_amino_acids(alphabet)
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
 
 
 
@@ -249,21 +250,21 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.left_boundary = 5
         self.feature.right_boundary = 10
         self.feature.check_boundaries()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_boundaries_2(self):
         """Test incorrect left boundary."""
         self.feature.left_boundary = "a"
         self.feature.right_boundary = 10
         self.feature.check_boundaries()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_boundaries_3(self):
         """Test incorrect right boundary."""
         self.feature.left_boundary = 5
         self.feature.right_boundary = "a"
         self.feature.check_boundaries()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -307,26 +308,31 @@ class TestCdsFeatureClass(unittest.TestCase):
         """Check if absent locus tag is expected to be absent."""
         self.feature.locus_tag = ""
         self.feature.check_locus_tag_present("absent")
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_present_2(self):
         """Check if absent locus tag is expected to be present."""
         self.feature.locus_tag = ""
         self.feature.check_locus_tag_present("present")
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_present_3(self):
         """Check if present locus tag is expected to be present."""
         self.feature.locus_tag = "ABCD"
         self.feature.check_locus_tag_present("present")
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_present_4(self):
         """Check if present locus tag is expected to be absent."""
         self.feature.locus_tag = "ABCD"
         self.feature.check_locus_tag_present("absent")
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
+    def test_check_locus_tag_present_5(self):
+        """Skip evaluation if not a valid expectation."""
+        self.feature.locus_tag = "ABCD"
+        self.feature.check_locus_tag_present("invalid")
+        self.assertEqual(self.feature.evaluations[0].status, "untested")
 
 
 
@@ -337,19 +343,19 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.processed_product_description = "ABC"
         self.feature.processed_function_description = "EFG"
         self.feature.check_description()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_2(self):
         """Product is present and function is absent."""
         self.feature.processed_product_description = "ABC"
         self.feature.check_description()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_3(self):
         """Product is absent and function is present."""
         self.feature.processed_function_description = "EFG"
         self.feature.check_description()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -359,13 +365,13 @@ class TestCdsFeatureClass(unittest.TestCase):
         """The locus_tag does not contain a typo."""
         self.feature.locus_tag = "ABC_TRIXIE_123"
         self.feature.check_locus_tag_typo("Trixie")
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_typo_2(self):
         """The locus_tag contains a typo."""
         self.feature.locus_tag = "ABC_TRIXE_123"
         self.feature.check_locus_tag_typo("Trixie")
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -380,7 +386,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.right_boundary = 11
         self.feature.set_translation("ABC")
         self.feature.check_lengths()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_lengths_2(self):
         """The translation length is not correct."""
@@ -389,7 +395,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.right_boundary = 12
         self.feature.set_translation("ABC")
         self.feature.check_lengths()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_lengths_3(self):
         """Compound feature is not computed."""
@@ -398,7 +404,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.right_boundary = 12
         self.feature.set_translation("ABC")
         self.feature.check_lengths()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "untested")
 
 
 
@@ -498,19 +504,19 @@ class TestCdsFeatureClass(unittest.TestCase):
         """Verify a present translation does not produce an error."""
         self.feature._translation_length = 1
         self.feature.check_translation_length()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_translation_length_2(self):
         """Verify a present translation does not produce an error."""
         self.feature._translation_length = 100
         self.feature.check_translation_length()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_translation_length_3(self):
         """Verify that no translation produces an error."""
         self.feature._translation_length = 0
         self.feature.check_translation_length()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -566,13 +572,13 @@ class TestCdsFeatureClass(unittest.TestCase):
         """Verify no error is produced."""
         self.feature.translation_table = "11"
         self.feature.check_translation_table_present()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_translation_table_present_2(self):
         """Verify an error is produced."""
         self.feature.translation_table = ""
         self.feature.check_translation_table_present()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -582,14 +588,14 @@ class TestCdsFeatureClass(unittest.TestCase):
         self.feature.translation_table = "11"
         self.feature.parent_translation_table = "11"
         self.feature.check_translation_table_typo()
-        self.assertEqual(len(self.feature.evaluations), 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_translation_table_typo_2(self):
         """Verify an error is produced."""
         self.feature.translation_table = ""
         self.feature.parent_translation_table = "11"
         self.feature.check_translation_table_typo()
-        self.assertEqual(len(self.feature.evaluations), 1)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 

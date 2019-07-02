@@ -111,17 +111,17 @@ class CdsFeature:
     # Define all attribute setters:
 
 
-    def set_evaluation(self, type, message1 = None, message2 = None):
-        """Creates an EvalResult object and adds it to the list of all
-        evaluations.
-        """
-        if type == "warning":
-            eval_object = Eval.construct_warning(message1, message2)
-        elif type == "error":
-            eval_object = Eval.construct_error(message1)
-        else:
-            eval_object = Eval.EvalResult()
-        self.evaluations.append(eval_object)
+    # def set_evaluation(self, type, message1 = None, message2 = None):
+    #     """Creates an EvalResult object and adds it to the list of all
+    #     evaluations.
+    #     """
+    #     if type == "warning":
+    #         eval_object = Eval.construct_warning(message1, message2)
+    #     elif type == "error":
+    #         eval_object = Eval.construct_error(message1)
+    #     else:
+    #         eval_object = Eval.EvalResult()
+    #     self.evaluations.append(eval_object)
 
     def set_phage_id(self, value):
         """Set the phage_id and search_id at the same time, removing
@@ -131,8 +131,6 @@ class CdsFeature:
         self._search_id = \
             basic.edit_draft_suffix(self.parent_phage_id, "remove")
 
-
-    # TODO unit test.
     def choose_description(self, value):
         """Set the primary description and processed primary description."""
 
@@ -271,15 +269,35 @@ class CdsFeature:
         amino_acid_error_set = amino_acid_set - protein_alphabet_set
 
         if len(amino_acid_error_set) > 0:
-            message = "There are unexpected amino acids in the translation: " \
+            result = "There are unexpected amino acids in the translation: " \
                 + str(amino_acid_error_set)
-            self.set_evaluation("error", message)
+            status = "error"
+        else:
+            result = "There are no unexpected amino acid residues."
+            status = "correct"
+
+        definition = "Check validity of amino acid residues."
+        eval = Eval.Eval(id = "CDS0001", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_translation_length(self):
         """Confirm that a translation is present."""
         if self._translation_length < 1:
-            message = "There is no translation."
-            self.set_evaluation("error", message)
+            result = "There is no translation."
+            status = "error"
+        else:
+            result = "Translation is identified."
+            status = "correct"
+
+        definition = "Confirm there is a translation."
+        eval = Eval.Eval(id = "CDS0002", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     # TODO this method can be improved by taking account coordinate
@@ -295,11 +313,23 @@ class CdsFeature:
             length2 = (self._translation_length * 3) + 3
 
             if length1 != length2:
-
-                message = "The translation length and nucleotide length " + \
+                result = "The translation length and nucleotide length " + \
                             "do not match."
-                self.set_evaluation("error", message)
+                status = "error"
+            else:
+                result = "Translation and nucleotide lengths match."
+                status = "correct"
 
+        else:
+            result = "Translation and nucleotide lengths not compared."
+            status = "untested"
+
+        definition = "Confirm the translation and nucleotide lengths."
+        eval = Eval.Eval(id = "CDS0003", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
 
@@ -310,9 +340,20 @@ class CdsFeature:
         strand = basic.reformat_strand(self.strand, format = "numeric")
 
         if (strand == 1 or self.strand == -1):
-            message = "The feature strand is not determined: " \
+            result = "The feature strand is not determined: " \
                 + str((self.left_boundary, self.right_boundary))
-            self.set_evaluation("error", message)
+            status = "error"
+
+        else:
+            result = "Feature strand is correct."
+            status = "correct"
+
+        definition = "Check if the strand is set appropriately."
+        eval = Eval.Eval(id = "CDS0004", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_boundaries(self):
@@ -323,48 +364,84 @@ class CdsFeature:
         if not (str(self.left_boundary).isdigit() and \
             str(self.right_boundary).isdigit()):
 
-            message = "The feature boundaries are not determined: " \
+            result = "The feature boundaries are not determined: " \
                 + str((self.left_boundary, self.right_boundary))
-            self.set_evaluation("error", message)
+            status = "error"
 
         elif (self.left_boundary == -1 or \
             self.right_boundary == -1):
 
             # TODO unit test this elif clause.
-            message = "The feature boundaries are not determined: " \
+            result = "The feature boundaries are not determined: " \
                 + str((self.left_boundary, self.right_boundary))
-            self.set_evaluation("error", message)
+            status = "error"
 
+        else:
+            result = "Feature boundaries are exact."
+            status = "correct"
+
+        definition = "Check if the left and right boundary coordinates " + \
+                        "are exact or fuzzy."
+        eval = Eval.Eval(id = "CDS0005", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_locus_tag_present(self, expectation):
-        """Check is status of locus tag matches expectations."""
+        """Check if status of locus tag matches expectations."""
         if expectation == "present":
             if self.locus_tag == "":
-                message = "The feature has no locus tag."
-                self.set_evaluation("error", message)
+                result = "The feature has no locus tag."
+                status = "error"
+            else:
+                result = "The locus_tag is as expected."
+                status = "correct"
 
         elif expectation == "absent":
             if self.locus_tag != "":
-                message = "The feature has a locus tag."
-                self.set_evaluation("error", message)
+                result = "The feature has a locus tag."
+                status = "error"
+            else:
+                result = "The locus_tag is as expected."
+                status = "correct"
 
+        # TODO unit test.
         else:
-            pass
+            result = "The presence/absence of the locus_tag was not evaluated."
+            status = "untested"
+
+        definition = "Check if the locus_tag status is expected."
+        eval = Eval.Eval(id = "CDS0006", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
 
 
     def check_locus_tag_typo(self, value):
-        """Check is the locus tag contains potential typos."""
+        """Check if the locus tag contains potential typos."""
         pattern = re.compile(value.lower())
         search_result = pattern.search(self.locus_tag.lower())
 
         if search_result == None:
 
-            message = "The feature locus tag has a typo."
-            self.set_evaluation("error", message)
+            result = "The feature locus tag has a typo."
+            status = "error"
 
+        else:
+            result = "The feature locus tag is correct."
+            status = "correct"
+
+        definition = "Check if the locus_tag contains a typo."
+        eval = Eval.Eval(id = "CDS0007", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_description(self):
@@ -374,25 +451,55 @@ class CdsFeature:
             (self.processed_function_description != '' or \
             self.processed_note_description != ''):
 
-            message = "The feature is missing a product description."
-            self.set_evaluation("error", message)
+            result = "The feature is missing a product description."
+            status = "error"
+
+        else:
+            result = "The feature description is correct."
+            status = "correct"
+
+        definition = "Check if there is a discrepancy between description fields."
+        eval = Eval.Eval(id = "CDS0008", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_translation_table_present(self):
         """Check that translation table data is present."""
         if self.translation_table == "":
-            message = "The feature is missing a translation table."
-            self.set_evaluation("error", message)
+            result = "The feature is missing a translation table."
+            status = "error"
+        else:
+            result = "The feature contains a translation table."
+            status = "correct"
 
+        definition = "Check that translation table data is present."
+        eval = Eval.Eval(id = "CDS0009", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_translation_table_typo(self):
         """Check that translation table data matches data from parent Genome."""
 
         if self.translation_table != self.parent_translation_table:
-            message = "The feature contains a translation table that " + \
+            result = "The feature contains a translation table that " + \
                         "is different from the parent Genome translation table."
-            self.set_evaluation("error", message)
+            status = "error"
 
+        else:
+            result = "The feature contains the expected translation table."
+            status = "correct"
+
+        definition = "Check that feature contains the exected translation table."
+        eval = Eval.Eval(id = "CDS0010", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     # TODO implement.
@@ -407,38 +514,6 @@ class CdsFeature:
         # and that the translated product matches the translated product
         # stored in self.translation.
         pass
-
-
-
-
-
-
-    #TODO this function cannot be implemented easily within the CDS feature,
-    #since several of these require parameters that are determined by other
-    #parts of the script, such as the amino acid alphabet and the _locus_tag
-    #reference value.
-    #TODO Unit test
-    # def check_feature(self):
-    #     self.check_translation(alphabet)
-    #     self.check_boundaries()
-    #     self.check_locus_tag_present()
-    #     self.check_description()
-    #     self.check_locus_tag_typo(value)
-
-
-
-
-
-
-
-
-        # TODO: I will need to re-implement this for database_comparison script.
-        # if self.get_unmatched_error():
-        #     self._total_errors += 1
-
-
-
-
 
 
 

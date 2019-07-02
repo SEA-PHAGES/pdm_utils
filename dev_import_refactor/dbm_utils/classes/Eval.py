@@ -12,7 +12,7 @@ class Eval:
 
         self.id = id # Unique identifier for the specific evaluation.
         self.definition = definition # Description of what was evaluated.
-        self.status = status # Not_evaluated, Ignored, Correct, Warning, Error.
+        self.status = status # untested, ignored, correct, warning, error.
         self.result = result # Customized message reporting details of
                          # the evaluation.
 
