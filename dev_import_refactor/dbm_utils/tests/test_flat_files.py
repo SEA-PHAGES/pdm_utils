@@ -35,7 +35,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
             type = "CDS", \
             strand = 1)
 
-        output_left, output_right, parts, output_eval = \
+        # output_left, output_right, parts, output_eval = \
+        #     flat_files.parse_coordinates(seqfeature)
+        output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = 2
@@ -48,8 +50,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, exp_right)
         with self.subTest():
             self.assertEqual(parts, exp_parts)
-        with self.subTest():
-            self.assertIsNone(output_eval)
+        # with self.subTest():
+        #     self.assertIsNone(output_eval)
 
 
     def test_parse_coordinates_2(self):
@@ -63,7 +65,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
             type = "CDS", \
             strand = 1)
 
-        output_left, output_right, parts, output_eval = \
+        # output_left, output_right, parts, output_eval = \
+        #     flat_files.parse_coordinates(seqfeature)
+        output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = 2
@@ -76,8 +80,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, exp_right)
         with self.subTest():
             self.assertEqual(parts, exp_parts)
-        with self.subTest():
-            self.assertIsNone(output_eval)
+        # with self.subTest():
+        #     self.assertIsNone(output_eval)
 
 
     def test_parse_coordinates_3(self):
@@ -91,7 +95,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
             type = "CDS", \
             strand = -1)
 
-        output_left, output_right, parts, output_eval = \
+        # output_left, output_right, parts, output_eval = \
+        #     flat_files.parse_coordinates(seqfeature)
+        output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = 8
@@ -104,8 +110,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, exp_right)
         with self.subTest():
             self.assertEqual(parts, exp_parts)
-        with self.subTest():
-            self.assertIsNone(output_eval)
+        # with self.subTest():
+        #     self.assertIsNone(output_eval)
 
 
     def test_parse_coordinates_4(self):
@@ -119,7 +125,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
             type = "CDS", \
             strand = None)
 
-        output_left, output_right, parts, output_eval = \
+        # output_left, output_right, parts, output_eval = \
+        #     flat_files.parse_coordinates(seqfeature)
+        output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = -1
@@ -132,8 +140,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, exp_right)
         with self.subTest():
             self.assertEqual(parts, exp_parts)
-        with self.subTest():
-            self.assertIsNotNone(output_eval)
+        # with self.subTest():
+        #     self.assertIsNotNone(output_eval)
 
 
     def test_parse_coordinates_5(self):
@@ -149,7 +157,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
             type = "CDS", \
             strand = 1)
 
-        output_left, output_right, parts, output_eval = \
+        # output_left, output_right, parts, output_eval = \
+        #     flat_files.parse_coordinates(seqfeature)
+        output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = -1
@@ -162,8 +172,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, exp_right)
         with self.subTest():
             self.assertEqual(parts, exp_parts)
-        with self.subTest():
-            self.assertIsNotNone(output_eval)
+        # with self.subTest():
+        #     self.assertIsNotNone(output_eval)
 
 
     def test_parse_coordinates_6(self):
@@ -171,7 +181,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         seqfeature = SeqFeature(None, type = "CDS", strand = None)
 
-        output_left, output_right, parts, output_eval = \
+        # output_left, output_right, parts, output_eval = \
+        #     flat_files.parse_coordinates(seqfeature)
+        output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
 
         exp_left = -1
@@ -184,8 +196,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, exp_right)
         with self.subTest():
             self.assertEqual(parts, exp_parts)
-        with self.subTest():
-            self.assertIsNotNone(output_eval)
+        # with self.subTest():
+        #     self.assertIsNotNone(output_eval)
 
 
 
@@ -208,7 +220,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -222,8 +235,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -251,6 +264,10 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
+
+
 
 
     def test_parse_cds_feature_2(self):
@@ -269,7 +286,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -283,8 +301,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -312,6 +330,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_3(self):
@@ -335,7 +355,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             strand = 1, \
             qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -349,8 +370,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, -1)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 3)
-        with self.subTest():
-            self.assertIsNotNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNotNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -378,6 +399,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_4(self):
@@ -396,7 +419,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -410,8 +434,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -439,6 +463,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_5(self):
@@ -457,7 +483,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -471,8 +498,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -500,6 +527,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_6(self):
@@ -518,7 +547,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -532,8 +562,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -561,6 +591,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_7(self):
@@ -579,7 +611,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -593,8 +626,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -622,6 +655,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_8(self):
@@ -640,7 +675,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -654,8 +690,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -683,6 +719,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_9(self):
@@ -701,7 +739,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
+        flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -715,8 +754,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -744,6 +783,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 11)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
     def test_parse_cds_feature_10(self):
@@ -763,7 +804,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        eval_result = flat_files.parse_cds_feature(self.cds, seqfeature, 1)
+        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature, 1)
+        flat_files.parse_cds_feature(self.cds, seqfeature, 1)
 
         with self.subTest():
             self.assertEqual(self.cds.type_id, "CDS")
@@ -777,8 +819,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right_boundary, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        with self.subTest():
-            self.assertIsNone(eval_result)
+        # with self.subTest():
+        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -806,6 +848,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene_number, "")
         with self.subTest():
             self.assertEqual(self.cds.parent_translation_table, 1)
+        with self.subTest():
+            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
 
@@ -931,32 +975,32 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-
-    def test_create_cds_objects_4(self):
-        """Verify cds objects list is constructed from list of two Biopython
-        CDS features when a third has an error."""
-
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1)
-
-
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(80)), \
-                    type = "CDS", \
-                    strand = -1)
-
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(5), ExactPosition(6)), \
-                    type = "CDS", \
-                    strand = None)
-
-
-        biopython_feature_list = [seqfeature1, seqfeature2, seqfeature3]
-
-        cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
-        self.assertEqual(len(cds_object_list), 2)
+    #
+    # def test_create_cds_objects_4(self):
+    #     """Verify cds objects list is constructed from list of two Biopython
+    #     CDS features when a third has an error."""
+    #
+    #     seqfeature1 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(2), ExactPosition(10)), \
+    #                 type = "CDS", \
+    #                 strand = 1)
+    #
+    #
+    #     seqfeature2 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(50), ExactPosition(80)), \
+    #                 type = "CDS", \
+    #                 strand = -1)
+    #
+    #     seqfeature3 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(5), ExactPosition(6)), \
+    #                 type = "CDS", \
+    #                 strand = None)
+    #
+    #
+    #     biopython_feature_list = [seqfeature1, seqfeature2, seqfeature3]
+    #
+    #     cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
+    #     self.assertEqual(len(cds_object_list), 2)
 
 
 

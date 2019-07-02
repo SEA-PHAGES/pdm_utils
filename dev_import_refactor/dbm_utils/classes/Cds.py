@@ -17,28 +17,23 @@ class CdsFeature:
         # Initialize all non-calculated attributes:
 
         # Datafields from Phamerator database.
-        self.type_id = "" # Feature type: CDS
-        self.left_boundary = "" # Genomic position, 0-indexed
-        self.right_boundary = "" # Genomic position, 0-indexed
-        self.start = "" # Genomic position, 0-indexed
-        self.end = "" # Genomic position, 0-indexed
+        self.type_id = "CDS"
+        self.left_boundary = "" # Genomic position
+        self.right_boundary = "" # Genomic position
+        self.start = "" # Genomic position
+        self.end = "" # Genomic position
         self.strand = "" #'forward', 'reverse', or 'NA'
         self.compound_parts = 0 # Number of regions that form the feature
-        self.translation = ""
+        self.translation = "" # Biopython Seq object with protein alphabet.
         self.translation_table = ""
 
         # Indexing format for coordinates. Current valid formats:
         # 0-based half open (stored in Phamerator), 1-based closed.
         self.coordinate_format = ""
 
-        # TODO: create coordinate indexing attribute, to be able to switch
-        # coordinates between different types of indexing strategies.
-
 
         # Common to Phamerator.
         self.parent_phage_id = ""
-
-
         self.parent_translation_table = ""
 
 
@@ -48,13 +43,17 @@ class CdsFeature:
         self.primary_description = ""
         self.processed_primary_description = "" # Non-generic gene descriptions
 
-        # TODO: I don't think I need these anymore, since they have
-        # been replaced by 'primary_description'
-        # self.notes = ""
-        # self.search_notes = "" # Non-generic gene descriptions
 
 
         # Common to NCBI.
+
+
+        self.seqfeature = None # Biopython SeqFeature object.
+        # Thiis enables several QC checks
+        # that utilize Biopython, such as retrieving the nucleotide
+        # sequence from the parent genome and re-translating the CDS.
+        self.sequence = "" # Biopython Seq object containing nucleotide seq.
+
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
         self.gene_number = ""
         self.product_description = ""
@@ -178,15 +177,11 @@ class CdsFeature:
         strand = basic.reformat_strand(self.strand, "fr_long")
 
         if strand == "forward":
-
             self.start = self.left_boundary
             self.end = self.right_boundary
-
         elif strand == "reverse":
-
             self.start = self.right_boundary
             self.end = self.left_boundary
-
         else:
             pass
 
@@ -245,6 +240,28 @@ class CdsFeature:
 
 
 
+
+    # TODO implement.
+    # TODO unit test.
+    def set_nucleotide_sequence(self, parent_genome):
+        """Retrieves the nucleotide sequence from the parent genome."""
+        # TODO pass the nucleotide sequence of the parent genome.
+        # Use self.seqfeature object - this has methods to retrieve the
+        # nucleotide sequence. The seqfeature object contains the entire
+        # coordinates from the flat file record, including all compound
+        # parts and fuzzy coordinates. So the retrieved sequence may
+        # not exactly match the length indicated from the
+        # self.left_boundary and self.right_boundary attributes.
+        pass
+
+
+
+
+
+
+
+
+
     # Evaluations.
 
     def check_amino_acids(self, protein_alphabet_set):
@@ -284,14 +301,40 @@ class CdsFeature:
                 self.set_evaluation("error", message)
 
 
+
+
+    # TODO unit test.
+    def check_strand(self):
+        """Check if strand is set appropriately."""
+
+        strand = basic.reformat_strand(self.strand, format = "numeric")
+
+        if (strand == 1 or self.strand == -1):
+            message = "The feature strand is not determined: " \
+                + str((self.left_boundary, self.right_boundary))
+            self.set_evaluation("error", message)
+
+
     def check_boundaries(self):
-        """Check if start and end coordinates are fuzzy."""
+        """Check if start and end coordinates are exact.
+        This method assumes that if the coordinates are not exact, they
+        have been set to -1 or are not integers."""
+
         if not (str(self.left_boundary).isdigit() and \
             str(self.right_boundary).isdigit()):
 
             message = "The feature boundaries are not determined: " \
                 + str((self.left_boundary, self.right_boundary))
             self.set_evaluation("error", message)
+
+        elif (self.left_boundary == -1 or \
+            self.right_boundary == -1):
+
+            # TODO unit test this elif clause.
+            message = "The feature boundaries are not determined: " \
+                + str((self.left_boundary, self.right_boundary))
+            self.set_evaluation("error", message)
+
 
 
     def check_locus_tag_present(self, expectation):
@@ -357,9 +400,12 @@ class CdsFeature:
     def check_translation(self):
         """Check that the current translation matches the expected
         translation."""
-        # Using Biopython, retrieve the nucleotide sequence, translate the
-        # sequence, and compare to the current value stored in the
-        # translation attribute.
+        # Once the nucleotide sequence is retrieved using the SeqFeature
+        # methods, use Biopython to translate the nucleotide sequence.
+        # This method can confirm that the CDS contains an initial start
+        # codon, a final stop codon, no stop codons in the middle,
+        # and that the translated product matches the translated product
+        # stored in self.translation.
         pass
 
 

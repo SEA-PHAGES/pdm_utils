@@ -7,6 +7,8 @@ GenBank-formatted flat files."""
 
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
+from Bio import Alphabet
+from Bio.Seq import Seq
 from classes import Genome, Eval, Cds, Trna, Source
 from functions import basic
 from constants import constants
@@ -22,7 +24,7 @@ from datetime import datetime
 # returned as integers, but it is possible that coordinates from Biopython
 # SeqFeature object are not integers, so this needs to be accounted for.
 # Also, this function doesn't test to confirm that coordinates are
-# ExactPosition objects (i.e. non-fuzzy coordinates.
+# ExactPosition objects (i.e. non-fuzzy coordinates).
 def parse_coordinates(feature):
     """Parse the boundary coordinates for a biopython feature object
     derived from a GenBank-formatted flat file.
@@ -40,15 +42,15 @@ def parse_coordinates(feature):
             left_boundary = -1
             right_boundary = -1
             parts = 0
-            message = \
-                "Unable to parse coordinates since strand is undefined."
-            eval_result = Eval.construct_error(message)
+            # message = \
+            #     "Unable to parse coordinates since strand is undefined."
+            # eval_result = Eval.construct_error(message)
 
         elif isinstance(feature.location, FeatureLocation):
             left_boundary = int(feature.location.start)
             right_boundary = int(feature.location.end)
             parts = 1
-            eval_result = None
+            # eval_result = None
 
         elif isinstance(feature.location, CompoundLocation):
 
@@ -62,39 +64,40 @@ def parse_coordinates(feature):
                 if feature.strand == 1:
                     left_boundary = int(feature.location.parts[0].start)
                     right_boundary = int(feature.location.parts[1].end)
-                    eval_result = None
+                    # eval_result = None
 
                 elif feature.strand == -1:
                     left_boundary = int(feature.location.parts[1].start)
                     right_boundary = int(feature.location.parts[0].end)
-                    eval_result = None
+                    # eval_result = None
 
                 else:
                     pass
             else:
                 left_boundary = -1
                 right_boundary = -1
-                message = \
-                    "This is a compound feature that is unable to be parsed."
-                eval_result = Eval.construct_warning(message, message)
+                # message = \
+                #     "This is a compound feature that is unable to be parsed."
+                # eval_result = Eval.construct_warning(message, message)
 
     else:
         left_boundary = -1
         right_boundary = -1
         parts = 0
-        message = \
-            "This is feature is not a standard Biopython SeqFeature " + \
-            "and it is unable to be parsed."
-        eval_result = Eval.construct_warning(message, message)
+        # message = \
+        #     "This is feature is not a standard Biopython SeqFeature " + \
+        #     "and it is unable to be parsed."
+        # eval_result = Eval.construct_warning(message, message)
 
-    return (left_boundary, right_boundary, parts, eval_result)
+    # return (left_boundary, right_boundary, parts, eval_result)
+    return (left_boundary, right_boundary, parts)
 
 
 def parse_cds_feature(cds, feature, parent_translation_table = 11):
-    """Parses a Biopython CDS Feature.
+    """Parses a Biopython CDS SeqFeature.
     """
 
-    cds.type_id = "CDS" #TODO can probably make this ID default in Object.
+    cds.seqfeature = feature
 
     try:
         cds.locus_tag = feature.qualifiers["locus_tag"][0]
@@ -106,10 +109,13 @@ def parse_cds_feature(cds, feature, parent_translation_table = 11):
     cds.set_strand(feature.strand, "fr_short", case = True)
 
 
+    # cds.left_boundary, \
+    # cds.right_boundary, \
+    # cds.compound_parts, \
+    # eval_result = parse_coordinates(feature)
     cds.left_boundary, \
     cds.right_boundary, \
-    cds.compound_parts, \
-    eval_result = parse_coordinates(feature)
+    cds.compound_parts = parse_coordinates(feature)
 
 
     # Coordinate format for GenBank flat file features parsed by Biopython
@@ -117,9 +123,12 @@ def parse_cds_feature(cds, feature, parent_translation_table = 11):
     cds.coordinate_format = "0_half_open"
 
     try:
-        cds.set_translation(feature.qualifiers["translation"][0])
+        translation = feature.qualifiers["translation"][0]
     except:
-        cds.set_translation("")
+        translation = ""
+
+    translation = Seq(translation, Alphabet.IUPAC.protein)
+    cds.set_translation(translation)
 
     cds.set_nucleotide_length()
 
@@ -165,7 +174,7 @@ def parse_cds_feature(cds, feature, parent_translation_table = 11):
 
     cds.parent_translation_table = parent_translation_table
 
-    return eval_result
+    # return eval_result
 
 
 
@@ -176,10 +185,8 @@ def create_cds_objects(biopython_feature_list):
 
     for feature in biopython_feature_list:
         cds = Cds.CdsFeature()
-        eval_result = parse_cds_feature(cds, feature)
-
-        if eval_result is None:
-            cds_object_list.append(cds)
+        parse_cds_feature(cds, feature)
+        cds_object_list.append(cds)
 
     return cds_object_list
 
@@ -379,6 +386,16 @@ def parse_flat_file_data(genome_obj, \
         cds_object_list = create_cds_objects(feature_dict["CDS"])
     else:
         cds_object_list = []
+
+
+    # TODO the parent_phage_id can't be set until the genome phage_id
+    # is set. But the phage_id is not determined from within the
+    # flat file. It is inputted externally, such as from a ticket.
+    # Once the ticket is used to set the phage_id, the parent_phage_id
+    # atttributes can be set for all features.
+    # for cds in cds_object_list:
+    #     cds.parent_phage_id = genome_obj.phage_id
+
 
     if "source" in feature_dict.keys():
         source_object_list = create_source_objects(feature_dict["source"])

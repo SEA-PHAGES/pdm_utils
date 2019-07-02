@@ -4,6 +4,7 @@ maintain and update SEA-PHAGES phage genomics data.
 from functions import basic
 from classes import Eval
 from datetime import datetime
+from Bio.SeqUtils import GC
 import re
 
 
@@ -20,7 +21,7 @@ class Genome:
         self.phage_id = "" # Unique identifier. Case sensitive, no "_Draft".
         self.phage_name = "" # Case sensitive and contains "_Draft".
         self.host = ""
-        self.sequence = "" # TODO should this be a Biopython Seq object?
+        self.sequence = "" # Biopython Seq object
         self.accession = ""
         self.author = "" # TODO do I need this in addition to annotation_author?
 
@@ -52,12 +53,18 @@ class Genome:
         self.record_organism = ""
         self.record_authors = ""
         self.record_date = ""
-        self.parsed_record = [] # Holds parsed flat file record.
+
+
         self.filename = "" # The file name from which the record is derived
-
-
-
         self.translation_table = ""
+
+        # TODO necessary to retain this?
+        self.seqrecord = [] # Holds parsed Biopython SeqRecord object.
+
+
+
+
+
 
 
 
@@ -225,16 +232,11 @@ class Genome:
     def set_sequence(self, value):
         """Set the nucleotide sequence and compute the length."""
 
-        self.sequence = value.upper() #TODO should this be biopython object?
+        self.sequence = value.upper() # Biopython Seq object
         self._length = len(self.sequence)
 
         if self._length > 0:
-            gc = 100 * \
-                (float(self.sequence.count("G")) + \
-                float(self.sequence.count("C"))) \
-                / float(self._length)
-            self._gc = round(gc, 4)
-
+            self._gc = round(GC(self.sequence), 4)
         else:
             self._gc = -1
 
@@ -432,6 +434,14 @@ class Genome:
 
     def check_nucleotides(self,dna_alphabet_set):
         """Check if all nucleotides in the sequence are expected."""
+        # When Biopython SeqIO parses the GenBank record, it automatically
+        # determines that it is a DNA sequence. It assigns the Seq object
+        # alphabet as IUPACAmbiguousDNA. The alphabet could be coerced
+        # to a different alphabet, and then tested using the
+        # Bio.Alphabet._verify_alphabet() function. Since this is a
+        # function though, it is not clear how stable this function is.
+        # Instead, Bio.Alphabet.IUPAC.unambiguous_dna alphabet can be passed
+        # to the check_nucleotides method.
 
         nucleotide_set = set(self.sequence)
         nucleotide_error_set = nucleotide_set - dna_alphabet_set
