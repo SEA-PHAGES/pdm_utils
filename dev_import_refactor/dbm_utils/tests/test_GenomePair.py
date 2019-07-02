@@ -25,21 +25,21 @@ class TestGenomePairClass(unittest.TestCase):
 
 
 
-
-    def test_set_evaluation_1(self):
-        """Set an empty evaluation object."""
-        self.genome_pair.set_evaluation("none")
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
-
-    def test_set_evaluation_2(self):
-        """Set a warning evaluation object."""
-        self.genome_pair.set_evaluation("warning","message1")
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
-
-    def test_set_evaluation_3(self):
-        """Set an error evaluation object."""
-        self.genome_pair.set_evaluation("error","message1","message2")
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+    # TODO this is probably no longer needed.
+    # def test_set_evaluation_1(self):
+    #     """Set an empty evaluation object."""
+    #     self.genome_pair.set_evaluation("none")
+    #     self.assertEqual(len(self.genome_pair.evaluations), 1)
+    #
+    # def test_set_evaluation_2(self):
+    #     """Set a warning evaluation object."""
+    #     self.genome_pair.set_evaluation("warning","message1")
+    #     self.assertEqual(len(self.genome_pair.evaluations), 1)
+    #
+    # def test_set_evaluation_3(self):
+    #     """Set an error evaluation object."""
+    #     self.genome_pair.set_evaluation("error","message1","message2")
+    #     self.assertEqual(len(self.genome_pair.evaluations), 1)
 
 
 
@@ -51,7 +51,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_genome_sequence()
-        self.assertEqual(len(self.genome_pair.evaluations), 0)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_genome_sequence_2(self):
         """Check that different sequences produce a warning."""
@@ -60,7 +60,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_genome_sequence()
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
 
@@ -72,7 +72,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_genome_length()
-        self.assertEqual(len(self.genome_pair.evaluations), 0)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_genome_length_2(self):
         """Check that different sequence lengths produce a warning."""
@@ -81,7 +81,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_genome_length()
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
 
@@ -93,7 +93,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_cluster()
-        self.assertEqual(len(self.genome_pair.evaluations), 0)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_cluster_2(self):
         """Check that different clusters produce a warning."""
@@ -102,7 +102,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_cluster()
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
 
@@ -114,7 +114,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_subcluster()
-        self.assertEqual(len(self.genome_pair.evaluations), 0)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_subcluster_2(self):
         """Check that different subclusters produce a warning."""
@@ -123,7 +123,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_subcluster()
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
 
@@ -135,7 +135,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_accession()
-        self.assertEqual(len(self.genome_pair.evaluations), 0)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_accession_2(self):
         """Check that different accessions produce a warning."""
@@ -144,7 +144,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_accession()
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
 
@@ -156,7 +156,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_host()
-        self.assertEqual(len(self.genome_pair.evaluations), 0)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_host_2(self):
         """Check that different hosts produce a warning."""
@@ -165,7 +165,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2
         self.genome_pair.compare_host()
-        self.assertEqual(len(self.genome_pair.evaluations), 1)
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
 

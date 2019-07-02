@@ -35,81 +35,19 @@ class GenomePair:
 
 
 
-
-    def set_evaluation(self, type, message1 = None, message2 = None):
-
-        if type == "warning":
-            eval_object = Eval.construct_warning(message1, message2)
-
-        elif type == "error":
-            eval_object = Eval.construct_error(message1)
-
-        else:
-            eval_object = Eval.EvalResult()
-
-        self.evaluations.append(eval_object)
-
-
-    def compare_genome_sequence(self):
-        """Compare the sequence of each genome."""
-
-        if self.genome1.sequence != self.genome2.sequence:
-            message = "The two genomes have different sequences."
-            self.set_evaluation("warning", message, message)
-
-
-    def compare_genome_length(self):
-        """Compare the sequence length of each genome."""
-
-        if self.genome1._length != self.genome2._length:
-            message = "The two genomes have different sequence lengths."
-            self.set_evaluation("warning", message, message)
-
-
-    def compare_cluster(self):
-        """Compare the cluster of each genome."""
-
-        if self.genome1.cluster != self.genome2.cluster:
-            message = "The two genomes are assigned to different clusters."
-            self.set_evaluation("warning", message, message)
-
-
-    def compare_subcluster(self):
-        """Compare the subcluster of each genome."""
-
-        if self.genome1.subcluster != self.genome2.subcluster:
-            message = "The two genomes are assigned to different subclusters."
-            self.set_evaluation("warning", message, message)
-
-
-    def compare_accession(self):
-        """Compare the accession of each genome."""
-
-        if self.genome1.accession != self.genome2.accession:
-            message = "The two genomes have different accessions."
-            self.set_evaluation("warning", message, message)
-
-
-    def compare_host(self):
-        """Compare the host of each genome."""
-
-        if self.genome1.host != self.genome2.host:
-            message = "The two genomes have different hosts."
-            self.set_evaluation("warning", message, message)
-
-
-    # TODO implement this method. Since authorship is not as straightforward
-    # as other fields, it is tricky.
-    def compare_author(self):
-        """Compare the authorship of each genome."""
-        pass
-
-
-
-
-
-
-
+    # TODO this is probably no longer needed.
+    # def set_evaluation(self, type, message1 = None, message2 = None):
+    #
+    #     if type == "warning":
+    #         eval_object = Eval.construct_warning(message1, message2)
+    #
+    #     elif type == "error":
+    #         eval_object = Eval.construct_error(message1)
+    #
+    #     else:
+    #         eval_object = Eval.EvalResult()
+    #
+    #     self.evaluations.append(eval_object)
 
 
 
@@ -282,6 +220,155 @@ class GenomePair:
         #     #Set unmatched cds lists, but do NOT count them in the unmatched tally.
         #     #The unmatched tally should reflect unmatched genes if there is actually a metching NCBI genome.
         #     self.__phamerator_features_unmatched_in_ncbi = g1_feature_list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # Evaluations
+
+    def compare_genome_sequence(self):
+        """Compare the sequence of each genome."""
+
+        if self.genome1.sequence != self.genome2.sequence:
+            result = "The two genomes have different sequences."
+            status = "error"
+
+        else:
+            result = "."
+            status = "correct"
+
+        definition = "."
+        eval = Eval.Eval(id = "GENOMEPAIR0001", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+    def compare_genome_length(self):
+        """Compare the sequence length of each genome."""
+
+        if self.genome1._length != self.genome2._length:
+            result = "The two genomes have different sequence lengths."
+            status = "error"
+        else:
+            result = "The two sequences are the same length."
+            status = "correct"
+
+        definition = "Compare the length of both sequences."
+        eval = Eval.Eval(id = "GENOMEPAIR0002", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+
+    def compare_cluster(self):
+        """Compare the cluster of each genome."""
+
+        if self.genome1.cluster != self.genome2.cluster:
+            result = "The two genomes are assigned to different clusters."
+            status = "error"
+        else:
+            result = "The two cluster designations are the same."
+            status = "correct"
+
+        definition = "Compare the cluster of both genomes."
+        eval = Eval.Eval(id = "GENOMEPAIR0003", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+
+    def compare_subcluster(self):
+        """Compare the subcluster of each genome."""
+
+        if self.genome1.subcluster != self.genome2.subcluster:
+            result = "The two genomes are assigned to different subclusters."
+            status = "error"
+        else:
+            result = "The two subcluster designations are the same."
+            status = "correct"
+
+        definition = "Compare the subcluster of both genomes."
+        eval = Eval.Eval(id = "GENOMEPAIR0004", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+
+    def compare_accession(self):
+        """Compare the accession of each genome."""
+
+        if self.genome1.accession != self.genome2.accession:
+            result = "The two genomes have different accessions."
+            status = "error"
+        else:
+            result = "The two accessions are the same."
+            status = "correct"
+
+        definition = "Compare the accession of both genomes."
+        eval = Eval.Eval(id = "GENOMEPAIR0005", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+
+    def compare_host(self):
+        """Compare the host of each genome."""
+
+        if self.genome1.host != self.genome2.host:
+            result = "The two genomes have different hosts."
+            status = "error"
+        else:
+            result = "The two hosts are the same."
+            status = "correct"
+
+        definition = "Compare the host of both genomes."
+        eval = Eval.Eval(id = "GENOMEPAIR0006", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+
+    # TODO implement this method. Since authorship is not as straightforward
+    # as other fields, it is tricky.
+    def compare_author(self):
+        """Compare the authorship of each genome."""
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

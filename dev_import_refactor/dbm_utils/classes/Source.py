@@ -40,18 +40,18 @@ class SourceFeature:
 
 
 
-
-    def set_evaluation(self, type, message1 = None, message2 = None):
-        """Creates an EvalResult object and adds it to the list of all
-        evaluations."""
-
-        if type == "warning":
-            eval_object = Eval.construct_warning(message1, message2)
-        elif type == "error":
-            eval_object = Eval.construct_error(message1)
-        else:
-            eval_object = Eval.EvalResult()
-        self.evaluations.append(eval_object)
+    # TODO this is probably no longer needed.
+    # def set_evaluation(self, type, message1 = None, message2 = None):
+    #     """Creates an EvalResult object and adds it to the list of all
+    #     evaluations."""
+    #
+    #     if type == "warning":
+    #         eval_object = Eval.construct_warning(message1, message2)
+    #     elif type == "error":
+    #         eval_object = Eval.construct_error(message1)
+    #     else:
+    #         eval_object = Eval.EvalResult()
+    #     self.evaluations.append(eval_object)
 
     def parse_organism(self):
         """Retrieve the phage name and host name from the 'organism' field."""
@@ -76,38 +76,90 @@ class SourceFeature:
         # expected to contain host information.
 
 
+
+
+
+
+
+    # Evalutions
+
     def check_organism_phage_name(self):
         """Check phage name spelling in the organism field."""
 
         if self.parent_phage_id != self._organism_phage_name:
-            message1 = "The phage name in the organism field " + \
+            result = "The phage name in the organism field " + \
                         "does not match the parent_phage_id."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "The phage name is spelled correctly."
+            status = "correct"
+
+        definition = "Check phage name spelling in the organism field."
+        eval = Eval.Eval(id = "SRC0001", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
+
 
     def check_organism_host_name(self):
         """Check host name spelling in the organism field."""
 
         if self.parent_host != self._organism_host_name:
-            message1 = "The host name in the organism field " + \
+            result = "The host name in the organism field " + \
                         "does not match the parent_host."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "The host name is spelled correctly."
+            status = "correct"
+
+        definition = "Check host name spelling in the organism field."
+        eval = Eval.Eval(id = "SRC0002", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_host_host_name(self):
         """Check host name spelling in the host field."""
 
         if self.parent_host != self._host_host_name:
-            message1 = "The host name in the host field " + \
+            result = "The host name in the host field " + \
                         "does not match the parent_host."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "The host name is spelled correctly."
+            status = "correct"
+
+        definition = "Check host name spelling in the host field."
+        eval = Eval.Eval(id = "SRC0003", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_lab_host_host_name(self):
         """Check host name spelling in the lab_host field."""
 
         if self.parent_host != self._lab_host_host_name:
-            message1 = "The host name in the lab_host field " + \
+            result = "The host name in the lab_host field " + \
                         "does not match the parent_host."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
 
+        else:
+            result = "The host name is spelled correctly."
+            status = "correct"
+
+        definition = "Check host name spelling in the lab_host field."
+        eval = Eval.Eval(id = "SRC0004", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
 
