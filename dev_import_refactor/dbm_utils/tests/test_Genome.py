@@ -30,20 +30,22 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_evaluation_1(self):
-        """Set an empty evaluation object."""
-        self.genome.set_evaluation("none")
-        self.assertEqual(len(self.genome.evaluations), 1)
 
-    def test_set_evaluation_2(self):
-        """Set a warning evaluation object."""
-        self.genome.set_evaluation("warning","message1")
-        self.assertEqual(len(self.genome.evaluations), 1)
-
-    def test_set_evaluation_3(self):
-        """Set an error evaluation object."""
-        self.genome.set_evaluation("error","message1","message2")
-        self.assertEqual(len(self.genome.evaluations), 1)
+    # TODO probably don't need. No more set_evaluation function.
+    # def test_set_evaluation_1(self):
+    #     """Set an empty evaluation object."""
+    #     self.genome.set_evaluation("none")
+    #     self.assertEqual(len(self.genome.evaluations), 1)
+    #
+    # def test_set_evaluation_2(self):
+    #     """Set a warning evaluation object."""
+    #     self.genome.set_evaluation("warning","message1")
+    #     self.assertEqual(len(self.genome.evaluations), 1)
+    #
+    # def test_set_evaluation_3(self):
+    #     """Set an error evaluation object."""
+    #     self.genome.set_evaluation("error","message1","message2")
+    #     self.assertEqual(len(self.genome.evaluations), 1)
 
 
 
@@ -555,14 +557,14 @@ class TestGenomeClass(unittest.TestCase):
         alphabet = set(["A","B","C"])
         self.genome.sequence = "AB"
         self.genome.check_nucleotides(alphabet)
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_nucleotides_2(self):
         """Some nucleotides are not in the alphabet."""
         alphabet = set(["A","B","C"])
         self.genome.sequence = "AD"
         self.genome.check_nucleotides(alphabet)
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -574,21 +576,21 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.status = "final"
         self.genome.accession = "ABC123"
         self.genome.check_status_accession()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_status_accession_2(self):
         """Check final status with no accession."""
         self.genome.status = "final"
         self.genome.accession = ""
         self.genome.check_status_accession()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_status_accession_3(self):
         """Check draft status with no accession."""
         self.genome.status = "draft"
         self.genome.accession = ""
         self.genome.check_status_accession()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
 
@@ -600,14 +602,14 @@ class TestGenomeClass(unittest.TestCase):
         an error."""
         self.genome.status = "draft"
         self.genome.check_status_descriptions()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_status_descriptions_2(self):
         """Check that draft genome with a description produces an error."""
         self.genome.status = "draft"
         self.genome._cds_processed_primary_descriptions_tally = 1
         self.genome.check_status_descriptions()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_status_descriptions_3(self):
         """Check that final genome with a description does not produce
@@ -615,20 +617,20 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.status = "final"
         self.genome._cds_processed_primary_descriptions_tally = 1
         self.genome.check_status_descriptions()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_status_descriptions_4(self):
         """Check that final genome with no descriptions produces an error."""
         self.genome.status = "final"
         self.genome.check_status_descriptions()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_status_descriptions_5(self):
         """Check that gbk genome with no descriptions does not produce
         an error."""
         self.genome.status = "gbk"
         self.genome.check_status_descriptions()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_status_descriptions_6(self):
         """Check that gbk genome with descriptions does not produce
@@ -636,7 +638,7 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.status = "gbk"
         self.genome._cds_processed_primary_descriptions_tally = 1
         self.genome.check_status_descriptions()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
 
@@ -654,14 +656,14 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.phage_id = "Trixie"
         self.genome._record_description_phage_name = "Trixie"
         self.genome.check_record_description_phage_name()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_description_phage_name_2(self):
         """Check that a warning is produced."""
         self.genome.phage_id = "L5"
         self.genome._record_description_phage_name = "Trixie"
         self.genome.check_record_description_phage_name()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -671,14 +673,14 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.phage_id = "Trixie"
         self.genome._record_source_phage_name = "Trixie"
         self.genome.check_record_source_phage_name()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_source_phage_name_2(self):
         """Check that a warning is produced."""
         self.genome.phage_id = "L5"
         self.genome._record_source_phage_name = "Trixie"
         self.genome.check_record_source_phage_name()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -688,14 +690,14 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.phage_id = "Trixie"
         self.genome._record_organism_phage_name = "Trixie"
         self.genome.check_record_organism_phage_name()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_organism_phage_name_2(self):
         """Check that a warning is produced."""
         self.genome.phage_id = "L5"
         self.genome._record_organism_phage_name = "Trixie"
         self.genome.check_record_organism_phage_name()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -705,14 +707,14 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.host = "Mycobacterium"
         self.genome._record_description_host_name = "Mycobacterium"
         self.genome.check_record_description_host_name()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_description_host_name_2(self):
         """Check that a warning is produced."""
         self.genome.host = "Gordonia"
         self.genome._record_description_host_name = "Mycobacterium"
         self.genome.check_record_description_host_name()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -722,14 +724,14 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.host = "Mycobacterium"
         self.genome._record_source_host_name = "Mycobacterium"
         self.genome.check_record_source_host_name()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_source_host_name_2(self):
         """Check that a warning is produced."""
         self.genome.host = "Gordonia"
         self.genome._record_source_host_name = "Mycobacterium"
         self.genome.check_record_source_host_name()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -739,14 +741,14 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.host = "Mycobacterium"
         self.genome._record_organism_host_name = "Mycobacterium"
         self.genome.check_record_organism_host_name()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_organism_host_name_2(self):
         """Check that a warning is produced."""
         self.genome.host = "Gordonia"
         self.genome._record_organism_host_name = "Mycobacterium"
         self.genome.check_record_organism_host_name()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -758,7 +760,7 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_authors = "abcd; efgh; hatfull; xyz"
         self.genome.annotation_author = 1
         self.genome.check_author()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_author_2(self):
         """Check that no warning is produced when author is not expected
@@ -767,7 +769,7 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 0
         self.genome.check_author()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_author_3(self):
         """Check that warning is produced when author is expected
@@ -776,7 +778,7 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 1
         self.genome.check_author()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_author_4(self):
         """Check that warning is produced when author is not expected
@@ -785,7 +787,7 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.record_authors = "abcd; efgh; hatfull; xyz"
         self.genome.annotation_author = 0
         self.genome.check_author()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -833,13 +835,13 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_cds_start_end_ids_1(self):
         """Verify that no warning is produced."""
         self.genome.check_cds_start_end_ids()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_cds_start_end_ids_2(self):
         """Verify that a warning is produced."""
         self.genome._cds_duplicate_start_end_ids = set([(2, 10)])
         self.genome.check_cds_start_end_ids()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -847,13 +849,13 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_cds_end_strand_ids_1(self):
         """Verify that no warning is produced."""
         self.genome.check_cds_end_strand_ids()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_cds_end_strand_ids_2(self):
         """Verify that a warning is produced."""
         self.genome._cds_duplicate_end_strand_ids = set([(2, "forward")])
         self.genome.check_cds_end_strand_ids()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -1070,13 +1072,13 @@ class TestGenomeClass(unittest.TestCase):
         """Verify no error is encountered when there is one CDS feature."""
         self.genome._cds_features_tally = 1
         self.genome.check_cds_feature_tally()
-        self.assertEqual(len(self.genome.evaluations), 0)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_cds_feature_tally_2(self):
         """Verify error is encountered when there is no CDS feature."""
         self.genome._cds_features_tally = 0
         self.genome.check_cds_feature_tally()
-        self.assertEqual(len(self.genome.evaluations), 1)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 

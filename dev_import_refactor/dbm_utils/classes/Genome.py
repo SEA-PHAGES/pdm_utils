@@ -123,17 +123,17 @@ class Genome:
 
 
 
-    def set_evaluation(self, type, message1 = None, message2 = None):
-        """Creates an EvalResult object and adds it to the list of all
-        evaluations."""
-
-        if type == "warning":
-            eval_object = Eval.construct_warning(message1, message2)
-        elif type == "error":
-            eval_object = Eval.construct_error(message1)
-        else:
-            eval_object = Eval.EvalResult()
-        self.evaluations.append(eval_object)
+    # def set_evaluation(self, type, message1 = None, message2 = None):
+    #     """Creates an EvalResult object and adds it to the list of all
+    #     evaluations."""
+    #
+    #     if type == "warning":
+    #         eval_object = Eval.construct_warning(message1, message2)
+    #     elif type == "error":
+    #         eval_object = Eval.construct_error(message1)
+    #     else:
+    #         eval_object = Eval.EvalResult()
+    #     self.evaluations.append(eval_object)
 
 
     def set_filename(self, value):
@@ -445,11 +445,23 @@ class Genome:
 
         nucleotide_set = set(self.sequence)
         nucleotide_error_set = nucleotide_set - dna_alphabet_set
-        if len(nucleotide_error_set) > 0:
 
-            message = "There are unexpected nucleotides in the genome: " \
+        if len(nucleotide_error_set) > 0:
+            result = \
+                "There are unexpected nucleotides in the sequence: " \
                 + str(nucleotide_error_set)
-            self.set_evaluation("error", message)
+            status = "error"
+
+        else:
+            result = "There are no unexpected nucleotides in the sequence."
+            status = "correct"
+
+        definition = "Check if all nucleotides in the sequence are expected."
+        eval = Eval.Eval(id = "GENOME0001", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_status_accession(self):
@@ -462,9 +474,21 @@ class Genome:
         or not. Only for 'final' (manually annotated) genomes should
         there be an accession."""
 
-        if self.status == 'final' and self.accession == '':
-            message = "The genome is final but does not have an accession. "
-            self.set_evaluation("error", message)
+
+        if (self.status == 'final' and self.accession == ''):
+            result = "The genome is final but does not have an accession. "
+            status = "error"
+
+        else:
+            result = "No conflict between status and accession."
+            status = "correct"
+
+        definition = "Compare the status and accession."
+        eval = Eval.Eval(id = "GENOME0002", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_status_descriptions(self):
@@ -474,71 +498,155 @@ class Genome:
         Final genomes should not have any descriptions.
         There are no expectations for other types of genomes."""
 
+
         if self.status == 'draft' and \
             self._cds_processed_primary_descriptions_tally > 0:
 
-            message = "The genome is draft status " + \
-                        "but contains CDS descriptions."
-            self.set_evaluation("error", message)
+            result = "The genome is draft status " + \
+                            "but contains CDS descriptions."
+            status = "error"
 
         elif self.status == 'final' and \
             self._cds_processed_primary_descriptions_tally == 0:
 
-            message = "The genome is final status " + \
-                        "but does not contain any CDS descriptions."
-            self.set_evaluation("error", message)
+            result = "The genome is final status " + \
+                            "but does not contain any CDS descriptions."
+            status = "error"
 
         else:
-            pass
+            result = "There is no conflict between status and " + \
+                            "CDS descriptions."
+            status = "correct"
+
+        definition = "Compare the status and presence of CDS descriptions."
+        eval = Eval.Eval(id = "GENOME0003", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
 
     def check_record_description_phage_name(self):
         """Check phage name spelling in the record description field."""
 
+
         if self.phage_id != self._record_description_phage_name:
-            message1 = "The phage name in the record_description field " + \
+            result = "The phage name in the record_description field " + \
                         "does not match the phage_id."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "Record descriptions field contains the phage name."
+            status = "correct"
+
+        definition = "Check phage name spelling in the " + \
+                            "record description field."
+        eval = Eval.Eval(id = "GENOME0004", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_record_source_phage_name(self):
         """Check phage name spelling in the record source field."""
 
+
         if self.phage_id != self._record_source_phage_name:
-            message1 = "The phage name in the record_source field " + \
+            result = "The phage name in the record_source field " + \
                         "does not match the phage_id."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "Record source field contains the phage name."
+            status = "correct"
+
+        definition = "Check phage name spelling in the record source field."
+        eval = Eval.Eval(id = "GENOME0005", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
+
 
     def check_record_organism_phage_name(self):
-        """Check phage name spelling in the record source field."""
+        """Check phage name spelling in the record organism field."""
+
 
         if self.phage_id != self._record_organism_phage_name:
-            message1 = "The phage name in the record_organism field " + \
+            result = "The phage name in the record_organism field " + \
                         "does not match the phage_id."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "Record organism field contains the phage name."
+            status = "correct"
+
+        definition = "Check phage name spelling in the record organism field."
+        eval = Eval.Eval(id = "GENOME0006", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_record_description_host_name(self):
         """Check host name spelling in the record description field."""
 
+
         if self.host != self._record_description_host_name:
-            message1 = "The host name in the record_description field " + \
+            result = "The host name in the record_description field " + \
                         "does not match the host."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "Record description field contains the host name."
+            status = "correct"
+
+        definition = "Check host name spelling in the record description field."
+        eval = Eval.Eval(id = "GENOME0007", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_record_source_host_name(self):
         """Check host name spelling in the record source field."""
 
+
         if self.host != self._record_source_host_name:
-            message1 = "The host name in the record_source field " + \
+            result = "The host name in the record_source field " + \
                         "does not match the host."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
+
+        else:
+            result = "Record source field contains the host name."
+            status = "correct"
+
+        definition = "Check host name spelling in the record source field."
+        eval = Eval.Eval(id = "GENOME0008", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
     def check_record_organism_host_name(self):
-        """Check host name spelling in the record source field."""
+        """Check host name spelling in the record organism field."""
+
 
         if self.host != self._record_organism_host_name:
-            message1 = "The host name in the record_organism field " + \
+            result = "The host name in the record_organism field " + \
                         "does not match the host."
-            self.set_evaluation("warning", message1, message1)
+            status = "error"
 
+        else:
+            result = "Record organism field contains the host name."
+            status = "correct"
+
+        definition = "Check host name spelling in the record organism field."
+        eval = Eval.Eval(id = "GENOME0009", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
 
@@ -555,30 +663,51 @@ class Genome:
         When AnnotationAuthor is set to 0, it will expect to NOT find the
         provided author in the list of authors."""
 
+
         authors = self.record_authors.lower()
         pattern = re.compile(self.author.lower())
         search_result = pattern.search(authors)
 
         if self.annotation_author == 1 and search_result == None:
 
-            message1 = "The expected author is not listed."
-            self.set_evaluation("warning", message1, message1)
+            result = "The expected author is not listed."
+            status = "error"
 
         elif self.annotation_author == 0 and search_result != None:
 
-            message2 = "The author is not expected to be present."
-            self.set_evaluation("warning", message2, message2)
+            result = "The author is not expected to be present."
+            status = "error"
 
         else:
-            pass
+            result = "The authorship is as expected."
+            status = "correct"
+
+        definition = "Check authorship."
+        eval = Eval.Eval(id = "GENOME0010", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_cds_feature_tally(self):
         """Check to confirm that CDS features have been parsed."""
 
+
         if self._cds_features_tally == 0:
-            message = "There are no CDS features for this genome."
-            self.set_evaluation("warning", message, message)
+            result = "There are no CDS features for this genome."
+            status = "error"
+
+        else:
+            result = "CDS features were annotated."
+            status = "correct"
+
+        definition = "Check if CDS features are annotated."
+        eval = Eval.Eval(id = "GENOME0011", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
     def check_cds_start_end_ids(self):
@@ -586,11 +715,24 @@ class Genome:
         Duplicated start-end coordinates may represent
         unintentional duplicate CDS features."""
 
-        if len(self._cds_duplicate_start_end_ids) > 0:
 
-            message = "There are multiple CDS features with the same " + \
+        if len(self._cds_duplicate_start_end_ids) > 0:
+            result = "There are multiple CDS features with the same " + \
                 "start and end coordinates."
-            self.set_evaluation("warning", message, message)
+            status = "error"
+        else:
+            result = "All CDS features contain unique start and " + \
+                            "end coordinate information."
+            status = "correct"
+
+        definition = "Check whether CDS features can be uniquely " + \
+                        "identified by their start and end coordinates."
+        eval = Eval.Eval(id = "GENOME0012", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+
+        self.evaluations.append(eval)
 
 
     def check_cds_end_strand_ids(self):
@@ -600,11 +742,21 @@ class Genome:
         different start coordinates."""
 
         if len(self._cds_duplicate_end_strand_ids) > 0:
+            result = "There are multiple CDS features with the same " + \
+                        "end coordinate and strand."
+            status = "error"
+        else:
+            result = "All CDS features contain unique strand and " + \
+                            "end coordinate information."
+            status = "correct"
 
-            message = "There are multiple CDS features with the same " + \
-                "end coordinate and strand."
-            self.set_evaluation("warning", message, message)
-
+        definition = "Check whether CDS features can be uniquely " + \
+                            "identified by their strand and end coordinate."
+        eval = Eval.Eval(id = "GENOME0013", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
 
