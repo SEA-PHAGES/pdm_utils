@@ -42,15 +42,11 @@ def parse_coordinates(feature):
             left_boundary = -1
             right_boundary = -1
             parts = 0
-            # message = \
-            #     "Unable to parse coordinates since strand is undefined."
-            # eval_result = Eval.construct_error(message)
 
         elif isinstance(feature.location, FeatureLocation):
             left_boundary = int(feature.location.start)
             right_boundary = int(feature.location.end)
             parts = 1
-            # eval_result = None
 
         elif isinstance(feature.location, CompoundLocation):
 
@@ -64,32 +60,22 @@ def parse_coordinates(feature):
                 if feature.strand == 1:
                     left_boundary = int(feature.location.parts[0].start)
                     right_boundary = int(feature.location.parts[1].end)
-                    # eval_result = None
 
                 elif feature.strand == -1:
                     left_boundary = int(feature.location.parts[1].start)
                     right_boundary = int(feature.location.parts[0].end)
-                    # eval_result = None
 
                 else:
                     pass
             else:
                 left_boundary = -1
                 right_boundary = -1
-                # message = \
-                #     "This is a compound feature that is unable to be parsed."
-                # eval_result = Eval.construct_warning(message, message)
 
     else:
         left_boundary = -1
         right_boundary = -1
         parts = 0
-        # message = \
-        #     "This is feature is not a standard Biopython SeqFeature " + \
-        #     "and it is unable to be parsed."
-        # eval_result = Eval.construct_warning(message, message)
 
-    # return (left_boundary, right_boundary, parts, eval_result)
     return (left_boundary, right_boundary, parts)
 
 
@@ -108,11 +94,6 @@ def parse_cds_feature(cds, feature, parent_translation_table = 11):
     # Orientation
     cds.set_strand(feature.strand, "fr_short", case = True)
 
-
-    # cds.left_boundary, \
-    # cds.right_boundary, \
-    # cds.compound_parts, \
-    # eval_result = parse_coordinates(feature)
     cds.left_boundary, \
     cds.right_boundary, \
     cds.compound_parts = parse_coordinates(feature)
@@ -174,7 +155,6 @@ def parse_cds_feature(cds, feature, parent_translation_table = 11):
 
     cds.parent_translation_table = parent_translation_table
 
-    # return eval_result
 
 
 
@@ -420,21 +400,28 @@ def parse_flat_file_data(genome_obj, \
 
 
 
-
+# TODO refactor to simply return true?
 def check_flat_file_type(filepath):
     """Verify that the file contains a file extension common to
     GenBank-formatted flat files."""
     filename = filepath.split("/")[-1]
 
     if filename.split('.')[-1] not in constants.ADMISSIBLE_FILE_TYPES:
-        eval_object = Eval.construct_error( \
-            "File does not have a valid file extension, " + \
-            "so it will not be processed.")
-
+        result = "File does not have a valid file extension, " + \
+            "so it will not be processed."
+        status = "error"
     else:
-        eval_object = None
+        result = "Flat file extension is valid."
+        status = "correct"
 
-    return eval_object
+    # TODO add eval id?
+    definition = "Check flat file type."
+    eval = Eval.Eval(id = "", \
+                    definition = definition, \
+                    result = result, \
+                    status = status)
+
+    return eval
 
 
 
@@ -462,27 +449,36 @@ def parse_flat_file(filepath):
 
     if records is None:
 
-        eval_object = Eval.construct_error( \
-            "Biopython is unable to parse this file, " + \
-            "so it will not be processed.")
+        result = "Biopython is unable to parse this file, " + \
+            "so it will not be processed."
+        status = "error"
 
     elif len(records) == 0:
 
-        eval_object = Eval.construct_error( \
-            "Biopython did not find any GenBank-formatted records, " + \
-            "so it will not be processed.")
+        result = "Biopython did not find any GenBank-formatted records, " + \
+            "so it will not be processed."
+        status = "error"
 
     elif len(records) > 1:
 
-        eval_object = Eval.construct_error( \
-            "Biopython found multiple records, " + \
-            "so it will not be processed.")
+        result = "Biopython found multiple records, " + \
+            "so it will not be processed."
+        status = "error"
 
     else:
-        eval_object = None
+        result = "Record was successfully parsed."
+        status = "correct"
         record = records[0]
 
-    return (record, eval_object)
+
+    # TODO add an eval id?
+    definition = "Parse the flat file record."
+    eval = Eval.Eval(id = "", \
+                    definition = definition, \
+                    result = result, \
+                    status = status)
+
+    return (record, eval)
 
 
 
@@ -503,10 +499,10 @@ def create_parsed_flat_file_list(all_files):
         result1 = check_flat_file_type(filename)
         record, result2 = parse_flat_file(filename)
 
-        if result1 is not None:
+        if result1.status != "correct":
             file_results.append(result1)
 
-        if result2 is not None:
+        if result2.status != "correct":
             file_results.append(result2)
 
         if len(file_results) == 0:
@@ -556,11 +552,7 @@ def create_trna_objects(biopython_feature_list):
 
     for feature in biopython_feature_list:
         trna = ""
-        # trna = Trna.TrnaFeature()
-        eval_result = parse_trna_feature(trna, feature)
-
-        if eval_result is None:
-            trna_object_list.append(trna)
+        trna_object_list.append(trna)
 
     return trna_object_list
 
@@ -583,11 +575,7 @@ def create_tmrna_objects(biopython_feature_list):
 
     for feature in biopython_feature_list:
         tmrna = ""
-        # trna = Trna.TrnaFeature()
-        eval_result = parse_trna_feature(tmrna, feature)
-
-        if eval_result is None:
-            tmrna_object_list.append(cds)
+        tmrna_object_list.append(tmrna)
 
     return tmrna_object_list
 

@@ -38,7 +38,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(phage, expected_phage)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_phagesdb_phage_name_2(self):
         """Verify name is not retrieved and error is produced."""
@@ -49,7 +49,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(phage, expected_phage)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 
@@ -63,7 +63,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cluster, expected_cluster)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_phagesdb_cluster_2(self):
         """Verify no cluster is retrieved and error is produced."""
@@ -74,7 +74,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cluster, expected_cluster)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
     def test_parse_phagesdb_cluster_3(self):
         """Verify standard cluster is retrieved and no error is produced."""
@@ -85,7 +85,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cluster, expected_cluster)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
 
 
@@ -99,7 +99,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(subcluster, expected_subcluster)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_phagesdb_subcluster_2(self):
         """Verify no subcluster is retrieved and an error is produced."""
@@ -110,7 +110,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(subcluster, expected_subcluster)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
     def test_parse_phagesdb_subcluster_3(self):
         """Verify standard subcluster is retrieved and no error is produced."""
@@ -121,7 +121,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(subcluster, expected_subcluster)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
 
 
@@ -135,7 +135,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(host, expected_host)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_phagesdb_host_2(self):
         """Verify host genus is not retrieved and an error is produced."""
@@ -146,7 +146,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(host, expected_host)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 
@@ -160,7 +160,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(accession, expected_accession)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_phagesdb_accession_2(self):
         """Verify accession is not retrieved and an error is produced."""
@@ -171,7 +171,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(accession, expected_accession)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 
@@ -186,7 +186,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(filename, expected_filename)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_phagesdb_filename_2(self):
         """Verify fasta filename is not retrieved and an error is produced."""
@@ -198,7 +198,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(filename, expected_filename)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 
@@ -212,7 +212,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(fasta_data[:23], expected_fasta_data_header)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_retrieve_phagesdb_fasta_2(self):
         """Verify fasta data is not retrieved and an error is produced."""
@@ -223,7 +223,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(fasta_data, expected_fasta_data_header)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 
@@ -239,7 +239,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result_list[1], expected_sequence)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_parse_fasta_file_2(self):
         """Verify it incorrect fasta file format (no ">") produces an error."""
@@ -252,7 +252,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result_list[1], expected_sequence)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
     def test_parse_fasta_file_3(self):
         """Verify it incorrect fasta file format (no new lines) produces
@@ -266,7 +266,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result_list[1], expected_sequence)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 
@@ -311,7 +311,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 2)
+            self.assertEqual(len(self.genome.seqrecord), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -360,7 +360,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 2)
+            self.assertEqual(len(self.genome.seqrecord), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -409,7 +409,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 2)
+            self.assertEqual(len(self.genome.seqrecord), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -458,7 +458,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 2)
+            self.assertEqual(len(self.genome.seqrecord), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -507,7 +507,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 2)
+            self.assertEqual(len(self.genome.seqrecord), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -556,7 +556,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 2)
+            self.assertEqual(len(self.genome.seqrecord), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -604,7 +604,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 0)
+            self.assertEqual(len(self.genome.seqrecord), 0)
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
@@ -650,7 +650,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 0)
+            self.assertEqual(len(self.genome.seqrecord), 0)
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
@@ -696,7 +696,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.parsed_record), 0)
+            self.assertEqual(len(self.genome.seqrecord), 0)
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
@@ -714,7 +714,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(data_dict["phage_name"], expected_phage_name)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_retrieve_phagesdb_data_2(self):
         """Verify data is not retrieved from PhagesDB and an error produced."""
@@ -724,7 +724,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(data_dict.keys()), 0)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
+            self.assertEqual(eval_result.status, "error")
 
 
 

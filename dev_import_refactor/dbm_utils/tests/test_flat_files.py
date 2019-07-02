@@ -3229,14 +3229,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_check_flat_file_type_1(self):
         """Verify valid file does not produce an error."""
         filepath = "/path/to/file/l5.gb"
-        result = flat_files.check_flat_file_type(filepath)
-        self.assertIsNone(result)
+        eval_object = flat_files.check_flat_file_type(filepath)
+        self.assertEqual(eval_object.status, "correct")
 
     def test_check_flat_file_type_2(self):
         """Verify invalid file produces an error."""
         filepath = "/path/to/file/l5.exe"
-        result = flat_files.check_flat_file_type(filepath)
-        self.assertIsNotNone(result)
+        eval_object = flat_files.check_flat_file_type(filepath)
+        self.assertEqual(eval_object.status, "error")
 
 
 
@@ -3262,7 +3262,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertIsNotNone(record)
         with self.subTest():
-            self.assertIsNone(eval_object)
+            self.assertEqual(eval_object.status, "correct")
 
 
     def test_parse_flat_file_2(self):
@@ -3273,13 +3273,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
             "test_files/test_x.gb")
 
         record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.messages["error"][:28]
+        eval_message = eval_object.result[:28]
         exp_message = "Biopython is unable to parse"
 
         with self.subTest():
             self.assertIsNone(record)
         with self.subTest():
-            self.assertIsNotNone(eval_object)
+            self.assertEqual(eval_object.status, "error")
         with self.subTest():
             self.assertEqual(eval_message, exp_message)
 
@@ -3292,13 +3292,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
             "test_files/test_flat_file_2.gb")
 
         record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.messages["error"][:22]
+        eval_message = eval_object.result[:22]
         exp_message = "Biopython did not find"
 
         with self.subTest():
             self.assertIsNone(record)
         with self.subTest():
-            self.assertIsNotNone(eval_object)
+            self.assertEqual(eval_object.status, "error")
         with self.subTest():
             self.assertEqual(eval_message, exp_message)
 
@@ -3312,13 +3312,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
             "test_files/test_flat_file_3.gb")
 
         record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.messages["error"][:22]
+        eval_message = eval_object.result[:22]
         exp_message = "Biopython did not find"
 
         with self.subTest():
             self.assertIsNone(record)
         with self.subTest():
-            self.assertIsNotNone(eval_object)
+            self.assertEqual(eval_object.status, "error")
         with self.subTest():
             self.assertEqual(eval_message, exp_message)
 
@@ -3332,13 +3332,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
             "test_files/test_flat_file_4.gb")
 
         record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.messages["error"][:28]
+        eval_message = eval_object.result[:28]
         exp_message = "Biopython is unable to parse"
 
         with self.subTest():
             self.assertIsNone(record)
         with self.subTest():
-            self.assertIsNotNone(eval_object)
+            self.assertEqual(eval_object.status, "error")
         with self.subTest():
             self.assertEqual(eval_message, exp_message)
 
@@ -3352,13 +3352,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
             "test_files/test_flat_file_5.gb")
 
         record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.messages["error"][:24]
+        eval_message = eval_object.result[:24]
         exp_message = "Biopython found multiple"
 
         with self.subTest():
             self.assertIsNone(record)
         with self.subTest():
-            self.assertIsNotNone(eval_object)
+            self.assertEqual(eval_object.status, "error")
         with self.subTest():
             self.assertEqual(eval_message, exp_message)
 
