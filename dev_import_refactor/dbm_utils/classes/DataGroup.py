@@ -27,19 +27,19 @@ class DataGroup:
 
 
 
-
-    def set_evaluation(self, eval_list, result_type, message1 = None, message2 = None):
-
-        if result_type == "warning":
-            eval_object = Eval.construct_warning(message1, message2)
-
-        elif result_type == "error":
-            eval_object = Eval.construct_error(message1)
-
-        else:
-            eval_object = Eval.EvalResult()
-
-        self.evaluations_dict[eval_list].append(eval_object)
+    #
+    # def set_evaluation(self, eval_list, result_type, message1 = None, message2 = None):
+    #
+    #     if result_type == "warning":
+    #         eval_object = Eval.construct_warning(message1, message2)
+    #
+    #     elif result_type == "error":
+    #         eval_object = Eval.construct_error(message1)
+    #
+    #     else:
+    #         eval_object = Eval.EvalResult()
+    #
+    #     self.evaluations_dict[eval_list].append(eval_object)
 
 
 
