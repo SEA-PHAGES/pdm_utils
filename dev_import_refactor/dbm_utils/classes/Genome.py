@@ -156,8 +156,48 @@ class Genome:
 
 
 
+    # TODO implement
+    # TODO unit test.
+    def set_phage_id_from_file(self, value):
+        """Set the phage_id from a value parsed from the indicated field."""
 
 
+        if value == "record_description":
+            self.set_phage_id(self._record_description_phage_name)
+            pass
+        elif value =="record_source":
+            self.set_phage_id(self._record_source_phage_name)
+            pass
+        elif value =="record_organism":
+            self.set_phage_id(self._record_organism_phage_name)
+            pass
+        elif value =="name":
+            self.set_phage_id(self.record_name)
+            pass
+        elif value =="id":
+            self.set_phage_id(self.record_id)
+            pass
+        else:
+            pass
+
+
+
+    # TODO implement
+    # TODO unit test.
+    def set_host_from_file(self, value):
+        """Set the host from a value parsed from the indicated field."""
+
+        if value == "record_description":
+            self.set_phage_id(self._record_description_host_name)
+            pass
+        elif value =="record_source":
+            self.set_phage_id(self._record_source_host_name)
+            pass
+        elif value =="record_organism":
+            self.set_phage_id(self._record_organism_host_name)
+            pass
+        else:
+            pass
 
 
     def parse_record_description(self):

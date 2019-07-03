@@ -7,16 +7,16 @@ import unittest
 
 
 
-class TestImportTicketClass(unittest.TestCase):
+class TestGenomeTicketClass(unittest.TestCase):
 
 
     def setUp(self):
 
         # Empty ticket to test simple methods
-        self.ticket = Ticket.ImportTicket()
+        self.ticket = Ticket.GenomeTicket()
 
         # Standard update ticket
-        self.update_ticket = Ticket.ImportTicket()
+        self.update_ticket = Ticket.GenomeTicket()
         self.update_ticket.type = "update"
         self.update_ticket.primary_phage_id = "Trixie"
         self.update_ticket.host = "Mycobacterium"
@@ -30,7 +30,7 @@ class TestImportTicketClass(unittest.TestCase):
 
 
         # Standard add ticket
-        self.add_ticket = Ticket.ImportTicket()
+        self.add_ticket = Ticket.GenomeTicket()
         self.add_ticket.type = "add"
         self.add_ticket.primary_phage_id = "Trixie"
         self.add_ticket.host = "Mycobacterium"
@@ -43,7 +43,7 @@ class TestImportTicketClass(unittest.TestCase):
 
 
         # Standard remove ticket
-        self.remove_ticket = Ticket.ImportTicket()
+        self.remove_ticket = Ticket.GenomeTicket()
         self.remove_ticket.type = "remove"
         self.remove_ticket.primary_phage_id = "none"
         self.remove_ticket.host = "none"
@@ -61,7 +61,7 @@ class TestImportTicketClass(unittest.TestCase):
 
 
         # Standard replace ticket
-        self.replace_ticket = Ticket.ImportTicket()
+        self.replace_ticket = Ticket.GenomeTicket()
         self.replace_ticket.type = "replace"
         self.replace_ticket.primary_phage_id = "Trixie"
         self.replace_ticket.host = "Mycobacterium"

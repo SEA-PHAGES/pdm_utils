@@ -16,7 +16,7 @@ class TestDataGroupClass(unittest.TestCase):
         self.data_group = DataGroup.DataGroup()
         self.genome1 = Genome.Genome()
         self.genome2 = Genome.Genome()
-        self.ticket = Ticket.ImportTicket()
+        self.ticket = Ticket.GenomeTicket()
         self.dict_name = "misc"
         self.data_group.evaluations_dict[self.dict_name] = []
 

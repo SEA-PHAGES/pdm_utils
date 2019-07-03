@@ -36,7 +36,7 @@ def parse_import_ticket(data_list):
     else:
         eval_object = None
 
-        ticket = Ticket.ImportTicket()
+        ticket = Ticket.GenomeTicket()
         ticket.type = data_list[0]
         ticket.primary_phage_id = data_list[1]
         ticket.host = data_list[2]
@@ -394,6 +394,54 @@ def complete_ticket(ticket):
             ticket.accession = genome.accession
 
     return eval_list1
+
+
+
+
+
+
+
+# TODO implement.
+# TODO unit test.
+
+
+def set_ticket_data(genome_obj, ticket_obj):
+    """Populate attributes in a Genome object using data from a ticket."""
+
+    genome_obj.set_phage_id(ticket.primary_phage_id)
+    genome_obj.phage_name = ticket.primary_phage_id
+    genome_obj.set_host(ticket.host)
+    genome_obj.set_accession(ticket.accession)
+    genome_obj.author = "" # TODO do I need this in addition to annotation_author?
+    genome_obj.status = ticket.status
+    genome_obj.set_cluster(ticket.cluster)
+    genome_obj.set_subcluster(ticket.subcluster)
+    genome_obj.set_cluster_subcluster()
+    genome_obj.ncbi_update_flag = ""
+    genome_obj.annotation_author = ticket.annotation_author
+
+    # TODO decide how to set this attribute. Check old script.
+    if ticket.status == "final":
+        genome_obj.annotation_qc = 1
+    else:
+        genome_obj.annotation_qc = 0
+
+    # TODO decide how to set this attribute. Check old script.
+    if ticket.run_mode == "auto_update":
+        genome_obj.retrieve_record = 1
+    else:
+        genome_obj.retrieve_record = 0
+
+
+
+
+
+
+
+
+
+
+
 
 
 

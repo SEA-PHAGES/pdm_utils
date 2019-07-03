@@ -5,22 +5,18 @@ interactive feedback about the import process.
 
 
 
-#Built-in libraries
+# Built-in libraries
 import time, sys, os, getpass, csv, re, shutil
 import json, urllib
 from datetime import datetime
 
 
 
-#Import third-party modules
+# Import third-party modules
 try:
-	from Bio import SeqIO
-	from Bio.Alphabet import IUPAC
-	from tabulate import tabulate
-	import MySQLdb as mdb
-except:
-	print "\nUnable to import one or more of the following third-party modules: MySQLdb, Biopython, tabulate."
-	print "Install modules and try again.\n\n"
+    pass
+except ModuleNotFoundError as err:
+    print(err)
 	sys.exit(1)
 
 
@@ -137,60 +133,112 @@ except:
 
 
 
-#Open file to record update information
-output_file = open(os.path.join(phageListDir,success_folder,date + "_phage_import_log_" + run_type + "_run.txt"), "w")
-write_out(output_file,date + " Phamerator database updates:\n\n\n")
-write_out(output_file,"\n\n\n\nBeginning import script...")
-write_out(output_file,"\nRun type: " + run_type)
 
 
 
 
 
 
-#TODO not sure if I need these counters any more.
-# table_errors = 0
-# add_total = 0
-# remove_total = 0
-# replace_total = 0
-# update_total = 0
-# run_mode_custom_total = 0
+
+
+
+
+### Below - refactored script in progress
+
+
+
+import prepare_tickets
+from functions import phamerator
+from functions import flat_files
+from functions import tickets
+
+# TODO command now should include an argument that specifies phage_id_field
+# from which phage_id should be assigned as flat files are parsed.
+
+
+# TODO confirm arguments are structured properly.
+
+# TODO confirm directories and files exist.
+
+# TODO confirm import table file exists.
+
+# TODO create output directories.
+
+
 
 
 # Retrieve import ticket data.
-list_of_tickets = prepare_tickets.main(ticket_filename)
+# Data is returned as a list of validated ticket objects.
+list_of_tickets, list_of_errors = prepare_tickets.main(ticket_filename)
+
+# TODO check for ticket errors = exit script if not structured correctly.
+if len(list_of_errors) > 0:
+    sys.exit(1)
 
 
 
-#TODO check for ticket errors = exit script if not structured correctly
+
+
+
 
 
 # Retrieve data from Phamerator.
-#TODO need to construct SQL connector object to pass to this function
-all_phamerator_data = prepare_phamerator_data.main(sql_obj)
 
-#TODO check for phamerator data errors = exit script if there are errors
+# TODO create SQL connector object using parsed arguments.
+# TODO it may be better to create the SQL object with the
+# prepare_phamerator_data module.
+
+
+# Retrieve all data from Phamerator
+retrieved_phamerator_data = phamerator.retrieve_sql_data(sql_obj)
+
+# Create a dictionary of all data retrieved.
+# Key = PhageID.
+# Value = Genome object with parsed data.
+phamerator_genome_dict = \
+    phamerator.create_phamerator_dict(retrieved_phamerator_data)
+
+# Create sets of unique values for different data fields.
+phamerator_data_sets = phamerator.create_data_sets(phamerator_genome_dict)
+
+
+# TODO check for phamerator data errors = exit script if there are errors
+# TODO the phamerator main function does not yet return errors.
+if len(phamerator_errors) > 0:
+    sys.exit(1)
 
 
 
 
 # Parse flat files and create list of genome objects
 #TODO insert real function
-all_flat_file_data = prepare_flat_file_data.main()
+
+# Identify valid files in folder.
+files_in_folder = basic.identify_files(genome_dir)
 
 
-#TODO check for flat file parsing errors = exit script if there are errors.
+# Iterate through the list of files.
+# Parse each file into a Genome object.
+# Returns lists of Genome objects, Eval objects, parsed files,
+# and failed files.
+# TODO the phage_id_field can be indicated from a new argument in the command.
+genomes, all_results, valid_files, failed_files = \
+    flat_files.create_parsed_flat_file_list(files_in_folder, phage_id_field)
+
+# TODO check for flat file parsing errors = exit script if there are errors.
+if len(all_results) > 0:
+    sys.exit(1)
 
 
 
 
 
 
-#Tickets will be matched with other genome data.
-#Ticket data will be paired with data from PhameratorDB
-#and/or a flat file.
-#TODO I may want to POP each ticket off this list as I assign to
-#matched genome objects.
+# Tickets will be matched with other genome data.
+# Ticket data will be paired with data from PhameratorDB
+# and/or a flat file.
+# TODO I may want to POP each ticket off this list as I assign to
+# matched genome objects.
 list_of_matched_objects = []
 for ticket in list_of_tickets:
     matched_data_obj = MatchedGenomes()
@@ -209,16 +257,49 @@ for ticket in list_of_tickets:
 
 # Now that Phamerator data has been retrieved and
 # Phamerator genome objects created, match them to ticket data
-list_of_match_evals = match_genomes_to_tickets(list_of_matched_objects,
+# TODO can probably change this to match_genomes_to_tickets2 function,
+# once I generalize it more.
+list_of_match_evals = tickets.match_genomes_to_tickets(list_of_matched_objects,
                                                     all_phamerator_data,
                                                     "phamerator")
 
 
 
 
-# Match tickets to flat file data
-list_of_matched_objects = match_flat_files_to_tickets(list_of_matched_objects, all_flat_file_data)
 
+
+
+
+
+# Match tickets to flat file data
+
+
+# First, determine what the strategy is to match tickets to flat files.
+# Flat files can be matched to tickets by either the file name
+# (if it serves as the phage id) or the parsed phage name from
+# the organism field. This is determined by the run mode.
+strategy, strategy_eval = assign_match_strategy(list_of_matched_objects)
+
+
+
+
+# TODO check to confirm that genome objects from parsed flat files do not
+# contain any duplicate phage_ids, since that is not gauranteed.
+
+
+# TODO create dictionary of flat file data based on matching strategy.
+# Now that flat file parsing assigns the phage_id using a parameter
+# retrieved as a command line argument, this step can be updated so that
+# it simply creates a dictionary from the phage_id field,
+# just like for Phamerator data.
+flat_file_dict = flat_files.create_file_dictionary(all_flat_file_data, strategy)
+
+# This is currently implemented within the tickets.match_genomes_to_tickets2
+# function.
+list_of_matched_objects, list_of_evals = \
+    tickets.match_genomes_to_tickets2(list_of_matched_objects,
+                                        flat_file_dict,
+                                        "import")
 
 
 
@@ -241,23 +322,79 @@ list_of_add_replace_objects = matched_object_dict["add_replace"]
 
 
 
+# TODO now that the flat file to be imported is parsed and matched to a ticket,
+# use the ticket to populate specific genome-level fields such as
+# host, cluster, subcluster, etc.
+index = 0
+while index < len(list_of_add_replace_objects):
 
-# TODO evaluate all update tickets
-list_of_update_objects = evaluate_data.check_update_tickets(list_of_update_objects)
+    matched_object = list_of_add_replace_objects[index]
+    tickets.set_ticket_data(matched_object.genome["import"], matched_object.ticket)
+
+    # Also, pair the genomes that will be directly compared.
+    genome_pair = GenomePair.GenomePair()
+    genome_pair.genome1 = matched_object.genome["import"]
+    genome_pair.genome2 = matched_object.genome["phamerator"]
+    matched_object.genome_pairs_dict["import_phamerator"] = genome_pair
+    index += 1
+
+
+
+
+# TODO implement better.
+# For update tickets, populate a Genome object with the fields that
+# need to be updated.
+
+index = 0
+while index < len(list_of_update_objects):
+
+    matched_object = list_of_update_objects[index]
+    update_genome = Genome.Genome()
+
+    # TODO the set_ticket_data might not populate all fields needed for
+    # update tickets.
+    tickets.set_ticket_data(matched_object.genome["update"], matched_object.ticket)
+
+    # Also, pair the genomes that will be directly compared.
+    genome_pair = GenomePair.GenomePair()
+    genome_pair.genome1 = matched_object.genome["update"]
+    genome_pair.genome2 = matched_object.genome["phamerator"]
+    matched_object.genome_pairs_dict["update_phamerator"] = genome_pair
+
+    index += 1
+
+
+
+
+# Perform all evaluations based on the ticket type.
+
+if len(list_of_update_objects) > 0:
+    evaluate.check_update_tickets(list_of_update_objects)
+
+if len(list_of_remove_objects) > 0:
+    evaluate.check_remove_tickets(list_of_remove_objects)
+
+
+
+
+
+# TODO after each add_replace ticket is evaluated,
+# should the script re-query the database and re-create the
+# sets of PhageIDs, Sequences, etc?
+if len(list_of_add_replace_objects) > 0:
+    evaluate.check_add_replace_tickets(list_of_add_replace_objects)
+
+
+
+
+
+
+
+# Create all SQL statements
 
 # TODO implement all updates
 
-
-# TODO evaluate all replace tickets
-list_of_remove_objects = evaluate_data.check_remove_tickets(list_of_remove_objects)
-
 # TODO implement all removes
-
-
-# TODO now that all data is matched, evaluate each add_replace ticket
-list_of_add_replace_objects = evaluate_data.check_add_replace_tickets(list_of_add_replace_objects)
-
-
 
 # TODO import all scrubbed add_replace data into Phamerator.
 

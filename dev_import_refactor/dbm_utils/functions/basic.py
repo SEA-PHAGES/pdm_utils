@@ -2,6 +2,7 @@
 k_phamerate modules to prevent circular imports."""
 
 from datetime import datetime
+import os
 
 #Note: used to be 'find_name' function.
 def find_expression(expression,list_of_items):
@@ -541,6 +542,35 @@ def split_string(string):
 
 
 #TODO Unit test below
+
+
+
+# TODO unit test.
+def identify_files(path_to_folder):
+    """Create a list of filenames from an indicated directory."""
+
+    files_in_folder = []
+    for item in os.listdir(path_to_folder):
+        item_path = os.path.join(path_to_folder, item)
+
+        if os.path.isfile(item_path):
+            files_in_folder.append(item)
+
+    return files_in_folder
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #TODO set up and unit test

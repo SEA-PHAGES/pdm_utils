@@ -6,7 +6,7 @@ from classes import Eval
 
 
 
-class ImportTicket:
+class GenomeTicket:
 
     # Initialize all attributes:
     def __init__(self):

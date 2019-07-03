@@ -198,12 +198,10 @@ def retrieve_phagesdb_fasta(fastafile_url):
 
 
 
-# TODO this function could probably be improved.
+# TODO obsolete, once a biopython-based parser has been built?
 def parse_fasta_file(fasta_file):
     """Parses sequence data from a fasta-formatted file.
     """
-
-    # TODO convert to Biopython object?
     # All sequence rows in the fasta file may not have equal widths,
     # so some processing of the data is required. If you split by newline,
     # the header is retained in the first list element.
@@ -247,6 +245,27 @@ def parse_fasta_file(fasta_file):
                     result = result, \
                     status = status)
     return (result, eval)
+
+
+
+
+
+
+# TODO implement
+# TODO unit test.
+def parse_fasta_file2(fasta_file):
+    """Parses sequence data from a fasta-formatted file using Biopython.
+    """
+
+    # TODO need to work out whether SeqIO can retrieve the data
+    # directly from the server or whether the data needs to be first
+    #retrieved and then parsed.
+
+    pass
+
+
+
+
 
 
 

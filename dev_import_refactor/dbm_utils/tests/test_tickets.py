@@ -233,13 +233,13 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_validate_tickets_1(self):
         """Verify no duplicates do not generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "L5"
         ticket2.secondary_phage_id = "L5"
@@ -254,13 +254,13 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_validate_tickets_2(self):
         """Verify 'none' duplicates do not generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "none"
@@ -278,13 +278,13 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_validate_tickets_3(self):
         """Verify Primary Phage ID duplicates do generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "Trixie"
         ticket2.secondary_phage_id = "none"
@@ -300,13 +300,13 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_validate_tickets_4(self):
         """Verify Secondary Phage ID duplicates generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "Trixie"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "Trixie"
@@ -322,13 +322,13 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_validate_tickets_5(self):
         """Verify Accession duplicates generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "none"
@@ -344,13 +344,13 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_validate_tickets_6(self):
         """Verify multiple duplicates generate multiple errors."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "Trixie"
         ticket2.secondary_phage_id = "Trixie"
@@ -373,13 +373,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify duplicate Primary Phage ID from non-standard ticket type
         does not generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "other"
         ticket2.primary_phage_id = "Trixie"
         ticket2.secondary_phage_id = "none"
@@ -395,13 +395,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify duplicate Secondary Phage ID from non-standard ticket type
         does not generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "Trixie"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "other"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "Trixie"
@@ -417,13 +417,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify Primary Phage ID duplicates from different ticket
         types generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "add"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "Trixie"
         ticket2.secondary_phage_id = "none"
@@ -439,13 +439,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify Secondary Phage ID duplicates from different ticket
         types generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "Trixie"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "remove"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "Trixie"
@@ -461,13 +461,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify Accession duplicates from different ticket
         types generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "none"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "remove"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "none"
@@ -482,13 +482,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify a conflict between an update/add Primary Phage ID and all
         Secondary Phage IDs generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "add"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "remove"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "Trixie"
@@ -504,13 +504,13 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify a conflict between a replace Primary Phage ID and a remove
         Secondary Phage ID generate an error."""
 
-        ticket1 = Ticket.ImportTicket()
+        ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
         ticket1.secondary_phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.ImportTicket()
+        ticket2 = Ticket.GenomeTicket()
         ticket2.type = "remove"
         ticket2.primary_phage_id = "none"
         ticket2.secondary_phage_id = "Trixie"
@@ -551,11 +551,11 @@ class TestTicketFunctions2(unittest.TestCase):
         self.genome_list = [self.genome1, self.genome2, self.genome3]
 
 
-        self.ticket1 = Ticket.ImportTicket()
-        self.ticket2 = Ticket.ImportTicket()
-        self.ticket3 = Ticket.ImportTicket()
-        self.ticket4 = Ticket.ImportTicket()
-        self.ticket5 = Ticket.ImportTicket()
+        self.ticket1 = Ticket.GenomeTicket()
+        self.ticket2 = Ticket.GenomeTicket()
+        self.ticket3 = Ticket.GenomeTicket()
+        self.ticket4 = Ticket.GenomeTicket()
+        self.ticket5 = Ticket.GenomeTicket()
 
 
         self.ticket1.primary_phage_id = "Trixie"
@@ -768,10 +768,10 @@ class TestTicketFunctions3(unittest.TestCase):
         self.genome3 = Genome.Genome()
         self.genome4 = Genome.Genome()
 
-        self.ticket1 = Ticket.ImportTicket()
-        self.ticket2 = Ticket.ImportTicket()
-        self.ticket3 = Ticket.ImportTicket()
-        self.ticket4 = Ticket.ImportTicket()
+        self.ticket1 = Ticket.GenomeTicket()
+        self.ticket2 = Ticket.GenomeTicket()
+        self.ticket3 = Ticket.GenomeTicket()
+        self.ticket4 = Ticket.GenomeTicket()
 
         self.datagroup1 = DataGroup.DataGroup()
         self.datagroup2 = DataGroup.DataGroup()
@@ -1089,10 +1089,10 @@ class TestTicketFunctions4(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = Ticket.ImportTicket()
-        self.ticket2 = Ticket.ImportTicket()
-        self.ticket3 = Ticket.ImportTicket()
-        self.ticket4 = Ticket.ImportTicket()
+        self.ticket1 = Ticket.GenomeTicket()
+        self.ticket2 = Ticket.GenomeTicket()
+        self.ticket3 = Ticket.GenomeTicket()
+        self.ticket4 = Ticket.GenomeTicket()
 
         self.datagroup1 = DataGroup.DataGroup()
         self.datagroup2 = DataGroup.DataGroup()
@@ -1175,7 +1175,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket = Ticket.ImportTicket()
+        self.ticket = Ticket.GenomeTicket()
         self.ticket.primary_phage_id = "L5"
 
 

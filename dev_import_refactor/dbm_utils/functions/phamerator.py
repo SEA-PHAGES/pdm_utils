@@ -279,8 +279,6 @@ def create_genome_insert_statements(genome):
 
 
 
-
-
 #TODO delete below once confirmed it is functionalized
 
 def retrieve_sql_data(sql_obj):
