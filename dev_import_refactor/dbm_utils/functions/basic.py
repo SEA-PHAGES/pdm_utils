@@ -541,6 +541,47 @@ def split_string(string):
 
 
 
+
+
+
+
+
+
+
+def identify_one_list_duplicates(item_list):
+    """Identify duplicate items within a list."""
+
+    duplicate_items = set()
+    item_set = set(item_list)
+    for item1 in item_set:
+        count = 0
+        for item2 in item_list:
+            if item1 == item2:
+                count += 1
+        if count > 1:
+            duplicate_items.add(item1)
+
+    return duplicate_items
+
+def identify_two_list_duplicates(item1_list, item2_list):
+    """Identify duplicate items between two lists.
+    It does not identify duplicate items within each list."""
+
+    item1_set = set(item1_list)
+    item2_set = set(item2_list)
+    item3_set = item1_set & item2_set
+
+    return item3_set
+
+
+
+
+
+
+
+
+
+
 #TODO Unit test below
 
 
@@ -557,12 +598,6 @@ def identify_files(path_to_folder):
             files_in_folder.append(item)
 
     return files_in_folder
-
-
-
-
-
-
 
 
 

@@ -145,7 +145,7 @@ class GenomeTicket:
         #Subcluster
         if self.subcluster == "retrieve":
             self.subcluster = "none"
-            result = "Subcluster data was not retrieved from Phagesdb.")
+            result = "Subcluster data was not retrieved from Phagesdb."
             status = "error"
         else:
             result = "Subcluster data is populated."
@@ -743,7 +743,7 @@ class GenomeTicket:
 
         if self.secondary_phage_id not in phage_id_set:
             result = "Secondary Phage %s is not a valid PhageID. " + \
-                    "This genome cannot be dropped from the database."
+                    "This genome cannot be dropped from the database." \
                     % self.secondary_phage_id
             status = "error"
 
@@ -754,22 +754,23 @@ class GenomeTicket:
 
         if self.primary_phage_id == "none":
 
-            result = "Primary Phage %s is not a valid PhageID. %s genome cannot be replaced."
+            result = \
+                "Primary Phage %s is not a valid PhageID. %s genome cannot be replaced." \
                 % (self.primary_phage_id,self.secondary_phage_id)
             status = "error"
 
         if self.primary_phage_id != self.secondary_phage_id:
 
             result = \
-                "The Primary Phage %s and Secondary phage %s are not spelled the same."
-                % (self.primary_phage_id,self.secondary_phage_id
+                "The Primary Phage %s and Secondary phage %s are not spelled the same." \
+                % (self.primary_phage_id,self.secondary_phage_id)
             status = "error"
 
             #FirstPhageID. If replacing a genome, ensure that if the genome to
             #be removed is not the same, that the new genome added has a unique name
             if self.primary_phage_id in phage_id_set:
                 result = "Primary Phage %s is already a PhageID " + \
-                    "in the database. This genome cannot be added to the database."
+                    "in the database. This genome cannot be added to the database." \
                     % self.primary_phage_id
                 status = "error"
 
@@ -795,7 +796,7 @@ class GenomeTicket:
 
         if self.secondary_phage_id not in phage_id_set:
             result = "Secondary Phage %s is not a valid PhageID. " + \
-                "This genome cannot be dropped from the database."
+                "This genome cannot be dropped from the database." \
                  % self.secondary_phage_id
             status = "error"
 
@@ -838,24 +839,6 @@ class GenomeTicket:
 
         else:
             pass
-
-
-
-
-    # Group of all functions to evaluate the structure of the ticket.
-    def validate_ticket(self):
-
-        self.check_retrieve_status()
-        self.check_type()
-        self.check_host()
-        self.check_cluster_subcluster()
-        self.check_status()
-        self.check_description_field()
-        self.check_accession()
-        self.check_annotation_author()
-        self.check_run_mode()
-        self.check_ticket()
-
 
 
 

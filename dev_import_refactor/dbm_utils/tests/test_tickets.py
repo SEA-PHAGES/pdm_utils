@@ -173,26 +173,24 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-
-    def test_identify_duplicates1_1(self):
-        """Verify duplicate items generates an error."""
-        eval_object = \
-            tickets.identify_duplicates1(["Trixie", "Trixie"], "temp")
-        with self.subTest():
-            self.assertIsNotNone(eval_object)
-        with self.subTest():
-            self.assertIsInstance(eval_object,Eval.EvalResult)
-
-    def test_identify_duplicates1_2(self):
-        """Verify non-duplicate items do not generate an error."""
-        eval_object = \
-            tickets.identify_duplicates1(["Trixie", "L5"], "temp")
-        with self.subTest():
-            self.assertIsNone(eval_object)
-        with self.subTest():
-            self.assertNotIsInstance(eval_object,Eval.EvalResult)
-
-
+    # TODO this can be deleted once the function has been moved to basic.    #
+    # def test_identify_one_list_duplicates_1(self):
+    #     """Verify duplicate items generates an error."""
+    #     eval_object = \
+    #         tickets.identify_one_list_duplicates(["Trixie", "Trixie"], "temp")
+    #     with self.subTest():
+    #         self.assertIsNotNone(eval_object)
+    #     with self.subTest():
+    #         self.assertIsInstance(eval_object,Eval.EvalResult)
+    #
+    # def test_identify_one_list_duplicates_2(self):
+    #     """Verify non-duplicate items do not generate an error."""
+    #     eval_object = \
+    #         tickets.identify_one_list_duplicates(["Trixie", "L5"], "temp")
+    #     with self.subTest():
+    #         self.assertIsNone(eval_object)
+    #     with self.subTest():
+    #         self.assertNotIsInstance(eval_object,Eval.EvalResult)
 
 
 
@@ -202,35 +200,37 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-    def test_identify_duplicates2_1(self):
-        """Verify duplicate items in two lists generate an error."""
-        list1 = ["Trixie", "L5"]
-        list2 = ["Trixie", "RedRock"]
-        eval_object = \
-            tickets.identify_duplicates2(list1, list2, "temp")
-        with self.subTest():
-            self.assertIsNotNone(eval_object)
-        with self.subTest():
-            self.assertIsInstance(eval_object,Eval.EvalResult)
+
+    # TODO this can be deleted once the function has been moved to basic.
+    # def test_identify_two_list_duplicates_1(self):
+    #     """Verify duplicate items in two lists generate an error."""
+    #     list1 = ["Trixie", "L5"]
+    #     list2 = ["Trixie", "RedRock"]
+    #     eval_object = \
+    #         tickets.identify_two_list_duplicates(list1, list2, "temp")
+    #     with self.subTest():
+    #         self.assertIsNotNone(eval_object)
+    #     with self.subTest():
+    #         self.assertIsInstance(eval_object,Eval.EvalResult)
+    #
+    #
+    #
+    #
+    # def test_identify_two_list_duplicates_2(self):
+    #     """Verify non-duplicate items in two lists do not generate an error."""
+    #     list1 = ["Trixie", "L5"]
+    #     list2 = ["D29", "RedRock"]
+    #     eval_object = \
+    #         tickets.identify_two_list_duplicates(list1, list2, "temp")
+    #     with self.subTest():
+    #         self.assertIsNone(eval_object)
+    #     with self.subTest():
+    #         self.assertNotIsInstance(eval_object,Eval.EvalResult)
 
 
 
 
-    def test_identify_duplicates2_2(self):
-        """Verify non-duplicate items in two lists do not generate an error."""
-        list1 = ["Trixie", "L5"]
-        list2 = ["D29", "RedRock"]
-        eval_object = \
-            tickets.identify_duplicates2(list1, list2, "temp")
-        with self.subTest():
-            self.assertIsNone(eval_object)
-        with self.subTest():
-            self.assertNotIsInstance(eval_object,Eval.EvalResult)
-
-
-
-
-    def test_validate_tickets_1(self):
+    def test_compare_tickets_1(self):
         """Verify no duplicates do not generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
@@ -247,11 +247,11 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
-    def test_validate_tickets_2(self):
+    def test_compare_tickets_2(self):
         """Verify 'none' duplicates do not generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
@@ -268,14 +268,14 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
 
 
 
-    def test_validate_tickets_3(self):
+    def test_compare_tickets_3(self):
         """Verify Primary Phage ID duplicates do generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
@@ -292,12 +292,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
 
-    def test_validate_tickets_4(self):
+    def test_compare_tickets_4(self):
         """Verify Secondary Phage ID duplicates generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
@@ -314,12 +314,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
 
-    def test_validate_tickets_5(self):
+    def test_compare_tickets_5(self):
         """Verify Accession duplicates generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
@@ -336,12 +336,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
 
-    def test_validate_tickets_6(self):
+    def test_compare_tickets_6(self):
         """Verify multiple duplicates generate multiple errors."""
 
         ticket1 = Ticket.GenomeTicket()
@@ -358,7 +358,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 3)
 
@@ -369,7 +369,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-    def test_validate_tickets_7(self):
+    def test_compare_tickets_7(self):
         """Verify duplicate Primary Phage ID from non-standard ticket type
         does not generate an error."""
 
@@ -387,11 +387,11 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
-    def test_validate_tickets_8(self):
+    def test_compare_tickets_8(self):
         """Verify duplicate Secondary Phage ID from non-standard ticket type
         does not generate an error."""
 
@@ -409,11 +409,11 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 0)
 
-    def test_validate_tickets_9(self):
+    def test_compare_tickets_9(self):
         """Verify Primary Phage ID duplicates from different ticket
         types generate an error."""
 
@@ -431,11 +431,11 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
-    def test_validate_tickets_10(self):
+    def test_compare_tickets_10(self):
         """Verify Secondary Phage ID duplicates from different ticket
         types generate an error."""
 
@@ -453,11 +453,11 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
-    def test_validate_tickets_11(self):
+    def test_compare_tickets_11(self):
         """Verify Accession duplicates from different ticket
         types generate an error."""
 
@@ -475,10 +475,10 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
         self.assertEqual(len(result_list), 1)
 
-    def test_validate_tickets_12(self):
+    def test_compare_tickets_12(self):
         """Verify a conflict between an update/add Primary Phage ID and all
         Secondary Phage IDs generate an error."""
 
@@ -496,11 +496,11 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 
-    def test_validate_tickets_13(self):
+    def test_compare_tickets_13(self):
         """Verify a conflict between a replace Primary Phage ID and a remove
         Secondary Phage ID generate an error."""
 
@@ -518,7 +518,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         list_of_tickets = [ticket1, ticket2]
         result_list = \
-            tickets.validate_tickets(list_of_tickets)
+            tickets.compare_tickets(list_of_tickets)
 
         self.assertEqual(len(result_list), 1)
 

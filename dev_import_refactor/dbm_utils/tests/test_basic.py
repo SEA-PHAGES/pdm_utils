@@ -1133,5 +1133,66 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
+
+
+
+
+
+
+    def test_identify_one_list_duplicates_1(self):
+        """Verify duplicate items generates an error."""
+        duplicate_items = \
+            basic.identify_one_list_duplicates(["Trixie", "Trixie"])
+        self.assertEqual(len(duplicate_items), 1)
+
+    def test_identify_one_list_duplicates_2(self):
+        """Verify non-duplicate items do not generate an error."""
+        duplicate_items = \
+            basic.identify_one_list_duplicates(["Trixie", "L5"])
+        self.assertEqual(len(duplicate_items), 0)
+
+    def test_identify_one_list_duplicates_3(self):
+        """Verify multiple duplicate items generate an error."""
+        item_list = ["Trixie", "Trixie", "L5", "L5", "L5", "D29"]
+        duplicate_items = \
+            basic.identify_one_list_duplicates(item_list)
+        self.assertEqual(len(duplicate_items), 2)
+
+
+
+
+    def test_identify_two_list_duplicates_1(self):
+        """Verify duplicate items in two lists generate an error."""
+        list1 = ["Trixie", "L5"]
+        list2 = ["Trixie", "RedRock"]
+        duplicate_items = \
+            basic.identify_two_list_duplicates(list1, list2)
+        self.assertEqual(len(duplicate_items), 1)
+
+    def test_identify_two_list_duplicates_2(self):
+        """Verify non-duplicate items in two lists do not generate an error."""
+        list1 = ["Trixie", "L5"]
+        list2 = ["D29", "RedRock"]
+        duplicate_items = \
+            basic.identify_two_list_duplicates(list1, list2)
+        self.assertEqual(len(duplicate_items), 0)
+
+    def test_identify_two_list_duplicates_3(self):
+        """Verify multiple duplicate items in two lists generate an error."""
+        list1 = ["Trixie", "L5", "D29", "RedRock"]
+        list2 = ["D29", "RedRock"]
+        duplicate_items = \
+            basic.identify_two_list_duplicates(list1, list2)
+        self.assertEqual(len(duplicate_items), 2)
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

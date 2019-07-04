@@ -1,4 +1,4 @@
-matched_obj"""Groups of evaluation/check functions."""
+"""Groups of evaluation/check functions."""
 
 
 
@@ -289,6 +289,32 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
 
 
         index += 1
+
+
+
+
+
+
+
+
+
+
+def check_import_ticket_structure(ticket_obj):
+    """Check how import tickets are structured prior to matching
+    with other types of data."""
+
+    ticket_obj.check_retrieve_status()
+    ticket_obj.check_type()
+    ticket_obj.check_host()
+    ticket_obj.check_cluster_subcluster()
+    ticket_obj.check_status()
+    ticket_obj.check_description_field()
+    ticket_obj.check_accession()
+    ticket_obj.check_annotation_author()
+    ticket_obj.check_run_mode()
+    ticket_obj.check_ticket()
+
+
 
 
 

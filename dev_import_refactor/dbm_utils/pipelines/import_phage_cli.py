@@ -26,27 +26,27 @@ except ModuleNotFoundError as err:
 #TODO replace with new function
 #Get the command line parameters
 try:
-	database = sys.argv[1]
-	phageListDir = sys.argv[2]
-	updateFile = sys.argv[3]
+    database = sys.argv[1]
+    phageListDir = sys.argv[2]
+    updateFile = sys.argv[3]
 except:
-	print "\n\n\
-			This is a python script to import and update phage genomes in the Phamerator database.\n\
-			It requires three arguments:\n\
-			First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
-			Second argument: directory path to the folder of genome files that will be uploaded (genbank-formatted).\n\
-			Third argument: directory path to the import table file with the following columns (csv-formatted):\n\
-				1. Action to implement on the database (add, remove, replace, update)\n\
-				2. PhageID to add or update\n\
-				3. Host genus of the updated phage\n\
-				4. Cluster of the updated phage\n\
-				5. Subcluster of the updated phage\n\
-				6. Annotation status of the updated phage (draft, final, gbk)\n\
-				7. Annotation authorship of the updated phage (hatfull, gbk)\n\
-				8. Gene description field of the updated phage (product, note, function)\n\
-				9. Accession of the updated phage\n\
-				10. Run mode of the updated phage\n\
-				11. PhageID that will be removed or replaced\n\n"
+    print "\n\n\
+            This is a python script to import and update phage genomes in the Phamerator database.\n\
+            It requires three arguments:\n\
+            First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
+            Second argument: directory path to the folder of genome files that will be uploaded (genbank-formatted).\n\
+            Third argument: directory path to the import table file with the following columns (csv-formatted):\n\
+                1. Action to implement on the database (add, remove, replace, update)\n\
+                2. PhageID to add or update\n\
+                3. Host genus of the updated phage\n\
+                4. Cluster of the updated phage\n\
+                5. Subcluster of the updated phage\n\
+                6. Annotation status of the updated phage (draft, final, gbk)\n\
+                7. Annotation authorship of the updated phage (hatfull, gbk)\n\
+                8. Gene description field of the updated phage (product, note, function)\n\
+                9. Accession of the updated phage\n\
+                10. Run mode of the updated phage\n\
+                11. PhageID that will be removed or replaced\n\n"
 	sys.exit(1)
 
 
@@ -68,12 +68,12 @@ home_dir = os.path.expanduser('~')
 
 #Add '/' at the end if it's not there
 if phageListDir[-1] != "/":
-	phageListDir = phageListDir + "/"
+    phageListDir = phageListDir + "/"
 
 
 #Expand the path if it references the home directory
 if phageListDir[0] == "~":
-	phageListDir = home_dir + phageListDir[1:]
+    phageListDir = home_dir + phageListDir[1:]
 
 #Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
 phageListDir = os.path.abspath(phageListDir)
@@ -81,8 +81,8 @@ phageListDir = os.path.abspath(phageListDir)
 
 
 if os.path.isdir(phageListDir) == False:
-	print "\n\nInvalid input for genome folder.\n\n"
-	sys.exit(1)
+    print "\n\nInvalid input for genome folder.\n\n"
+    sys.exit(1)
 
 
 
@@ -92,14 +92,13 @@ if os.path.isdir(phageListDir) == False:
 #Verify the import table path exists
 #Expand the path if it references the home directory
 if updateFile[0] == "~":
-	updateFile = home_dir + updateFile[1:]
+    updateFile = home_dir + updateFile[1:]
 
 #Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
 updateFile = os.path.abspath(updateFile)
-
 if os.path.exists(updateFile) == False:
-	print "\n\nInvalid input for import table file.\n\n"
-	sys.exit(1)
+    print "\n\nInvalid input for import table file.\n\n"
+    sys.exit(1)
 
 
 
@@ -119,17 +118,17 @@ failed_folder = '%s_failed_upload_files' % date
 success_folder = '%s_successful_upload_files' % date
 
 try:
-	os.mkdir(os.path.join(phageListDir,failed_folder))
+    os.mkdir(os.path.join(phageListDir,failed_folder))
 except:
-	print "\nUnable to create output folder: %s" % os.path.join(phageListDir,failed_folder)
-	sys.exit(1)
+    print "\nUnable to create output folder: %s" % os.path.join(phageListDir,failed_folder)
+    sys.exit(1)
 
 
 try:
-	os.mkdir(os.path.join(phageListDir,success_folder))
+    os.mkdir(os.path.join(phageListDir,success_folder))
 except:
-	print "\nUnable to create output folder: %s" % os.path.join(phageListDir,success_folder)
-	sys.exit(1)
+    print "\nUnable to create output folder: %s" % os.path.join(phageListDir,success_folder)
+    sys.exit(1)
 
 
 
@@ -169,9 +168,42 @@ from functions import tickets
 
 # Retrieve import ticket data.
 # Data is returned as a list of validated ticket objects.
-list_of_tickets, list_of_errors = prepare_tickets.main(ticket_filename)
+list_of_tickets, list_of_errors = tickets.prepare_tickets(ticket_filename)
+
+
+
+
+
+
+
+
+# Evaluate the tickets to ensure they are structured properly.
+
+# Each ticket should be complete, now that data from PhagesDB has been
+# retrieved. Validate each ticket by checking each field in the ticket
+# that it is populated correctly.
+
+# TODO not sure if I should pass a list of valid types to this function.
+for ticket in ticket_list:
+    evaluate.check_import_ticket_structure(ticket)
+
+
+
+
+
+
+# Now that individual tickets have been validated,
+# validate the entire group of tickets.
+
+#TODO this should return information
+eval_list = tickets.compare_tickets(ticket_list)
+
+
 
 # TODO check for ticket errors = exit script if not structured correctly.
+# Iterate through tickets and collect all evals.
+
+
 if len(list_of_errors) > 0:
     sys.exit(1)
 
@@ -242,11 +274,8 @@ if len(all_results) > 0:
 list_of_matched_objects = []
 for ticket in list_of_tickets:
     matched_data_obj = MatchedGenomes()
-	matched_data_obj.ticket = ticket
-	list_of_matched_objects.append(matched_data_obj)
-
-
-
+    matched_data_obj.ticket = ticket
+    list_of_matched_objects.append(matched_data_obj)
 
 
 
@@ -455,20 +484,18 @@ list_of_unassigned_tickets = []
 
 
 for matched_data_obj in matched_data_list:
-
     ticket_type = matched_data_obj.ticket.type
-
-	if ticket_type == "update":
-		list_of_update_tickets.append(matched_data_obj)
-	elif ticket_type == "remove":
-		list_of_remove_tickets.append(matched_data_obj)
-	elif (ticket_type == "add" or ticket_type == "replace"):
-		list_of_add_replace_tickets.append(matched_data_obj)
+    if ticket_type == "update":
+        list_of_update_tickets.append(matched_data_obj)
+    elif ticket_type == "remove":
+        list_of_remove_tickets.append(matched_data_obj)
+    elif (ticket_type == "add" or ticket_type == "replace"):
+        list_of_add_replace_tickets.append(matched_data_obj)
 
     #TODO error handling
-	else:
-		write_out(output_file,"\nError: during parsing of actions.")
-		table_errors += 1
+    else:
+        write_out(output_file,"\nError: during parsing of actions.")
+        table_errors += 1
 
 
 

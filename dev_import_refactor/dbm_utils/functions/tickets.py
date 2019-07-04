@@ -80,38 +80,40 @@ def parse_import_tickets(list_of_lists):
 
 
 
-#TODO this function should probably be moved to the general functions module.
-def identify_duplicates1(item_list, message):
-    """Verifies there are no duplicate items in a list."""
-
-    item_set = set(item_list)
-    if len(item_set) != len(item_list):
-        eval_object = Eval.construct_error(message)
-    else:
-        eval_object = None
-    return eval_object
-
-
-
-#TODO this function should probably be moved to the general functions module.
-def identify_duplicates2(item1_list, item2_list, message):
-    """Verifies there are no duplicate items between two lists."""
-
-    item1_set = set(item1_list)
-    item2_set = set(item2_list)
-    item3_list = item1_set & item2_set
-
-    if len(item3_list) > 0:
-        eval_object = Eval.construct_error(message)
-    else:
-        eval_object = None
-    return eval_object
+#
+# #TODO delete once this function is moved to basic.
+# def identify_one_list_duplicates(item_list, message):
+#     """Verifies there are no duplicate items in a list."""
+#
+#     item_set = set(item_list)
+#     if len(item_set) != len(item_list):
+#         eval_object = Eval.construct_error(message)
+#     else:
+#         eval_object = None
+#     return eval_object
 
 
+#
+# #TODO delete once this function is moved to basic.
+# def identify_two_list_duplicates(item1_list, item2_list, message):
+#     """Verifies there are no duplicate items between two lists."""
+#
+#     item1_set = set(item1_list)
+#     item2_set = set(item2_list)
+#     item3_list = item1_set & item2_set
+#
+#     if len(item3_list) > 0:
+#         eval_object = Eval.construct_error(message)
+#     else:
+#         eval_object = None
+#     return eval_object
 
 
-def validate_tickets(list_of_tickets):
-    """Verifies there are no ticket conflicts."""
+
+# TODO unit test now that I have refactored this function.
+def compare_tickets(list_of_tickets):
+    """Compare all tickets to each other to determine if
+    there are any ticket conflicts."""
 
     accession_list = []
 
@@ -163,46 +165,110 @@ def validate_tickets(list_of_tickets):
 
     # Now, iterate through each list to identify duplicate or
     # conflicting tickets.
-    result1 = identify_duplicates1(primary_id_list,\
-        "Multiple tickets contain the same Primary Phage ID.")
-    result_list.append(result1)
+    dupe_set1 = basic.identify_one_list_duplicates(primary_id_list)
+    if len(dupe_set1) > 0:
+        result1 = "Multiple tickets contain the same Primary Phage ID."
+        status1 = "error"
+    else:
+        result1 = "Primary PhageID is fine."
+        status1 = "correct"
 
-    result2 = identify_duplicates1(secondary_id_list,\
-        "Multiple tickets contain the same Secondary Phage ID.")
-    result_list.append(result2)
+    definition1 = "Check if there are multiple tickets with the same Primary PhageID."
+    eval1 = Eval.Eval(id = "TICKET", \
+                    definition = definition1, \
+                    result = result1, \
+                    status = status1)
+    result_list.append(eval1)
 
-    result3 = identify_duplicates1(accession_list,\
-        "Multiple tickets contain the same Accession.")
-    result_list.append(result3)
+
+    dupe_set2 = basic.identify_one_list_duplicates(secondary_id_list)
+    if len(dupe_set2) > 0:
+        result2 = "Multiple tickets contain the same Secondary Phage ID."
+        status2 = "error"
+    else:
+        result2 = "Secondary PhageID is fine."
+        status2 = "correct"
+
+    definition2 = "Check if there are multiple tickets with the same Secondary PhageID."
+    eval2 = Eval.Eval(id = "TICKET", \
+                    definition = definition2, \
+                    result = result2, \
+                    status = status2)
+    result_list.append(eval2)
+
+
+    dupe_set3 = basic.identify_one_list_duplicates(accession_list)
+    if len(dupe_set3) > 0:
+        result3 = "Multiple tickets contain the same Accession."
+        status3 = "error"
+    else:
+        result3 = "Accession is fine."
+        status3 = "correct"
+
+    definition3 = "Check if there are multiple tickets with the same Accession."
+    eval3 = Eval.Eval(id = "TICKET", \
+                    definition = definition3, \
+                    result = result3, \
+                    status = status3)
+    result_list.append(eval3)
+
+
 
 
 
     # No 'update' or 'add' Primary Phage IDs are expected to be a
     # 'remove' or 'replace' Secondary Phage IDs.
-    result4 = identify_duplicates2(update_add_primary_id_list, \
-                        secondary_id_list, \
-                        "An update or add Primary Phage ID is also a " + \
-                        "remove or replace Secondary Phage ID.")
-    result_list.append(result4)
+    dupe_set4 = basic.identify_two_list_duplicates(
+                        update_add_primary_id_list, \
+                        secondary_id_list)
+    if len(dupe_set4) > 0:
+        result4 = "An update or add Primary Phage ID is also a " + \
+                    "remove or replace Secondary Phage ID."
+        status4 = "error"
+    else:
+        result4 = "There is no PhageID conflict."
+        status4 = "correct"
+
+    definition4 = "Check if an update/add Primary PhageID is used " + \
+                    "as a remove/replace Secondary PhageID."
+    eval4 = Eval.Eval(id = "TICKET", \
+                    definition = definition4, \
+                    result = result4, \
+                    status = status4)
+    result_list.append(eval4)
 
 
     # No 'replace' Primary Phage IDs are expected to be a 'remove'.
     # Secondary Phage ID.
-    result5 = identify_duplicates2(replace_primary_id_list, \
-                        remove_secondary_id_list, \
-                        "A replace Primary Phage ID is also a " + \
-                        "remove Secondary Phage ID.")
-    result_list.append(result5)
+    dupe_set5 = basic.identify_two_list_duplicates(replace_primary_id_list, \
+                        remove_secondary_id_list)
+    if len(dupe_set5) > 0:
+        result5 = "A replace Primary Phage ID is also a " + \
+                    "remove Secondary Phage ID."
+        status5 = "error"
+    else:
+        result5 = "There is no PhageID conflict."
+        status5 = "correct"
+
+    definition5 = "Check if a replace Primary PhageID is used " + \
+                    "as a remove Secondary PhageID."
+    eval5 = Eval.Eval(id = "TICKET", \
+                    definition = definition5, \
+                    result = result5, \
+                    status = status5)
+    result_list.append(eval5)
+
 
 
     # Only return results that are Eval objects.
-    list_of_evals = []
-    for eval in result_list:
-        if eval is not None:
-            list_of_evals.append(eval)
+    # list_of_evals = []
+    # for eval in result_list:
+    #     if eval is not None:
+    #         list_of_evals.append(eval)
 
-
-    return list_of_evals
+    # TODO this used to return only error evals, but now it returns all
+    # evals, so this will need to be corrected in the unit tests.
+    return result_list
 
 
 
@@ -438,6 +504,67 @@ def set_ticket_data(genome_obj, ticket_obj):
 
 
 
+
+
+
+
+
+# TODO implement below.
+# TODO unit test below.
+
+
+
+
+def prepare_tickets(ticket_filename):
+    """Parse import table into ticket objects."""
+
+    # Assumes that filename has already been validated.
+
+    # TODO retrieve import data.
+    # List of ticket data.
+
+
+    #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
+    #0 = Type of database action to be performed (add, remove, replace, update)
+    #1 = New PhageID that will be added to database
+    #2 = Host of new phage
+    #3 = Cluster of new phage (singletons should be reported as "singleton")
+    #4 = Subcluster of new phage (no subcluster should be reported as "none")
+    #5 = Annotation status of new phage
+    #6 = Annotation author of the new phage
+    #7 = Feature field containing gene descriptions of new phage
+    #8 = Accession
+    #9 = Run mode
+    #10 = PhageID of genome to be removed from the database
+
+
+    # Parse list of data and construct tickets.
+
+    # Convert data from import file into ticket objects
+    ticket_list = parse_import_tickets(import_table_data_list)
+
+
+
+    # TODO rename this function to set_case?
+    # Verify all data is cased appropriately.
+    for ticket_list in ticket_list:
+    	ticket.check_case()
+
+
+    # Some data may need to be retrieved from PhagesDB.
+    for ticket in ticket_list:
+        ticket, eval_object = retrieve_online_data(ticket)
+
+
+
+
+
+
+
+    return ticket_list
+
+
+###
 
 
 
