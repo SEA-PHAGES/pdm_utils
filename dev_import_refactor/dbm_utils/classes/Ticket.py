@@ -2,6 +2,7 @@
 genomes into Phamerator."""
 
 from classes import Eval
+from functions import basic
 
 
 
@@ -95,6 +96,35 @@ class GenomeTicket:
         self.run_mode = self.run_mode.lower()
 
 
+    # TODO unit test.
+    def set_host(self,value):
+
+        # Keep only the genus in the host data field and discard the rest
+        self.host = value.split(' ')[0]
+
+
+
+
+
+    # TODO unit test.
+    def set_accession(self,value):
+
+        self.accession = value.strip()
+        self.accession = value.split('.')[0]
+
+        if self.accession == "":
+            self.accession = "none"
+
+
+
+    # TODO unit test.
+    def set_annotation_author(self,value):
+        """Convert author name listed in ticket to binary value if needed."""
+        self.annotation_author = basic.convert_author(value)
+
+
+
+
 
 
     # If either the Host, Cluster, Subcluster or Accession data needs to be
@@ -105,38 +135,35 @@ class GenomeTicket:
         #Host
         if self.host == "retrieve":
             self.host = "none"
-            result = "Host data was not retrieved from Phagesdb."
-            status = "error"
+            result1 = "Host data was not retrieved from Phagesdb."
+            status1 = "error"
         else:
-            result = "Host data is populated."
-            status = "correct"
+            result1 = "Host data is populated."
+            status1 = "correct"
 
-        definition = "Confirm host data is populated."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
-
-
-
+        definition1 = "Confirm host data is populated."
+        eval1 = Eval.Eval(id = "TICKET", \
+                        definition = definition1, \
+                        result = result1, \
+                        status = status1)
+        self.evaluations.append(eval1)
 
 
         #Cluster
         if self.cluster == "retrieve":
             self.cluster = "none"
-            result = "Cluster data was not retrieved from Phagesdb."
-            status = "error"
+            result2 = "Cluster data was not retrieved from Phagesdb."
+            status2 = "error"
         else:
-            result = "Cluster data is populated."
-            status = "correct"
+            result2 = "Cluster data is populated."
+            status2 = "correct"
 
-        definition = "Confirm Cluster data is populated."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
+        definition2 = "Confirm Cluster data is populated."
+        eval2 = Eval.Eval(id = "TICKET", \
+                        definition = definition2, \
+                        result = result2, \
+                        status = status2)
+        self.evaluations.append(eval2)
 
 
 
@@ -145,700 +172,362 @@ class GenomeTicket:
         #Subcluster
         if self.subcluster == "retrieve":
             self.subcluster = "none"
-            result = "Subcluster data was not retrieved from Phagesdb."
-            status = "error"
+            result3 = "Subcluster data was not retrieved from Phagesdb."
+            status3 = "error"
         else:
-            result = "Subcluster data is populated."
-            status = "correct"
+            result3 = "Subcluster data is populated."
+            status3 = "correct"
 
-        definition = "Confirm Subcluster data is populated."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
+        definition3 = "Confirm Subcluster data is populated."
+        eval3 = Eval.Eval(id = "TICKET", \
+                        definition = definition3, \
+                        result = result3, \
+                        status = status3)
+        self.evaluations.append(eval3)
 
 
         #Accession
         if self.accession == "retrieve":
             self.accession = "none"
-            result = "Accession data was not retrieved from Phagesdb."
-            status = "error"
+            result4 = "Accession data was not retrieved from Phagesdb."
+            status4 = "error"
         else:
-            result = "Accession data is populated."
-            status = "correct"
+            result4 = "Accession data is populated."
+            status4 = "correct"
 
-        definition = "Confirm Accession data is populated."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition4 = "Confirm Accession data is populated."
+        eval4 = Eval.Eval(id = "TICKET", \
+                        definition = definition4, \
+                        result = result4, \
+                        status = status4)
+        self.evaluations.append(eval4)
+
+
+
+
+
+    # Evaluations
+    def check_type(self, value_set, expected = True):
+        """Check whether the ticket type field is populated as expected.
+        The value_set contains a list of possible values for
+        the ticket type. The 'expected' parameter indicates whether
+        the ticket type is expected to be an element of the set or not."""
+
+        result, status = basic.check_value_in_set(
+                            self.type,
+                            value_set,
+                            expected)
+
+        definition = "Check if ticket type field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
 
 
 
-    # Make sure the requested action is permissible
-    # This script currently only allows four actions:
-    # add, remove, replace, and update.
-    def check_type(self):
 
-        if not (self.type == "add" or \
-            self.type == "remove" or \
-            self.type == "replace" or \
-            self.type == "update"):
+    # TODO HERE IN PROGRESS. TRYING TO FIGURE OUT HOW TO TEST PHAGE_ID TO
+    # BE WITHIN  A CERTAIN SET AS WELL AS NOT IN EMPTY SET.
+    # TODO in progress, replacing old method.
+    def check_primary_phage_id(self,
+                                filled_set,
+                                filled_expected = False,
+                                empty_expected = False):
+        """Check if primary_phage_id meets expectations."""
 
-            result = "The ticket type %s is not valid." % self.type
-            status = "error"
-        else:
-            result = "The ticket type is valid."
+        filled_correct = basic.check_value_in_set2(
+                                            self.primary_phage_id,
+                                            filled_set,
+                                            filled_expected)
+
+
+        empty_correct = basic.check_value_in_set2(
+                                            self.primary_phage_id,
+                                            set(["none"]),
+                                            empty_expected)
+
+
+        if empty_correct:
+            result = "The field is populated correctly."
             status = "correct"
+        elif (empty_correct and filled_correct):
+            result = "The field is not populated correctly."
+            status = "error"
 
-        definition = "Confirm validity of ticket type."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition = "Check if primary_phage_id field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+    # TODO HERE IN PROGRESS. TRYING TO FIGURE OUT HOW TO TEST PHAGE_ID TO
+    # BE WITHIN  A CERTAIN SET AS WELL AS NOT IN EMPTY SET.
+    # TODO in progress, replacing old method.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def check_primary_phage_id(self, value_set, expected = True):
+        """Check whether the primary_phage_id field is populated as expected.
+        The value_set contains a list of possible values for
+        the primary_phage_id. The 'expected' parameter indicates whether
+        the primary_phage_id is expected to be an element of the set or not."""
+
+        result, status = basic.check_value_in_set(
+                            self.primary_phage_id,
+                            value_set,
+                            expected)
+
+        definition = "Check if primary_phage_id field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_secondary_phage_id(self, value_set, expected = True):
+        """Check whether the secondary_phage_id field is populated as expected.
+        The value_set contains a list of possible values for
+        the secondary_phage_id. The 'expected' parameter indicates whether
+        the secondary_phage_id is expected to be an element of the set or not."""
+
+        result, status = basic.check_value_in_set(
+                            self.secondary_phage_id,
+                            value_set,
+                            expected)
+
+        definition = "Check if secondary_phage_id field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_host(self, value_set, expected = True):
+        """Check whether the host field is populated as expected.
+        The value_set contains a list of possible values for
+        the host. The 'expected' parameter indicates whether
+        the host is expected to be an element of the set or not."""
+
+        result, status = basic.check_value_in_set(
+                            self.host,
+                            value_set,
+                            expected)
+
+        definition = "Check if host field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
 
 
+    def check_subcluster(self, value_set, expected = True):
+        """Check whether the subcluster field is populated as expected.
+        The value_set contains a list of possible values for
+        the subcluster. The 'expected' parameter indicates whether
+        the subcluster is expected to be an element of the set or not."""
 
-    # Modify fields if needed
+        result, status = basic.check_value_in_set(
+                            self.subcluster,
+                            value_set,
+                            expected)
 
-    # Modify Host if needed
-    def check_host(self, host_set):
-
-        if self.host != "none":
-
-            # Keep only the genus in the host data field and discard the rest
-            self.host = self.host.split(' ')[0]
-
-            # TODO need to implement it elsewhere?
-            # TODO define host_set
-            if self.host not in host_set:
-
-                result = \
-                    "The host strain %s is not currently in the database." % \
-                    self.host
-                status = "error"
-            else:
-                result = "The host strain is not new."
-                status = "correct"
-
-            definition = "Check whether host strain is new."
-            eval = Eval.Eval(id = "TICKET", \
-                            definition = definition, \
-                            result = result, \
-                            status = status)
-            self.evaluations.append(eval)
+        definition = "Check if subcluster field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
 
 
 
 
+    def check_cluster(self, value_set, expected = True):
+        """Check whether the cluster field is populated as expected.
+        The value_set contains a list of possible values for
+        the cluster. The 'expected' parameter indicates whether
+        the cluster is expected to be an element of the set or not."""
+
+        result, status = basic.check_value_in_set(
+                            self.cluster,
+                            value_set,
+                            expected)
+
+        definition = "Check if cluster field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
 
 
-
-
-
-    # Check Subcluster data
-    def check_subcluster(self, phage_subcluster_set):
+    def check_subcluster_structure(self):
+        """Check whether the cluster field is structured appropriately."""
 
         if self.subcluster != "none":
+            left, right = basic.split_string(self.subcluster)
 
-            if self.subcluster not in phage_subcluster_set:
-
-                result = \
-                    "The Subcluster %s is not currently in the database." % \
-                    self.subcluster
+            if (left.isalpha() == False or right.isdigit() == False):
+                result = "Subcluster is not structured correctly."
                 status = "error"
             else:
-                result = "The Subcluster is not new."
+                result = "Subcluster is structured correctly."
                 status = "correct"
 
-            definition = "Check whether Subcluster is new."
-            eval = Eval.Eval(id = "TICKET", \
-                            definition = definition, \
-                            result = result, \
-                            status = status)
-            self.evaluations.append(eval)
+        else:
+            result = "Subcluster is empty."
+            status = "not_evaluated"
+
+        definition = "Check if subcluster field is structured correctly."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
 
 
-            if len(self.subcluster) > 5:
+    def check_cluster_structure(self):
+        """Check whether the cluster field is structured appropriately."""
 
-                result = \
-                    "The Subcluster designation %s exceeds the character limit." % \
-                    self.subcluster
-                status = "error"
-            else:
-                result = "The Subcluster designation length is valid."
-                status = "correct"
-
-            definition = "Check whether Subcluster designation length is valud."
-            eval = Eval.Eval(id = "TICKET", \
-                            definition = definition, \
-                            result = result, \
-                            status = status)
-            self.evaluations.append(eval)
-
-
-
-
-
-
-	# Modify Cluster and Subcluster if needed
-    def check_cluster(self, phage_cluster_set):
-
-        # Check Cluster data
         if self.cluster != "none":
+            left, right = basic.split_string(self.cluster)
 
-            if self.cluster.lower() != "singleton":
-
-                if self.cluster not in phage_cluster_set:
-
-                    result = \
-                        "The Cluster %s is not currently in the database." % \
-                        self.cluster
-                    status = "error"
-                else:
-                    result = "The Cluster designation is valid."
-                    status = "correct"
-
-                definition = "Check whether Cluster is new."
-                eval = Eval.Eval(id = "TICKET", \
-                                definition = definition, \
-                                result = result, \
-                                status = status)
-                self.evaluations.append(eval)
-
-                if len(self.cluster) > 5:
-                    result = \
-                        "The Cluster designation %s exceeds the character limit." % \
-                        self.cluster
-                    status = "error"
-                else:
-                    result = "The Cluster designation length is valid."
-                    status = "correct"
-
-                definition = "Check whether Cluster designation length is valid."
-                eval = Eval.Eval(id = "TICKET", \
-                                definition = definition, \
-                                result = result, \
-                                status = status)
-                self.evaluations.append(eval)
-
-
+            if (right != "" or left.isalpha() == False):
+                result = "Cluster is not structured correctly."
+                status = "error"
             else:
-                self.cluster = self.cluster.lower()
+                result = "Cluster is structured correctly."
+                status = "correct"
+        else:
+            result = "Cluster is empty."
+            status = "not_evaluated"
 
 
+        definition = "Check if cluster field is structured correctly."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
 
 
-
-	# Compare Cluster and Subcluster if needed
     def check_cluster_subcluster(self):
+        """Check whether the cluster and subcluster fields are
+        compatible."""
 
-        # If Singleton or Unknown Cluster, there should be no Subcluster
-        if (self.cluster == "singleton" or \
-            self.cluster == "UNK" or \
-            self.cluster == "none"):
-
-            if self.subcluster != "none":
-                result = "There is a discrepancy between the " + \
-                            "Cluster and Subcluster designations."
-                status = "error"
-            else:
-                result = "The Cluster and Subcluster are valid."
-                status = "correct"
-
-        # If not Singleton or Unknown or none, then Cluster should be part
-        # of Subcluster data and the remainder should be a digit
-        elif self.subcluster != "none":
-
-            if (self.subcluster[:len(self.cluster)] != self.cluster or \
-                self.subcluster[len(self.cluster):].isdigit() == False):
-
-                result = "There is a discrepancy between the " + \
-                            "Cluster and Subcluster designations."
-                status = "error"
-            else:
-                result = "The Cluster and Subcluster are valid."
-                status = "correct"
-
+        output = basic.compare_cluster_subcluster(self.cluster, self.subcluster)
+        if not output:
+            result = "Cluster and Subcluster designations are not compatible."
+            status = "error"
         else:
-            result = "The Cluster and Subcluster are valid."
+            result = "Cluster and Subcluster designations are compatible."
             status = "correct"
 
-        definition = "Check for discrepancy between Cluster and Subcluster."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-
+        definition = "Check for compatibility between Cluster and Subcluster."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
+    def check_status(self, value_set, expected = True):
+        """Check whether the status field is populated as expected.
+        The value_set contains a list of possible values for
+        the status. The 'expected' parameter indicates whether
+        the status is expected to be an element of the set or not."""
 
+        result, status = basic.check_value_in_set(
+                            self.status,
+                            value_set,
+                            expected)
 
-
-
-
-
-
-
-	# Modify Status if needed
-    def check_status(self, phage_status_set):
-
-        if (self.status not in phage_status_set and self.status != "none"):
-
-            result = \
-                "The status %s is not currently in the database." % self.status
-            status = "error"
-        else:
-            result = "The status is not new."
-            status = "correct"
-
-        definition = "Check whether status is new."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
-
-        if len(self.status) > 5:
-            result = "The status designation %s exceeds the character limit." % \
-                self.status
-            status = "error"
-        else:
-            result = "The status designation length is valid."
-            status = "correct"
-
-        definition = "Check whether status designation length is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition = "Check if status field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
-    # Modify Description Qualifier if needed
-    def check_description_field(self, description_set):
+    def check_description_field(self, value_set, expected = True):
+        """Check whether the description_field field is populated as expected.
+        The value_set contains a list of possible values for
+        the description_field. The 'expected' parameter indicates whether
+        the description_field is expected to be an element of the set or not."""
 
-        if (self.description_field not in description_set and \
-            self.description_field != "none"):
+        result, status = basic.check_value_in_set(
+                            self.description_field,
+                            value_set,
+                            expected)
 
-            result = "The description field %s is not commonly used." % \
-                    self.description_field
-            status = "error"
-        else:
-            result = "The description field is common."
-            status = "correct"
-
-        definition = "Check whether the description field is commonly used."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition = "Check if description_field field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
+    def check_accession(self, value_set, expected = True):
+        """Check whether the accession field is populated as expected.
+        The value_set contains a list of possible values for
+        the accession. The 'expected' parameter indicates whether
+        the accession is expected to be an element of the set or not."""
 
-    # Modify Accession if needed
-    def check_accession(self):
+        result, status = basic.check_value_in_set(
+                            self.accession,
+                            value_set,
+                            expected)
 
-        self.accession = self.accession.strip()
-        self.accession = self.accession.split('.')[0]
-
-        if self.accession == "":
-            self.accession = "none"
-
-
-    # TODO improve this method = create separate, general function to convert
-    # author value same way as with strand.
-    # TODO the logic for creating Eval needs to be improved, so that
-    # a 'correct' Eval is also created.
-	# Modify AnnotationAuthor
-    def check_annotation_author(self):
-
-        # Author should only be 'hatfull','gbk', or 'none'.
-        if self.annotation_author == "hatfull":
-            self.annotation_author = "1"
-        elif self.annotation_author == "gbk":
-            self.annotation_author = "0"
-        elif self.annotation_author == "none":
-            self.annotation_author = "none"
-        else:
-            self.annotation_author = "error"
-            result = "The annotation author designation %s is not correct." \
-                    % self.annotation_author
-            status = "error"
-            definition = "Check whether annotation_author is valid."
-            eval = Eval.Eval(id = "TICKET", \
-                            definition = definition, \
-                            result = result, \
-                            status = status)
-            self.evaluations.append(eval)
-
-
-	# Make sure run mode is permissible
-    def check_run_mode(self,run_mode_options_dict):
-
-        if self.run_mode == "custom":
-
-            # TODO make this variable accessible or return a value
-            # run_mode_custom_total += 1
-
-            pass
-
-        elif self.run_mode not in set(run_mode_options_dict.keys()):
-
-            result = "The run mode %s is not valid." % self.run_mode
-            status = "error"
-        else:
-            result = "The run mode is valid."
-            status = "correct"
-
-        definition = "Check whether the run mode is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition = "Check if accession field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
+    def check_annotation_author(self, value_set, expected = True):
+        """Check whether the annotation_author field is populated as expected.
+        The value_set contains a list of possible values for
+        the annotation_author. The 'expected' parameter indicates whether
+        the annotation_author is expected to be an element of the set or not."""
 
+        result, status = basic.check_value_in_set(
+                            self.annotation_author,
+                            value_set,
+                            expected)
 
-
-
-
-
-    def check_update_ticket(self,phage_id_set):
-
-        if self.primary_phage_id not in phage_id_set:
-            result = "The %s is not a valid PhageID in the database." \
-                    % self.primary_phage_id
-            status = "error"
-        else:
-            result = "The PhageID is valid."
-            status = "correct"
-
-        definition = "Check whether the primary PhageID is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
-
-        if self.host == "none":
-            result = "Phage %s does not have correctly populated Host field." \
-                    % self.primary_phage_id
-            status = "error"
-        else:
-            result = "The Host is valid."
-            status = "correct"
-
-        definition = "Check whether the Host is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition = "Check if annotation_author field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
+    def check_run_mode(self, value_set, expected = True):
+        """Check whether the run_mode field is populated as expected.
+        The value_set contains a list of possible values for
+        the run_mode. The 'expected' parameter indicates whether
+        the run_mode is expected to be an element of the set or not."""
 
+        result, status = basic.check_value_in_set(
+                            self.run_mode,
+                            value_set,
+                            expected)
 
-
-
-
-
-
-
-        if self.cluster == "none":
-            result = "Phage %s does not have correctly populated Cluster field." \
-                    % self.primary_phage_id
-            status = "error"
-        else:
-            result = "The Cluster field is valid."
-            status = "correct"
-
-        definition = "Check whether the Cluster field is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        definition = "Check if run_mode field is correctly populated."
+        eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
-
-
-        if self.status == "none":
-            result = "Phage %s does not have correctly populated Status field." \
-                    % self.primary_phage_id
-            status = "error"
-        else:
-            result = "The Status field is valid."
-            status = "correct"
-
-        definition = "Check whether the Status field is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
-
-
-        if self.description_field != "none":
-            result = "Phage %s does not have correctly populated Description field." \
-                    % self.primary_phage_id
-            status = "error"
-        else:
-            result = "The Description field is valid."
-            status = "correct"
-
-        definition = "Check whether the Description field is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
-
-
-
-
-
-
-        if self.secondary_phage_id != "none":
-            result = "Phage %s should not have a genome listed to be removed." \
-                    % self.primary_phage_id
-            status = "error"
-        else:
-            result = "The Secondary PhageID field is valid."
-            status = "correct"
-
-        definition = "Check whether the Secondary PhageID field is valid."
-        eval = Eval.Eval(id = "TICKET", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-        self.evaluations.append(eval)
-
-
-        #Accession = it will either be an accession or it will be "none"
-        #Subcluster = it will either be a Subcluster or it will be "none"
-
-        if (self.annotation_author != "1" and self.annotation_author != "0"):
-            result = "Phage %s does not have correctly populated Author field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.run_mode != "none":
-            result = "Phage %s does not have correctly populated Run Mode field." \
-                    % self.primary_phage_id
-            status = "error"
-
-
-
-    def check_add_ticket(self,phage_id_set):
-
-        if self.primary_phage_id in phage_id_set:
-
-            result = "Phage %s is already a PhageID in the database." + \
-                    "This genome cannot be added to the database." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.primary_phage_id == "none":
-            result = "Phage %s does not have correctly populated Primary PhageID field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.host == "none":
-            result = "Phage %s does not have correctly populated Host field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.cluster == "none":
-            result = "Phage %s does not have correctly populated Cluster field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.status == "none":
-            result = "Phage %s does not have correctly populated Status field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.status == "final":
-            result = "The phage %s to be added is listed " + \
-                    "as Final status, but no Draft (or other) genome " + \
-                    " is listed to be removed."
-            status = "error"
-
-        if self.description_field == "none":
-            result = "Phage %s does not have correctly populated Description field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.secondary_phage_id != "none":
-            result = "Phage %s to be added should not have a genome indicated for removal." \
-                    % self.primary_phage_id
-            status = "error"
-
-        #Accession = it will either be an accession or it will be "none"
-        #Subcluster = it will either be a Subcluster or it will be "none"
-
-        if self.annotation_author != '1' and self.annotation_author != '0':
-            result = "Phage %s does not have correctly populated Author field." \
-                    % self.primary_phage_id
-            status = "error"
-
-        if self.run_mode == 'none':
-            result = "Phage %s does not have correctly populated Run Mode field." \
-                    % self.primary_phage_id
-            status = "error"
-
-
-
-
-    def check_remove_ticket(self,phage_id_set):
-        error_msg4 = "Secondary Phage %s does not have correctly " + \
-        "populated %s field."
-
-        if self.primary_phage_id != "none":
-            result = error_msg4 % (self.secondary_phage_id, "Primary PhageID")
-            status = "error"
-
-        if self.host != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Host")
-            status = "error"
-
-        if self.cluster != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Cluster")
-            status = "error"
-
-        if self.subcluster != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Subcluster")
-            status = "error"
-
-        if self.status != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Status")
-            status = "error"
-
-        if self.description_field != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Description Field")
-            status = "error"
-
-        if self.accession != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Accession")
-            status = "error"
-
-        if self.annotation_author != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "AnnotationAuthor")
-            status = "error"
-
-        if self.run_mode != "none":
-            result =  error_msg4 % (self.secondary_phage_id, "Run Mode")
-            status = "error"
-
-        if self.secondary_phage_id not in phage_id_set:
-            result = "Secondary Phage %s is not a valid PhageID. " + \
-                    "This genome cannot be dropped from the database." \
-                    % self.secondary_phage_id
-            status = "error"
-
-
-
-
-    def check_replace_ticket(self,phage_id_set):
-
-        if self.primary_phage_id == "none":
-
-            result = \
-                "Primary Phage %s is not a valid PhageID. %s genome cannot be replaced." \
-                % (self.primary_phage_id,self.secondary_phage_id)
-            status = "error"
+    def check_primary_secondary_phage_ids(self):
+        """Check whether the primary_phage_id and secondary_phage_id
+        fields are the same."""
 
         if self.primary_phage_id != self.secondary_phage_id:
-
-            result = \
-                "The Primary Phage %s and Secondary phage %s are not spelled the same." \
-                % (self.primary_phage_id,self.secondary_phage_id)
+            result = "The primary_phage_id and secondary_phage_id are different."
             status = "error"
-
-            #FirstPhageID. If replacing a genome, ensure that if the genome to
-            #be removed is not the same, that the new genome added has a unique name
-            if self.primary_phage_id in phage_id_set:
-                result = "Primary Phage %s is already a PhageID " + \
-                    "in the database. This genome cannot be added to the database." \
-                    % self.primary_phage_id
-                status = "error"
-
-        if self.host == "none":
-            result = "Phage %s does not have correctly populated Host field." \
-                % self.primary_phage_id
-            status = "error"
-
-        if self.cluster == "none":
-            result = "Phage %s does not have correctly populated Cluster field." \
-                % self.primary_phage_id
-            status = "error"
-
-        if self.status == "none":
-            result = "Phage %s does not have correctly populated Status field." \
-                % self.primary_phage_id
-            status = "error"
-
-        if self.description_field == "none":
-            result = "Phage %s does not have correctly populated Description Field field." \
-                % self.primary_phage_id
-            status = "error"
-
-        if self.secondary_phage_id not in phage_id_set:
-            result = "Secondary Phage %s is not a valid PhageID. " + \
-                "This genome cannot be dropped from the database." \
-                 % self.secondary_phage_id
-            status = "error"
-
-
-
-        #Accession = it will either be an accession or it will be "none"
-        #Subcluster = it will either be a Subcluster or it will be "none"
-
-        if self.annotation_author != '1' and self.annotation_author != '0':
-            result = "Phage %s does not have correctly populated Author field." \
-                % self.primary_phage_id
-            status = "error"
-
-        if self.run_mode == 'none':
-            result = "Phage %s does not have correctly populated Run Mode field." \
-                % self.primary_phage_id
-            status = "error"
-
-
-
-
-
-
-
-    # Rules for how each field is populated differs depending on
-    # each specific action.
-    def check_ticket(self,phage_id_set):
-
-        if self.type == "update":
-            self.check_update_ticket(phage_id_set)
-
-        elif self.type == "add":
-            self.check_add_ticket(phage_id_set)
-
-        elif self.type == "remove":
-            self.check_remove_ticket(phage_id_set)
-
-        elif self.type == "replace":
-            self.check_replace_ticket(phage_id_set)
-
         else:
-            pass
+            result = "The primary_phage_id and secondary_phage_id are the same."
+            status = "correct"
+
+        definition = "Check if primary_phage_id and secondary_phage_id " + \
+                        "fields are compatible."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+
+
+
+
+
 
 
 

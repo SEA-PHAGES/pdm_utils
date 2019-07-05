@@ -1139,6 +1139,125 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
+    def test_compare_cluster_subcluster_1(self):
+        """Check that empty cluster and empty subcluster
+        do not produce an error."""
+        cluster = "none"
+        subcluster = "none"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertTrue(result)
+
+    def test_compare_cluster_subcluster_2(self):
+        """Check that empty cluster and non-empty subcluster
+        produce an error."""
+        cluster = "none"
+        subcluster = "AA1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+    def test_compare_cluster_subcluster_3(self):
+        """Check that singleton cluster and empty subcluster
+        do not produce an error."""
+        cluster = "singleton"
+        subcluster = "none"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertTrue(result)
+
+    def test_compare_cluster_subcluster_4(self):
+        """Check that singleton cluster and non-empty subcluster
+        produce an error."""
+        cluster = "singleton"
+        subcluster = "AA1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+    def test_compare_cluster_subcluster_5(self):
+        """Check that Unknown cluster and empty subcluster
+        do not produce an error."""
+        cluster = "UNK"
+        subcluster = "none"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertTrue(result)
+
+    def test_compare_cluster_subcluster_6(self):
+        """Check that Unknown cluster and non-empty subcluster
+        produce an error."""
+        cluster = "UNK"
+        subcluster = "AA1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+    def test_compare_cluster_subcluster_7(self):
+        """Check that non-empty cluster and empty subcluster
+        do not produce an error."""
+        cluster = "AA"
+        subcluster = "none"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertTrue(result)
+
+    def test_compare_cluster_subcluster_8(self):
+        """Check that non-empty cluster and matching non-empty subcluster
+        do not produce an error."""
+        cluster = "AA"
+        subcluster = "AA1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertTrue(result)
+
+    def test_compare_cluster_subcluster_9(self):
+        """Check that non-empty cluster and non-matching non-empty subcluster
+        produce an error."""
+        cluster = "AA"
+        subcluster = "A1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+    def test_compare_cluster_subcluster_10(self):
+        """Check that non-empty cluster and non-matching non-empty subcluster
+        produce an error."""
+        cluster = "AA"
+        subcluster = "1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+    def test_compare_cluster_subcluster_11(self):
+        """Check that non-empty cluster and non-matching non-empty subcluster
+        produce an error."""
+        cluster = "AA"
+        subcluster = "AAA1"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+    def test_compare_cluster_subcluster_12(self):
+        """Check that non-empty cluster and non-matching non-empty subcluster
+        produce an error."""
+        cluster = "AA"
+        subcluster = "A123"
+        result = basic.compare_cluster_subcluster(cluster, subcluster)
+        self.assertFalse(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def test_identify_one_list_duplicates_1(self):
         """Verify duplicate items generates an error."""
         duplicate_items = \
@@ -1184,6 +1303,98 @@ class TestGeneralFunctions(unittest.TestCase):
         duplicate_items = \
             basic.identify_two_list_duplicates(list1, list2)
         self.assertEqual(len(duplicate_items), 2)
+
+
+
+
+
+
+
+
+
+
+    def test_check_value_in_set_1(self):
+        """Check that no error is produced if the
+        value_set is 'none',
+        the value is expected to be present in the set,
+        and is present."""
+        test_set = set(["none"])
+        value = "none"
+        result, status = basic.check_value_in_set(value, test_set)
+        self.assertEqual(status, "correct")
+
+    def test_check_value_in_set_2(self):
+        """Check that an error is produced if the
+        phagvalue_sete_id_set is 'none',
+        the value is expected to be present in the set,
+        and is not present."""
+        test_set = set(["none"])
+        value = "D29"
+        result, status = basic.check_value_in_set(value, test_set)
+        self.assertEqual(status, "error")
+
+    def test_check_value_in_set_3(self):
+        """Check that no error is produced if the
+        value_set is 'none',
+        the value is not expected to be present in the set,
+        and is present."""
+        test_set = set(["none"])
+        value = "none"
+        result, status = basic.check_value_in_set(value, test_set, False)
+        self.assertEqual(status, "error")
+
+    def test_check_value_in_set_4(self):
+        """Check that no error is produced if the
+        value_set is 'none',
+        the value is not expected to be present in the set,
+        and is not present."""
+        test_set = set(["none"])
+        value = "D29"
+        result, status = basic.check_value_in_set(value, test_set, False)
+        self.assertEqual(status, "correct")
+
+    def test_check_value_in_set_5(self):
+        """Check that no error is produced if the
+        value_set is not 'none',
+        the value is expected to be present in the set,
+        and is present."""
+        test_set = set(["Trixie", "L5"])
+        value = "Trixie"
+        result, status = basic.check_value_in_set(value, test_set)
+        self.assertEqual(status, "correct")
+
+    def test_check_value_in_set_6(self):
+        """Check that an error is produced if the
+        value_set is not 'none',
+        the value is expected to be present in the set,
+        and is not present."""
+        test_set = set(["Trixie", "L5"])
+        value = "D29"
+        result, status = basic.check_value_in_set(value, test_set)
+        self.assertEqual(status, "error")
+
+    def test_check_value_in_set_7(self):
+        """Check that no error is produced if the
+        value_set is not 'none',
+        the value is not expected to be present in the set,
+        and is present."""
+        test_set = set(["Trixie", "L5"])
+        value = "Trixie"
+        result, status = basic.check_value_in_set(value, test_set, False)
+        self.assertEqual(status, "error")
+
+    def test_check_value_in_set_8(self):
+        """Check that no error is produced if the
+        value_set is not 'none',
+        the value is not expected to be present in the set,
+        and is not present."""
+        test_set = set(["Trixie", "L5"])
+        value = "D29"
+        result, status = basic.check_value_in_set(value, test_set, False)
+        self.assertEqual(status, "correct")
+
+
+
 
 
 

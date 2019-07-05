@@ -8,7 +8,7 @@
 
 class Eval:
 
-    def __init__(self, id = "", definition = "", status = "", result = ""):
+    def __init__(self, id = "", definition = "", result = "", status = ""):
 
         self.id = id # Unique identifier for the specific evaluation.
         self.definition = definition # Description of what was evaluated.

@@ -3,9 +3,30 @@ database."""
 
 
 from Bio.Alphabet import IUPAC
+from datetime import datetime
 
 
 
+
+
+
+
+
+
+
+EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')
+
+# Common list of values that represent empty or null values.
+EMPTY_SET = set(["",
+                "none",
+                "null",
+                None,
+                "not applicable",
+                "na",
+                "n/a",
+                "0",
+                0,
+                EMPTY_DATE])
 
 
 # Set up dna and protein alphabets to verify sequence integrity
@@ -19,9 +40,11 @@ PROTEIN_ALPHABET = set(IUPAC.ExtendedIUPACProtein.letters)
 # Replace = delete a genome and replace it with another.
 # Update = make changes to one or more fields related to a genome
 # already present in the database (e.g. HostStrain, Cluster, Subcluster, etc.)
-ACTIONS = set(["add","remove","replace","update"])
+TICKET_TYPE = set(["add","remove","replace","update"])
 
 
+
+# TODO is this constant still needed?
 # Create set of most common gene description genbank qualifiers.
 DESCRIPTION_FIELDS = set(["product","note","function"])
 
@@ -34,9 +57,19 @@ HOST_IGNORE = ['enterobacteria','phage','bacteriophage','cyanophage']
 
 
 
-# Dictionary for storing authorship info
-# TODO will need to revampe this, allowing for other names to be added or used.
-AUTHOR_DICTIONARY = {'0':'gbk','1':'hatfull'}
+
+# List of names that represent authors that have control over
+# a genome record annotations. This constant is stored as a list
+# so that multiple names can be stored, if needed.
+AUTHOR_SET = set(["hatfull"])
+
+# Dictionary for storing authorship info.
+# 1 = list of authors that should be listed on a genome record.
+# 0 = 'gbk', representing a genome record that a group does not have
+# control over.
+AUTHOR_DICTIONARY = {0:set(['gbk']),1: AUTHOR_SET}
+
+
 
 
 # PhagesDB API to retrieve genome information.
@@ -50,6 +83,8 @@ ADMISSIBLE_FILE_TYPES = set(["gb","gbf","gbk","txt"])
 
 
 
+# Set of possible import ticket run modes.
+RUN_MODE_SET = set(["phagesdb", "pecaan", "ncbi_auto", "ncbi_misc", "custom"])
 
 
 
