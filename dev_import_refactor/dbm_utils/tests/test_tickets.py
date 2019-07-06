@@ -1170,7 +1170,8 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
 
-
+### TODO below copied and implemented in test_phagesdb(), so can
+# probably be deleted once confirme the new tests work.
 class TestTicketFunctions5(unittest.TestCase):
 
     def setUp(self):
@@ -1268,6 +1269,9 @@ class TestTicketFunctions5(unittest.TestCase):
             self.assertEqual(self.ticket.host, expected_host)
         with self.subTest():
             self.assertEqual(len(eval_list), 7)
+### TODO above copied and implemented in test_phagesdb(), so can
+# probably be deleted once confirme the new tests work.
+
 
 if __name__ == '__main__':
     unittest.main()

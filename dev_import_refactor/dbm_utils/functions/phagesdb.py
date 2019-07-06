@@ -2,6 +2,7 @@
 
 
 from classes import Eval
+from classes import Genome
 from functions import basic
 from constants import constants
 import urllib.request
@@ -373,7 +374,41 @@ def construct_phage_url(phage_name):
 
 
 
+# TODO implement.
+# TODO unit test.
+def retrieve_genome_data(genome1):
+    """If the genome object has attributes that are set to be auto-completed,
+    retrieve the data from PhagesDB to complete the genome."""
 
+    eval_list1 = []
+    if (genome1.host == "retrieve" or \
+        genome1.cluster == "retrieve" or \
+        genome1.subcluster == "retrieve" or \
+        genome1.accession == "retrieve"):
+
+        genome2 = Genome.Genome()
+
+        phage_url = construct_phage_url(genome1.phage_id)
+
+        data_dict, eval_object1 = retrieve_phagesdb_data(phage_url)
+
+        if eval_object1 is not None:
+            eval_list1 += [eval_object1]
+
+        eval_list2 = parse_phagesdb_data(genome2, data_dict)
+
+        eval_list1 += eval_list2
+
+        if genome1.host == "retrieve":
+            genome1.host = genome2.host
+        if genome1.cluster == "retrieve":
+            genome1.cluster = genome2.cluster
+        if genome1.subcluster == "retrieve":
+            genome1.subcluster = genome2.subcluster
+        if genome1.accession == "retrieve":
+            genome1.accession = genome2.accession
+
+    return eval_list1
 
 
 

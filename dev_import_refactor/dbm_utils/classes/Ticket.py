@@ -64,41 +64,9 @@ class GenomeTicket:
         """Set the ticket type."""
         self.type = value.lower()
 
-    def set_primary_phage_id(self, value):
-        """Set the primary_phage_id."""
-        self.primary_phage_id = basic.lower_case(value)
-
-    def set_host(self, value):
-        """Set the host."""
-        self.host = basic.lower_case(value)
-
-    def set_cluster(self, value):
-        """Set the cluster."""
-        self.cluster = basic.lower_case(value)
-
-    def set_subcluster(self, value):
-        """Set the subcluster."""
-        self.subcluster = basic.lower_case(value)
-
-    def set_status(self, value):
-        """Set the status."""
-        self.status = value.lower()
-
     def set_description_field(self, value):
         """Set the description_field."""
         self.description_field = value.lower()
-
-    def set_accession(self, value):
-        """Set the accession."""
-        self.accession = basic.lower_case(value)
-
-    def set_annotation_author(self, value):
-        """Set the annotation_author."""
-        self.annotation_author = value.lower()
-
-    def set_secondary_phage_id(self, value):
-        """Set the secondary_phage_id."""
-        self.secondary_phage_id = basic.lower_case(value)
 
     def set_run_mode(self, value):
         """Set the run_mode."""
@@ -109,6 +77,52 @@ class GenomeTicket:
 
 
 
+    # TODO implement in Genome object?
+    def set_primary_phage_id(self, value):
+        """Set the primary_phage_id."""
+        self.primary_phage_id = basic.lower_case(value)
+
+    # TODO implement in Genome object?
+    def set_host(self, value):
+        """Set the host."""
+        self.host = basic.lower_case(value)
+
+    # TODO implement in Genome object?
+    def set_cluster(self, value):
+        """Set the cluster."""
+        self.cluster = basic.lower_case(value)
+
+    # TODO implement in Genome object?
+    def set_subcluster(self, value):
+        """Set the subcluster."""
+        self.subcluster = basic.lower_case(value)
+
+    # TODO implement in Genome object?
+    def set_status(self, value):
+        """Set the status."""
+        self.status = value.lower()
+
+    # TODO implement in Genome object?
+    def set_accession(self, value):
+        """Set the accession."""
+        self.accession = basic.lower_case(value)
+
+    # TODO implement in Genome object?
+    def set_annotation_author(self, value):
+        """Set the annotation_author."""
+        self.annotation_author = value.lower()
+
+    # TODO implement in Genome object?
+    def set_secondary_phage_id(self, value):
+        """Set the secondary_phage_id."""
+        self.secondary_phage_id = basic.lower_case(value)
+
+
+
+
+
+
+    # TODO below this should probably be moved to the Genome object.
     # If either the Host, Cluster, Subcluster or Accession data needs to be
     # retrieved, try to access the data in phagesdb before proceeding
 
@@ -183,6 +197,7 @@ class GenomeTicket:
                         result = result4, \
                         status = status4)
         self.evaluations.append(eval4)
+    # TODO above this should probably be moved to the Genome object.
 
 
 

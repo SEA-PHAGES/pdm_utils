@@ -64,7 +64,7 @@ def parse_import_ticket(data_list):
         # matched_data.ticket = ticket
         # matched_data.genomes_dict["import_genome1"] = genome1
         # matched_data.genomes_dict["import_genome2"] = genome2
-        
+
 
     return(ticket, eval_object)
 
@@ -444,6 +444,11 @@ def create_matched_object_dict(list_of_group_objects):
     return ticket_type_dict
 
 
+
+
+
+# TODO below this has been copied and implemented in functions.phagesdb,
+# so it can probably be deleted once confirmed the new function works.
 def complete_ticket(ticket):
     """If the ticket has fields that are set to be auto-completed,
     retrieve the data from PhagesDB to complete the ticket."""
@@ -477,6 +482,8 @@ def complete_ticket(ticket):
             ticket.accession = genome.accession
 
     return eval_list1
+# TODO above this has been copied and implemented in functions.phagesdb, 
+# so it can probably be deleted once confirmed the new function works.
 
 
 
