@@ -516,15 +516,6 @@ def split_string(string):
     return (left, right)
 
 
-
-
-
-
-
-
-
-
-
 def compare_cluster_subcluster(cluster, subcluster):
     """Check if a cluster designation is part of a subcluster designation."""
 
@@ -549,37 +540,6 @@ def compare_cluster_subcluster(cluster, subcluster):
         pass
 
     return result
-
-
-
-
-
-
-
-
-
-# TODO unit test
-def convert_author(input_value):
-    """Converts author string to author integer."""
-
-    if input_value.lower() == "none":
-        new_value = "none"
-    elif input_value in constants.AUTHOR_DICTIONARY["1"]:
-        new_value = 1
-    else:
-        new_value = 0
-
-    return new_value
-
-
-
-
-
-
-
-
-
-
 
 
 def identify_one_list_duplicates(item_list):
@@ -608,121 +568,33 @@ def identify_two_list_duplicates(item1_list, item2_list):
     return item3_set
 
 
+def check_value_in_two_sets(value, set1, set2):
+    """Check if a value is present within two sets, and return whether
+    it is present within:
+    1. only the 'first' set
+    2. only the 'second' set
+    3. 'both' sets
+    4. 'neither' set
+    """
 
+    present1 = False
+    present2 = False
 
+    if value in set1:
+        present1 = True
+    if value in set2:
+        present2 = True
 
-
-
-
-
-
-
-
-# TODO this needs to be improved so that it evaluates whether the value
-# itself should be 'none' or not, in addition to evaluating whether
-# the value_set is 'none'.
-def check_value_in_set(value, value_set, expected = True):
-    """Check whether a value is present in a set of possible values.
-    An error is encountered depending on whether the value is
-    present/absent in the set and on whether it is expected to be
-    present/absent.
-    A value and value set of 'none' are given special consideration."""
-
-    if (len(value_set) == 1 and "none" in value_set):
-        if expected:
-            if value not in value_set:
-                result = "The value is not 'none'."
-                status = "error"
-            else:
-                result = "The value is 'none'."
-                status = "correct"
-        else:
-            if value in value_set:
-                result = "The value is 'none'."
-                status = "error"
-            else:
-                result = "The value is not 'none'."
-                status = "correct"
+    if (present1 and present2):
+        result = "both"
+    elif (present1 and not present2):
+        result = "first"
+    elif (not present1 and present2):
+        result = "second"
     else:
-        if expected:
-            if value not in value_set:
-                result = "The value is not expected."
-                status = "error"
-            else:
-                result = "The value is expected."
-                status = "correct"
-        else:
-            if value in value_set:
-                result = "The value is expected."
-                status = "error"
-            else:
-                result = "The value is not expected."
-                status = "correct"
+        result = "neither"
 
-    return (result, status)
-
-
-
-
-
-
-
-
-
-# TODO HERE IN PROGRESS. TRYING TO FIGURE OUT HOW TO TEST PHAGE_ID TO
-# BE WITHIN  A CERTAIN SET AS WELL AS NOT IN EMPTY SET.
-# TODO in progress, replacing old method.
-
-# TODO unit test.
-# TODO this needs to be improved so that it evaluates whether the value
-# itself should be 'none' or not, in addition to evaluating whether
-# the value_set is 'none'.
-def check_value_in_set2(value, value_set, expected = True):
-    """."""
-
-    correct = True
-    if value in value_set:
-        if not expected:
-            correct = False
-    else:
-        if expected:
-            correct = False
-    return correct
-
-
-
-
-
-
-# TODO in progress.
-# TODO unit test.
-def check_empty_value(value, value_set, expected = True):
-    """Check whether a value is present in a set of possible values.
-    An error is encountered depending on whether the value is
-    present/absent in the set and on whether it is expected to be
-    present/absent."""
-
-    if expected:
-        if value != "none":
-            result = "The value is not expected."
-            status = "error"
-        else:
-            result = "The value is expected."
-            status = "correct"
-    else:
-        if value != "none":
-            result = "The value is expected."
-            status = "error"
-        else:
-            result = "The value is not expected."
-            status = "correct"
-
-    return (result, status)
-
-
-# TODO HERE IN PROGRESS. TRYING TO FIGURE OUT HOW TO TEST PHAGE_ID TO
-# BE WITHIN  A CERTAIN SET AS WELL AS NOT IN EMPTY SET.
-# TODO in progress, replacing old method.
+    return result
 
 
 
@@ -740,6 +612,24 @@ def check_empty_value(value, value_set, expected = True):
 
 
 #TODO Unit test below
+
+
+
+
+# TODO unit test
+def convert_author(input_value):
+    """Converts author string to author integer."""
+
+    if input_value.lower() == "none":
+        new_value = "none"
+    elif input_value in constants.AUTHOR_DICTIONARY["1"]:
+        new_value = 1
+    else:
+        new_value = 0
+
+    return new_value
+
+
 
 
 

@@ -1313,94 +1313,46 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-    def test_check_value_in_set_1(self):
-        """Check that no error is produced if the
-        value_set is 'none',
-        the value is expected to be present in the set,
-        and is present."""
-        test_set = set(["none"])
-        value = "none"
-        result, status = basic.check_value_in_set(value, test_set)
-        self.assertEqual(status, "correct")
 
-    def test_check_value_in_set_2(self):
-        """Check that an error is produced if the
-        phagvalue_sete_id_set is 'none',
-        the value is expected to be present in the set,
-        and is not present."""
-        test_set = set(["none"])
-        value = "D29"
-        result, status = basic.check_value_in_set(value, test_set)
-        self.assertEqual(status, "error")
 
-    def test_check_value_in_set_3(self):
-        """Check that no error is produced if the
-        value_set is 'none',
-        the value is not expected to be present in the set,
-        and is present."""
-        test_set = set(["none"])
-        value = "none"
-        result, status = basic.check_value_in_set(value, test_set, False)
-        self.assertEqual(status, "error")
 
-    def test_check_value_in_set_4(self):
-        """Check that no error is produced if the
-        value_set is 'none',
-        the value is not expected to be present in the set,
-        and is not present."""
-        test_set = set(["none"])
-        value = "D29"
-        result, status = basic.check_value_in_set(value, test_set, False)
-        self.assertEqual(status, "correct")
 
-    def test_check_value_in_set_5(self):
-        """Check that no error is produced if the
-        value_set is not 'none',
-        the value is expected to be present in the set,
-        and is present."""
-        test_set = set(["Trixie", "L5"])
+
+
+
+
+
+    def test_check_value_in_two_sets_1(self):
+        """Check value that is in neither set."""
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["D29", "RedRock"])
+        value = "EagleEye"
+        result = basic.check_value_in_two_sets(value, set1, set2)
+        self.assertEqual(result, "neither")
+
+    def test_check_value_in_two_sets_2(self):
+        """Check value that is in the first set."""
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["D29", "RedRock"])
         value = "Trixie"
-        result, status = basic.check_value_in_set(value, test_set)
-        self.assertEqual(status, "correct")
+        result = basic.check_value_in_two_sets(value, set1, set2)
+        self.assertEqual(result, "first")
 
-    def test_check_value_in_set_6(self):
-        """Check that an error is produced if the
-        value_set is not 'none',
-        the value is expected to be present in the set,
-        and is not present."""
-        test_set = set(["Trixie", "L5"])
+    def test_check_value_in_two_sets_3(self):
+        """Check value that is in the second set."""
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["D29", "RedRock"])
         value = "D29"
-        result, status = basic.check_value_in_set(value, test_set)
-        self.assertEqual(status, "error")
+        result = basic.check_value_in_two_sets(value, set1, set2)
+        self.assertEqual(result, "second")
 
-    def test_check_value_in_set_7(self):
-        """Check that no error is produced if the
-        value_set is not 'none',
-        the value is not expected to be present in the set,
-        and is present."""
-        test_set = set(["Trixie", "L5"])
+    def test_check_value_in_two_sets_4(self):
+        """Check value that is in both sets."""
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["Trixie", "RedRock"])
         value = "Trixie"
-        result, status = basic.check_value_in_set(value, test_set, False)
-        self.assertEqual(status, "error")
-
-    def test_check_value_in_set_8(self):
-        """Check that no error is produced if the
-        value_set is not 'none',
-        the value is not expected to be present in the set,
-        and is not present."""
-        test_set = set(["Trixie", "L5"])
-        value = "D29"
-        result, status = basic.check_value_in_set(value, test_set, False)
-        self.assertEqual(status, "correct")
-
-
-
-
-
-
-
-
-
+        result = basic.check_value_in_two_sets(value, set1, set2)
+        self.assertEqual(result, "both")
 
 
 

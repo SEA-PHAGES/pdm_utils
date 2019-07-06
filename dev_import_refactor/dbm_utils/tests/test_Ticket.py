@@ -186,22 +186,6 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.assertEqual(self.ticket.run_mode, "phagesdb")
 
 
-    # TODO no longer need since no longer use this method.
-    # def test_set_evaluation_1(self):
-    #     self.ticket.set_evaluation("none")
-    #     self.assertEqual(len(self.ticket.evaluations), 1)
-    #
-    # def test_set_evaluation_2(self):
-    #     self.ticket.set_evaluation("warning","message1")
-    #     self.assertEqual(len(self.ticket.evaluations), 1)
-    #
-    # def test_set_evaluation_3(self):
-    #     self.ticket.set_evaluation("error","message1","message2")
-    #     self.assertEqual(len(self.ticket.evaluations), 1)
-    #
-
-    #
-    #
 
 
     def test_clear_retrieve_status_1(self):
@@ -240,154 +224,136 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-
-    # TODO reformat for set_host() method.
-    # def test_check_host_3(self):
-    #     test_list = ["Mycobacterium","Gordonia"]
-    #     self.ticket.host = "Mycobacterium smegmatis"
-    #     self.ticket.check_host(test_list)
-    #     with self.subTest():
-    #         self.assertEqual(self.ticket.host, "Mycobacterium")
-    #     with self.subTest():
-    #         self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
-
-
-
-
-
-
-
-    # TODO reformat to set_accession()
-    # def test_check_accession_1(self):
-    #     """Test that empty is changed to none."""
-    #     self.ticket.accession = ""
-    #     self.ticket.check_accession()
-    #     self.assertEqual(self.ticket.accession, "none")
-    #
-    # def test_check_accession_2(self):
-    #     """Test that whitespace is removed."""
-    #     self.ticket.accession = "   ABC123    "
-    #     self.ticket.check_accession()
-    #     self.assertEqual(self.ticket.accession, "ABC123")
-    #
-    # def test_check_accession_3(self):
-    #     """Test that data is split."""
-    #     self.ticket.accession = "ABC123.456"
-    #     self.ticket.check_accession()
-    #     self.assertEqual(self.ticket.accession, "ABC123")
-    #
-    # def test_check_accession_4(self):
-    #     """Test that data is split."""
-    #     self.ticket.accession = "   .   "
-    #     self.ticket.check_accession()
-    #     self.assertEqual(self.ticket.accession, "none")
-    #
-
-
     def test_check_type_1(self):
-        type_set = set(["add", "remove", "update", "replace"])
+        """Check that no error is produced if the
+        type is present in the first set."""
+        set1 = set(["add", "remove"])
         self.ticket.type = "add"
-        self.ticket.check_type(type_set)
+        self.ticket.check_type(set1)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
 
     def test_check_type_2(self):
-        type_set = set(["add", "remove", "update", "replace"])
-        self.ticket.type = "remove"
-        self.ticket.check_type(type_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
-    def test_check_type_3(self):
-        type_set = set(["add", "remove", "update", "replace"])
-        self.ticket.type = "replace"
-        self.ticket.check_type(type_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
-    def test_check_type_4(self):
-        type_set = set(["add", "remove", "update", "replace"])
-        self.ticket.type = "update"
-        self.ticket.check_type(type_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
-    def test_check_type_5(self):
-        type_set = set(["add", "remove", "update", "replace"])
-        self.ticket.type = "abcd"
-        self.ticket.check_type(type_set)
+        """Check that an error is produced if the
+        type is not present in the first set."""
+        set1 = set(["add", "remove"])
+        self.ticket.type = "none"
+        self.ticket.type = "Trixie"
+        self.ticket.check_type(set1)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
-
-
-
-
-
-
 
 
 
 
     def test_check_primary_phage_id_1(self):
-        """Check that an error is produced if the
-        phage_id_set is not 'none',
-        the primary_phage_id is not expected to be present in the set,
+        """Check that no error is produced if the
+        primary_phage_id is expected to be in the first set,
         and is present."""
-        test_set = set(["Trixie", "L5"])
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["none"])
         self.ticket.primary_phage_id = "Trixie"
-        self.ticket.check_primary_phage_id(test_set, False)
+        self.ticket.check_primary_phage_id(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_primary_phage_id_2(self):
+        """Check that an error is produced if the
+        primary_phage_id is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["none"])
+        self.ticket.primary_phage_id = "Trixie"
+        self.ticket.check_primary_phage_id(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
-
     def test_check_secondary_phage_id_1(self):
-        """Check that an error is produced if the
-        phage_id_set is not 'none',
-        the secondary_phage_id is not expected to be present in the set,
+        """Check that no error is produced if the
+        secondary_phage_id is expected to be in the first set,
         and is present."""
-        test_set = set(["Trixie", "L5"])
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["none"])
         self.ticket.secondary_phage_id = "Trixie"
-        self.ticket.check_secondary_phage_id(test_set, False)
+        self.ticket.check_secondary_phage_id(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_secondary_phage_id_2(self):
+        """Check that an error is produced if the
+        secondary_phage_id is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["Trixie", "L5"])
+        set2 = set(["none"])
+        self.ticket.secondary_phage_id = "Trixie"
+        self.ticket.check_secondary_phage_id(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
     def test_check_host_1(self):
-        """Check that an error is produced if the
-        host_set is not 'none',
-        the host is not expected to be present in the set,
+        """Check that no error is produced if the
+        host is expected to be in the first set,
         and is present."""
-        test_set = set(["Mycobacterium", "Gordonia"])
+        set1 = set(["Mycobacterium", "Gordonia"])
+        set2 = set(["none"])
         self.ticket.host = "Mycobacterium"
-        self.ticket.check_host(test_set, False)
+        self.ticket.check_host(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_host_2(self):
+        """Check that an error is produced if the
+        host is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["Mycobacterium", "Gordonia"])
+        set2 = set(["none"])
+        self.ticket.host = "Mycobacterium"
+        self.ticket.check_host(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
     def test_check_subcluster_1(self):
-        """Check that an error is produced if the
-        subcluster_set is not 'none',
-        the subcluster is not expected to be present in the set,
+        """Check that no error is produced if the
+        subcluster is expected to be in the first set,
         and is present."""
-        test_set = set(["A2", "B1"])
+        set1 = set(["A2", "B1"])
+        set2 = set(["none"])
         self.ticket.subcluster = "A2"
-        self.ticket.check_subcluster(test_set, False)
+        self.ticket.check_subcluster(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_subcluster_2(self):
+        """Check that an error is produced if the
+        subcluster is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["A2", "B1"])
+        set2 = set(["none"])
+        self.ticket.subcluster = "A2"
+        self.ticket.check_subcluster(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
     def test_check_cluster_1(self):
-        """Check that an error is produced if the
-        cluster_set is not 'none',
-        the cluster is not expected to be present in the set,
+        """Check that no error is produced if the
+        cluster is expected to be in the first set,
         and is present."""
-        test_set = set(["A", "B"])
+        set1 = set(["A", "B"])
+        set2 = set(["none"])
         self.ticket.cluster = "A"
-        self.ticket.check_cluster(test_set, False)
+        self.ticket.check_cluster(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_cluster_2(self):
+        """Check that an error is produced if the
+        cluster is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["A", "B"])
+        set2 = set(["none"])
+        self.ticket.cluster = "A"
+        self.ticket.check_cluster(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
-
-
 
 
 
@@ -460,68 +426,116 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
     def test_check_status_1(self):
+        """Check that no error is produced if the
+        status is expected to be in the first set,
+        and is present."""
+        set1 = set(["final", "draft"])
+        set2 = set(["none"])
+        self.ticket.status = "final"
+        self.ticket.check_status(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_status_2(self):
         """Check that an error is produced if the
-        status_set is not 'none',
-        the status is expected to be present in the set,
-        and is not present."""
-        test_set = set(["final", "draft"])
-        self.ticket.status = "gbk"
-        self.ticket.check_status(test_set)
+        status is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["final", "draft"])
+        set2 = set(["none"])
+        self.ticket.status = "final"
+        self.ticket.check_status(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
     def test_check_description_field_1(self):
+        """Check that no error is produced if the
+        description_field is expected to be in the first set,
+        and is present."""
+        set1 = set(["product", "function"])
+        set2 = set(["none"])
+        self.ticket.description_field = "product"
+        self.ticket.check_description_field(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_description_field_2(self):
         """Check that an error is produced if the
-        description_field_set is not 'none',
-        the description_field is expected to be present in the set,
-        and is not present."""
-        test_set = set(["product", "function"])
-        self.ticket.description_field = "note"
-        self.ticket.check_description_field(test_set)
+        description_field is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["product", "function"])
+        set2 = set(["none"])
+        self.ticket.description_field = "product"
+        self.ticket.check_description_field(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
+
     def test_check_accession_1(self):
+        """Check that no error is produced if the
+        accession is expected to be in the first set,
+        and is present."""
+        set1 = set(["product", "function"])
+        set2 = set(["none"])
+        self.ticket.accession = "product"
+        self.ticket.check_accession(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_accession_2(self):
         """Check that an error is produced if the
-        accession_set is 'none',
-        the accession is expected to be present in the set,
-        and is not present."""
-        test_set = set(["none"])
-        self.ticket.accession = "ABC123"
-        self.ticket.check_accession(test_set)
+        accession is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["product", "function"])
+        set2 = set(["none"])
+        self.ticket.accession = "product"
+        self.ticket.check_accession(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
     def test_check_annotation_author_1(self):
+        """Check that no error is produced if the
+        annotation_author is expected to be in the first set,
+        and is present."""
+        set1 = set(["hatfull", "gbk"])
+        set2 = set(["none"])
+        self.ticket.annotation_author = "hatfull"
+        self.ticket.check_annotation_author(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_annotation_author_2(self):
         """Check that an error is produced if the
-        annotation_author_set is not 'none',
-        the annotation_author is expected to be present in the set,
-        and is not present."""
-        test_set = set([0,1])
-        self.ticket.annotation_author = "none"
-        self.ticket.check_annotation_author(test_set)
+        annotation_author is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["hatfull", "gbk"])
+        set2 = set(["none"])
+        self.ticket.annotation_author = "hatfull"
+        self.ticket.check_annotation_author(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
     def test_check_run_mode_1(self):
+        """Check that no error is produced if the
+        run_mode is expected to be in the first set,
+        and is present."""
+        set1 = set(["phagesdb", "pecaan"])
+        set2 = set(["none"])
+        self.ticket.run_mode = "phagesdb"
+        self.ticket.check_run_mode(set1, set2, "first")
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_run_mode_2(self):
         """Check that an error is produced if the
-        run_mode_set is not 'none',
-        the run_mode is expected to be present in the set,
-        and is not present."""
-        test_set = set(["phagesdb", "pecaan"])
-        self.ticket.run_mode = "abcxyz"
-        self.ticket.check_run_mode(test_set)
+        run_mode is expected to be in neither set,
+        and is present in one."""
+        set1 = set(["phagesdb", "pecaan"])
+        set2 = set(["none"])
+        self.ticket.run_mode = "phagesdb"
+        self.ticket.check_run_mode(set1, set2, "neither")
         self.assertEqual(self.ticket.evaluations[0].status, "error")
-
-
-
 
 
 
@@ -541,6 +555,16 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.ticket.secondary_phage_id = "Trixie"
         self.ticket.check_primary_secondary_phage_ids()
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
