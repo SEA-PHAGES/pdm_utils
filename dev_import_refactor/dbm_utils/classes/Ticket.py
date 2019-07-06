@@ -14,19 +14,22 @@ class GenomeTicket:
 
         # Initialize all non-calculated attributes:
         self.type = "" # Add, Replace, Remove, UPDATE
-        self.run_mode = ""
 
         # Attribute used to populate Genome objects for any ticket type.
         self.primary_phage_id = ""
 
+        # Attribute used to evaluate all 'add' and 'replace' ticket types.
+        self.run_mode = ""
+        self.description_field = ""
+
+
         # Attributes used to populate Genome objects for
         # 'update', 'add', and 'replace' ticket types.
         self.host = ""
-        self.cluster = "" # Singleton should be reported as 'singleton'
+        self.cluster = ""
         self.subcluster = ""
         self.status = ""
         self.annotation_author = ""
-        self.description_field = ""
         self.accession = ""
 
         # Attribute used to populate Genome objects for 'replace' ticket types.
@@ -51,58 +54,55 @@ class GenomeTicket:
 
 
 
-	# Make sure "none" and "retrieve" indications are lowercase, as well as
-    # "action", "status", "feature", and "author" fields are lowercase.
-
-
-    def set_case(self):
-
-        self.type = self.type.lower()
-
-        if self.primary_phage_id.lower() == "none":
-            self.primary_phage_id = self.primary_phage_id.lower()
-
-        if (self.host.lower() == "none" or \
-            self.host.lower() == "retrieve"):
-
-            self.host = self.host.lower()
-
-        if (self.cluster.lower() == "none" or \
-            self.cluster.lower() == "retrieve"):
-
-            self.cluster = self.cluster.lower()
-
-        if (self.subcluster.lower() == "none" or
-            self.subcluster.lower() == "retrieve"):
-
-            self.subcluster = self.subcluster.lower()
-
-        self.status = self.status.lower()
-
-        self.description_field = self.description_field.lower()
-
-        if (self.accession.lower() == "none" or \
-            self.accession.lower() == "retrieve"):
-
-            self.accession = self.accession.lower()
-
-        self.annotation_author = self.annotation_author.lower()
-
-        if self.secondary_phage_id.lower() == "none":
-            self.secondary_phage_id = self.secondary_phage_id.lower()
-
-        self.run_mode = self.run_mode.lower()
 
 
 
+    # When parsing data from an import ticket, some fields should be
+    # lowercase regardless of the content, while other fields should
+    # be lowercase only if they are set to 'none' or 'retrieve'.
+    def set_type(self, value):
+        """Set the ticket type."""
+        self.type = value.lower()
 
+    def set_primary_phage_id(self, value):
+        """Set the primary_phage_id."""
+        self.primary_phage_id = basic.lower_case(value)
 
-    # TODO this method might not be necessary. It could be implemented
-    # in the Genome object.
-    # TODO unit test.
-    def set_annotation_author(self,value):
-        """Convert author name listed in ticket to binary value if needed."""
-        self.annotation_author = basic.convert_author(value)
+    def set_host(self, value):
+        """Set the host."""
+        self.host = basic.lower_case(value)
+
+    def set_cluster(self, value):
+        """Set the cluster."""
+        self.cluster = basic.lower_case(value)
+
+    def set_subcluster(self, value):
+        """Set the subcluster."""
+        self.subcluster = basic.lower_case(value)
+
+    def set_status(self, value):
+        """Set the status."""
+        self.status = value.lower()
+
+    def set_description_field(self, value):
+        """Set the description_field."""
+        self.description_field = value.lower()
+
+    def set_accession(self, value):
+        """Set the accession."""
+        self.accession = basic.lower_case(value)
+
+    def set_annotation_author(self, value):
+        """Set the annotation_author."""
+        self.annotation_author = value.lower()
+
+    def set_secondary_phage_id(self, value):
+        """Set the secondary_phage_id."""
+        self.secondary_phage_id = basic.lower_case(value)
+
+    def set_run_mode(self, value):
+        """Set the run_mode."""
+        self.run_mode = value.lower()
 
 
 
@@ -199,9 +199,8 @@ class GenomeTicket:
 
 
     def check_type(self, set1):
-        """Check if the type is populated with an
-        expected value. Every ticket type is expected to have
-        a non-empty value, so provide a set of possible values."""
+        """Check if the type is populated with a value from
+        a specific set of possible values."""
 
         if self.type in set1:
             result = "The field is populated correctly."
@@ -215,17 +214,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_primary_phage_id(self, set1, set2, expect):
-        """Check if the primary_phage_id is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
+    def check_primary_phage_id(self, set1):
+        """Check if the primary_phage_id is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-        output = basic.check_value_in_two_sets(\
-                    self.primary_phage_id, set1, set2)
-        if output == expect:
+        if self.primary_phage_id not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -237,17 +230,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_secondary_phage_id(self, set1, set2, expect):
-        """Check if the secondary_phage_id is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
+    def check_secondary_phage_id(self, set1):
+        """Check if the secondary_phage_id is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-        output = basic.check_value_in_two_sets(\
-                    self.secondary_phage_id, set1, set2)
-        if output == expect:
+        if self.secondary_phage_id not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -259,17 +246,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_host(self, set1, set2, expect):
-        """Check if the host is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
+    def check_host(self, set1):
+        """Check if the host is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-        output = basic.check_value_in_two_sets(\
-                    self.host, set1, set2)
-        if output == expect:
+        if self.host not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -281,31 +262,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_subcluster(self, set1):
+        """Check if the subcluster is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def check_subcluster(self, set1, set2, expect):
-        """Check if the subcluster is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.subcluster, set1, set2)
-        if output == expect:
+        if self.subcluster not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -317,34 +278,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_cluster(self, set1):
+        """Check if the cluster is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def check_cluster(self, set1, set2, expect):
-        """Check if the cluster is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.cluster, set1, set2)
-        if output == expect:
+        if self.cluster not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -356,107 +294,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_status(self, set1):
+        """Check if the status is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-
-
-
-    # TODO move this to Genome method?
-    def check_subcluster_structure(self):
-        """Check whether the cluster field is structured appropriately."""
-
-        if self.subcluster != "none":
-            left, right = basic.split_string(self.subcluster)
-
-            if (left.isalpha() == False or right.isdigit() == False):
-                result = "Subcluster is not structured correctly."
-                status = "error"
-            else:
-                result = "Subcluster is structured correctly."
-                status = "correct"
-
-        else:
-            result = "Subcluster is empty."
-            status = "not_evaluated"
-
-        definition = "Check if subcluster field is structured correctly."
-        eval = Eval.Eval("TICKET", definition, result, status)
-        self.evaluations.append(eval)
-
-
-    # TODO move this to Genome method?
-    def check_cluster_structure(self):
-        """Check whether the cluster field is structured appropriately."""
-
-        if self.cluster != "none":
-            left, right = basic.split_string(self.cluster)
-
-            if (right != "" or left.isalpha() == False):
-                result = "Cluster is not structured correctly."
-                status = "error"
-            else:
-                result = "Cluster is structured correctly."
-                status = "correct"
-        else:
-            result = "Cluster is empty."
-            status = "not_evaluated"
-
-
-        definition = "Check if cluster field is structured correctly."
-        eval = Eval.Eval("TICKET", definition, result, status)
-        self.evaluations.append(eval)
-
-
-    # TODO move this to Genome method?
-    def check_cluster_subcluster(self):
-        """Check whether the cluster and subcluster fields are
-        compatible."""
-
-        output = basic.compare_cluster_subcluster(self.cluster, self.subcluster)
-        if not output:
-            result = "Cluster and Subcluster designations are not compatible."
-            status = "error"
-        else:
-            result = "Cluster and Subcluster designations are compatible."
-            status = "correct"
-
-        definition = "Check for compatibility between Cluster and Subcluster."
-        eval = Eval.Eval("TICKET", definition, result, status)
-        self.evaluations.append(eval)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def check_status(self, set1, set2, expect):
-        """Check if the status is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.status, set1, set2)
-        if output == expect:
+        if self.status not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -468,27 +310,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_description_field(self, set1):
+        """Check if the description_field is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-    def check_description_field(self, set1, set2, expect):
-        """Check if the description_field is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.description_field, set1, set2)
-        if output == expect:
+        if self.description_field not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -500,27 +326,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_accession(self, set1):
+        """Check if the accession is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-    def check_accession(self, set1, set2, expect):
-        """Check if the accession is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.accession, set1, set2)
-        if output == expect:
+        if self.accession not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -532,28 +342,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_annotation_author(self, set1):
+        """Check if the annotation_author is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-
-    def check_annotation_author(self, set1, set2, expect):
-        """Check if the annotation_author is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.annotation_author, set1, set2)
-        if output == expect:
+        if self.annotation_author not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -565,30 +358,11 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
+    def check_run_mode(self, set1):
+        """Check if the run_mode is populated with an empty value.
+        The provided set contains a list of possible empty values."""
 
-
-
-
-
-
-
-
-
-
-
-
-
-    def check_run_mode(self, set1, set2, expect):
-        """Check if the run_mode is populated with an
-        expected value. Provide two sets of mutually exclusive values
-        The first set should contain all current PhageIDs in the database.
-        The second set should contain values representing NULL or 'empty'.
-        The expect value indicates whether the field is
-        expected to be within the first, second, or neither set."""
-
-        output = basic.check_value_in_two_sets(\
-                    self.run_mode, set1, set2)
-        if output == expect:
+        if self.run_mode not in set1:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -598,38 +372,6 @@ class GenomeTicket:
         definition = "Check if run_mode field is correctly populated."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
-
-
-
-
-
-
-
-
-
-
-    def check_primary_secondary_phage_ids(self):
-        """Check whether the primary_phage_id and secondary_phage_id
-        fields are the same."""
-
-        if self.primary_phage_id != self.secondary_phage_id:
-            result = "The primary_phage_id and secondary_phage_id are different."
-            status = "error"
-        else:
-            result = "The primary_phage_id and secondary_phage_id are the same."
-            status = "correct"
-
-        definition = "Check if primary_phage_id and secondary_phage_id " + \
-                        "fields are compatible."
-        eval = Eval.Eval("TICKET", definition, result, status)
-        self.evaluations.append(eval)
-
-
-
-
-
-
-
 
 
 

@@ -171,7 +171,13 @@ from functions import tickets
 list_of_tickets, list_of_errors = tickets.prepare_tickets(ticket_filename)
 
 
-
+# TODO after parsing from import table:
+# 1. set case for all fields.
+# 2. confirm all tickets have a valid type.
+# 3. populate Genome object.
+# 4. retrieve data if needed.
+# 5. confirm correct fields are populated based on ticket type.
+# 6. check for PhageID conflicts.
 
 
 

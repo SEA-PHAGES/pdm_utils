@@ -122,20 +122,6 @@ class Genome:
 
 
 
-
-    # def set_evaluation(self, type, message1 = None, message2 = None):
-    #     """Creates an EvalResult object and adds it to the list of all
-    #     evaluations."""
-    #
-    #     if type == "warning":
-    #         eval_object = Eval.construct_warning(message1, message2)
-    #     elif type == "error":
-    #         eval_object = Eval.construct_error(message1)
-    #     else:
-    #         eval_object = Eval.EvalResult()
-    #     self.evaluations.append(eval_object)
-
-
     def set_filename(self, value):
         """Set the filename. Discard the path and file extension."""
 
@@ -424,6 +410,12 @@ class Genome:
         self.date_last_modified = basic.convert_empty(value, format)
 
 
+    def set_annotation_author(self,value):
+        """Convert author name listed in ticket to binary value if needed."""
+
+        self.annotation_author = basic.convert_author(value)
+
+
     def tally_descriptions(self):
         """Iterate through all CDS features and determine how many
         non-generic descriptions are present."""
@@ -471,6 +463,67 @@ class Genome:
 
 
     # Evaluations.
+
+    def check_subcluster_structure(self):
+        """Check whether the cluster field is structured appropriately."""
+
+        if self.subcluster != "none":
+            left, right = basic.split_string(self.subcluster)
+
+            if (left.isalpha() == False or right.isdigit() == False):
+                result = "Subcluster is not structured correctly."
+                status = "error"
+            else:
+                result = "Subcluster is structured correctly."
+                status = "correct"
+
+        else:
+            result = "Subcluster is empty."
+            status = "not_evaluated"
+
+        definition = "Check if subcluster field is structured correctly."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_cluster_structure(self):
+        """Check whether the cluster field is structured appropriately."""
+
+        if self.cluster != "none":
+            left, right = basic.split_string(self.cluster)
+
+            if (right != "" or left.isalpha() == False):
+                result = "Cluster is not structured correctly."
+                status = "error"
+            else:
+                result = "Cluster is structured correctly."
+                status = "correct"
+        else:
+            result = "Cluster is empty."
+            status = "not_evaluated"
+
+
+        definition = "Check if cluster field is structured correctly."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def compare_cluster_subcluster_structure(self):
+        """Check whether the cluster and subcluster fields are
+        compatible."""
+
+        output = basic.compare_cluster_subcluster(self.cluster, self.subcluster)
+        if not output:
+            result = "Cluster and Subcluster designations are not compatible."
+            status = "error"
+        else:
+            result = "Cluster and Subcluster designations are compatible."
+            status = "correct"
+
+        definition = "Check for compatibility between Cluster and Subcluster."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
 
     def check_nucleotides(self,dna_alphabet_set):
         """Check if all nucleotides in the sequence are expected."""

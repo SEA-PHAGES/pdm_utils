@@ -884,9 +884,6 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-
-
-
     def test_compare_sets_1(self):
         """Verify output when there is no intersection."""
         set1 = set(['a', 'b', 'c'])
@@ -940,7 +937,6 @@ class TestGeneralFunctions(unittest.TestCase):
             self.assertEqual(set1_diff, expected_set1_diff)
         with self.subTest():
             self.assertEqual(set2_diff, expected_set2_diff)
-
 
     def test_compare_sets_4(self):
         """Verify output when there all items are shared."""
@@ -1133,12 +1129,6 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-
-
-
-
-
-
     def test_compare_cluster_subcluster_1(self):
         """Check that empty cluster and empty subcluster
         do not produce an error."""
@@ -1238,26 +1228,6 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def test_identify_one_list_duplicates_1(self):
         """Verify duplicate items generates an error."""
         duplicate_items = \
@@ -1307,21 +1277,6 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def test_check_value_in_two_sets_1(self):
         """Check value that is in neither set."""
         set1 = set(["Trixie", "L5"])
@@ -1353,6 +1308,40 @@ class TestGeneralFunctions(unittest.TestCase):
         value = "Trixie"
         result = basic.check_value_in_two_sets(value, set1, set2)
         self.assertEqual(result, "both")
+
+
+
+
+    def test_convert_author_1(self):
+        """Check that author in author_set is converted to 1."""
+        input_value = "Hatfull"
+        output_value = basic.convert_author(input_value)
+        self.assertEqual(output_value, 1)
+
+    def test_convert_author_2(self):
+        """Check that author not in author_set is converted to 0."""
+        input_value = "Unknown author"
+        output_value = basic.convert_author(input_value)
+        self.assertEqual(output_value, 0)
+
+
+
+
+    def test_lower_case_1(self):
+        """Check that value is not changed if it is not within
+        the set of valid values."""
+        input_value = "Trixie"
+        output_value = basic.lower_case(input_value)
+        self.assertEqual(output_value, input_value)
+
+    def test_lower_case_2(self):
+        """Check that value is changed if it is within
+        the set of valid values."""
+        input_value = "NONE"
+        output_value = basic.lower_case(input_value)
+        self.assertEqual(output_value, "none")
+
+
 
 
 

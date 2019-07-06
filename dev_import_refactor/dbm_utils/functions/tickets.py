@@ -38,16 +38,33 @@ def parse_import_ticket(data_list):
 
         ticket = Ticket.GenomeTicket()
         ticket.type = data_list[0]
+        ticket.description_field = data_list[7]
+        ticket.run_mode = data_list[9]
+
+
+        # TODO this data should populate a Genome object.
+        # genome1 = Genome.Genome()
         ticket.primary_phage_id = data_list[1]
         ticket.host = data_list[2]
         ticket.cluster = data_list[3]
         ticket.subcluster = data_list[4]
         ticket.status = data_list[5]
         ticket.annotation_author = data_list[6]
-        ticket.description_field = data_list[7]
         ticket.accession = data_list[8]
-        ticket.run_mode = data_list[9]
+
+
+        # TODO this data should populate a second Genome object.
+        # genome2 = Genome.Genome()
+
         ticket.secondary_phage_id = data_list[10]
+
+
+        # TODO combine all data into a DataGroup object.
+        # matched_data = DataGroup.DataGroup()
+        # matched_data.ticket = ticket
+        # matched_data.genomes_dict["import_genome1"] = genome1
+        # matched_data.genomes_dict["import_genome2"] = genome2
+        
 
     return(ticket, eval_object)
 

@@ -244,6 +244,24 @@ class GenomePair:
 
     # Evaluations
 
+
+
+    def compare_phage_id(self):
+        """Compare the phage_id of each genome."""
+
+        if self.genome1.phage_id != self.genome2.phage_id:
+            result = "The two genomes have different phage_ids."
+            status = "error"
+        else:
+            result = "The primary_phage_id and secondary_phage_id are the same."
+            status = "correct"
+
+        definition = "Compare the phage_id of each genome."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+
     def compare_genome_sequence(self):
         """Compare the sequence of each genome."""
 
@@ -252,10 +270,10 @@ class GenomePair:
             status = "error"
 
         else:
-            result = "."
+            result = "The two sequences are the same."
             status = "correct"
 
-        definition = "."
+        definition = "Compare the sequence of each genome."
         eval = Eval.Eval(id = "GENOMEPAIR0001", \
                         definition = definition, \
                         result = result, \

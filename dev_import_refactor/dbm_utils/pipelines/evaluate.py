@@ -294,6 +294,7 @@ def check_replace_tickets(matched_object):
     # TODO determine other assumptions about what is/isn't in the database
     # if this is a replacement.
     # TODO verify there is only one identical genome sequence.
+    # TODO confirm that phage_ids of both genomes are the same.
 
     pass
 

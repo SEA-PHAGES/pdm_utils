@@ -31,25 +31,6 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    # TODO probably don't need. No more set_evaluation function.
-    # def test_set_evaluation_1(self):
-    #     """Set an empty evaluation object."""
-    #     self.genome.set_evaluation("none")
-    #     self.assertEqual(len(self.genome.evaluations), 1)
-    #
-    # def test_set_evaluation_2(self):
-    #     """Set a warning evaluation object."""
-    #     self.genome.set_evaluation("warning","message1")
-    #     self.assertEqual(len(self.genome.evaluations), 1)
-    #
-    # def test_set_evaluation_3(self):
-    #     """Set an error evaluation object."""
-    #     self.genome.set_evaluation("error","message1","message2")
-    #     self.assertEqual(len(self.genome.evaluations), 1)
-
-
-
-
 
     def test_set_filename_1(self):
         """Confirm file path is split appropriately."""
@@ -59,7 +40,6 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(self.genome.filename, "Trixie")
         with self.subTest():
             self.assertEqual(self.genome.search_filename, "trixie")
-
 
 
 
@@ -392,6 +372,22 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_set_annotation_author_1(self):
+        """Check that annotation_author to set to 1 when author
+        is in author_set."""
+        input_author = "Hatfull"
+        self.genome.set_annotation_author(input_author)
+        self.assertEqual(self.genome.annotation_author, 1)
+
+    def test_set_annotation_author_2(self):
+        """Check that annotation_author to set to 0 when author
+        is not in author_set."""
+        input_author = "Unknown author"
+        self.genome.set_annotation_author(input_author)
+        self.assertEqual(self.genome.annotation_author, 0)
+
+
+
 
     def test_tally_descriptions_1(self):
         """Check that no description tally is incremented."""
@@ -545,9 +541,69 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_check_subcluster_structure_1(self):
+        """Check that no error is produced if the
+        non-empty subcluster is structured correctly."""
+        self.genome.subcluster = "A1"
+        self.genome.check_subcluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_subcluster_structure_2(self):
+        """Check that an error is produced if the
+        non-empty subcluster is not structured correctly."""
+        self.genome.subcluster = "A"
+        self.genome.check_subcluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_subcluster_structure_3(self):
+        """Check that no error is produced if the
+        subcluster is empty."""
+        self.genome.subcluster = "none"
+        self.genome.check_subcluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "not_evaluated")
 
 
 
+
+    def test_check_cluster_structure_1(self):
+        """Check that no error is produced if the
+        non-empty cluster is structured correctly."""
+        self.genome.cluster = "A"
+        self.genome.check_cluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_cluster_structure_2(self):
+        """Check that an error is produced if the
+        non-empty cluster is not structured correctly."""
+        self.genome.cluster = "A1"
+        self.genome.check_cluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_cluster_structure_3(self):
+        """Check that no error is produced if the
+        cluster is empty."""
+        self.genome.cluster = "none"
+        self.genome.check_cluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "not_evaluated")
+
+
+
+
+    def test_compare_cluster_subcluster_structure_1(self):
+        """Check that compatible Cluster and subcluster
+        do not produce an error."""
+        self.genome.cluster = "A"
+        self.genome.subcluster = "A1"
+        self.genome.compare_cluster_subcluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_compare_cluster_subcluster_structure_2(self):
+        """Check that incompatible Cluster and subcluster
+        produce an error."""
+        self.genome.cluster = "A"
+        self.genome.subcluster = "B1"
+        self.genome.compare_cluster_subcluster_structure()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -565,8 +621,6 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.sequence = "AD"
         self.genome.check_nucleotides(alphabet)
         self.assertEqual(self.genome.evaluations[0].status, "error")
-
-
 
 
 
