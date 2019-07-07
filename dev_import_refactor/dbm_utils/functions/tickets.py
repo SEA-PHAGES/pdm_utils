@@ -9,12 +9,12 @@ from classes import Genome
 
 
 
-
-def parse_import_ticket(data_list):
+# TODO unit test since function is updated.
+def parse_import_ticket(ticket, data_list):
     """Parses list of data and creates an import ticket.
         Expected data structure:
         0. Import action
-        1. New PhageID
+        1. Primary PhageID
         2. Host
         3. Cluster
         4. Subcluster
@@ -23,40 +23,34 @@ def parse_import_ticket(data_list):
         7. Feature field
         8. Accession
         9. Run mode
-        10. PhageID to be removed
+        10. Secondary PhageID
     """
 
+    ticket._parsed_fields = len(data_list)
 
     # Verify the row of information has the correct number of fields to parse.
-    if len(data_list) != 11:
-        message = "Data is not formatted correctly"
-        eval_object = Eval.construct_error(message)
-        ticket = None
+    if len(data_list) == 11:
 
-    else:
-        eval_object = None
-
-        ticket = Ticket.GenomeTicket()
-        ticket.type = data_list[0]
-        ticket.description_field = data_list[7]
-        ticket.run_mode = data_list[9]
+        ticket.set_type(data_list[0])
+        ticket.set_description_field(data_list[7])
+        ticket.set_run_mode(data_list[9])
 
 
         # TODO this data should populate a Genome object.
         # genome1 = Genome.Genome()
-        ticket.primary_phage_id = data_list[1]
-        ticket.host = data_list[2]
-        ticket.cluster = data_list[3]
-        ticket.subcluster = data_list[4]
-        ticket.status = data_list[5]
-        ticket.annotation_author = data_list[6]
-        ticket.accession = data_list[8]
+        ticket.set_primary_phage_id(data_list[1])
+        ticket.set_host(data_list[2])
+        ticket.set_cluster(data_list[3])
+        ticket.set_subcluster(data_list[4])
+        ticket.set_status(data_list[5])
+        ticket.set_annotation_author(data_list[6])
+        ticket.set_accession(data_list[8])
 
 
         # TODO this data should populate a second Genome object.
         # genome2 = Genome.Genome()
 
-        ticket.secondary_phage_id = data_list[10]
+        ticket.set_secondary_phage_id(data_list[10])
 
 
         # TODO combine all data into a DataGroup object.
@@ -65,68 +59,36 @@ def parse_import_ticket(data_list):
         # matched_data.genomes_dict["import_genome1"] = genome1
         # matched_data.genomes_dict["import_genome2"] = genome2
 
-
-    return(ticket, eval_object)
-
+    return ticket
 
 
 
 
 
 
+# TODO unit test since function has been updated.
 def parse_import_tickets(list_of_lists):
     """Parses lists of lists of data from csv file and converts to
     group of parsed tickets. It also returns a lost of errors for tickets
     that failed to be parsed.
     """
 
-    list_of_evals = []
     list_of_tickets = []
 
     for list_of_data in list_of_lists:
 
-        ticket, eval = parse_import_ticket(list_of_data)
+        ticket = Ticket.GenomeTicket()
+        parse_import_ticket(ticket, list_of_data)
 
-        if ticket is not None:
-            list_of_tickets.append(ticket)
-        if eval is not None:
-            list_of_evals.append(eval)
+        list_of_tickets.append(ticket)
 
-    return(list_of_tickets, list_of_evals)
+    return list_of_tickets
 
 
 
 
-#
-# #TODO delete once this function is moved to basic.
-# def identify_one_list_duplicates(item_list, message):
-#     """Verifies there are no duplicate items in a list."""
-#
-#     item_set = set(item_list)
-#     if len(item_set) != len(item_list):
-#         eval_object = Eval.construct_error(message)
-#     else:
-#         eval_object = None
-#     return eval_object
-
-
-#
-# #TODO delete once this function is moved to basic.
-# def identify_two_list_duplicates(item1_list, item2_list, message):
-#     """Verifies there are no duplicate items between two lists."""
-#
-#     item1_set = set(item1_list)
-#     item2_set = set(item2_list)
-#     item3_list = item1_set & item2_set
-#
-#     if len(item3_list) > 0:
-#         eval_object = Eval.construct_error(message)
-#     else:
-#         eval_object = None
-#     return eval_object
-
-
-
+# TODO this needs to be changed again. Remove tickets now store
+# the genome to be removed within the primary_phage_id.
 # TODO unit test now that I have refactored this function.
 def compare_tickets(list_of_tickets):
     """Compare all tickets to each other to determine if
@@ -289,6 +251,95 @@ def compare_tickets(list_of_tickets):
 
 
 
+
+# TODO unit test.
+def expand_tickets(list_of_matched_objects):
+    """Construct genome objects and populate them appropriately using data
+    from import ticket."""
+
+    index = 0
+    while index < len(list_of_matched_objects):
+        matched_object = list_of_matched_objects[index]
+        ticket = matched_object.ticket
+
+        if ticket.type == "update":
+            genome = Genome.Genome()
+            genome.set_phage_id(ticket.primary_phage_id)
+            genome.set_host(ticket.host)
+            genome.set_accession(ticket.accession)
+            genome.status = ticket.status
+            genome.set_cluster(ticket.cluster)
+            genome.set_subcluster(ticket.subcluster)
+            genome.set_cluster_subcluster()
+
+            matched_object.genomes_dict["update"] = genome
+
+        elif ticket.type == "remove":
+            genome = Genome.Genome()
+            genome.set_phage_id(ticket.primary_phage_id)
+
+            matched_object.genomes_dict["remove"] = genome
+
+
+        elif ticket.type == "add":
+            genome = Genome.Genome()
+            genome.set_phage_id(ticket.primary_phage_id)
+            genome.phage_name = ticket.primary_phage_id
+            genome.set_host(ticket.host)
+            genome.set_accession(ticket.accession)
+            genome.status = ticket.status
+            genome.set_cluster(ticket.cluster)
+            genome.set_subcluster(ticket.subcluster)
+            genome.set_cluster_subcluster()
+            genome.ncbi_update_flag = ""
+            genome.set_annotation_author(ticket.annotation_author)
+
+            # TODO decide how to set annotation_qc at some point.
+            # TODO decide how to set retrieve_record at some point.
+
+            matched_object.genomes_dict["add"] = genome
+
+        elif ticket.type == "replace":
+            genome1 = Genome.Genome()
+            genome1.set_phage_id(ticket.primary_phage_id)
+            genome1.phage_name = ticket.primary_phage_id
+            genome1.set_host(ticket.host)
+            genome1.set_accession(ticket.accession)
+            genome1.status = ticket.status
+            genome1.set_cluster(ticket.cluster)
+            genome1.set_subcluster(ticket.subcluster)
+            genome1.set_cluster_subcluster()
+            genome1.ncbi_update_flag = ""
+            genome1.set_annotation_author(ticket.annotation_author)
+
+            # TODO decide how to set annotation_qc at some point.
+            # TODO decide how to set retrieve_record at some point.
+
+            genome2 = Genome.Genome()
+            genome2.set_phage_id(ticket.secondary_phage_id)
+
+
+            matched_object.genomes_dict["add"] = genome1
+            matched_object.genomes_dict["remove"] = genome2
+
+        else:
+            pass
+
+        index += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def match_genomes_to_tickets1(list_of_group_objects, genome_dict, key):
     """Match genome objects to tickets using phage_id.
     All tickets are expected to be matched."""
@@ -313,6 +364,12 @@ def match_genomes_to_tickets1(list_of_group_objects, genome_dict, key):
 
     return list_of_evals
 
+
+
+# TODO this function may no longer be needed. Genome object methods
+# can assign the PhageID from either the filename or a flat file record
+# field. As a result, all genomes can be matched to tickets using the
+# Genome object phage_id.
 def assign_match_strategy(list_of_group_objects):
 
     strategy = ""
@@ -334,6 +391,10 @@ def assign_match_strategy(list_of_group_objects):
     return strategy, eval_result
 
 
+# TODO this function may no longer be needed. Genome object methods
+# can assign the PhageID from either the filename or a flat file record
+# field. As a result, all genomes can be matched to tickets using the
+# Genome object phage_id.
 # TODO this function may be able to be combined with match_genomes_to_tickets1.
 def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
     """Match genome objects parsed from files to tickets."""
@@ -445,56 +506,8 @@ def create_matched_object_dict(list_of_group_objects):
 
 
 
-
-
-# TODO below this has been copied and implemented in functions.phagesdb,
-# so it can probably be deleted once confirmed the new function works.
-def complete_ticket(ticket):
-    """If the ticket has fields that are set to be auto-completed,
-    retrieve the data from PhagesDB to complete the ticket."""
-
-    eval_list1 = []
-    if (ticket.host == "retrieve" or \
-        ticket.cluster == "retrieve" or \
-        ticket.subcluster == "retrieve" or \
-        ticket.accession == "retrieve"):
-
-        genome = Genome.Genome()
-
-        phage_url = phagesdb.construct_phage_url(ticket.primary_phage_id)
-
-        data_dict, eval_object1 = phagesdb.retrieve_phagesdb_data(phage_url)
-
-        if eval_object1 is not None:
-            eval_list1 += [eval_object1]
-
-        eval_list2 = phagesdb.parse_phagesdb_data(genome, data_dict)
-
-        eval_list1 += eval_list2
-
-        if ticket.host == "retrieve":
-            ticket.host = genome.host
-        if ticket.cluster == "retrieve":
-            ticket.cluster = genome.cluster
-        if ticket.subcluster == "retrieve":
-            ticket.subcluster = genome.subcluster
-        if ticket.accession == "retrieve":
-            ticket.accession = genome.accession
-
-    return eval_list1
-# TODO above this has been copied and implemented in functions.phagesdb, 
-# so it can probably be deleted once confirmed the new function works.
-
-
-
-
-
-
-
 # TODO implement.
 # TODO unit test.
-
-
 def set_ticket_data(genome_obj, ticket_obj):
     """Populate attributes in a Genome object using data from a ticket."""
 
@@ -533,12 +546,8 @@ def set_ticket_data(genome_obj, ticket_obj):
 
 
 
-# TODO implement below.
+# TODO implement below. This function may no longer be needed.
 # TODO unit test below.
-
-
-
-
 def prepare_tickets(ticket_filename):
     """Parse import table into ticket objects."""
 
@@ -548,7 +557,8 @@ def prepare_tickets(ticket_filename):
     # List of ticket data.
 
 
-    #Retrieve import info from indicated import table file and read all lines into a list and verify contents are correctly populated.
+    #Retrieve import info from indicated import table file and
+    # read all lines into a list and verify contents are correctly populated.
     #0 = Type of database action to be performed (add, remove, replace, update)
     #1 = New PhageID that will be added to database
     #2 = Host of new phage
@@ -566,23 +576,6 @@ def prepare_tickets(ticket_filename):
 
     # Convert data from import file into ticket objects
     ticket_list = parse_import_tickets(import_table_data_list)
-
-
-
-    # TODO rename this function to set_case?
-    # Verify all data is cased appropriately.
-    for ticket_list in ticket_list:
-    	ticket.check_case()
-
-
-    # Some data may need to be retrieved from PhagesDB.
-    for ticket in ticket_list:
-        ticket, eval_object = retrieve_online_data(ticket)
-
-
-
-
-
 
 
     return ticket_list

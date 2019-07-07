@@ -164,6 +164,14 @@ from functions import tickets
 # TODO create output directories.
 
 
+# TODO parsing from import table:
+# 1. parse ticket data from table. = prepare_tickets()
+# 2. set case for all fields. = prepare_tickets()
+# 3. confirm all tickets have a valid type. = check_ticket_structure()
+# 4. populate Genome objects as necessary.
+# 5. retrieve data if needed.
+# 6. check for PhageID conflicts.
+# 7. confirm correct fields are populated based on ticket type.
 
 
 # Retrieve import ticket data.
@@ -171,38 +179,56 @@ from functions import tickets
 list_of_tickets, list_of_errors = tickets.prepare_tickets(ticket_filename)
 
 
-# TODO after parsing from import table:
-# 1. set case for all fields.
-# 2. confirm all tickets have a valid type.
-# 3. populate Genome object.
-# 4. retrieve data if needed.
-# 5. confirm correct fields are populated based on ticket type.
-# 6. check for PhageID conflicts.
-
-
-
-
 
 # Evaluate the tickets to ensure they are structured properly.
 
-# Each ticket should be complete, now that data from PhagesDB has been
-# retrieved. Validate each ticket by checking each field in the ticket
-# that it is populated correctly.
 
 # TODO not sure if I should pass a list of valid types to this function.
 for ticket in ticket_list:
-    evaluate.check_import_ticket_structure(ticket)
-
-
-
+    evaluate.check_ticket_structure(ticket,
+                                    constants.TICKET_TYPE_SET,
+                                    constants.EMPTY_SET,
+                                    constants.RUN_MODE_SET)
 
 
 
 # Now that individual tickets have been validated,
 # validate the entire group of tickets.
 
-#TODO this should return information
+# TODO refactor this function. It could switch a flag within the
+# tickets that have duplicated information, so that the evals are set
+# to each specific ticket.
+# TODO this should return information
 eval_list = tickets.compare_tickets(ticket_list)
+
+
+# Tickets will be matched with other genome data.
+# Ticket data will be paired with data from PhameratorDB
+# and/or a flat file.
+# TODO I may want to POP each ticket off this list as I assign to
+# matched genome objects.
+list_of_matched_objects = []
+for ticket in list_of_tickets:
+    matched_data_obj = MatchedGenomes()
+    matched_data_obj.ticket = ticket
+    list_of_matched_objects.append(matched_data_obj)
+
+
+# Using each ticket, construct and populate genome objects as needed.
+tickets.expand_tickets(list_of_matched_objects)
+
+# Now check to see if there is any missing data for each genome, and
+# retrieve it from phagesdb.
+phagesdb.retrieve_genome_data(list_of_matched_objects)
+
+
+
+
+# Each ticket should be complete, now that data from PhagesDB has been
+# retrieved. Validate each ticket by checking each field in the ticket
+# that it is populated correctly.
+
+
 
 
 
@@ -217,6 +243,11 @@ if len(list_of_errors) > 0:
 
 
 
+
+# TODO at some point annotation_qc and retrieve_record attributes
+# will need to be set. These are dependent on the ticket type.
+# If genomes are being replace, these fields may be carried over from
+# the previous genome, combined with their annotation status.
 
 
 
@@ -272,16 +303,6 @@ if len(all_results) > 0:
 
 
 
-# Tickets will be matched with other genome data.
-# Ticket data will be paired with data from PhameratorDB
-# and/or a flat file.
-# TODO I may want to POP each ticket off this list as I assign to
-# matched genome objects.
-list_of_matched_objects = []
-for ticket in list_of_tickets:
-    matched_data_obj = MatchedGenomes()
-    matched_data_obj.ticket = ticket
-    list_of_matched_objects.append(matched_data_obj)
 
 
 
@@ -347,6 +368,7 @@ matched_object_dict = create_matched_object_dict(list_of_matched_objects)
 list_of_update_objects = matched_object_dict["update"]
 list_of_remove_objects = matched_object_dict["remove"]
 list_of_add_replace_objects = matched_object_dict["add_replace"]
+
 
 
 

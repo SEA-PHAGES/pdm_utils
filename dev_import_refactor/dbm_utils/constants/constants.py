@@ -40,13 +40,13 @@ PROTEIN_ALPHABET = set(IUPAC.ExtendedIUPACProtein.letters)
 # Replace = delete a genome and replace it with another.
 # Update = make changes to one or more fields related to a genome
 # already present in the database (e.g. HostStrain, Cluster, Subcluster, etc.)
-TICKET_TYPE = set(["add","remove","replace","update"])
+TICKET_TYPE_SET = set(["add", "remove", "replace", "update"])
 
 
 
 # TODO is this constant still needed?
 # Create set of most common gene description genbank qualifiers.
-DESCRIPTION_FIELDS = set(["product","note","function"])
+DESCRIPTION_FIELDS = set(["product", "note", "function"])
 
 
 # Create list of potential host names to ignore.

@@ -3,37 +3,39 @@
 
 
 
+# TODO implement.
 # TODO unit test.
-def check_ticket_structure(ticket,
+def check_ticket_structure(
+                            ticket,
+                            type_set,
                             null_set,
-                            phage_id_set,
-                            host_set,
-                            cluster_set,
-                            status_set,
-                            author_set,
-                            description_field_set,
                             run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket."""
 
+    # This function simply evaluates whether there is data in the
+    # appropriate ticket attributes given the type of ticket.
+    # It confirms that ticket attributes 'type', 'run_mode', and
+    # 'description_field' are populated with specific values.
+    # But it does not evaluate the quality of the data itself for
+    # the other fields, since those are genome-specific fields and
+    # can be checked within Genome objects.
+
     #null_set = set(["none"])
 
     # This is the only evaluation that is not dependent on the ticket type.
-    ticket.check_type(type_set)
+    ticket.check_type(type_set, True)
 
     if ticket.type == "update":
-        ticket.check_primary_phage_id(phage_id_set)
-        ticket.check_host(host_set)
-        ticket.check_cluster(cluster_set)
-        ticket.check_subcluster_structure()
-        ticket.check_cluster_structure()
-        ticket.check_cluster_subcluster()
-        ticket.check_status(status_set)
-        ticket.check_description_field(null_set)
-        ticket.check_annotation_author(author_set)
-        ticket.check_run_mode(null_set)
-        ticket.check_secondary_phage_id(null_set)
+        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_host(null_set, False)
+        ticket.check_cluster(null_set, False)
+        ticket.check_status(null_set, False)
+        ticket.check_description_field(null_set, False)
+        ticket.check_annotation_author(null_set, False)
+        ticket.check_run_mode(null_set, True)
+        ticket.check_secondary_phage_id(null_set, True)
 
         # No need to evaluate the following fields:
         # Accession = it will either be an accession or it will be "none"
@@ -43,17 +45,14 @@ def check_ticket_structure(ticket,
     elif ticket.type == "add":
         # TODO make sure it checks that the primary_phage_id
         # is not 'none' as well.
-        ticket.check_primary_phage_id(phage_id_set, False)
-        ticket.check_secondary_phage_id(null_set)
-        ticket.check_host(host_set)
-        ticket.check_cluster(cluster_set)
-        ticket.check_subcluster_structure()
-        ticket.check_cluster_structure()
-        ticket.check_cluster_subcluster()
-        ticket.check_status(status_set)
-        ticket.check_description_field(description_field_set)
-        ticket.check_annotation_author(author_set)
-        ticket.check_run_mode(run_mode_set)
+        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_secondary_phage_id(null_set, True)
+        ticket.check_host(null_set, False)
+        ticket.check_cluster(null_set, False)
+        ticket.check_status(null_set, False)
+        ticket.check_description_field(null_set, False)
+        ticket.check_annotation_author(null_set, False)
+        ticket.check_run_mode(run_mode_set, True)
 
         # No need to evaluate the following fields:
         # Accession = it will either be an accession or it will be "none"
@@ -61,32 +60,31 @@ def check_ticket_structure(ticket,
 
     elif ticket.type == "remove":
 
-        # Everything except the secondary phage_id field should be 'none'
-        ticket.check_primary_phage_id(null_set)
-        ticket.check_secondary_phage_id(phage_id_set)
-        ticket.check_host(null_set)
-        ticket.check_subcluster(null_set)
-        ticket.check_cluster(null_set)
-        ticket.check_status(null_set)
-        ticket.check_description_field(null_set)
-        ticket.check_accession(null_set)
-        ticket.check_annotation_author(null_set)
-        ticket.check_run_mode(null_set)
+        # Everything except the primary phage_id field should be 'none'
+        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_secondary_phage_id(null_set, True)
+        ticket.check_host(null_set, True)
+        ticket.check_subcluster(null_set, True)
+        ticket.check_cluster(null_set, True)
+        ticket.check_status(null_set, True)
+        ticket.check_description_field(null_set, True)
+        ticket.check_accession(null_set, True)
+        ticket.check_annotation_author(null_set, True)
+        ticket.check_run_mode(null_set, True)
 
     elif ticket.type == "replace":
-        ticket.check_secondary_phage_id(phage_id_set)
-        ticket.check_host(host_set)
-        ticket.check_cluster(cluster_set)
-        ticket.check_subcluster_structure()
-        ticket.check_cluster_structure()
-        ticket.check_cluster_subcluster()
-        ticket.check_status(status_set)
-        ticket.check_description_field(description_field_set)
-        ticket.check_annotation_author(author_set)
-        ticket.check_run_mode(run_mode_set)
-        ticket.check_primary_secondary_phage_ids()
+        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_secondary_phage_id(null_set, False)
+        ticket.check_host(null_set, False)
+        ticket.check_cluster(null_set, False)
+        ticket.check_status(null_set, False)
+        ticket.check_description_field(null_set, False)
+        ticket.check_annotation_author(null_set, False)
+        ticket.check_run_mode(run_mode_set, True)
 
 
+
+        # TODO move this evaluation further into the program.
         # If the genome to be added is not spelled the same as the genome
         # to be removed, the new genome needs to have a unique name.
         if self.primary_phage_id != self.secondary_phage_id:
@@ -97,6 +95,109 @@ def check_ticket_structure(ticket,
         # Subcluster = it will either be a Subcluster or it will be "none"
     else:
         pass
+
+
+
+
+
+
+
+# TODO this function needs to be completely revamped. It should
+# be implemented within the Genome object.
+# TODO unit test.
+# def check_ticket_structure(ticket,
+#                             null_set,
+#                             phage_id_set,
+#                             host_set,
+#                             cluster_set,
+#                             status_set,
+#                             author_set,
+#                             description_field_set,
+#                             run_mode_set):
+#     """Evaluate a ticket to confirm it is structured appropriately.
+#     The assumptions for how each field is populated varies depending on
+#     the type of ticket."""
+#
+#     #null_set = set(["none"])
+#
+#     # This is the only evaluation that is not dependent on the ticket type.
+#     ticket.check_type(type_set)
+#
+#     if ticket.type == "update":
+#         ticket.check_primary_phage_id(phage_id_set)
+#         ticket.check_host(host_set)
+#         ticket.check_cluster(cluster_set)
+#         ticket.check_subcluster_structure()
+#         ticket.check_cluster_structure()
+#         ticket.check_cluster_subcluster()
+#         ticket.check_status(status_set)
+#         ticket.check_description_field(null_set)
+#         ticket.check_annotation_author(author_set)
+#         ticket.check_run_mode(null_set)
+#         ticket.check_secondary_phage_id(null_set)
+#
+#         # No need to evaluate the following fields:
+#         # Accession = it will either be an accession or it will be "none"
+#         # Subcluster = it will either be a Subcluster or it will be "none"
+#
+#
+#     elif ticket.type == "add":
+#         # TODO make sure it checks that the primary_phage_id
+#         # is not 'none' as well.
+#         ticket.check_primary_phage_id(phage_id_set, False)
+#         ticket.check_secondary_phage_id(null_set)
+#         ticket.check_host(host_set)
+#         ticket.check_cluster(cluster_set)
+#         ticket.check_subcluster_structure()
+#         ticket.check_cluster_structure()
+#         ticket.check_cluster_subcluster()
+#         ticket.check_status(status_set)
+#         ticket.check_description_field(description_field_set)
+#         ticket.check_annotation_author(author_set)
+#         ticket.check_run_mode(run_mode_set)
+#
+#         # No need to evaluate the following fields:
+#         # Accession = it will either be an accession or it will be "none"
+#         # Subcluster = it will either be a Subcluster or it will be "none"
+#
+#     elif ticket.type == "remove":
+#
+#         # Everything except the secondary phage_id field should be 'none'
+#         ticket.check_primary_phage_id(null_set)
+#         ticket.check_secondary_phage_id(phage_id_set)
+#         ticket.check_host(null_set)
+#         ticket.check_subcluster(null_set)
+#         ticket.check_cluster(null_set)
+#         ticket.check_status(null_set)
+#         ticket.check_description_field(null_set)
+#         ticket.check_accession(null_set)
+#         ticket.check_annotation_author(null_set)
+#         ticket.check_run_mode(null_set)
+#
+#     elif ticket.type == "replace":
+#         ticket.check_secondary_phage_id(phage_id_set)
+#         ticket.check_host(host_set)
+#         ticket.check_cluster(cluster_set)
+#         ticket.check_subcluster_structure()
+#         ticket.check_cluster_structure()
+#         ticket.check_cluster_subcluster()
+#         ticket.check_status(status_set)
+#         ticket.check_description_field(description_field_set)
+#         ticket.check_annotation_author(author_set)
+#         ticket.check_run_mode(run_mode_set)
+#         ticket.check_primary_secondary_phage_ids()
+#
+#
+#         # If the genome to be added is not spelled the same as the genome
+#         # to be removed, the new genome needs to have a unique name.
+#         if self.primary_phage_id != self.secondary_phage_id:
+#             ticket.check_primary_phage_id(phage_id_set, False)
+#
+#         # No need to evaluate the following fields:
+#         # Accession = it will either be an accession or it will be "none"
+#         # Subcluster = it will either be a Subcluster or it will be "none"
+#     else:
+#         pass
 
 
 
@@ -397,22 +498,6 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
 
 
 
-
-
-def check_import_ticket_structure(ticket_obj):
-    """Check how import tickets are structured prior to matching
-    with other types of data."""
-
-    ticket_obj.check_retrieve_status()
-    ticket_obj.check_type()
-    ticket_obj.check_host()
-    ticket_obj.check_cluster_subcluster()
-    ticket_obj.check_status()
-    ticket_obj.check_description_field()
-    ticket_obj.check_accession()
-    ticket_obj.check_annotation_author()
-    ticket_obj.check_run_mode()
-    ticket_obj.check_ticket()
 
 
 

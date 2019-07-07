@@ -370,12 +370,6 @@ def construct_phage_url(phage_name):
 
 
 
-
-
-
-
-# TODO implement.
-# TODO unit test.
 def retrieve_genome_data(genome1):
     """If the genome object has attributes that are set to be auto-completed,
     retrieve the data from PhagesDB to complete the genome."""

@@ -285,17 +285,34 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+    def test_check_parsed_fields_1(self):
+        """Check that no error is produced if the
+        correct number of fields were parsed."""
+        self.ticket._parsed_fields = 11
+        self.ticket.check_parsed_fields()
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_parsed_fields_2(self):
+        """Check that an error is produced if the
+        incorrect number of fields were parsed."""
+        self.ticket._parsed_fields = 10
+        self.ticket.check_parsed_fields()
+        self.assertEqual(self.ticket.evaluations[0].status, "error")
+
+
+
+
     def test_check_type_1(self):
         """Check that no error is produced if the
-        type is present in the first set."""
+        type is present in the set and expected to be in the set."""
         set1 = set(["add", "remove"])
         self.ticket.type = "add"
-        self.ticket.check_type(set1)
+        self.ticket.check_type(set1, True)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_type_2(self):
         """Check that an error is produced if the
-        type is not present in the first set."""
+        type is not present in the set and expected to be in the set."""
         set1 = set(["add", "remove"])
         self.ticket.type = "none"
         self.ticket.check_type(set1)
@@ -306,18 +323,19 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_primary_phage_id_1(self):
         """Check that no error is produced if the
-        primary_phage_id is not present in the empty/null set."""
+        primary_phage_id is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.primary_phage_id = "Trixie"
-        self.ticket.check_primary_phage_id(set1)
+        self.ticket.check_primary_phage_id(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_primary_phage_id_2(self):
-        """Check that no error is produced if the
+        """Check that an error is produced if the
         primary_phage_id is present in the empty/null set."""
         set1 = set(["none"])
         self.ticket.primary_phage_id = "none"
-        self.ticket.check_primary_phage_id(set1)
+        self.ticket.check_primary_phage_id(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -325,18 +343,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_secondary_phage_id_1(self):
         """Check that no error is produced if the
-        secondary_phage_id is not present in the empty/null set."""
+        secondary_phage_id is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.secondary_phage_id = "Trixie"
-        self.ticket.check_secondary_phage_id(set1)
+        self.ticket.check_secondary_phage_id(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_secondary_phage_id_2(self):
-        """Check that no error is produced if the
-        secondary_phage_id is present in the empty/null set."""
+        """Check that an error is produced if the
+        secondary_phage_id is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.secondary_phage_id = "none"
-        self.ticket.check_secondary_phage_id(set1)
+        self.ticket.check_secondary_phage_id(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -344,18 +364,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_host_1(self):
         """Check that no error is produced if the
-        host is not present in the empty/null set."""
+        host is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.host = "Mycobacterium"
-        self.ticket.check_host(set1)
+        self.ticket.check_host(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_host_2(self):
-        """Check that no error is produced if the
-        host is present in the empty/null set."""
+        """Check that an error is produced if the
+        host is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.host = "none"
-        self.ticket.check_host(set1)
+        self.ticket.check_host(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -363,18 +385,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_subcluster_1(self):
         """Check that no error is produced if the
-        subcluster is not present in the empty/null set."""
+        subcluster is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.subcluster = "Mycobacterium"
-        self.ticket.check_subcluster(set1)
+        self.ticket.check_subcluster(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_subcluster_2(self):
-        """Check that no error is produced if the
-        subcluster is present in the empty/null set."""
+        """Check that an error is produced if the
+        subcluster is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.subcluster = "none"
-        self.ticket.check_subcluster(set1)
+        self.ticket.check_subcluster(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -382,18 +406,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_cluster_1(self):
         """Check that no error is produced if the
-        cluster is not present in the empty/null set."""
+        cluster is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.cluster = "Mycobacterium"
-        self.ticket.check_cluster(set1)
+        self.ticket.check_cluster(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_cluster_2(self):
-        """Check that no error is produced if the
-        cluster is present in the empty/null set."""
+        """Check that an error is produced if the
+        cluster is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.cluster = "none"
-        self.ticket.check_cluster(set1)
+        self.ticket.check_cluster(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -401,18 +427,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_status_1(self):
         """Check that no error is produced if the
-        status is not present in the empty/null set."""
+        status is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.status = "Mycobacterium"
-        self.ticket.check_status(set1)
+        self.ticket.check_status(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_status_2(self):
-        """Check that no error is produced if the
-        status is present in the empty/null set."""
+        """Check that an error is produced if the
+        status is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.status = "none"
-        self.ticket.check_status(set1)
+        self.ticket.check_status(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -420,18 +448,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_description_field_1(self):
         """Check that no error is produced if the
-        description_field is not present in the empty/null set."""
+        description_field is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.description_field = "Mycobacterium"
-        self.ticket.check_description_field(set1)
+        self.ticket.check_description_field(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_description_field_2(self):
-        """Check that no error is produced if the
-        description_field is present in the empty/null set."""
+        """Check that an error is produced if the
+        description_field is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.description_field = "none"
-        self.ticket.check_description_field(set1)
+        self.ticket.check_description_field(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -439,18 +469,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_accession_1(self):
         """Check that no error is produced if the
-        accession is not present in the empty/null set."""
+        accession is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.accession = "Mycobacterium"
-        self.ticket.check_accession(set1)
+        self.ticket.check_accession(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_accession_2(self):
-        """Check that no error is produced if the
-        accession is present in the empty/null set."""
+        """Check that an error is produced if the
+        accession is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.accession = "none"
-        self.ticket.check_accession(set1)
+        self.ticket.check_accession(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -458,18 +490,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_annotation_author_1(self):
         """Check that no error is produced if the
-        annotation_author is not present in the empty/null set."""
+        annotation_author is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.annotation_author = "Mycobacterium"
-        self.ticket.check_annotation_author(set1)
+        self.ticket.check_annotation_author(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_annotation_author_2(self):
-        """Check that no error is produced if the
-        annotation_author is present in the empty/null set."""
+        """Check that an error is produced if the
+        annotation_author is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.annotation_author = "none"
-        self.ticket.check_annotation_author(set1)
+        self.ticket.check_annotation_author(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -477,18 +511,20 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_run_mode_1(self):
         """Check that no error is produced if the
-        run_mode is not present in the empty/null set."""
+        run_mode is not present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.run_mode = "Mycobacterium"
-        self.ticket.check_run_mode(set1)
+        self.ticket.check_run_mode(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
     def test_check_run_mode_2(self):
-        """Check that no error is produced if the
-        run_mode is present in the empty/null set."""
+        """Check that an error is produced if the
+        run_mode is present in the empty/null set
+        and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.run_mode = "none"
-        self.ticket.check_run_mode(set1)
+        self.ticket.check_run_mode(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 

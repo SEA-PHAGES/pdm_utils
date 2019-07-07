@@ -1277,6 +1277,37 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
 
+    def test_check_value_expected_in_set_1(self):
+        """Check value that is in the set and expected to be in set."""
+        set1 = set(["none", "empty"])
+        value = "none"
+        result = basic.check_value_expected_in_set(value, set1)
+        self.assertTrue(result)
+
+    def test_check_value_expected_in_set_2(self):
+        """Check value that is in the set and not expected to be in set."""
+        set1 = set(["none", "empty"])
+        value = "none"
+        result = basic.check_value_expected_in_set(value, set1, False)
+        self.assertFalse(result)
+
+    def test_check_value_expected_in_set_3(self):
+        """Check value that is not in the set and expected to be in set."""
+        set1 = set(["none", "empty"])
+        value = "EagleEye"
+        result = basic.check_value_expected_in_set(value, set1)
+        self.assertFalse(result)
+
+    def test_check_value_expected_in_set_4(self):
+        """Check value that is not in the set and not expected to be in set."""
+        set1 = set(["none", "empty"])
+        value = "EagleEye"
+        result = basic.check_value_expected_in_set(value, set1, False)
+        self.assertTrue(result)
+
+
+
+
     def test_check_value_in_two_sets_1(self):
         """Check value that is in neither set."""
         set1 = set(["Trixie", "L5"])

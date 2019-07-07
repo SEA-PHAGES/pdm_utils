@@ -567,6 +567,26 @@ def identify_two_list_duplicates(item1_list, item2_list):
 
     return item3_set
 
+def check_value_expected_in_set(value, set1, expected = True):
+    """Check if a value is present within a set and if it is expected.
+    """
+
+    # Check if the value is present in the set.
+    if value in set1:
+        present = True
+    else:
+        present = False
+
+    # Compare the presence/absence with what was expected.
+    if (expected and present):
+        result = True
+    elif (not expected and not present):
+        result = True
+    else:
+        result = False
+
+    return result
+
 
 def check_value_in_two_sets(value, set1, set2):
     """Check if a value is present within two sets, and return whether

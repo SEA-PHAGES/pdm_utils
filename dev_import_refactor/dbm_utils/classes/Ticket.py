@@ -48,7 +48,7 @@ class GenomeTicket:
 
 
 
-
+        self._parsed_fields = 0
 
 
 
@@ -77,42 +77,34 @@ class GenomeTicket:
 
 
 
-    # TODO implement in Genome object?
     def set_primary_phage_id(self, value):
         """Set the primary_phage_id."""
         self.primary_phage_id = basic.lower_case(value)
 
-    # TODO implement in Genome object?
     def set_host(self, value):
         """Set the host."""
         self.host = basic.lower_case(value)
 
-    # TODO implement in Genome object?
     def set_cluster(self, value):
         """Set the cluster."""
         self.cluster = basic.lower_case(value)
 
-    # TODO implement in Genome object?
     def set_subcluster(self, value):
         """Set the subcluster."""
         self.subcluster = basic.lower_case(value)
 
-    # TODO implement in Genome object?
     def set_status(self, value):
         """Set the status."""
         self.status = value.lower()
 
-    # TODO implement in Genome object?
     def set_accession(self, value):
         """Set the accession."""
         self.accession = basic.lower_case(value)
 
-    # TODO implement in Genome object?
     def set_annotation_author(self, value):
         """Set the annotation_author."""
         self.annotation_author = value.lower()
 
-    # TODO implement in Genome object?
     def set_secondary_phage_id(self, value):
         """Set the secondary_phage_id."""
         self.secondary_phage_id = basic.lower_case(value)
@@ -213,11 +205,29 @@ class GenomeTicket:
     # Evaluations
 
 
-    def check_type(self, set1):
+    def check_parsed_fields(self):
+        """Check if the import table contained the correct amount of data."""
+
+        if self._parsed_fields == 11:
+            result = "Import table contains the correct amount of data."
+            status = "correct"
+        else:
+            result = "Import table contains incorrect amount of data."
+            status = "error"
+
+        definition = "Check if import table contains the correct amount of data."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_type(self, value_set, expected = True):
         """Check if the type is populated with a value from
         a specific set of possible values."""
 
-        if self.type in set1:
+        output = basic.check_value_expected_in_set(
+                    self.type, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -229,11 +239,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_primary_phage_id(self, set1):
+    def check_primary_phage_id(self, value_set, expected = True):
         """Check if the primary_phage_id is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.primary_phage_id not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.primary_phage_id, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -245,11 +258,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_secondary_phage_id(self, set1):
+    def check_secondary_phage_id(self, value_set, expected = True):
         """Check if the secondary_phage_id is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.secondary_phage_id not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.secondary_phage_id, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -261,11 +277,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_host(self, set1):
+    def check_host(self, value_set, expected = True):
         """Check if the host is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.host not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.host, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -277,11 +296,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_subcluster(self, set1):
+    def check_subcluster(self, value_set, expected = True):
         """Check if the subcluster is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.subcluster not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.subcluster, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -293,11 +315,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_cluster(self, set1):
+    def check_cluster(self, value_set, expected = True):
         """Check if the cluster is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.cluster not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.cluster, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -309,11 +334,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_status(self, set1):
+    def check_status(self, value_set, expected = True):
         """Check if the status is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.status not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.status, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -325,11 +353,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_description_field(self, set1):
+    def check_description_field(self, value_set, expected = True):
         """Check if the description_field is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.description_field not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.description_field, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -341,11 +372,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_accession(self, set1):
+    def check_accession(self, value_set, expected = True):
         """Check if the accession is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.accession not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.accession, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -357,11 +391,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_annotation_author(self, set1):
+    def check_annotation_author(self, value_set, expected = True):
         """Check if the annotation_author is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.annotation_author not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.annotation_author, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
@@ -373,11 +410,14 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_run_mode(self, set1):
+    def check_run_mode(self, value_set, expected = True):
         """Check if the run_mode is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
-        if self.run_mode not in set1:
+        output = basic.check_value_expected_in_set(
+                    self.run_mode, value_set, expected)
+
+        if output:
             result = "The field is populated correctly."
             status = "correct"
         else:
