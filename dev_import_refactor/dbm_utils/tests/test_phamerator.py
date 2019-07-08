@@ -116,7 +116,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         output_annotation_author = "1"
         output_annotation_qc = "1"
         output_retrieve_record = "1"
-
+        output_type = "phamerator"
         output_search_id = "trixie"
         output_seq_length = 4
 
@@ -151,6 +151,8 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(self.genome1.search_id, output_search_id)
         with self.subTest():
             self.assertEqual(self.genome1._length, output_seq_length)
+        with self.subTest():
+            self.assertEqual(self.genome1.type, output_type)
 
 
     def test_parse_phamerator_data_2(self):
@@ -196,7 +198,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         output_annotation_author = "1"
         output_annotation_qc = "1"
         output_retrieve_record = "1"
-
+        output_type = "phamerator"
         output_search_id = "trixie"
         output_seq_length = 4
 
@@ -231,6 +233,8 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(self.genome1.search_id, output_search_id)
         with self.subTest():
             self.assertEqual(self.genome1._length, output_seq_length)
+        with self.subTest():
+            self.assertEqual(self.genome1.type, output_type)
 
 
 

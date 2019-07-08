@@ -327,6 +327,8 @@ def parse_phagesdb_data(genome_obj,data_dict):
             list_of_results.append(result8)
 
 
+    genome_obj.type = "phagesdb"
+
     # TODO this filtering step may not be ideal.
     list_of_evals = []
     for result in list_of_results:

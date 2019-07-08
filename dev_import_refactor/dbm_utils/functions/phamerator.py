@@ -35,6 +35,7 @@ def parse_phamerator_data(genome, data_tuple):
     genome.annotation_author = str(data_tuple[9])
     genome.annotation_qc = str(data_tuple[10])
     genome.retrieve_record = str(data_tuple[11])
+    genome.type = "phamerator"
 
 
 

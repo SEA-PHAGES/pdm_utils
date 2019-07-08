@@ -1312,6 +1312,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.translation_table, 11)
         with self.subTest():
             self.assertEqual(self.genome.phage_id,"KatherineG")
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
 
@@ -1437,6 +1439,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_3(self):
@@ -1556,6 +1560,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_4(self):
@@ -1680,6 +1686,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_5(self):
@@ -1803,6 +1811,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_6(self):
@@ -1926,6 +1936,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_7(self):
@@ -2047,6 +2059,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_8(self):
@@ -2166,6 +2180,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_9(self):
@@ -2276,6 +2292,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_10(self):
@@ -2394,6 +2412,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_11(self):
@@ -2517,6 +2537,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_12(self):
@@ -2630,6 +2652,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_13(self):
@@ -2748,6 +2772,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_14(self):
@@ -2866,6 +2892,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 0)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_15(self):
@@ -2966,6 +2994,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 0)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
 
@@ -3089,6 +3119,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_17(self):
@@ -3211,6 +3243,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_18(self):

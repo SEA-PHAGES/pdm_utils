@@ -359,6 +359,7 @@ def parse_flat_file_data(genome_obj, \
     # Now that record fields are parsed, set the phage_id.
     genome_obj.set_phage_id_from_field(phage_id_field)
 
+    genome_obj.type = "flat_file"
 
 
     # Create lists of parsed features.
