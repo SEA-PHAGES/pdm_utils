@@ -35,19 +35,175 @@ class GenomePair:
 
 
 
-    # TODO this is probably no longer needed.
-    # def set_evaluation(self, type, message1 = None, message2 = None):
-    #
-    #     if type == "warning":
-    #         eval_object = Eval.construct_warning(message1, message2)
-    #
-    #     elif type == "error":
-    #         eval_object = Eval.construct_error(message1)
-    #
-    #     else:
-    #         eval_object = Eval.EvalResult()
-    #
-    #     self.evaluations.append(eval_object)
+
+
+
+
+
+
+
+
+    # TODO implement.
+    # TODO unit test.
+    def transfer_data(self, field, first, second, keyword = None):
+        """Transfer data between paired genomes."""
+
+
+
+        # Decide the direction of data transfer.
+        if field = "type":
+            if (self.genome1.type == first and self.genome2.type == second):
+                first = self.genome1
+                second = self.genome2
+            elif (self.genome1.type == second and self.genome2.type == first):
+                first = self.genome2
+                second = self.genome1
+            else:
+                # TODO what to implement here?
+                pass
+        if field = "phage_id":
+            if (self.genome1.phage_id == first and self.genome2.phage_id == second):
+                first = self.genome1
+                second = self.genome2
+            elif (self.genome1.phage_id == second and self.genome2.phage_id == first):
+                first = self.genome2
+                second = self.genome1
+            else:
+                # TODO what to implement here?
+                pass
+
+
+        # Now transfer the data.
+
+        if (second.phage_id == keyword or keyword is None):
+            second.phage_id = first.phage_id
+        if (second.phage_name == keyword or keyword is None):
+            second.phage_name = first.phage_name
+        if (second.host == keyword or keyword is None):
+            second.host = first.host
+        if (second.sequence == keyword or keyword is None):
+            second.sequence = first.sequence
+        if (second.accession == keyword or keyword is None):
+            second.accession = first.accession
+        if (second.author == keyword or keyword is None):
+            second.author = first.author
+        if (second.status == keyword or keyword is None):
+            second.status = first.status
+        if (second.cluster == keyword or keyword is None):
+            second.cluster = first.cluster
+        if (second.subcluster == keyword or keyword is None):
+            second.subcluster = first.subcluster
+        if (second.cluster_subcluster == keyword or keyword is None):
+            second.cluster_subcluster = first.cluster_subcluster
+        if (second.ncbi_update_flag == keyword or keyword is None):
+            second.ncbi_update_flag = first.ncbi_update_flag
+        if (second.date_last_modified == keyword or keyword is None):
+            second.date_last_modified = first.date_last_modified
+        if (second.annotation_author == keyword or keyword is None):
+            second.annotation_author = first.annotation_author
+        if (second.annotation_qc == keyword or keyword is None):
+            second.annotation_qc = first.annotation_qc
+        if (second.retrieve_record == keyword or keyword is None):
+            second.retrieve_record = first.retrieve_record
+        if (second.record_name == keyword or keyword is None):
+            second.record_name = first.record_name
+        if (second.record_id == keyword or keyword is None):
+            second.record_id = first.record_id
+        if (second.record_accession == keyword or keyword is None):
+            second.record_accession = first.record_accession
+        if (second.record_description == keyword or keyword is None):
+            second.record_description = first.record_description
+        if (second.record_source == keyword or keyword is None):
+            second.record_source = first.record_source
+        if (second.record_organism == keyword or keyword is None):
+            second.record_organism = first.record_organism
+        if (second.record_authors == keyword or keyword is None):
+            second.record_authors = first.record_authors
+        if (second.record_date == keyword or keyword is None):
+            second.record_date = first.record_date
+        if (second.filename == keyword or keyword is None):
+            second.filename = first.filename
+        if (second.translation_table == keyword or keyword is None):
+            second.translation_table = first.translation_table
+        if (second.seqrecord == keyword or keyword is None):
+            second.seqrecord = first.seqrecord
+        if (second.type == keyword or keyword is None):
+            second.type = first.type
+        if (second.search_id == keyword or keyword is None):
+            second.search_id = first.search_id
+        if (second.search_name == keyword or keyword is None):
+            second.search_name = first.search_name
+        if (second._length == keyword or keyword is None):
+            second._length = first._length
+        if (second._gc == keyword or keyword is None):
+            second._gc = first._gc
+        if (second.evaluations == keyword or keyword is None):
+            second.evaluations = first.evaluations
+        if (second.cds_features == keyword or keyword is None):
+            second.cds_features = first.cds_features
+        if (second._cds_features_tally == keyword or keyword is None):
+            second._cds_features_tally = first._cds_features_tally
+        if (second._cds_start_end_ids == keyword or keyword is None):
+            second._cds_start_end_ids = first._cds_start_end_ids
+        if (second._cds_end_strand_ids == keyword or keyword is None):
+            second._cds_end_strand_ids = first._cds_end_strand_ids
+        if (second._cds_processed_primary_descriptions_tally == keyword or keyword is None):
+            second._cds_processed_primary_descriptions_tally = first._cds_processed_primary_descriptions_tally
+        if (second.trna_features == keyword or keyword is None):
+            second.trna_features = first.trna_features
+        if (second._trna_features_tally == keyword or keyword is None):
+            second._trna_features_tally = first._trna_features_tally
+        if (second.source_features == keyword or keyword is None):
+            second.source_features = first.source_features
+        if (second._source_features_tally == keyword or keyword is None):
+            second._source_features_tally = first._source_features_tally
+        if (second.search_filename == keyword or keyword is None):
+            second.search_filename = first.search_filename
+        if (second._record_description_phage_name == keyword or keyword is None):
+            second._record_description_phage_name = first._record_description_phage_name
+        if (second._record_source_phage_name == keyword or keyword is None):
+            second._record_source_phage_name = first._record_source_phage_name
+        if (second._record_organism_phage_name == keyword or keyword is None):
+            second._record_organism_phage_name = first._record_organism_phage_name
+        if (second._record_description_host_name == keyword or keyword is None):
+            second._record_description_host_name = first._record_description_host_name
+        if (second._record_source_host_name == keyword or keyword is None):
+            second._record_source_host_name = first._record_source_host_name
+        if (second._record_organism_host_name == keyword or keyword is None):
+            second._record_organism_host_name = first._record_organism_host_name
+        if (second._cds_processed_product_descriptions_tally == keyword or keyword is None):
+            second._cds_processed_product_descriptions_tally = first._cds_processed_product_descriptions_tally
+        if (second._cds_processed_function_descriptions_tally == keyword or keyword is None):
+            second._cds_processed_function_descriptions_tally = first._cds_processed_function_descriptions_tally
+        if (second._cds_processed_note_descriptions_tally == keyword or keyword is None):
+            second._cds_processed_note_descriptions_tally = first._cds_processed_note_descriptions_tally
+        if (second._cds_unique_start_end_ids == keyword or keyword is None):
+            second._cds_unique_start_end_ids = first._cds_unique_start_end_ids
+        if (second._cds_duplicate_start_end_ids == keyword or keyword is None):
+            second._cds_duplicate_start_end_ids = first._cds_duplicate_start_end_ids
+        if (second._cds_unique_end_strand_ids == keyword or keyword is None):
+            second._cds_unique_end_strand_ids = first._cds_unique_end_strand_ids
+        if (second._cds_duplicate_end_strand_ids == keyword or keyword is None):
+            second._cds_duplicate_end_strand_ids = first._cds_duplicate_end_strand_ids
+
+
+
+
+
+
+###
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

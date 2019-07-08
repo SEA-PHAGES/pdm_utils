@@ -237,12 +237,11 @@ def create_feature_dictionary(feature_list):
 
 
 
-# TODO unit test how the phage_id_field parameter works.
 def parse_flat_file_data(genome_obj, \
                             retrieved_record, \
                             filepath = "", \
                             translation_table = 11, \
-                            phage_id_field = "record_organism"):
+                            phage_id_field = "record_organism_phage_name"):
 
     """Parses a GenBank-formatted flat file into a Genome object using
     data that has already been parsed by Bio.SeqIO.
@@ -358,7 +357,7 @@ def parse_flat_file_data(genome_obj, \
 
 
     # Now that record fields are parsed, set the phage_id.
-    genome_obj.set_phage_id_from_file(phage_id_field)
+    genome_obj.set_phage_id_from_field(phage_id_field)
 
 
 
@@ -487,9 +486,8 @@ def parse_flat_file(filepath):
     return (record, eval)
 
 
-
-# TODO update function to use phage_id_field
-def create_parsed_flat_file_list(all_files, phage_id_field):
+def create_parsed_flat_file_list(all_files,
+                                phage_id_field = "record_organism_phage_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 

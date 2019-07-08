@@ -1310,6 +1310,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._trna_features_tally, 1)
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome.phage_id,"KatherineG")
 
 
 
@@ -3226,6 +3228,41 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
+
+    def test_parse_flat_file_data_19(self):
+        """Verify retrieved flat file data is parsed correctly with
+        phage_id field specified as non-standard field."""
+
+        description = "Mycobacterium phage L5 complete genome"
+        organism = "Gordonia phage KatherineG"
+        source = "Streptomyces phage phiC31"
+
+        annotation_dict = {"accessions": [" ABC123.1 "], \
+                            "source": source, \
+                            "organism": organism, \
+                            }
+
+        record = SeqRecord(seq = Seq("atgc"), \
+                            id = "OPQ123.1", \
+                            name = "XYZ123", \
+                            annotations = annotation_dict, \
+                            description = description, \
+                            )
+
+        flat_files.parse_flat_file_data(
+                            self.genome,
+                            record,
+                            phage_id_field = "record_description_phage_name")
+
+        self.assertEqual(self.genome.phage_id, "L5")
+
+
+
+
+
+
+
+
     def test_check_flat_file_type_1(self):
         """Verify valid file does not produce an error."""
         filepath = "/path/to/file/l5.gb"
@@ -3363,7 +3400,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(eval_message, exp_message)
 
 
-
+    # TODO fix these unittests after the parse_flat_file_data tests are fixed.
 
     def test_create_parsed_flat_file_list_1(self):
         """Verify file with one GenBank-formatted flat file

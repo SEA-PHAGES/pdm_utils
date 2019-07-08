@@ -129,7 +129,7 @@ class CdsFeature:
 
         self.parent_phage_id = value
         self._search_id = \
-            basic.edit_draft_suffix(self.parent_phage_id, "remove")
+            basic.edit_suffix(self.parent_phage_id, "remove")
 
     def choose_description(self, value):
         """Set the primary description and processed primary description."""

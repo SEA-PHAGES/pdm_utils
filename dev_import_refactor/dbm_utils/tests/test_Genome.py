@@ -219,6 +219,160 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_set_phage_id_from_field_1(self):
+        """Check that the phage_id is set from the phage_name field."""
+        self.genome.phage_name = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("phage_name")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_2(self):
+        """Check that the phage_id is set from the accession field."""
+        self.genome.accession = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("accession")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_3(self):
+        """Check that the phage_id is set from the record_name field."""
+        self.genome.record_name = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_name")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_4(self):
+        """Check that the phage_id is set from the record_id field."""
+        self.genome.record_id = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_id")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_5(self):
+        """Check that the phage_id is set from the record_accession field."""
+        self.genome.record_accession = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_accession")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_6(self):
+        """Check that the phage_id is set from the record_description field."""
+        self.genome.record_description = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_description")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_7(self):
+        """Check that the phage_id is set from the record_source field."""
+        self.genome.record_source = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_source")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_8(self):
+        """Check that the phage_id is set from the record_organism field."""
+        self.genome.record_organism = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_organism")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_9(self):
+        """Check that the phage_id is set from the filename field."""
+        self.genome.filename = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("filename")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_10(self):
+        """Check that the phage_id is set from the
+        record_description_phage_name field."""
+        self.genome._record_description_phage_name = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_description_phage_name")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_11(self):
+        """Check that the phage_id is set from the
+        record_source_phage_name field."""
+        self.genome._record_source_phage_name = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_source_phage_name")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_12(self):
+        """Check that the phage_id is set from the
+        record_organism_phage_name field."""
+        self.genome._record_organism_phage_name = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_organism_phage_name")
+        self.assertEqual(self.genome.phage_id, "Trixie")
+
+    def test_set_phage_id_from_field_13(self):
+        """Check that the phage_id is empty from an invalid field."""
+        self.genome.set_phage_id_from_field("invalid")
+        self.assertEqual(self.genome.phage_id, "")
+
+
+
+
+    def test_set_host_from_field_1(self):
+        """Check that the host is set from the record_name field."""
+        self.genome.record_name = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_name")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_2(self):
+        """Check that the host is set from the record_id field."""
+        self.genome.record_id = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_id")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_3(self):
+        """Check that the host is set from the record_accession field."""
+        self.genome.record_accession = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_accession")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_4(self):
+        """Check that the host is set from the record_description field."""
+        self.genome.record_description = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_description")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_5(self):
+        """Check that the host is set from the record_source field."""
+        self.genome.record_source = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_source")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_6(self):
+        """Check that the host is set from the record_organism field."""
+        self.genome.record_organism = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_organism")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_7(self):
+        """Check that the host is set from the filename field."""
+        self.genome.filename = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("filename")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_8(self):
+        """Check that the host is set from the
+        record_description_host_name field."""
+        self.genome._record_description_host_name = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_description_host_name")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_9(self):
+        """Check that the host is set from the
+        record_source_host_name field."""
+        self.genome._record_source_host_name = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_source_host_name")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_10(self):
+        """Check that the host is set from the
+        record_organism_host_name field."""
+        self.genome._record_organism_host_name = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_organism_host_name")
+        self.assertEqual(self.genome.host, "Mycobacterium")
+
+    def test_set_host_from_field_11(self):
+        """Check that the host is empty from an invalid field."""
+        self.genome.set_host_from_field("invalid")
+        self.assertEqual(self.genome.host, "")
+
+
+
+
     def test_set_cluster_1(self):
         """Check that standard Cluster is set appropriately."""
         cluster = "A"

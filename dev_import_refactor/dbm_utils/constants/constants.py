@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 
-
+NAME_SUFFIX = "_Draft"
 
 
 EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')

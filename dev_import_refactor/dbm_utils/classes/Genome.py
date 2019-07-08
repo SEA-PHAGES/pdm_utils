@@ -62,7 +62,8 @@ class Genome:
         self.seqrecord = [] # Holds parsed Biopython SeqRecord object.
 
 
-
+        self.type = "" # Describes how this genome is used
+                        # (e.g. import, phamerator, phagesdb, etc.)
 
 
 
@@ -137,54 +138,64 @@ class Genome:
     def set_phage_id(self, value):
         """Set the phage_id and search_id."""
 
-        self.phage_id = basic.edit_draft_suffix(value, "remove")
+        self.phage_id = basic.edit_suffix(value, "remove")
         self.search_id = self.phage_id.lower()
 
-
-
-    # TODO implement
-    # TODO unit test.
-    def set_phage_id_from_file(self, value):
+    def set_phage_id_from_field(self, value):
         """Set the phage_id from a value parsed from the indicated field."""
 
-
-        if value == "record_description":
-            self.set_phage_id(self._record_description_phage_name)
-            pass
-        elif value =="record_source":
-            self.set_phage_id(self._record_source_phage_name)
-            pass
-        elif value =="record_organism":
-            self.set_phage_id(self._record_organism_phage_name)
-            pass
-        elif value =="name":
+        if value == "phage_name":
+            self.set_phage_id(self.phage_name)
+        elif value == "accession":
+            self.set_phage_id(self.accession)
+        elif value == "record_name":
             self.set_phage_id(self.record_name)
-            pass
-        elif value =="id":
+        elif value == "record_id":
             self.set_phage_id(self.record_id)
-            pass
+        elif value == "record_accession":
+            self.set_phage_id(self.record_accession)
+        elif value == "record_description":
+            self.set_phage_id(self.record_description)
+        elif value == "record_source":
+            self.set_phage_id(self.record_source)
+        elif value == "record_organism":
+            self.set_phage_id(self.record_organism)
+        elif value == "filename":
+            self.set_phage_id(self.filename)
+        elif value == "record_description_phage_name":
+            self.set_phage_id(self._record_description_phage_name)
+        elif value == "record_source_phage_name":
+            self.set_phage_id(self._record_source_phage_name)
+        elif value == "record_organism_phage_name":
+            self.set_phage_id(self._record_organism_phage_name)
         else:
-            pass
+            self.set_phage_id("")
 
-
-
-    # TODO implement
-    # TODO unit test.
-    def set_host_from_file(self, value):
+    def set_host_from_field(self, value):
         """Set the host from a value parsed from the indicated field."""
 
-        if value == "record_description":
-            self.set_phage_id(self._record_description_host_name)
-            pass
+        if value == "record_name":
+            self.set_host(self.record_name)
+        elif value =="record_id":
+            self.set_host(self.record_id)
+        elif value =="record_accession":
+            self.set_host(self.record_accession)
+        elif value =="record_description":
+            self.set_host(self.record_description)
         elif value =="record_source":
-            self.set_phage_id(self._record_source_host_name)
-            pass
+            self.set_host(self.record_source)
         elif value =="record_organism":
-            self.set_phage_id(self._record_organism_host_name)
-            pass
+            self.set_host(self.record_organism)
+        elif value =="filename":
+            self.set_host(self.filename)
+        elif value =="record_description_host_name":
+            self.set_host(self._record_description_host_name)
+        elif value =="record_source_host_name":
+            self.set_host(self._record_source_host_name)
+        elif value =="record_organism_host_name":
+            self.set_host(self._record_organism_host_name)
         else:
-            pass
-
+            self.set_host("")
 
     def parse_record_description(self):
         """Retrieve the phage name and host name from the record's
@@ -233,7 +244,7 @@ class Genome:
     #     self.phage_name = value
     #
     #     self.search_name = \
-    #           basic.edit_draft_suffix(self.phage_name, "remove").lower()
+    #           basic.edit_suffix(self.phage_name, "remove").lower()
 
 
     def set_host(self, value, format = "empty_string"):
