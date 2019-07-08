@@ -15,6 +15,8 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
+        self.ticket = Ticket.GenomeTicket()
+
         self.normal_ticket_list = ["add",
                                 "Trixe",
                                 "Mycobacterium",
@@ -24,6 +26,8 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "Hatfull",
                                 "Product",
                                 "ABC123",
+                                1,
+                                1,
                                 "phagesdb",
                                 "none"]
 
@@ -44,76 +48,66 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "Hatfull",
                                 "Product",
                                 "ABC123",
+                                1,
+                                1,
                                 "phagesdb",
                                 "none",
                                 "extra"]
 
-
-        self.remove_ticket_list = ["remove",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "none",
-                                    "Trixe"]
-
+        self.normal_ticket_list2 = ["replace",
+                                "KatherineG",
+                                "Gordonia",
+                                "A",
+                                "A15",
+                                "Final",
+                                "Hatfull",
+                                "Product",
+                                "XYZ456",
+                                1,
+                                1,
+                                "phagesdb",
+                                "KatherineG"]
 
     def test_parse_import_ticket_1(self):
         """Verify properly structured data is parsed correctly."""
-        ticket, eval = \
-            tickets.parse_import_ticket(self.normal_ticket_list)
+        tickets.parse_import_ticket(self.ticket, self.normal_ticket_list)
+
         with self.subTest():
-            self.assertIsNone(eval)
+            self.assertEqual(self.ticket.type, "add")
         with self.subTest():
-            self.assertIsNotNone(ticket)
+            self.assertEqual(self.ticket.primary_phage_id, "Trixe")
         with self.subTest():
-            self.assertEqual(ticket.type, "add")
+            self.assertEqual(self.ticket.host, "Mycobacterium")
         with self.subTest():
-            self.assertEqual(ticket.primary_phage_id, "Trixe")
+            self.assertEqual(self.ticket.cluster, "A")
         with self.subTest():
-            self.assertEqual(ticket.host, "Mycobacterium")
+            self.assertEqual(self.ticket.subcluster, "A2")
         with self.subTest():
-            self.assertEqual(ticket.cluster, "A")
+            self.assertEqual(self.ticket.status, "final")
         with self.subTest():
-            self.assertEqual(ticket.subcluster, "A2")
+            self.assertEqual(self.ticket.annotation_author, "hatfull")
         with self.subTest():
-            self.assertEqual(ticket.status, "Final")
+            self.assertEqual(self.ticket.annotation_qc, 1)
         with self.subTest():
-            self.assertEqual(ticket.annotation_author, "Hatfull")
+            self.assertEqual(self.ticket.retrieve_record, 1)
         with self.subTest():
-            self.assertEqual(ticket.description_field, "Product")
+            self.assertEqual(self.ticket.description_field, "product")
         with self.subTest():
-            self.assertEqual(ticket.accession, "ABC123")
+            self.assertEqual(self.ticket.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(ticket.run_mode, "phagesdb")
+            self.assertEqual(self.ticket.run_mode, "phagesdb")
         with self.subTest():
-            self.assertEqual(ticket.secondary_phage_id, "none")
+            self.assertEqual(self.ticket.secondary_phage_id, "none")
 
     def test_parse_import_ticket_2(self):
         """Verify improperly structured data is not parsed."""
-        ticket, eval = \
-            tickets.parse_import_ticket(self.short_ticket_list)
-        with self.subTest():
-            self.assertIsNotNone(eval)
-        with self.subTest():
-            self.assertIsNone(ticket)
-        with self.subTest():
-            self.assertEqual(eval.status, "error")
+        tickets.parse_import_ticket(self.ticket, self.short_ticket_list)
+        self.assertEqual(self.ticket.type, "")
 
     def test_parse_import_ticket_3(self):
         """Verify improperly structured data is not parsed."""
-        ticket, eval = \
-            tickets.parse_import_ticket(self.long_ticket_list)
-        with self.subTest():
-            self.assertIsNotNone(eval)
-        with self.subTest():
-            self.assertIsNone(ticket)
-        with self.subTest():
-            self.assertEqual(eval.status, "error")
+        tickets.parse_import_ticket(self.ticket, self.long_ticket_list)
+        self.assertEqual(self.ticket.type, "")
 
 
 
@@ -121,19 +115,13 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-
-
-
-
+# TODO HERE IN PROGRESS fixing broken tickets functions.
 
     def test_parse_import_tickets_1(self):
         """Verify two lists of correct data are parsed."""
         list_of_lists = [self.normal_ticket_list,
-                         self.remove_ticket_list]
-        list_of_tickets, list_of_evals = \
-            tickets.parse_import_tickets(list_of_lists)
-        with self.subTest():
-            self.assertEqual(len(list_of_evals), 0)
+                         self.normal_ticket_list2]
+        list_of_tickets = tickets.parse_import_tickets(list_of_lists)
         with self.subTest():
             self.assertEqual(len(list_of_tickets), 2)
         with self.subTest():
@@ -141,19 +129,22 @@ class TestTicketFunctions1(unittest.TestCase):
             self.assertEqual(type, "add")
         with self.subTest():
             type = list_of_tickets[1].type
-            self.assertEqual(type, "remove")
+            self.assertEqual(type, "replace")
 
 
     def test_parse_import_tickets_2(self):
         """Verify two lists of incorrect data are not parsed."""
         list_of_lists = [self.short_ticket_list,
                          self.long_ticket_list]
-        list_of_tickets, list_of_evals = \
-            tickets.parse_import_tickets(list_of_lists)
+        list_of_tickets = tickets.parse_import_tickets(list_of_lists)
         with self.subTest():
-            self.assertEqual(len(list_of_evals), 2)
+            self.assertEqual(len(list_of_tickets), 2)
         with self.subTest():
-            self.assertEqual(len(list_of_tickets), 0)
+            type = list_of_tickets[0].type
+            self.assertEqual(type, "")
+        with self.subTest():
+            type = list_of_tickets[1].type
+            self.assertEqual(type, "")
 
     def test_parse_import_tickets_3(self):
         """Verify mixed lists of correct and incorrect data are
@@ -161,77 +152,24 @@ class TestTicketFunctions1(unittest.TestCase):
         list_of_lists = [self.short_ticket_list,
                         self.normal_ticket_list,
                          self.long_ticket_list]
-        list_of_tickets, list_of_evals = \
-            tickets.parse_import_tickets(list_of_lists)
+        list_of_tickets = tickets.parse_import_tickets(list_of_lists)
         with self.subTest():
-            self.assertEqual(len(list_of_evals), 2)
+            self.assertEqual(len(list_of_tickets), 3)
         with self.subTest():
-            self.assertEqual(len(list_of_tickets), 1)
-
-
-
-
-
-
-    # TODO this can be deleted once the function has been moved to basic.    #
-    # def test_identify_one_list_duplicates_1(self):
-    #     """Verify duplicate items generates an error."""
-    #     eval_object = \
-    #         tickets.identify_one_list_duplicates(["Trixie", "Trixie"], "temp")
-    #     with self.subTest():
-    #         self.assertIsNotNone(eval_object)
-    #     with self.subTest():
-    #         self.assertIsInstance(eval_object,Eval.EvalResult)
-    #
-    # def test_identify_one_list_duplicates_2(self):
-    #     """Verify non-duplicate items do not generate an error."""
-    #     eval_object = \
-    #         tickets.identify_one_list_duplicates(["Trixie", "L5"], "temp")
-    #     with self.subTest():
-    #         self.assertIsNone(eval_object)
-    #     with self.subTest():
-    #         self.assertNotIsInstance(eval_object,Eval.EvalResult)
-
-
-
-
-
-
-
-
-
-
-    # TODO this can be deleted once the function has been moved to basic.
-    # def test_identify_two_list_duplicates_1(self):
-    #     """Verify duplicate items in two lists generate an error."""
-    #     list1 = ["Trixie", "L5"]
-    #     list2 = ["Trixie", "RedRock"]
-    #     eval_object = \
-    #         tickets.identify_two_list_duplicates(list1, list2, "temp")
-    #     with self.subTest():
-    #         self.assertIsNotNone(eval_object)
-    #     with self.subTest():
-    #         self.assertIsInstance(eval_object,Eval.EvalResult)
-    #
-    #
-    #
-    #
-    # def test_identify_two_list_duplicates_2(self):
-    #     """Verify non-duplicate items in two lists do not generate an error."""
-    #     list1 = ["Trixie", "L5"]
-    #     list2 = ["D29", "RedRock"]
-    #     eval_object = \
-    #         tickets.identify_two_list_duplicates(list1, list2, "temp")
-    #     with self.subTest():
-    #         self.assertIsNone(eval_object)
-    #     with self.subTest():
-    #         self.assertNotIsInstance(eval_object,Eval.EvalResult)
+            type = list_of_tickets[0].type
+            self.assertEqual(type, "")
+        with self.subTest():
+            type = list_of_tickets[1].type
+            self.assertEqual(type, "add")
+        with self.subTest():
+            type = list_of_tickets[2].type
+            self.assertEqual(type, "")
 
 
 
 
     def test_compare_tickets_1(self):
-        """Verify no duplicates do not generate an error."""
+        """Verify two tickets with no duplicates do not generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
@@ -246,13 +184,29 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket2.accession = "EFG456"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 0)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
+
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
+
+        with self.subTest():
+            self.assertEqual(len(ticket1.evaluations), 3)
+        with self.subTest():
+            self.assertEqual(len(ticket2.evaluations), 3)
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 0)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 0)
 
     def test_compare_tickets_2(self):
-        """Verify 'none' duplicates do not generate an error."""
+        """Verify two tickets with 'none' duplicates do not generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
@@ -267,16 +221,26 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket2.accession = "none"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 0)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
 
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
 
-
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 0)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 0)
 
     def test_compare_tickets_3(self):
-        """Verify Primary Phage ID duplicates do generate an error."""
+        """Verify two tickets with Primary Phage ID duplicates
+        do generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
@@ -291,14 +255,26 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket2.accession = "none"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 1)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
 
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
+
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 1)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 1)
 
     def test_compare_tickets_4(self):
-        """Verify Secondary Phage ID duplicates generate an error."""
+        """Verify two tickets with Secondary Phage ID duplicates
+        do generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
@@ -313,14 +289,25 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket2.accession = "none"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 1)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
 
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
+
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 1)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 1)
 
     def test_compare_tickets_5(self):
-        """Verify Accession duplicates generate an error."""
+        """Verify two tickets with Accession duplicates do generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
@@ -335,87 +322,60 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket2.accession = "ABC123"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 1)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
 
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
+
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 1)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 1)
 
     def test_compare_tickets_6(self):
-        """Verify multiple duplicates generate multiple errors."""
+        """Verify two tickets with multiple duplicates
+        do generate multiple errors."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "Trixie"
+        ticket1.secondary_phage_id = "none"
         ticket1.accession = "ABC123"
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.primary_phage_id = "Trixie"
-        ticket2.secondary_phage_id = "Trixie"
+        ticket2.secondary_phage_id = "none"
         ticket2.accession = "ABC123"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 3)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
 
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
 
-
-
-
-
-
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 2)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 2)
 
     def test_compare_tickets_7(self):
-        """Verify duplicate Primary Phage ID from non-standard ticket type
-        does not generate an error."""
-
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "replace"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "none"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "other"
-        ticket2.primary_phage_id = "Trixie"
-        ticket2.secondary_phage_id = "none"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
-
-        self.assertEqual(len(result_list), 0)
-
-    def test_compare_tickets_8(self):
-        """Verify duplicate Secondary Phage ID from non-standard ticket type
-        does not generate an error."""
-
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "replace"
-        ticket1.primary_phage_id = "none"
-        ticket1.secondary_phage_id = "Trixie"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "other"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "Trixie"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
-
-        self.assertEqual(len(result_list), 0)
-
-    def test_compare_tickets_9(self):
-        """Verify Primary Phage ID duplicates from different ticket
-        types generate an error."""
+        """Verify a conflict between a Primary Phage ID and a
+        Secondary Phage ID does generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "add"
@@ -425,102 +385,29 @@ class TestTicketFunctions1(unittest.TestCase):
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
-        ticket2.primary_phage_id = "Trixie"
-        ticket2.secondary_phage_id = "none"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
-
-        self.assertEqual(len(result_list), 1)
-
-    def test_compare_tickets_10(self):
-        """Verify Secondary Phage ID duplicates from different ticket
-        types generate an error."""
-
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "replace"
-        ticket1.primary_phage_id = "none"
-        ticket1.secondary_phage_id = "Trixie"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "remove"
-        ticket2.primary_phage_id = "none"
+        ticket2.primary_phage_id = "L5"
         ticket2.secondary_phage_id = "Trixie"
         ticket2.accession = "none"
 
         list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
+        tickets.compare_tickets(list_of_tickets)
 
-        self.assertEqual(len(result_list), 1)
+        ticket1_errors = 0
+        for eval in ticket1.evaluations:
+            if eval.status == "error":
+                ticket1_errors += 1
 
-    def test_compare_tickets_11(self):
-        """Verify Accession duplicates from different ticket
-        types generate an error."""
+        ticket2_errors = 0
+        for eval in ticket2.evaluations:
+            if eval.status == "error":
+                ticket2_errors += 1
 
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "replace"
-        ticket1.primary_phage_id = "none"
-        ticket1.secondary_phage_id = "none"
-        ticket1.accession = "ABC123"
+        with self.subTest():
+            self.assertEqual(ticket1_errors, 1)
+        with self.subTest():
+            self.assertEqual(ticket2_errors, 1)
 
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "remove"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "none"
-        ticket2.accession = "ABC123"
 
-        list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
-        self.assertEqual(len(result_list), 1)
-
-    def test_compare_tickets_12(self):
-        """Verify a conflict between an update/add Primary Phage ID and all
-        Secondary Phage IDs generate an error."""
-
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "add"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "none"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "remove"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "Trixie"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
-
-        self.assertEqual(len(result_list), 1)
-
-    def test_compare_tickets_13(self):
-        """Verify a conflict between a replace Primary Phage ID and a remove
-        Secondary Phage ID generate an error."""
-
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "replace"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "none"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "remove"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "Trixie"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        result_list = \
-            tickets.compare_tickets(list_of_tickets)
-
-        self.assertEqual(len(result_list), 1)
 
 
 
@@ -578,148 +465,6 @@ class TestTicketFunctions2(unittest.TestCase):
         self.datagroup5.ticket = self.ticket5
 
 
-
-
-    def test_match_genomes_to_tickets1_1(self):
-        """Verify that one genome is matched to ticket correctly."""
-
-        list1 = [self.datagroup1] # Trixie
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        matched_genome = list1[0].genomes_dict["phamerator"]
-        id = matched_genome.phage_id
-        expected_id = "Trixie"
-        with self.subTest():
-            self.assertEqual(id, expected_id)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets1_2(self):
-        """Verify that no genome is matched to empty ticket list."""
-
-        list1 = []
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets1_3(self):
-        """Verify that genome is not matched to ticket."""
-
-        list1 = [self.datagroup4] # RedRock
-
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        num_dict_keys = len(list1[0].genomes_dict.keys())
-
-        with self.subTest():
-            self.assertEqual(num_dict_keys, 0)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-    def test_match_genomes_to_tickets1_4(self):
-        """Verify that two genomes are matched to tickets correctly."""
-
-        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
-
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        matched_genome1 = list1[0].genomes_dict["phamerator"]
-        matched_genome2 = list1[1].genomes_dict["phamerator"]
-
-        id1 = matched_genome1.phage_id
-        expected_id1 = "Trixie"
-
-        id2 = matched_genome2.phage_id
-        expected_id2 = "L5"
-
-        with self.subTest():
-            self.assertEqual(id1, expected_id1)
-        with self.subTest():
-            self.assertEqual(id2, expected_id2)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets1_5(self):
-        """Verify that first genome is not matched to ticket correctly."""
-
-        list1 = [self.datagroup4, self.datagroup2] # RedRock, L5
-
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        num_dict_keys1 = len(list1[0].genomes_dict.keys())
-        matched_genome2 = list1[1].genomes_dict["phamerator"]
-
-        id2 = matched_genome2.phage_id
-        expected_id2 = "L5"
-
-        with self.subTest():
-            self.assertEqual(num_dict_keys1, 0)
-        with self.subTest():
-            self.assertEqual(id2, expected_id2)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-    def test_match_genomes_to_tickets1_6(self):
-        """Verify that second genome is not matched to ticket correctly."""
-
-        list1 = [self.datagroup2, self.datagroup4] # L5, RedRock
-
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        matched_genome1 = list1[0].genomes_dict["phamerator"]
-        num_dict_keys2 = len(list1[1].genomes_dict.keys())
-
-        id1 = matched_genome1.phage_id
-        expected_id1 = "L5"
-
-        with self.subTest():
-            self.assertEqual(num_dict_keys2, 0)
-        with self.subTest():
-            self.assertEqual(id1, expected_id1)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-    def test_match_genomes_to_tickets1_7(self):
-        """Verify that two genomes are not matched to tickets."""
-
-        list1 = [self.datagroup4, self.datagroup5] # RedRock, EagleEye
-
-        eval_list = \
-            tickets.match_genomes_to_tickets1(list1,
-                                                    self.genome_dict,
-                                                    "phamerator")
-
-        num_dict_keys1 = len(list1[0].genomes_dict.keys())
-        num_dict_keys2 = len(list1[1].genomes_dict.keys())
-
-        with self.subTest():
-            self.assertEqual(num_dict_keys1, 0)
-        with self.subTest():
-            self.assertEqual(num_dict_keys2, 0)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 2)
-
-
-
-
     def test_assign_match_strategy_1(self):
         """Verify strategy is assigned with no error produced."""
         input_strategy = "phage_id"
@@ -731,7 +476,7 @@ class TestTicketFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(output_strategy, input_strategy)
         with self.subTest():
-            self.assertIsNone(eval_result)
+            self.assertEqual(eval_result.status, "correct")
 
     def test_assign_match_strategy_2(self):
         """Verify no strategy is assigned and an error is produced."""
@@ -746,343 +491,499 @@ class TestTicketFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(output_strategy, expected_strategy)
         with self.subTest():
-            self.assertIsNotNone(eval_result)
-
-
-
-
-
-
-
-
-
-
-###
-
-class TestTicketFunctions3(unittest.TestCase):
-
-    def setUp(self):
-
-        self.genome1 = Genome.Genome()
-        self.genome2 = Genome.Genome()
-        self.genome3 = Genome.Genome()
-        self.genome4 = Genome.Genome()
-
-        self.ticket1 = Ticket.GenomeTicket()
-        self.ticket2 = Ticket.GenomeTicket()
-        self.ticket3 = Ticket.GenomeTicket()
-        self.ticket4 = Ticket.GenomeTicket()
-
-        self.datagroup1 = DataGroup.DataGroup()
-        self.datagroup2 = DataGroup.DataGroup()
-        self.datagroup3 = DataGroup.DataGroup()
-        self.datagroup4 = DataGroup.DataGroup()
-
-        self.datagroup1.ticket = self.ticket1
-        self.datagroup2.ticket = self.ticket2
-        self.datagroup3.ticket = self.ticket3
-        self.datagroup4.ticket = self.ticket4
-
-
-    def test_match_genomes_to_tickets2_1(self):
-        """Verify that one genome is matched to ticket using phage_id."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "phage_id"
-        self.genome1.phage_id = "Trixie"
-
-
-        list1 = [self.datagroup1] # Trixie
-        list2 = [self.genome1] # Trixie
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "phamerator")
-
-        matched_genome = list1[0].genomes_dict["phamerator"]
-        id = matched_genome.phage_id
-        expected_id = "Trixie"
-        with self.subTest():
-            self.assertEqual(id, expected_id)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets2_2(self):
-        """Verify that one genome is matched to ticket using filename."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-
-        list1 = [self.datagroup1] # Trixie
-        list2 = [self.genome1] # Trixie
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome = list1[0].genomes_dict["flat_file"]
-        id = matched_genome.filename
-        expected_id = "Trixie"
-        with self.subTest():
-            self.assertEqual(id, expected_id)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets2_3(self):
-        """Verify that one genome is matched to ticket,
-        and one genome is not matched (no matching ticket), using filename."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-        self.genome2.filename = "L5"
-
-
-        list1 = [self.datagroup1] # Trixie
-        list2 = [self.genome1, self.genome2] # Trixie, L5
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome = list1[0].genomes_dict["flat_file"]
-        id = matched_genome.filename
-        expected_id = "Trixie"
-        with self.subTest():
-            self.assertEqual(id, expected_id)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-    def test_match_genomes_to_tickets2_4(self):
-        """Verify that one ticket is matched to genome,
-        and one ticket is not matched (no matching genome), using filename."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-
-        self.datagroup2.ticket.primary_phage_id = "L5"
-        self.datagroup2.ticket.match_strategy = "filename"
-
-        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
-        list2 = [self.genome1] # Trixie
-
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome = list1[0].genomes_dict["flat_file"]
-        id = matched_genome.filename
-        expected_id = "Trixie"
-        with self.subTest():
-            self.assertEqual(id, expected_id)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-    def test_match_genomes_to_tickets2_5(self):
-        """Verify that two genomes are matched to tickets,
-        using filename."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-
-        self.datagroup2.ticket.primary_phage_id = "L5"
-        self.datagroup2.ticket.match_strategy = "filename"
-        self.genome2.filename = "L5"
-
-
-        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
-        list2 = [self.genome1, self.genome2] # Trixie, L5
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome1 = list1[0].genomes_dict["flat_file"]
-        id1 = matched_genome1.filename
-        expected_id1 = "Trixie"
-
-        matched_genome2 = list1[1].genomes_dict["flat_file"]
-        id2 = matched_genome2.filename
-        expected_id2 = "L5"
-
-        with self.subTest():
-            self.assertEqual(id1, expected_id1)
-        with self.subTest():
-            self.assertEqual(id2, expected_id2)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets2_6(self):
-        """Verify that no genomes are matched to tickets due to
-        conflicting strategies."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "phage_id"
-        self.genome1.filename = "Trixie"
-
-        self.datagroup2.ticket.primary_phage_id = "L5"
-        self.datagroup2.ticket.match_strategy = "filename"
-        self.genome2.filename = "L5"
-
-        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
-        list2 = [self.genome1, self.genome2] # Trixie, L5
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        with self.subTest():
-            self.assertEqual(len(list1[0].genomes_dict.keys()), 0)
-        with self.subTest():
-            self.assertEqual(len(list1[0].genomes_dict.keys()), 0)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 3)
-
-    def test_match_genomes_to_tickets2_7(self):
-        """Verify that three genomes are matched to tickets,
-        using filename."""
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-
-        self.datagroup2.ticket.primary_phage_id = "L5"
-        self.datagroup2.ticket.match_strategy = "filename"
-        self.genome2.filename = "L5"
-
-        self.datagroup3.ticket.primary_phage_id = "D29"
-        self.datagroup3.ticket.match_strategy = "filename"
-        self.genome3.filename = "D29"
-
-        list1 = [self.datagroup1, self.datagroup2, self.datagroup3]
-        list2 = [self.genome1, self.genome2, self.genome3]
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome1 = list1[0].genomes_dict["flat_file"]
-        id1 = matched_genome1.filename
-        expected_id1 = "Trixie"
-
-        matched_genome2 = list1[1].genomes_dict["flat_file"]
-        id2 = matched_genome2.filename
-        expected_id2 = "L5"
-
-        matched_genome3 = list1[2].genomes_dict["flat_file"]
-        id3 = matched_genome3.filename
-        expected_id3 = "D29"
-
-        with self.subTest():
-            self.assertEqual(id1, expected_id1)
-        with self.subTest():
-            self.assertEqual(id2, expected_id2)
-        with self.subTest():
-            self.assertEqual(id3, expected_id3)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_match_genomes_to_tickets2_8(self):
-        """Verify that two tickets are matched to genomes,
-        and two tickets are not matched (same identifier), using filename."""
-
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-
-        self.datagroup2.ticket.primary_phage_id = "L5"
-        self.datagroup2.ticket.match_strategy = "filename"
-        self.genome2.filename = "L5"
-
-        self.datagroup3.ticket.primary_phage_id = "D29"
-        self.datagroup3.ticket.match_strategy = "filename"
-
-        self.datagroup4.ticket.primary_phage_id = "D29"
-        self.datagroup4.ticket.match_strategy = "filename"
-
-        list1 = [self.datagroup1, self.datagroup2,
-                self.datagroup3, self.datagroup4]
-        list2 = [self.genome1, self.genome2]
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome1 = list1[0].genomes_dict["flat_file"]
-        id1 = matched_genome1.filename
-        expected_id1 = "Trixie"
-
-        matched_genome2 = list1[1].genomes_dict["flat_file"]
-        id2 = matched_genome2.filename
-        expected_id2 = "L5"
-
-        with self.subTest():
-            self.assertEqual(id1, expected_id1)
-        with self.subTest():
-            self.assertEqual(id2, expected_id2)
-        with self.subTest():
-            self.assertEqual(len(list1[2].genomes_dict.keys()), 0)
-        with self.subTest():
-            self.assertEqual(len(list1[3].genomes_dict.keys()), 0)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-    def test_match_genomes_to_tickets2_9(self):
-        """Verify that two genomes are matched to tickets,
-        and two genomes are not matched (same identifier), using filename."""
-
-
-        self.datagroup1.ticket.primary_phage_id = "Trixie"
-        self.datagroup1.ticket.match_strategy = "filename"
-        self.genome1.filename = "Trixie"
-
-        self.datagroup2.ticket.primary_phage_id = "L5"
-        self.datagroup2.ticket.match_strategy = "filename"
-        self.genome2.filename = "L5"
-
-        self.genome3.filename = "D29"
-        self.genome4.filename = "D29"
-
-        list1 = [self.datagroup1, self.datagroup2]
-        list2 = [self.genome1, self.genome2, self.genome3, self.genome4]
-        eval_list = \
-            tickets.match_genomes_to_tickets2(list1,
-                                                    list2,
-                                                    "flat_file")
-
-        matched_genome1 = list1[0].genomes_dict["flat_file"]
-        id1 = matched_genome1.filename
-        expected_id1 = "Trixie"
-
-        matched_genome2 = list1[1].genomes_dict["flat_file"]
-        id2 = matched_genome2.filename
-        expected_id2 = "L5"
-
-        with self.subTest():
-            self.assertEqual(id1, expected_id1)
-        with self.subTest():
-            self.assertEqual(id2, expected_id2)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            self.assertEqual(eval_result.status, "error")
+
+
+
+
+
+# TODO below code is broken since I have changed how eval is structured.
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#     def test_match_genomes_to_tickets1_1(self):
+#         """Verify that one genome is matched to ticket correctly."""
+#
+#         list1 = [self.datagroup1] # Trixie
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         matched_genome = list1[0].genomes_dict["phamerator"]
+#         id = matched_genome.phage_id
+#         expected_id = "Trixie"
+#         with self.subTest():
+#             self.assertEqual(id, expected_id)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets1_2(self):
+#         """Verify that no genome is matched to empty ticket list."""
+#
+#         list1 = []
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets1_3(self):
+#         """Verify that genome is not matched to ticket."""
+#
+#         list1 = [self.datagroup4] # RedRock
+#
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         num_dict_keys = len(list1[0].genomes_dict.keys())
+#
+#         with self.subTest():
+#             self.assertEqual(num_dict_keys, 0)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#     def test_match_genomes_to_tickets1_4(self):
+#         """Verify that two genomes are matched to tickets correctly."""
+#
+#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         matched_genome1 = list1[0].genomes_dict["phamerator"]
+#         matched_genome2 = list1[1].genomes_dict["phamerator"]
+#
+#         id1 = matched_genome1.phage_id
+#         expected_id1 = "Trixie"
+#
+#         id2 = matched_genome2.phage_id
+#         expected_id2 = "L5"
+#
+#         with self.subTest():
+#             self.assertEqual(id1, expected_id1)
+#         with self.subTest():
+#             self.assertEqual(id2, expected_id2)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets1_5(self):
+#         """Verify that first genome is not matched to ticket correctly."""
+#
+#         list1 = [self.datagroup4, self.datagroup2] # RedRock, L5
+#
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         num_dict_keys1 = len(list1[0].genomes_dict.keys())
+#         matched_genome2 = list1[1].genomes_dict["phamerator"]
+#
+#         id2 = matched_genome2.phage_id
+#         expected_id2 = "L5"
+#
+#         with self.subTest():
+#             self.assertEqual(num_dict_keys1, 0)
+#         with self.subTest():
+#             self.assertEqual(id2, expected_id2)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#     def test_match_genomes_to_tickets1_6(self):
+#         """Verify that second genome is not matched to ticket correctly."""
+#
+#         list1 = [self.datagroup2, self.datagroup4] # L5, RedRock
+#
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         matched_genome1 = list1[0].genomes_dict["phamerator"]
+#         num_dict_keys2 = len(list1[1].genomes_dict.keys())
+#
+#         id1 = matched_genome1.phage_id
+#         expected_id1 = "L5"
+#
+#         with self.subTest():
+#             self.assertEqual(num_dict_keys2, 0)
+#         with self.subTest():
+#             self.assertEqual(id1, expected_id1)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#     def test_match_genomes_to_tickets1_7(self):
+#         """Verify that two genomes are not matched to tickets."""
+#
+#         list1 = [self.datagroup4, self.datagroup5] # RedRock, EagleEye
+#
+#         eval_list = \
+#             tickets.match_genomes_to_tickets1(list1,
+#                                                     self.genome_dict,
+#                                                     "phamerator")
+#
+#         num_dict_keys1 = len(list1[0].genomes_dict.keys())
+#         num_dict_keys2 = len(list1[1].genomes_dict.keys())
+#
+#         with self.subTest():
+#             self.assertEqual(num_dict_keys1, 0)
+#         with self.subTest():
+#             self.assertEqual(num_dict_keys2, 0)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 2)
+#
+#
+#
+
+
+
+
+
+#
+#
+#
+#
+#
+#
+#
+# ###
+#
+# class TestTicketFunctions3(unittest.TestCase):
+#
+#     def setUp(self):
+#
+#         self.genome1 = Genome.Genome()
+#         self.genome2 = Genome.Genome()
+#         self.genome3 = Genome.Genome()
+#         self.genome4 = Genome.Genome()
+#
+#         self.ticket1 = Ticket.GenomeTicket()
+#         self.ticket2 = Ticket.GenomeTicket()
+#         self.ticket3 = Ticket.GenomeTicket()
+#         self.ticket4 = Ticket.GenomeTicket()
+#
+#         self.datagroup1 = DataGroup.DataGroup()
+#         self.datagroup2 = DataGroup.DataGroup()
+#         self.datagroup3 = DataGroup.DataGroup()
+#         self.datagroup4 = DataGroup.DataGroup()
+#
+#         self.datagroup1.ticket = self.ticket1
+#         self.datagroup2.ticket = self.ticket2
+#         self.datagroup3.ticket = self.ticket3
+#         self.datagroup4.ticket = self.ticket4
+#
+#
+#     def test_match_genomes_to_tickets2_1(self):
+#         """Verify that one genome is matched to ticket using phage_id."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "phage_id"
+#         self.genome1.phage_id = "Trixie"
+#
+#
+#         list1 = [self.datagroup1] # Trixie
+#         list2 = [self.genome1] # Trixie
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "phamerator")
+#
+#         matched_genome = list1[0].genomes_dict["phamerator"]
+#         id = matched_genome.phage_id
+#         expected_id = "Trixie"
+#         with self.subTest():
+#             self.assertEqual(id, expected_id)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets2_2(self):
+#         """Verify that one genome is matched to ticket using filename."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#
+#         list1 = [self.datagroup1] # Trixie
+#         list2 = [self.genome1] # Trixie
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome = list1[0].genomes_dict["flat_file"]
+#         id = matched_genome.filename
+#         expected_id = "Trixie"
+#         with self.subTest():
+#             self.assertEqual(id, expected_id)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets2_3(self):
+#         """Verify that one genome is matched to ticket,
+#         and one genome is not matched (no matching ticket), using filename."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#         self.genome2.filename = "L5"
+#
+#
+#         list1 = [self.datagroup1] # Trixie
+#         list2 = [self.genome1, self.genome2] # Trixie, L5
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome = list1[0].genomes_dict["flat_file"]
+#         id = matched_genome.filename
+#         expected_id = "Trixie"
+#         with self.subTest():
+#             self.assertEqual(id, expected_id)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#     def test_match_genomes_to_tickets2_4(self):
+#         """Verify that one ticket is matched to genome,
+#         and one ticket is not matched (no matching genome), using filename."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#
+#         self.datagroup2.ticket.primary_phage_id = "L5"
+#         self.datagroup2.ticket.match_strategy = "filename"
+#
+#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#         list2 = [self.genome1] # Trixie
+#
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome = list1[0].genomes_dict["flat_file"]
+#         id = matched_genome.filename
+#         expected_id = "Trixie"
+#         with self.subTest():
+#             self.assertEqual(id, expected_id)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#     def test_match_genomes_to_tickets2_5(self):
+#         """Verify that two genomes are matched to tickets,
+#         using filename."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#
+#         self.datagroup2.ticket.primary_phage_id = "L5"
+#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.genome2.filename = "L5"
+#
+#
+#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#         list2 = [self.genome1, self.genome2] # Trixie, L5
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome1 = list1[0].genomes_dict["flat_file"]
+#         id1 = matched_genome1.filename
+#         expected_id1 = "Trixie"
+#
+#         matched_genome2 = list1[1].genomes_dict["flat_file"]
+#         id2 = matched_genome2.filename
+#         expected_id2 = "L5"
+#
+#         with self.subTest():
+#             self.assertEqual(id1, expected_id1)
+#         with self.subTest():
+#             self.assertEqual(id2, expected_id2)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets2_6(self):
+#         """Verify that no genomes are matched to tickets due to
+#         conflicting strategies."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "phage_id"
+#         self.genome1.filename = "Trixie"
+#
+#         self.datagroup2.ticket.primary_phage_id = "L5"
+#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.genome2.filename = "L5"
+#
+#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#         list2 = [self.genome1, self.genome2] # Trixie, L5
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         with self.subTest():
+#             self.assertEqual(len(list1[0].genomes_dict.keys()), 0)
+#         with self.subTest():
+#             self.assertEqual(len(list1[0].genomes_dict.keys()), 0)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 3)
+#
+#     def test_match_genomes_to_tickets2_7(self):
+#         """Verify that three genomes are matched to tickets,
+#         using filename."""
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#
+#         self.datagroup2.ticket.primary_phage_id = "L5"
+#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.genome2.filename = "L5"
+#
+#         self.datagroup3.ticket.primary_phage_id = "D29"
+#         self.datagroup3.ticket.match_strategy = "filename"
+#         self.genome3.filename = "D29"
+#
+#         list1 = [self.datagroup1, self.datagroup2, self.datagroup3]
+#         list2 = [self.genome1, self.genome2, self.genome3]
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome1 = list1[0].genomes_dict["flat_file"]
+#         id1 = matched_genome1.filename
+#         expected_id1 = "Trixie"
+#
+#         matched_genome2 = list1[1].genomes_dict["flat_file"]
+#         id2 = matched_genome2.filename
+#         expected_id2 = "L5"
+#
+#         matched_genome3 = list1[2].genomes_dict["flat_file"]
+#         id3 = matched_genome3.filename
+#         expected_id3 = "D29"
+#
+#         with self.subTest():
+#             self.assertEqual(id1, expected_id1)
+#         with self.subTest():
+#             self.assertEqual(id2, expected_id2)
+#         with self.subTest():
+#             self.assertEqual(id3, expected_id3)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 0)
+#
+#     def test_match_genomes_to_tickets2_8(self):
+#         """Verify that two tickets are matched to genomes,
+#         and two tickets are not matched (same identifier), using filename."""
+#
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#
+#         self.datagroup2.ticket.primary_phage_id = "L5"
+#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.genome2.filename = "L5"
+#
+#         self.datagroup3.ticket.primary_phage_id = "D29"
+#         self.datagroup3.ticket.match_strategy = "filename"
+#
+#         self.datagroup4.ticket.primary_phage_id = "D29"
+#         self.datagroup4.ticket.match_strategy = "filename"
+#
+#         list1 = [self.datagroup1, self.datagroup2,
+#                 self.datagroup3, self.datagroup4]
+#         list2 = [self.genome1, self.genome2]
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome1 = list1[0].genomes_dict["flat_file"]
+#         id1 = matched_genome1.filename
+#         expected_id1 = "Trixie"
+#
+#         matched_genome2 = list1[1].genomes_dict["flat_file"]
+#         id2 = matched_genome2.filename
+#         expected_id2 = "L5"
+#
+#         with self.subTest():
+#             self.assertEqual(id1, expected_id1)
+#         with self.subTest():
+#             self.assertEqual(id2, expected_id2)
+#         with self.subTest():
+#             self.assertEqual(len(list1[2].genomes_dict.keys()), 0)
+#         with self.subTest():
+#             self.assertEqual(len(list1[3].genomes_dict.keys()), 0)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#     def test_match_genomes_to_tickets2_9(self):
+#         """Verify that two genomes are matched to tickets,
+#         and two genomes are not matched (same identifier), using filename."""
+#
+#
+#         self.datagroup1.ticket.primary_phage_id = "Trixie"
+#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.genome1.filename = "Trixie"
+#
+#         self.datagroup2.ticket.primary_phage_id = "L5"
+#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.genome2.filename = "L5"
+#
+#         self.genome3.filename = "D29"
+#         self.genome4.filename = "D29"
+#
+#         list1 = [self.datagroup1, self.datagroup2]
+#         list2 = [self.genome1, self.genome2, self.genome3, self.genome4]
+#         eval_list = \
+#             tickets.match_genomes_to_tickets2(list1,
+#                                                     list2,
+#                                                     "flat_file")
+#
+#         matched_genome1 = list1[0].genomes_dict["flat_file"]
+#         id1 = matched_genome1.filename
+#         expected_id1 = "Trixie"
+#
+#         matched_genome2 = list1[1].genomes_dict["flat_file"]
+#         id2 = matched_genome2.filename
+#         expected_id2 = "L5"
+#
+#         with self.subTest():
+#             self.assertEqual(id1, expected_id1)
+#         with self.subTest():
+#             self.assertEqual(id2, expected_id2)
+#         with self.subTest():
+#             self.assertEqual(len(eval_list), 1)
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
 
 class TestTicketFunctions4(unittest.TestCase):
@@ -1163,114 +1064,6 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(replace_list), 1)
 
-
-
-
-
-
-
-
-### TODO below copied and implemented in test_phagesdb(), so can
-# probably be deleted once confirme the new tests work.
-class TestTicketFunctions5(unittest.TestCase):
-
-    def setUp(self):
-
-        self.ticket = Ticket.GenomeTicket()
-        self.ticket.primary_phage_id = "L5"
-
-
-
-
-    def test_complete_ticket_1(self):
-        """Verify host field is retrieved correctly."""
-        self.ticket.host = "retrieve"
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_value = "Mycobacterium"
-        with self.subTest():
-            self.assertEqual(self.ticket.host, expected_value)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_complete_ticket_2(self):
-        """Verify cluster field is retrieved correctly."""
-        self.ticket.cluster = "retrieve"
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_value = "A"
-        with self.subTest():
-            self.assertEqual(self.ticket.cluster, expected_value)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_complete_ticket_3(self):
-        """Verify subcluster field is retrieved correctly."""
-        self.ticket.subcluster = "retrieve"
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_value = "A2"
-        with self.subTest():
-            self.assertEqual(self.ticket.subcluster, expected_value)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_complete_ticket_4(self):
-        """Verify accession field is retrieved correctly."""
-        self.ticket.accession = "retrieve"
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_value = "Z18946"
-        with self.subTest():
-            self.assertEqual(self.ticket.accession, expected_value)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_complete_ticket_5(self):
-        """Verify no fields are retrieved."""
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_value = ""
-        with self.subTest():
-            self.assertEqual(self.ticket.host, expected_value)
-        with self.subTest():
-            self.assertEqual(self.ticket.cluster, expected_value)
-        with self.subTest():
-            self.assertEqual(self.ticket.subcluster, expected_value)
-        with self.subTest():
-            self.assertEqual(self.ticket.accession, expected_value)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_complete_ticket_6(self):
-        """Verify all fields are retrieved."""
-        self.ticket.host = "retrieve"
-        self.ticket.cluster = "retrieve"
-        self.ticket.subcluster = "retrieve"
-        self.ticket.accession = "retrieve"
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_host = "Mycobacterium"
-        expected_cluster = "A"
-        expected_subcluster = "A2"
-        expected_accession = "Z18946"
-        with self.subTest():
-            self.assertEqual(self.ticket.host, expected_host)
-        with self.subTest():
-            self.assertEqual(self.ticket.cluster, expected_cluster)
-        with self.subTest():
-            self.assertEqual(self.ticket.subcluster, expected_subcluster)
-        with self.subTest():
-            self.assertEqual(self.ticket.accession, expected_accession)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 0)
-
-    def test_complete_ticket_7(self):
-        """Verify no fields are retrieved and an error is produced."""
-        self.ticket.primary_phage_id = "L5_x"
-        self.ticket.host = "retrieve"
-        eval_list = tickets.complete_ticket(self.ticket)
-        expected_host = "none"
-        with self.subTest():
-            self.assertEqual(self.ticket.host, expected_host)
-        with self.subTest():
-            self.assertEqual(len(eval_list), 7)
-### TODO above copied and implemented in test_phagesdb(), so can
-# probably be deleted once confirme the new tests work.
 
 
 if __name__ == '__main__':

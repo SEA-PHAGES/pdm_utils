@@ -30,6 +30,8 @@ class GenomeTicket:
         self.subcluster = ""
         self.status = ""
         self.annotation_author = ""
+        self.annotation_qc = ""
+        self.retrieve_record = ""
         self.accession = ""
 
         # Attribute used to populate Genome objects for 'replace' ticket types.
@@ -38,17 +40,13 @@ class GenomeTicket:
 
 
 
-        # Initialize calculated attributes
         self.evaluations = []
+        self._parsed_fields = 0
 
 
 
         # TODO this attribute may no longer be needed.
         self.match_strategy = "" # phage_id or filename
-
-
-
-        self._parsed_fields = 0
 
 
 
@@ -71,11 +69,6 @@ class GenomeTicket:
     def set_run_mode(self, value):
         """Set the run_mode."""
         self.run_mode = value.lower()
-
-
-
-
-
 
     def set_primary_phage_id(self, value):
         """Set the primary_phage_id."""
@@ -105,97 +98,17 @@ class GenomeTicket:
         """Set the annotation_author."""
         self.annotation_author = value.lower()
 
+    def set_annotation_qc(self, value):
+        """Set the set_annotation_qc."""
+        self.annotation_qc = basic.lower_case(value)
+
+    def set_retrieve_record(self, value):
+        """Set the set_retrieve_record."""
+        self.retrieve_record = basic.lower_case(value)
+
     def set_secondary_phage_id(self, value):
         """Set the secondary_phage_id."""
         self.secondary_phage_id = basic.lower_case(value)
-
-
-
-
-
-
-    # TODO below this should probably be moved to the Genome object.
-    # If either the Host, Cluster, Subcluster or Accession data needs to be
-    # retrieved, try to access the data in phagesdb before proceeding
-
-    def clear_retrieve_status(self):
-
-        #Host
-        if self.host == "retrieve":
-            self.host = "none"
-            result1 = "Host data was not retrieved from Phagesdb."
-            status1 = "error"
-        else:
-            result1 = "Host data is populated."
-            status1 = "correct"
-
-        definition1 = "Confirm host data is populated."
-        eval1 = Eval.Eval(id = "TICKET", \
-                        definition = definition1, \
-                        result = result1, \
-                        status = status1)
-        self.evaluations.append(eval1)
-
-
-        #Cluster
-        if self.cluster == "retrieve":
-            self.cluster = "none"
-            result2 = "Cluster data was not retrieved from Phagesdb."
-            status2 = "error"
-        else:
-            result2 = "Cluster data is populated."
-            status2 = "correct"
-
-        definition2 = "Confirm Cluster data is populated."
-        eval2 = Eval.Eval(id = "TICKET", \
-                        definition = definition2, \
-                        result = result2, \
-                        status = status2)
-        self.evaluations.append(eval2)
-
-
-
-
-
-        #Subcluster
-        if self.subcluster == "retrieve":
-            self.subcluster = "none"
-            result3 = "Subcluster data was not retrieved from Phagesdb."
-            status3 = "error"
-        else:
-            result3 = "Subcluster data is populated."
-            status3 = "correct"
-
-        definition3 = "Confirm Subcluster data is populated."
-        eval3 = Eval.Eval(id = "TICKET", \
-                        definition = definition3, \
-                        result = result3, \
-                        status = status3)
-        self.evaluations.append(eval3)
-
-
-        #Accession
-        if self.accession == "retrieve":
-            self.accession = "none"
-            result4 = "Accession data was not retrieved from Phagesdb."
-            status4 = "error"
-        else:
-            result4 = "Accession data is populated."
-            status4 = "correct"
-
-        definition4 = "Confirm Accession data is populated."
-        eval4 = Eval.Eval(id = "TICKET", \
-                        definition = definition4, \
-                        result = result4, \
-                        status = status4)
-        self.evaluations.append(eval4)
-    # TODO above this should probably be moved to the Genome object.
-
-
-
-
-
-
 
 
 
@@ -427,6 +340,69 @@ class GenomeTicket:
         definition = "Check if run_mode field is correctly populated."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
+
+
+    def check_duplicate_primary_phage_id(self, set_of_duplicates):
+        """Check if the primary_phage_id is unique to this ticket by
+        checking if it is found within a list of previously
+        determined duplicate phage_ids."""
+
+        if self.primary_phage_id in set_of_duplicates:
+            result = "The primary_phage_id is not unique to this ticket."
+            status = "error"
+        else:
+            result = "The primary_phage_id is unique to this ticket"
+            status = "correct"
+
+        definition = "Check if the primary_phage_id is unique to this ticket."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_duplicate_secondary_phage_id(self, set_of_duplicates):
+        """Check if the primary_phage_id is unique to this ticket by
+        checking if it is found within a list of previously
+        determined duplicate phage_ids."""
+
+        if self.secondary_phage_id in set_of_duplicates:
+            result = "The secondary_phage_id is not unique to this ticket."
+            status = "error"
+        else:
+            result = "The secondary_phage_id is unique to this ticket"
+            status = "correct"
+
+        definition = "Check if the secondary_phage_id is unique to this ticket."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_duplicate_accession(self, set_of_duplicates):
+        """Check if the accession is unique to this ticket by
+        checking if it is found within a list of previously
+        determined duplicate accessions."""
+
+        if self.accession in set_of_duplicates:
+            result = "The accession is not unique to this ticket."
+            status = "error"
+        else:
+            result = "The accession is unique to this ticket"
+            status = "correct"
+
+        definition = "Check if the accession is unique to this ticket."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -220,6 +220,36 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+    def test_set_annotation_qc_1(self):
+        """Check that value is not lowercased when not 'none'."""
+        value = "ABC"
+        self.ticket.set_annotation_qc(value)
+        self.assertEqual(self.ticket.annotation_qc, "ABC")
+
+    def test_set_annotation_qc_2(self):
+        """Check that value is lowercased when 'none'."""
+        value = "NONE"
+        self.ticket.set_annotation_qc(value)
+        self.assertEqual(self.ticket.annotation_qc, "none")
+
+
+
+
+    def test_set_retrieve_record_1(self):
+        """Check that value is not lowercased when not 'none'."""
+        value = "ABC"
+        self.ticket.set_retrieve_record(value)
+        self.assertEqual(self.ticket.retrieve_record, "ABC")
+
+    def test_set_retrieve_record_2(self):
+        """Check that value is lowercased when 'none'."""
+        value = "NONE"
+        self.ticket.set_retrieve_record(value)
+        self.assertEqual(self.ticket.retrieve_record, "none")
+
+
+
+
     def test_set_secondary_phage_id_1(self):
         """Check that value is not lowercased when not 'none'."""
         value = "Trixie"
@@ -246,41 +276,6 @@ class TestGenomeTicketClass(unittest.TestCase):
         value = "NONE"
         self.ticket.set_run_mode(value)
         self.assertEqual(self.ticket.run_mode, "none")
-
-
-
-
-    def test_clear_retrieve_status_1(self):
-        self.ticket.host = "retrieve"
-        self.ticket.clear_retrieve_status()
-        with self.subTest():
-            self.assertEqual(self.ticket.host, "none")
-        with self.subTest():
-            self.assertEqual(self.ticket.evaluations[0].status, "error")
-
-    def test_clear_retrieve_status_2(self):
-        self.ticket.cluster = "retrieve"
-        self.ticket.clear_retrieve_status()
-        with self.subTest():
-            self.assertEqual(self.ticket.cluster, "none")
-        with self.subTest():
-            self.assertEqual(self.ticket.evaluations[1].status, "error")
-
-    def test_clear_retrieve_status_3(self):
-        self.ticket.subcluster = "retrieve"
-        self.ticket.clear_retrieve_status()
-        with self.subTest():
-            self.assertEqual(self.ticket.subcluster, "none")
-        with self.subTest():
-            self.assertEqual(self.ticket.evaluations[2].status, "error")
-
-    def test_clear_retrieve_status_4(self):
-        self.ticket.accession = "retrieve"
-        self.ticket.clear_retrieve_status()
-        with self.subTest():
-            self.assertEqual(self.ticket.accession, "none")
-        with self.subTest():
-            self.assertEqual(self.ticket.evaluations[3].status, "error")
 
 
 
@@ -530,13 +525,59 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+    def test_check_duplicate_primary_phage_id_1(self):
+        """Check that no error is produced if the
+        primary_phage_id is not present in the set of duplicated values."""
+        dupe_set = set(["Trixie", "L5"])
+        self.ticket.primary_phage_id = "D29"
+        self.ticket.check_duplicate_primary_phage_id(dupe_set)
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_duplicate_primary_phage_id_2(self):
+        """Check that an error is produced if the
+        primary_phage_id is present in the set of duplicated values."""
+        dupe_set = set(["Trixie", "L5"])
+        self.ticket.primary_phage_id = "Trixie"
+        self.ticket.check_duplicate_primary_phage_id(dupe_set)
+        self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
 
+    def test_check_duplicate_secondary_phage_id_1(self):
+        """Check that no error is produced if the
+        secondary_phage_id is not present in the set of duplicated values."""
+        dupe_set = set(["Trixie", "L5"])
+        self.ticket.secondary_phage_id = "D29"
+        self.ticket.check_duplicate_secondary_phage_id(dupe_set)
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_duplicate_secondary_phage_id_2(self):
+        """Check that an error is produced if the
+        secondary_phage_id is present in the set of duplicated values."""
+        dupe_set = set(["Trixie", "L5"])
+        self.ticket.secondary_phage_id = "Trixie"
+        self.ticket.check_duplicate_secondary_phage_id(dupe_set)
+        self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
+
+    def test_check_duplicate_accession_1(self):
+        """Check that no error is produced if the
+        accession is not present in the set of duplicated values."""
+        dupe_set = set(["ABC123", "EFG456"])
+        self.ticket.accession = "XYZ789"
+        self.ticket.check_duplicate_accession(dupe_set)
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_duplicate_accession_2(self):
+        """Check that an error is produced if the
+        accession is present in the set of duplicated values."""
+        dupe_set = set(["ABC123", "EFG456"])
+        self.ticket.accession = "ABC123"
+        self.ticket.check_duplicate_accession(dupe_set)
+        self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 

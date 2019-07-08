@@ -11,6 +11,8 @@ from datetime import datetime
 
 
 
+IMPORT_TABLE_SIZE = 13
+
 NAME_SUFFIX = "_Draft"
 
 

@@ -1,6 +1,6 @@
 """Misc. functions to manipulate tickets."""
 
-
+from constants import constants
 from functions import basic
 from functions import phagesdb
 from classes import Eval
@@ -9,8 +9,10 @@ from classes import Genome
 
 
 
-# TODO unit test since function is updated.
-def parse_import_ticket(ticket, data_list):
+def parse_import_ticket(
+                        ticket,
+                        data_list,
+                        expected_size = constants.IMPORT_TABLE_SIZE):
     """Parses list of data and creates an import ticket.
         Expected data structure:
         0. Import action
@@ -22,22 +24,23 @@ def parse_import_ticket(ticket, data_list):
         6. Annotation Author
         7. Feature field
         8. Accession
-        9. Run mode
-        10. Secondary PhageID
+        9. Annotation QC
+        10. Retrieve Record
+        11. Run mode
+        12. Secondary PhageID
     """
 
     ticket._parsed_fields = len(data_list)
 
     # Verify the row of information has the correct number of fields to parse.
-    if len(data_list) == 11:
+    if len(data_list) == expected_size:
 
         ticket.set_type(data_list[0])
         ticket.set_description_field(data_list[7])
-        ticket.set_run_mode(data_list[9])
+        ticket.set_run_mode(data_list[11])
 
 
-        # TODO this data should populate a Genome object.
-        # genome1 = Genome.Genome()
+        # This data will eventually populate a Genome object.
         ticket.set_primary_phage_id(data_list[1])
         ticket.set_host(data_list[2])
         ticket.set_cluster(data_list[3])
@@ -45,28 +48,15 @@ def parse_import_ticket(ticket, data_list):
         ticket.set_status(data_list[5])
         ticket.set_annotation_author(data_list[6])
         ticket.set_accession(data_list[8])
+        ticket.set_annotation_qc(data_list[9])
+        ticket.set_retrieve_record(data_list[10])
 
-
-        # TODO this data should populate a second Genome object.
-        # genome2 = Genome.Genome()
-
-        ticket.set_secondary_phage_id(data_list[10])
-
-
-        # TODO combine all data into a DataGroup object.
-        # matched_data = DataGroup.DataGroup()
-        # matched_data.ticket = ticket
-        # matched_data.genomes_dict["import_genome1"] = genome1
-        # matched_data.genomes_dict["import_genome2"] = genome2
+        # This data will eventually populate a second Genome object.
+        ticket.set_secondary_phage_id(data_list[12])
 
     return ticket
 
 
-
-
-
-
-# TODO unit test since function has been updated.
 def parse_import_tickets(list_of_lists):
     """Parses lists of lists of data from csv file and converts to
     group of parsed tickets. It also returns a lost of errors for tickets
@@ -87,167 +77,207 @@ def parse_import_tickets(list_of_lists):
 
 
 
-# TODO this needs to be changed again. Remove tickets now store
-# the genome to be removed within the primary_phage_id.
-# TODO unit test now that I have refactored this function.
+
+# This function has been substantially simplified if Remove tickets
+# store the genome to be removed in the primary_phage_id field, and if
+# it does not try to keep track of the types of tickets from which the
+# conflict arises.
 def compare_tickets(list_of_tickets):
     """Compare all tickets to each other to determine if
     there are any ticket conflicts."""
 
     accession_list = []
-
-    update_primary_id_list = []
-    add_primary_id_list = []
-    replace_primary_id_list = []
-
-    remove_secondary_id_list = []
-    replace_secondary_id_list = []
-
-    result_list = []
+    phage_id_list = []
 
     # Create separate lists to check each field for duplications.
     # Skip "none" values since they are expected to be duplicated.
     for ticket in list_of_tickets:
 
         if ticket.primary_phage_id != "none":
-            if ticket.type == "update":
-                update_primary_id_list.append(ticket.primary_phage_id)
-            elif ticket.type == "add":
-                add_primary_id_list.append(ticket.primary_phage_id)
-            elif ticket.type == "replace":
-                replace_primary_id_list.append(ticket.primary_phage_id)
-            else:
-                pass
+            phage_id_list.append(ticket.primary_phage_id)
 
-        if ticket.secondary_phage_id != "none":
-            if ticket.type == "replace":
-                replace_secondary_id_list.append(ticket.secondary_phage_id)
-            elif ticket.type == "remove":
-                remove_secondary_id_list.append(ticket.secondary_phage_id)
-            else:
-                pass
+        if (ticket.secondary_phage_id != "none" and \
+            ticket.primary_phage_id != ticket.secondary_phage_id):
+
+            phage_id_list.append(ticket.secondary_phage_id)
 
         if ticket.accession != "none":
             accession_list.append(ticket.accession)
 
+    # Identify duplicate values in the group of tickets.
+    phage_id_dupe_set = basic.identify_one_list_duplicates(phage_id_list)
+    accession_dupe_set = basic.identify_one_list_duplicates(accession_list)
 
-    update_add_primary_id_list = update_primary_id_list + \
-                                add_primary_id_list
+    for ticket in list_of_tickets:
 
-    primary_id_list = update_primary_id_list + \
-                            add_primary_id_list + \
-                            replace_primary_id_list
-
-    secondary_id_list = remove_secondary_id_list + \
-                            replace_secondary_id_list
-
-
-    # Now, iterate through each list to identify duplicate or
-    # conflicting tickets.
-    dupe_set1 = basic.identify_one_list_duplicates(primary_id_list)
-    if len(dupe_set1) > 0:
-        result1 = "Multiple tickets contain the same Primary Phage ID."
-        status1 = "error"
-    else:
-        result1 = "Primary PhageID is fine."
-        status1 = "correct"
-
-    definition1 = "Check if there are multiple tickets with the same Primary PhageID."
-    eval1 = Eval.Eval(id = "TICKET", \
-                    definition = definition1, \
-                    result = result1, \
-                    status = status1)
-    result_list.append(eval1)
-
-
-    dupe_set2 = basic.identify_one_list_duplicates(secondary_id_list)
-    if len(dupe_set2) > 0:
-        result2 = "Multiple tickets contain the same Secondary Phage ID."
-        status2 = "error"
-    else:
-        result2 = "Secondary PhageID is fine."
-        status2 = "correct"
-
-    definition2 = "Check if there are multiple tickets with the same Secondary PhageID."
-    eval2 = Eval.Eval(id = "TICKET", \
-                    definition = definition2, \
-                    result = result2, \
-                    status = status2)
-    result_list.append(eval2)
-
-
-    dupe_set3 = basic.identify_one_list_duplicates(accession_list)
-    if len(dupe_set3) > 0:
-        result3 = "Multiple tickets contain the same Accession."
-        status3 = "error"
-    else:
-        result3 = "Accession is fine."
-        status3 = "correct"
-
-    definition3 = "Check if there are multiple tickets with the same Accession."
-    eval3 = Eval.Eval(id = "TICKET", \
-                    definition = definition3, \
-                    result = result3, \
-                    status = status3)
-    result_list.append(eval3)
+        ticket.check_duplicate_primary_phage_id(phage_id_dupe_set)
+        ticket.check_duplicate_secondary_phage_id(phage_id_dupe_set)
+        ticket.check_duplicate_accession(accession_dupe_set)
 
 
 
-
-
-    # No 'update' or 'add' Primary Phage IDs are expected to be a
-    # 'remove' or 'replace' Secondary Phage IDs.
-    dupe_set4 = basic.identify_two_list_duplicates(
-                        update_add_primary_id_list, \
-                        secondary_id_list)
-    if len(dupe_set4) > 0:
-        result4 = "An update or add Primary Phage ID is also a " + \
-                    "remove or replace Secondary Phage ID."
-        status4 = "error"
-    else:
-        result4 = "There is no PhageID conflict."
-        status4 = "correct"
-
-    definition4 = "Check if an update/add Primary PhageID is used " + \
-                    "as a remove/replace Secondary PhageID."
-    eval4 = Eval.Eval(id = "TICKET", \
-                    definition = definition4, \
-                    result = result4, \
-                    status = status4)
-    result_list.append(eval4)
-
-
-    # No 'replace' Primary Phage IDs are expected to be a 'remove'.
-    # Secondary Phage ID.
-    dupe_set5 = basic.identify_two_list_duplicates(replace_primary_id_list, \
-                        remove_secondary_id_list)
-    if len(dupe_set5) > 0:
-        result5 = "A replace Primary Phage ID is also a " + \
-                    "remove Secondary Phage ID."
-        status5 = "error"
-    else:
-        result5 = "There is no PhageID conflict."
-        status5 = "correct"
-
-    definition5 = "Check if a replace Primary PhageID is used " + \
-                    "as a remove Secondary PhageID."
-    eval5 = Eval.Eval(id = "TICKET", \
-                    definition = definition5, \
-                    result = result5, \
-                    status = status5)
-    result_list.append(eval5)
-
-
-
-    # Only return results that are Eval objects.
-    # list_of_evals = []
-    # for eval in result_list:
-    #     if eval is not None:
-    #         list_of_evals.append(eval)
-
-    # TODO this used to return only error evals, but now it returns all
-    # evals, so this will need to be corrected in the unit tests.
-    return result_list
+# TODO this can probably be deleted. It is a more complex compare_tickets
+# function that tries to keep track of ticket type.
+# # This needs to be changed again. Remove tickets now store
+# # the genome to be removed within the primary_phage_id.
+# def compare_tickets(list_of_tickets):
+#     """Compare all tickets to each other to determine if
+#     there are any ticket conflicts."""
+#
+#     accession_list = []
+#
+#     update_primary_id_list = []
+#     add_primary_id_list = []
+#     replace_primary_id_list = []
+#
+#     remove_secondary_id_list = []
+#     replace_secondary_id_list = []
+#
+#     result_list = []
+#
+#     # Create separate lists to check each field for duplications.
+#     # Skip "none" values since they are expected to be duplicated.
+#     for ticket in list_of_tickets:
+#
+#         if ticket.primary_phage_id != "none":
+#             if ticket.type == "update":
+#                 update_primary_id_list.append(ticket.primary_phage_id)
+#             elif ticket.type == "add":
+#                 add_primary_id_list.append(ticket.primary_phage_id)
+#             elif ticket.type == "replace":
+#                 replace_primary_id_list.append(ticket.primary_phage_id)
+#             else:
+#                 pass
+#
+#         if ticket.secondary_phage_id != "none":
+#             if ticket.type == "replace":
+#                 replace_secondary_id_list.append(ticket.secondary_phage_id)
+#             elif ticket.type == "remove":
+#                 remove_secondary_id_list.append(ticket.secondary_phage_id)
+#             else:
+#                 pass
+#
+#         if ticket.accession != "none":
+#             accession_list.append(ticket.accession)
+#
+#
+#     update_add_primary_id_list = update_primary_id_list + \
+#                                 add_primary_id_list
+#
+#     primary_id_list = update_primary_id_list + \
+#                             add_primary_id_list + \
+#                             replace_primary_id_list
+#
+#     secondary_id_list = remove_secondary_id_list + \
+#                             replace_secondary_id_list
+#
+#
+#     # Now, iterate through each list to identify duplicate or
+#     # conflicting tickets.
+#     dupe_set1 = basic.identify_one_list_duplicates(primary_id_list)
+#     if len(dupe_set1) > 0:
+#         result1 = "Multiple tickets contain the same Primary Phage ID."
+#         status1 = "error"
+#     else:
+#         result1 = "Primary PhageID is fine."
+#         status1 = "correct"
+#
+#     definition1 = "Check if there are multiple tickets with the same Primary PhageID."
+#     eval1 = Eval.Eval(id = "TICKET", \
+#                     definition = definition1, \
+#                     result = result1, \
+#                     status = status1)
+#     result_list.append(eval1)
+#
+#
+#     dupe_set2 = basic.identify_one_list_duplicates(secondary_id_list)
+#     if len(dupe_set2) > 0:
+#         result2 = "Multiple tickets contain the same Secondary Phage ID."
+#         status2 = "error"
+#     else:
+#         result2 = "Secondary PhageID is fine."
+#         status2 = "correct"
+#
+#     definition2 = "Check if there are multiple tickets with the same Secondary PhageID."
+#     eval2 = Eval.Eval(id = "TICKET", \
+#                     definition = definition2, \
+#                     result = result2, \
+#                     status = status2)
+#     result_list.append(eval2)
+#
+#
+#     dupe_set3 = basic.identify_one_list_duplicates(accession_list)
+#     if len(dupe_set3) > 0:
+#         result3 = "Multiple tickets contain the same Accession."
+#         status3 = "error"
+#     else:
+#         result3 = "Accession is fine."
+#         status3 = "correct"
+#
+#     definition3 = "Check if there are multiple tickets with the same Accession."
+#     eval3 = Eval.Eval(id = "TICKET", \
+#                     definition = definition3, \
+#                     result = result3, \
+#                     status = status3)
+#     result_list.append(eval3)
+#
+#
+#
+#
+#
+#     # No 'update' or 'add' Primary Phage IDs are expected to be a
+#     # 'remove' or 'replace' Secondary Phage IDs.
+#     dupe_set4 = basic.identify_two_list_duplicates(
+#                         update_add_primary_id_list, \
+#                         secondary_id_list)
+#     if len(dupe_set4) > 0:
+#         result4 = "An update or add Primary Phage ID is also a " + \
+#                     "remove or replace Secondary Phage ID."
+#         status4 = "error"
+#     else:
+#         result4 = "There is no PhageID conflict."
+#         status4 = "correct"
+#
+#     definition4 = "Check if an update/add Primary PhageID is used " + \
+#                     "as a remove/replace Secondary PhageID."
+#     eval4 = Eval.Eval(id = "TICKET", \
+#                     definition = definition4, \
+#                     result = result4, \
+#                     status = status4)
+#     result_list.append(eval4)
+#
+#
+#     # No 'replace' Primary Phage IDs are expected to be a 'remove'.
+#     # Secondary Phage ID.
+#     dupe_set5 = basic.identify_two_list_duplicates(replace_primary_id_list, \
+#                         remove_secondary_id_list)
+#     if len(dupe_set5) > 0:
+#         result5 = "A replace Primary Phage ID is also a " + \
+#                     "remove Secondary Phage ID."
+#         status5 = "error"
+#     else:
+#         result5 = "There is no PhageID conflict."
+#         status5 = "correct"
+#
+#     definition5 = "Check if a replace Primary PhageID is used " + \
+#                     "as a remove Secondary PhageID."
+#     eval5 = Eval.Eval(id = "TICKET", \
+#                     definition = definition5, \
+#                     result = result5, \
+#                     status = status5)
+#     result_list.append(eval5)
+#
+#
+#
+#     # Only return results that are Eval objects.
+#     # list_of_evals = []
+#     # for eval in result_list:
+#     #     if eval is not None:
+#     #         list_of_evals.append(eval)
+#
+#     # TODO this used to return only error evals, but now it returns all
+#     # evals, so this will need to be corrected in the unit tests.
+#     return result_list
 
 
 
@@ -262,6 +292,9 @@ def expand_tickets(list_of_matched_objects):
         matched_object = list_of_matched_objects[index]
         ticket = matched_object.ticket
 
+        genome.type = "ticket"
+
+        # TODO 'update' ticket option will eventually be removed.
         if ticket.type == "update":
             genome = Genome.Genome()
             genome.set_phage_id(ticket.primary_phage_id)
@@ -274,6 +307,8 @@ def expand_tickets(list_of_matched_objects):
 
             matched_object.genomes_dict["update"] = genome
 
+
+        # TODO 'remove' ticket option will eventually be removed.
         elif ticket.type == "remove":
             genome = Genome.Genome()
             genome.set_phage_id(ticket.primary_phage_id)
@@ -293,9 +328,8 @@ def expand_tickets(list_of_matched_objects):
             genome.set_cluster_subcluster()
             genome.ncbi_update_flag = ""
             genome.set_annotation_author(ticket.annotation_author)
-
-            # TODO decide how to set annotation_qc at some point.
-            # TODO decide how to set retrieve_record at some point.
+            genome.annotation_qc = ticket.annotation_qc
+            genome.retrieve_record = ticket.retrieve_record
 
             matched_object.genomes_dict["add"] = genome
 
@@ -311,9 +345,9 @@ def expand_tickets(list_of_matched_objects):
             genome1.set_cluster_subcluster()
             genome1.ncbi_update_flag = ""
             genome1.set_annotation_author(ticket.annotation_author)
+            genome.annotation_qc = ticket.annotation_qc
+            genome.retrieve_record = ticket.retrieve_record
 
-            # TODO decide how to set annotation_qc at some point.
-            # TODO decide how to set retrieve_record at some point.
 
             genome2 = Genome.Genome()
             genome2.set_phage_id(ticket.secondary_phage_id)
@@ -374,21 +408,26 @@ def assign_match_strategy(list_of_group_objects):
 
     strategy = ""
     strategies = set()
-    eval_result = None
 
     for group_obj in list_of_group_objects:
         strategies.add(group_obj.ticket.match_strategy)
 
 
     if len(strategies) > 1:
-        message = "Unable to match genomes in files to tickets, " + \
+        result = "Unable to match genomes in files to tickets, " + \
                     "since more than one match strategy is indicated."
-        eval_result = Eval.construct_error(message)
+        status = "error"
+
 
     else:
         strategy = list(strategies)[0]
+        result = "Able to match genomes in files to tickets."
+        status = "correct"
 
-    return strategy, eval_result
+    definition = "Assign matching strategy."
+    eval = Eval.Eval("TICKET", definition, result, status)
+
+    return strategy, eval
 
 
 # TODO this function may no longer be needed. Genome object methods

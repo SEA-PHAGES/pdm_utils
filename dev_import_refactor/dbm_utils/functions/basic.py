@@ -530,7 +530,6 @@ def compare_cluster_subcluster(cluster, subcluster):
 
     return result
 
-
 def identify_one_list_duplicates(item_list):
     """Identify duplicate items within a list."""
 
@@ -621,9 +620,11 @@ def convert_author(input_value):
 def lower_case(value):
     """Return the value lowercased if it is within a specific set of values."""
 
-    lower_set = set(["none", "retrieve"])
-    if value.lower() in lower_set:
-        value = value.lower()
+    lower_set = set(["none", "retrieve", "retain"])
+
+    if isinstance(value, str):
+        if value.lower() in lower_set:
+            value = value.lower()
     return value
 
 

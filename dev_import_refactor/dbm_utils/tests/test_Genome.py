@@ -695,6 +695,17 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
     def test_check_subcluster_structure_1(self):
         """Check that no error is produced if the
         non-empty subcluster is structured correctly."""
@@ -1000,12 +1011,6 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
     def test_identify_unique_cds_start_end_ids_1(self):
         """Verify that both sets are computed."""
         self.genome._cds_start_end_ids = \
@@ -1064,6 +1069,36 @@ class TestGenomeClass(unittest.TestCase):
         self.genome._cds_duplicate_end_strand_ids = set([(2, "forward")])
         self.genome.check_cds_end_strand_ids()
         self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_set_retrieve_1(self):
+        """Verify that the retrieve setting is set to True."""
+        self.genome.cluster = "retrieve"
+        self.genome.set_retrieve()
+        self.assertTrue(self.genome._retrieve)
+
+    def test_set_retrieve_2(self):
+        """Verify that the retrieve setting is set to False."""
+        self.genome.cluster = "A"
+        self.genome.set_retrieve()
+        self.assertFalse(self.genome._retrieve)
+
+
+
+
+    def test_set_retain_1(self):
+        """Verify that the retain setting is set to True."""
+        self.genome.cluster = "retain"
+        self.genome.set_retain()
+        self.assertTrue(self.genome._retain)
+
+    def test_set_retain_2(self):
+        """Verify that the retain setting is set to False."""
+        self.genome.cluster = "A"
+        self.genome.set_retain()
+        self.assertFalse(self.genome._retain)
 
 
 
@@ -1291,7 +1326,37 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+    def test_check_fields_populated_1(self):
+        """Verify error is produced when some fields are still
+        set to 'retrieve'."""
+        self.genome._retrieve = True
+        self.genome._retain = False
+        self.genome.check_fields_populated()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
+    def test_check_fields_populated_2(self):
+        """Verify error is produced when some fields are still
+        set to 'retain'."""
+        self.genome._retrieve = False
+        self.genome._retain = True
+        self.genome.check_fields_populated()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_fields_populated_3(self):
+        """Verify error is produced when some fields are still
+        set to 'retrieve' or 'retain'."""
+        self.genome._retrieve = True
+        self.genome._retain = True
+        self.genome.check_fields_populated()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_fields_populated_4(self):
+        """Verify no error is produced when no fields are
+        set to 'retrieve' or 'retain'."""
+        self.genome._retrieve = False
+        self.genome._retain = False
+        self.genome.check_fields_populated()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
 

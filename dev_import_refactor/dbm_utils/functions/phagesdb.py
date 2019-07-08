@@ -3,6 +3,7 @@
 
 from classes import Eval
 from classes import Genome
+from classes import GenomePair
 from functions import basic
 from constants import constants
 import urllib.request
@@ -371,45 +372,112 @@ def construct_phage_url(phage_name):
 
 
 
+#
+# # TODO this will probably be obselete.
+# def retrieve_genome_data2(genome1):
+#     """If the genome object has attributes that are set to be auto-completed,
+#     retrieve the data from PhagesDB to complete the genome."""
+#
+#     eval_list1 = []
+#     genome1.set_retrieve()
+#     if genome1._retrieve:
+#
+#         genome2 = Genome.Genome()
+#         phage_url = construct_phage_url(genome1.phage_id)
+#         data_dict, eval_object1 = retrieve_phagesdb_data(phage_url)
+#
+#         if eval_object1 is not None:
+#             eval_list1 += [eval_object1]
+#
+#         eval_list2 = parse_phagesdb_data(genome2, data_dict)
+#
+#         eval_list1 += eval_list2
+#
+#
+#         # Copy all retrieved data.
+#         genome_pair = GenomePair.GenomePair()
+#         genome_pair.genome1 = genome1
+#         genome_pair.genome2 = genome2
+#         genome_pair.copy_data("type", genome2.type, genome1.type, "retrieve")
+#
+#
+#     return eval_list1
 
-def retrieve_genome_data(genome1):
-    """If the genome object has attributes that are set to be auto-completed,
+
+
+
+
+
+
+
+
+# TODO this may replace the retrieve_genome_data2.
+# TODO unit test.
+def retrieve_genome_data1(matched_data_obj):
+    """If a genome object stored in the DataGroup object has
+    attributes that are set to be auto-completed,
     retrieve the data from PhagesDB to complete the genome."""
 
     eval_list1 = []
-    if (genome1.host == "retrieve" or \
-        genome1.cluster == "retrieve" or \
-        genome1.subcluster == "retrieve" or \
-        genome1.accession == "retrieve"):
+
+    retrieve = False
+    for key in matched_data_obj.genomes_dict.keys():
+
+        genome1 = matched_data_obj.genomes_dict[key]
+        genome1.set_retrieve()
+        if genome1._retrieve:
+            retrieve = True
+
+    if retrieve:
 
         genome2 = Genome.Genome()
-
         phage_url = construct_phage_url(genome1.phage_id)
-
         data_dict, eval_object1 = retrieve_phagesdb_data(phage_url)
 
         if eval_object1 is not None:
             eval_list1 += [eval_object1]
 
         eval_list2 = parse_phagesdb_data(genome2, data_dict)
+        matched_data_obj.genomes_dict[genome2.type] = genome2
 
         eval_list1 += eval_list2
-
-        if genome1.host == "retrieve":
-            genome1.host = genome2.host
-        if genome1.cluster == "retrieve":
-            genome1.cluster = genome2.cluster
-        if genome1.subcluster == "retrieve":
-            genome1.subcluster = genome2.subcluster
-        if genome1.accession == "retrieve":
-            genome1.accession = genome2.accession
 
     return eval_list1
 
 
 
 
+# TODO this may replace the retrieve_genome_data2.
+# TODO unit test.
+def retrieve_genome_data3(matched_data_obj, key1, key2):
+    """."""
 
+    genome1 = None
+    genome2 = None
+    for key3 in matched_data_obj.genomes_dict.keys():
+
+        if key3 == key1:
+            genome1 = matched_data_obj.genomes_dict[key1]
+            genome1.set_retrieve()
+        elif key3 == key2:
+            genome2 = matched_data_obj.genomes_dict[key2]
+        else:
+            pass
+
+    if (genome1 is not None and genome2 is not None):
+
+        genome1.set_retrieve()
+        if genome1._retrieve:
+
+            # Copy all retrieved data.
+            genome_pair = GenomePair.GenomePair()
+            genome_pair.genome1 = genome1
+            genome_pair.genome2 = genome2
+            genome_pair.copy_data("type", genome2.type, genome1.type, "retrieve")
+            pair_id = genome1.type + "_" + genome2.type
+            matched_data_obj.genome_pairs_dict[pair_id] = genome_pair
+
+    return eval_list1
 
 
 

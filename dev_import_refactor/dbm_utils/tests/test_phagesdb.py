@@ -767,10 +767,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
-
-
-###TODO below pasted from test_tickets()
-
 class TestPhagesDBFunctions2(unittest.TestCase):
 
     def setUp(self):
@@ -782,130 +778,145 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome = Genome.Genome()
         self.genome.phage_id = "L5"
 
-        # self.ticket = Ticket.GenomeTicket()
-        # self.ticket.primary_phage_id = "L5"
 
 
 
 
-    def test_retrieve_genome_data_1(self):
-        """Verify host field is retrieved correctly."""
-        self.genome.host = "retrieve"
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_value = "Mycobacterium"
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.host, expected_value)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_retrieve_genome_data_2(self):
-        """Verify cluster field is retrieved correctly."""
-        self.genome.cluster = "retrieve"
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_value = "A"
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_value)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_retrieve_genome_data_3(self):
-        """Verify subcluster field is retrieved correctly."""
-        self.genome.subcluster = "retrieve"
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_value = "A2"
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_value)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_retrieve_genome_data_4(self):
-        """Verify accession field is retrieved correctly."""
-        self.genome.accession = "retrieve"
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_value = "Z18946"
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.accession, expected_value)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_retrieve_genome_data_5(self):
-        """Verify no fields are retrieved."""
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_value = ""
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.host, expected_value)
-        with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_value)
-        with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_value)
-        with self.subTest():
-            self.assertEqual(self.genome.accession, expected_value)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_retrieve_genome_data_6(self):
-        """Verify all fields are retrieved."""
-        self.genome.host = "retrieve"
-        self.genome.cluster = "retrieve"
-        self.genome.subcluster = "retrieve"
-        self.genome.accession = "retrieve"
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_host = "Mycobacterium"
-        expected_cluster = "A"
-        expected_subcluster = "A2"
-        expected_accession = "Z18946"
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
-        with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
-        with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
-        with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_retrieve_genome_data_7(self):
-        """Verify no fields are retrieved and an error is produced."""
-        self.genome.phage_id = "L5_x"
-        self.genome.host = "retrieve"
-        eval_list = phagesdb.retrieve_genome_data(self.genome)
-        expected_host = "none"
-        errors = 0
-        for eval in eval_list:
-            if eval.status != "correct":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
-        with self.subTest():
-            self.assertEqual(errors, 7)
 
 
-###TODO above pasted from test_tickets()
+    # TODO below unit tests may be unneeded, once new retrieve_genome_data
+    # functions have been implemented and tested.
+    # def test_retrieve_genome_data2_1(self):
+    #     """Verify host field is retrieved correctly."""
+    #     self.genome.host = "retrieve"
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_value = "Mycobacterium"
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.host, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 0)
+    #
+    # def test_retrieve_genome_data2_2(self):
+    #     """Verify cluster field is retrieved correctly."""
+    #     self.genome.cluster = "retrieve"
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_value = "A"
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.cluster, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 0)
+    #
+    # def test_retrieve_genome_data2_3(self):
+    #     """Verify subcluster field is retrieved correctly."""
+    #     self.genome.subcluster = "retrieve"
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_value = "A2"
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.subcluster, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 0)
+    #
+    # def test_retrieve_genome_data2_4(self):
+    #     """Verify accession field is retrieved correctly."""
+    #     self.genome.accession = "retrieve"
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_value = "Z18946"
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.accession, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 0)
+    #
+    # def test_retrieve_genome_data2_5(self):
+    #     """Verify no fields are retrieved."""
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_value = ""
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.host, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.cluster, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.subcluster, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.accession, expected_value)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 0)
+    #
+    # def test_retrieve_genome_data2_6(self):
+    #     """Verify all fields are retrieved."""
+    #     self.genome.host = "retrieve"
+    #     self.genome.cluster = "retrieve"
+    #     self.genome.subcluster = "retrieve"
+    #     self.genome.accession = "retrieve"
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_host = "Mycobacterium"
+    #     expected_cluster = "A"
+    #     expected_subcluster = "A2"
+    #     expected_accession = "Z18946"
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.host, expected_host)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.cluster, expected_cluster)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.subcluster, expected_subcluster)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.accession, expected_accession)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 0)
+    #
+    # def test_retrieve_genome_data2_7(self):
+    #     """Verify no fields are retrieved and an error is produced."""
+    #     self.genome.phage_id = "L5_x"
+    #     self.genome.host = "retrieve"
+    #     self.genome._retrieve = True
+    #     self.genome.type = "ticket"
+    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
+    #     expected_host = "none"
+    #     errors = 0
+    #     for eval in eval_list:
+    #         if eval.status != "correct":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(self.genome.host, expected_host)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 7)
+
+
 
 
 if __name__ == '__main__':

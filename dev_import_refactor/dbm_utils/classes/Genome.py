@@ -67,6 +67,11 @@ class Genome:
 
 
 
+        # TODO unit test.
+        self._retrieve = False
+        self._retain = False
+
+
 
 
 
@@ -232,19 +237,6 @@ class Genome:
 
 
 
-
-
-
-
-
-    # TODO I don't think I need this anymore.
-    # Original script removed draft suffix.
-    # Not sure if "_draft" should remain or not.
-    # def set_phage_name(self,value):
-    #     self.phage_name = value
-    #
-    #     self.search_name = \
-    #           basic.edit_suffix(self.phage_name, "remove").lower()
 
 
     def set_host(self, value, format = "empty_string"):
@@ -427,6 +419,28 @@ class Genome:
         self.annotation_author = basic.convert_author(value)
 
 
+
+    def set_annotation_qc(self):
+        """Set annotation_qc."""
+
+        # TODO not sure if this is needed.
+        # if self.status == 'final':
+        #     self.annotation_qc = 1
+        # else:
+        #     self.annotation_qc = 0
+        pass
+
+    def set_retrieve_record(self):
+        """Set retrieve_record."""
+
+        # TODO not sure if this is needed.
+        # if self.annotation_author == 1:
+        #     self.retrieve_record = 1
+        # else:
+        #     self.retrieve_record = 0
+        pass
+
+
     def tally_descriptions(self):
         """Iterate through all CDS features and determine how many
         non-generic descriptions are present."""
@@ -468,6 +482,14 @@ class Genome:
         self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
 
 
+    def set_retrieve(self):
+        if "retrieve" in vars(self).values():
+            self._retrieve = True
+
+
+    def set_retain(self):
+        if "retain" in vars(self).values():
+            self._retain = True
 
 
 
@@ -865,7 +887,23 @@ class Genome:
 
 
 
+    # TODO this method may be better if it receives an expect value.
+    # After assessing whether there are any fields not populated correctly,
+    # it could compare to what is expected, and then decide to throw an error.
+    def check_fields_populated(self):
+        """Check if there are any data that are not populated correctly."""
 
+        if (self._retrieve or self._retain):
+            result = "Some fields are not populated."
+            status = "error"
+        else:
+            result = "All fields are populated."
+            status = "correct"
+
+        definition = "Check if there are any data that are " + \
+                        "not populated correctly."
+        eval = Eval.Eval("GENOME0014", definition, result, status)
+        self.evaluations.append(eval)
 
 
 

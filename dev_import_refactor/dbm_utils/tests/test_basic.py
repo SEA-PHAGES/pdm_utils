@@ -1359,20 +1359,25 @@ class TestGeneralFunctions(unittest.TestCase):
 
 
     def test_lower_case_1(self):
-        """Check that value is not changed if it is not within
+        """Check that a string value is not changed if it is not within
         the set of valid values."""
         input_value = "Trixie"
         output_value = basic.lower_case(input_value)
         self.assertEqual(output_value, input_value)
 
     def test_lower_case_2(self):
-        """Check that value is changed if it is within
+        """Check that a string value is changed if it is within
         the set of valid values."""
         input_value = "NONE"
         output_value = basic.lower_case(input_value)
         self.assertEqual(output_value, "none")
 
-
+    def test_lower_case_2(self):
+        """Check that an int value is changed if it is within
+        the set of valid values."""
+        input_value = 1
+        output_value = basic.lower_case(input_value)
+        self.assertEqual(output_value, 1)
 
 
 
