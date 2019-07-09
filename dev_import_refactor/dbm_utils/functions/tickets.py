@@ -116,6 +116,278 @@ def compare_tickets(list_of_tickets):
 
 
 
+def copy_ticket_to_genome(matched_object):
+    """Construct genome objects and populate them appropriately using data
+    from import ticket."""
+
+    ticket = matched_object.ticket
+
+    if (ticket.type == "add" or ticket.type == "replace"):
+        genome1 = Genome.Genome()
+        genome1.type = "add"
+        genome1.set_phage_id(ticket.primary_phage_id)
+        genome1.phage_name = ticket.primary_phage_id
+        genome1.set_host(ticket.host)
+        genome1.set_accession(ticket.accession)
+        genome1.status = ticket.status
+        genome1.set_cluster(ticket.cluster)
+        genome1.set_subcluster(ticket.subcluster)
+        genome1.set_cluster_subcluster()
+        genome1.set_annotation_author(ticket.annotation_author)
+        genome1.annotation_qc = ticket.annotation_qc
+        genome1.retrieve_record = ticket.retrieve_record
+
+        matched_object.genome_dict[genome1.type] = genome1
+
+        if ticket.type == "replace":
+
+            genome2 = Genome.Genome()
+            genome2.type = "remove"
+            genome2.set_phage_id(ticket.secondary_phage_id)
+
+            matched_object.genome_dict[genome2.type] = genome2
+
+    # TODO 'update' ticket option will eventually be deleted.
+    elif ticket.type == "update":
+
+        # TODO unit test.
+        # genome = Genome.Genome()
+        # genome.type = "update"
+        # genome.set_phage_id(ticket.primary_phage_id)
+        # genome.set_host(ticket.host)
+        # genome.set_accession(ticket.accession)
+        # genome.status = ticket.status
+        # genome.set_cluster(ticket.cluster)
+        # genome.set_subcluster(ticket.subcluster)
+        # genome.set_cluster_subcluster()
+        # matched_object.genome_dict[genome.type] = genome
+        pass
+
+    # TODO 'remove' ticket option will eventually be deleted.
+    elif ticket.type == "remove":
+
+        # TODO unit test.
+        # genome = Genome.Genome()
+        # genome.type = "remove"
+        # genome.set_phage_id(ticket.primary_phage_id)
+        # matched_object.genome_dict[genome.type] = genome
+        pass
+
+    else:
+        pass
+
+
+
+
+
+def create_matched_object_dict(list_of_group_objects):
+    """Create a dictionary of DataGroup objects based on their ticket type.
+    Key = ticket type (e.g. update, add, etc.).
+    Value = list of DataGroup objects."""
+
+    type_set = set()
+    for matched_object in list_of_group_objects:
+        type_set.add(matched_object.ticket.type)
+
+    ticket_type_dict = {}
+    for type in type_set:
+        group_object_list = []
+        index = 0
+        while index < len(list_of_group_objects):
+            matched_object = list_of_group_objects[index]
+            if matched_object.ticket.type == type:
+                group_object_list.append(matched_object)
+            index += 1
+        ticket_type_dict[type] = group_object_list
+
+    return ticket_type_dict
+
+
+
+
+
+
+
+# TODO this function may no longer be needed. Genome object methods
+# can assign the PhageID from either the filename or a flat file record
+# field. As a result, all genomes can be matched to tickets using the
+# Genome object phage_id.
+def assign_match_strategy(list_of_group_objects):
+
+    strategy = ""
+    strategies = set()
+
+    for group_obj in list_of_group_objects:
+        strategies.add(group_obj.ticket.match_strategy)
+
+
+    if len(strategies) > 1:
+        result = "Unable to match genomes in files to tickets, " + \
+                    "since more than one match strategy is indicated."
+        status = "error"
+
+
+    else:
+        strategy = list(strategies)[0]
+        result = "Able to match genomes in files to tickets."
+        status = "correct"
+
+    definition = "Assign matching strategy."
+    eval = Eval.Eval("TICKET", definition, result, status)
+
+    return strategy, eval
+
+
+# TODO this function may no longer be needed. Genome object methods
+# can assign the PhageID from either the filename or a flat file record
+# field. As a result, all genomes can be matched to tickets using the
+# Genome object phage_id.
+# TODO fix unit tests.
+# def match_genomes_to_tickets(list_of_group_objects, all_flat_file_data, key):
+#     """Match genome objects parsed from files to tickets."""
+#
+#     # Determine what the strategy is to match tickets to flat files.
+#     strategy, strategy_eval = assign_match_strategy(list_of_group_objects)
+#
+#     # Create list of all ticket identifiers.
+#     ticket_id_list = []
+#     for group_obj in list_of_group_objects:
+#         ticket_id_list.append(group_obj.ticket.primary_phage_id)
+#
+#
+#     # Create list of all genome identifiers based on the strategy.
+#     genome_dict = {}
+#     genome_id_list = []
+#     index1 = 0
+#     while index1 < len(all_flat_file_data):
+#         genome_object = all_flat_file_data[index1]
+#
+#         if strategy == "phage_id":
+#             genome_id = genome_object.phage_id
+#         elif strategy == "filename":
+#             genome_id = genome_object.filename
+#         else:
+#             genome_id = ""
+#
+#         genome_id_list.append(genome_id)
+#         genome_dict[genome_id] = genome_object
+#
+#         index1 += 1
+#
+#
+#     matched_unique_ids, \
+#     ticket_unmatched_unique_ids, \
+#     genome_unmatched_unique_ids, \
+#     ticket_duplicate_ids, \
+#     genome_duplicate_ids = \
+#         basic.match_items(ticket_id_list, genome_id_list)
+#
+#
+#     # Match genomes to tickets using the unique identifiers.
+#     index2 = 0
+#     while index2 < len(list_of_group_objects):
+#
+#         group_obj = list_of_group_objects[index2]
+#         match_id = group_obj.ticket.primary_phage_id
+#
+#         if match_id in matched_unique_ids:
+#             genome_object = genome_dict.pop(match_id)
+#             group_obj.genome_dict[key] = genome_object
+#
+#         index2 += 1
+#
+#
+#
+#     # Check for the various errors that could have been encountered.
+#     eval_results = []
+#
+#     if strategy_eval is not None:
+#         eval_results.append(strategy_eval)
+#
+#     if len(ticket_duplicate_ids) > 0:
+#         result = "Unable to match genomes to tickets " + \
+#                 "since there are multiple tickets with the same identifier."
+#         status = "error"
+#         definition = "Match tickets to genome."
+#         eval = Eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(eval)
+#
+#     if len(genome_duplicate_ids) > 0:
+#         result = "Unable to match genomes to tickets " + \
+#                 "since there are multiple genomes with the same identifier."
+#         status = "error"
+#         definition = "Match tickets to genome."
+#         eval = Eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(eval)
+#
+#     if len(ticket_unmatched_unique_ids) > 0:
+#         result = "There is no matching genome for one or more tickets."
+#         status = "error"
+#         definition = "Match tickets to genome."
+#         eval = Eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(eval)
+#
+#     if len(genome_unmatched_unique_ids) > 0:
+#         result = "There is no matching ticket for one or more genomes."
+#         status = "error"
+#         definition = "Match tickets to genome."
+#         eval = Eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(eval)
+#
+#     return eval_results
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO implement below. This function may no longer be needed.
+# TODO unit test below.
+def prepare_tickets(ticket_filename):
+    """Parse import table into ticket objects."""
+
+    # Assumes that filename has already been validated.
+
+    # TODO retrieve import data.
+    # List of ticket data.
+
+
+    #Retrieve import info from indicated import table file and
+    # read all lines into a list and verify contents are correctly populated.
+    #0 = Type of database action to be performed (add, remove, replace, update)
+    #1 = New PhageID that will be added to database
+    #2 = Host of new phage
+    #3 = Cluster of new phage (singletons should be reported as "singleton")
+    #4 = Subcluster of new phage (no subcluster should be reported as "none")
+    #5 = Annotation status of new phage
+    #6 = Annotation author of the new phage
+    #7 = Feature field containing gene descriptions of new phage
+    #8 = Accession
+    #9 = Run mode
+    #10 = PhageID of genome to be removed from the database
+
+
+    # Parse list of data and construct tickets.
+
+    # Convert data from import file into ticket objects
+    ticket_list = parse_import_tickets(import_table_data_list)
+
+
+    return ticket_list
+
+
+
+
+
 # TODO this can probably be deleted. It is a more complex compare_tickets
 # function that tries to keep track of ticket type.
 # # This needs to be changed again. Remove tickets now store
@@ -278,364 +550,6 @@ def compare_tickets(list_of_tickets):
 #     # TODO this used to return only error evals, but now it returns all
 #     # evals, so this will need to be corrected in the unit tests.
 #     return result_list
-
-
-
-
-# TODO unit test.
-def expand_tickets(list_of_matched_objects):
-    """Construct genome objects and populate them appropriately using data
-    from import ticket."""
-
-    index = 0
-    while index < len(list_of_matched_objects):
-        matched_object = list_of_matched_objects[index]
-        ticket = matched_object.ticket
-
-        genome.type = "ticket"
-
-        # TODO 'update' ticket option will eventually be removed.
-        if ticket.type == "update":
-            genome = Genome.Genome()
-            genome.set_phage_id(ticket.primary_phage_id)
-            genome.set_host(ticket.host)
-            genome.set_accession(ticket.accession)
-            genome.status = ticket.status
-            genome.set_cluster(ticket.cluster)
-            genome.set_subcluster(ticket.subcluster)
-            genome.set_cluster_subcluster()
-
-            matched_object.genomes_dict["update"] = genome
-
-
-        # TODO 'remove' ticket option will eventually be removed.
-        elif ticket.type == "remove":
-            genome = Genome.Genome()
-            genome.set_phage_id(ticket.primary_phage_id)
-
-            matched_object.genomes_dict["remove"] = genome
-
-
-        elif ticket.type == "add":
-            genome = Genome.Genome()
-            genome.set_phage_id(ticket.primary_phage_id)
-            genome.phage_name = ticket.primary_phage_id
-            genome.set_host(ticket.host)
-            genome.set_accession(ticket.accession)
-            genome.status = ticket.status
-            genome.set_cluster(ticket.cluster)
-            genome.set_subcluster(ticket.subcluster)
-            genome.set_cluster_subcluster()
-            genome.ncbi_update_flag = ""
-            genome.set_annotation_author(ticket.annotation_author)
-            genome.annotation_qc = ticket.annotation_qc
-            genome.retrieve_record = ticket.retrieve_record
-
-            matched_object.genomes_dict["add"] = genome
-
-        elif ticket.type == "replace":
-            genome1 = Genome.Genome()
-            genome1.set_phage_id(ticket.primary_phage_id)
-            genome1.phage_name = ticket.primary_phage_id
-            genome1.set_host(ticket.host)
-            genome1.set_accession(ticket.accession)
-            genome1.status = ticket.status
-            genome1.set_cluster(ticket.cluster)
-            genome1.set_subcluster(ticket.subcluster)
-            genome1.set_cluster_subcluster()
-            genome1.ncbi_update_flag = ""
-            genome1.set_annotation_author(ticket.annotation_author)
-            genome.annotation_qc = ticket.annotation_qc
-            genome.retrieve_record = ticket.retrieve_record
-
-
-            genome2 = Genome.Genome()
-            genome2.set_phage_id(ticket.secondary_phage_id)
-
-
-            matched_object.genomes_dict["add"] = genome1
-            matched_object.genomes_dict["remove"] = genome2
-
-        else:
-            pass
-
-        index += 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def match_genomes(list_of_group_objects, genome_dict, key1, key2 = None):
-    """Match genome object to another genome object using phage_id.
-    The 'key1' parameter provides the type of genome stored in the DataGroup
-    genome dictionary to base the match from.
-    The 'key2' parameter provides the type of genome to be stored in
-    the DataGroup genome dictionary."""
-
-    index = 0
-    while index < len(list_of_group_objects):
-
-        group_obj = list_of_group_objects[index]
-
-        try:
-            ref_genome = group_obj.genome_dict[key1]
-            ref_phage_id = ref_genome.phage_id
-
-            if ref_phage_id in genome_dict.keys():
-                matched_genome = genome_dict[ref_phage_id]
-
-                if key2 is None:
-                    group_obj.genome_dict[matched_genome.type] = matched_genome
-                else:
-                    group_obj.genome_dict[key2] = matched_genome
-
-        except:
-            pass
-
-        index += 1
-
-
-
-# TODO this function may no longer be needed. Genome object methods
-# can assign the PhageID from either the filename or a flat file record
-# field. As a result, all genomes can be matched to tickets using the
-# Genome object phage_id.
-def assign_match_strategy(list_of_group_objects):
-
-    strategy = ""
-    strategies = set()
-
-    for group_obj in list_of_group_objects:
-        strategies.add(group_obj.ticket.match_strategy)
-
-
-    if len(strategies) > 1:
-        result = "Unable to match genomes in files to tickets, " + \
-                    "since more than one match strategy is indicated."
-        status = "error"
-
-
-    else:
-        strategy = list(strategies)[0]
-        result = "Able to match genomes in files to tickets."
-        status = "correct"
-
-    definition = "Assign matching strategy."
-    eval = Eval.Eval("TICKET", definition, result, status)
-
-    return strategy, eval
-
-
-# TODO this function may no longer be needed. Genome object methods
-# can assign the PhageID from either the filename or a flat file record
-# field. As a result, all genomes can be matched to tickets using the
-# Genome object phage_id.
-# TODO this function may be able to be combined with match_genomes_to_tickets1.
-def match_genomes_to_tickets2(list_of_group_objects, all_flat_file_data, key):
-    """Match genome objects parsed from files to tickets."""
-
-    # Determine what the strategy is to match tickets to flat files.
-    strategy, strategy_eval = assign_match_strategy(list_of_group_objects)
-
-    # Create list of all ticket identifiers.
-    ticket_id_list = []
-    for group_obj in list_of_group_objects:
-        ticket_id_list.append(group_obj.ticket.primary_phage_id)
-
-
-    # Create list of all genome identifiers based on the strategy.
-    genome_dict = {}
-    genome_id_list = []
-    index1 = 0
-    while index1 < len(all_flat_file_data):
-        genome_object = all_flat_file_data[index1]
-
-        if strategy == "phage_id":
-            genome_id = genome_object.phage_id
-        elif strategy == "filename":
-            genome_id = genome_object.filename
-        else:
-            genome_id = ""
-
-        genome_id_list.append(genome_id)
-        genome_dict[genome_id] = genome_object
-
-        index1 += 1
-
-
-    matched_unique_ids, \
-    ticket_unmatched_unique_ids, \
-    genome_unmatched_unique_ids, \
-    ticket_duplicate_ids, \
-    genome_duplicate_ids = \
-        basic.match_items(ticket_id_list, genome_id_list)
-
-
-    # Match genomes to tickets using the unique identifiers.
-    index2 = 0
-    while index2 < len(list_of_group_objects):
-
-        group_obj = list_of_group_objects[index2]
-        match_id = group_obj.ticket.primary_phage_id
-
-        if match_id in matched_unique_ids:
-            genome_object = genome_dict.pop(match_id)
-            group_obj.genomes_dict[key] = genome_object
-
-        index2 += 1
-
-
-
-    # Check for the various errors that could have been encountered.
-    eval_results = []
-
-    if strategy_eval is not None:
-        eval_results.append(strategy_eval)
-
-    if len(ticket_duplicate_ids) > 0:
-        message = "Unable to match genomes to tickets " + \
-                "since there are multiple tickets with the same identifier."
-        eval_result = Eval.construct_error(message)
-        eval_results.append(eval_result)
-
-    if len(genome_duplicate_ids) > 0:
-        message = "Unable to match genomes to tickets " + \
-                "since there are multiple genomes with the same identifier."
-        eval_result = Eval.construct_error(message)
-        eval_results.append(eval_result)
-
-    if len(ticket_unmatched_unique_ids) > 0:
-        message = "There is no matching genome for one or more tickets."
-        eval_result = Eval.construct_error(message)
-        eval_results.append(eval_result)
-
-    if len(genome_unmatched_unique_ids) > 0:
-        message = "There is no matching ticket for one or more genomes."
-        eval_result = Eval.construct_error(message)
-        eval_results.append(eval_result)
-
-    return eval_results
-
-
-def create_matched_object_dict(list_of_group_objects):
-    """Create a dictionary of DataGroup objects based on their ticket type.
-    Key = ticket type (e.g. update, add, etc.).
-    Value = list of DataGroup objects."""
-
-    type_set = set()
-    for matched_object in list_of_group_objects:
-        type_set.add(matched_object.ticket.type)
-
-    ticket_type_dict = {}
-    for type in type_set:
-        group_object_list = []
-        index = 0
-        while index < len(list_of_group_objects):
-            matched_object = list_of_group_objects[index]
-            if matched_object.ticket.type == type:
-                group_object_list.append(matched_object)
-            index += 1
-        ticket_type_dict[type] = group_object_list
-
-    return ticket_type_dict
-
-
-
-# TODO implement.
-# TODO unit test.
-def set_ticket_data(genome_obj, ticket_obj):
-    """Populate attributes in a Genome object using data from a ticket."""
-
-    genome_obj.set_phage_id(ticket.primary_phage_id)
-    genome_obj.phage_name = ticket.primary_phage_id
-    genome_obj.set_host(ticket.host)
-    genome_obj.set_accession(ticket.accession)
-    genome_obj.author = "" # TODO do I need this in addition to annotation_author?
-    genome_obj.status = ticket.status
-    genome_obj.set_cluster(ticket.cluster)
-    genome_obj.set_subcluster(ticket.subcluster)
-    genome_obj.set_cluster_subcluster()
-    genome_obj.ncbi_update_flag = ""
-    genome_obj.annotation_author = ticket.annotation_author
-
-    # TODO decide how to set this attribute. Check old script.
-    if ticket.status == "final":
-        genome_obj.annotation_qc = 1
-    else:
-        genome_obj.annotation_qc = 0
-
-    # TODO decide how to set this attribute. Check old script.
-    if ticket.run_mode == "auto_update":
-        genome_obj.retrieve_record = 1
-    else:
-        genome_obj.retrieve_record = 0
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO implement below. This function may no longer be needed.
-# TODO unit test below.
-def prepare_tickets(ticket_filename):
-    """Parse import table into ticket objects."""
-
-    # Assumes that filename has already been validated.
-
-    # TODO retrieve import data.
-    # List of ticket data.
-
-
-    #Retrieve import info from indicated import table file and
-    # read all lines into a list and verify contents are correctly populated.
-    #0 = Type of database action to be performed (add, remove, replace, update)
-    #1 = New PhageID that will be added to database
-    #2 = Host of new phage
-    #3 = Cluster of new phage (singletons should be reported as "singleton")
-    #4 = Subcluster of new phage (no subcluster should be reported as "none")
-    #5 = Annotation status of new phage
-    #6 = Annotation author of the new phage
-    #7 = Feature field containing gene descriptions of new phage
-    #8 = Accession
-    #9 = Run mode
-    #10 = PhageID of genome to be removed from the database
-
-
-    # Parse list of data and construct tickets.
-
-    # Convert data from import file into ticket objects
-    ticket_list = parse_import_tickets(import_table_data_list)
-
-
-    return ticket_list
-
-
-###
-
-
-
-
-
-
-
-
-
-
 
 
 
