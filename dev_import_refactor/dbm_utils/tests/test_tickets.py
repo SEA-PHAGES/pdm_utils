@@ -505,53 +505,98 @@ class TestTicketFunctions2(unittest.TestCase):
 #
 #
 #
-#
-#
-#     def test_match_genomes_to_tickets1_1(self):
-#         """Verify that one genome is matched to ticket correctly."""
-#
-#         list1 = [self.datagroup1] # Trixie
-#         eval_list = \
-#             tickets.match_genomes_to_tickets1(list1,
-#                                                     self.genome_dict,
-#                                                     "phamerator")
-#
-#         matched_genome = list1[0].genomes_dict["phamerator"]
-#         id = matched_genome.phage_id
-#         expected_id = "Trixie"
-#         with self.subTest():
-#             self.assertEqual(id, expected_id)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 0)
-#
-#     def test_match_genomes_to_tickets1_2(self):
-#         """Verify that no genome is matched to empty ticket list."""
-#
-#         list1 = []
-#         eval_list = \
-#             tickets.match_genomes_to_tickets1(list1,
-#                                                     self.genome_dict,
-#                                                     "phamerator")
-#
-#         self.assertEqual(len(eval_list), 0)
-#
-#     def test_match_genomes_to_tickets1_3(self):
-#         """Verify that genome is not matched to ticket."""
-#
-#         list1 = [self.datagroup4] # RedRock
-#
-#         eval_list = \
-#             tickets.match_genomes_to_tickets1(list1,
-#                                                     self.genome_dict,
-#                                                     "phamerator")
-#
-#         num_dict_keys = len(list1[0].genomes_dict.keys())
-#
-#         with self.subTest():
-#             self.assertEqual(num_dict_keys, 0)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 1)
-#
+
+
+    def test_match_genomes_1(self):
+        """Verify that one genome is matched correctly."""
+
+
+        genome1 = Genome.Genome()
+        genome1.phage_id = "Trixie"
+        genome1.phage_name = "Genome1"
+        genome1.type = "phamerator"
+
+        genome2 = Genome.Genome()
+        genome2.phage_id = "Trixie"
+        genome2.phage_name = "Genome2"
+        genome2.type = "flat_file"
+
+        self.datagroup1.genome_dict[genome1.type] = genome1
+        list1 = [self.datagroup1] # Trixie phamerator genome.
+
+        genomes_to_match = {genome2.phage_id: genome2}
+
+        tickets.match_genomes(list1, genomes_to_match, "phamerator", "new_genome")
+        matched_genome = list1[0].genome_dict["new_genome"]
+        self.assertEqual(matched_genome.phage_name, "Genome2")
+
+
+    def test_match_genomes_2(self):
+        """Verify that no genome is matched since there is no
+        DataGroup object."""
+
+        genome2 = Genome.Genome()
+        genome2.phage_id = "Trixie"
+        genome2.phage_name = "Genome2"
+        genome2.type = "flat_file"
+
+        list1 = []
+
+        genomes_to_match = {genome2.phage_id: genome2}
+
+        tickets.match_genomes(list1, genomes_to_match, "phamerator", "new_genome")
+        self.assertEqual(len(list1), 0)
+
+
+    def test_match_genomes_3(self):
+        """Verify that no genome is matched since there is no
+        reference genome in the DataGroup."""
+
+        genome2 = Genome.Genome()
+        genome2.phage_id = "Trixie"
+        genome2.phage_name = "Genome2"
+        genome2.type = "flat_file"
+
+        list1 = [self.datagroup1]
+
+        genomes_to_match = {genome2.phage_id: genome2}
+
+        tickets.match_genomes(list1, genomes_to_match, "phamerator", "new_genome")
+        self.assertEqual(len(list1[0].genome_dict.keys()), 0)
+
+
+
+
+
+
+
+
+
+    #
+    # def test_match_genomes_to_tickets1_3(self):
+    #     """Verify that genome is not matched to ticket."""
+    #
+    #     list1 = [self.datagroup4] # RedRock
+    #
+    #     eval_list = \
+    #         tickets.match_genomes_to_tickets1(list1,
+    #                                                 self.genome_dict,
+    #                                                 "phamerator")
+    #
+    #     num_dict_keys = len(list1[0].genomes_dict.keys())
+    #
+    #     with self.subTest():
+    #         self.assertEqual(num_dict_keys, 0)
+    #     with self.subTest():
+    #         self.assertEqual(len(eval_list), 1)
+
+
+
+# TODO test with two DataGroup objects.
+
+
+
+
 #     def test_match_genomes_to_tickets1_4(self):
 #         """Verify that two genomes are matched to tickets correctly."""
 #

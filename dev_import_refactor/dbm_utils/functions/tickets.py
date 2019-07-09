@@ -374,29 +374,34 @@ def expand_tickets(list_of_matched_objects):
 
 
 
-def match_genomes_to_tickets1(list_of_group_objects, genome_dict, key):
-    """Match genome objects to tickets using phage_id.
-    All tickets are expected to be matched."""
-
-    list_of_evals = []
+def match_genomes(list_of_group_objects, genome_dict, key1, key2 = None):
+    """Match genome object to another genome object using phage_id.
+    The 'key1' parameter provides the type of genome stored in the DataGroup
+    genome dictionary to base the match from.
+    The 'key2' parameter provides the type of genome to be stored in
+    the DataGroup genome dictionary."""
 
     index = 0
     while index < len(list_of_group_objects):
 
         group_obj = list_of_group_objects[index]
-        phage_id = group_obj.ticket.primary_phage_id
 
-        if phage_id in genome_dict.keys():
-            matched_genome = genome_dict[phage_id]
-            group_obj.genomes_dict[key] = matched_genome
-        else:
-            message = "Ticket was not able to be matched with a genome."
-            eval_object = Eval.construct_error(message)
-            list_of_evals.append(eval_object)
+        try:
+            ref_genome = group_obj.genome_dict[key1]
+            ref_phage_id = ref_genome.phage_id
+
+            if ref_phage_id in genome_dict.keys():
+                matched_genome = genome_dict[ref_phage_id]
+
+                if key2 is None:
+                    group_obj.genome_dict[matched_genome.type] = matched_genome
+                else:
+                    group_obj.genome_dict[key2] = matched_genome
+
+        except:
+            pass
 
         index += 1
-
-    return list_of_evals
 
 
 
