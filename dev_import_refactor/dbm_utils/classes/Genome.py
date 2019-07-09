@@ -1,6 +1,8 @@
 """Represents a collection of data about a genome that are commonly used to
 maintain and update SEA-PHAGES phage genomics data.
 """
+
+from constants import constants
 from functions import basic
 from classes import Eval
 from datetime import datetime
@@ -36,7 +38,6 @@ class Genome:
 
         # Common to Phamerator
         self.cluster_subcluster = "" # Combined cluster_subcluster data.
-        self.ncbi_update_flag = ""
         self.date_last_modified = ""
         self.annotation_author = "" # 1 (Hatfull), 0 (Genbank)
         self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
@@ -65,11 +66,9 @@ class Genome:
         self.type = "" # Describes how this genome is used
                         # (e.g. import, phamerator, phagesdb, etc.)
 
-
-
-        # TODO unit test.
         self._retrieve = False
         self._retain = False
+        self._empty = False
 
 
 
@@ -495,7 +494,216 @@ class Genome:
 
 
 
+
+
+
+
+
+
+
+
+
+
     # Evaluations.
+    def check_phage_id(self, phage_id_set, expect = False):
+        """Check that the phage_id is valid."""
+
+        if self.phage_id in phage_id_set:
+            if expect:
+                result = "The phage_id is valid."
+                status = "correct"
+            else:
+                result = "The phage_id is not valid."
+                status = "error"
+        else:
+            if not expect:
+                result = "The phage_id is valid."
+                status = "correct"
+            else:
+                result = "The phage_id is not valid."
+                status = "error"
+
+        definition = "Check that the phage_id is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+    def check_phage_name(self, phage_name_set, expect = False):
+        """Check that the phage_name is valid."""
+
+        if self.phage_name in phage_name_set:
+            if expect:
+                result = "The phage_name is valid."
+                status = "correct"
+            else:
+                result = "The phage_name is not valid."
+                status = "error"
+        else:
+            if not expect:
+                result = "The phage_name is valid."
+                status = "correct"
+            else:
+                result = "The phage_name is not valid."
+                status = "error"
+
+        definition = "Check that the phage_name is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_status(self, status_set = constants.ANNOTATION_STATUS_SET):
+        """Check that the annotation status is valid."""
+        if self.status in status_set:
+            result = "The annotation status is valid."
+            status = "correct"
+        else:
+            result = "The annotation status is not valid."
+            status = "error"
+        definition = "Check that the annotation status is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_host(self, host_set):
+        """Check that the host is valid."""
+        if self.host in host_set:
+            result = "The host is valid."
+            status = "correct"
+        else:
+            result = "The host is not valid."
+            status = "error"
+        definition = "Check that the host is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_cluster(self, cluster_set):
+        """Check that the cluster is valid."""
+        if self.cluster in cluster_set:
+            result = "The cluster is valid."
+            status = "correct"
+        else:
+            result = "The cluster is not valid."
+            status = "error"
+        definition = "Check that the cluster is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_subcluster(self, subcluster_set):
+        """Check that the subcluster is valid."""
+        if self.subcluster in subcluster_set:
+            result = "The subcluster is valid."
+            status = "correct"
+        else:
+            result = "The subcluster is not valid."
+            status = "error"
+        definition = "Check that the subcluster is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    # TODO this may need to be updated to account for Seq alphabets better.
+    def check_sequence(self, seq_set, expect = False):
+        """Check that the phage_name is valid."""
+
+        if self.sequence in seq_set:
+            if expect:
+                result = "The sequence is valid."
+                status = "correct"
+            else:
+                result = "The sequence is not valid."
+                status = "error"
+        else:
+            if not expect:
+                result = "The sequence is valid."
+                status = "correct"
+            else:
+                result = "The sequence is not valid."
+                status = "error"
+
+        definition = "Check that the sequence is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_accession(self, accession_set, expect = False):
+        """Check that the accession is valid."""
+
+        if self.accession in accession_set:
+            if expect:
+                result = "The accession is valid."
+                status = "correct"
+            else:
+                result = "The accession is not valid."
+                status = "error"
+        else:
+            if not expect:
+                result = "The accession is valid."
+                status = "correct"
+            else:
+                result = "The accession is not valid."
+                status = "error"
+
+        definition = "Check that the accession is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    # TODO implement.
+    # TODO unit test.
+    def check_date_last_modified(self):
+        """Check that the date_last_modified is valid."""
+
+        # definition = "Check that the date_last_modified is valid."
+        # eval = Eval.Eval("GENOME", definition, result, status)
+        # self.evaluations.append(eval)
+        pass
+
+
+    def check_annotation_author(self):
+        """Check that the annotation_author is valid."""
+
+        if (self.annotation_author == 0 or self.annotation_author == 1):
+            result = "The annotation_author is valid."
+            status = "correct"
+        else:
+            result = "The annotation_author is not valid."
+            status = "error"
+
+        definition = "Check that the annotation_author is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_annotation_qc(self):
+        """Check that the annotation_qc is valid."""
+
+        if (self.annotation_qc == 0 or self.annotation_qc == 1):
+            result = "The annotation_qc is valid."
+            status = "correct"
+        else:
+            result = "The annotation_qc is not valid."
+            status = "error"
+
+        definition = "Check that the annotation_qc is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_retrieve_record(self):
+        """Check that the retrieve_record is valid."""
+
+        if (self.retrieve_record == 0 or self.retrieve_record == 1):
+            result = "The retrieve_record is valid."
+            status = "correct"
+        else:
+            result = "The retrieve_record is not valid."
+            status = "error"
+
+        definition = "Check that the retrieve_record is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
 
     def check_subcluster_structure(self):
         """Check whether the cluster field is structured appropriately."""
@@ -583,10 +791,7 @@ class Genome:
             status = "correct"
 
         definition = "Check if all nucleotides in the sequence are expected."
-        eval = Eval.Eval(id = "GENOME0001", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -610,10 +815,7 @@ class Genome:
             status = "correct"
 
         definition = "Compare the status and accession."
-        eval = Eval.Eval(id = "GENOME0002", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -645,10 +847,7 @@ class Genome:
             status = "correct"
 
         definition = "Compare the status and presence of CDS descriptions."
-        eval = Eval.Eval(id = "GENOME0003", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -667,11 +866,9 @@ class Genome:
 
         definition = "Check phage name spelling in the " + \
                             "record description field."
-        eval = Eval.Eval(id = "GENOME0004", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
+
 
     def check_record_source_phage_name(self):
         """Check phage name spelling in the record source field."""
@@ -687,10 +884,7 @@ class Genome:
             status = "correct"
 
         definition = "Check phage name spelling in the record source field."
-        eval = Eval.Eval(id = "GENOME0005", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -708,10 +902,7 @@ class Genome:
             status = "correct"
 
         definition = "Check phage name spelling in the record organism field."
-        eval = Eval.Eval(id = "GENOME0006", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
     def check_record_description_host_name(self):
@@ -728,10 +919,7 @@ class Genome:
             status = "correct"
 
         definition = "Check host name spelling in the record description field."
-        eval = Eval.Eval(id = "GENOME0007", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
     def check_record_source_host_name(self):
@@ -748,10 +936,7 @@ class Genome:
             status = "correct"
 
         definition = "Check host name spelling in the record source field."
-        eval = Eval.Eval(id = "GENOME0008", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
     def check_record_organism_host_name(self):
@@ -768,10 +953,7 @@ class Genome:
             status = "correct"
 
         definition = "Check host name spelling in the record organism field."
-        eval = Eval.Eval(id = "GENOME0009", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -809,10 +991,7 @@ class Genome:
             status = "correct"
 
         definition = "Check authorship."
-        eval = Eval.Eval(id = "GENOME0010", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -829,10 +1008,7 @@ class Genome:
             status = "correct"
 
         definition = "Check if CDS features are annotated."
-        eval = Eval.Eval(id = "GENOME0011", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -853,11 +1029,7 @@ class Genome:
 
         definition = "Check whether CDS features can be uniquely " + \
                         "identified by their start and end coordinates."
-        eval = Eval.Eval(id = "GENOME0012", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
-
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -878,15 +1050,13 @@ class Genome:
 
         definition = "Check whether CDS features can be uniquely " + \
                             "identified by their strand and end coordinate."
-        eval = Eval.Eval(id = "GENOME0013", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
 
-
+    # TODO not sure if this is needed now, since check_fields_retained()
+    # and check_fields_retrieved() has been implemented.
     # TODO this method may be better if it receives an expect value.
     # After assessing whether there are any fields not populated correctly,
     # it could compare to what is expected, and then decide to throw an error.
@@ -902,8 +1072,62 @@ class Genome:
 
         definition = "Check if there are any data that are " + \
                         "not populated correctly."
-        eval = Eval.Eval("GENOME0014", definition, result, status)
+        eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
+
+
+
+
+
+
+
+    def check_fields_retrieved(self, expect = False):
+        """Check if there are any fields that are set to be retrieved."""
+
+        if self._retrieve:
+            if expect:
+                result = "No fields are set to be retrieved."
+                status = "correct"
+            else:
+                result = "Some fields are set to be retrieved."
+                status = "error"
+        else:
+            if not expect:
+                result = "Some fields are set to be retrieved."
+                status = "correct"
+            else:
+                result = "No fields are set to be retrieved."
+                status = "error"
+
+        definition = "Check if there are any fields that are set to " + \
+                        "be retrieved."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_fields_retained(self, expect = False):
+        """Check if there are any fields that are set to be retained."""
+
+        if self._retain:
+            if expect:
+                result = "No fields are set to be retained."
+                status = "correct"
+            else:
+                result = "Some fields are set to be retained."
+                status = "error"
+        else:
+            if not expect:
+                result = "Some fields are set to be retained."
+                status = "correct"
+            else:
+                result = "No fields are set to be retained."
+                status = "error"
+
+        definition = "Check if there are any fields that are set to " + \
+                        "be retained."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
 
 
 

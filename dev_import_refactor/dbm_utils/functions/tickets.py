@@ -57,6 +57,8 @@ def parse_import_ticket(
     return ticket
 
 
+
+# TODO unit test now that
 def parse_import_tickets(list_of_lists):
     """Parses lists of lists of data from csv file and converts to
     group of parsed tickets. It also returns a lost of errors for tickets

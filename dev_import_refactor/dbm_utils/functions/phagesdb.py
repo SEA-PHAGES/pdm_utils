@@ -412,7 +412,10 @@ def construct_phage_url(phage_name):
 
 
 # TODO this may replace the retrieve_genome_data2.
+# TOD this dovetails with misc.match_genome(), so see if it can
+# utilize that.
 # TODO unit test.
+
 def retrieve_genome_data1(matched_data_obj):
     """If a genome object stored in the DataGroup object has
     attributes that are set to be auto-completed,
@@ -449,7 +452,7 @@ def retrieve_genome_data1(matched_data_obj):
 
 # TODO this may replace the retrieve_genome_data2.
 # TODO unit test.
-def retrieve_genome_data3(matched_data_obj, key1, key2):
+def copy_retrieved_data(matched_data_obj, key1, key2):
     """."""
 
     genome1 = None

@@ -3,13 +3,7 @@
 
 
 
-# TODO implement.
-# TODO unit test.
-def check_ticket_structure(
-                            ticket,
-                            type_set,
-                            null_set,
-                            run_mode_set):
+def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket."""
@@ -27,7 +21,27 @@ def check_ticket_structure(
     # This is the only evaluation that is not dependent on the ticket type.
     ticket.check_type(type_set, True)
 
-    if ticket.type == "update":
+    if (ticket.type == "add" or ticket.type == "replace"):
+        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_host(null_set, False)
+        ticket.check_cluster(null_set, False)
+        ticket.check_status(null_set, False)
+        ticket.check_description_field(null_set, False)
+        ticket.check_annotation_author(null_set, False)
+        ticket.check_run_mode(run_mode_set, True)
+
+        # No need to evaluate the Accession and Subcluster fields
+        # since they may or may not be populated.
+
+        if ticket.type == "replace":
+            ticket.check_secondary_phage_id(null_set, False)
+        else:
+            ticket.check_secondary_phage_id(null_set, True)
+
+
+    # TODO this may be deleted.
+    # TODO unit test.
+    elif ticket.type == "update":
         ticket.check_primary_phage_id(null_set, False)
         ticket.check_host(null_set, False)
         ticket.check_cluster(null_set, False)
@@ -37,27 +51,12 @@ def check_ticket_structure(
         ticket.check_run_mode(null_set, True)
         ticket.check_secondary_phage_id(null_set, True)
 
-        # No need to evaluate the following fields:
-        # Accession = it will either be an accession or it will be "none"
-        # Subcluster = it will either be a Subcluster or it will be "none"
+        # No need to evaluate the Accession and Subcluster fields
+        # since they may or may not be populated.
 
 
-    elif ticket.type == "add":
-        # TODO make sure it checks that the primary_phage_id
-        # is not 'none' as well.
-        ticket.check_primary_phage_id(null_set, False)
-        ticket.check_secondary_phage_id(null_set, True)
-        ticket.check_host(null_set, False)
-        ticket.check_cluster(null_set, False)
-        ticket.check_status(null_set, False)
-        ticket.check_description_field(null_set, False)
-        ticket.check_annotation_author(null_set, False)
-        ticket.check_run_mode(run_mode_set, True)
-
-        # No need to evaluate the following fields:
-        # Accession = it will either be an accession or it will be "none"
-        # Subcluster = it will either be a Subcluster or it will be "none"
-
+    # TODO this may be deleted.
+    # TODO unit test.
     elif ticket.type == "remove":
 
         # Everything except the primary phage_id field should be 'none'
@@ -72,27 +71,6 @@ def check_ticket_structure(
         ticket.check_annotation_author(null_set, True)
         ticket.check_run_mode(null_set, True)
 
-    elif ticket.type == "replace":
-        ticket.check_primary_phage_id(null_set, False)
-        ticket.check_secondary_phage_id(null_set, False)
-        ticket.check_host(null_set, False)
-        ticket.check_cluster(null_set, False)
-        ticket.check_status(null_set, False)
-        ticket.check_description_field(null_set, False)
-        ticket.check_annotation_author(null_set, False)
-        ticket.check_run_mode(run_mode_set, True)
-
-
-
-        # TODO move this evaluation further into the program.
-        # If the genome to be added is not spelled the same as the genome
-        # to be removed, the new genome needs to have a unique name.
-        if self.primary_phage_id != self.secondary_phage_id:
-            ticket.check_primary_phage_id(phage_id_set, False)
-
-        # No need to evaluate the following fields:
-        # Accession = it will either be an accession or it will be "none"
-        # Subcluster = it will either be a Subcluster or it will be "none"
     else:
         pass
 
@@ -538,42 +516,42 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
 #replace the default import_cds_qualifier descriptions.
 #Then provide option to verify changes.
 #This block is skipped if user selects to do so.
-def check_description_field_choice():
-
-    if ignore_description_field_check != 'yes':
-
-        changed = ""
-        if (import_cds_qualifier != "product" and feature_product_tally > 0):
-           print "\nThere are %s CDS products found." % feature_product_tally
-           change_descriptions()
-
-           if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
-                for feature in all_features_data_list:
-                    feature[9] = feature[10]
-                changed = "product"
-
-        if (import_cds_qualifier != "function" and feature_function_tally > 0):
-            print "\nThere are %s CDS functions found." % feature_function_tally
-            change_descriptions()
-
-            if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
-                for feature in all_features_data_list:
-                    feature[9] = feature[11]
-                changed = "function"
-        if (import_cds_qualifier != "note" and feature_note_tally > 0):
-
-            print "\nThere are %s CDS notes found." % feature_note_tally
-            change_descriptions()
-
-            if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
-                for feature in all_features_data_list:
-                    feature[9] = feature[12]
-                changed = "note"
-
-        if changed != "":
-            record_warnings += 1
-            write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
-            record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+# def check_description_field_choice():
+#
+#     if ignore_description_field_check != 'yes':
+#
+#         changed = ""
+#         if (import_cds_qualifier != "product" and feature_product_tally > 0):
+#            print "\nThere are %s CDS products found." % feature_product_tally
+#            change_descriptions()
+#
+#            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
+#                 for feature in all_features_data_list:
+#                     feature[9] = feature[10]
+#                 changed = "product"
+#
+#         if (import_cds_qualifier != "function" and feature_function_tally > 0):
+#             print "\nThere are %s CDS functions found." % feature_function_tally
+#             change_descriptions()
+#
+#             if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
+#                 for feature in all_features_data_list:
+#                     feature[9] = feature[11]
+#                 changed = "function"
+#         if (import_cds_qualifier != "note" and feature_note_tally > 0):
+#
+#             print "\nThere are %s CDS notes found." % feature_note_tally
+#             change_descriptions()
+#
+#             if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
+#                 for feature in all_features_data_list:
+#                     feature[9] = feature[12]
+#                 changed = "note"
+#
+#         if changed != "":
+#             record_warnings += 1
+#             write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
+#             record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
 
 
 ###

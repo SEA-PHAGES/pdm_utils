@@ -15,6 +15,7 @@ IMPORT_TABLE_SIZE = 13
 
 NAME_SUFFIX = "_Draft"
 
+ANNOTATION_STATUS_SET = set(["draft", "final", "gbk"])
 
 EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')
 

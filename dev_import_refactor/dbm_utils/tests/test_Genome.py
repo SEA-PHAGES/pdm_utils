@@ -5,7 +5,7 @@ import unittest
 from classes import Genome
 from classes import Cds
 from datetime import datetime
-
+from Bio.Seq import Seq
 
 
 class TestGenomeClass(unittest.TestCase):
@@ -1103,6 +1103,320 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+
+
+
+
+
+    def test_check_phage_id_1(self):
+        """Verify that no error is produced when the phage_id
+        is in the phage_id_set and is expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_id = "Trixie"
+        self.genome.check_phage_id(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_phage_id_2(self):
+        """Verify that an error is produced when the phage_id
+        is not in the phage_id_set and is expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_id = "D29"
+        self.genome.check_phage_id(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_phage_id_3(self):
+        """Verify that no error is produced when the phage_id
+        is not in the phage_id_set and is not expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_id = "D29"
+        self.genome.check_phage_id(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_phage_id_4(self):
+        """Verify that an error is produced when the phage_id
+        is in the phage_id_set and is not expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_id = "Trixie"
+        self.genome.check_phage_id(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+
+    def test_check_phage_name_1(self):
+        """Verify that no error is produced when the phage_name
+        is in the phage_name_set and is expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_name = "Trixie"
+        self.genome.check_phage_name(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_phage_name_2(self):
+        """Verify that an error is produced when the phage_name
+        is not in the phage_name_set and is expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_name = "D29"
+        self.genome.check_phage_name(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_phage_name_3(self):
+        """Verify that no error is produced when the phage_name
+        is not in the phage_name_set and is not expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_name = "D29"
+        self.genome.check_phage_name(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_phage_name_4(self):
+        """Verify that an error is produced when the phage_name
+        is in the phage_name_set and is not expected to be in the set."""
+        value_set = set(["Trixie", "L5"])
+        self.genome.phage_name = "Trixie"
+        self.genome.check_phage_name(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_status_1(self):
+        """Verify that no error is produced when the status
+        is in the status_set and is expected to be in the set."""
+        self.genome.status = "draft"
+        self.genome.check_status()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_status_2(self):
+        """Verify that an error is produced when the status
+        is not in the status_set and is expected to be in the set."""
+        self.genome.status = "invalid"
+        self.genome.check_status()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_status_3(self):
+        """Verify that no error is produced when the status
+        is in a non-standard status_set and is expected to be in the set."""
+        value_set = set(["new_status", "final"])
+        self.genome.status = "new_status"
+        self.genome.check_status(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_status_4(self):
+        """Verify that an error is produced when the status
+        is not a non-standard status_set and is expected to be in the set."""
+        value_set = set(["new_status", "final"])
+        self.genome.status = "draft"
+        self.genome.check_status(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_host_1(self):
+        """Verify that no error is produced when the host
+        is in the host_set and is expected to be in the set."""
+        value_set = set(["Mycobacterium", "Gordonia"])
+        self.genome.host = "Mycobacterium"
+        self.genome.check_host(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_host_2(self):
+        """Verify that an error is produced when the host
+        is not in the host_set and is expected to be in the set."""
+        value_set = set(["Mycobacterium", "Gordonia"])
+        self.genome.host = "invalid"
+        self.genome.check_host(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_cluster_1(self):
+        """Verify that no error is produced when the cluster
+        is in the cluster_set and is expected to be in the set."""
+        value_set = set(["A", "B"])
+        self.genome.cluster = "A"
+        self.genome.check_cluster(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_cluster_2(self):
+        """Verify that an error is produced when the cluster
+        is not in the cluster_set and is expected to be in the set."""
+        value_set = set(["A", "B"])
+        self.genome.cluster = "C"
+        self.genome.check_cluster(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_subcluster_1(self):
+        """Verify that no error is produced when the subcluster
+        is in the subcluster_set and is expected to be in the set."""
+        value_set = set(["A1", "B1"])
+        self.genome.subcluster = "A1"
+        self.genome.check_subcluster(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_subcluster_2(self):
+        """Verify that an error is produced when the subcluster
+        is not in the subcluster_set and is expected to be in the set."""
+        value_set = set(["A1", "B1"])
+        self.genome.subcluster = "C1"
+        self.genome.check_subcluster(value_set)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_sequence_1(self):
+        """Verify that no error is produced when the sequence
+        is in the seq_set and is expected to be in the set."""
+        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
+        self.genome.sequence = Seq("ATCG")
+        self.genome.check_sequence(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_sequence_2(self):
+        """Verify that an error is produced when the sequence
+        is not in the seq_set and is expected to be in the set."""
+        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
+        self.genome.sequence = Seq("TTTTT")
+        self.genome.check_sequence(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_sequence_3(self):
+        """Verify that no error is produced when the sequence
+        is not in the seq_set and is not expected to be in the set."""
+        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
+        self.genome.sequence = Seq("TTTTT")
+        self.genome.check_sequence(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_sequence_4(self):
+        """Verify that an error is produced when the sequence
+        is in the seq_set and is not expected to be in the set."""
+        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
+        self.genome.sequence = Seq("ATCG")
+        self.genome.check_sequence(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_accession_1(self):
+        """Verify that no error is produced when the accession
+        is in the accession_set and is expected to be in the set."""
+        value_set = set(["ABC123", "XYZ456"])
+        self.genome.accession = "ABC123"
+        self.genome.check_accession(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_accession_2(self):
+        """Verify that an error is produced when the accession
+        is not in the accession_set and is expected to be in the set."""
+        value_set = set(["ABC123", "XYZ456"])
+        self.genome.accession = "EFG789"
+        self.genome.check_accession(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_accession_3(self):
+        """Verify that no error is produced when the accession
+        is not in the accession_set and is not expected to be in the set."""
+        value_set = set(["ABC123", "XYZ456"])
+        self.genome.accession = "EFG789"
+        self.genome.check_accession(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_accession_4(self):
+        """Verify that an error is produced when the accession
+        is in the accession_set and is not expected to be in the set."""
+        value_set = set(["ABC123", "XYZ456"])
+        self.genome.accession = "ABC123"
+        self.genome.check_accession(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_annotation_author_1(self):
+        """Verify that no error is produced when the annotation_author
+        is valid."""
+        self.genome.annotation_author = 0
+        self.genome.check_annotation_author()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_annotation_author_2(self):
+        """Verify that no error is produced when the annotation_author
+        is valid."""
+        self.genome.annotation_author = 1
+        self.genome.check_annotation_author()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_annotation_author_3(self):
+        """Verify that an error is produced when the annotation_author
+        is not valid."""
+        self.genome.annotation_author = 3
+        self.genome.check_annotation_author()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_annotation_qc_1(self):
+        """Verify that no error is produced when the annotation_qc
+        is valid."""
+        self.genome.annotation_qc = 0
+        self.genome.check_annotation_qc()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_annotation_qc_2(self):
+        """Verify that no error is produced when the annotation_qc
+        is valid."""
+        self.genome.annotation_qc = 1
+        self.genome.check_annotation_qc()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_annotation_qc_3(self):
+        """Verify that an error is produced when the annotation_qc
+        is not valid."""
+        self.genome.annotation_qc = 3
+        self.genome.check_annotation_qc()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_retrieve_record_1(self):
+        """Verify that no error is produced when the retrieve_record
+        is valid."""
+        self.genome.retrieve_record = 0
+        self.genome.check_retrieve_record()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_retrieve_record_2(self):
+        """Verify that no error is produced when the retrieve_record
+        is valid."""
+        self.genome.retrieve_record = 1
+        self.genome.check_retrieve_record()
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_retrieve_record_3(self):
+        """Verify that an error is produced when the retrieve_record
+        is not valid."""
+        self.genome.retrieve_record = 3
+        self.genome.check_retrieve_record()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+
+###
+
+
+
+
     def test_parse_record_description_1(self):
         """Verify empty string is parsed correctly."""
         self.genome.record_description = ""
@@ -1326,6 +1640,16 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+
+
+
+
+
+
+
+
+
+
     def test_check_fields_populated_1(self):
         """Verify error is produced when some fields are still
         set to 'retrieve'."""
@@ -1357,6 +1681,76 @@ class TestGenomeClass(unittest.TestCase):
         self.genome._retain = False
         self.genome.check_fields_populated()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+
+
+
+    def test_check_fields_retrieved_1(self):
+        """Verify that no error is produced when the _retrieve
+        field is True and is expected to be True."""
+        self.genome._retrieve = True
+        self.genome.check_fields_retrieved(True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_fields_retrieved_2(self):
+        """Verify that an error is produced when the _retrieve
+        field is False and is expected to be True."""
+        self.genome._retrieve = False
+        self.genome.check_fields_retrieved(True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_fields_retrieved_3(self):
+        """Verify that no error is produced when the _retrieve
+        field is False and is expected to be False."""
+        self.genome._retrieve = False
+        self.genome.check_fields_retrieved(False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_fields_retrieved_4(self):
+        """Verify that an error is produced when the _retrieve
+        field is True and is expected to be False."""
+        self.genome._retrieve = True
+        self.genome.check_fields_retrieved(False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_fields_retained_1(self):
+        """Verify that no error is produced when the _retain
+        field is True and is expected to be True."""
+        self.genome._retain = True
+        self.genome.check_fields_retained(True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_fields_retained_2(self):
+        """Verify that an error is produced when the _retain
+        field is False and is expected to be True."""
+        self.genome._retain = False
+        self.genome.check_fields_retained(True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_fields_retained_3(self):
+        """Verify that no error is produced when the _retain
+        field is False and is expected to be False."""
+        self.genome._retain = False
+        self.genome.check_fields_retained(False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_fields_retained_4(self):
+        """Verify that an error is produced when the _retain
+        field is True and is expected to be False."""
+        self.genome._retain = True
+        self.genome.check_fields_retained(False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+
+
+
+
 
 
 

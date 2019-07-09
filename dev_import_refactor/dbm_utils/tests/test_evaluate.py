@@ -1,7 +1,9 @@
 """ Unit tests for evaluate functions."""
 
 
-
+from constants import constants
+from pipelines import evaluate
+from classes import Ticket
 import unittest
 
 
@@ -11,6 +13,244 @@ class TestEvaluateClass(unittest.TestCase):
 
     def setUp(self):
         pass
+
+        self.null_set = constants.EMPTY_SET
+        self.type_set = constants.TICKET_TYPE_SET
+        self.run_mode_set = constants.RUN_MODE_SET
+
+        self.add_ticket1 = Ticket.GenomeTicket()
+        self.add_ticket1.type = "add"
+        self.add_ticket1.primary_phage_id = "Trixie_Draft"
+        self.add_ticket1.run_mode = "phagesdb"
+        self.add_ticket1.description_field = "product"
+        self.add_ticket1.host = "Mycobacterium smegmatis"
+        self.add_ticket1.cluster = "A"
+        self.add_ticket1.subcluster = "A2"
+        self.add_ticket1.status = "final"
+        self.add_ticket1.annotation_author = "hatfull"
+        self.add_ticket1.annotation_qc = 1
+        self.add_ticket1.retrieve_record = 1
+        self.add_ticket1.accession = "ABC123.1"
+        self.add_ticket1.secondary_phage_id = "none"
+
+
+    def test_check_ticket_structure_1(self):
+        """Verify no error is produced with a correctly structured
+        'add' ticket."""
+        evaluate.check_ticket_structure(
+            self.add_ticket1, self.type_set, self.null_set, self.run_mode_set)
+
+        errors = 0
+        for eval in self.add_ticket1.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(self.add_ticket1.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 0)
+
+
+    def test_check_ticket_structure_2(self):
+        """Verify an error is produced with an incorrectly structured
+        'invalid' ticket 'type' field."""
+
+        ticket = self.add_ticket1
+        ticket.type = "invalid"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 1)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_3(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'primary_phage_id' field."""
+
+        ticket = self.add_ticket1
+        ticket.primary_phage_id = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_4(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'host' field."""
+
+        ticket = self.add_ticket1
+        ticket.host = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_5(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'cluster' field."""
+
+        ticket = self.add_ticket1
+        ticket.cluster = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_6(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'status' field."""
+
+        ticket = self.add_ticket1
+        ticket.status = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_7(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'description_field' field."""
+
+        ticket = self.add_ticket1
+        ticket.description_field = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_8(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'annotation_author' field."""
+
+        ticket = self.add_ticket1
+        ticket.annotation_author = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_9(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'run_mode' field."""
+
+        ticket = self.add_ticket1
+        ticket.run_mode = "invalid"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_10(self):
+        """Verify an error is produced with an incorrectly structured
+        'add' ticket 'secondary_phage_id' field."""
+
+        ticket = self.add_ticket1
+        ticket.secondary_phage_id = "L5"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+    def test_check_ticket_structure_11(self):
+        """Verify no error is produced with a correctly structured
+        'replace' ticket."""
+
+        ticket = self.add_ticket1
+        ticket.type = "replace"
+        ticket.secondary_phage_id = "L5"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 0)
+
+
+    def test_check_ticket_structure_12(self):
+        """Verify an error is produced with an incorrectly structured
+        'replace' ticket 'secondary_phage_id' field."""
+
+        ticket = self.add_ticket1
+        ticket.type = "replace"
+        ticket.secondary_phage_id = "none"
+        evaluate.check_ticket_structure(
+            ticket, self.type_set, self.null_set, self.run_mode_set)
+        errors = 0
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(ticket.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 1)
+
+
+
 
 
 

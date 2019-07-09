@@ -334,6 +334,10 @@ def retrieve_sql_data(sql_obj):
 
     con.close()
 
+
+
+
+    return list_of_tuples
     # TODO delete above once confirmed it is functionalized
 
 

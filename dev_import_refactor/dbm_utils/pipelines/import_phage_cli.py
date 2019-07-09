@@ -9,6 +9,7 @@ interactive feedback about the import process.
 import time, sys, os, getpass, csv, re, shutil
 import json, urllib
 from datetime import datetime
+from classes import Genome
 
 
 
@@ -176,7 +177,8 @@ from functions import tickets
 
 # Retrieve import ticket data.
 # Data is returned as a list of validated ticket objects.
-list_of_tickets, list_of_errors = tickets.prepare_tickets(ticket_filename)
+# list_of_ticket_data = read.csv(ticket_filename)
+list_of_tickets = tickets.parse_import_tickets(list_of_ticket_data)
 
 
 
@@ -184,42 +186,53 @@ list_of_tickets, list_of_errors = tickets.prepare_tickets(ticket_filename)
 
 
 # TODO not sure if I should pass a list of valid types to this function.
-for ticket in ticket_list:
-    evaluate.check_ticket_structure(ticket,
+index1 = 0
+while index1 < len(ticket_list):
+    evaluate.check_ticket_structure(ticket_list[index1],
                                     constants.TICKET_TYPE_SET,
                                     constants.EMPTY_SET,
                                     constants.RUN_MODE_SET)
-
+    index1 += 1
 
 
 # Now that individual tickets have been validated,
 # validate the entire group of tickets.
-
-# TODO refactor this function. It could switch a flag within the
-# tickets that have duplicated information, so that the evals are set
-# to each specific ticket.
-# TODO this should return information
-eval_list = tickets.compare_tickets(ticket_list)
+tickets.compare_tickets(ticket_list)
 
 
 # Tickets will be matched with other genome data.
-# Ticket data will be paired with data from PhameratorDB
+# Ticket data will be paired with data from PhagesDB, PhameratorDB,
 # and/or a flat file.
-# TODO I may want to POP each ticket off this list as I assign to
-# matched genome objects.
 list_of_matched_objects = []
-for ticket in list_of_tickets:
-    matched_data_obj = MatchedGenomes()
-    matched_data_obj.ticket = ticket
-    list_of_matched_objects.append(matched_data_obj)
+index2 = 0
+while index2 < len(list_of_tickets):
 
+    matched_data_obj = MatchedGenomes()
+    matched_data_obj.ticket = list_of_tickets[index2]
+    list_of_matched_objects.append(matched_data_obj)
+    index2 += 1
 
 # Using each ticket, construct and populate genome objects as needed.
-tickets.expand_tickets(list_of_matched_objects)
+index3 = 0
+while index3 < len(list_of_matched_objects):
+    tickets.copy_ticket_to_genome(list_of_matched_objects[index3])
+    index3 += 1
+
 
 # Now check to see if there is any missing data for each genome, and
 # retrieve it from phagesdb.
-phagesdb.retrieve_genome_data(list_of_matched_objects)
+index4 = 0
+while index4 < len(list_of_matched_objects):
+
+    # If the ticket genome has fields set to 'retrieve', data is
+    # retrieved from PhagesDB and populates a new Genome object.
+    phagesdb.retrieve_genome_data1(list_of_matched_objects[index4])
+
+    # If fields in the Ticket genome are set to 'retrieve', and
+    # if a PhagesDB genome is present, data is copied from PhagesDB genome
+    # to Ticket genome for all 'retrieve' fields.
+    phagesdb.copy_retrieved_data(list_of_matched_objects[index4])
+    index4 += 1
 
 
 
@@ -230,10 +243,9 @@ phagesdb.retrieve_genome_data(list_of_matched_objects)
 
 
 
-
-
 # TODO check for ticket errors = exit script if not structured correctly.
 # Iterate through tickets and collect all evals.
+
 
 
 if len(list_of_errors) > 0:
@@ -259,22 +271,73 @@ if len(list_of_errors) > 0:
 
 
 # Retrieve all data from Phamerator
+# All data is returned as a list of tuples.
 retrieved_phamerator_data = phamerator.retrieve_sql_data(sql_obj)
+
 
 # Create a dictionary of all data retrieved.
 # Key = PhageID.
 # Value = Genome object with parsed data.
-phamerator_genome_dict = \
+phamerator_data_dict = \
     phamerator.create_phamerator_dict(retrieved_phamerator_data)
 
+
+
+# Now iterate through the phamerator genome dictionary and create
+# a second dictionary of parsed Genome objects.
+
+phamerator_genome_dict = {}
+for key in phamerator_data_dict.keys():
+    genome = Genome.Genome()
+    phamerator.parse_phamerator_data(genome, phamerator_data_dict[key])
+    phamerator_genome_dict[genome.phage_id] = genome
+
+
+
+
+
+
+# Now that Phamerator data has been retrieved and
+# Phamerator genome objects created, match them to ticket data
+index5 = 0
+while index5 < len(list_of_matched_objects):
+    matched_obj = list_of_matched_objects[index5]
+    if matched_obj.ticket.type == "replace":
+        misc.match_genome(matched_obj,
+                        phamerator_genome_dict,
+                        "add")
+        phamerator.copy_retrieved_data(matched_obj, "add", # other parameters)
+
+    index5 += 1
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO when should this be implemented?
 # Create sets of unique values for different data fields.
 phamerator_data_sets = phamerator.create_data_sets(phamerator_genome_dict)
 
 
+
+
+
+
+
+
 # TODO check for phamerator data errors = exit script if there are errors
-# TODO the phamerator main function does not yet return errors.
+# TODO is this needed?
 if len(phamerator_errors) > 0:
     sys.exit(1)
+
+
 
 
 
@@ -290,9 +353,8 @@ files_in_folder = basic.identify_files(genome_dir)
 # Parse each file into a Genome object.
 # Returns lists of Genome objects, Eval objects, parsed files,
 # and failed files.
-# TODO the phage_id_field can be indicated from a new argument in the command.
-genomes, all_results, valid_files, failed_files = \
-    flat_files.create_parsed_flat_file_list(files_in_folder, phage_id_field)
+flat_file_genomes, all_results, valid_files, failed_files = \
+    flat_files.create_parsed_flat_file_list(files_in_folder)
 
 # TODO check for flat file parsing errors = exit script if there are errors.
 if len(all_results) > 0:
@@ -304,37 +366,8 @@ if len(all_results) > 0:
 
 
 
-
-
-
-
-
-
-
-# Now that Phamerator data has been retrieved and
-# Phamerator genome objects created, match them to ticket data
-# TODO can probably change this to match_genomes_to_tickets2 function,
-# once I generalize it more.
-list_of_match_evals = tickets.match_genomes_to_tickets(list_of_matched_objects,
-                                                    all_phamerator_data,
-                                                    "phamerator")
-
-
-
-
-
-
-
-
-
 # Match tickets to flat file data
 
-
-# First, determine what the strategy is to match tickets to flat files.
-# Flat files can be matched to tickets by either the file name
-# (if it serves as the phage id) or the parsed phage name from
-# the organism field. This is determined by the run mode.
-strategy, strategy_eval = assign_match_strategy(list_of_matched_objects)
 
 
 
@@ -350,6 +383,22 @@ strategy, strategy_eval = assign_match_strategy(list_of_matched_objects)
 # just like for Phamerator data.
 flat_file_dict = flat_files.create_file_dictionary(all_flat_file_data, strategy)
 
+
+
+
+
+
+# Match flat file genomes.
+# TODO review match_genome function and parameters.
+index6 = 0
+while index6 < len(list_of_matched_objects):
+    matched_obj = list_of_matched_objects[index6]
+    misc.match_genome(matched_obj,
+                    flat_file_dict,
+                    "flat_file")
+
+
+
 # This is currently implemented within the tickets.match_genomes_to_tickets2
 # function.
 list_of_matched_objects, list_of_evals = \
@@ -361,13 +410,15 @@ list_of_matched_objects, list_of_evals = \
 
 
 
+# TODO don't think this is needed anymore, since 'update' and 'remove'
+# tickets aren't valid types for this script.
 # TODO Now that all data has been matched, split matched objects by ticket type.
 # Different types of tickets are evaluated differently.
-matched_object_dict = create_matched_object_dict(list_of_matched_objects)
-
-list_of_update_objects = matched_object_dict["update"]
-list_of_remove_objects = matched_object_dict["remove"]
-list_of_add_replace_objects = matched_object_dict["add_replace"]
+# matched_object_dict = create_matched_object_dict(list_of_matched_objects)
+#
+# list_of_update_objects = matched_object_dict["update"]
+# list_of_remove_objects = matched_object_dict["remove"]
+# list_of_add_replace_objects = matched_object_dict["add_replace"]
 
 
 
@@ -382,54 +433,36 @@ list_of_add_replace_objects = matched_object_dict["add_replace"]
 # TODO now that the flat file to be imported is parsed and matched to a ticket,
 # use the ticket to populate specific genome-level fields such as
 # host, cluster, subcluster, etc.
-index = 0
-while index < len(list_of_add_replace_objects):
+index7 = 0
+while index7 < len(list_of_add_replace_objects):
 
-    matched_object = list_of_add_replace_objects[index]
-    tickets.set_ticket_data(matched_object.genome["import"], matched_object.ticket)
-
-    # Also, pair the genomes that will be directly compared.
+    matched_object = list_of_add_replace_objects[index7]
     genome_pair = GenomePair.GenomePair()
     genome_pair.genome1 = matched_object.genome["import"]
     genome_pair.genome2 = matched_object.genome["phamerator"]
     matched_object.genome_pairs_dict["import_phamerator"] = genome_pair
-    index += 1
+
+    misc.copy_data() # TODO incorrect function name. need to update this.
+
+    index7 += 1
 
 
 
-
-# TODO implement better.
-# For update tickets, populate a Genome object with the fields that
-# need to be updated.
-
-index = 0
-while index < len(list_of_update_objects):
-
-    matched_object = list_of_update_objects[index]
-    update_genome = Genome.Genome()
-
-    # TODO the set_ticket_data might not populate all fields needed for
-    # update tickets.
-    tickets.set_ticket_data(matched_object.genome["update"], matched_object.ticket)
-
-    # Also, pair the genomes that will be directly compared.
-    genome_pair = GenomePair.GenomePair()
-    genome_pair.genome1 = matched_object.genome["update"]
-    genome_pair.genome2 = matched_object.genome["phamerator"]
-    matched_object.genome_pairs_dict["update_phamerator"] = genome_pair
-
-    index += 1
 
 
 
 
 # Perform all evaluations based on the ticket type.
 
-if len(list_of_update_objects) > 0:
-    evaluate.check_update_tickets(list_of_update_objects)
 
-if len(list_of_remove_objects) > 0:
-    evaluate.check_remove_tickets(list_of_remove_objects)
+
+# # TODO probably can be deleted.
+# if len(list_of_update_objects) > 0:
+#     evaluate.check_update_tickets(list_of_update_objects)
+#
+# # TODO probably can be deleted.
+# if len(list_of_remove_objects) > 0:
+#     evaluate.check_remove_tickets(list_of_remove_objects)
 
 
 
@@ -522,9 +555,7 @@ for matched_data_obj in matched_data_list:
 
     #TODO error handling
     else:
-        write_out(output_file,"\nError: during parsing of actions.")
-        table_errors += 1
-
+        pass 
 
 
 
