@@ -1075,12 +1075,14 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_retrieve_1(self):
         """Verify that the retrieve setting is set to True."""
+        self.genome._retrieve = False
         self.genome.cluster = "retrieve"
         self.genome.set_retrieve()
         self.assertTrue(self.genome._retrieve)
 
     def test_set_retrieve_2(self):
         """Verify that the retrieve setting is set to False."""
+        self.genome._retrieve = True
         self.genome.cluster = "A"
         self.genome.set_retrieve()
         self.assertFalse(self.genome._retrieve)
@@ -1090,20 +1092,17 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_retain_1(self):
         """Verify that the retain setting is set to True."""
+        self.genome._retrieve = False
         self.genome.cluster = "retain"
         self.genome.set_retain()
         self.assertTrue(self.genome._retain)
 
     def test_set_retain_2(self):
         """Verify that the retain setting is set to False."""
+        self.genome._retrieve = True
         self.genome.cluster = "A"
         self.genome.set_retain()
         self.assertFalse(self.genome._retain)
-
-
-
-
-
 
 
 

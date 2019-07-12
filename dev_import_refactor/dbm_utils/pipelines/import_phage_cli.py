@@ -226,12 +226,8 @@ while index4 < len(list_of_matched_objects):
 
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
-    phagesdb.retrieve_genome_data1(list_of_matched_objects[index4])
-
-    # If fields in the Ticket genome are set to 'retrieve', and
-    # if a PhagesDB genome is present, data is copied from PhagesDB genome
-    # to Ticket genome for all 'retrieve' fields.
-    phagesdb.copy_retrieved_data(list_of_matched_objects[index4])
+    matched_object = list_of_matched_objects[index4]
+    phagesdb.copy_data_from_phagesdb(matched_object, "add")
     index4 += 1
 
 
@@ -555,7 +551,7 @@ for matched_data_obj in matched_data_list:
 
     #TODO error handling
     else:
-        pass 
+        pass
 
 
 

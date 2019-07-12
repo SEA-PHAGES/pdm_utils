@@ -120,7 +120,9 @@ def compare_tickets(list_of_tickets):
 
 def copy_ticket_to_genome(matched_object):
     """Construct genome objects and populate them appropriately using data
-    from import ticket."""
+    from import ticket. This function operates on a DataGroup object
+    instead of a Genome object because some tickets (such as 'replace')
+    need to instantiate more than one Genome object."""
 
     ticket = matched_object.ticket
 

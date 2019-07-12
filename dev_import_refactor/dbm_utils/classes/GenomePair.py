@@ -110,8 +110,6 @@ class GenomePair:
                 second.subcluster = first.subcluster
             if (second.cluster_subcluster == keyword or keyword is None):
                 second.cluster_subcluster = first.cluster_subcluster
-            if (second.ncbi_update_flag == keyword or keyword is None):
-                second.ncbi_update_flag = first.ncbi_update_flag
             if (second.date_last_modified == keyword or keyword is None):
                 second.date_last_modified = first.date_last_modified
             if (second.annotation_author == keyword or keyword is None):

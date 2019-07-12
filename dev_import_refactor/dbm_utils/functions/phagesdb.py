@@ -267,12 +267,6 @@ def parse_fasta_file2(fasta_file):
 
 
 
-
-
-
-
-
-
 def parse_phagesdb_data(genome_obj,data_dict):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
     Genome object.
@@ -362,125 +356,55 @@ def retrieve_phagesdb_data(phage_url):
     return (data_dict, eval)
 
 
-
-
 def construct_phage_url(phage_name):
     """Create URL to retrieve phage-specific data from PhagesDB."""
     phage_url = constants.API_PREFIX + phage_name + constants.API_SUFFIX
     return phage_url
 
 
-
-
-#
-# # TODO this will probably be obselete.
-# def retrieve_genome_data2(genome1):
-#     """If the genome object has attributes that are set to be auto-completed,
-#     retrieve the data from PhagesDB to complete the genome."""
-#
-#     eval_list1 = []
-#     genome1.set_retrieve()
-#     if genome1._retrieve:
-#
-#         genome2 = Genome.Genome()
-#         phage_url = construct_phage_url(genome1.phage_id)
-#         data_dict, eval_object1 = retrieve_phagesdb_data(phage_url)
-#
-#         if eval_object1 is not None:
-#             eval_list1 += [eval_object1]
-#
-#         eval_list2 = parse_phagesdb_data(genome2, data_dict)
-#
-#         eval_list1 += eval_list2
-#
-#
-#         # Copy all retrieved data.
-#         genome_pair = GenomePair.GenomePair()
-#         genome_pair.genome1 = genome1
-#         genome_pair.genome2 = genome2
-#         genome_pair.copy_data("type", genome2.type, genome1.type, "retrieve")
-#
-#
-#     return eval_list1
-
-
-
-
-
-
-
-
-
-# TODO this may replace the retrieve_genome_data2.
-# TOD this dovetails with misc.match_genome(), so see if it can
-# utilize that.
-# TODO unit test.
-
-def retrieve_genome_data1(matched_data_obj):
+def copy_data_from_phagesdb(matched_data_obj, type):
     """If a genome object stored in the DataGroup object has
-    attributes that are set to be auto-completed,
-    retrieve the data from PhagesDB to complete the genome."""
+    attributes that are set to be 'retrieved' and auto-filled,
+    retrieve the data from PhagesDB to complete the genome.
+    The 'type' parameter indicates the type of genome that may need
+    to be populated from PhagesDB."""
 
-    eval_list1 = []
+    if type in matched_data_obj.genome_dict.keys():
 
-    retrieve = False
-    for key in matched_data_obj.genomes_dict.keys():
-
-        genome1 = matched_data_obj.genomes_dict[key]
+        genome1 = matched_data_obj.genome_dict[type]
         genome1.set_retrieve()
-        if genome1._retrieve:
-            retrieve = True
 
-    if retrieve:
-
-        genome2 = Genome.Genome()
-        phage_url = construct_phage_url(genome1.phage_id)
-        data_dict, eval_object1 = retrieve_phagesdb_data(phage_url)
-
-        if eval_object1 is not None:
-            eval_list1 += [eval_object1]
-
-        eval_list2 = parse_phagesdb_data(genome2, data_dict)
-        matched_data_obj.genomes_dict[genome2.type] = genome2
-
-        eval_list1 += eval_list2
-
-    return eval_list1
-
-
-
-
-# TODO this may replace the retrieve_genome_data2.
-# TODO unit test.
-def copy_retrieved_data(matched_data_obj, key1, key2):
-    """."""
-
-    genome1 = None
-    genome2 = None
-    for key3 in matched_data_obj.genomes_dict.keys():
-
-        if key3 == key1:
-            genome1 = matched_data_obj.genomes_dict[key1]
-            genome1.set_retrieve()
-        elif key3 == key2:
-            genome2 = matched_data_obj.genomes_dict[key2]
-        else:
-            pass
-
-    if (genome1 is not None and genome2 is not None):
-
-        genome1.set_retrieve()
         if genome1._retrieve:
 
-            # Copy all retrieved data.
-            genome_pair = GenomePair.GenomePair()
-            genome_pair.genome1 = genome1
-            genome_pair.genome2 = genome2
-            genome_pair.copy_data("type", genome2.type, genome1.type, "retrieve")
-            pair_id = genome1.type + "_" + genome2.type
-            matched_data_obj.genome_pairs_dict[pair_id] = genome_pair
+            phage_url = construct_phage_url(genome1.phage_id)
+            data_dict, evals = retrieve_phagesdb_data(phage_url)
 
-    return eval_list1
+            # If there was an error with retrieving data from PhagesDB,
+            # an empty dictionary is returned.
+            if len(data_dict.keys()) != 0:
+
+                genome2 = Genome.Genome()
+                parse_phagesdb_data(genome2, data_dict)
+                matched_data_obj.genome_dict[genome2.type] = genome2
+
+
+                # Copy all retrieved data and add to DataGroup object.
+                genome_pair = GenomePair.GenomePair()
+                genome_pair.genome1 = genome1
+                genome_pair.genome2 = genome2
+                genome_pair.copy_data("type", genome2.type, genome1.type, "retrieve")
+                matched_data_obj.set_genome_pair(genome_pair, genome1.type, genome2.type)
+
+
+        # Now record an error if there are still fields
+        # that need to be retrieved.
+        genome1.set_retrieve()
+        genome1.check_fields_retrieved()
+
+
+
+
+
 
 
 

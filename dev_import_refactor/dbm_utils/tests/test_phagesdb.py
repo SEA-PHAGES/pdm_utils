@@ -1,6 +1,6 @@
 """ Unit tests for misc. functions that interact with PhagesDB."""
 
-# from classes import DataGroup
+from classes import DataGroup
 # from classes import Genome
 # from classes import Ticket
 # from classes import Eval
@@ -775,8 +775,101 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.API_PREFIX = constants.API_PREFIX
         self.API_SUFFIX = constants.API_SUFFIX
 
-        self.genome = Genome.Genome()
-        self.genome.phage_id = "L5"
+
+        self.genome1 = Genome.Genome()
+        self.genome1.phage_id = "L5"
+        self.genome1.type = "add"
+        self.genome1.host = "Gordonia"
+        self.genome1.cluster = "B"
+        self.genome1._retrieve = True
+
+        self.matched_data_obj1 = DataGroup.DataGroup()
+
+
+
+
+    def test_copy_data_from_phagesdb_1(self):
+        """Check that an "add" genome with no fields set to 'retrieve' is
+        not impacted."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
+        genome1 = self.matched_data_obj1.genome_dict["add"]
+        with self.subTest():
+            self.assertFalse(genome1._retrieve)
+        with self.subTest():
+            self.assertEqual(genome1.host, "Gordonia")
+        with self.subTest():
+            self.assertEqual(genome1.cluster, "B")
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "correct")
+
+    def test_copy_data_from_phagesdb_2(self):
+        """Check that an "add" genome with host field set to 'retrieve' is
+        populated correctly."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retrieve"
+        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
+        genome1 = self.matched_data_obj1.genome_dict["add"]
+        with self.subTest():
+            self.assertFalse(genome1._retrieve)
+        with self.subTest():
+            self.assertEqual(genome1.host, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(genome1.cluster, "B")
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "correct")
+
+    def test_copy_data_from_phagesdb_3(self):
+        """Check that an "invalid" genome with host field set to 'retrieve' is
+        not populated correctly."""
+
+        self.genome1.type = "invalid"
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retrieve"
+        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
+        with self.subTest():
+            self.assertEqual(
+                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(self.genome1.host, "retrieve")
+        with self.subTest():
+            self.assertEqual(len(self.genome1.evaluations), 0)
+
+    def test_copy_data_from_phagesdb_4(self):
+        """Check that an "add" genome with host field set to 'retrieve' is
+        not populated correctly when "invalid" type is requrested."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retrieve"
+        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "invalid")
+        with self.subTest():
+            self.assertEqual(
+                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(self.genome1.host, "retrieve")
+        with self.subTest():
+            self.assertEqual(len(self.genome1.evaluations), 0)
+
+    def test_copy_data_from_phagesdb_5(self):
+        """Check that an "add" genome with host field set to 'retrieve' is
+        not populated correctly when phage_id is not valid."""
+
+        self.genome1.phage_id = "invalid"
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retrieve"
+        self.genome1._retrieve = False
+        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
+        with self.subTest():
+            self.assertTrue(self.genome1._retrieve)
+        with self.subTest():
+            self.assertEqual(
+                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(self.genome1.host, "retrieve")
+        with self.subTest():
+            self.assertEqual(self.genome1.evaluations[0].status, "error")
 
 
 
@@ -784,137 +877,12 @@ class TestPhagesDBFunctions2(unittest.TestCase):
 
 
 
-    # TODO below unit tests may be unneeded, once new retrieve_genome_data
-    # functions have been implemented and tested.
-    # def test_retrieve_genome_data2_1(self):
-    #     """Verify host field is retrieved correctly."""
-    #     self.genome.host = "retrieve"
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_value = "Mycobacterium"
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.host, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    # def test_retrieve_genome_data2_2(self):
-    #     """Verify cluster field is retrieved correctly."""
-    #     self.genome.cluster = "retrieve"
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_value = "A"
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.cluster, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    # def test_retrieve_genome_data2_3(self):
-    #     """Verify subcluster field is retrieved correctly."""
-    #     self.genome.subcluster = "retrieve"
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_value = "A2"
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.subcluster, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    # def test_retrieve_genome_data2_4(self):
-    #     """Verify accession field is retrieved correctly."""
-    #     self.genome.accession = "retrieve"
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_value = "Z18946"
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.accession, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    # def test_retrieve_genome_data2_5(self):
-    #     """Verify no fields are retrieved."""
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_value = ""
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.host, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.cluster, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.subcluster, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.accession, expected_value)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    # def test_retrieve_genome_data2_6(self):
-    #     """Verify all fields are retrieved."""
-    #     self.genome.host = "retrieve"
-    #     self.genome.cluster = "retrieve"
-    #     self.genome.subcluster = "retrieve"
-    #     self.genome.accession = "retrieve"
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_host = "Mycobacterium"
-    #     expected_cluster = "A"
-    #     expected_subcluster = "A2"
-    #     expected_accession = "Z18946"
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.host, expected_host)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.cluster, expected_cluster)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.subcluster, expected_subcluster)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.accession, expected_accession)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    # def test_retrieve_genome_data2_7(self):
-    #     """Verify no fields are retrieved and an error is produced."""
-    #     self.genome.phage_id = "L5_x"
-    #     self.genome.host = "retrieve"
-    #     self.genome._retrieve = True
-    #     self.genome.type = "ticket"
-    #     eval_list = phagesdb.retrieve_genome_data2(self.genome)
-    #     expected_host = "none"
-    #     errors = 0
-    #     for eval in eval_list:
-    #         if eval.status != "correct":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(self.genome.host, expected_host)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 7)
+
+
+
+
+
+
 
 
 

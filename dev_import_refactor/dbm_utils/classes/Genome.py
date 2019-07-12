@@ -484,11 +484,15 @@ class Genome:
     def set_retrieve(self):
         if "retrieve" in vars(self).values():
             self._retrieve = True
+        else:
+            self._retrieve = False
 
 
     def set_retain(self):
         if "retain" in vars(self).values():
             self._retain = True
+        else:
+            self._retain = False
 
 
 
@@ -1082,7 +1086,9 @@ class Genome:
 
 
     def check_fields_retrieved(self, expect = False):
-        """Check if there are any fields that are set to be retrieved."""
+        """Check if there are any fields that are set to be retrieved.
+        The 'expect' parameter indicates whether those attributes are
+        expected to be set to 'retrieve' or not."""
 
         if self._retrieve:
             if expect:
