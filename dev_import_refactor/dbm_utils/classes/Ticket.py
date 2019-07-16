@@ -398,9 +398,7 @@ class GenomeTicket:
 
 
 
-
-
-
+    
 
 
 

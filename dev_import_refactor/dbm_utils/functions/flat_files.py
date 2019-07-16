@@ -9,7 +9,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Seq import Seq
-from classes import Genome, Eval, Cds, Trna, Source
+from classes import Genome, Cds, Trna, Source
 from functions import basic
 from constants import constants
 from datetime import datetime
@@ -406,85 +406,79 @@ def parse_flat_file_data(genome_obj, \
 
 
 
-# TODO refactor to simply return true?
+#TODO unit test.
 def check_flat_file_type(filepath):
     """Verify that the file contains a file extension common to
     GenBank-formatted flat files."""
+    valid = False
     filename = filepath.split("/")[-1]
-
-    if filename.split('.')[-1] not in constants.ADMISSIBLE_FILE_TYPES:
-        result = "File does not have a valid file extension, " + \
-            "so it will not be processed."
-        status = "error"
-    else:
-        result = "Flat file extension is valid."
-        status = "correct"
-
-    # TODO add eval id?
-    definition = "Check flat file type."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-
-    return eval
+    if filename.split('.')[-1] in constants.ADMISSIBLE_FILE_TYPES:
+        valid = True
+    return valid
 
 
 
 
-def parse_flat_file(filepath):
-    """Determine whether the file contains a single GenBank-formatted record
-    that can be parsed by Biopython SeqIO.
-    Files may contain 0, 1, or >1 parseable records.
-    When SeqIO parses files, if there are 0 Genbank-formatted records,
-    it does not throw an error, but simply moves on.
-    Only when there is one record in the file is the parsed data returned.
-    It is not clear how often there multiple records are present in
-    non-SEA-PHAGES GenBank records, but it is a good idea to verify
-    there is only one record per file before proceeding."""
 
-
-    records = []
-    record = None
-
-    # If Biopython is unable to parse the file, an error is encountered.
-    try:
-        records = list(SeqIO.parse(filepath, "genbank"))
-    except:
-        records = None
-
-    if records is None:
-
-        result = "Biopython is unable to parse this file, " + \
-            "so it will not be processed."
-        status = "error"
-
-    elif len(records) == 0:
-
-        result = "Biopython did not find any GenBank-formatted records, " + \
-            "so it will not be processed."
-        status = "error"
-
-    elif len(records) > 1:
-
-        result = "Biopython found multiple records, " + \
-            "so it will not be processed."
-        status = "error"
-
-    else:
-        result = "Record was successfully parsed."
-        status = "correct"
-        record = records[0]
-
-
-    # TODO add an eval id?
-    definition = "Parse the flat file record."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-
-    return (record, eval)
+# # TODO now that evals are not generated within functions, this
+# # function is probably not needed.
+# def parse_flat_file(filepath):
+#     """Determine whether the file contains a single GenBank-formatted record
+#     that can be parsed by Biopython SeqIO.
+#     Files may contain 0, 1, or >1 parseable records.
+#     When SeqIO parses files, if there are 0 Genbank-formatted records,
+#     it does not throw an error, but simply moves on.
+#     Only when there is one record in the file is the parsed data returned.
+#     It is not clear how often there multiple records are present in
+#     non-SEA-PHAGES GenBank records, but it is a good idea to verify
+#     there is only one record per file before proceeding."""
+#
+#
+#     records = []
+#     record = None
+#
+#     # If Biopython is unable to parse the file, an error is encountered.
+#     try:
+#         records = list(SeqIO.parse(filepath, "genbank"))
+#     except:
+#         records = None
+#
+#     if records is None:
+#
+#         # result = "Biopython is unable to parse this file, " + \
+#         #     "so it will not be processed."
+#         # status = "error"
+#         pass
+#
+#     elif len(records) == 0:
+#
+#         # result = "Biopython did not find any GenBank-formatted records, " + \
+#         #     "so it will not be processed."
+#         # status = "error"
+#         pass
+#
+#     elif len(records) > 1:
+#
+#         # result = "Biopython found multiple records, " + \
+#         #     "so it will not be processed."
+#         # status = "error"
+#         pass
+#
+#     else:
+#         # result = "Record was successfully parsed."
+#         # status = "correct"
+#         # record = records[0]
+#         pass
+#
+#
+#     # TODO add an eval id?
+#     # definition = "Parse the flat file record."
+#     # eval = Eval.Eval(id = "", \
+#     #                 definition = definition, \
+#     #                 result = result, \
+#     #                 status = status)
+#
+#     return records
 
 
 def create_parsed_flat_file_list(all_files,
@@ -495,31 +489,28 @@ def create_parsed_flat_file_list(all_files,
     failed_files = []
     valid_files = []
     genomes = []
-    all_results = []
 
     for filename in all_files:
 
-        file_results = []
-        genome_obj = Genome.Genome()
-        result1 = check_flat_file_type(filename)
-        record, result2 = parse_flat_file(filename)
+        if check_flat_file_type(filename):
 
-        if result1.status != "correct":
-            file_results.append(result1)
+            try:
+                records = list(SeqIO.parse(filename, "genbank"))
+            except:
+                records = []
 
-        if result2.status != "correct":
-            file_results.append(result2)
-
-        if len(file_results) == 0:
-            parse_flat_file_data(genome_obj, record, filename, phage_id_field)
-            valid_files.append(filename)
-            genomes.append(genome_obj)
-
+            if len(records) == 1:
+                genome_obj = Genome.Genome()
+                parse_flat_file_data(
+                    genome_obj, records[0], filename, phage_id_field)
+                valid_files.append(filename)
+                genomes.append(genome_obj)
+            else:
+                failed_files.append(filename)
         else:
             failed_files.append(filename)
-            all_results += file_results
 
-    return (genomes, all_results, valid_files, failed_files)
+    return (genomes, valid_files, failed_files)
 
 
 

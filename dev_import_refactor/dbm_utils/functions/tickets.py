@@ -3,7 +3,6 @@
 from constants import constants
 from functions import basic
 from functions import phagesdb
-from classes import Eval
 from classes import Ticket
 from classes import Genome
 
@@ -212,35 +211,6 @@ def create_matched_object_dict(list_of_group_objects):
 
 
 
-# TODO this function may no longer be needed. Genome object methods
-# can assign the PhageID from either the filename or a flat file record
-# field. As a result, all genomes can be matched to tickets using the
-# Genome object phage_id.
-def assign_match_strategy(list_of_group_objects):
-
-    strategy = ""
-    strategies = set()
-
-    for group_obj in list_of_group_objects:
-        strategies.add(group_obj.ticket.match_strategy)
-
-
-    if len(strategies) > 1:
-        result = "Unable to match genomes in files to tickets, " + \
-                    "since more than one match strategy is indicated."
-        status = "error"
-
-
-    else:
-        strategy = list(strategies)[0]
-        result = "Able to match genomes in files to tickets."
-        status = "correct"
-
-    definition = "Assign matching strategy."
-    eval = Eval.Eval("TICKET", definition, result, status)
-
-    return strategy, eval
-
 
 
 
@@ -283,6 +253,38 @@ def prepare_tickets(ticket_filename):
 
 
 
+
+
+
+
+# TODO this function may no longer be needed. Genome object methods
+# can assign the PhageID from either the filename or a flat file record
+# field. As a result, all genomes can be matched to tickets using the
+# Genome object phage_id.
+# def assign_match_strategy(list_of_group_objects):
+#
+#     strategy = ""
+#     strategies = set()
+#
+#     for group_obj in list_of_group_objects:
+#         strategies.add(group_obj.ticket.match_strategy)
+#
+#
+#     if len(strategies) > 1:
+#         result = "Unable to match genomes in files to tickets, " + \
+#                     "since more than one match strategy is indicated."
+#         status = "error"
+#
+#
+#     else:
+#         strategy = list(strategies)[0]
+#         result = "Able to match genomes in files to tickets."
+#         status = "correct"
+#
+#     definition = "Assign matching strategy."
+#     eval = Eval.Eval("TICKET", definition, result, status)
+#
+#     return strategy, eval
 
 
 

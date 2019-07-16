@@ -3300,14 +3300,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_check_flat_file_type_1(self):
         """Verify valid file does not produce an error."""
         filepath = "/path/to/file/l5.gb"
-        eval_object = flat_files.check_flat_file_type(filepath)
-        self.assertEqual(eval_object.status, "correct")
+        result = flat_files.check_flat_file_type(filepath)
+        self.assertTrue(result)
 
     def test_check_flat_file_type_2(self):
         """Verify invalid file produces an error."""
         filepath = "/path/to/file/l5.exe"
-        eval_object = flat_files.check_flat_file_type(filepath)
-        self.assertEqual(eval_object.status, "error")
+        result = flat_files.check_flat_file_type(filepath)
+        self.assertFalse(result)
 
 
 
@@ -3321,120 +3321,132 @@ class TestFlatFileFunctions2(unittest.TestCase):
         pass
 
 
-    def test_parse_flat_file_1(self):
-        """Verify file with one record is parsed."""
 
-        test_filepath = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_flat_file_1.gb")
+    # TODO I may not need these unit tests.
+    #
+    # def test_parse_flat_file_1(self):
+    #     """Verify file with one record is parsed."""
+    #
+    #     test_filepath = \
+    #         os.path.join(os.path.dirname(__file__), \
+    #         "test_files/test_flat_file_1.gb")
+    #
+    #     records = flat_files.parse_flat_file(test_filepath)
+    #
+    #     with self.subTest():
+    #         self.assertIsNotNone(records)
+    #     with self.subTest():
+    #         self.assertEqual(len(records), 1)
+    #     with self.subTest():
+    #         self.assertEqual(eval_object.status, "correct")
+    #
+    #
+    # def test_parse_flat_file_2(self):
+    #     """Verify file with incorrect path is not parsed."""
+    #
+    #     test_filepath = \
+    #         os.path.join(os.path.dirname(__file__), \
+    #         "test_files/test_x.gb")
+    #
+    #     record, eval_object = flat_files.parse_flat_file(test_filepath)
+    #     eval_message = eval_object.result[:28]
+    #     exp_message = "Biopython is unable to parse"
+    #
+    #     with self.subTest():
+    #         self.assertIsNone(record)
+    #     with self.subTest():
+    #         self.assertEqual(eval_object.status, "error")
+    #     with self.subTest():
+    #         self.assertEqual(eval_message, exp_message)
+    #
+    #
+    # def test_parse_flat_file_3(self):
+    #     """Verify empty file with no records is not parsed."""
+    #
+    #     test_filepath = \
+    #         os.path.join(os.path.dirname(__file__), \
+    #         "test_files/test_flat_file_2.gb")
+    #
+    #     record, eval_object = flat_files.parse_flat_file(test_filepath)
+    #     eval_message = eval_object.result[:22]
+    #     exp_message = "Biopython did not find"
+    #
+    #     with self.subTest():
+    #         self.assertIsNone(record)
+    #     with self.subTest():
+    #         self.assertEqual(eval_object.status, "error")
+    #     with self.subTest():
+    #         self.assertEqual(eval_message, exp_message)
+    #
+    #
+    # def test_parse_flat_file_4(self):
+    #     """Verify fasta file with no GenBank-formatted flat file
+    #     records is not parsed."""
+    #
+    #     test_filepath = \
+    #         os.path.join(os.path.dirname(__file__), \
+    #         "test_files/test_flat_file_3.gb")
+    #
+    #     record, eval_object = flat_files.parse_flat_file(test_filepath)
+    #     eval_message = eval_object.result[:22]
+    #     exp_message = "Biopython did not find"
+    #
+    #     with self.subTest():
+    #         self.assertIsNone(record)
+    #     with self.subTest():
+    #         self.assertEqual(eval_object.status, "error")
+    #     with self.subTest():
+    #         self.assertEqual(eval_message, exp_message)
+    #
+    #
+    # def test_parse_flat_file_5(self):
+    #     """Verify file with empty GenBank-formatted flat file
+    #     record is not parsed."""
+    #
+    #     test_filepath = \
+    #         os.path.join(os.path.dirname(__file__), \
+    #         "test_files/test_flat_file_4.gb")
+    #
+    #     record, eval_object = flat_files.parse_flat_file(test_filepath)
+    #     eval_message = eval_object.result[:28]
+    #     exp_message = "Biopython is unable to parse"
+    #
+    #     with self.subTest():
+    #         self.assertIsNone(record)
+    #     with self.subTest():
+    #         self.assertEqual(eval_object.status, "error")
+    #     with self.subTest():
+    #         self.assertEqual(eval_message, exp_message)
+    #
+    #
+    # def test_parse_flat_file_6(self):
+    #     """Verify file with two GenBank-formatted flat file
+    #     records is not parsed."""
+    #
+    #     test_filepath = \
+    #         os.path.join(os.path.dirname(__file__), \
+    #         "test_files/test_flat_file_5.gb")
+    #
+    #     record, eval_object = flat_files.parse_flat_file(test_filepath)
+    #     eval_message = eval_object.result[:24]
+    #     exp_message = "Biopython found multiple"
+    #
+    #     with self.subTest():
+    #         self.assertIsNone(record)
+    #     with self.subTest():
+    #         self.assertEqual(eval_object.status, "error")
+    #     with self.subTest():
+    #         self.assertEqual(eval_message, exp_message)
 
-        record, eval_object = flat_files.parse_flat_file(test_filepath)
-
-        with self.subTest():
-            self.assertIsNotNone(record)
-        with self.subTest():
-            self.assertEqual(eval_object.status, "correct")
 
 
-    def test_parse_flat_file_2(self):
-        """Verify file with incorrect path is not parsed."""
-
-        test_filepath = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_x.gb")
-
-        record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.result[:28]
-        exp_message = "Biopython is unable to parse"
-
-        with self.subTest():
-            self.assertIsNone(record)
-        with self.subTest():
-            self.assertEqual(eval_object.status, "error")
-        with self.subTest():
-            self.assertEqual(eval_message, exp_message)
 
 
-    def test_parse_flat_file_3(self):
-        """Verify empty file with no records is not parsed."""
-
-        test_filepath = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_flat_file_2.gb")
-
-        record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.result[:22]
-        exp_message = "Biopython did not find"
-
-        with self.subTest():
-            self.assertIsNone(record)
-        with self.subTest():
-            self.assertEqual(eval_object.status, "error")
-        with self.subTest():
-            self.assertEqual(eval_message, exp_message)
 
 
-    def test_parse_flat_file_4(self):
-        """Verify fasta file with no GenBank-formatted flat file
-        records is not parsed."""
-
-        test_filepath = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_flat_file_3.gb")
-
-        record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.result[:22]
-        exp_message = "Biopython did not find"
-
-        with self.subTest():
-            self.assertIsNone(record)
-        with self.subTest():
-            self.assertEqual(eval_object.status, "error")
-        with self.subTest():
-            self.assertEqual(eval_message, exp_message)
 
 
-    def test_parse_flat_file_5(self):
-        """Verify file with empty GenBank-formatted flat file
-        record is not parsed."""
 
-        test_filepath = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_flat_file_4.gb")
-
-        record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.result[:28]
-        exp_message = "Biopython is unable to parse"
-
-        with self.subTest():
-            self.assertIsNone(record)
-        with self.subTest():
-            self.assertEqual(eval_object.status, "error")
-        with self.subTest():
-            self.assertEqual(eval_message, exp_message)
-
-
-    def test_parse_flat_file_6(self):
-        """Verify file with two GenBank-formatted flat file
-        records is not parsed."""
-
-        test_filepath = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_flat_file_5.gb")
-
-        record, eval_object = flat_files.parse_flat_file(test_filepath)
-        eval_message = eval_object.result[:24]
-        exp_message = "Biopython found multiple"
-
-        with self.subTest():
-            self.assertIsNone(record)
-        with self.subTest():
-            self.assertEqual(eval_object.status, "error")
-        with self.subTest():
-            self.assertEqual(eval_message, exp_message)
-
-
-    # TODO fix these unittests after the parse_flat_file_data tests are fixed.
 
     def test_create_parsed_flat_file_list_1(self):
         """Verify file with one GenBank-formatted flat file
@@ -3444,13 +3456,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_1.gb")
         files = [test_filepath1]
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 1)
-        with self.subTest():
-            self.assertEqual(len(results), 0)
         with self.subTest():
             self.assertEqual(len(successes), 1)
         with self.subTest():
@@ -3465,13 +3475,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_2.gb")
         files = [test_filepath1]
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 0)
-        with self.subTest():
-            self.assertEqual(len(results), 1)
         with self.subTest():
             self.assertEqual(len(successes), 0)
         with self.subTest():
@@ -3486,13 +3494,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_8.ggb")
         files = [test_filepath1]
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 0)
-        with self.subTest():
-            self.assertEqual(len(results), 1)
         with self.subTest():
             self.assertEqual(len(successes), 0)
         with self.subTest():
@@ -3507,13 +3513,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_9.ggb")
         files = [test_filepath1]
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 0)
-        with self.subTest():
-            self.assertEqual(len(results), 2)
         with self.subTest():
             self.assertEqual(len(successes), 0)
         with self.subTest():
@@ -3531,13 +3535,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_2.gb")
         files = [test_filepath1, test_filepath2]
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 1)
-        with self.subTest():
-            self.assertEqual(len(results), 1)
         with self.subTest():
             self.assertEqual(len(successes), 1)
         with self.subTest():
@@ -3552,13 +3554,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_1.gb")
         files = [test_filepath1, test_filepath1]
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 2)
-        with self.subTest():
-            self.assertEqual(len(results), 0)
         with self.subTest():
             self.assertEqual(len(successes), 2)
         with self.subTest():
@@ -3583,13 +3583,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
         files = [test_filepath1, test_filepath2, test_filepath3]
 
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 2)
-        with self.subTest():
-            self.assertEqual(len(results), 1)
         with self.subTest():
             self.assertEqual(len(successes), 2)
         with self.subTest():
@@ -3620,13 +3618,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
         files = [test_filepath1, test_filepath2, test_filepath3, test_filepath4]
 
-        genomes, results, successes, fails = \
+        genomes, successes, fails = \
             flat_files.create_parsed_flat_file_list(files)
 
         with self.subTest():
             self.assertEqual(len(genomes), 2)
-        with self.subTest():
-            self.assertEqual(len(results), 3)
         with self.subTest():
             self.assertEqual(len(successes), 2)
         with self.subTest():

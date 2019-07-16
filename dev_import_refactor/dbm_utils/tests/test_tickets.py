@@ -427,33 +427,34 @@ class TestTicketFunctions2(unittest.TestCase):
         self.datagroup2.ticket = self.ticket2
 
 
-    def test_assign_match_strategy_1(self):
-        """Verify strategy is assigned with no error produced."""
-        input_strategy = "phage_id"
-        self.datagroup1.ticket.match_strategy = input_strategy
-        self.datagroup2.ticket.match_strategy = input_strategy
-        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
-        output_strategy, eval_result = \
-            tickets.assign_match_strategy(list1)
-        with self.subTest():
-            self.assertEqual(output_strategy, input_strategy)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
-
-    def test_assign_match_strategy_2(self):
-        """Verify no strategy is assigned and an error is produced."""
-        input_strategy1 = "phage_id"
-        input_strategy2 = "filename"
-        self.datagroup1.ticket.match_strategy = input_strategy1
-        self.datagroup2.ticket.match_strategy = input_strategy2
-        list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
-        output_strategy, eval_result = \
-            tickets.assign_match_strategy(list1)
-        expected_strategy = ""
-        with self.subTest():
-            self.assertEqual(output_strategy, expected_strategy)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+    # TODO no longer needed probably.
+    # def test_assign_match_strategy_1(self):
+    #     """Verify strategy is assigned with no error produced."""
+    #     input_strategy = "phage_id"
+    #     self.datagroup1.ticket.match_strategy = input_strategy
+    #     self.datagroup2.ticket.match_strategy = input_strategy
+    #     list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+    #     output_strategy, eval_result = \
+    #         tickets.assign_match_strategy(list1)
+    #     with self.subTest():
+    #         self.assertEqual(output_strategy, input_strategy)
+    #     with self.subTest():
+    #         self.assertEqual(eval_result.status, "correct")
+    #
+    # def test_assign_match_strategy_2(self):
+    #     """Verify no strategy is assigned and an error is produced."""
+    #     input_strategy1 = "phage_id"
+    #     input_strategy2 = "filename"
+    #     self.datagroup1.ticket.match_strategy = input_strategy1
+    #     self.datagroup2.ticket.match_strategy = input_strategy2
+    #     list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+    #     output_strategy, eval_result = \
+    #         tickets.assign_match_strategy(list1)
+    #     expected_strategy = ""
+    #     with self.subTest():
+    #         self.assertEqual(output_strategy, expected_strategy)
+    #     with self.subTest():
+    #         self.assertEqual(eval_result.status, "error")
 
 
 
