@@ -690,7 +690,7 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.subcluster = "A2"
         self.genome.accession = "ABC123"
         self.genome.filename = "Trixie.gb"
-        self.genome.seqrecord = "abcd"
+        self.genome.record = "abcd"
         self.genome.sequence = "ATCG"
 
         self.null_set = set([""])
@@ -805,9 +805,9 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_check_phagesdb_genome_9(self):
         """Verify an error is produced with a PhagesDB genome with
-        no seqrecord."""
+        no record."""
 
-        self.genome.seqrecord = ""
+        self.genome.record = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
         for eval in self.genome.evaluations:

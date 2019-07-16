@@ -1534,36 +1534,36 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_seqrecord_1(self):
-        """Verify that no error is produced when the seqrecord
-        is in the seqrecord_set and is expected to be in the set."""
+    def test_check_record_1(self):
+        """Verify that no error is produced when the record
+        is in the record_set and is expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.seqrecord = "Trixie"
-        self.genome.check_seqrecord(value_set, True)
+        self.genome.record = "Trixie"
+        self.genome.check_record(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_seqrecord_2(self):
-        """Verify that an error is produced when the seqrecord
-        is not in the seqrecord_set and is expected to be in the set."""
+    def test_check_record_2(self):
+        """Verify that an error is produced when the record
+        is not in the record_set and is expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.seqrecord = "L5"
-        self.genome.check_seqrecord(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "errors")
+        self.genome.record = "L5"
+        self.genome.check_record(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_seqrecord_3(self):
-        """Verify that no error is produced when the seqrecord
-        is not in the seqrecord_set and is not expected to be in the set."""
+    def test_check_record_3(self):
+        """Verify that no error is produced when the record
+        is not in the record_set and is not expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.seqrecord = "L5"
-        self.genome.check_seqrecord(value_set, False)
+        self.genome.record = "L5"
+        self.genome.check_record(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_seqrecord_4(self):
-        """Verify that an error is produced when the seqrecord
-        is in the seqrecord_set and is not expected to be in the set."""
+    def test_check_record_4(self):
+        """Verify that an error is produced when the record
+        is in the record_set and is not expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.seqrecord = "Trixie"
-        self.genome.check_seqrecord(value_set, False)
+        self.genome.record = "Trixie"
+        self.genome.check_record(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 ###

@@ -257,7 +257,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 2)
+            self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -314,7 +314,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 2)
+            self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -371,7 +371,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 2)
+            self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -428,7 +428,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 2)
+            self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -485,7 +485,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 2)
+            self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -543,7 +543,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 2)
+            self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
             self.assertEqual(self.genome.sequence[:8], expected_seq_start)
         with self.subTest():
@@ -599,7 +599,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 0)
+            self.assertEqual(len(self.genome.record), 0)
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
@@ -653,7 +653,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 0)
+            self.assertEqual(len(self.genome.record), 0)
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
@@ -707,7 +707,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(len(self.genome.seqrecord), 0)
+            self.assertEqual(len(self.genome.record), 0)
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():

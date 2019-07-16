@@ -138,8 +138,8 @@ class GenomePair:
                 second.filename = first.filename
             if (second.translation_table == keyword or keyword is None):
                 second.translation_table = first.translation_table
-            if (second.seqrecord == keyword or keyword is None):
-                second.seqrecord = first.seqrecord
+            if (second.record == keyword or keyword is None):
+                second.record = first.record
             if (second.search_id == keyword or keyword is None):
                 second.search_id = first.search_id
             if (second.search_name == keyword or keyword is None):

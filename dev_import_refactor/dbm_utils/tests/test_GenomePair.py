@@ -255,7 +255,6 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.cluster = 8
         self.genome1.subcluster = 9
         self.genome1.cluster_subcluster = 10
-        self.genome1.ncbi_update_flag = 11
         self.genome1.date_last_modified = 12
         self.genome1.annotation_author = 13
         self.genome1.annotation_qc = 14
@@ -270,7 +269,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.record_date = 23
         self.genome1.filename = 24
         self.genome1.translation_table = 25
-        self.genome1.seqrecord = 26
+        self.genome1.record = 26
         self.genome1.search_id = 27
         self.genome1.search_name = 28
         self.genome1._length = 29
@@ -327,8 +326,6 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.cluster_subcluster, 10)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.ncbi_update_flag, 11)
-        with self.subTest():
             self.assertEqual(self.genome_pair.genome2.date_last_modified, 12)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.annotation_author, 13)
@@ -357,7 +354,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.translation_table, 25)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.seqrecord, 26)
+            self.assertEqual(self.genome_pair.genome2.record, 26)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.search_id, 27)
         with self.subTest():

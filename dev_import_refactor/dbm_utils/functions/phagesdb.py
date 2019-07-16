@@ -199,7 +199,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
         # Genome sequence and parsed record
         if fasta_file != "":
             fasta_record = parse_fasta_file(fasta_file)
-            genome_obj.seqrecord = fasta_record
+            genome_obj.record = fasta_record
             genome_obj.sequence = fasta_record[1]
 
     genome_obj.type = "phagesdb"

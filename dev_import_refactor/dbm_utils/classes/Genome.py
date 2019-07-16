@@ -63,7 +63,7 @@ class Genome:
         self.translation_table = ""
 
         # TODO necessary to retain this?
-        self.seqrecord = "" # Holds parsed Biopython SeqRecord object.
+        self.record = "" # Holds parsed Biopython SeqRecord object.
 
 
         self.type = "" # Describes how this genome is used
@@ -722,19 +722,19 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_seqrecord(self, seqrecord_set, expect = False):
-        """Check that the seqrecord is valid."""
+    def check_record(self, record_set, expect = False):
+        """Check that the record is valid."""
 
-        value = basic.check_value_expected_in_set(self.seqrecord,
-                seqrecord_set, expect)
+        value = basic.check_value_expected_in_set(self.record,
+                record_set, expect)
         if value:
-            result = "The seqrecord is valid."
+            result = "The record is valid."
             status = "correct"
         else:
-            result = "The seqrecord is not valid."
+            result = "The record is not valid."
             status = "error"
 
-        definition = "Check that the seqrecord is valid."
+        definition = "Check that the record is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
