@@ -1,6 +1,7 @@
 """ Unit tests for evaluate functions."""
 
 
+from classes import Genome
 from constants import constants
 from pipelines import evaluate
 from classes import Ticket
@@ -12,7 +13,6 @@ class TestEvaluateClass(unittest.TestCase):
 
 
     def setUp(self):
-        pass
 
         self.null_set = constants.EMPTY_SET
         self.type_set = constants.TICKET_TYPE_SET
@@ -262,7 +262,8 @@ class TestEvaluateClass(unittest.TestCase):
 
 
     ###Below = pasted from test.Ticket.py, since some Ticket methods
-    ###were moved to evaluate.py
+    ###were moved to evaluate.py. These will now probably need to be implemented
+    # in the 'compare_add_replace_ticket()'' evaluate functions.
     #
     # def test_check_update_ticket_1(self):
     #     phage_id_set = set(["Trixie","L5","RedRock"])
@@ -666,6 +667,168 @@ class TestEvaluateClass(unittest.TestCase):
     #
     ###Above = pasted from test.Ticket.py, since some Ticket methods
     ###were moved to evaluate.py
+
+
+
+
+
+
+
+
+
+
+
+class TestEvaluateClass2(unittest.TestCase):
+
+
+    def setUp(self):
+        self.genome = Genome.Genome()
+        self.genome.phage_id = "Trixie"
+        self.genome.phage_name = "Trixie_Draft"
+        self.genome.host = "Mycobacterium"
+        self.genome.cluster = "A"
+        self.genome.subcluster = "A2"
+        self.genome.accession = "ABC123"
+        self.genome.filename = "Trixie.gb"
+        self.genome.seqrecord = "abcd"
+        self.genome.sequence = "ATCG"
+
+        self.null_set = set([""])
+
+
+
+
+    def test_check_phagesdb_genome_1(self):
+        """Verify no error is produced with a correctly structured
+        PhagesDB genome."""
+
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(self.genome.evaluations), 9)
+        with self.subTest():
+            self.assertEqual(errors, 0)
+
+    def test_check_phagesdb_genome_2(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no phage_id."""
+
+        self.genome.phage_id = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_3(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no phage_name."""
+
+        self.genome.phage_name = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_4(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no host."""
+
+        self.genome.host = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_5(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no cluster."""
+
+        self.genome.cluster = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_6(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no subcluster."""
+
+        self.genome.subcluster = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_7(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no accession."""
+
+        self.genome.accession = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_8(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no filename."""
+
+        self.genome.filename = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_9(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no seqrecord."""
+
+        self.genome.seqrecord = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
+    def test_check_phagesdb_genome_10(self):
+        """Verify an error is produced with a PhagesDB genome with
+        no sequence."""
+
+        self.genome.sequence = ""
+        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+        self.assertEqual(errors, 1)
+
+
 
 
 

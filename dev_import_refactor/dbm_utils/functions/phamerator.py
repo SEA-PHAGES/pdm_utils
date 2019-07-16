@@ -2,6 +2,7 @@
 
 
 from classes import Genome
+from classes import GenomePair
 from functions import basic
 
 
@@ -264,6 +265,46 @@ def create_genome_insert_statements(genome):
         table, field1, value1, "Subcluster2", genome.subcluster))
 
     return statements
+
+
+
+def copy_data_from_phamerator(matched_data_obj, type):
+    """If a genome object stored in the DataGroup object has
+    attributes that are set to be 'retained' from Phamerator,
+    copy any necessary data from the Phamerator genome to the new genome.
+    The 'type' parameter indicates the type of genome that may need
+    to be populated from Phamerator."""
+
+    if type in matched_data_obj.genome_dict.keys():
+
+        genome1 = matched_data_obj.genome_dict[type]
+        genome1.set_retain()
+
+        if genome1._retain:
+
+            if "phamerator" in matched_data_obj.genome_dict.keys():
+
+                genome2 = matched_data_obj.genome_dict["phamerator"]
+
+                # Copy all data that is set to be retained and
+                # add to DataGroup object.
+                genome_pair = GenomePair.GenomePair()
+                genome_pair.genome1 = genome1
+                genome_pair.genome2 = genome2
+                genome_pair.copy_data("type", genome2.type, genome1.type, "retain")
+                matched_data_obj.set_genome_pair(genome_pair, genome1.type, genome2.type)
+
+        # Now record an error if there are still fields
+        # that need to be retained.
+        genome1.set_retain()
+        genome1.check_fields_retained()
+
+
+
+
+
+
+
 
 
 

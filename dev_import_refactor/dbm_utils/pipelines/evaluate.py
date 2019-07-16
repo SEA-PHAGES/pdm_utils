@@ -79,103 +79,19 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
 
 
 
+def check_phagesdb_genome(genome_obj, null_set):
+    """Check a Genome object for specific errors when it has been
+    parsed from PhagesDB data in preparation for completing import tickets."""
 
-# TODO this function needs to be completely revamped. It should
-# be implemented within the Genome object.
-# TODO unit test.
-# def check_ticket_structure(ticket,
-#                             null_set,
-#                             phage_id_set,
-#                             host_set,
-#                             cluster_set,
-#                             status_set,
-#                             author_set,
-#                             description_field_set,
-#                             run_mode_set):
-#     """Evaluate a ticket to confirm it is structured appropriately.
-#     The assumptions for how each field is populated varies depending on
-#     the type of ticket."""
-#
-#     #null_set = set(["none"])
-#
-#     # This is the only evaluation that is not dependent on the ticket type.
-#     ticket.check_type(type_set)
-#
-#     if ticket.type == "update":
-#         ticket.check_primary_phage_id(phage_id_set)
-#         ticket.check_host(host_set)
-#         ticket.check_cluster(cluster_set)
-#         ticket.check_subcluster_structure()
-#         ticket.check_cluster_structure()
-#         ticket.check_cluster_subcluster()
-#         ticket.check_status(status_set)
-#         ticket.check_description_field(null_set)
-#         ticket.check_annotation_author(author_set)
-#         ticket.check_run_mode(null_set)
-#         ticket.check_secondary_phage_id(null_set)
-#
-#         # No need to evaluate the following fields:
-#         # Accession = it will either be an accession or it will be "none"
-#         # Subcluster = it will either be a Subcluster or it will be "none"
-#
-#
-#     elif ticket.type == "add":
-#         # TODO make sure it checks that the primary_phage_id
-#         # is not 'none' as well.
-#         ticket.check_primary_phage_id(phage_id_set, False)
-#         ticket.check_secondary_phage_id(null_set)
-#         ticket.check_host(host_set)
-#         ticket.check_cluster(cluster_set)
-#         ticket.check_subcluster_structure()
-#         ticket.check_cluster_structure()
-#         ticket.check_cluster_subcluster()
-#         ticket.check_status(status_set)
-#         ticket.check_description_field(description_field_set)
-#         ticket.check_annotation_author(author_set)
-#         ticket.check_run_mode(run_mode_set)
-#
-#         # No need to evaluate the following fields:
-#         # Accession = it will either be an accession or it will be "none"
-#         # Subcluster = it will either be a Subcluster or it will be "none"
-#
-#     elif ticket.type == "remove":
-#
-#         # Everything except the secondary phage_id field should be 'none'
-#         ticket.check_primary_phage_id(null_set)
-#         ticket.check_secondary_phage_id(phage_id_set)
-#         ticket.check_host(null_set)
-#         ticket.check_subcluster(null_set)
-#         ticket.check_cluster(null_set)
-#         ticket.check_status(null_set)
-#         ticket.check_description_field(null_set)
-#         ticket.check_accession(null_set)
-#         ticket.check_annotation_author(null_set)
-#         ticket.check_run_mode(null_set)
-#
-#     elif ticket.type == "replace":
-#         ticket.check_secondary_phage_id(phage_id_set)
-#         ticket.check_host(host_set)
-#         ticket.check_cluster(cluster_set)
-#         ticket.check_subcluster_structure()
-#         ticket.check_cluster_structure()
-#         ticket.check_cluster_subcluster()
-#         ticket.check_status(status_set)
-#         ticket.check_description_field(description_field_set)
-#         ticket.check_annotation_author(author_set)
-#         ticket.check_run_mode(run_mode_set)
-#         ticket.check_primary_secondary_phage_ids()
-#
-#
-#         # If the genome to be added is not spelled the same as the genome
-#         # to be removed, the new genome needs to have a unique name.
-#         if self.primary_phage_id != self.secondary_phage_id:
-#             ticket.check_primary_phage_id(phage_id_set, False)
-#
-#         # No need to evaluate the following fields:
-#         # Accession = it will either be an accession or it will be "none"
-#         # Subcluster = it will either be a Subcluster or it will be "none"
-#     else:
-#         pass
+    genome_obj.check_phage_id(null_set, False)
+    genome_obj.check_phage_name(null_set, False)
+    genome_obj.check_host(null_set, False)
+    genome_obj.check_cluster(null_set, False)
+    genome_obj.check_subcluster(null_set, False)
+    genome_obj.check_accession(null_set, False)
+    genome_obj.check_filename(null_set, False)
+    genome_obj.check_seqrecord(null_set, False)
+    genome_obj.check_sequence(null_set, False)
 
 
 
@@ -184,6 +100,30 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO unit test below....
 
 
 # TODO implement.
@@ -223,6 +163,15 @@ def check_add_replace_tickets(list_of_matched_objects, genome_type):
 
 
 
+
+
+
+
+
+
+
+
+# TODO does this need to be separate from the check_add_replace_tickets()?
 # TODO implement.
 # TODO unit test.
 def check_genome(genome_obj):
@@ -317,7 +266,8 @@ def check_source(src_obj):
 
 
 
-
+# TODO implement.
+# TODO unit test.
 def compare_genomes(genome_pair_obj):
     """Compare two genomes to identify discrepancies."""
 
@@ -344,9 +294,31 @@ def compare_genomes(genome_pair_obj):
     #     status6 = "correct"
 
 
-
+# TODO implement.
+# TODO unit test.
 def check_add_tickets(genome_obj):
     """Check several aspects about a genome only if it is being added."""
+
+
+    # TODO make sure it checks that the primary_phage_id
+    # is not 'none' as well.
+    # genome_obj.check_type(type_set)
+    # genome_obj.check_primary_phage_id(phage_id_set, False)
+    # genome_obj.check_secondary_phage_id(null_set)
+    # genome_obj.check_host(host_set)
+    # genome_obj.check_cluster(cluster_set)
+    # genome_obj.check_subcluster_structure()
+    # genome_obj.check_cluster_structure()
+    # genome_obj.check_cluster_subcluster()
+    # genome_obj.check_status(status_set)
+    # genome_obj.check_description_field(description_field_set)
+    # genome_obj.check_annotation_author(author_set)
+    # genome_obj.check_run_mode(run_mode_set)
+
+    # No need to evaluate the following fields:
+    # Accession = it will either be an accession or it will be "none"
+    # Subcluster = it will either be a Subcluster or it will be "none"
+
 
     # TODO determine other assumptions about what is/isn't in the database
     # if this is a new genome.
@@ -365,6 +337,30 @@ def check_replace_tickets(matched_object):
     if len(matched_object.genome_pair_dict.keys()) == 0:
         # TODO throw an error - there should be a matched genome_pair object
         # since this is a check_replace function.
+
+        # ticket.check_type(type_set)
+        # ticket.check_secondary_phage_id(phage_id_set)
+        # ticket.check_host(host_set)
+        # ticket.check_cluster(cluster_set)
+        # ticket.check_subcluster_structure()
+        # ticket.check_cluster_structure()
+        # ticket.check_cluster_subcluster()
+        # ticket.check_status(status_set)
+        # ticket.check_description_field(description_field_set)
+        # ticket.check_annotation_author(author_set)
+        # ticket.check_run_mode(run_mode_set)
+        # ticket.check_primary_secondary_phage_ids()
+        #
+        #
+        # # If the genome to be added is not spelled the same as the genome
+        # # to be removed, the new genome needs to have a unique name.
+        # if self.primary_phage_id != self.secondary_phage_id:
+        #     ticket.check_primary_phage_id(phage_id_set, False)
+        #
+        # # No need to evaluate the following fields:
+        # # Accession = it will either be an accession or it will be "none"
+        # # Subcluster = it will either be a Subcluster or it will be "none"
+
         pass
     else:
         for key in matched_object.genome_pair_dict.keys():

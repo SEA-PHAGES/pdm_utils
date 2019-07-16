@@ -42,6 +42,58 @@ class TestMiscFunctions(unittest.TestCase):
 
 
 
+
+
+    def test_match_genome_by_phage_id_1(self):
+        """Verify that one genome is matched correctly."""
+
+        self.datagroup1.genome_dict[self.genome1.type] = self.genome1
+        genomes_to_match = {self.genome2.phage_id: self.genome2}
+        misc.match_genome_by_phage_id(
+            self.datagroup1, genomes_to_match, "phamerator")
+        matched_genome = self.datagroup1.genome_dict["flat_file"]
+        self.assertEqual(matched_genome.phage_name, "Genome2")
+
+    def test_match_genome_by_phage_id_2(self):
+        """Verify that no genome is matched since there is no
+        reference genome in the DataGroup that matches the key."""
+
+        self.datagroup1.genome_dict[self.genome1.type] = self.genome1
+        genomes_to_match = {self.genome2.phage_id: self.genome2}
+        misc.match_genome_by_phage_id(
+            self.datagroup1, genomes_to_match, "invalid")
+        self.assertEqual(len(self.datagroup1.genome_dict.keys()), 1)
+
+    def test_match_genome_by_phage_id_3(self):
+        """Verify that no genome is matched since there is no
+        genome in the genome dictionary for matching."""
+
+        self.datagroup1.genome_dict[self.genome1.type] = self.genome1
+        genomes_to_match = {}
+        misc.match_genome_by_phage_id(
+            self.datagroup1, genomes_to_match, "phamerator")
+        self.assertEqual(len(self.datagroup1.genome_dict.keys()), 1)
+
+    def test_match_genome_by_phage_id_4(self):
+        """Verify that one genome is matched correctly with the 'key2'
+        parameter explicitly added."""
+
+        self.datagroup1.genome_dict[self.genome1.type] = self.genome1
+        genomes_to_match = {self.genome2.phage_id: self.genome2}
+        misc.match_genome_by_phage_id(
+            self.datagroup1, genomes_to_match, "phamerator", "new_type")
+        matched_genome = self.datagroup1.genome_dict["new_type"]
+        self.assertEqual(matched_genome.phage_name, "Genome2")
+
+
+
+
+
+
+
+
+
+
     def test_match_genomes_1(self):
         """Verify that one genome is matched correctly."""
 

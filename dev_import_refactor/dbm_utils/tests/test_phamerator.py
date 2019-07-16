@@ -6,6 +6,7 @@ from functions import phamerator
 from classes import Genome
 from classes import Cds
 from datetime import datetime
+from classes import DataGroup
 
 
 class TestPhameratorFunctions(unittest.TestCase):
@@ -600,11 +601,110 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
+class TestPhameratorFunctions2(unittest.TestCase):
+
+    def setUp(self):
 
 
+        self.genome1 = Genome.Genome()
+        self.genome1.phage_id = "L5"
+        self.genome1.type = "add"
+        self.genome1.host = "Gordonia"
+        self.genome1.cluster = "B"
+        self.genome1._retain = True
+
+        self.matched_data_obj1 = DataGroup.DataGroup()
 
 
+        self.genome2 = Genome.Genome()
+        self.genome2.phage_id = "L5"
+        self.genome2.type = "phamerator"
+        self.genome2.host = "Mycobacterium"
+        self.genome2.cluster = "A"
 
+    def test_copy_data_from_phamerator_1(self):
+        """Check that an "add" genome with no fields set to 'retain' is
+        not impacted."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
+        genome1 = self.matched_data_obj1.genome_dict["add"]
+        with self.subTest():
+            self.assertFalse(genome1._retain)
+        with self.subTest():
+            self.assertEqual(genome1.host, "Gordonia")
+        with self.subTest():
+            self.assertEqual(genome1.cluster, "B")
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "correct")
+
+    def test_copy_data_from_phamerator_2(self):
+        """Check that an "add" genome with host field set to 'retain' is
+        populated correctly."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retain"
+        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
+        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
+        genome1 = self.matched_data_obj1.genome_dict["add"]
+        with self.subTest():
+            self.assertFalse(genome1._retain)
+        with self.subTest():
+            self.assertEqual(genome1.host, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(genome1.cluster, "B")
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "correct")
+
+    def test_copy_data_from_phamerator_3(self):
+        """Check that an "invalid" genome with host field set to 'retain' is
+        not populated correctly."""
+
+        self.genome1.type = "invalid"
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retain"
+        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
+        with self.subTest():
+            self.assertEqual(
+                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(self.genome1.host, "retain")
+        with self.subTest():
+            self.assertEqual(len(self.genome1.evaluations), 0)
+
+    def test_copy_data_from_phamerator_4(self):
+        """Check that an "add" genome with host field set to 'retain' is
+        not populated correctly when "invalid" type is requested."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retain"
+        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "invalid")
+        with self.subTest():
+            self.assertEqual(
+                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(self.genome1.host, "retain")
+        with self.subTest():
+            self.assertEqual(len(self.genome1.evaluations), 0)
+
+    def test_copy_data_from_phamerator_5(self):
+        """Check that an "add" genome with host field set to 'retain' is
+        not populated correctly when there is no matching "phamerator"
+        genomet type."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.genome1.host = "retain"
+        self.genome1._retain = False
+        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
+        with self.subTest():
+            self.assertTrue(self.genome1._retain)
+        with self.subTest():
+            self.assertEqual(
+                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(self.genome1.host, "retain")
+        with self.subTest():
+            self.assertEqual(self.genome1.evaluations[0].status, "error")
 
 
 

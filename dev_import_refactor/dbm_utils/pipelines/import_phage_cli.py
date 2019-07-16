@@ -299,10 +299,10 @@ index5 = 0
 while index5 < len(list_of_matched_objects):
     matched_obj = list_of_matched_objects[index5]
     if matched_obj.ticket.type == "replace":
-        misc.match_genome(matched_obj,
+        misc.match_genome_by_phage_id(matched_obj,
                         phamerator_genome_dict,
                         "add")
-        phamerator.copy_retrieved_data(matched_obj, "add", # other parameters)
+        phamerator.copy_data_from_phamerator(matched_obj, "add")
 
     index5 += 1
 
@@ -389,18 +389,10 @@ flat_file_dict = flat_files.create_file_dictionary(all_flat_file_data, strategy)
 index6 = 0
 while index6 < len(list_of_matched_objects):
     matched_obj = list_of_matched_objects[index6]
-    misc.match_genome(matched_obj,
+    misc.match_genome_by_phage_id(matched_obj,
                     flat_file_dict,
-                    "flat_file")
+                    "add")
 
-
-
-# This is currently implemented within the tickets.match_genomes_to_tickets2
-# function.
-list_of_matched_objects, list_of_evals = \
-    tickets.match_genomes_to_tickets2(list_of_matched_objects,
-                                        flat_file_dict,
-                                        "import")
 
 
 

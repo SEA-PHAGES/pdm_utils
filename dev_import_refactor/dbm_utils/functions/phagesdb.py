@@ -1,6 +1,7 @@
 """Functions to interact with PhagesDB"""
 
 
+from pipelines import evaluate
 from classes import Genome
 from classes import GenomePair
 from functions import basic
@@ -203,16 +204,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
     genome_obj.type = "phagesdb"
 
-    empty_set = set([""])
-    genome_obj.check_phage_id(empty_set, False)
-    genome_obj.check_phage_name(empty_set, False)
-    genome_obj.check_host(empty_set, False)
-    genome_obj.check_cluster(empty_set, False)
-    genome_obj.check_subcluster(empty_set, False)
-    genome_obj.check_accession(empty_set, False)
-    genome_obj.check_filename(empty_set, False)
-    genome_obj.check_seqrecord(empty_set, False)
-    genome_obj.check_sequence(empty_set, False)
+    evaluate.check_phagesdb_genome(genome_obj, set([""]))
 
 
 
