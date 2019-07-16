@@ -46,7 +46,7 @@ class GenomeTicket:
 
 
         # TODO this attribute may no longer be needed.
-        self.match_strategy = "" # phage_id or filename
+        self.match_strategy = "" # phage_id or record_filename
 
 
 
@@ -398,7 +398,7 @@ class GenomeTicket:
 
 
 
-    
+
 
 
 

@@ -1253,9 +1253,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1382,9 +1382,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "")
         with self.subTest():
@@ -1505,9 +1505,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1629,9 +1629,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1754,9 +1754,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1879,9 +1879,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2002,9 +2002,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2125,9 +2125,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2235,9 +2235,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2355,9 +2355,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2480,9 +2480,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2595,9 +2595,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2715,9 +2715,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2835,9 +2835,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2937,9 +2937,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -3062,9 +3062,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "")
+            self.assertEqual(self.genome.record_filename, "")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "")
+            self.assertEqual(self.genome.search_record_filename, "")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -3186,9 +3186,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         exp_date = basic.convert_empty("","empty_datetime_obj")
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "phage_zzz")
+            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():

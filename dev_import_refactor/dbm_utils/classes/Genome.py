@@ -47,8 +47,20 @@ class Genome:
         self.retrieve_record = "" # 1 (auto update), 0 (do not auto update)
 
 
+        self.translation_table = ""
+        self.type = "" # Describes how this genome is used
+                        # (e.g. import, phamerator, phagesdb, etc.)
+
+
 
         # Common to GenBank-formatted flat file (NCBI) records
+
+        # TODO necessary to retain this?
+        self.record = "" # Holds parsed Biopython SeqRecord object.
+
+
+
+        self.record_filename = "" # The file name from which the record is derived
         self.record_name = ""
         self.record_id = "" # TODO might not need this anymore
         self.record_accession = ""
@@ -59,15 +71,9 @@ class Genome:
         self.record_date = ""
 
 
-        self.filename = "" # The file name from which the record is derived
-        self.translation_table = ""
-
-        # TODO necessary to retain this?
-        self.record = "" # Holds parsed Biopython SeqRecord object.
 
 
-        self.type = "" # Describes how this genome is used
-                        # (e.g. import, phamerator, phagesdb, etc.)
+
 
         self._retrieve = False
         self._retain = False
@@ -108,7 +114,7 @@ class Genome:
 
 
         # Computed datafields: common to flat file (NCBI) records
-        self.search_filename = "" # Lowercase file name
+        self.search_record_filename = "" # Lowercase file name
 
 
         self._record_description_phage_name = ""
@@ -130,14 +136,14 @@ class Genome:
 
 
 
-    def set_filename(self, value):
-        """Set the filename. Discard the path and file extension."""
+    def set_record_filename(self, value):
+        """Set the record_filename. Discard the path and file extension."""
 
         split_filepath = value.split('/')
-        filename = split_filepath[-1]
-        filename = filename.split('.')[0]
-        self.filename = filename
-        self.search_filename = filename.lower()
+        record_filename = split_filepath[-1]
+        record_filename = record_filename.split('.')[0]
+        self.record_filename = record_filename
+        self.search_record_filename = record_filename.lower()
 
 
     # Common to Phamerator
@@ -167,8 +173,8 @@ class Genome:
             self.set_phage_id(self.record_source)
         elif value == "record_organism":
             self.set_phage_id(self.record_organism)
-        elif value == "filename":
-            self.set_phage_id(self.filename)
+        elif value == "record_filename":
+            self.set_phage_id(self.record_filename)
         elif value == "record_description_phage_name":
             self.set_phage_id(self._record_description_phage_name)
         elif value == "record_source_phage_name":
@@ -193,8 +199,8 @@ class Genome:
             self.set_host(self.record_source)
         elif value =="record_organism":
             self.set_host(self.record_organism)
-        elif value =="filename":
-            self.set_host(self.filename)
+        elif value =="record_filename":
+            self.set_host(self.record_filename)
         elif value =="record_description_host_name":
             self.set_host(self._record_description_host_name)
         elif value =="record_source_host_name":
@@ -705,19 +711,19 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_filename(self, filename_set, expect = False):
-        """Check that the filename is valid."""
+    def check_record_filename(self, filename_set, expect = False):
+        """Check that the record_filename is valid."""
 
-        value = basic.check_value_expected_in_set(self.filename,
+        value = basic.check_value_expected_in_set(self.record_filename,
                 filename_set, expect)
         if value:
-            result = "The filename is valid."
+            result = "The record_filename is valid."
             status = "correct"
         else:
-            result = "The filename is not valid."
+            result = "The record_filename is not valid."
             status = "error"
 
-        definition = "Check that the filename is valid."
+        definition = "Check that the record_filename is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 

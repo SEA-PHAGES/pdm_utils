@@ -267,7 +267,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.record_organism = 21
         self.genome1.record_authors = 22
         self.genome1.record_date = 23
-        self.genome1.filename = 24
+        self.genome1.record_filename = 24
         self.genome1.translation_table = 25
         self.genome1.record = 26
         self.genome1.search_id = 27
@@ -284,7 +284,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._trna_features_tally = 38
         self.genome1.source_features = 39
         self.genome1._source_features_tally = 40
-        self.genome1.search_filename = 41
+        self.genome1.search_record_filename = 41
         self.genome1._record_description_phage_name = 42
         self.genome1._record_source_phage_name = 43
         self.genome1._record_organism_phage_name = 44
@@ -350,7 +350,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.record_date, 23)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.filename, 24)
+            self.assertEqual(self.genome_pair.genome2.record_filename, 24)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.translation_table, 25)
         with self.subTest():
@@ -386,7 +386,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2._source_features_tally, 40)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.search_filename, 41)
+            self.assertEqual(self.genome_pair.genome2.search_record_filename, 41)
         with self.subTest():
             self.assertEqual(
                 self.genome_pair.genome2._record_description_phage_name, 42)

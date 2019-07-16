@@ -255,7 +255,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
@@ -312,7 +312,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
@@ -369,7 +369,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
@@ -426,7 +426,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
@@ -483,7 +483,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
@@ -541,7 +541,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 2)
         with self.subTest():
@@ -597,7 +597,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 0)
         with self.subTest():
@@ -651,7 +651,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 0)
         with self.subTest():
@@ -705,7 +705,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.genome.record_filename, expected_filename)
         with self.subTest():
             self.assertEqual(len(self.genome.record), 0)
         with self.subTest():

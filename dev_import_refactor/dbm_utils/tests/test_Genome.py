@@ -32,14 +32,14 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_filename_1(self):
+    def test_set_record_filename_1(self):
         """Confirm file path is split appropriately."""
         filepath = "/path/to/folder/Trixie.gbk"
-        self.genome.set_filename(filepath)
+        self.genome.set_record_filename(filepath)
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Trixie")
+            self.assertEqual(self.genome.record_filename, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome.search_filename, "trixie")
+            self.assertEqual(self.genome.search_record_filename, "trixie")
 
 
 
@@ -268,9 +268,9 @@ class TestGenomeClass(unittest.TestCase):
         self.assertEqual(self.genome.phage_id, "Trixie")
 
     def test_set_phage_id_from_field_9(self):
-        """Check that the phage_id is set from the filename field."""
-        self.genome.filename = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("filename")
+        """Check that the phage_id is set from the record_filename field."""
+        self.genome.record_filename = "Trixie_Draft"
+        self.genome.set_phage_id_from_field("record_filename")
         self.assertEqual(self.genome.phage_id, "Trixie")
 
     def test_set_phage_id_from_field_10(self):
@@ -339,9 +339,9 @@ class TestGenomeClass(unittest.TestCase):
         self.assertEqual(self.genome.host, "Mycobacterium")
 
     def test_set_host_from_field_7(self):
-        """Check that the host is set from the filename field."""
-        self.genome.filename = "Mycobacterium smegmatis"
-        self.genome.set_host_from_field("filename")
+        """Check that the host is set from the record_filename field."""
+        self.genome.record_filename = "Mycobacterium smegmatis"
+        self.genome.set_host_from_field("record_filename")
         self.assertEqual(self.genome.host, "Mycobacterium")
 
     def test_set_host_from_field_8(self):
@@ -1499,36 +1499,36 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_filename_1(self):
-        """Verify that no error is produced when the filename
+    def test_check_record_filename_1(self):
+        """Verify that no error is produced when the record_filename
         is in the filename_set and is expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.filename = "Trixie"
-        self.genome.check_filename(value_set, True)
+        self.genome.record_filename = "Trixie"
+        self.genome.check_record_filename(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_filename_2(self):
-        """Verify that an error is produced when the filename
+    def test_check_record_filename_2(self):
+        """Verify that an error is produced when the record_filename
         is not in the filename_set and is expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.filename = "L5"
-        self.genome.check_filename(value_set, True)
+        self.genome.record_filename = "L5"
+        self.genome.check_record_filename(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_filename_3(self):
-        """Verify that no error is produced when the filename
+    def test_check_record_filename_3(self):
+        """Verify that no error is produced when the record_filename
         is not in the filename_set and is not expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.filename = "L5"
-        self.genome.check_filename(value_set, False)
+        self.genome.record_filename = "L5"
+        self.genome.check_record_filename(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_filename_4(self):
-        """Verify that an error is produced when the filename
+    def test_check_record_filename_4(self):
+        """Verify that an error is produced when the record_filename
         is in the filename_set and is not expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.filename = "Trixie"
-        self.genome.check_filename(value_set, False)
+        self.genome.record_filename = "Trixie"
+        self.genome.check_record_filename(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 

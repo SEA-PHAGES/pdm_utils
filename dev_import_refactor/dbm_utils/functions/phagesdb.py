@@ -187,12 +187,12 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
     # Fasta file URL
     fastafile_url = parse_phagesdb_filename(data_dict)
-    genome_obj.filename = fastafile_url
+    genome_obj.record_filename = fastafile_url
 
 
     # Fasta file record
-    if genome_obj.filename != "":
-        fasta_file = retrieve_phagesdb_fasta(genome_obj.filename)
+    if genome_obj.record_filename != "":
+        fasta_file = retrieve_phagesdb_fasta(genome_obj.record_filename)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.

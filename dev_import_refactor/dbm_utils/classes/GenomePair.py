@@ -134,8 +134,8 @@ class GenomePair:
                 second.record_authors = first.record_authors
             if (second.record_date == keyword or keyword is None):
                 second.record_date = first.record_date
-            if (second.filename == keyword or keyword is None):
-                second.filename = first.filename
+            if (second.record_filename == keyword or keyword is None):
+                second.record_filename = first.record_filename
             if (second.translation_table == keyword or keyword is None):
                 second.translation_table = first.translation_table
             if (second.record == keyword or keyword is None):
@@ -172,8 +172,8 @@ class GenomePair:
                 second.source_features = first.source_features
             if (second._source_features_tally == keyword or keyword is None):
                 second._source_features_tally = first._source_features_tally
-            if (second.search_filename == keyword or keyword is None):
-                second.search_filename = first.search_filename
+            if (second.search_record_filename == keyword or keyword is None):
+                second.search_record_filename = first.search_record_filename
             if (second._record_description_phage_name == keyword \
                 or keyword is None):
 

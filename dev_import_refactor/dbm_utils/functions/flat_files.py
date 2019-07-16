@@ -248,7 +248,7 @@ def parse_flat_file_data(genome_obj, \
     """
 
     # Keep track of the file from which the record is derived.
-    genome_obj.set_filename(filepath)
+    genome_obj.set_record_filename(filepath)
 
 
     try:

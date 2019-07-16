@@ -689,7 +689,7 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.cluster = "A"
         self.genome.subcluster = "A2"
         self.genome.accession = "ABC123"
-        self.genome.filename = "Trixie.gb"
+        self.genome.record_filename = "Trixie.gb"
         self.genome.record = "abcd"
         self.genome.sequence = "ATCG"
 
@@ -792,9 +792,9 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_check_phagesdb_genome_8(self):
         """Verify an error is produced with a PhagesDB genome with
-        no filename."""
+        no record_filename."""
 
-        self.genome.filename = ""
+        self.genome.record_filename = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
         for eval in self.genome.evaluations:
