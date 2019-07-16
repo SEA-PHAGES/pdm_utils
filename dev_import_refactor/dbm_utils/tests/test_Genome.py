@@ -1182,14 +1182,14 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the status
         is in the status_set and is expected to be in the set."""
         self.genome.status = "draft"
-        self.genome.check_status()
+        self.genome.check_status(expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_status_2(self):
         """Verify that an error is produced when the status
         is not in the status_set and is expected to be in the set."""
         self.genome.status = "invalid"
-        self.genome.check_status()
+        self.genome.check_status(expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_status_3(self):
@@ -1197,7 +1197,7 @@ class TestGenomeClass(unittest.TestCase):
         is in a non-standard status_set and is expected to be in the set."""
         value_set = set(["new_status", "final"])
         self.genome.status = "new_status"
-        self.genome.check_status(value_set)
+        self.genome.check_status(value_set, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_status_4(self):
@@ -1205,7 +1205,15 @@ class TestGenomeClass(unittest.TestCase):
         is not a non-standard status_set and is expected to be in the set."""
         value_set = set(["new_status", "final"])
         self.genome.status = "draft"
-        self.genome.check_status(value_set)
+        self.genome.check_status(value_set, expect = True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_status_5(self):
+        """Verify that an error is produced when the status
+        is in the set, and is not expected to be in the set."""
+        value_set = set(["new_status", "final"])
+        self.genome.status = "new_status"
+        self.genome.check_status(value_set, expect = False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1216,7 +1224,7 @@ class TestGenomeClass(unittest.TestCase):
         is in the host_set and is expected to be in the set."""
         value_set = set(["Mycobacterium", "Gordonia"])
         self.genome.host = "Mycobacterium"
-        self.genome.check_host(value_set)
+        self.genome.check_host(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_host_2(self):
@@ -1224,8 +1232,36 @@ class TestGenomeClass(unittest.TestCase):
         is not in the host_set and is expected to be in the set."""
         value_set = set(["Mycobacterium", "Gordonia"])
         self.genome.host = "invalid"
-        self.genome.check_host(value_set)
+        self.genome.check_host(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_host_3(self):
+        """Verify that no error is produced when the host
+        is not in the host_set and is not expected to be in the set."""
+        value_set = set(["Mycobacterium", "Gordonia"])
+        self.genome.host = "Arthrobacter"
+        self.genome.check_host(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_host_4(self):
+        """Verify that an error is produced when the host
+        is in the host_set and is not expected to be in the set."""
+        value_set = set(["Mycobacterium", "Gordonia"])
+        self.genome.host = "Mycobacterium"
+        self.genome.check_host(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1235,7 +1271,7 @@ class TestGenomeClass(unittest.TestCase):
         is in the cluster_set and is expected to be in the set."""
         value_set = set(["A", "B"])
         self.genome.cluster = "A"
-        self.genome.check_cluster(value_set)
+        self.genome.check_cluster(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_cluster_2(self):
@@ -1243,8 +1279,33 @@ class TestGenomeClass(unittest.TestCase):
         is not in the cluster_set and is expected to be in the set."""
         value_set = set(["A", "B"])
         self.genome.cluster = "C"
-        self.genome.check_cluster(value_set)
+        self.genome.check_cluster(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_cluster_3(self):
+        """Verify that no error is produced when the cluster
+        is not in the cluster_set and is not expected to be in the set."""
+        value_set = set(["A", "B"])
+        self.genome.cluster = "C"
+        self.genome.check_cluster(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_cluster_4(self):
+        """Verify that an error is produced when the cluster
+        is in the cluster_set and is not expected to be in the set."""
+        value_set = set(["A", "B"])
+        self.genome.cluster = "A"
+        self.genome.check_cluster(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1254,7 +1315,7 @@ class TestGenomeClass(unittest.TestCase):
         is in the subcluster_set and is expected to be in the set."""
         value_set = set(["A1", "B1"])
         self.genome.subcluster = "A1"
-        self.genome.check_subcluster(value_set)
+        self.genome.check_subcluster(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_subcluster_2(self):
@@ -1262,8 +1323,31 @@ class TestGenomeClass(unittest.TestCase):
         is not in the subcluster_set and is expected to be in the set."""
         value_set = set(["A1", "B1"])
         self.genome.subcluster = "C1"
-        self.genome.check_subcluster(value_set)
+        self.genome.check_subcluster(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_subcluster_3(self):
+        """Verify that no error is produced when the subcluster
+        is not in the subcluster_set and is not expected to be in the set."""
+        value_set = set(["A1", "B1"])
+        self.genome.subcluster = "A2"
+        self.genome.check_subcluster(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_subcluster_4(self):
+        """Verify that an error is produced when the subcluster
+        is in the subcluster_set and is not expected to be in the set."""
+        value_set = set(["A1", "B1"])
+        self.genome.subcluster = "A1"
+        self.genome.check_subcluster(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+
+
+
 
 
 
@@ -1410,6 +1494,77 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+
+
+
+
+
+    def test_check_filename_1(self):
+        """Verify that no error is produced when the filename
+        is in the filename_set and is expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.filename = "Trixie"
+        self.genome.check_filename(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_filename_2(self):
+        """Verify that an error is produced when the filename
+        is not in the filename_set and is expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.filename = "L5"
+        self.genome.check_filename(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_filename_3(self):
+        """Verify that no error is produced when the filename
+        is not in the filename_set and is not expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.filename = "L5"
+        self.genome.check_filename(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_filename_4(self):
+        """Verify that an error is produced when the filename
+        is in the filename_set and is not expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.filename = "Trixie"
+        self.genome.check_filename(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_seqrecord_1(self):
+        """Verify that no error is produced when the seqrecord
+        is in the seqrecord_set and is expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.seqrecord = "Trixie"
+        self.genome.check_seqrecord(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_seqrecord_2(self):
+        """Verify that an error is produced when the seqrecord
+        is not in the seqrecord_set and is expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.seqrecord = "L5"
+        self.genome.check_seqrecord(value_set, True)
+        self.assertEqual(self.genome.evaluations[0].status, "errors")
+
+    def test_check_seqrecord_3(self):
+        """Verify that no error is produced when the seqrecord
+        is not in the seqrecord_set and is not expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.seqrecord = "L5"
+        self.genome.check_seqrecord(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_seqrecord_4(self):
+        """Verify that an error is produced when the seqrecord
+        is in the seqrecord_set and is not expected to be in the set."""
+        value_set = set(["Trixie"])
+        self.genome.seqrecord = "Trixie"
+        self.genome.check_seqrecord(value_set, False)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 ###
 

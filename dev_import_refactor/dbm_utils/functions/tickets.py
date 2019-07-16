@@ -242,6 +242,51 @@ def assign_match_strategy(list_of_group_objects):
     return strategy, eval
 
 
+
+
+
+
+
+# TODO implement below. This function may no longer be needed.
+# TODO unit test below.
+def prepare_tickets(ticket_filename):
+    """Parse import table into ticket objects."""
+
+    # Assumes that filename has already been validated.
+
+    # TODO retrieve import data.
+    # List of ticket data.
+
+
+    #Retrieve import info from indicated import table file and
+    # read all lines into a list and verify contents are correctly populated.
+    #0 = Type of database action to be performed (add, remove, replace, update)
+    #1 = New PhageID that will be added to database
+    #2 = Host of new phage
+    #3 = Cluster of new phage (singletons should be reported as "singleton")
+    #4 = Subcluster of new phage (no subcluster should be reported as "none")
+    #5 = Annotation status of new phage
+    #6 = Annotation author of the new phage
+    #7 = Feature field containing gene descriptions of new phage
+    #8 = Accession
+    #9 = Run mode
+    #10 = PhageID of genome to be removed from the database
+
+
+    # Parse list of data and construct tickets.
+
+    # Convert data from import file into ticket objects
+    ticket_list = parse_import_tickets(import_table_data_list)
+
+
+    return ticket_list
+
+
+
+
+
+
+
 # TODO this function may no longer be needed. Genome object methods
 # can assign the PhageID from either the filename or a flat file record
 # field. As a result, all genomes can be matched to tickets using the
@@ -354,49 +399,13 @@ def assign_match_strategy(list_of_group_objects):
 
 
 
-# TODO implement below. This function may no longer be needed.
-# TODO unit test below.
-def prepare_tickets(ticket_filename):
-    """Parse import table into ticket objects."""
-
-    # Assumes that filename has already been validated.
-
-    # TODO retrieve import data.
-    # List of ticket data.
-
-
-    #Retrieve import info from indicated import table file and
-    # read all lines into a list and verify contents are correctly populated.
-    #0 = Type of database action to be performed (add, remove, replace, update)
-    #1 = New PhageID that will be added to database
-    #2 = Host of new phage
-    #3 = Cluster of new phage (singletons should be reported as "singleton")
-    #4 = Subcluster of new phage (no subcluster should be reported as "none")
-    #5 = Annotation status of new phage
-    #6 = Annotation author of the new phage
-    #7 = Feature field containing gene descriptions of new phage
-    #8 = Accession
-    #9 = Run mode
-    #10 = PhageID of genome to be removed from the database
-
-
-    # Parse list of data and construct tickets.
-
-    # Convert data from import file into ticket objects
-    ticket_list = parse_import_tickets(import_table_data_list)
-
-
-    return ticket_list
-
-
-
 
 
 # TODO this can probably be deleted. It is a more complex compare_tickets
 # function that tries to keep track of ticket type.
 # # This needs to be changed again. Remove tickets now store
 # # the genome to be removed within the primary_phage_id.
-# def compare_tickets(list_of_tickets):
+# def compare_tickets2(list_of_tickets):
 #     """Compare all tickets to each other to determine if
 #     there are any ticket conflicts."""
 #

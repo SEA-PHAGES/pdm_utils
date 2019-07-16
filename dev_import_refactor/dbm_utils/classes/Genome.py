@@ -15,29 +15,32 @@ class Genome:
     # Initialize all attributes:
     def __init__(self):
 
+
+
         # Non-computed datafields:
+
+        # Genome classification
+        self.nucleic_acid_type = "" # dsDNA, ssDNA, etc.
+        self.order = "" # Caudovirales, Nidovirales, etc.
+        self.family = "" # Siphoviridae, Myoviridae, etc.
+        self.cluster = "" # A, B, C, Singleton, etc.
+        self.subcluster = "" #A1, A2, etc.
+        self.phage_id = "" # Unique identifier. Case sensitive, no "_Draft".
+        self.phage_name = "" # Case sensitive and contains "_Draft".
+        self.sequence = "" # Biopython Seq object
 
 
 
         # Common to all genomes
-        self.phage_id = "" # Unique identifier. Case sensitive, no "_Draft".
-        self.phage_name = "" # Case sensitive and contains "_Draft".
         self.host = ""
-        self.sequence = "" # Biopython Seq object
         self.accession = ""
         self.author = "" # TODO do I need this in addition to annotation_author?
 
 
 
-        # Common to Phamerator and PhagesDB
-        self.status = "" # Final, Draft, Gbk version of genome data
-        self.cluster = ""
-        self.subcluster = ""
-
-
-
         # Common to Phamerator
         self.cluster_subcluster = "" # Combined cluster_subcluster data.
+        self.status = "" # Final, Draft, Gbk version of genome data
         self.date_last_modified = ""
         self.annotation_author = "" # 1 (Hatfull), 0 (Genbank)
         self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
@@ -60,7 +63,7 @@ class Genome:
         self.translation_table = ""
 
         # TODO necessary to retain this?
-        self.seqrecord = [] # Holds parsed Biopython SeqRecord object.
+        self.seqrecord = "" # Holds parsed Biopython SeqRecord object.
 
 
         self.type = "" # Describes how this genome is used
@@ -512,20 +515,14 @@ class Genome:
     def check_phage_id(self, phage_id_set, expect = False):
         """Check that the phage_id is valid."""
 
-        if self.phage_id in phage_id_set:
-            if expect:
-                result = "The phage_id is valid."
-                status = "correct"
-            else:
-                result = "The phage_id is not valid."
-                status = "error"
+        value = basic.check_value_expected_in_set(self.phage_id,
+                phage_id_set, expect)
+        if value:
+            result = "The phage_id is valid."
+            status = "correct"
         else:
-            if not expect:
-                result = "The phage_id is valid."
-                status = "correct"
-            else:
-                result = "The phage_id is not valid."
-                status = "error"
+            result = "The phage_id is not valid."
+            status = "error"
 
         definition = "Check that the phage_id is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
@@ -534,73 +531,85 @@ class Genome:
     def check_phage_name(self, phage_name_set, expect = False):
         """Check that the phage_name is valid."""
 
-        if self.phage_name in phage_name_set:
-            if expect:
-                result = "The phage_name is valid."
-                status = "correct"
-            else:
-                result = "The phage_name is not valid."
-                status = "error"
+        value = basic.check_value_expected_in_set(self.phage_name,
+                phage_name_set, expect)
+        if value:
+            result = "The phage_name is valid."
+            status = "correct"
         else:
-            if not expect:
-                result = "The phage_name is valid."
-                status = "correct"
-            else:
-                result = "The phage_name is not valid."
-                status = "error"
+            result = "The phage_name is not valid."
+            status = "error"
 
         definition = "Check that the phage_name is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-
-    def check_status(self, status_set = constants.ANNOTATION_STATUS_SET):
+    def check_status(self,
+                    status_set = constants.ANNOTATION_STATUS_SET,
+                    expect = False):
         """Check that the annotation status is valid."""
-        if self.status in status_set:
+
+        value = basic.check_value_expected_in_set(self.status,
+                status_set, expect)
+        if value:
             result = "The annotation status is valid."
             status = "correct"
         else:
             result = "The annotation status is not valid."
             status = "error"
+
         definition = "Check that the annotation status is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_host(self, host_set):
+    def check_host(self, host_set, expect = False):
         """Check that the host is valid."""
-        if self.host in host_set:
+
+        value = basic.check_value_expected_in_set(self.host,
+                host_set, expect)
+        if value:
             result = "The host is valid."
             status = "correct"
         else:
             result = "The host is not valid."
             status = "error"
+
         definition = "Check that the host is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_cluster(self, cluster_set):
+    def check_cluster(self, cluster_set, expect = False):
         """Check that the cluster is valid."""
-        if self.cluster in cluster_set:
+
+        value = basic.check_value_expected_in_set(self.cluster,
+                cluster_set, expect)
+        if value:
             result = "The cluster is valid."
             status = "correct"
         else:
             result = "The cluster is not valid."
             status = "error"
+
         definition = "Check that the cluster is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_subcluster(self, subcluster_set):
+    def check_subcluster(self, subcluster_set, expect = False):
         """Check that the subcluster is valid."""
-        if self.subcluster in subcluster_set:
+
+
+        value = basic.check_value_expected_in_set(self.subcluster,
+                subcluster_set, expect)
+        if value:
             result = "The subcluster is valid."
             status = "correct"
         else:
             result = "The subcluster is not valid."
             status = "error"
+
         definition = "Check that the subcluster is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
@@ -610,20 +619,14 @@ class Genome:
     def check_sequence(self, seq_set, expect = False):
         """Check that the phage_name is valid."""
 
-        if self.sequence in seq_set:
-            if expect:
-                result = "The sequence is valid."
-                status = "correct"
-            else:
-                result = "The sequence is not valid."
-                status = "error"
+        value = basic.check_value_expected_in_set(self.sequence,
+                seq_set, expect)
+        if value:
+            result = "The sequence is valid."
+            status = "correct"
         else:
-            if not expect:
-                result = "The sequence is valid."
-                status = "correct"
-            else:
-                result = "The sequence is not valid."
-                status = "error"
+            result = "The sequence is not valid."
+            status = "error"
 
         definition = "Check that the sequence is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
@@ -633,20 +636,14 @@ class Genome:
     def check_accession(self, accession_set, expect = False):
         """Check that the accession is valid."""
 
-        if self.accession in accession_set:
-            if expect:
-                result = "The accession is valid."
-                status = "correct"
-            else:
-                result = "The accession is not valid."
-                status = "error"
+        value = basic.check_value_expected_in_set(self.accession,
+                accession_set, expect)
+        if value:
+            result = "The accession is valid."
+            status = "correct"
         else:
-            if not expect:
-                result = "The accession is valid."
-                status = "correct"
-            else:
-                result = "The accession is not valid."
-                status = "error"
+            result = "The accession is not valid."
+            status = "error"
 
         definition = "Check that the accession is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
@@ -707,6 +704,41 @@ class Genome:
         definition = "Check that the retrieve_record is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
+
+    def check_filename(self, filename_set, expect = False):
+        """Check that the filename is valid."""
+
+        value = basic.check_value_expected_in_set(self.filename,
+                filename_set, expect)
+        if value:
+            result = "The filename is valid."
+            status = "correct"
+        else:
+            result = "The filename is not valid."
+            status = "error"
+
+        definition = "Check that the filename is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_seqrecord(self, seqrecord_set, expect = False):
+        """Check that the seqrecord is valid."""
+
+        value = basic.check_value_expected_in_set(self.seqrecord,
+                seqrecord_set, expect)
+        if value:
+            result = "The seqrecord is valid."
+            status = "correct"
+        else:
+            result = "The seqrecord is not valid."
+            status = "error"
+
+        definition = "Check that the seqrecord is valid."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
+
 
 
     def check_subcluster_structure(self):

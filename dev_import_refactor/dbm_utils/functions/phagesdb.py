@@ -1,7 +1,6 @@
 """Functions to interact with PhagesDB"""
 
 
-from classes import Eval
 from classes import Genome
 from classes import GenomePair
 from functions import basic
@@ -14,22 +13,9 @@ def parse_phagesdb_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB."""
     try:
         phage_name = data_dict['phage_name']
-        result = "Phage name retrieved."
-        status = "correct"
-
     except:
         phage_name = ""
-        result = "Unable to retrieve Phage Name data from PhagesDB."
-        status = "error"
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB phage name."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-
-    return (phage_name, eval)
+    return phage_name
 
 
 
@@ -48,26 +34,11 @@ def parse_phagesdb_cluster(data_dict):
     try:
         if data_dict["pcluster"] is None:
             cluster = 'UNK'
-
         else:
             cluster = data_dict["pcluster"]["cluster"]
-
-        result = "Cluster retrieved."
-        status = "correct"
-
     except:
         cluster = ""
-        result = "Unable to retrieve Cluster data from PhagesDB."
-        status = "error"
-
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB cluster."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (cluster, eval)
+    return cluster
 
 
 def parse_phagesdb_subcluster(data_dict):
@@ -85,67 +56,28 @@ def parse_phagesdb_subcluster(data_dict):
             subcluster = "none"
         else:
             subcluster = data_dict["psubcluster"]["subcluster"]
-        result = "Subcluster retrieved."
-        status = "correct"
-
     except:
         subcluster = ""
-        result = "Unable to retrieve Subcluster data from PhagesDB."
-        status = "error"
-
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB subcluster."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-
-    return (subcluster, eval)
+    return subcluster
 
 
 def parse_phagesdb_host(data_dict):
     """Retrieve Host from PhagesDB."""
     try:
         host = data_dict["isolation_host"]["genus"]
-        result = "Host retrieved."
-        status = "correct"
-
     except:
         host = ""
-        result = "Unable to retrieve Host data from PhagesDB."
-        status = "error"
-
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB host."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (host, eval)
+    return host
 
 
 def parse_phagesdb_accession(data_dict):
     """Retrieve Accession from PhagesDB."""
     try:
         accession = data_dict["genbank_accession"]
-        result = "Accession retrieved."
-        status = "correct"
-
     except:
         accession = ""
-        result = "Unable to retrieve Accession data from PhagesDB."
-        status = "error"
 
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB accession."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (accession, eval)
+    return accession
 
 
 
@@ -154,22 +86,9 @@ def parse_phagesdb_filename(data_dict):
 
     try:
         fastafile_url = data_dict["fasta_file"]
-        result = "Fasta filename retrieved."
-        status = "correct"
-
     except:
         fastafile_url = ""
-        result = "Unable to retrieve fasta filename from PhagesDB."
-        status = "error"
-
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB fasta filename."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (fastafile_url, eval)
+    return fastafile_url
 
 
 def retrieve_phagesdb_fasta(fastafile_url):
@@ -180,22 +99,9 @@ def retrieve_phagesdb_fasta(fastafile_url):
         with urllib.request.urlopen(request) as response:
             fasta_data = response.read()
             fasta_data = fasta_data.decode("utf-8")
-        result = "Fasta data retrieved."
-        status = "correct"
-
     except:
         fasta_data = ""
-        result = "Unable to retrieve fasta data from PhagesDB."
-        status = "error"
-
-
-    # TODO add an eval id?
-    definition = "Retrieve the PhagesDB fasta data."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (fasta_data, eval)
+    return fasta_data
 
 
 
@@ -217,12 +123,6 @@ def parse_fasta_file(fasta_file):
         header = split_fasta_data[0]
         if header[0] == ">":
             header = header[1:] # remove '>' symbol.
-            result = "Fasta record successfully parsed."
-            status = "correct"
-
-        else:
-            result = "Record is not fasta-formatted."
-            status = "error"
 
         header = header.strip() # remove any whitespace
         index = 1
@@ -232,21 +132,9 @@ def parse_fasta_file(fasta_file):
             sequence = sequence + split_fasta_data[index].strip()
             index += 1
 
-    else:
-        result = "Record is not fasta-formatted."
-        status = "error"
+    result = (header, sequence)
 
-
-    result = [header, sequence]
-
-
-    # TODO add an eval id?
-    definition = "Parse the PhagesDB fasta data."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (result, eval)
+    return result
 
 
 
@@ -276,61 +164,56 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
 
     # Phage Name, PhageID and SearchID
-    phage_name, result1 = parse_phagesdb_phage_name(data_dict)
+    phage_name = parse_phagesdb_phage_name(data_dict)
     genome_obj.phage_name = phage_name
     genome_obj.set_phage_id(phage_name)
-    list_of_results.append(result1)
 
     # Host
-    host, result2 = parse_phagesdb_host(data_dict)
-    genome_obj.set_host(host, "none_string")
-    list_of_results.append(result2)
+    host = parse_phagesdb_host(data_dict)
+    genome_obj.set_host(host, "empty_string")
 
     # Accession
-    accession, result3 = parse_phagesdb_accession(data_dict)
-    genome_obj.set_accession(accession, "none_string")
-    list_of_results.append(result3)
+    accession = parse_phagesdb_accession(data_dict)
+    genome_obj.set_accession(accession, "empty_string")
 
     # Cluster
-    cluster, result4 = parse_phagesdb_cluster(data_dict)
+    cluster = parse_phagesdb_cluster(data_dict)
     genome_obj.set_cluster(cluster)
-    list_of_results.append(result4)
 
     #Subcluster
-    subcluster, result5 = parse_phagesdb_subcluster(data_dict)
-    genome_obj.set_subcluster(subcluster, "none_string")
-    list_of_results.append(result5)
+    subcluster = parse_phagesdb_subcluster(data_dict)
+    genome_obj.set_subcluster(subcluster, "empty_string")
 
     # Fasta file URL
-    fastafile_url, result6 = parse_phagesdb_filename(data_dict)
+    fastafile_url = parse_phagesdb_filename(data_dict)
     genome_obj.filename = fastafile_url
-    list_of_results.append(result6)
 
 
     # Fasta file record
     if genome_obj.filename != "":
-        fasta_file, result7 = retrieve_phagesdb_fasta(genome_obj.filename)
-        list_of_results.append(result7)
+        fasta_file = retrieve_phagesdb_fasta(genome_obj.filename)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
         # Genome sequence and parsed record
         if fasta_file != "":
-            fasta_record, result8 = parse_fasta_file(fasta_file)
+            fasta_record = parse_fasta_file(fasta_file)
             genome_obj.seqrecord = fasta_record
             genome_obj.sequence = fasta_record[1]
-            list_of_results.append(result8)
-
 
     genome_obj.type = "phagesdb"
 
-    # TODO this filtering step may not be ideal.
-    list_of_evals = []
-    for result in list_of_results:
-        if result.status != "correct":
-            list_of_evals.append(result)
+    empty_set = set([""])
+    genome_obj.check_phage_id(empty_set, False)
+    genome_obj.check_phage_name(empty_set, False)
+    genome_obj.check_host(empty_set, False)
+    genome_obj.check_cluster(empty_set, False)
+    genome_obj.check_subcluster(empty_set, False)
+    genome_obj.check_accession(empty_set, False)
+    genome_obj.check_filename(empty_set, False)
+    genome_obj.check_seqrecord(empty_set, False)
+    genome_obj.check_sequence(empty_set, False)
 
-    return list_of_evals
 
 
 
@@ -340,20 +223,9 @@ def retrieve_phagesdb_data(phage_url):
     try:
         data_json = urllib.request.urlopen(phage_url)
         data_dict = json.loads(data_json.read())
-        result = "PhagesDB data successfully retrieved."
-        status = "correct"
     except:
         data_dict = {}
-        result = "Unable to retrieve data from PhagesDB."
-        status = "error"
-
-    # TODO add an eval id?
-    definition = "Retrieve PhagesDB data."
-    eval = Eval.Eval(id = "", \
-                    definition = definition, \
-                    result = result, \
-                    status = status)
-    return (data_dict, eval)
+    return data_dict
 
 
 def construct_phage_url(phage_name):
@@ -377,7 +249,7 @@ def copy_data_from_phagesdb(matched_data_obj, type):
         if genome1._retrieve:
 
             phage_url = construct_phage_url(genome1.phage_id)
-            data_dict, evals = retrieve_phagesdb_data(phage_url)
+            data_dict = retrieve_phagesdb_data(phage_url)
 
             # If there was an error with retrieving data from PhagesDB,
             # an empty dictionary is returned.

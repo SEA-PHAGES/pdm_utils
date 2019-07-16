@@ -1,9 +1,6 @@
 """ Unit tests for misc. functions that interact with PhagesDB."""
 
 from classes import DataGroup
-# from classes import Genome
-# from classes import Ticket
-# from classes import Eval
 from functions import phagesdb
 from classes import Genome
 from constants import constants
@@ -29,23 +26,17 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         data_dict = {"phage_name":"Trixie"}
 
-        phage, eval_result = phagesdb.parse_phagesdb_phage_name(data_dict)
+        phage = phagesdb.parse_phagesdb_phage_name(data_dict)
         expected_phage = "Trixie"
-        with self.subTest():
-            self.assertEqual(phage, expected_phage)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(phage, expected_phage)
 
     def test_parse_phagesdb_phage_name_2(self):
         """Verify name is not retrieved and error is produced."""
 
         data_dict = {"phage_id":"Trixie"}
-        phage, eval_result = phagesdb.parse_phagesdb_phage_name(data_dict)
+        phage = phagesdb.parse_phagesdb_phage_name(data_dict)
         expected_phage = ""
-        with self.subTest():
-            self.assertEqual(phage, expected_phage)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(phage, expected_phage)
 
 
 
@@ -54,34 +45,25 @@ class TestPhagesDBFunctions(unittest.TestCase):
         """Verify missing cluster is retrieved and no error is produced."""
 
         data_dict = {"pcluster": None}
-        cluster, eval_result = phagesdb.parse_phagesdb_cluster(data_dict)
+        cluster = phagesdb.parse_phagesdb_cluster(data_dict)
         expected_cluster = "UNK"
-        with self.subTest():
-            self.assertEqual(cluster, expected_cluster)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(cluster, expected_cluster)
 
     def test_parse_phagesdb_cluster_2(self):
         """Verify no cluster is retrieved and error is produced."""
 
         data_dict = {"pcluster_x": None}
-        cluster, eval_result = phagesdb.parse_phagesdb_cluster(data_dict)
+        cluster = phagesdb.parse_phagesdb_cluster(data_dict)
         expected_cluster = ""
-        with self.subTest():
-            self.assertEqual(cluster, expected_cluster)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(cluster, expected_cluster)
 
     def test_parse_phagesdb_cluster_3(self):
         """Verify standard cluster is retrieved and no error is produced."""
 
         data_dict = {"pcluster": {"cluster": "A"}}
-        cluster, eval_result = phagesdb.parse_phagesdb_cluster(data_dict)
+        cluster = phagesdb.parse_phagesdb_cluster(data_dict)
         expected_cluster = "A"
-        with self.subTest():
-            self.assertEqual(cluster, expected_cluster)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(cluster, expected_cluster)
 
 
 
@@ -90,34 +72,25 @@ class TestPhagesDBFunctions(unittest.TestCase):
         """Verify missing subcluster is retrieved and no error is produced."""
 
         data_dict = {"psubcluster": None}
-        subcluster, eval_result = phagesdb.parse_phagesdb_subcluster(data_dict)
+        subcluster = phagesdb.parse_phagesdb_subcluster(data_dict)
         expected_subcluster = "none"
-        with self.subTest():
-            self.assertEqual(subcluster, expected_subcluster)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(subcluster, expected_subcluster)
 
     def test_parse_phagesdb_subcluster_2(self):
         """Verify no subcluster is retrieved and an error is produced."""
 
         data_dict = {"psubcluster_x": None}
-        subcluster, eval_result = phagesdb.parse_phagesdb_subcluster(data_dict)
+        subcluster = phagesdb.parse_phagesdb_subcluster(data_dict)
         expected_subcluster = ""
-        with self.subTest():
-            self.assertEqual(subcluster, expected_subcluster)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(subcluster, expected_subcluster)
 
     def test_parse_phagesdb_subcluster_3(self):
         """Verify standard subcluster is retrieved and no error is produced."""
 
         data_dict = {"psubcluster": {"subcluster": "A2"}}
-        subcluster, eval_result = phagesdb.parse_phagesdb_subcluster(data_dict)
+        subcluster = phagesdb.parse_phagesdb_subcluster(data_dict)
         expected_subcluster = "A2"
-        with self.subTest():
-            self.assertEqual(subcluster, expected_subcluster)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(subcluster, expected_subcluster)
 
 
 
@@ -126,23 +99,17 @@ class TestPhagesDBFunctions(unittest.TestCase):
         """Verify host genus is retrieved and no error is produced."""
 
         data_dict = {"isolation_host": {"genus": "Mycobacterium"}}
-        host, eval_result = phagesdb.parse_phagesdb_host(data_dict)
+        host = phagesdb.parse_phagesdb_host(data_dict)
         expected_host = "Mycobacterium"
-        with self.subTest():
-            self.assertEqual(host, expected_host)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(host, expected_host)
 
     def test_parse_phagesdb_host_2(self):
         """Verify host genus is not retrieved and an error is produced."""
 
         data_dict = {"isolation_host_x": {"genus": "Mycobacterium"}}
-        host, eval_result = phagesdb.parse_phagesdb_host(data_dict)
+        host = phagesdb.parse_phagesdb_host(data_dict)
         expected_host = ""
-        with self.subTest():
-            self.assertEqual(host, expected_host)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(host, expected_host)
 
 
 
@@ -151,23 +118,17 @@ class TestPhagesDBFunctions(unittest.TestCase):
         """Verify accession is retrieved and no error is produced."""
 
         data_dict = {"genbank_accession": "ABC123"}
-        accession, eval_result = phagesdb.parse_phagesdb_accession(data_dict)
+        accession = phagesdb.parse_phagesdb_accession(data_dict)
         expected_accession = "ABC123"
-        with self.subTest():
-            self.assertEqual(accession, expected_accession)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(accession, expected_accession)
 
     def test_parse_phagesdb_accession_2(self):
         """Verify accession is not retrieved and an error is produced."""
 
         data_dict = {"genbank_accession_x": "ABC123"}
-        accession, eval_result = phagesdb.parse_phagesdb_accession(data_dict)
+        accession = phagesdb.parse_phagesdb_accession(data_dict)
         expected_accession = ""
-        with self.subTest():
-            self.assertEqual(accession, expected_accession)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(accession, expected_accession)
 
 
 
@@ -177,24 +138,18 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"fasta_file": url}
-        filename, eval_result = phagesdb.parse_phagesdb_filename(data_dict)
+        filename = phagesdb.parse_phagesdb_filename(data_dict)
         expected_filename = url
-        with self.subTest():
-            self.assertEqual(filename, expected_filename)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(filename, expected_filename)
 
     def test_parse_phagesdb_filename_2(self):
         """Verify fasta filename is not retrieved and an error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"fasta_file_x": url}
-        filename, eval_result = phagesdb.parse_phagesdb_filename(data_dict)
+        filename = phagesdb.parse_phagesdb_filename(data_dict)
         expected_filename = ""
-        with self.subTest():
-            self.assertEqual(filename, expected_filename)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(filename, expected_filename)
 
 
 
@@ -203,23 +158,17 @@ class TestPhagesDBFunctions(unittest.TestCase):
         """Verify fasta data is retrieved and no error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        fasta_data, eval_result = phagesdb.retrieve_phagesdb_fasta(url)
+        fasta_data = phagesdb.retrieve_phagesdb_fasta(url)
         expected_fasta_data_header = ">Mycobacterium phage L5"
-        with self.subTest():
-            self.assertEqual(fasta_data[:23], expected_fasta_data_header)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(fasta_data[:23], expected_fasta_data_header)
 
     def test_retrieve_phagesdb_fasta_2(self):
         """Verify fasta data is not retrieved and an error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5_x.fasta"
-        fasta_data, eval_result = phagesdb.retrieve_phagesdb_fasta(url)
+        fasta_data = phagesdb.retrieve_phagesdb_fasta(url)
         expected_fasta_data_header = ""
-        with self.subTest():
-            self.assertEqual(fasta_data, expected_fasta_data_header)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        self.assertEqual(fasta_data, expected_fasta_data_header)
 
 
 
@@ -229,26 +178,22 @@ class TestPhagesDBFunctions(unittest.TestCase):
         fasta_data = ">Trixie  \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG\n\n"
         expected_header = "Trixie"
         expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
-        result_list, eval_result = phagesdb.parse_fasta_file(fasta_data)
+        result_tuple = phagesdb.parse_fasta_file(fasta_data)
         with self.subTest():
-            self.assertEqual(result_list[0], expected_header)
+            self.assertEqual(result_tuple[0], expected_header)
         with self.subTest():
-            self.assertEqual(result_list[1], expected_sequence)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+            self.assertEqual(result_tuple[1], expected_sequence)
 
     def test_parse_fasta_file_2(self):
         """Verify it incorrect fasta file format (no ">") produces an error."""
         fasta_data = "Trixie  \nAAAAAAAAAA   \nTTTTTTT \nCCC\nGGGGGGGGGGG\n\n"
         expected_header = "Trixie"
         expected_sequence = "AAAAAAAAAATTTTTTTCCCGGGGGGGGGGG"
-        result_list, eval_result = phagesdb.parse_fasta_file(fasta_data)
+        result_tuple = phagesdb.parse_fasta_file(fasta_data)
         with self.subTest():
-            self.assertEqual(result_list[0], expected_header)
+            self.assertEqual(result_tuple[0], expected_header)
         with self.subTest():
-            self.assertEqual(result_list[1], expected_sequence)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+            self.assertEqual(result_tuple[1], expected_sequence)
 
     def test_parse_fasta_file_3(self):
         """Verify it incorrect fasta file format (no new lines) produces
@@ -256,13 +201,11 @@ class TestPhagesDBFunctions(unittest.TestCase):
         fasta_data = "Trixie  AAAAAAAAAA   TTTTTTT CCCGGGGGGGGGGG"
         expected_header = ""
         expected_sequence = ""
-        result_list, eval_result = phagesdb.parse_fasta_file(fasta_data)
+        result_tuple = phagesdb.parse_fasta_file(fasta_data)
         with self.subTest():
-            self.assertEqual(result_list[0], expected_header)
+            self.assertEqual(result_tuple[0], expected_header)
         with self.subTest():
-            self.assertEqual(result_list[1], expected_sequence)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+            self.assertEqual(result_tuple[1], expected_sequence)
 
 
 
@@ -277,7 +220,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -290,6 +233,12 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_start = "GGTCGGTT"
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
+
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -314,9 +263,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(len(eval_results), 0)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 0)
 
 
     def test_parse_phagesdb_data_2(self):
@@ -329,7 +278,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
@@ -342,6 +291,11 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_start = "GGTCGGTT"
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -366,9 +320,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 2)
 
 
     def test_parse_phagesdb_data_3(self):
@@ -381,7 +335,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -394,6 +348,11 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_start = "GGTCGGTT"
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -418,9 +377,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 1)
 
 
     def test_parse_phagesdb_data_4(self):
@@ -433,19 +392,24 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
         expected_search_id = "trixie"
         expected_cluster = "A"
-        expected_subcluster = "none"
+        expected_subcluster = ""
         expected_host = "Mycobacterium"
         expected_accession = "ABC123"
         expected_filename = url
         expected_seq_start = "GGTCGGTT"
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -470,9 +434,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 1)
 
 
     def test_parse_phagesdb_data_5(self):
@@ -485,19 +449,24 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
         expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = "A2"
-        expected_host = "none"
+        expected_host = ""
         expected_accession = "ABC123"
         expected_filename = url
         expected_seq_start = "GGTCGGTT"
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -522,9 +491,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 1)
 
 
     def test_parse_phagesdb_data_6(self):
@@ -537,7 +506,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -545,11 +514,17 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_cluster = "A"
         expected_subcluster = "A2"
         expected_host = "Mycobacterium"
-        expected_accession = "none"
+        expected_accession = ""
         expected_filename = url
         expected_seq_start = "GGTCGGTT"
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -574,9 +549,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 1)
 
 
     def test_parse_phagesdb_data_7(self):
@@ -589,7 +564,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file_x": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -601,6 +576,11 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_filename = ""
         expected_seq = ""
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -623,9 +603,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 3)
 
 
     def test_parse_phagesdb_data_8(self):
@@ -638,7 +618,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -651,6 +631,11 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq = ""
         expected_type = "phagesdb"
 
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
+
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
@@ -672,9 +657,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
-            self.assertEqual(len(eval_results), 1)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 2)
 
 
     def test_parse_phagesdb_data_9(self):
@@ -687,18 +672,23 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file_x": url}
-        eval_results = phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        phagesdb.parse_phagesdb_data(self.genome, data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
         expected_search_id = ""
         expected_cluster = ""
-        expected_subcluster = "none"
-        expected_host = "none"
-        expected_accession = "none"
+        expected_subcluster = ""
+        expected_host = ""
+        expected_accession = ""
         expected_filename = ""
         expected_seq = ""
         expected_type = "phagesdb"
+
+        errors = 0
+        for eval in self.genome.evaluations:
+            if eval.status == "error":
+                errors += 1
 
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
@@ -721,9 +711,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.sequence, expected_seq)
         with self.subTest():
-            self.assertEqual(len(eval_results), 6)
-        with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
+        with self.subTest():
+            self.assertEqual(errors, 9)
 
 
 
@@ -732,22 +722,16 @@ class TestPhagesDBFunctions(unittest.TestCase):
         """Verify data is retrieved from PhagesDB with no error produced."""
 
         url = self.API_PREFIX + "L5" + self.API_SUFFIX
-        data_dict, eval_result = phagesdb.retrieve_phagesdb_data(url)
+        data_dict = phagesdb.retrieve_phagesdb_data(url)
         expected_phage_name = "L5"
-        with self.subTest():
-            self.assertEqual(data_dict["phage_name"], expected_phage_name)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "correct")
+        self.assertEqual(data_dict["phage_name"], expected_phage_name)
 
     def test_retrieve_phagesdb_data_2(self):
         """Verify data is not retrieved from PhagesDB and an error produced."""
 
         url = self.API_PREFIX + "L5_x" + self.API_SUFFIX
-        data_dict, eval_result = phagesdb.retrieve_phagesdb_data(url)
-        with self.subTest():
-            self.assertEqual(len(data_dict.keys()), 0)
-        with self.subTest():
-            self.assertEqual(eval_result.status, "error")
+        data_dict = phagesdb.retrieve_phagesdb_data(url)
+        self.assertEqual(len(data_dict.keys()), 0)
 
 
 
