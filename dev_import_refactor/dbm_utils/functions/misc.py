@@ -1,8 +1,9 @@
 """Misc. functions useful for comparing and processing genomes."""
 
 
-
-
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio.Alphabet import IUPAC
 
 
 
@@ -57,6 +58,26 @@ def match_genomes(list_of_group_objects, genome_dict, key1, key2 = None):
             pass
 
         index += 1
+
+
+
+
+def create_fasta_seqrecord(header, sequence_string):
+    """Create a fasta-formatted Biopython SeqRecord object."""
+
+    seq = Seq(sequence_string, alphabet = IUPAC.unambiguous_dna)
+    seqrecord = SeqRecord(seq, description = header)
+
+    return seqrecord
+
+
+
+
+
+
+
+
+
 
 
 

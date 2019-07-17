@@ -90,7 +90,7 @@ def check_phagesdb_genome(genome_obj, null_set):
     genome_obj.check_subcluster(null_set, False)
     genome_obj.check_accession(null_set, False)
     genome_obj.check_record_filename(null_set, False)
-    genome_obj.check_record(null_set, False)
+    #genome_obj.check_record(null_set, False)
     genome_obj.check_sequence(null_set, False)
 
 

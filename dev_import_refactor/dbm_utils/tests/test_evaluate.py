@@ -708,7 +708,7 @@ class TestEvaluateClass2(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(self.genome.evaluations), 9)
+            self.assertEqual(len(self.genome.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -804,19 +804,6 @@ class TestEvaluateClass2(unittest.TestCase):
 
 
     def test_check_phagesdb_genome_9(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no record."""
-
-        self.genome.record = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
-        errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_10(self):
         """Verify an error is produced with a PhagesDB genome with
         no sequence."""
 

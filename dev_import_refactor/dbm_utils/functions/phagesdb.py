@@ -8,6 +8,7 @@ from functions import basic
 from constants import constants
 import urllib.request
 import json
+from functions import misc
 
 
 def parse_phagesdb_phage_name(data_dict):
@@ -150,7 +151,8 @@ def parse_fasta_file2(fasta_file):
 
     # TODO need to work out whether SeqIO can retrieve the data
     # directly from the server or whether the data needs to be first
-    #retrieved and then parsed.
+    # retrieved and then parsed.
+    # Using SeqIO to retrieve a record from PhagesDB server did not work.
 
     pass
 
@@ -198,9 +200,13 @@ def parse_phagesdb_data(genome_obj,data_dict):
         # retrieves and parses files from PhagesDB.
         # Genome sequence and parsed record
         if fasta_file != "":
-            fasta_record = parse_fasta_file(fasta_file)
+
+            fasta_data = parse_fasta_file(fasta_file)
+            fasta_record = misc.create_fasta_seqrecord(fasta_data[0], fasta_data[1])
             genome_obj.record = fasta_record
-            genome_obj.sequence = fasta_record[1]
+            genome_obj.sequence = fasta_record.seq
+            genome_obj.record_description = fasta_record.description
+            genome_obj.parse_record_description()
 
     genome_obj.type = "phagesdb"
 

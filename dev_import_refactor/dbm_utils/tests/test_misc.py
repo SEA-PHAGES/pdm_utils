@@ -4,7 +4,8 @@ from classes import DataGroup
 from classes import Genome
 from functions import misc
 import unittest
-
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 
 class TestMiscFunctions(unittest.TestCase):
@@ -161,6 +162,33 @@ class TestMiscFunctions(unittest.TestCase):
         misc.match_genomes(list1, genomes_to_match, "phamerator")
         matched_genome = list1[0].genome_dict["flat_file"]
         self.assertEqual(matched_genome.phage_name, "Genome2")
+
+
+
+
+
+    def test_create_fasta_seqrecord_1(self):
+        """."""
+        record = misc.create_fasta_seqrecord("Mycobacterium phage Trixie", "ATCGC")
+        with self.subTest():
+            self.assertTrue(isinstance(record, SeqRecord))
+        with self.subTest():
+            self.assertTrue(isinstance(record.seq, Seq))
+        with self.subTest():
+            self.assertEqual(record.description, "Mycobacterium phage Trixie")
+        with self.subTest():
+            self.assertEqual(record.seq, "ATCGC")
+
+
+
+
+
+
+
+
+
+
+
 
 
 
