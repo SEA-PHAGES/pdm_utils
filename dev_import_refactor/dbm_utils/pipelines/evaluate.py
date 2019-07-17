@@ -23,7 +23,7 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
 
     if (ticket.type == "add" or ticket.type == "replace"):
         ticket.check_primary_phage_id(null_set, False)
-        ticket.check_host(null_set, False)
+        ticket.check_host_genus(null_set, False)
         ticket.check_cluster(null_set, False)
         ticket.check_status(null_set, False)
         ticket.check_description_field(null_set, False)
@@ -43,7 +43,7 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
     # TODO unit test.
     elif ticket.type == "update":
         ticket.check_primary_phage_id(null_set, False)
-        ticket.check_host(null_set, False)
+        ticket.check_host_genus(null_set, False)
         ticket.check_cluster(null_set, False)
         ticket.check_status(null_set, False)
         ticket.check_description_field(null_set, False)
@@ -62,7 +62,7 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
         # Everything except the primary phage_id field should be 'none'
         ticket.check_primary_phage_id(null_set, False)
         ticket.check_secondary_phage_id(null_set, True)
-        ticket.check_host(null_set, True)
+        ticket.check_host_genus(null_set, True)
         ticket.check_subcluster(null_set, True)
         ticket.check_cluster(null_set, True)
         ticket.check_status(null_set, True)
@@ -85,7 +85,7 @@ def check_phagesdb_genome(genome_obj, null_set):
 
     genome_obj.check_phage_id(null_set, False)
     genome_obj.check_phage_name(null_set, False)
-    genome_obj.check_host(null_set, False)
+    genome_obj.check_host_genus(null_set, False)
     genome_obj.check_cluster(null_set, False)
     genome_obj.check_subcluster(null_set, False)
     genome_obj.check_accession(null_set, False)
@@ -184,9 +184,9 @@ def check_genome(genome_obj):
     genome_obj.check_record_description_phage_name()
     genome_obj.check_record_source_phage_name()
     genome_obj.check_record_organism_phage_name()
-    genome_obj.check_record_description_host_name()
-    genome_obj.check_record_source_host_name()
-    genome_obj.check_record_organism_host_name()
+    genome_obj.check_record_description_host_genus()
+    genome_obj.check_record_source_host_genus()
+    genome_obj.check_record_organism_host_genus()
     genome_obj.check_author()
     genome_obj.check_cds_feature_tally()
 
@@ -258,9 +258,9 @@ def check_source(src_obj):
     """Check a SourceFeature object for errors."""
 
     src_obj.check_organism_phage_name()
-    src_obj.check_organism_host_name()
-    src_obj.check_host_host_name()
-    src_obj.check_lab_host_host_name()
+    src_obj.check_organism_host_genus()
+    src_obj.check_host_host_genus()
+    src_obj.check_lab_host_host_genus()
 
 
 
@@ -276,7 +276,7 @@ def compare_genomes(genome_pair_obj):
     genome_pair_obj.compare_cluster()
     genome_pair_obj.compare_subcluster()
     genome_pair_obj.compare_accession()
-    genome_pair_obj.compare_host()
+    genome_pair_obj.compare_host_genus()
     genome_pair_obj.compare_author()
 
 
@@ -305,7 +305,7 @@ def check_add_tickets(genome_obj):
     # genome_obj.check_type(type_set)
     # genome_obj.check_primary_phage_id(phage_id_set, False)
     # genome_obj.check_secondary_phage_id(null_set)
-    # genome_obj.check_host(host_set)
+    # genome_obj.check_host_genus(host_genus_set)
     # genome_obj.check_cluster(cluster_set)
     # genome_obj.check_subcluster_structure()
     # genome_obj.check_cluster_structure()
@@ -340,7 +340,7 @@ def check_replace_tickets(matched_object):
 
         # ticket.check_type(type_set)
         # ticket.check_secondary_phage_id(phage_id_set)
-        # ticket.check_host(host_set)
+        # ticket.check_host_genus(host_genus_set)
         # ticket.check_cluster(cluster_set)
         # ticket.check_subcluster_structure()
         # ticket.check_cluster_structure()

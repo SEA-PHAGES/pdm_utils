@@ -23,7 +23,7 @@ class TestEvaluateClass(unittest.TestCase):
         self.add_ticket1.primary_phage_id = "Trixie_Draft"
         self.add_ticket1.run_mode = "phagesdb"
         self.add_ticket1.description_field = "product"
-        self.add_ticket1.host = "Mycobacterium smegmatis"
+        self.add_ticket1.host_genus = "Mycobacterium smegmatis"
         self.add_ticket1.cluster = "A"
         self.add_ticket1.subcluster = "A2"
         self.add_ticket1.status = "final"
@@ -88,10 +88,10 @@ class TestEvaluateClass(unittest.TestCase):
 
     def test_check_ticket_structure_4(self):
         """Verify an error is produced with an incorrectly structured
-        'add' ticket 'host' field."""
+        'add' ticket 'host_genus' field."""
 
         ticket = self.add_ticket1
-        ticket.host = "none"
+        ticket.host_genus = "none"
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
@@ -277,9 +277,9 @@ class TestEvaluateClass(unittest.TestCase):
     #     self.assertEqual(self.update_ticket.evaluations[0].status, "error")
     #
     # def test_check_update_ticket_3(self):
-    #     """Host is none."""
+    #     """host_genus is none."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.host = "none"
+    #     self.update_ticket.host_genus = "none"
     #     self.update_ticket.check_update_ticket(phage_id_set)
     #     self.assertEqual(self.update_ticket.evaluations[1].status, "error")
     #
@@ -359,9 +359,9 @@ class TestEvaluateClass(unittest.TestCase):
     #     self.assertEqual(len(self.add_ticket.evaluations), 1)
     #
     # def test_check_add_ticket_4(self):
-    #     """Host is none."""
+    #     """host_genus is none."""
     #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.host = "none"
+    #     self.add_ticket.host_genus = "none"
     #     self.add_ticket.check_add_ticket(phage_id_set)
     #     self.assertEqual(len(self.add_ticket.evaluations), 1)
     #
@@ -442,9 +442,9 @@ class TestEvaluateClass(unittest.TestCase):
     #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
     #
     # def test_check_remove_ticket_3(self):
-    #     """Host is not none."""
+    #     """host_genus is not none."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.host = "Mycobacterium"
+    #     self.remove_ticket.host_genus = "Mycobacterium"
     #     self.remove_ticket.check_remove_ticket(phage_id_set)
     #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
     #
@@ -542,9 +542,9 @@ class TestEvaluateClass(unittest.TestCase):
     #     self.assertEqual(len(self.replace_ticket.evaluations), 2)
     #
     # def test_check_replace_ticket_5(self):
-    #     """Host is none."""
+    #     """host_genus is none."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.host = "none"
+    #     self.replace_ticket.host_genus = "none"
     #     self.replace_ticket.check_replace_ticket(phage_id_set)
     #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
     #
@@ -685,7 +685,7 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome = Genome.Genome()
         self.genome.phage_id = "Trixie"
         self.genome.phage_name = "Trixie_Draft"
-        self.genome.host = "Mycobacterium"
+        self.genome.host_genus = "Mycobacterium"
         self.genome.cluster = "A"
         self.genome.subcluster = "A2"
         self.genome.accession = "ABC123"
@@ -740,9 +740,9 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_check_phagesdb_genome_4(self):
         """Verify an error is produced with a PhagesDB genome with
-        no host."""
+        no host_genus."""
 
-        self.genome.host = ""
+        self.genome.host_genus = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
         for eval in self.genome.evaluations:

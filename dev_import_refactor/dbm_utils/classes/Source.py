@@ -25,14 +25,14 @@ class SourceFeature:
 
         # Common to Phamerator.
         self.parent_phage_id = ""
-        self.parent_host = ""
+        self.parent_host_genus = ""
 
 
         # Computed data fields.
         self._organism_phage_name = ""
-        self._organism_host_name = ""
-        self._host_host_name = ""
-        self._lab_host_host_name = ""
+        self._organism_host_genus = ""
+        self._host_host_genus = ""
+        self._lab_host_host_genus = ""
 
 
 
@@ -54,23 +54,23 @@ class SourceFeature:
     #     self.evaluations.append(eval_object)
 
     def parse_organism(self):
-        """Retrieve the phage name and host name from the 'organism' field."""
+        """Retrieve the phage name and host_genus name from the 'organism' field."""
         self._organism_phage_name, \
-        self._organism_host_name = \
+        self._organism_host_genus = \
             basic.parse_names_from_record_field(self.organism)
 
     def parse_host(self):
-        """Retrieve the host name from the 'host' field."""
+        """Retrieve the host_genus name from the 'host' field."""
         phage_name, \
-        self._host_host_name = \
+        self._host_host_genus = \
             basic.parse_names_from_record_field(self.host)
         # Note: no need to assign phage name, since this field is only
         # expected to contain host information.
 
     def parse_lab_host(self):
-        """Retrieve the host name from the 'lab_host' field."""
+        """Retrieve the host_genus name from the 'lab_host' field."""
         phage_name, \
-        self._lab_host_host_name = \
+        self._lab_host_host_genus = \
             basic.parse_names_from_record_field(self.lab_host)
         # Note: no need to assign phage name, since this field is only
         # expected to contain host information.
@@ -104,57 +104,57 @@ class SourceFeature:
 
 
 
-    def check_organism_host_name(self):
-        """Check host name spelling in the organism field."""
+    def check_organism_host_genus(self):
+        """Check host_genus name spelling in the organism field."""
 
-        if self.parent_host != self._organism_host_name:
-            result = "The host name in the organism field " + \
-                        "does not match the parent_host."
+        if self.parent_host_genus != self._organism_host_genus:
+            result = "The host_genus name in the organism field " + \
+                        "does not match the parent_host_genus."
             status = "error"
 
         else:
-            result = "The host name is spelled correctly."
+            result = "The host_genus name is spelled correctly."
             status = "correct"
 
-        definition = "Check host name spelling in the organism field."
+        definition = "Check host_genus name spelling in the organism field."
         eval = Eval.Eval(id = "SRC0002", \
                         definition = definition, \
                         result = result, \
                         status = status)
         self.evaluations.append(eval)
 
-    def check_host_host_name(self):
-        """Check host name spelling in the host field."""
+    def check_host_host_genus(self):
+        """Check host_genus name spelling in the host field."""
 
-        if self.parent_host != self._host_host_name:
-            result = "The host name in the host field " + \
-                        "does not match the parent_host."
+        if self.parent_host_genus != self._host_host_genus:
+            result = "The host_genus name in the host field " + \
+                        "does not match the parent_host_genus."
             status = "error"
 
         else:
-            result = "The host name is spelled correctly."
+            result = "The host_genus name is spelled correctly."
             status = "correct"
 
-        definition = "Check host name spelling in the host field."
+        definition = "Check host_genus name spelling in the host field."
         eval = Eval.Eval(id = "SRC0003", \
                         definition = definition, \
                         result = result, \
                         status = status)
         self.evaluations.append(eval)
 
-    def check_lab_host_host_name(self):
-        """Check host name spelling in the lab_host field."""
+    def check_lab_host_host_genus(self):
+        """Check host_genus name spelling in the lab_host field."""
 
-        if self.parent_host != self._lab_host_host_name:
-            result = "The host name in the lab_host field " + \
-                        "does not match the parent_host."
+        if self.parent_host_genus != self._lab_host_host_genus:
+            result = "The host_genus name in the lab_host field " + \
+                        "does not match the parent_host_genus."
             status = "error"
 
         else:
-            result = "The host name is spelled correctly."
+            result = "The host_genus name is spelled correctly."
             status = "correct"
 
-        definition = "Check host name spelling in the lab_host field."
+        definition = "Check host_genus name spelling in the lab_host field."
         eval = Eval.Eval(id = "SRC0004", \
                         definition = definition, \
                         result = result, \

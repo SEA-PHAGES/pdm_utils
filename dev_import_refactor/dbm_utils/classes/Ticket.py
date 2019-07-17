@@ -25,7 +25,7 @@ class GenomeTicket:
 
         # Attributes used to populate Genome objects for
         # 'update', 'add', and 'replace' ticket types.
-        self.host = ""
+        self.host_genus = ""
         self.cluster = ""
         self.subcluster = ""
         self.status = ""
@@ -75,8 +75,8 @@ class GenomeTicket:
         self.primary_phage_id = basic.lower_case(value)
 
     def set_host(self, value):
-        """Set the host."""
-        self.host = basic.lower_case(value)
+        """Set the host_genus."""
+        self.host_genus = basic.lower_case(value)
 
     def set_cluster(self, value):
         """Set the cluster."""
@@ -190,12 +190,12 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_host(self, value_set, expected = True):
-        """Check if the host is populated with an empty value.
+    def check_host_genus(self, value_set, expected = True):
+        """Check if the host_genus is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
         output = basic.check_value_expected_in_set(
-                    self.host, value_set, expected)
+                    self.host_genus, value_set, expected)
 
         if output:
             result = "The field is populated correctly."
@@ -204,7 +204,7 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
 
-        definition = "Check if host field is correctly populated."
+        definition = "Check if host_genus field is correctly populated."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 

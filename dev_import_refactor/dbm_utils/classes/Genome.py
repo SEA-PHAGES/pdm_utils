@@ -32,7 +32,7 @@ class Genome:
 
 
         # Common to all genomes
-        self.host = ""
+        self.host_genus = ""
         self.accession = ""
         self.author = "" # TODO do I need this in addition to annotation_author?
 
@@ -120,9 +120,9 @@ class Genome:
         self._record_description_phage_name = ""
         self._record_source_phage_name = ""
         self._record_organism_phage_name = ""
-        self._record_description_host_name = ""
-        self._record_source_host_name = ""
-        self._record_organism_host_name = ""
+        self._record_description_host_genus = ""
+        self._record_source_host_genus = ""
+        self._record_organism_host_genus = ""
 
 
         self._cds_processed_product_descriptions_tally = 0
@@ -184,8 +184,8 @@ class Genome:
         else:
             self.set_phage_id("")
 
-    def set_host_from_field(self, value):
-        """Set the host from a value parsed from the indicated field."""
+    def set_host_genus_from_field(self, value):
+        """Set the host_genus from a value parsed from the indicated field."""
 
         if value == "record_name":
             self.set_host(self.record_name)
@@ -201,41 +201,41 @@ class Genome:
             self.set_host(self.record_organism)
         elif value =="record_filename":
             self.set_host(self.record_filename)
-        elif value =="record_description_host_name":
-            self.set_host(self._record_description_host_name)
-        elif value =="record_source_host_name":
-            self.set_host(self._record_source_host_name)
-        elif value =="record_organism_host_name":
-            self.set_host(self._record_organism_host_name)
+        elif value =="record_description_host_genus":
+            self.set_host(self._record_description_host_genus)
+        elif value =="record_source_host_genus":
+            self.set_host(self._record_source_host_genus)
+        elif value =="record_organism_host_genus":
+            self.set_host(self._record_organism_host_genus)
         else:
             self.set_host("")
 
     def parse_record_description(self):
-        """Retrieve the phage name and host name from the record's
+        """Retrieve the phage name and host_genus name from the record's
         'description' field."""
         string = self.record_description
-        phage_name, host_name = \
+        phage_name, host_genus = \
             basic.parse_names_from_record_field(string)
         self._record_description_phage_name = phage_name
-        self._record_description_host_name = host_name
+        self._record_description_host_genus = host_genus
 
     def parse_record_source(self):
-        """Retrieve the phage name and host name from the record's
+        """Retrieve the phage name and host_genus name from the record's
         'source' field."""
         string = self.record_source
-        phage_name, host_name = \
+        phage_name, host_genus = \
             basic.parse_names_from_record_field(string)
         self._record_source_phage_name = phage_name
-        self._record_source_host_name = host_name
+        self._record_source_host_genus = host_genus
 
     def parse_record_organism(self):
-        """Retrieve the phage name and host name from the record's
+        """Retrieve the phage name and host_genus name from the record's
         'organism' field."""
         string = self.record_organism
-        phage_name, host_name = \
+        phage_name, host_genus = \
             basic.parse_names_from_record_field(string)
         self._record_organism_phage_name = phage_name
-        self._record_organism_host_name = host_name
+        self._record_organism_host_genus = host_genus
 
 
 
@@ -248,20 +248,20 @@ class Genome:
 
 
     def set_host(self, value, format = "empty_string"):
-        """Set the host genus and discard the species."""
+        """Set the host_genus and discard the species."""
 
         if isinstance(value, str):
             value = value.strip()
 
-        # The host value may need to be split. But don't split until
+        # The host_genus value may need to be split. But don't split until
         # it is determined if the value is a null value.
         value = basic.convert_empty(value, "empty_string")
 
         if value != "":
-            self.host = value.split(" ")[0]
+            self.host_genus = value.split(" ")[0]
 
         else:
-            self.host = basic.convert_empty(value, format)
+            self.host_genus = basic.convert_empty(value, format)
 
 
 
@@ -569,19 +569,19 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_host(self, host_set, expect = False):
-        """Check that the host is valid."""
+    def check_host_genus(self, host_set, expect = False):
+        """Check that the host_genus is valid."""
 
-        value = basic.check_value_expected_in_set(self.host,
+        value = basic.check_value_expected_in_set(self.host_genus,
                 host_set, expect)
         if value:
-            result = "The host is valid."
+            result = "The host_genus is valid."
             status = "correct"
         else:
-            result = "The host is not valid."
+            result = "The host_genus is not valid."
             status = "error"
 
-        definition = "Check that the host is valid."
+        definition = "Check that the host_genus is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
@@ -947,54 +947,54 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_description_host_name(self):
-        """Check host name spelling in the record description field."""
+    def check_record_description_host_genus(self):
+        """Check host_genus name spelling in the record description field."""
 
 
-        if self.host != self._record_description_host_name:
-            result = "The host name in the record_description field " + \
-                        "does not match the host."
+        if self.host_genus != self._record_description_host_genus:
+            result = "The host_genus name in the record_description field " + \
+                        "does not match the host_genus."
             status = "error"
 
         else:
-            result = "Record description field contains the host name."
+            result = "Record description field contains the host_genus name."
             status = "correct"
 
-        definition = "Check host name spelling in the record description field."
+        definition = "Check host_genus name spelling in the record description field."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_source_host_name(self):
-        """Check host name spelling in the record source field."""
+    def check_record_source_host_genus(self):
+        """Check host_genus name spelling in the record source field."""
 
 
-        if self.host != self._record_source_host_name:
-            result = "The host name in the record_source field " + \
-                        "does not match the host."
+        if self.host_genus != self._record_source_host_genus:
+            result = "The host_genus name in the record_source field " + \
+                        "does not match the host_genus."
             status = "error"
 
         else:
-            result = "Record source field contains the host name."
+            result = "Record source field contains the host_genus name."
             status = "correct"
 
-        definition = "Check host name spelling in the record source field."
+        definition = "Check host_genus name spelling in the record source field."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_organism_host_name(self):
-        """Check host name spelling in the record organism field."""
+    def check_record_organism_host_genus(self):
+        """Check host_genus name spelling in the record organism field."""
 
 
-        if self.host != self._record_organism_host_name:
-            result = "The host name in the record_organism field " + \
-                        "does not match the host."
+        if self.host_genus != self._record_organism_host_genus:
+            result = "The host_genus name in the record_organism field " + \
+                        "does not match the host_genus."
             status = "error"
 
         else:
-            result = "Record organism field contains the host name."
+            result = "Record organism field contains the host_genus name."
             status = "correct"
 
-        definition = "Check host name spelling in the record organism field."
+        definition = "Check host_genus name spelling in the record organism field."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 

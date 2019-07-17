@@ -43,26 +43,26 @@ class TestSourceFeatureClass(unittest.TestCase):
         self.feature.organism = ""
         self.feature.parse_organism()
         expected_phage = ""
-        expected_host = ""
+        expected_host_genus = ""
         with self.subTest():
             self.assertEqual(\
                 self.feature._organism_phage_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.feature._organism_host_name, expected_host)
+                self.feature._organism_host_genus, expected_host_genus)
 
     def test_parse_organism_2(self):
         """Verify string is parsed correctly."""
         self.feature.organism = "asdf Mycobacterium phage Trixie."
         self.feature.parse_organism()
         expected_phage = "Trixie"
-        expected_host = "Mycobacterium"
+        expected_host_genus = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
                 self.feature._organism_phage_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.feature._organism_host_name, expected_host)
+                self.feature._organism_host_genus, expected_host_genus)
 
 
 
@@ -71,17 +71,17 @@ class TestSourceFeatureClass(unittest.TestCase):
         """Verify empty string is parsed correctly."""
         self.feature.host = ""
         self.feature.parse_host()
-        expected_host = ""
+        expected_host_genus = ""
         self.assertEqual(\
-            self.feature._host_host_name, expected_host)
+            self.feature._host_host_genus, expected_host_genus)
 
     def test_parse_host_2(self):
         """Verify string is parsed correctly."""
         self.feature.host = "asdf Mycobacterium phage Trixie."
         self.feature.parse_host()
-        expected_host = "Mycobacterium"
+        expected_host_genus = "Mycobacterium"
         self.assertEqual(\
-            self.feature._host_host_name, expected_host)
+            self.feature._host_host_genus, expected_host_genus)
 
 
 
@@ -90,17 +90,17 @@ class TestSourceFeatureClass(unittest.TestCase):
         """Verify empty string is parsed correctly."""
         self.feature.lab_host = ""
         self.feature.parse_lab_host()
-        expected_host = ""
+        expected_host_genus = ""
         self.assertEqual(\
-            self.feature._lab_host_host_name, expected_host)
+            self.feature._lab_host_host_genus, expected_host_genus)
 
     def test_parse_lab_host_2(self):
         """Verify string is parsed correctly."""
         self.feature.lab_host = "asdf Mycobacterium phage Trixie."
         self.feature.parse_lab_host()
-        expected_host = "Mycobacterium"
+        expected_host_genus = "Mycobacterium"
         self.assertEqual(\
-            self.feature._lab_host_host_name, expected_host)
+            self.feature._lab_host_host_genus, expected_host_genus)
 
 
 
@@ -122,52 +122,52 @@ class TestSourceFeatureClass(unittest.TestCase):
 
 
 
-    def test_check_organism_host_name_1(self):
+    def test_check_organism_host_genus_1(self):
         """Check that no warning is produced."""
-        self.feature.parent_host = "Mycobacterium"
-        self.feature._organism_host_name = "Mycobacterium"
-        self.feature.check_organism_host_name()
+        self.feature.parent_host_genus = "Mycobacterium"
+        self.feature._organism_host_genus = "Mycobacterium"
+        self.feature.check_organism_host_genus()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_organism_host_name_2(self):
+    def test_check_organism_host_genus_2(self):
         """Check that a warning is produced."""
-        self.feature.parent_host = "Gordonia"
-        self.feature._organism_host_name = "Mycobacterium"
-        self.feature.check_organism_host_name()
+        self.feature.parent_host_genus = "Gordonia"
+        self.feature._organism_host_genus = "Mycobacterium"
+        self.feature.check_organism_host_genus()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
 
-    def test_check_host_host_name_1(self):
+    def test_check_host_host_genus_1(self):
         """Check that no warning is produced."""
-        self.feature.parent_host = "Mycobacterium"
-        self.feature._host_host_name = "Mycobacterium"
-        self.feature.check_host_host_name()
+        self.feature.parent_host_genus = "Mycobacterium"
+        self.feature._host_host_genus = "Mycobacterium"
+        self.feature.check_host_host_genus()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_host_host_name_2(self):
+    def test_check_host_host_genus_2(self):
         """Check that a warning is produced."""
-        self.feature.parent_host = "Gordonia"
-        self.feature._host_host_name = "Mycobacterium"
-        self.feature.check_host_host_name()
+        self.feature.parent_host_genus = "Gordonia"
+        self.feature._host_host_genus = "Mycobacterium"
+        self.feature.check_host_host_genus()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
 
-    def test_check_lab_host_host_name_1(self):
+    def test_check_lab_host_host_genus_1(self):
         """Check that no warning is produced."""
-        self.feature.parent_host = "Mycobacterium"
-        self.feature._lab_host_host_name = "Mycobacterium"
-        self.feature.check_lab_host_host_name()
+        self.feature.parent_host_genus = "Mycobacterium"
+        self.feature._lab_host_host_genus = "Mycobacterium"
+        self.feature.check_lab_host_host_genus()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_lab_host_host_name_2(self):
+    def test_check_lab_host_host_genus_2(self):
         """Check that a warning is produced."""
-        self.feature.parent_host = "Gordonia"
-        self.feature._lab_host_host_name = "Mycobacterium"
-        self.feature.check_lab_host_host_name()
+        self.feature.parent_host_genus = "Gordonia"
+        self.feature._lab_host_host_genus = "Mycobacterium"
+        self.feature.check_lab_host_host_genus()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 

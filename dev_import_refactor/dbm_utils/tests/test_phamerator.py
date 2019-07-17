@@ -126,7 +126,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.phage_name, output_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome1.host, output_host)
+            self.assertEqual(self.genome1.host_genus, output_host)
         with self.subTest():
             self.assertEqual(self.genome1.sequence, output_sequence)
         with self.subTest():
@@ -208,7 +208,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.phage_name, output_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome1.host, output_host)
+            self.assertEqual(self.genome1.host_genus, output_host)
         with self.subTest():
             self.assertEqual(self.genome1.sequence, output_sequence)
         with self.subTest():
@@ -292,7 +292,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(returned_dict["phage_id"], exp_ids)
         with self.subTest():
-            self.assertEqual(returned_dict["host"], exp_host)
+            self.assertEqual(returned_dict["host_genus"], exp_host)
         with self.subTest():
             self.assertEqual(returned_dict["status"], exp_status)
         with self.subTest():
@@ -368,7 +368,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         """Verify list of statements are created correctly."""
 
         self.genome1.phage_id = "L5"
-        self.genome1.host = "Mycobacterium"
+        self.genome1.host_genus = "Mycobacterium"
         self.genome1.status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.author = "1"
@@ -546,7 +546,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "L5_Draft"
-        self.genome1.host = "Mycobacterium"
+        self.genome1.host_genus = "Mycobacterium"
         self.genome1.status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.sequence = "ATCG"
@@ -576,7 +576,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "L5_Draft"
-        self.genome1.host = "Mycobacterium"
+        self.genome1.host_genus = "Mycobacterium"
         self.genome1.status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.sequence = "ATCG"
@@ -609,7 +609,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome1 = Genome.Genome()
         self.genome1.phage_id = "L5"
         self.genome1.type = "add"
-        self.genome1.host = "Gordonia"
+        self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
         self.genome1._retain = True
 
@@ -619,7 +619,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome2 = Genome.Genome()
         self.genome2.phage_id = "L5"
         self.genome2.type = "phamerator"
-        self.genome2.host = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
         self.genome2.cluster = "A"
 
     def test_copy_data_from_phamerator_1(self):
@@ -632,68 +632,68 @@ class TestPhameratorFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertFalse(genome1._retain)
         with self.subTest():
-            self.assertEqual(genome1.host, "Gordonia")
+            self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
         with self.subTest():
             self.assertEqual(genome1.evaluations[0].status, "correct")
 
     def test_copy_data_from_phamerator_2(self):
-        """Check that an "add" genome with host field set to 'retain' is
+        """Check that an "add" genome with host_genus field set to 'retain' is
         populated correctly."""
 
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retain"
+        self.genome1.host_genus = "retain"
         self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
         genome1 = self.matched_data_obj1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._retain)
         with self.subTest():
-            self.assertEqual(genome1.host, "Mycobacterium")
+            self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
         with self.subTest():
             self.assertEqual(genome1.evaluations[0].status, "correct")
 
     def test_copy_data_from_phamerator_3(self):
-        """Check that an "invalid" genome with host field set to 'retain' is
+        """Check that an "invalid" genome with host_genus field set to 'retain' is
         not populated correctly."""
 
         self.genome1.type = "invalid"
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retain"
+        self.genome1.host_genus = "retain"
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
         with self.subTest():
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
         with self.subTest():
-            self.assertEqual(self.genome1.host, "retain")
+            self.assertEqual(self.genome1.host_genus, "retain")
         with self.subTest():
             self.assertEqual(len(self.genome1.evaluations), 0)
 
     def test_copy_data_from_phamerator_4(self):
-        """Check that an "add" genome with host field set to 'retain' is
+        """Check that an "add" genome with host_genus field set to 'retain' is
         not populated correctly when "invalid" type is requested."""
 
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retain"
+        self.genome1.host_genus = "retain"
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "invalid")
         with self.subTest():
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
         with self.subTest():
-            self.assertEqual(self.genome1.host, "retain")
+            self.assertEqual(self.genome1.host_genus, "retain")
         with self.subTest():
             self.assertEqual(len(self.genome1.evaluations), 0)
 
     def test_copy_data_from_phamerator_5(self):
-        """Check that an "add" genome with host field set to 'retain' is
+        """Check that an "add" genome with host_genus field set to 'retain' is
         not populated correctly when there is no matching "phamerator"
         genomet type."""
 
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retain"
+        self.genome1.host_genus = "retain"
         self.genome1._retain = False
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
         with self.subTest():
@@ -702,7 +702,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
         with self.subTest():
-            self.assertEqual(self.genome1.host, "retain")
+            self.assertEqual(self.genome1.host_genus, "retain")
         with self.subTest():
             self.assertEqual(self.genome1.evaluations[0].status, "error")
 

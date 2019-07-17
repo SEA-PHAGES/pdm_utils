@@ -24,7 +24,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.update_ticket = Ticket.GenomeTicket()
         self.update_ticket.type = "update"
         self.update_ticket.primary_phage_id = "Trixie"
-        self.update_ticket.host = "Mycobacterium"
+        self.update_ticket.host_genus = "Mycobacterium"
         self.update_ticket.cluster = "A"
         self.update_ticket.status = "Final"
         self.update_ticket.description_field = "none"
@@ -38,7 +38,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.add_ticket = Ticket.GenomeTicket()
         self.add_ticket.type = "add"
         self.add_ticket.primary_phage_id = "Trixie"
-        self.add_ticket.host = "Mycobacterium"
+        self.add_ticket.host_genus = "Mycobacterium"
         self.add_ticket.cluster = "A"
         self.add_ticket.status = "draft"
         self.add_ticket.description_field = "Product"
@@ -51,7 +51,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.remove_ticket = Ticket.GenomeTicket()
         self.remove_ticket.type = "remove"
         self.remove_ticket.primary_phage_id = "none"
-        self.remove_ticket.host = "none"
+        self.remove_ticket.host_genus = "none"
         self.remove_ticket.cluster = "none"
         self.remove_ticket.subcluster = "none"
         self.remove_ticket.status = "none"
@@ -66,7 +66,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.replace_ticket = Ticket.GenomeTicket()
         self.replace_ticket.type = "replace"
         self.replace_ticket.primary_phage_id = "Trixie"
-        self.replace_ticket.host = "Mycobacterium"
+        self.replace_ticket.host_genus = "Mycobacterium"
         self.replace_ticket.cluster = "A"
         self.replace_ticket.status = "draft"
         self.replace_ticket.description_field = "Product"
@@ -113,19 +113,19 @@ class TestGenomeTicketClass(unittest.TestCase):
         """Check that value is not lowercased when not 'none'."""
         value = "Mycobacterium"
         self.ticket.set_host(value)
-        self.assertEqual(self.ticket.host, "Mycobacterium")
+        self.assertEqual(self.ticket.host_genus, "Mycobacterium")
 
     def test_set_host_2(self):
         """Check that value is lowercased when 'none'."""
         value = "NONE"
         self.ticket.set_host(value)
-        self.assertEqual(self.ticket.host, "none")
+        self.assertEqual(self.ticket.host_genus, "none")
 
     def test_set_host_3(self):
         """Check that value is lowercased when 'retrieve'."""
         value = "RETRIEVE"
         self.ticket.set_host(value)
-        self.assertEqual(self.ticket.host, "retrieve")
+        self.assertEqual(self.ticket.host_genus, "retrieve")
 
 
 
@@ -357,22 +357,22 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_check_host_1(self):
+    def test_check_host_genus_1(self):
         """Check that no error is produced if the
-        host is not present in the empty/null set
+        host_genus is not present in the empty/null set
         and not expected to be in the set."""
         set1 = set(["none"])
-        self.ticket.host = "Mycobacterium"
-        self.ticket.check_host(set1, False)
+        self.ticket.host_genus = "Mycobacterium"
+        self.ticket.check_host_genus(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
-    def test_check_host_2(self):
+    def test_check_host_genus_2(self):
         """Check that an error is produced if the
-        host is present in the empty/null set
+        host_genus is present in the empty/null set
         and not expected to be in the set."""
         set1 = set(["none"])
-        self.ticket.host = "none"
-        self.ticket.check_host(set1, False)
+        self.ticket.host_genus = "none"
+        self.ticket.check_host_genus(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 

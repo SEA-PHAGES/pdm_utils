@@ -146,17 +146,17 @@ class TestGenomePairClass(unittest.TestCase):
         are identical."""
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "Trixie"
-        self.genome1.host = "copy"
+        self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
         self.genome2.phage_id = "L5"
         self.genome2.phage_name = "copy"
-        self.genome2.host = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "phamerator"
 
         self.genome_pair.copy_data("phage_id", "L5", "L5", "copy")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome1.host, "copy")
+            self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, "copy")
 
@@ -166,17 +166,17 @@ class TestGenomePairClass(unittest.TestCase):
         in either genome, using 'phage_id' attribute."""
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "Trixie"
-        self.genome1.host = "copy"
+        self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
         self.genome2.phage_id = "D29"
         self.genome2.phage_name = "copy"
-        self.genome2.host = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "phamerator"
 
         self.genome_pair.copy_data("phage_id", "Trixie", "L5", "copy")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome1.host, "copy")
+            self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, "copy")
 
@@ -186,17 +186,17 @@ class TestGenomePairClass(unittest.TestCase):
         in either genome, using 'phage_id' attribute."""
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "Trixie"
-        self.genome1.host = "copy"
+        self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
         self.genome2.phage_id = "D29"
         self.genome2.phage_name = "copy"
-        self.genome2.host = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "phamerator"
 
         self.genome_pair.copy_data("phage_id", "L5", "Trixie", "copy")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome1.host, "copy")
+            self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, "copy")
 
@@ -206,17 +206,17 @@ class TestGenomePairClass(unittest.TestCase):
         in either genome, using 'type' attribute."""
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "Trixie"
-        self.genome1.host = "copy"
+        self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
         self.genome2.phage_id = "D29"
         self.genome2.phage_name = "copy"
-        self.genome2.host = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "import"
 
         self.genome_pair.copy_data("type", "L5", "import", "copy")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome1.host, "copy")
+            self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, "copy")
 
@@ -226,17 +226,17 @@ class TestGenomePairClass(unittest.TestCase):
         in either genome, using 'type' attribute."""
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "Trixie"
-        self.genome1.host = "copy"
+        self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
         self.genome2.phage_id = "D29"
         self.genome2.phage_name = "copy"
-        self.genome2.host = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "import"
 
         self.genome_pair.copy_data("type", "phamerator", "Trixie", "copy")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome1.host, "copy")
+            self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, "copy")
 
@@ -247,7 +247,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.type = "phamerator"
         self.genome1.phage_id = 1
         self.genome1.phage_name = 2
-        self.genome1.host = 3
+        self.genome1.host_genus = 3
         self.genome1.sequence = 4
         self.genome1.accession = 5
         self.genome1.author = 6
@@ -288,9 +288,9 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._record_description_phage_name = 42
         self.genome1._record_source_phage_name = 43
         self.genome1._record_organism_phage_name = 44
-        self.genome1._record_description_host_name = 45
-        self.genome1._record_source_host_name = 46
-        self.genome1._record_organism_host_name = 47
+        self.genome1._record_description_host_genus = 45
+        self.genome1._record_source_host_genus = 46
+        self.genome1._record_organism_host_genus = 47
         self.genome1._cds_processed_product_descriptions_tally = 48
         self.genome1._cds_processed_function_descriptions_tally = 49
         self.genome1._cds_processed_note_descriptions_tally = 50
@@ -310,7 +310,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, 2)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.host, 3)
+            self.assertEqual(self.genome_pair.genome2.host_genus, 3)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.sequence, 4)
         with self.subTest():
@@ -398,13 +398,13 @@ class TestGenomePairClass(unittest.TestCase):
                 self.genome_pair.genome2._record_organism_phage_name, 44)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_description_host_name, 45)
+                self.genome_pair.genome2._record_description_host_genus, 45)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_source_host_name, 46)
+                self.genome_pair.genome2._record_source_host_genus, 46)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_organism_host_name, 47)
+                self.genome_pair.genome2._record_organism_host_genus, 47)
         with self.subTest():
             self.assertEqual(
                 self.genome_pair.genome2._cds_processed_product_descriptions_tally,
@@ -556,18 +556,18 @@ class TestGenomePairClass(unittest.TestCase):
 
 
 
-    def test_compare_host_1(self):
+    def test_compare_host_genus_1(self):
         """Check that identical hosts produce no warning."""
-        self.genome1.host = "Mycobacterium"
-        self.genome2.host = "Mycobacterium"
-        self.genome_pair.compare_host()
+        self.genome1.host_genus = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacterium"
+        self.genome_pair.compare_host_genus()
         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
-    def test_compare_host_2(self):
+    def test_compare_host_genus_2(self):
         """Check that different hosts produce a warning."""
-        self.genome1.host = "Mycobacterium"
-        self.genome2.host = "Mycobacteriums"
-        self.genome_pair.compare_host()
+        self.genome1.host_genus = "Mycobacterium"
+        self.genome2.host_genus = "Mycobacteriums"
+        self.genome_pair.compare_host_genus()
         self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 

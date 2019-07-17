@@ -355,12 +355,12 @@ def trim_characters(string):
 # TODO this can probably be improved.
 def parse_names_from_record_field(description):
     """Parse string of text from GenBank-formatted flat file to
-    identify the phage name and host name.
+    identify the phage name and host_genus name.
     """
 
     generic_words = set(["complete", "genome", "phage", "unclassified"])
 
-    host_name = ""
+    host_genus = ""
     phage_name = ""
 
     # Remove trailing whitespace and split into a list.
@@ -376,7 +376,7 @@ def parse_names_from_record_field(description):
 
 
     # Iterate through the list of processed words and attempt to
-    # identify the host name and phage name.
+    # identify the host_genus name and phage name.
     index = 0
     while index < len(split_description):
 
@@ -384,18 +384,18 @@ def parse_names_from_record_field(description):
 
         word_lower = word.lower()
 
-        # Attempt to identify the host.
+        # Attempt to identify the host_genus.
 
-        # Sometimes the host name is the word preceding 'phage' or 'virus'.
+        # Sometimes the host_genus name is the word preceding 'phage' or 'virus'.
         # e.g. 'Mycobacterium phage'.
         if index > 0:
             if (word_lower == "phage" or word_lower == "virus"):
-                host_name = split_description[index - 1]
+                host_genus = split_description[index - 1]
 
-        # Sometimes the host name is merged with 'phage'.
+        # Sometimes the host_genus name is merged with 'phage'.
         # e.g. 'Mycobacteriophage'.
         elif (len(word) > 5 and word_lower[-5:] == "phage"):
-            host_name = word[:-5]
+            host_genus = word[:-5]
 
         else:
             pass
@@ -408,7 +408,7 @@ def parse_names_from_record_field(description):
         if len(split_description) == 1:
 
             if (len(word) > 5 and word_lower[-5:] == "phage"):
-                host_name = word[:-5]
+                host_genus = word[:-5]
 
             elif word_lower not in generic_words:
                 phage_name = word
@@ -427,7 +427,7 @@ def parse_names_from_record_field(description):
         index += 1
 
 
-    return (phage_name, host_name)
+    return (phage_name, host_genus)
 
 
 

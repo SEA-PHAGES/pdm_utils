@@ -95,19 +95,19 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
-    def test_parse_phagesdb_host_1(self):
+    def test_parse_phagesdb_host_genus_1(self):
         """Verify host genus is retrieved and no error is produced."""
 
         data_dict = {"isolation_host": {"genus": "Mycobacterium"}}
-        host = phagesdb.parse_phagesdb_host(data_dict)
+        host = phagesdb.parse_phagesdb_host_genus(data_dict)
         expected_host = "Mycobacterium"
         self.assertEqual(host, expected_host)
 
-    def test_parse_phagesdb_host_2(self):
+    def test_parse_phagesdb_host_genus_2(self):
         """Verify host genus is not retrieved and an error is produced."""
 
         data_dict = {"isolation_host_x": {"genus": "Mycobacterium"}}
-        host = phagesdb.parse_phagesdb_host(data_dict)
+        host = phagesdb.parse_phagesdb_host_genus(data_dict)
         expected_host = ""
         self.assertEqual(host, expected_host)
 
@@ -251,7 +251,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -308,7 +308,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -365,7 +365,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -422,7 +422,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -479,7 +479,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -537,7 +537,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -593,7 +593,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -647,7 +647,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -701,7 +701,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host, expected_host)
+            self.assertEqual(self.genome.host_genus, expected_host)
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
@@ -763,7 +763,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1 = Genome.Genome()
         self.genome1.phage_id = "L5"
         self.genome1.type = "add"
-        self.genome1.host = "Gordonia"
+        self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
         self.genome1._retrieve = True
 
@@ -782,67 +782,67 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertFalse(genome1._retrieve)
         with self.subTest():
-            self.assertEqual(genome1.host, "Gordonia")
+            self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
         with self.subTest():
             self.assertEqual(genome1.evaluations[0].status, "correct")
 
     def test_copy_data_from_phagesdb_2(self):
-        """Check that an "add" genome with host field set to 'retrieve' is
+        """Check that an "add" genome with host_genus field set to 'retrieve' is
         populated correctly."""
 
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retrieve"
+        self.genome1.host_genus = "retrieve"
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
         genome1 = self.matched_data_obj1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._retrieve)
         with self.subTest():
-            self.assertEqual(genome1.host, "Mycobacterium")
+            self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
         with self.subTest():
             self.assertEqual(genome1.evaluations[0].status, "correct")
 
     def test_copy_data_from_phagesdb_3(self):
-        """Check that an "invalid" genome with host field set to 'retrieve' is
+        """Check that an "invalid" genome with host_genus field set to 'retrieve' is
         not populated correctly."""
 
         self.genome1.type = "invalid"
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retrieve"
+        self.genome1.host_genus = "retrieve"
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
         with self.subTest():
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
         with self.subTest():
-            self.assertEqual(self.genome1.host, "retrieve")
+            self.assertEqual(self.genome1.host_genus, "retrieve")
         with self.subTest():
             self.assertEqual(len(self.genome1.evaluations), 0)
 
     def test_copy_data_from_phagesdb_4(self):
-        """Check that an "add" genome with host field set to 'retrieve' is
+        """Check that an "add" genome with host_genus field set to 'retrieve' is
         not populated correctly when "invalid" type is requrested."""
 
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retrieve"
+        self.genome1.host_genus = "retrieve"
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "invalid")
         with self.subTest():
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
         with self.subTest():
-            self.assertEqual(self.genome1.host, "retrieve")
+            self.assertEqual(self.genome1.host_genus, "retrieve")
         with self.subTest():
             self.assertEqual(len(self.genome1.evaluations), 0)
 
     def test_copy_data_from_phagesdb_5(self):
-        """Check that an "add" genome with host field set to 'retrieve' is
+        """Check that an "add" genome with host_genus field set to 'retrieve' is
         not populated correctly when phage_id is not valid."""
 
         self.genome1.phage_id = "invalid"
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.genome1.host = "retrieve"
+        self.genome1.host_genus = "retrieve"
         self.genome1._retrieve = False
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
         with self.subTest():
@@ -851,7 +851,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
         with self.subTest():
-            self.assertEqual(self.genome1.host, "retrieve")
+            self.assertEqual(self.genome1.host_genus, "retrieve")
         with self.subTest():
             self.assertEqual(self.genome1.evaluations[0].status, "error")
 

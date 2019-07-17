@@ -62,7 +62,7 @@ def create_data_sets(genome_dict):
     Create sets of all unique values for several fields in the Phamerator data.
     """
     phage_id_set = set()
-    host_set = set()
+    host_genus_set = set()
     status_set = set()
     cluster_set = set()
     accession_set = set()
@@ -72,7 +72,7 @@ def create_data_sets(genome_dict):
 
         genome = genome_dict[genome_id]
         phage_id_set.add(genome.phage_id)
-        host_set.add(genome.host)
+        host_genus_set.add(genome.host_genus)
         status_set.add(genome.status)
         cluster_set.add(genome.cluster)
 
@@ -90,7 +90,7 @@ def create_data_sets(genome_dict):
 
     dictionary_of_sets = {}
     dictionary_of_sets["phage_id"] = phage_id_set
-    dictionary_of_sets["host"] = host_set
+    dictionary_of_sets["host_genus"] = host_genus_set
     dictionary_of_sets["status"] = status_set
     dictionary_of_sets["cluster"] = cluster_set
     dictionary_of_sets["subcluster"] = subcluster_set
@@ -136,7 +136,7 @@ def create_genome_update_statements(genome):
     statements = []
 
     statements.append(create_update_statement( \
-        table, field1, value1, "HostStrain", genome.host))
+        table, field1, value1, "HostStrain", genome.host_genus))
 
     statements.append(create_update_statement( \
         table, field1, value1, "status", genome.status))
@@ -230,7 +230,7 @@ def create_genome_insert_statement(genome):
         % (genome.phage_id, \
         genome.accession, \
         genome.phage_name, \
-        genome.host, \
+        genome.host_genus, \
         genome.sequence, \
         genome._length, \
         genome._gc, \

@@ -130,7 +130,7 @@ def copy_ticket_to_genome(matched_object):
         genome1.type = "add"
         genome1.set_phage_id(ticket.primary_phage_id)
         genome1.phage_name = ticket.primary_phage_id
-        genome1.set_host(ticket.host)
+        genome1.set_host(ticket.host_genus)
         genome1.set_accession(ticket.accession)
         genome1.status = ticket.status
         genome1.set_cluster(ticket.cluster)
@@ -157,7 +157,7 @@ def copy_ticket_to_genome(matched_object):
         # genome = Genome.Genome()
         # genome.type = "update"
         # genome.set_phage_id(ticket.primary_phage_id)
-        # genome.set_host(ticket.host)
+        # genome.set_host(ticket.host_genus)
         # genome.set_accession(ticket.accession)
         # genome.status = ticket.status
         # genome.set_cluster(ticket.cluster)

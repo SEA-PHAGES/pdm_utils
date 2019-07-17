@@ -62,13 +62,13 @@ def parse_phagesdb_subcluster(data_dict):
     return subcluster
 
 
-def parse_phagesdb_host(data_dict):
-    """Retrieve Host from PhagesDB."""
+def parse_phagesdb_host_genus(data_dict):
+    """Retrieve host_genus from PhagesDB."""
     try:
-        host = data_dict["isolation_host"]["genus"]
+        host_genus = data_dict["isolation_host"]["genus"]
     except:
-        host = ""
-    return host
+        host_genus = ""
+    return host_genus
 
 
 def parse_phagesdb_accession(data_dict):
@@ -170,8 +170,8 @@ def parse_phagesdb_data(genome_obj,data_dict):
     genome_obj.set_phage_id(phage_name)
 
     # Host
-    host = parse_phagesdb_host(data_dict)
-    genome_obj.set_host(host, "empty_string")
+    host_genus = parse_phagesdb_host_genus(data_dict)
+    genome_obj.set_host(host_genus, "empty_string")
 
     # Accession
     accession = parse_phagesdb_accession(data_dict)

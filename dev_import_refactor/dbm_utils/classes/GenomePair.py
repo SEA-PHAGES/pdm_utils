@@ -94,8 +94,8 @@ class GenomePair:
             # All other fields can be copied as needed.
             if (second.phage_name == keyword or keyword is None):
                 second.phage_name = first.phage_name
-            if (second.host == keyword or keyword is None):
-                second.host = first.host
+            if (second.host_genus == keyword or keyword is None):
+                second.host_genus = first.host_genus
             if (second.sequence == keyword or keyword is None):
                 second.sequence = first.sequence
             if (second.accession == keyword or keyword is None):
@@ -192,20 +192,20 @@ class GenomePair:
                 second._record_organism_phage_name = \
                     first._record_organism_phage_name
 
-            if (second._record_description_host_name == keyword \
+            if (second._record_description_host_genus == keyword \
                 or keyword is None):
 
-                second._record_description_host_name = \
-                    first._record_description_host_name
+                second._record_description_host_genus = \
+                    first._record_description_host_genus
 
-            if (second._record_source_host_name == keyword or keyword is None):
-                second._record_source_host_name = \
-                    first._record_source_host_name
-            if (second._record_organism_host_name == keyword \
+            if (second._record_source_host_genus == keyword or keyword is None):
+                second._record_source_host_genus = \
+                    first._record_source_host_genus
+            if (second._record_organism_host_genus == keyword \
                 or keyword is None):
 
-                second._record_organism_host_name = \
-                    first._record_organism_host_name
+                second._record_organism_host_genus = \
+                    first._record_organism_host_genus
 
             if (second._cds_processed_product_descriptions_tally == keyword \
                 or keyword is None):
@@ -545,17 +545,17 @@ class GenomePair:
         self.evaluations.append(eval)
 
 
-    def compare_host(self):
-        """Compare the host of each genome."""
+    def compare_host_genus(self):
+        """Compare the host_genus of each genome."""
 
-        if self.genome1.host != self.genome2.host:
+        if self.genome1.host_genus != self.genome2.host_genus:
             result = "The two genomes have different hosts."
             status = "error"
         else:
             result = "The two hosts are the same."
             status = "correct"
 
-        definition = "Compare the host of both genomes."
+        definition = "Compare the host_genus of both genomes."
         eval = Eval.Eval(id = "GENOMEPAIR0006", \
                         definition = definition, \
                         result = result, \

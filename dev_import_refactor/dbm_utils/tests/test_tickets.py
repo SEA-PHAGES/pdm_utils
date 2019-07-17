@@ -77,7 +77,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.ticket.primary_phage_id, "Trixie")
         with self.subTest():
-            self.assertEqual(self.ticket.host, "Mycobacterium")
+            self.assertEqual(self.ticket.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.ticket.cluster, "A")
         with self.subTest():
@@ -558,7 +558,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.primary_phage_id = "Trixie_Draft"
         self.add_ticket.run_mode = "phagesdb"
         self.add_ticket.description_field = "product"
-        self.add_ticket.host = "Mycobacterium smegmatis"
+        self.add_ticket.host_genus = "Mycobacterium smegmatis"
         self.add_ticket.cluster = "A"
         self.add_ticket.subcluster = "A2"
         self.add_ticket.status = "final"
@@ -576,7 +576,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.primary_phage_id = "Trixie_Draft"
         self.remove_ticket.run_mode = "phagesdb"
         self.remove_ticket.description_field = "product"
-        self.remove_ticket.host = "Mycobacterium smegmatis"
+        self.remove_ticket.host_genus = "Mycobacterium smegmatis"
         self.remove_ticket.cluster = "A"
         self.remove_ticket.subcluster = "A2"
         self.remove_ticket.status = "final"
@@ -597,7 +597,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.primary_phage_id = "Trixie_Draft"
         self.invalid_ticket.run_mode = "phagesdb"
         self.invalid_ticket.description_field = "product"
-        self.invalid_ticket.host = "Mycobacterium smegmatis"
+        self.invalid_ticket.host_genus = "Mycobacterium smegmatis"
         self.invalid_ticket.cluster = "A"
         self.invalid_ticket.subcluster = "A2"
         self.invalid_ticket.status = "final"
@@ -622,7 +622,7 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome.type, "add")
         with self.subTest():
-            self.assertEqual(matched_genome.host, "Mycobacterium")
+            self.assertEqual(matched_genome.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(matched_genome.cluster, "A")
         with self.subTest():
