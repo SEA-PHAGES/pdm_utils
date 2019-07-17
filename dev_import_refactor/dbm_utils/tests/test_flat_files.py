@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
-
+from classes import DataGroup
 
 # For integration testing.
 import os
@@ -3313,8 +3313,136 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-# TODO integration testing below. It may be better to move this to a new file.
+
+### Pasted below from phagesdb
 class TestFlatFileFunctions2(unittest.TestCase):
+
+
+    def setUp(self):
+
+
+        self.genome1 = Genome.Genome()
+        self.genome1.phage_id = "L5"
+        self.genome1.cluster = "B"
+        self.genome1.type = "flat_file"
+        self.genome1._empty_fields = False
+        self.genome1.translation_table = "empty"
+
+        self.matched_data_obj1 = DataGroup.DataGroup()
+
+
+        self.genome2 = Genome.Genome()
+        self.genome2.phage_id = "L5"
+        self.genome2.type = "add"
+        self.genome2.cluster = "A"
+        self.genome2.subcluster = "A2"
+        self.genome2.phage_name = "L5_Draft"
+        self.genome2.host_genus = "Mycobacterium"
+        self.genome2.accession = "ABC123"
+        self.genome2.cluster_subcluster = "C"
+        self.genome2.annotation_status = "final"
+        self.genome2.annotation_author = 1
+        self.genome2.annotation_qc = 2
+        self.genome2.retrieve_record = 3
+        self.genome2.translation_table = 11
+
+
+    def test_copy_data_to_flat_file_1(self):
+        """Check that a "flat_file" genome is successfully populated."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
+        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add")
+        genome1 = self.matched_data_obj1.genome_dict["flat_file"]
+        with self.subTest():
+            self.assertFalse(genome1._empty_fields)
+        with self.subTest():
+            self.assertEqual(genome1.cluster, "A")
+        with self.subTest():
+            self.assertEqual(genome1.subcluster, "A2")
+        with self.subTest():
+            self.assertEqual(genome1.phage_name, "L5_Draft")
+        with self.subTest():
+            self.assertEqual(genome1.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(genome1.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(genome1.cluster_subcluster, "C")
+        with self.subTest():
+            self.assertEqual(genome1.annotation_status, "final")
+        with self.subTest():
+            self.assertEqual(genome1.annotation_author, 1)
+        with self.subTest():
+            self.assertEqual(genome1.annotation_qc, 2)
+        with self.subTest():
+            self.assertEqual(genome1.retrieve_record, 3)
+        with self.subTest():
+            self.assertEqual(genome1.translation_table, "empty")
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "correct")
+
+
+    def test_copy_data_to_flat_file_2(self):
+        """Check that the function can handle a missing "flat_file" genome."""
+
+        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
+        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add")
+        self.assertEqual(len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+
+
+    def test_copy_data_to_flat_file_3(self):
+        """Check that a "flat_file" genome is not successfully populated
+        when a second genome is absent."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add")
+        genome1 = self.matched_data_obj1.genome_dict["flat_file"]
+        with self.subTest():
+            self.assertTrue(genome1._empty_fields)
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "error")
+
+
+    def test_copy_data_to_flat_file_4(self):
+        """Check that a "flat_file" genome is successfully populated when
+        a non-standard field flag is used."""
+
+        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
+        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add", "empty")
+        genome1 = self.matched_data_obj1.genome_dict["flat_file"]
+        with self.subTest():
+            self.assertFalse(genome1._empty_fields)
+        with self.subTest():
+            self.assertEqual(genome1.cluster, "A")
+        with self.subTest():
+            self.assertEqual(genome1.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(genome1.evaluations[0].status, "correct")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Pasted above from phagesdb
+
+
+# TODO integration testing below. It may be better to move this to a new file.
+class TestFlatFileFunctions3(unittest.TestCase):
 
 
     def setUp(self):

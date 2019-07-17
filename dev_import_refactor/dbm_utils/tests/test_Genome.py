@@ -1073,36 +1073,22 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_retrieve_1(self):
-        """Verify that the retrieve setting is set to True."""
-        self.genome._retrieve = False
-        self.genome.cluster = "retrieve"
-        self.genome.set_retrieve()
-        self.assertTrue(self.genome._retrieve)
-
-    def test_set_retrieve_2(self):
-        """Verify that the retrieve setting is set to False."""
-        self.genome._retrieve = True
-        self.genome.cluster = "A"
-        self.genome.set_retrieve()
-        self.assertFalse(self.genome._retrieve)
-
-
-
-
-    def test_set_retain_1(self):
-        """Verify that the retain setting is set to True."""
-        self.genome._retrieve = False
+    def test_set_empty_fields_1(self):
+        """Verify that the 'retain' setting is set to True."""
+        self.genome._empty_fields = False
         self.genome.cluster = "retain"
-        self.genome.set_retain()
-        self.assertTrue(self.genome._retain)
+        self.genome.set_empty_fields("retain")
+        self.assertTrue(self.genome._empty_fields)
 
-    def test_set_retain_2(self):
-        """Verify that the retain setting is set to False."""
-        self.genome._retrieve = True
+    def test_set_empty_fields_2(self):
+        """Verify that the 'retain' setting is set to False."""
+        self.genome._empty_fields = True
         self.genome.cluster = "A"
-        self.genome.set_retain()
-        self.assertFalse(self.genome._retain)
+        self.genome.set_empty_fields("retain")
+        self.assertFalse(self.genome._empty_fields)
+
+
+
 
 
 
@@ -1794,119 +1780,33 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-    def test_check_fields_populated_1(self):
-        """Verify error is produced when some fields are still
-        set to 'retrieve'."""
-        self.genome._retrieve = True
-        self.genome._retain = False
-        self.genome.check_fields_populated()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
-
-    def test_check_fields_populated_2(self):
-        """Verify error is produced when some fields are still
-        set to 'retain'."""
-        self.genome._retrieve = False
-        self.genome._retain = True
-        self.genome.check_fields_populated()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
-
-    def test_check_fields_populated_3(self):
-        """Verify error is produced when some fields are still
-        set to 'retrieve' or 'retain'."""
-        self.genome._retrieve = True
-        self.genome._retain = True
-        self.genome.check_fields_populated()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
-
-    def test_check_fields_populated_4(self):
-        """Verify no error is produced when no fields are
-        set to 'retrieve' or 'retain'."""
-        self.genome._retrieve = False
-        self.genome._retain = False
-        self.genome.check_fields_populated()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
-
-
-
-
-    def test_check_fields_retrieved_1(self):
-        """Verify that no error is produced when the _retrieve
+    def test_check_empty_fields_1(self):
+        """Verify that no error is produced when the _empty_fields
         field is True and is expected to be True."""
-        self.genome._retrieve = True
-        self.genome.check_fields_retrieved(True)
+        self.genome._empty_fields = True
+        self.genome.check_empty_fields(True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_fields_retrieved_2(self):
-        """Verify that an error is produced when the _retrieve
+    def test_check_empty_fields_2(self):
+        """Verify that an error is produced when the _empty_fields
         field is False and is expected to be True."""
-        self.genome._retrieve = False
-        self.genome.check_fields_retrieved(True)
+        self.genome._empty_fields = False
+        self.genome.check_empty_fields(True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_fields_retrieved_3(self):
-        """Verify that no error is produced when the _retrieve
+    def test_check_empty_fields_3(self):
+        """Verify that no error is produced when the _empty_fields
         field is False and is expected to be False."""
-        self.genome._retrieve = False
-        self.genome.check_fields_retrieved(False)
+        self.genome._empty_fields = False
+        self.genome.check_empty_fields(False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_fields_retrieved_4(self):
-        """Verify that an error is produced when the _retrieve
+    def test_check_empty_fields_4(self):
+        """Verify that an error is produced when the _empty_fields
         field is True and is expected to be False."""
-        self.genome._retrieve = True
-        self.genome.check_fields_retrieved(False)
+        self.genome._empty_fields = True
+        self.genome.check_empty_fields(False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
-
-
-
-
-    def test_check_fields_retained_1(self):
-        """Verify that no error is produced when the _retain
-        field is True and is expected to be True."""
-        self.genome._retain = True
-        self.genome.check_fields_retained(True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
-
-    def test_check_fields_retained_2(self):
-        """Verify that an error is produced when the _retain
-        field is False and is expected to be True."""
-        self.genome._retain = False
-        self.genome.check_fields_retained(True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
-
-    def test_check_fields_retained_3(self):
-        """Verify that no error is produced when the _retain
-        field is False and is expected to be False."""
-        self.genome._retain = False
-        self.genome.check_fields_retained(False)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
-
-    def test_check_fields_retained_4(self):
-        """Verify that an error is produced when the _retain
-        field is True and is expected to be False."""
-        self.genome._retain = True
-        self.genome.check_fields_retained(False)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

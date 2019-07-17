@@ -611,7 +611,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
-        self.genome1._retain = True
+        self.genome1._empty_fields = True
 
         self.matched_data_obj1 = DataGroup.DataGroup()
 
@@ -630,7 +630,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
         genome1 = self.matched_data_obj1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._retain)
+            self.assertFalse(genome1._empty_fields)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
@@ -648,7 +648,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
         genome1 = self.matched_data_obj1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._retain)
+            self.assertFalse(genome1._empty_fields)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
@@ -694,10 +694,10 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        self.genome1._retain = False
+        self.genome1._empty_fields = False
         phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
         with self.subTest():
-            self.assertTrue(self.genome1._retain)
+            self.assertTrue(self.genome1._empty_fields)
         with self.subTest():
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)

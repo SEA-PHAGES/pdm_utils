@@ -75,13 +75,6 @@ class Genome:
 
 
 
-        self._retrieve = False
-        self._retain = False
-        self._empty = False
-
-
-
-
 
         # Computed datafields
 
@@ -92,6 +85,7 @@ class Genome:
         self._length = 0 # Size of the nucleotide sequence
         self._gc = 0 # %GC content
         self.evaluations = [] # List of warnings and errors about the genome
+        self._empty_fields = False
 
 
         #Common to annotated genomes
@@ -490,21 +484,15 @@ class Genome:
         self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
 
 
-    def set_retrieve(self):
-        if "retrieve" in vars(self).values():
-            self._retrieve = True
+    def set_empty_fields(self, value):
+        """Search all attributes for a specified 'value'.
+        The 'expect' parameter indicates whether any attributes are
+        expected to contain 'value'."""
+
+        if value in vars(self).values():
+            self._empty_fields = True
         else:
-            self._retrieve = False
-
-
-    def set_retain(self):
-        if "retain" in vars(self).values():
-            self._retain = True
-        else:
-            self._retain = False
-
-
-
+            self._empty_fields = False
 
 
 
@@ -1097,79 +1085,25 @@ class Genome:
         self.evaluations.append(eval)
 
 
+    def check_empty_fields(self, expect = False):
+        """Check if there are any fields that are not populated as expected."""
 
-    # TODO not sure if this is needed now, since check_fields_retained()
-    # and check_fields_retrieved() has been implemented.
-    # TODO this method may be better if it receives an expect value.
-    # After assessing whether there are any fields not populated correctly,
-    # it could compare to what is expected, and then decide to throw an error.
-    def check_fields_populated(self):
-        """Check if there are any data that are not populated correctly."""
-
-        if (self._retrieve or self._retain):
-            result = "Some fields are not populated."
-            status = "error"
-        else:
-            result = "All fields are populated."
-            status = "correct"
-
-        definition = "Check if there are any data that are " + \
-                        "not populated correctly."
-        eval = Eval.Eval("GENOME", definition, result, status)
-        self.evaluations.append(eval)
-
-
-
-
-
-
-
-    def check_fields_retrieved(self, expect = False):
-        """Check if there are any fields that are set to be retrieved.
-        The 'expect' parameter indicates whether those attributes are
-        expected to be set to 'retrieve' or not."""
-
-        if self._retrieve:
+        if self._empty_fields:
             if expect:
-                result = "No fields are set to be retrieved."
+                result = "All fields are populated."
                 status = "correct"
             else:
-                result = "Some fields are set to be retrieved."
+                result = "Some fields are not populated."
                 status = "error"
         else:
             if not expect:
-                result = "Some fields are set to be retrieved."
+                result = "All fields are populated."
                 status = "correct"
             else:
-                result = "No fields are set to be retrieved."
+                result = "Some fields are not populated."
                 status = "error"
 
-        definition = "Check if there are any fields that are set to " + \
-                        "be retrieved."
-        eval = Eval.Eval("GENOME", definition, result, status)
-        self.evaluations.append(eval)
-
-
-    def check_fields_retained(self, expect = False):
-        """Check if there are any fields that are set to be retained."""
-
-        if self._retain:
-            if expect:
-                result = "No fields are set to be retained."
-                status = "correct"
-            else:
-                result = "Some fields are set to be retained."
-                status = "error"
-        else:
-            if not expect:
-                result = "Some fields are set to be retained."
-                status = "correct"
-            else:
-                result = "No fields are set to be retained."
-                status = "error"
-
-        definition = "Check if there are any fields that are set to " + \
-                        "be retained."
+        definition = "Check if there are any fields that are set to %s."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 

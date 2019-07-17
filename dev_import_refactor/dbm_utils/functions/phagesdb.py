@@ -232,7 +232,7 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from_phagesdb(matched_data_obj, type):
+def copy_data_from_phagesdb(matched_data_obj, type, flag = "retrieve"):
     """If a genome object stored in the DataGroup object has
     attributes that are set to be 'retrieved' and auto-filled,
     retrieve the data from PhagesDB to complete the genome.
@@ -242,9 +242,9 @@ def copy_data_from_phagesdb(matched_data_obj, type):
     if type in matched_data_obj.genome_dict.keys():
 
         genome1 = matched_data_obj.genome_dict[type]
-        genome1.set_retrieve()
+        genome1.set_empty_fields(flag)
 
-        if genome1._retrieve:
+        if genome1._empty_fields:
 
             phage_url = construct_phage_url(genome1.phage_id)
             data_dict = retrieve_phagesdb_data(phage_url)
@@ -262,14 +262,14 @@ def copy_data_from_phagesdb(matched_data_obj, type):
                 genome_pair = GenomePair.GenomePair()
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
-                genome_pair.copy_data("type", genome2.type, genome1.type, "retrieve")
+                genome_pair.copy_data("type", genome2.type, genome1.type, flag)
                 matched_data_obj.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
 
         # Now record an error if there are still fields
         # that need to be retrieved.
-        genome1.set_retrieve()
-        genome1.check_fields_retrieved()
+        genome1.set_empty_fields(flag)
+        genome1.check_empty_fields()
 
 
 

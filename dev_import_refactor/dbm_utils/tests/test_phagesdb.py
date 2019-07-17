@@ -757,7 +757,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
-        self.genome1._retrieve = True
+        self.genome1._empty_fields = True
 
         self.matched_data_obj1 = DataGroup.DataGroup()
 
@@ -772,7 +772,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
         genome1 = self.matched_data_obj1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._retrieve)
+            self.assertFalse(genome1._empty_fields)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
@@ -789,7 +789,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
         genome1 = self.matched_data_obj1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._retrieve)
+            self.assertFalse(genome1._empty_fields)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
@@ -835,10 +835,10 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.phage_id = "invalid"
         self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
-        self.genome1._retrieve = False
+        self.genome1._empty_fields = False
         phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
         with self.subTest():
-            self.assertTrue(self.genome1._retrieve)
+            self.assertTrue(self.genome1._empty_fields)
         with self.subTest():
             self.assertEqual(
                 len(self.matched_data_obj1.genome_pair_dict.keys()), 0)

@@ -418,20 +418,13 @@ while index6 < len(list_of_matched_objects):
 
 
 
-# TODO now that the flat file to be imported is parsed and matched to a ticket,
+# Now that the flat file to be imported is parsed and matched to a ticket,
 # use the ticket to populate specific genome-level fields such as
 # host, cluster, subcluster, etc.
 index7 = 0
 while index7 < len(list_of_add_replace_objects):
-
     matched_object = list_of_add_replace_objects[index7]
-    genome_pair = GenomePair.GenomePair()
-    genome_pair.genome1 = matched_object.genome["import"]
-    genome_pair.genome2 = matched_object.genome["phamerator"]
-    matched_object.genome_pairs_dict["import_phamerator"] = genome_pair
-
-    misc.copy_data() # TODO incorrect function name. need to update this.
-
+    flat_files.copy_data_to_flat_file(matched_object, "add")
     index7 += 1
 
 
