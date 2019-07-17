@@ -83,7 +83,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.ticket.subcluster, "A2")
         with self.subTest():
-            self.assertEqual(self.ticket.status, "final")
+            self.assertEqual(self.ticket.annotation_status, "final")
         with self.subTest():
             self.assertEqual(self.ticket.annotation_author, "hatfull")
         with self.subTest():
@@ -561,7 +561,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.host_genus = "Mycobacterium smegmatis"
         self.add_ticket.cluster = "A"
         self.add_ticket.subcluster = "A2"
-        self.add_ticket.status = "final"
+        self.add_ticket.annotation_status = "final"
         self.add_ticket.annotation_author = "hatfull"
         self.add_ticket.annotation_qc = 1
         self.add_ticket.retrieve_record = 1
@@ -579,7 +579,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.host_genus = "Mycobacterium smegmatis"
         self.remove_ticket.cluster = "A"
         self.remove_ticket.subcluster = "A2"
-        self.remove_ticket.status = "final"
+        self.remove_ticket.annotation_status = "final"
         self.remove_ticket.annotation_author = "hatfull"
         self.remove_ticket.annotation_qc = 1
         self.remove_ticket.retrieve_record = 1
@@ -600,7 +600,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.host_genus = "Mycobacterium smegmatis"
         self.invalid_ticket.cluster = "A"
         self.invalid_ticket.subcluster = "A2"
-        self.invalid_ticket.status = "final"
+        self.invalid_ticket.annotation_status = "final"
         self.invalid_ticket.annotation_author = "hatfull"
         self.invalid_ticket.annotation_qc = 1
         self.invalid_ticket.retrieve_record = 1
@@ -630,7 +630,7 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome.cluster_subcluster, "A2")
         with self.subTest():
-            self.assertEqual(matched_genome.status, "final")
+            self.assertEqual(matched_genome.annotation_status, "final")
         with self.subTest():
             self.assertEqual(matched_genome.annotation_author, 1)
         with self.subTest():

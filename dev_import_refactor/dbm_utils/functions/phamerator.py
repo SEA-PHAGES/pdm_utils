@@ -28,7 +28,7 @@ def parse_phamerator_data(genome, data_tuple):
     genome.phage_name = data_tuple[1]
     genome.set_host(data_tuple[2])
     genome.set_sequence(data_tuple[3])
-    genome.status = data_tuple[4]
+    genome.annotation_status = data_tuple[4]
     genome.set_cluster(data_tuple[5])
     genome.set_subcluster(data_tuple[8])
     genome.set_date_last_modified(data_tuple[6])
@@ -73,7 +73,7 @@ def create_data_sets(genome_dict):
         genome = genome_dict[genome_id]
         phage_id_set.add(genome.phage_id)
         host_genus_set.add(genome.host_genus)
-        status_set.add(genome.status)
+        status_set.add(genome.annotation_status)
         cluster_set.add(genome.cluster)
 
         # TODO this was not implemented in original import script,
@@ -91,7 +91,7 @@ def create_data_sets(genome_dict):
     dictionary_of_sets = {}
     dictionary_of_sets["phage_id"] = phage_id_set
     dictionary_of_sets["host_genus"] = host_genus_set
-    dictionary_of_sets["status"] = status_set
+    dictionary_of_sets["annotation_status"] = status_set
     dictionary_of_sets["cluster"] = cluster_set
     dictionary_of_sets["subcluster"] = subcluster_set
     dictionary_of_sets["accession"] = accession_set
@@ -139,7 +139,7 @@ def create_genome_update_statements(genome):
         table, field1, value1, "HostStrain", genome.host_genus))
 
     statements.append(create_update_statement( \
-        table, field1, value1, "status", genome.status))
+        table, field1, value1, "status", genome.annotation_status))
 
     statements.append(create_update_statement( \
         table, field1, value1, "Accession", genome.accession))
@@ -234,7 +234,7 @@ def create_genome_insert_statement(genome):
         genome.sequence, \
         genome._length, \
         genome._gc, \
-        genome.status, \
+        genome.annotation_status, \
         genome.date_last_modified, \
         genome.retrieve_record, \
         genome.annotation_qc, \

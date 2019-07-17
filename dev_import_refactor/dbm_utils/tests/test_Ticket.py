@@ -26,7 +26,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.update_ticket.primary_phage_id = "Trixie"
         self.update_ticket.host_genus = "Mycobacterium"
         self.update_ticket.cluster = "A"
-        self.update_ticket.status = "Final"
+        self.update_ticket.annotation_status = "Final"
         self.update_ticket.description_field = "none"
         self.update_ticket.secondary_phage_id = "none"
         self.update_ticket.annotation_author = "1"
@@ -40,7 +40,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.add_ticket.primary_phage_id = "Trixie"
         self.add_ticket.host_genus = "Mycobacterium"
         self.add_ticket.cluster = "A"
-        self.add_ticket.status = "draft"
+        self.add_ticket.annotation_status = "draft"
         self.add_ticket.description_field = "Product"
         self.add_ticket.secondary_phage_id = "none"
         self.add_ticket.annotation_author = "1"
@@ -54,7 +54,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.remove_ticket.host_genus = "none"
         self.remove_ticket.cluster = "none"
         self.remove_ticket.subcluster = "none"
-        self.remove_ticket.status = "none"
+        self.remove_ticket.annotation_status = "none"
         self.remove_ticket.description_field = "none"
         self.remove_ticket.accession = "none"
         self.remove_ticket.annotation_author = "none"
@@ -68,7 +68,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.replace_ticket.primary_phage_id = "Trixie"
         self.replace_ticket.host_genus = "Mycobacterium"
         self.replace_ticket.cluster = "A"
-        self.replace_ticket.status = "draft"
+        self.replace_ticket.annotation_status = "draft"
         self.replace_ticket.description_field = "Product"
         self.replace_ticket.secondary_phage_id = "none"
         self.replace_ticket.annotation_author = "1"
@@ -160,17 +160,17 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_set_status_1(self):
+    def test_set_annotation_status_1(self):
         """Check that value is lowercased when not 'none'."""
         value = "Final"
-        self.ticket.set_status(value)
-        self.assertEqual(self.ticket.status, "final")
+        self.ticket.set_annotation_status(value)
+        self.assertEqual(self.ticket.annotation_status, "final")
 
-    def test_set_status_2(self):
+    def test_set_annotation_status_2(self):
         """Check that value is lowercased when 'none'."""
         value = "NONE"
-        self.ticket.set_status(value)
-        self.assertEqual(self.ticket.status, "none")
+        self.ticket.set_annotation_status(value)
+        self.assertEqual(self.ticket.annotation_status, "none")
 
 
 
@@ -420,22 +420,22 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_check_status_1(self):
+    def test_check_annotation_status_1(self):
         """Check that no error is produced if the
-        status is not present in the empty/null set
+        annotation_status is not present in the empty/null set
         and not expected to be in the set."""
         set1 = set(["none"])
-        self.ticket.status = "Mycobacterium"
-        self.ticket.check_status(set1, False)
+        self.ticket.annotation_status = "Mycobacterium"
+        self.ticket.check_annotation_status(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
-    def test_check_status_2(self):
+    def test_check_annotation_status_2(self):
         """Check that an error is produced if the
-        status is present in the empty/null set
+        annotation_status is present in the empty/null set
         and not expected to be in the set."""
         set1 = set(["none"])
-        self.ticket.status = "none"
-        self.ticket.check_status(set1, False)
+        self.ticket.annotation_status = "none"
+        self.ticket.check_annotation_status(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 

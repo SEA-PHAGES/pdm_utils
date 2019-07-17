@@ -130,7 +130,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.sequence, output_sequence)
         with self.subTest():
-            self.assertEqual(self.genome1.status, output_status)
+            self.assertEqual(self.genome1.annotation_status, output_status)
         with self.subTest():
             self.assertEqual(self.genome1.cluster, output_cluster)
         with self.subTest():
@@ -212,7 +212,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.sequence, output_sequence)
         with self.subTest():
-            self.assertEqual(self.genome1.status, output_status)
+            self.assertEqual(self.genome1.annotation_status, output_status)
         with self.subTest():
             self.assertEqual(self.genome1.cluster, output_cluster)
         with self.subTest():
@@ -294,7 +294,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(returned_dict["host_genus"], exp_host)
         with self.subTest():
-            self.assertEqual(returned_dict["status"], exp_status)
+            self.assertEqual(returned_dict["annotation_status"], exp_status)
         with self.subTest():
             self.assertEqual(returned_dict["cluster"], exp_cluster)
         with self.subTest():
@@ -369,7 +369,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
         self.genome1.phage_id = "L5"
         self.genome1.host_genus = "Mycobacterium"
-        self.genome1.status = "final"
+        self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.author = "1"
         self.genome1.cluster_subcluster = "A123"
@@ -547,7 +547,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
-        self.genome1.status = "final"
+        self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.sequence = "ATCG"
         self.genome1._length = 4
@@ -577,7 +577,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.phage_id = "L5"
         self.genome1.phage_name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
-        self.genome1.status = "final"
+        self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.sequence = "ATCG"
         self.genome1._length = 4

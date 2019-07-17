@@ -44,7 +44,7 @@ def parse_import_ticket(
         ticket.set_host(data_list[2])
         ticket.set_cluster(data_list[3])
         ticket.set_subcluster(data_list[4])
-        ticket.set_status(data_list[5])
+        ticket.set_annotation_status(data_list[5])
         ticket.set_annotation_author(data_list[6])
         ticket.set_accession(data_list[8])
         ticket.set_annotation_qc(data_list[9])
@@ -132,7 +132,7 @@ def copy_ticket_to_genome(matched_object):
         genome1.phage_name = ticket.primary_phage_id
         genome1.set_host(ticket.host_genus)
         genome1.set_accession(ticket.accession)
-        genome1.status = ticket.status
+        genome1.annotation_status = ticket.annotation_status
         genome1.set_cluster(ticket.cluster)
         genome1.set_subcluster(ticket.subcluster)
         genome1.set_cluster_subcluster()
@@ -159,7 +159,7 @@ def copy_ticket_to_genome(matched_object):
         # genome.set_phage_id(ticket.primary_phage_id)
         # genome.set_host(ticket.host_genus)
         # genome.set_accession(ticket.accession)
-        # genome.status = ticket.status
+        # genome.annotation_status = ticket.annotation_status
         # genome.set_cluster(ticket.cluster)
         # genome.set_subcluster(ticket.subcluster)
         # genome.set_cluster_subcluster()

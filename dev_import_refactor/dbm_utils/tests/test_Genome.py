@@ -790,25 +790,25 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_status_accession_1(self):
-        """Check final status with accession."""
-        self.genome.status = "final"
+    def test_check_annotation_status_accession_1(self):
+        """Check final annotation_status with accession."""
+        self.genome.annotation_status = "final"
         self.genome.accession = "ABC123"
-        self.genome.check_status_accession()
+        self.genome.check_annotation_status_accession()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_status_accession_2(self):
-        """Check final status with no accession."""
-        self.genome.status = "final"
+    def test_check_annotation_status_accession_2(self):
+        """Check final annotation_status with no accession."""
+        self.genome.annotation_status = "final"
         self.genome.accession = ""
-        self.genome.check_status_accession()
+        self.genome.check_annotation_status_accession()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_status_accession_3(self):
-        """Check draft status with no accession."""
-        self.genome.status = "draft"
+    def test_check_annotation_status_accession_3(self):
+        """Check draft annotation_status with no accession."""
+        self.genome.annotation_status = "draft"
         self.genome.accession = ""
-        self.genome.check_status_accession()
+        self.genome.check_annotation_status_accession()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
@@ -816,47 +816,47 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_status_descriptions_1(self):
+    def test_check_annotation_status_descriptions_1(self):
         """Check that draft genome with no descriptions does not produce
         an error."""
-        self.genome.status = "draft"
-        self.genome.check_status_descriptions()
+        self.genome.annotation_status = "draft"
+        self.genome.check_annotation_status_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_status_descriptions_2(self):
+    def test_check_annotation_status_descriptions_2(self):
         """Check that draft genome with a description produces an error."""
-        self.genome.status = "draft"
+        self.genome.annotation_status = "draft"
         self.genome._cds_processed_primary_descriptions_tally = 1
-        self.genome.check_status_descriptions()
+        self.genome.check_annotation_status_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_status_descriptions_3(self):
+    def test_check_annotation_status_descriptions_3(self):
         """Check that final genome with a description does not produce
         an error."""
-        self.genome.status = "final"
+        self.genome.annotation_status = "final"
         self.genome._cds_processed_primary_descriptions_tally = 1
-        self.genome.check_status_descriptions()
+        self.genome.check_annotation_status_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_status_descriptions_4(self):
+    def test_check_annotation_status_descriptions_4(self):
         """Check that final genome with no descriptions produces an error."""
-        self.genome.status = "final"
-        self.genome.check_status_descriptions()
+        self.genome.annotation_status = "final"
+        self.genome.check_annotation_status_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_status_descriptions_5(self):
+    def test_check_annotation_status_descriptions_5(self):
         """Check that gbk genome with no descriptions does not produce
         an error."""
-        self.genome.status = "gbk"
-        self.genome.check_status_descriptions()
+        self.genome.annotation_status = "gbk"
+        self.genome.check_annotation_status_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_status_descriptions_6(self):
+    def test_check_annotation_status_descriptions_6(self):
         """Check that gbk genome with descriptions does not produce
         an error."""
-        self.genome.status = "gbk"
+        self.genome.annotation_status = "gbk"
         self.genome._cds_processed_primary_descriptions_tally = 1
-        self.genome.check_status_descriptions()
+        self.genome.check_annotation_status_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
@@ -1178,42 +1178,42 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_status_1(self):
-        """Verify that no error is produced when the status
+    def test_check_annotation_status_1(self):
+        """Verify that no error is produced when the annotation_status
         is in the status_set and is expected to be in the set."""
-        self.genome.status = "draft"
-        self.genome.check_status(expect = True)
+        self.genome.annotation_status = "draft"
+        self.genome.check_annotation_status(expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_status_2(self):
-        """Verify that an error is produced when the status
+    def test_check_annotation_status_2(self):
+        """Verify that an error is produced when the annotation_status
         is not in the status_set and is expected to be in the set."""
-        self.genome.status = "invalid"
-        self.genome.check_status(expect = True)
+        self.genome.annotation_status = "invalid"
+        self.genome.check_annotation_status(expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_status_3(self):
-        """Verify that no error is produced when the status
+    def test_check_annotation_status_3(self):
+        """Verify that no error is produced when the annotation_status
         is in a non-standard status_set and is expected to be in the set."""
         value_set = set(["new_status", "final"])
-        self.genome.status = "new_status"
-        self.genome.check_status(value_set, expect = True)
+        self.genome.annotation_status = "new_status"
+        self.genome.check_annotation_status(value_set, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_status_4(self):
-        """Verify that an error is produced when the status
+    def test_check_annotation_status_4(self):
+        """Verify that an error is produced when the annotation_status
         is not a non-standard status_set and is expected to be in the set."""
         value_set = set(["new_status", "final"])
-        self.genome.status = "draft"
-        self.genome.check_status(value_set, expect = True)
+        self.genome.annotation_status = "draft"
+        self.genome.check_annotation_status(value_set, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_status_5(self):
-        """Verify that an error is produced when the status
+    def test_check_annotation_status_5(self):
+        """Verify that an error is produced when the annotation_status
         is in the set, and is not expected to be in the set."""
         value_set = set(["new_status", "final"])
-        self.genome.status = "new_status"
-        self.genome.check_status(value_set, expect = False)
+        self.genome.annotation_status = "new_status"
+        self.genome.check_annotation_status(value_set, expect = False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 

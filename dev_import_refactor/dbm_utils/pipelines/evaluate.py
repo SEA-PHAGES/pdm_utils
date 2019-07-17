@@ -25,7 +25,7 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
         ticket.check_primary_phage_id(null_set, False)
         ticket.check_host_genus(null_set, False)
         ticket.check_cluster(null_set, False)
-        ticket.check_status(null_set, False)
+        ticket.check_annotation_status(null_set, False)
         ticket.check_description_field(null_set, False)
         ticket.check_annotation_author(null_set, False)
         ticket.check_run_mode(run_mode_set, True)
@@ -45,7 +45,7 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
         ticket.check_primary_phage_id(null_set, False)
         ticket.check_host_genus(null_set, False)
         ticket.check_cluster(null_set, False)
-        ticket.check_status(null_set, False)
+        ticket.check_annotation_status(null_set, False)
         ticket.check_description_field(null_set, False)
         ticket.check_annotation_author(null_set, False)
         ticket.check_run_mode(null_set, True)
@@ -65,7 +65,7 @@ def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
         ticket.check_host_genus(null_set, True)
         ticket.check_subcluster(null_set, True)
         ticket.check_cluster(null_set, True)
-        ticket.check_status(null_set, True)
+        ticket.check_annotation_status(null_set, True)
         ticket.check_description_field(null_set, True)
         ticket.check_accession(null_set, True)
         ticket.check_annotation_author(null_set, True)
@@ -179,8 +179,8 @@ def check_genome(genome_obj):
 
     # TODO decide how to implement alphabet
     genome_obj.check_nucleotides(alphabet = alphabet)
-    genome_obj.check_status_accession()
-    genome_obj.check_status_descriptions()
+    genome_obj.check_annotation_status_accession()
+    genome_obj.check_annotation_status_descriptions()
     genome_obj.check_record_description_phage_name()
     genome_obj.check_record_source_phage_name()
     genome_obj.check_record_organism_phage_name()
@@ -281,10 +281,10 @@ def compare_genomes(genome_pair_obj):
 
 
 
-    # TODO at this stage check the status of the genome. If it is a final,
+    # TODO at this stage check the annotation_status of the genome. If it is a final,
     # and there is no other paired genome, it should throw an error. This was
     # moved from the ticket evaluation stage.
-    # if self.status == "final":
+    # if self.annotation_status == "final":
     #     result6 = "The phage %s to be added is listed " + \
     #             "as Final status, but no Draft (or other) genome " + \
     #             " is listed to be removed."

@@ -28,7 +28,7 @@ class GenomeTicket:
         self.host_genus = ""
         self.cluster = ""
         self.subcluster = ""
-        self.status = ""
+        self.annotation_status = ""
         self.annotation_author = ""
         self.annotation_qc = ""
         self.retrieve_record = ""
@@ -86,9 +86,9 @@ class GenomeTicket:
         """Set the subcluster."""
         self.subcluster = basic.lower_case(value)
 
-    def set_status(self, value):
-        """Set the status."""
-        self.status = value.lower()
+    def set_annotation_status(self, value):
+        """Set the annotation_status."""
+        self.annotation_status = value.lower()
 
     def set_accession(self, value):
         """Set the accession."""
@@ -247,12 +247,12 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_status(self, value_set, expected = True):
-        """Check if the status is populated with an empty value.
+    def check_annotation_status(self, value_set, expected = True):
+        """Check if the annotation_status is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
         output = basic.check_value_expected_in_set(
-                    self.status, value_set, expected)
+                    self.annotation_status, value_set, expected)
 
         if output:
             result = "The field is populated correctly."
@@ -261,7 +261,7 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
 
-        definition = "Check if status field is correctly populated."
+        definition = "Check if annotation_status field is correctly populated."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 

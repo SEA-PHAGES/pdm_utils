@@ -26,7 +26,7 @@ class TestEvaluateClass(unittest.TestCase):
         self.add_ticket1.host_genus = "Mycobacterium smegmatis"
         self.add_ticket1.cluster = "A"
         self.add_ticket1.subcluster = "A2"
-        self.add_ticket1.status = "final"
+        self.add_ticket1.annotation_status = "final"
         self.add_ticket1.annotation_author = "hatfull"
         self.add_ticket1.annotation_qc = 1
         self.add_ticket1.retrieve_record = 1
@@ -124,10 +124,10 @@ class TestEvaluateClass(unittest.TestCase):
 
     def test_check_ticket_structure_6(self):
         """Verify an error is produced with an incorrectly structured
-        'add' ticket 'status' field."""
+        'add' ticket 'annotation_status' field."""
 
         ticket = self.add_ticket1
-        ticket.status = "none"
+        ticket.annotation_status = "none"
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0

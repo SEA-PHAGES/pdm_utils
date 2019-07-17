@@ -102,8 +102,8 @@ class GenomePair:
                 second.accession = first.accession
             if (second.author == keyword or keyword is None):
                 second.author = first.author
-            if (second.status == keyword or keyword is None):
-                second.status = first.status
+            if (second.annotation_status == keyword or keyword is None):
+                second.annotation_status = first.annotation_status
             if (second.cluster == keyword or keyword is None):
                 second.cluster = first.cluster
             if (second.subcluster == keyword or keyword is None):

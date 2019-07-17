@@ -40,7 +40,7 @@ class Genome:
 
         # Common to Phamerator
         self.cluster_subcluster = "" # Combined cluster_subcluster data.
-        self.status = "" # Final, Draft, Gbk version of genome data
+        self.annotation_status = "" # Final, Draft, Gbk version of genome data
         self.date_last_modified = ""
         self.annotation_author = "" # 1 (Hatfull), 0 (Genbank)
         self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
@@ -432,7 +432,7 @@ class Genome:
         """Set annotation_qc."""
 
         # TODO not sure if this is needed.
-        # if self.status == 'final':
+        # if self.annotation_status == 'final':
         #     self.annotation_qc = 1
         # else:
         #     self.annotation_qc = 0
@@ -550,12 +550,12 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_status(self,
+    def check_annotation_status(self,
                     status_set = constants.ANNOTATION_STATUS_SET,
                     expect = False):
         """Check that the annotation status is valid."""
 
-        value = basic.check_value_expected_in_set(self.status,
+        value = basic.check_value_expected_in_set(self.annotation_status,
                 status_set, expect)
         if value:
             result = "The annotation status is valid."
@@ -837,46 +837,47 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_status_accession(self):
-        """Compare genome status and accession.
+    def check_annotation_status_accession(self):
+        """Compare genome annotation_status and accession.
         Now that the AnnotationAuthor field contains authorship data, the
         'gbk' annotation status now reflects an 'unknown' annotation (in
         regards to if it was auto-annotated or manually annotated).
-        So for the status-accession error, if the status is 'gbk' ('unkown'),
+        So for the annotation_status-accession error,
+        if the annotation_status is 'gbk' ('unkown'),
         there is no reason to assume whether there should be an accession
         or not. Only for 'final' (manually annotated) genomes should
         there be an accession."""
 
 
-        if (self.status == 'final' and self.accession == ''):
+        if (self.annotation_status == 'final' and self.accession == ''):
             result = "The genome is final but does not have an accession. "
             status = "error"
 
         else:
-            result = "No conflict between status and accession."
+            result = "No conflict between annotation_status and accession."
             status = "correct"
 
-        definition = "Compare the status and accession."
+        definition = "Compare the annotation_status and accession."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_status_descriptions(self):
-        """Depending on the status of the genome, CDS features are expected
-        to contain or not contain descriptions.
+    def check_annotation_status_descriptions(self):
+        """Depending on the annotation_status of the genome,
+        CDS features are expected to contain or not contain descriptions.
         Draft genomes should not have any descriptions.
         Final genomes should not have any descriptions.
         There are no expectations for other types of genomes."""
 
 
-        if self.status == 'draft' and \
+        if self.annotation_status == 'draft' and \
             self._cds_processed_primary_descriptions_tally > 0:
 
             result = "The genome is draft status " + \
                             "but contains CDS descriptions."
             status = "error"
 
-        elif self.status == 'final' and \
+        elif self.annotation_status == 'final' and \
             self._cds_processed_primary_descriptions_tally == 0:
 
             result = "The genome is final status " + \
