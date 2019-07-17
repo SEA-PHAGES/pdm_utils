@@ -1,6 +1,7 @@
 """Represents a structure to directly compare data between two or more genomes."""
 
 from classes import Eval
+from functions import phamerator
 
 class DataGroup:
 
@@ -18,7 +19,7 @@ class DataGroup:
         self.evaluations = []
         self.sql_queries = [] # All SQL data needed to implement ticket.
 
-
+        self._errors = 0
 
 
 
@@ -36,6 +37,38 @@ class DataGroup:
             pass
 
 
+
+
+
+    # TODO implement.
+    # TODO unit test.
+    def create_sql_statements(self):
+        """Create list of MySQL statements based on the ticket type."""
+
+        if self.ticket.type == "replace" or self.ticket.type == "remove":
+            genome = self.genome_dict["remove"]
+            statement = phamerator.create_genome_delete_statement(genome)
+            self.sql_queries.append(statement)
+
+        if self.ticket.type == "replace" or self.ticket.type == "add":
+            genome = self.genome_dict["add"]
+            statement = phamerator.create_genome_insert_statement(genome)
+            self.sql_queries.append(statement)
+
+            for cds in genome.cds_features:
+                statement = create_cds_insert_statement(cds)
+                self.sql_queries.append(statement)
+
+
+
+
+
+
+
+
+
+    # Evaluations.
+
     def check_matched_genome(self, key):
         """Check for whether a certain type of genome has been added to the
         genome dictionary."""
@@ -50,6 +83,99 @@ class DataGroup:
                         "matched to the ticket."
         eval = Eval.Eval("DATAGROUP", definition, result, status)
         self.evaluations.append(eval)
+
+    def check_genome_dictionary(self, key, expect = True):
+        """Check if a genome is present in the genome dictionary.
+        The 'key' parameter indicates how the genome is expected to be
+        stored in the dictionary.
+        The 'expect' parameter indicates whether the genome is expected
+        to be present or not."""
+
+        if key in self.genome_dict.keys():
+            result = "The %s genome is present." % key
+            if expect:
+                status = "correct"
+            else:
+                status = "error"
+        else:
+            result = "The %s genome is not present." % key
+            if not expect:
+                status = "correct"
+            else:
+                status = "error"
+
+        definition = "Check if the %s genome is present." % key
+        eval = Eval.Eval("DATAGROUP", definition, result, status)
+        self.evaluations.append(eval)
+
+    def check_genome_pair_dictionary(self, key, expect = True):
+        """Check if a genome_pair is present in the genome_pair dictionary.
+        The 'key' parameter indicates how the genome_pair is expected to be
+        stored in the dictionary.
+        The 'expect' parameter indicates whether the genome_pair is expected
+        to be present or not."""
+
+        if key in self.genome_pair_dict.keys():
+            result = "The %s genome_pair is present." % key
+            if expect:
+                status = "correct"
+            else:
+                status = "error"
+        else:
+            result = "The %s genome_pair is not present." % key
+            if not expect:
+                status = "correct"
+            else:
+                status = "error"
+
+        definition = "Check if the %s genome_pair is present." % key
+        eval = Eval.Eval("DATAGROUP", definition, result, status)
+        self.evaluations.append(eval)
+
+    def check_for_errors(self):
+        """Check evaluation lists of all objects contained in the DataGroup
+        and determine how many errors there are."""
+
+        for eval in self.evaluations:
+            if eval.status == "error":
+                self._errors += 1
+
+        for eval in self.ticket.evaluations:
+            if eval.status == "error":
+                self._errors += 1
+
+        for key in self.genome_dict.keys():
+            genome = self.genome_dict[key]
+            for eval in genome.evaluations:
+                if eval.status == "error":
+                    self._errors += 1
+
+            for cds in genome.cds_features:
+                for eval in cds.evaluations:
+                    if eval.status == "error":
+                        self._errors += 1
+
+            # TODO need to implement this once this class is implemented.
+            # for trna in genome.trna_features:
+            #     for eval in trna.evaluations:
+            #         if eval.status == "error":
+            #             self._errors += 1
+
+        for key in self.genome_pair_dict.keys():
+            genome_pair = self.genome_pair_dict[key]
+            for eval in genome_pair.evaluations:
+                if eval.status == "error":
+                    self._errors += 1
+
+
+            # TODO need to implement this once this class is implemented.
+            # for cds_pair in genome_pair.matched_cds_list:
+            #     for eval in cds_pair.evaluations:
+            #         if eval.status == "error":
+            #             self._errors += 1
+
+
+
 
 
 

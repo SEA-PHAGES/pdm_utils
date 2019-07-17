@@ -1,7 +1,7 @@
 """Groups of evaluation/check functions."""
 
 
-
+from constants import constants
 
 def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
@@ -128,57 +128,108 @@ def check_phagesdb_genome(genome_obj, null_set):
 
 # TODO implement.
 # TODO unit test.
-def check_add_replace_tickets(list_of_matched_objects, genome_type):
+def check_datagroup_for_import(matched_object):
+    """Check a DataGroup for errors."""
 
-    index = 0
-    while index < len(list_of_matched_objects):
-
-        matched_object = list_of_matched_objects[index]
-
-        # Since a DataGroup object can hold multiple genomes, the specific
-        # genome that needs to be evaluated for import needs to be specified
-        # by 'genome_type'.
-
-        genome = matched_object.matched_genomes_dict[genome_type]
-        check_genome(genome)
-
-        # TODO is this needed?
-        compare_ticket_to_flat_file(matched_object)
-
-        if matched_object.ticket.type == "add":
-            check_add_tickets(genome)
-        elif matched_object.ticket.type == "replace":
-            check_replace_tickets(matched_object)
-        else:
-            pass
-
-        index += 1
+    ticket = matched_object.ticket
 
 
+    # First, evaluate whether all genomes have been successfully grouped,
+    # and whether all genomes have been paired, as expected.
+    # Based on the ticket type, there are expected to be certain
+    # types of genomes and pairs of genomes in the group.
+
+    if ticket.type == "add" or ticket.type == "replace":
 
 
+        matched_object.check_genome_dict("add")
+        matched_object.check_genome_dict("flat_file")
+        matched_object.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
+
+        ticket.set_empty_fields("retrieve")
+        if ticket._empty_fields:
+            matched_object.check_genome_dict("phagesdb")
+            matched_object.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
 
 
+    if ticket.type == "replace":
+        matched_object.check_genome_dict("remove")
+        matched_object.check_genome_dict("phamerator")
+        matched_object.check_genome_pair_dict("flat_file_phamerator") # TODO Ordered correctly?
+        matched_object.check_genome_pair_dict("remove_phamerator") # TODO Ordered correctly? Also - is this needed?
 
-
-
-
+        ticket.set_empty_fields("retain")
+        if ticket._empty_fields:
+            matched_object.check_genome_pair_dict("add_phamerator") # TODO Ordered correctly?
 
 
 
+    # Second, evaluate each genome or pair of genomes as needed.
+    try:
+        check_genome_to_import(matched_object.genome_dict["flat_file"], ticket.type)
+    except:
+        pass
+
+
+    try:
+        compare_genomes_for_replace(matched_object.genome_pair_dict["flat_file_phamerator"])
+    except:
+        pass
+
+    try:
+        compare_genomes_for_remove(matched_object.genome_pair_dict["remove_phamerator"])
+    except:
+        pass
 
 
 
 
 
-# TODO does this need to be separate from the check_add_replace_tickets()?
+
+
+
+
+
 # TODO implement.
 # TODO unit test.
-def check_genome(genome_obj):
+def check_genome_to_import(genome_obj, type):
     """Check a Genome object for errors."""
 
-    # TODO decide how to implement alphabet
-    genome_obj.check_nucleotides(alphabet = alphabet)
+    if type == "add":
+        genome_obj.check_phage_id(phage_id_set, False)
+        genome_obj.check_phage_id(null_set, False)
+        genome_obj.check_phage_name(phage_id_set, False) # TODO is this needed?
+        genome_obj.check_phage_name(null_set, False) # TODO is this needed?
+        genome_obj.check_sequence(seq_set, False)
+        genome_obj.check_sequence(null_set, False)
+
+    # Certain checks if it is a 'replace' ticket.
+    else:
+        genome_obj.check_phage_id(phage_id_set, True)
+        genome_obj.check_phage_name(phage_id_set, True) # TODO is this needed?
+        genome_obj.check_sequence(seq_set, True)
+
+
+    # remove genome = ticket.check_secondary_phage_id(phage_id_set)
+    # ticket = ticket.check_description_field(description_field_set)
+    # ticket = ticket.check_run_mode(run_mode_set)
+
+
+
+    genome_obj.check_annotation_status(expect = True)
+    genome_obj.check_host_genus(host_set, True)
+    genome_obj.check_cluster(cluster_set, True)
+    genome_obj.check_subcluster(subcluster_set, True)
+    genome_obj.check_annotation_author()
+    genome_obj.check_annotation_qc()
+    genome_obj.check_retrieve_record()
+    genome_obj.check_record_filename() # TODO is this needed?
+    # genome_obj.check_record() # TODO is this needed?
+    genome_obj.check_subcluster_structure()
+    genome_obj.check_cluster_structure()
+    genome_obj.compare_cluster_subcluster_structure()
+    # genome_obj.check_accession(accession_set, False) # TODO is this needed?
+    genome_obj.check_nucleotides(alphabet = alphabet) # TODO decide how to implement alphabet
     genome_obj.check_annotation_status_accession()
     genome_obj.check_annotation_status_descriptions()
     genome_obj.check_record_description_phage_name()
@@ -189,30 +240,27 @@ def check_genome(genome_obj):
     genome_obj.check_record_organism_host_genus()
     genome_obj.check_author()
     genome_obj.check_cds_feature_tally()
-
-
-    # TODO decide how to evaluate duplicate feature coordinates.
-    genome_obj.check_cds_start_end_ids()
-    genome_obj.check_cds_end_strand_ids()
-
+    genome_obj.check_cds_start_end_ids() # TODO decide how to evaluate duplicate feature coordinates.
+    genome_obj.check_cds_end_strand_ids() # TODO decide how to evaluate duplicate feature coordinates.
+    genome_obj.check_empty_fields()
 
     # Check all CDS features
     index1 = 0
     while index1 < len(genome_obj.cds_features):
-        check_cds(genome_obj.cds_features[index1])
+        check_cds_for_import(genome_obj.cds_features[index1])
         index1 += 1
 
     # Check all tRNA features
     index2 = 0
     while index2 < len(genome_obj.trna_features):
-        check_trna(genome_obj.trna_features[index2])
+        check_trna_for_import(genome_obj.trna_features[index2])
         index2 += 1
 
 
     # Check all Source features
     index3 = 0
     while index3 < len(genome_obj.source_features):
-        check_source(genome_obj.source_features[index3])
+        check_source_for_import(genome_obj.source_features[index3])
         index3 += 1
 
 
@@ -221,7 +269,7 @@ def check_genome(genome_obj):
 
 # TODO implement.
 # TODO unit test.
-def check_cds(cds_obj):
+def check_cds_for_import(cds_obj):
     """Check a CdsFeature object for errors."""
 
     # TODO decide how to implement alphabet
@@ -243,7 +291,7 @@ def check_cds(cds_obj):
 
 # TODO implement.
 # TODO unit test.
-def check_trna(trna_obj):
+def check_trna_for_import(trna_obj):
     """Check a TrnaFeature object for errors."""
 
     pass
@@ -254,7 +302,7 @@ def check_trna(trna_obj):
 
 # TODO implement.
 # TODO unit test.
-def check_source(src_obj):
+def check_source_for_import(src_obj):
     """Check a SourceFeature object for errors."""
 
     src_obj.check_organism_phage_name()
@@ -279,6 +327,7 @@ def compare_genomes(genome_pair_obj):
     genome_pair_obj.compare_host_genus()
     genome_pair_obj.compare_author()
 
+    # genomepair = ticket.check_primary_secondary_phage_ids()
 
 
     # TODO at this stage check the annotation_status of the genome. If it is a final,
@@ -294,40 +343,6 @@ def compare_genomes(genome_pair_obj):
     #     status6 = "correct"
 
 
-# TODO implement.
-# TODO unit test.
-def check_add_tickets(genome_obj):
-    """Check several aspects about a genome only if it is being added."""
-
-
-    # TODO make sure it checks that the primary_phage_id
-    # is not 'none' as well.
-    # genome_obj.check_type(type_set)
-    # genome_obj.check_primary_phage_id(phage_id_set, False)
-    # genome_obj.check_secondary_phage_id(null_set)
-    # genome_obj.check_host_genus(host_genus_set)
-    # genome_obj.check_cluster(cluster_set)
-    # genome_obj.check_subcluster_structure()
-    # genome_obj.check_cluster_structure()
-    # genome_obj.check_cluster_subcluster()
-    # genome_obj.check_status(status_set)
-    # genome_obj.check_description_field(description_field_set)
-    # genome_obj.check_annotation_author(author_set)
-    # genome_obj.check_run_mode(run_mode_set)
-
-    # No need to evaluate the following fields:
-    # Accession = it will either be an accession or it will be "none"
-    # Subcluster = it will either be a Subcluster or it will be "none"
-
-
-    # TODO determine other assumptions about what is/isn't in the database
-    # if this is a new genome.
-
-    # TODO verify there is no other identical genome sequence.
-    # TODO verify there is no other identical phage id.
-
-    pass
-
 
 
 
@@ -335,21 +350,10 @@ def check_replace_tickets(matched_object):
     """Check several aspects about a genome only if it is being replaced."""
 
     if len(matched_object.genome_pair_dict.keys()) == 0:
+
         # TODO throw an error - there should be a matched genome_pair object
         # since this is a check_replace function.
 
-        # ticket.check_type(type_set)
-        # ticket.check_secondary_phage_id(phage_id_set)
-        # ticket.check_host_genus(host_genus_set)
-        # ticket.check_cluster(cluster_set)
-        # ticket.check_subcluster_structure()
-        # ticket.check_cluster_structure()
-        # ticket.check_cluster_subcluster()
-        # ticket.check_status(status_set)
-        # ticket.check_description_field(description_field_set)
-        # ticket.check_annotation_author(author_set)
-        # ticket.check_run_mode(run_mode_set)
-        # ticket.check_primary_secondary_phage_ids()
         #
         #
         # # If the genome to be added is not spelled the same as the genome
@@ -366,10 +370,6 @@ def check_replace_tickets(matched_object):
         for key in matched_object.genome_pair_dict.keys():
             compare_genomes(matched_object.genome_pair_dict[key])
 
-    # TODO determine other assumptions about what is/isn't in the database
-    # if this is a replacement.
-    # TODO verify there is only one identical genome sequence.
-    # TODO confirm that phage_ids of both genomes are the same.
 
     pass
 
@@ -378,14 +378,6 @@ def check_replace_tickets(matched_object):
 
 
 
-
-
-
-# TODO complete this function.
-# TODO unit test.
-def compare_ticket_to_flat_file(matched_object):
-
-    pass
 
 
 
@@ -399,40 +391,40 @@ def compare_ticket_to_flat_file(matched_object):
 # TODO unit test.
 def check_update_tickets(list_of_update_objects):
     """."""
-
-    index = 0
-    while index < len(list_of_update_objects):
-
-        matched_object = list_of_update_objects[index]
-
-        if len(matched_object.genome_pairs_dict.keys()) == 0:
-            # TODO throw an error if there is no matched Phamerator genome?
-            pass
-
-        for key in matched_object.genome_pairs_dict.keys():
-
-            genome_pair = matched_object.genome_pairs_dict[key]
-
-            # TODO check for conflicting hosts. It is not common to
-            # change hosts.
-            genome_pair.check_xyz()
-
-            # TODO check for conflicting status. It is not common to
-            # change status unless the current phamerator is draft status.
-            # The only common change is from draft to final.
-            genome_pair.check_xyz()
-
-            # TODO check for conflicting accession.
-            # It is not common to change from real accession to another
-            # real accession. But it is common to change from 'none' to
-            # real accession.
-            genome_pair.check_xyz()
-
-            # TODO check for conflicint authorship.
-            # It is not common to change authorships.
-            genome_pair.check_xyz()
-
-        index += 1
+    pass
+    # index = 0
+    # while index < len(list_of_update_objects):
+    #
+    #     matched_object = list_of_update_objects[index]
+    #
+    #     if len(matched_object.genome_pairs_dict.keys()) == 0:
+    #         # TODO throw an error if there is no matched Phamerator genome?
+    #         pass
+    #
+    #     for key in matched_object.genome_pairs_dict.keys():
+    #
+    #         genome_pair = matched_object.genome_pairs_dict[key]
+    #
+    #         # TODO check for conflicting hosts. It is not common to
+    #         # change hosts.
+    #         genome_pair.check_xyz()
+    #
+    #         # TODO check for conflicting status. It is not common to
+    #         # change status unless the current phamerator is draft status.
+    #         # The only common change is from draft to final.
+    #         genome_pair.check_xyz()
+    #
+    #         # TODO check for conflicting accession.
+    #         # It is not common to change from real accession to another
+    #         # real accession. But it is common to change from 'none' to
+    #         # real accession.
+    #         genome_pair.check_xyz()
+    #
+    #         # TODO check for conflicint authorship.
+    #         # It is not common to change authorships.
+    #         genome_pair.check_xyz()
+    #
+    #     index += 1
 
 
 
@@ -442,28 +434,28 @@ def check_update_tickets(list_of_update_objects):
 # TODO unit test.
 def check_remove_tickets(list_of_remove_objects, genome_type):
     """."""
-
-
-
-    index = 0
-    while index < len(list_of_remove_objects):
-
-        matched_object = list_of_update_objects[index]
-
-        try:
-            genome = matched_object.genomes_dict[genome_type]
-        except:
-            # TODO throw an error if there is no matched Phamerator genome?
-            continue
-
-
-        # TODO list of evaluations for remove ticket.
-
-        # TODO check the status of the removing genome.
-        # It is not common to remove anything but a 'draft' genome.
-
-
-        index += 1
+    pass
+    #
+    #
+    # index = 0
+    # while index < len(list_of_remove_objects):
+    #
+    #     matched_object = list_of_update_objects[index]
+    #
+    #     try:
+    #         genome = matched_object.genomes_dict[genome_type]
+    #     except:
+    #         # TODO throw an error if there is no matched Phamerator genome?
+    #         continue
+    #
+    #
+    #     # TODO list of evaluations for remove ticket.
+    #
+    #     # TODO check the status of the removing genome.
+    #     # It is not common to remove anything but a 'draft' genome.
+    #
+    #
+    #     index += 1
 
 
 

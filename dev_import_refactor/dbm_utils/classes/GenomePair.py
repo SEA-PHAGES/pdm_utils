@@ -19,7 +19,7 @@ class GenomePair:
         # Initialize calculated attributes
         self.evaluations = []
 
-        self.matched_cds = [] # List of MatchedCds objects. TODO this contains perfect and imperfect matches
+        self.matched_cds_list = [] # List of MatchedCds objects. TODO this contains perfect and imperfect matches
         self.unmatched_cds_genome1 = [] # List of CdsFeature objects
         self.unmatched_cds_genome2 = [] # List of CdsFeature objects
 

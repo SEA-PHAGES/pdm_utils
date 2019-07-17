@@ -232,15 +232,6 @@ class Genome:
         self._record_organism_host_genus = host_genus
 
 
-
-
-
-
-
-
-
-
-
     def set_host(self, value, format = "empty_string"):
         """Set the host_genus and discard the species."""
 
@@ -256,8 +247,6 @@ class Genome:
 
         else:
             self.host_genus = basic.convert_empty(value, format)
-
-
 
 
     def set_sequence(self, value):
@@ -284,8 +273,6 @@ class Genome:
         self.accession = basic.convert_empty(value, format)
 
 
-
-
     def set_cds_features(self, value):
         """Set the CDS features. Tally the CDS features."""
 
@@ -310,8 +297,6 @@ class Genome:
 
         self._cds_start_end_ids = start_end_id_list
         self._cds_end_strand_ids = end_strand_id_list
-
-
 
 
     def set_trna_features(self, value):
@@ -655,6 +640,7 @@ class Genome:
         pass
 
 
+    # TODO improve this to accept an author list?
     def check_annotation_author(self):
         """Check that the annotation_author is valid."""
 
@@ -716,6 +702,7 @@ class Genome:
         self.evaluations.append(eval)
 
 
+    # TODO is this needed?
     def check_record(self, record_set, expect = False):
         """Check that the record is valid."""
 
