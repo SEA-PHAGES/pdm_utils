@@ -99,6 +99,34 @@ def create_data_sets(genome_dict):
     return dictionary_of_sets
 
 
+
+
+# TODO implement.
+# TODO unit test.
+def create_seq_set(sql_obj):
+    """Create set of genome sequences currently in PhameratorDB."""
+    # Query MySQL for all unique host genera.
+    # return a set of sequences
+    pass
+
+
+
+# TODO implement.
+# TODO unit test.
+def create_phage_id_set(sql_obj):
+    """Create set of phage_ids currently in PhameratorDB."""
+    # Query MySQL for all unique host genera.
+    # return a set of phage_ids
+    pass
+
+
+
+
+
+
+
+
+
 def create_update_statement(table, field1, value1, field2, value2):
     """Create MySQL UPDATE statement. When:
     The new value to be added is 'singleton' (e.g. for Cluster and
@@ -357,14 +385,16 @@ def retrieve_sql_data(sql_obj):
         cur.execute("SELECT PhageID, \
                             Name, \
                             HostStrain, \
-                            Sequence,status, \
+                            Sequence, \
+                            status, \
                             Cluster2, \
                             DateLastModified, \
                             Accession,\
                             Subcluster2, \
                             AnnotationAuthor,\
                             AnnotationQC, \
-                            RetrieveRecord FROM phage")
+                            RetrieveRecord \
+                            FROM phage")
         current_genome_data_tuples = cur.fetchall()
         cur.execute("COMMIT")
         cur.close()

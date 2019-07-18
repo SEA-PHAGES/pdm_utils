@@ -75,11 +75,13 @@ AUTHOR_DICTIONARY = {0:set(['gbk']),1: AUTHOR_SET}
 
 
 
-# PhagesDB API to retrieve genome information.
+# PhagesDB API to retrieve specific genome information.
 API_PREFIX = "https://phagesdb.org/api/phages/"
 API_SUFFIX = "/?format=json"
 
 
+API_HOST_GENERA = "https://phagesdb.org/api/host_genera/"
+API_CLUSTERS = "https://phagesdb.org/api/clusters/"
 
 # Set of valid file extensions for flat files to be evaluated.
 ADMISSIBLE_FILE_TYPES = set(["gb","gbf","gbk","txt"])

@@ -1,7 +1,7 @@
 """Functions to interact with PhagesDB"""
 
 
-from pipelines import evaluate
+from pipelines.database_import import evaluate
 from classes import Genome
 from classes import GenomePair
 from functions import basic
@@ -163,9 +163,6 @@ def parse_phagesdb_data(genome_obj,data_dict):
     Genome object.
     """
 
-    list_of_results = []
-
-
     # Phage Name, PhageID and SearchID
     phage_name = parse_phagesdb_phage_name(data_dict)
     genome_obj.phage_name = phage_name
@@ -215,6 +212,9 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
 
 
+
+
+
 def retrieve_phagesdb_data(phage_url):
     """Retrieve all data from PhagesDB for a specific phage."""
 
@@ -224,7 +224,6 @@ def retrieve_phagesdb_data(phage_url):
     except:
         data_dict = {}
     return data_dict
-
 
 def construct_phage_url(phage_name):
     """Create URL to retrieve phage-specific data from PhagesDB."""
@@ -274,7 +273,68 @@ def copy_data_from_phagesdb(matched_data_obj, type, flag = "retrieve"):
 
 
 
+# TODO unit test.
+def retrieve_phagesdb_data_list(url):
+    """Retrieve list of data from PhagesDB."""
 
+    try:
+        data_json = urllib.request.urlopen(url)
+        data_list = json.loads(data_json.read())
+    except:
+        data_list = []
+    return data_list
+
+
+# TODO unit test.
+def create_host_genus_set():
+    """Create a set of host genera currently in PhagesDB.
+    The parameter is a list, and each element is a dictionary of data
+    pertaining to a different host genus."""
+
+    try:
+        output = retrieve_phagesdb_data_list(constants.API_HOST_GENERA)
+    except:
+        output = []
+
+    host_genera_set = set()
+    for genus_dict in output:
+        try:
+            host_genera_set.add(genus_dict["genus_name"])
+        except:
+            pass
+    return host_genera_set
+
+
+
+# TODO unit test.
+def create_cluster_subcluster_sets(add_extra = True):
+    """Create sets of clusters and subclusters currently in PhagesDB.
+    The parameter is a list, and each element is a dictionary of data
+    pertaining to a different cluster."""
+
+    try:
+        output = retrieve_phagesdb_data_list(constants.API_CLUSTERS)
+    except:
+        output = []
+
+    cluster_set = set()
+    subcluster_set = set()
+    for data in output:
+        try:
+            # This set will contain "Singleton".
+            cluster_set.add(data["cluster"])
+            try:
+                subclusters_list = data["subclusters_set"]
+                subcluster_set = subcluster_set | set(subclusters_list)
+            except:
+                pass
+        except:
+            pass
+
+    if add_extra:
+        cluster_set.add("UNK")
+
+    return (cluster_set, subcluster_set)
 
 
 

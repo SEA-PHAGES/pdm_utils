@@ -562,7 +562,32 @@ def create_parsed_flat_file_list(all_files,
 
 
 
+# TODO unit test.
+def create_parsed_flat_file(filename,
+                                phage_id_field = "record_organism_phage_name"):
+    """Create a list of genome objects containing data parsed from
+    flat files."""
 
+    file_valid = False
+    genome_obj = Genome.Genome()
+
+    if check_flat_file_type(filename):
+
+        try:
+            records = list(SeqIO.parse(filename, "genbank"))
+        except:
+            records = []
+
+        if len(records) == 1:
+            parse_flat_file_data(
+                genome_obj, records[0], filename, phage_id_field)
+            valid_file = True
+            genomes.append(genome_obj)
+        else:
+            genome_obj.filename = filename
+    else:
+        pass
+    return (genome, valid_file)
 
 
 
