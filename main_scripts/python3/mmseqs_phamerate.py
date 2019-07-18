@@ -42,7 +42,7 @@ pham_handler = MMseqsPhameratorHandler(mysql_connection)
 pham_handler.filter_redundant = True
 
 # Set MMseqs2 clustering parameters
-pham_handler.threads = 4
+pham_handler.threads = 1
 pham_handler.verbosity = 0
 pham_handler.single_step = True
 pham_handler.max_seqs = 1000
