@@ -143,6 +143,41 @@ except:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Below - refactored script in progress
 
 
@@ -166,9 +201,12 @@ from functions import tickets
 
 # TODO create SQL connector object using parsed arguments.
 
-list_of_ticket_data # TODO run a function to read the import table and retrieve the data.
 
-ticket_objects = # TODO convert list_of_ticket_data to list of ticket_objects
+
+
+
+# Identify valid files in folder for evaluation.
+files_in_folder = basic.identify_files(genome_dir)
 
 
 
@@ -186,272 +224,25 @@ ticket_objects = # TODO convert list_of_ticket_data to list of ticket_objects
 
 
 # Retrieve import ticket data.
-# Data is returned as a list of validated ticket objects.
-# list_of_ticket_data = read.csv(ticket_filename)
-list_of_tickets = tickets.parse_import_tickets(list_of_ticket_data)
+lists_of_ticket_data # TODO run a function to read the import table and retrieve the data.
 
 
 
-# Evaluate the tickets to ensure they are structured properly.
 
 
-# TODO not sure if I should pass a list of valid types to this function.
-index1 = 0
-while index1 < len(ticket_list):
-    evaluate.check_ticket_structure(ticket_list[index1],
-                                    constants.TICKET_TYPE_SET,
-                                    constants.EMPTY_SET,
-                                    constants.RUN_MODE_SET)
-    index1 += 1
+# TODO not sure how many elements (or what types) are returned.
+results = import_main.main1(lists_of_ticket_data, files_in_folder)
 
 
-# Now that individual tickets have been validated,
-# validate the entire group of tickets.
-tickets.compare_tickets(ticket_list)
 
 
 
 
 
-# Parse flat files and create list of genome objects
-#TODO insert real function
 
-# Identify valid files in folder.
-files_in_folder = basic.identify_files(genome_dir)
 
-
-for file in files_in_folder:
-    try:
-        seqrecord = SeqIO.read(file, "genbank")
-
-    except:
-        # TODO some error.
-        pass
-
-
-
-
-
-
-
-# Iterate through the list of files.
-# Parse each file into a Genome object.
-# Returns lists of Genome objects, Eval objects, parsed files,
-# and failed files.
-flat_file_genomes, valid_files, failed_files = \
-    flat_files.create_parsed_flat_file_list(files_in_folder)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###Above: new pipeline being built.
-
-
-
-
-###Unused functions that may now be obselete.
-
-###Unused functions that may now be obselete.
-
-
-
-###Below: incorrect pipeline.
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Tickets will be matched with other genome data.
-# Ticket data will be paired with data from PhagesDB, PhameratorDB,
-# and/or a flat file.
-list_of_matched_objects = []
-index2 = 0
-while index2 < len(list_of_tickets):
-
-    matched_data_obj = DataGroup()
-    matched_data_obj.ticket = list_of_tickets[index2]
-    list_of_matched_objects.append(matched_data_obj)
-    index2 += 1
-
-# Using each ticket, construct and populate genome objects as needed.
-index3 = 0
-while index3 < len(list_of_matched_objects):
-    tickets.copy_ticket_to_genome(list_of_matched_objects[index3])
-    index3 += 1
-
-
-# Now check to see if there is any missing data for each genome, and
-# retrieve it from phagesdb.
-index4 = 0
-while index4 < len(list_of_matched_objects):
-
-    # If the ticket genome has fields set to 'retrieve', data is
-    # retrieved from PhagesDB and populates a new Genome object.
-    matched_object = list_of_matched_objects[index4]
-    phagesdb.copy_data_from_phagesdb(matched_object, "add")
-    index4 += 1
-
-
-
-
-# Each ticket should now contain all requisite data from PhagesDB.
-# Validate each ticket by checking each field in the ticket
-# that it is populated correctly.
-
-
-
-# TODO check for ticket errors = exit script if not structured correctly.
-
-
-
-# TODO at some point annotation_qc and retrieve_record attributes
-# will need to be set. These are dependent on the ticket type.
-# If genomes are being replace, these fields may be carried over from
-# the previous genome, combined with their annotation status.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Match tickets to flat file data
-
-
-
-
-
-
-# Create dictionary of flat file data.
-flat_file_dict = {}
-index100 = 0
-while index100 < len(flat_file_genomes):
-    genome = flat_file_genomes[index100]
-    flat_file_dict[genome.phage_id] = genome
-
-
-
-# Match flat file genomes.
-index6 = 0
-while index6 < len(list_of_matched_objects):
-    matched_obj = list_of_matched_objects[index6]
-    misc.match_genome_by_phage_id(matched_obj, flat_file_dict, "add")
-
-
-
-
-
-
-
-
-
-
-
-# TODO After parsing flat file, prepare gene_id and gene_name appropriately
-
-# TODO check to confirm that genome objects from parsed flat files do not
-# contain any duplicate phage_ids, since that is not gauranteed.
-
-
-# Now that the flat file to be imported is parsed and matched to a ticket,
-# use the ticket to populate specific genome-level fields such as
-# host, cluster, subcluster, etc.
-index7 = 0
-while index7 < len(list_of_add_replace_objects):
-    matched_object = list_of_add_replace_objects[index7]
-    flat_files.copy_data_to_flat_file(matched_object, "add")
-    index7 += 1
-
-
-
-
-
-
-
-
-
-list_of_matched_objects = import_main.main(list_of_ticket_data, flat_file_genomes, sql_obj)
-
-
-
-
-
-# Perform all evaluations based on the ticket type.
-
-index8 = 0
-while index8 < len(list_of_matched_objects):
-    import_main.process_matched_data_object(list_of_matched_objects[index8])
-
-
-
-
-import_main.import_into_database(list_of_matched_objects, sql_obj)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Now that all flat files and tickets have been evaluated,
+# provide summary of results.
 
 
 

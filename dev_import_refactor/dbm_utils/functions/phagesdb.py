@@ -271,9 +271,6 @@ def copy_data_from_phagesdb(matched_data_obj, type, flag = "retrieve"):
         genome1.check_empty_fields()
 
 
-
-
-# TODO unit test.
 def retrieve_phagesdb_data_list(url):
     """Retrieve list of data from PhagesDB."""
 
@@ -285,14 +282,13 @@ def retrieve_phagesdb_data_list(url):
     return data_list
 
 
-# TODO unit test.
-def create_host_genus_set():
+def create_host_genus_set(url = constants.API_HOST_GENERA):
     """Create a set of host genera currently in PhagesDB.
     The parameter is a list, and each element is a dictionary of data
     pertaining to a different host genus."""
 
     try:
-        output = retrieve_phagesdb_data_list(constants.API_HOST_GENERA)
+        output = retrieve_phagesdb_data_list(url)
     except:
         output = []
 
@@ -305,15 +301,13 @@ def create_host_genus_set():
     return host_genera_set
 
 
-
-# TODO unit test.
-def create_cluster_subcluster_sets(add_extra = True):
+def create_cluster_subcluster_sets(url = constants.API_CLUSTERS):
     """Create sets of clusters and subclusters currently in PhagesDB.
     The parameter is a list, and each element is a dictionary of data
     pertaining to a different cluster."""
 
     try:
-        output = retrieve_phagesdb_data_list(constants.API_CLUSTERS)
+        output = retrieve_phagesdb_data_list(url)
     except:
         output = []
 
@@ -331,10 +325,21 @@ def create_cluster_subcluster_sets(add_extra = True):
         except:
             pass
 
-    if add_extra:
-        cluster_set.add("UNK")
-
     return (cluster_set, subcluster_set)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

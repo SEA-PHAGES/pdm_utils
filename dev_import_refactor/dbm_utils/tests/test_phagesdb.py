@@ -740,6 +740,64 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
+    def test_retrieve_phagesdb_data_list_1(self):
+        """Confirm that data is successfully retrieved."""
+        url = constants.API_CLUSTERS
+        data_list = phagesdb.retrieve_phagesdb_data_list(url)
+        self.assertTrue(len(data_list) > 0)
+
+    def test_retrieve_phagesdb_data_list_2(self):
+        """Confirm that data is not successfully retrieved."""
+        url = 'invalid url'
+        data_list = phagesdb.retrieve_phagesdb_data_list(url)
+        self.assertTrue(len(data_list) == 0)
+
+
+
+
+    def test_create_host_genus_set_1(self):
+        """Confirm that host genera data is successfully retrieved."""
+        host_genera_set = phagesdb.create_host_genus_set()
+        with self.subTest():
+            self.assertTrue(len(host_genera_set) > 0)
+        with self.subTest():
+            self.assertTrue("Mycobacterium" in host_genera_set)
+
+
+    def test_create_host_genus_set_2(self):
+        """Confirm that host genera data are not retrieved due to
+        invalid url."""
+        host_genera_set = phagesdb.create_host_genus_set("invalid_url")
+        self.assertTrue(len(host_genera_set) == 0)
+
+
+
+
+    def test_create_cluster_subcluster_sets_1(self):
+        """Confirm that cluster and subcluster data are successfully
+        retrieved."""
+        cluster_set, \
+        subcluster_set = phagesdb.create_cluster_subcluster_sets()
+        with self.subTest():
+            self.assertTrue("A" in cluster_set)
+        with self.subTest():
+            self.assertTrue("A1" in subcluster_set)
+
+    def test_create_cluster_subcluster_sets_2(self):
+        """Confirm that cluster and subcluster data are not retrieved due
+        to invalid url."""
+        cluster_set, \
+        subcluster_set = phagesdb.create_cluster_subcluster_sets("invalid_url")
+        with self.subTest():
+            self.assertTrue(len(cluster_set) == 0)
+        with self.subTest():
+            self.assertTrue(len(subcluster_set) == 0)
+
+
+
+
+
+
 
 
 

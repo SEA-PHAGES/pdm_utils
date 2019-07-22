@@ -568,7 +568,6 @@ def create_parsed_flat_file(filename,
     """Create a list of genome objects containing data parsed from
     flat files."""
 
-    file_valid = False
     genome_obj = Genome.Genome()
 
     if check_flat_file_type(filename):
@@ -581,13 +580,16 @@ def create_parsed_flat_file(filename,
         if len(records) == 1:
             parse_flat_file_data(
                 genome_obj, records[0], filename, phage_id_field)
-            valid_file = True
             genomes.append(genome_obj)
         else:
-            genome_obj.filename = filename
+
+            # If there is no parseable record, a genome object is still
+            # created and populated with 'type and 'filename'.
+            genome_obj.type = "flat_file"
+            genome_obj.set_record_filename(filename)
     else:
         pass
-    return (genome, valid_file)
+    return genome
 
 
 

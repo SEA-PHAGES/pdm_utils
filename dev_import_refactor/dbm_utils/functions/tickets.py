@@ -57,7 +57,6 @@ def parse_import_ticket(
 
 
 
-# TODO unit test now that
 def parse_import_tickets(list_of_lists):
     """Parses lists of lists of data from csv file and converts to
     group of parsed tickets. It also returns a lost of errors for tickets
@@ -65,14 +64,10 @@ def parse_import_tickets(list_of_lists):
     """
 
     list_of_tickets = []
-
     for list_of_data in list_of_lists:
-
         ticket = Ticket.GenomeTicket()
         parse_import_ticket(ticket, list_of_data)
-
         list_of_tickets.append(ticket)
-
     return list_of_tickets
 
 

@@ -112,11 +112,6 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-
-
-
-# TODO HERE IN PROGRESS fixing broken tickets functions.
-
     def test_parse_import_tickets_1(self):
         """Verify two lists of correct data are parsed."""
         list_of_lists = [self.normal_ticket_list,

@@ -41,6 +41,27 @@ def parse_phamerator_data(genome, data_tuple):
 
 
 
+# TODO unit test.
+def create_phamerator_genome(sql_obj, phage_id):
+    """
+    Returns a Genome object containing data parsed from MySQL
+    Phamerator database.
+    """
+
+    genome_tuple = retrieve_sql_data(sql_obj, phage_id)
+
+    genome = Genome.Genome()
+    if sql_data:
+        parse_phamerator_data(genome, genome_tuple)
+    else:
+        genome.type = "phamerator"
+
+    return genome
+
+
+
+
+
 def create_phamerator_dict(phamerator_data_tuples):
     """
     Returns a dictionary of Phamerator data retrieved from MySQL query.
@@ -342,10 +363,30 @@ def copy_data_from_phamerator(matched_data_obj, type, flag = "retain"):
 # TODO unit test below.
 
 
+# TODO implement.
+# TODO unit test.
+def retrieve_sql_data(sql_obj, phage_id):
+    """Retrieve data from Phamerator for a single genome."""
 
+    statement1 = "SELECT PhageID, \
+                            Name, \
+                            HostStrain, \
+                            Sequence, \
+                            status, \
+                            Cluster2, \
+                            DateLastModified, \
+                            Accession,\
+                            Subcluster2, \
+                            AnnotationAuthor,\
+                            AnnotationQC, \
+                            RetrieveRecord \
+                            FROM phage"
 
+    statement2 = " WHERE PhageID = '%s'" % phage_id
 
-
+    statement3 = statement1 + statement2
+    # returns a tuple of data containing PhageID, Host, Cluster, etc.
+    pass
 
 
 
