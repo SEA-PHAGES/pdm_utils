@@ -1,6 +1,6 @@
 """ Unit tests for misc. functions that interact with PhagesDB."""
 
-from classes import DataGroup
+from classes import Bundle
 from functions import phagesdb
 from classes import Genome
 from constants import constants
@@ -817,7 +817,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.cluster = "B"
         self.genome1._empty_fields = True
 
-        self.matched_data_obj1 = DataGroup.DataGroup()
+        self.bundle1 = Bundle.Bundle()
 
 
 
@@ -826,9 +826,9 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         """Check that an "add" genome with no fields set to 'retrieve' is
         not impacted."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
-        genome1 = self.matched_data_obj1.genome_dict["add"]
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
+        phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
+        genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._empty_fields)
         with self.subTest():
@@ -842,10 +842,10 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         """Check that an "add" genome with host_genus field set to 'retrieve' is
         populated correctly."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
-        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
-        genome1 = self.matched_data_obj1.genome_dict["add"]
+        phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
+        genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._empty_fields)
         with self.subTest():
@@ -860,12 +860,12 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         not populated correctly."""
 
         self.genome1.type = "invalid"
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
-        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
+        phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
         with self.subTest():
             self.assertEqual(
-                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+                len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retrieve")
         with self.subTest():
@@ -875,12 +875,12 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         """Check that an "add" genome with host_genus field set to 'retrieve' is
         not populated correctly when "invalid" type is requrested."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
-        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "invalid")
+        phagesdb.copy_data_from_phagesdb(self.bundle1, "invalid")
         with self.subTest():
             self.assertEqual(
-                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+                len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retrieve")
         with self.subTest():
@@ -891,15 +891,15 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         not populated correctly when phage_id is not valid."""
 
         self.genome1.phage_id = "invalid"
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
         self.genome1._empty_fields = False
-        phagesdb.copy_data_from_phagesdb(self.matched_data_obj1, "add")
+        phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
         with self.subTest():
             self.assertTrue(self.genome1._empty_fields)
         with self.subTest():
             self.assertEqual(
-                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+                len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retrieve")
         with self.subTest():

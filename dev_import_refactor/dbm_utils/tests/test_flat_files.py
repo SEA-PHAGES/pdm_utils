@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
-from classes import DataGroup
+from classes import Bundle
 
 # For integration testing.
 import os
@@ -3328,7 +3328,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.genome1._empty_fields = False
         self.genome1.translation_table = "empty"
 
-        self.matched_data_obj1 = DataGroup.DataGroup()
+        self.bundle1 = Bundle.Bundle()
 
 
         self.genome2 = Genome.Genome()
@@ -3350,10 +3350,10 @@ class TestFlatFileFunctions2(unittest.TestCase):
     def test_copy_data_to_flat_file_1(self):
         """Check that a "flat_file" genome is successfully populated."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add")
-        genome1 = self.matched_data_obj1.genome_dict["flat_file"]
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome2.type] = self.genome2
+        flat_files.copy_data_to_flat_file(self.bundle1, "add")
+        genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._empty_fields)
         with self.subTest():
@@ -3385,18 +3385,18 @@ class TestFlatFileFunctions2(unittest.TestCase):
     def test_copy_data_to_flat_file_2(self):
         """Check that the function can handle a missing "flat_file" genome."""
 
-        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add")
-        self.assertEqual(len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+        self.bundle1.genome_dict[self.genome2.type] = self.genome2
+        flat_files.copy_data_to_flat_file(self.bundle1, "add")
+        self.assertEqual(len(self.bundle1.genome_pair_dict.keys()), 0)
 
 
     def test_copy_data_to_flat_file_3(self):
         """Check that a "flat_file" genome is not successfully populated
         when a second genome is absent."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add")
-        genome1 = self.matched_data_obj1.genome_dict["flat_file"]
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
+        flat_files.copy_data_to_flat_file(self.bundle1, "add")
+        genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertTrue(genome1._empty_fields)
         with self.subTest():
@@ -3407,10 +3407,10 @@ class TestFlatFileFunctions2(unittest.TestCase):
         """Check that a "flat_file" genome is successfully populated when
         a non-standard field flag is used."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to_flat_file(self.matched_data_obj1, "add", "empty")
-        genome1 = self.matched_data_obj1.genome_dict["flat_file"]
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome2.type] = self.genome2
+        flat_files.copy_data_to_flat_file(self.bundle1, "add", "empty")
+        genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._empty_fields)
         with self.subTest():

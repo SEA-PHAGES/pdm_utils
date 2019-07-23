@@ -128,56 +128,56 @@ def check_phagesdb_genome(genome_obj, null_set):
 
 # TODO implement.
 # TODO unit test.
-def check_datagroup_for_import(matched_object):
-    """Check a DataGroup for errors."""
+def check_bundle_for_import(bundle):
+    """Check a Bundle for errors."""
 
-    ticket = matched_object.ticket
+    ticket = bundle.ticket
 
 
     # First, evaluate whether all genomes have been successfully grouped,
     # and whether all genomes have been paired, as expected.
     # Based on the ticket type, there are expected to be certain
-    # types of genomes and pairs of genomes in the group.
+    # types of genomes and pairs of genomes in the bundle.
 
     if ticket.type == "add" or ticket.type == "replace":
 
 
-        matched_object.check_genome_dict("add")
-        matched_object.check_genome_dict("flat_file")
-        matched_object.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
+        bundle.check_genome_dict("add")
+        bundle.check_genome_dict("flat_file")
+        bundle.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
 
         ticket.set_empty_fields("retrieve")
         if ticket._empty_fields:
-            matched_object.check_genome_dict("phagesdb")
-            matched_object.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
+            bundle.check_genome_dict("phagesdb")
+            bundle.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
 
 
     if ticket.type == "replace":
-        matched_object.check_genome_dict("remove")
-        matched_object.check_genome_dict("phamerator")
-        matched_object.check_genome_pair_dict("flat_file_phamerator") # TODO Ordered correctly?
-        matched_object.check_genome_pair_dict("remove_phamerator") # TODO Ordered correctly? Also - is this needed?
+        bundle.check_genome_dict("remove")
+        bundle.check_genome_dict("phamerator")
+        bundle.check_genome_pair_dict("flat_file_phamerator") # TODO Ordered correctly?
+        bundle.check_genome_pair_dict("remove_phamerator") # TODO Ordered correctly? Also - is this needed?
 
         ticket.set_empty_fields("retain")
         if ticket._empty_fields:
-            matched_object.check_genome_pair_dict("add_phamerator") # TODO Ordered correctly?
+            bundle.check_genome_pair_dict("add_phamerator") # TODO Ordered correctly?
 
 
 
     # Second, evaluate each genome or pair of genomes as needed.
     try:
-        check_genome_to_import(matched_object.genome_dict["flat_file"], ticket.type)
+        check_genome_to_import(bundle.genome_dict["flat_file"], ticket.type)
     except:
         pass
 
 
     try:
-        compare_genomes_for_replace(matched_object.genome_pair_dict["flat_file_phamerator"])
+        compare_genomes_for_replace(bundle.genome_pair_dict["flat_file_phamerator"])
     except:
         pass
 
     try:
-        compare_genomes_for_remove(matched_object.genome_pair_dict["remove_phamerator"])
+        compare_genomes_for_remove(bundle.genome_pair_dict["remove_phamerator"])
     except:
         pass
 
@@ -346,10 +346,10 @@ def compare_genomes(genome_pair_obj):
 
 
 
-def check_replace_tickets(matched_object):
+def check_replace_tickets(bundle):
     """Check several aspects about a genome only if it is being replaced."""
 
-    if len(matched_object.genome_pair_dict.keys()) == 0:
+    if len(bundle.genome_pair_dict.keys()) == 0:
 
         # TODO throw an error - there should be a matched genome_pair object
         # since this is a check_replace function.
@@ -367,8 +367,8 @@ def check_replace_tickets(matched_object):
 
         pass
     else:
-        for key in matched_object.genome_pair_dict.keys():
-            compare_genomes(matched_object.genome_pair_dict[key])
+        for key in bundle.genome_pair_dict.keys():
+            compare_genomes(bundle.genome_pair_dict[key])
 
 
     pass
@@ -395,15 +395,15 @@ def check_update_tickets(list_of_update_objects):
     # index = 0
     # while index < len(list_of_update_objects):
     #
-    #     matched_object = list_of_update_objects[index]
+    #     bundle = list_of_update_objects[index]
     #
-    #     if len(matched_object.genome_pairs_dict.keys()) == 0:
+    #     if len(bundle.genome_pairs_dict.keys()) == 0:
     #         # TODO throw an error if there is no matched Phamerator genome?
     #         pass
     #
-    #     for key in matched_object.genome_pairs_dict.keys():
+    #     for key in bundle.genome_pairs_dict.keys():
     #
-    #         genome_pair = matched_object.genome_pairs_dict[key]
+    #         genome_pair = bundle.genome_pairs_dict[key]
     #
     #         # TODO check for conflicting hosts. It is not common to
     #         # change hosts.
@@ -440,10 +440,10 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
     # index = 0
     # while index < len(list_of_remove_objects):
     #
-    #     matched_object = list_of_update_objects[index]
+    #     bundle = list_of_update_objects[index]
     #
     #     try:
-    #         genome = matched_object.genomes_dict[genome_type]
+    #         genome = bundle.genomes_dict[genome_type]
     #     except:
     #         # TODO throw an error if there is no matched Phamerator genome?
     #         continue

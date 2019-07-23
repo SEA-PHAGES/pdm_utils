@@ -3,7 +3,7 @@
 
 from classes import Genome
 from constants import constants
-from pipelines import evaluate
+from pipelines.database_import import evaluate
 from classes import Ticket
 import unittest
 

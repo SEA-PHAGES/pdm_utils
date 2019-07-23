@@ -1,6 +1,6 @@
 """ Unit tests for misc. ticket functions"""
 
-from classes import DataGroup
+from classes import Bundle
 from classes import Genome
 from classes import Ticket
 from classes import Eval
@@ -430,20 +430,20 @@ class TestTicketFunctions2(unittest.TestCase):
         self.ticket1.primary_phage_id = "Trixie"
         self.ticket2.primary_phage_id = "L5"
 
-        self.datagroup1 = DataGroup.DataGroup()
-        self.datagroup2 = DataGroup.DataGroup()
+        self.bundle1 = Bundle.Bundle()
+        self.bundle2 = Bundle.Bundle()
 
-        self.datagroup1.ticket = self.ticket1
-        self.datagroup2.ticket = self.ticket2
+        self.bundle1.ticket = self.ticket1
+        self.bundle2.ticket = self.ticket2
 
 
     # TODO no longer needed probably.
     # def test_assign_match_strategy_1(self):
     #     """Verify strategy is assigned with no error produced."""
     #     input_strategy = "phage_id"
-    #     self.datagroup1.ticket.match_strategy = input_strategy
-    #     self.datagroup2.ticket.match_strategy = input_strategy
-    #     list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+    #     self.bundle1.ticket.match_strategy = input_strategy
+    #     self.bundle2.ticket.match_strategy = input_strategy
+    #     list1 = [self.bundle1, self.bundle2] # Trixie, L5
     #     output_strategy, eval_result = \
     #         tickets.assign_match_strategy(list1)
     #     with self.subTest():
@@ -455,9 +455,9 @@ class TestTicketFunctions2(unittest.TestCase):
     #     """Verify no strategy is assigned and an error is produced."""
     #     input_strategy1 = "phage_id"
     #     input_strategy2 = "filename"
-    #     self.datagroup1.ticket.match_strategy = input_strategy1
-    #     self.datagroup2.ticket.match_strategy = input_strategy2
-    #     list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+    #     self.bundle1.ticket.match_strategy = input_strategy1
+    #     self.bundle2.ticket.match_strategy = input_strategy2
+    #     list1 = [self.bundle1, self.bundle2] # Trixie, L5
     #     output_strategy, eval_result = \
     #         tickets.assign_match_strategy(list1)
     #     expected_strategy = ""
@@ -478,28 +478,28 @@ class TestTicketFunctions3(unittest.TestCase):
         self.ticket3 = Ticket.GenomeTicket()
         self.ticket4 = Ticket.GenomeTicket()
 
-        self.datagroup1 = DataGroup.DataGroup()
-        self.datagroup2 = DataGroup.DataGroup()
-        self.datagroup3 = DataGroup.DataGroup()
-        self.datagroup4 = DataGroup.DataGroup()
+        self.bundle1 = Bundle.Bundle()
+        self.bundle2 = Bundle.Bundle()
+        self.bundle3 = Bundle.Bundle()
+        self.bundle4 = Bundle.Bundle()
 
-        self.datagroup1.ticket = self.ticket1
-        self.datagroup2.ticket = self.ticket2
-        self.datagroup3.ticket = self.ticket3
-        self.datagroup4.ticket = self.ticket4
+        self.bundle1.ticket = self.ticket1
+        self.bundle2.ticket = self.ticket2
+        self.bundle3.ticket = self.ticket3
+        self.bundle4.ticket = self.ticket4
 
 
-    def test_create_matched_object_dict_1(self):
+    def test_create_bundle_dict_1(self):
         """Verify dictionary of update tickets is created."""
 
-        self.datagroup1.ticket.type = "update"
-        self.datagroup2.ticket.type = "update"
-        self.datagroup3.ticket.type = "update"
-        self.datagroup4.ticket.type = "update"
-        list = [self.datagroup1, self.datagroup2,
-                self.datagroup3, self.datagroup4]
+        self.bundle1.ticket.type = "update"
+        self.bundle2.ticket.type = "update"
+        self.bundle3.ticket.type = "update"
+        self.bundle4.ticket.type = "update"
+        list = [self.bundle1, self.bundle2,
+                self.bundle3, self.bundle4]
 
-        result_dict = tickets.create_matched_object_dict(list)
+        result_dict = tickets.create_bundle_dict(list)
         update_list = result_dict["update"]
 
         with self.subTest():
@@ -507,13 +507,13 @@ class TestTicketFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(update_list), 4)
 
-    def test_create_matched_object_dict_2(self):
+    def test_create_bundle_dict_2(self):
         """Verify dictionary of empty tickets is created."""
 
-        list = [self.datagroup1, self.datagroup2,
-                self.datagroup3, self.datagroup4]
+        list = [self.bundle1, self.bundle2,
+                self.bundle3, self.bundle4]
 
-        result_dict = tickets.create_matched_object_dict(list)
+        result_dict = tickets.create_bundle_dict(list)
         update_list = result_dict[""]
 
         with self.subTest():
@@ -522,18 +522,18 @@ class TestTicketFunctions3(unittest.TestCase):
             self.assertEqual(len(update_list), 4)
 
 
-    def test_create_matched_object_dict_3(self):
+    def test_create_bundle_dict_3(self):
         """Verify dictionary of multiple ticket types is created."""
 
-        self.datagroup1.ticket.type = "update"
-        self.datagroup2.ticket.type = "add"
-        self.datagroup3.ticket.type = "update"
-        self.datagroup4.ticket.type = "replace"
+        self.bundle1.ticket.type = "update"
+        self.bundle2.ticket.type = "add"
+        self.bundle3.ticket.type = "update"
+        self.bundle4.ticket.type = "replace"
 
-        list = [self.datagroup1, self.datagroup2,
-                self.datagroup3, self.datagroup4]
+        list = [self.bundle1, self.bundle2,
+                self.bundle3, self.bundle4]
 
-        result_dict = tickets.create_matched_object_dict(list)
+        result_dict = tickets.create_bundle_dict(list)
         update_list = result_dict["update"]
         add_list = result_dict["add"]
         replace_list = result_dict["replace"]
@@ -577,8 +577,8 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.retrieve_record = 1
         self.add_ticket.accession = "ABC123.1"
         self.add_ticket.secondary_phage_id = "none"
-        self.datagroup1 = DataGroup.DataGroup()
-        self.datagroup1.ticket = self.add_ticket
+        self.bundle1 = Bundle.Bundle()
+        self.bundle1.ticket = self.add_ticket
 
         # Remove ticket.
         self.remove_ticket = Ticket.GenomeTicket()
@@ -595,8 +595,8 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.retrieve_record = 1
         self.remove_ticket.accession = "ABC123.1"
         self.remove_ticket.secondary_phage_id = "L5"
-        self.datagroup2 = DataGroup.DataGroup()
-        self.datagroup2.ticket = self.remove_ticket
+        self.bundle2 = Bundle.Bundle()
+        self.bundle2.ticket = self.remove_ticket
 
 
 
@@ -616,15 +616,15 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.retrieve_record = 1
         self.invalid_ticket.accession = "ABC123.1"
         self.invalid_ticket.secondary_phage_id = "L5"
-        self.datagroup3 = DataGroup.DataGroup()
-        self.datagroup3.ticket = self.invalid_ticket
+        self.bundle3 = Bundle.Bundle()
+        self.bundle3.ticket = self.invalid_ticket
 
 
     def test_copy_ticket_to_genome_1(self):
         """Verify data from 'add' ticket is added to genome."""
 
-        tickets.copy_ticket_to_genome(self.datagroup1)
-        matched_genome = self.datagroup1.genome_dict["add"]
+        tickets.copy_ticket_to_genome(self.bundle1)
+        matched_genome = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertEqual(matched_genome.phage_id, "Trixie")
         with self.subTest():
@@ -653,9 +653,9 @@ class TestTicketFunctions4(unittest.TestCase):
     def test_copy_ticket_to_genome_2(self):
         """Verify data from 'remove' ticket is added to genome."""
 
-        tickets.copy_ticket_to_genome(self.datagroup2)
-        matched_genome1 = self.datagroup2.genome_dict["add"]
-        matched_genome2 = self.datagroup2.genome_dict["remove"]
+        tickets.copy_ticket_to_genome(self.bundle2)
+        matched_genome1 = self.bundle2.genome_dict["add"]
+        matched_genome2 = self.bundle2.genome_dict["remove"]
 
         with self.subTest():
             self.assertEqual(matched_genome1.phage_id, "Trixie")
@@ -669,8 +669,8 @@ class TestTicketFunctions4(unittest.TestCase):
     def test_copy_ticket_to_genome_3(self):
         """Verify data from 'invalid' ticket is not added to genome."""
 
-        tickets.copy_ticket_to_genome(self.datagroup3)
-        self.assertEqual(len(self.datagroup3.genome_dict.keys()), 0)
+        tickets.copy_ticket_to_genome(self.bundle3)
+        self.assertEqual(len(self.bundle3.genome_dict.keys()), 0)
 
 
 
@@ -697,26 +697,26 @@ class TestTicketFunctions4(unittest.TestCase):
 #         self.ticket3 = Ticket.GenomeTicket()
 #         self.ticket4 = Ticket.GenomeTicket()
 #
-#         self.datagroup1 = DataGroup.DataGroup()
-#         self.datagroup2 = DataGroup.DataGroup()
-#         self.datagroup3 = DataGroup.DataGroup()
-#         self.datagroup4 = DataGroup.DataGroup()
+#         self.bundle1 = Bundle.Bundle()
+#         self.bundle2 = Bundle.Bundle()
+#         self.bundle3 = Bundle.Bundle()
+#         self.bundle4 = Bundle.Bundle()
 #
-#         self.datagroup1.ticket = self.ticket1
-#         self.datagroup2.ticket = self.ticket2
-#         self.datagroup3.ticket = self.ticket3
-#         self.datagroup4.ticket = self.ticket4
+#         self.bundle1.ticket = self.ticket1
+#         self.bundle2.ticket = self.ticket2
+#         self.bundle3.ticket = self.ticket3
+#         self.bundle4.ticket = self.ticket4
 #
 #
 #     def test_match_genomes_to_tickets_1(self):
 #         """Verify that one genome is matched to ticket using phage_id."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "phage_id"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "phage_id"
 #         self.genome1.phage_id = "Trixie"
 #
 #
-#         list1 = [self.datagroup1] # Trixie
+#         list1 = [self.bundle1] # Trixie
 #         list2 = [self.genome1] # Trixie
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -734,11 +734,11 @@ class TestTicketFunctions4(unittest.TestCase):
 #     def test_match_genomes_to_tickets_2(self):
 #         """Verify that one genome is matched to ticket using filename."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         list1 = [self.datagroup1] # Trixie
+#         list1 = [self.bundle1] # Trixie
 #         list2 = [self.genome1] # Trixie
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -757,13 +757,13 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that one genome is matched to ticket,
 #         and one genome is not matched (no matching ticket), using filename."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #         self.genome2.filename = "L5"
 #
 #
-#         list1 = [self.datagroup1] # Trixie
+#         list1 = [self.bundle1] # Trixie
 #         list2 = [self.genome1, self.genome2] # Trixie, L5
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -782,14 +782,14 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that one ticket is matched to genome,
 #         and one ticket is not matched (no matching genome), using filename."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.datagroup2.ticket.primary_phage_id = "L5"
-#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.match_strategy = "filename"
 #
-#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#         list1 = [self.bundle1, self.bundle2] # Trixie, L5
 #         list2 = [self.genome1] # Trixie
 #
 #         eval_list = \
@@ -809,16 +809,16 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that two genomes are matched to tickets,
 #         using filename."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.datagroup2.ticket.primary_phage_id = "L5"
-#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
 #
-#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#         list1 = [self.bundle1, self.bundle2] # Trixie, L5
 #         list2 = [self.genome1, self.genome2] # Trixie, L5
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -844,15 +844,15 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that no genomes are matched to tickets due to
 #         conflicting strategies."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "phage_id"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "phage_id"
 #         self.genome1.filename = "Trixie"
 #
-#         self.datagroup2.ticket.primary_phage_id = "L5"
-#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
-#         list1 = [self.datagroup1, self.datagroup2] # Trixie, L5
+#         list1 = [self.bundle1, self.bundle2] # Trixie, L5
 #         list2 = [self.genome1, self.genome2] # Trixie, L5
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -870,19 +870,19 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that three genomes are matched to tickets,
 #         using filename."""
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.datagroup2.ticket.primary_phage_id = "L5"
-#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
-#         self.datagroup3.ticket.primary_phage_id = "D29"
-#         self.datagroup3.ticket.match_strategy = "filename"
+#         self.bundle3.ticket.primary_phage_id = "D29"
+#         self.bundle3.ticket.match_strategy = "filename"
 #         self.genome3.filename = "D29"
 #
-#         list1 = [self.datagroup1, self.datagroup2, self.datagroup3]
+#         list1 = [self.bundle1, self.bundle2, self.bundle3]
 #         list2 = [self.genome1, self.genome2, self.genome3]
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -915,22 +915,22 @@ class TestTicketFunctions4(unittest.TestCase):
 #         and two tickets are not matched (same identifier), using filename."""
 #
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.datagroup2.ticket.primary_phage_id = "L5"
-#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
-#         self.datagroup3.ticket.primary_phage_id = "D29"
-#         self.datagroup3.ticket.match_strategy = "filename"
+#         self.bundle3.ticket.primary_phage_id = "D29"
+#         self.bundle3.ticket.match_strategy = "filename"
 #
-#         self.datagroup4.ticket.primary_phage_id = "D29"
-#         self.datagroup4.ticket.match_strategy = "filename"
+#         self.bundle4.ticket.primary_phage_id = "D29"
+#         self.bundle4.ticket.match_strategy = "filename"
 #
-#         list1 = [self.datagroup1, self.datagroup2,
-#                 self.datagroup3, self.datagroup4]
+#         list1 = [self.bundle1, self.bundle2,
+#                 self.bundle3, self.bundle4]
 #         list2 = [self.genome1, self.genome2]
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,
@@ -961,18 +961,18 @@ class TestTicketFunctions4(unittest.TestCase):
 #         and two genomes are not matched (same identifier), using filename."""
 #
 #
-#         self.datagroup1.ticket.primary_phage_id = "Trixie"
-#         self.datagroup1.ticket.match_strategy = "filename"
+#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.datagroup2.ticket.primary_phage_id = "L5"
-#         self.datagroup2.ticket.match_strategy = "filename"
+#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
 #         self.genome3.filename = "D29"
 #         self.genome4.filename = "D29"
 #
-#         list1 = [self.datagroup1, self.datagroup2]
+#         list1 = [self.bundle1, self.bundle2]
 #         list2 = [self.genome1, self.genome2, self.genome3, self.genome4]
 #         eval_list = \
 #             tickets.match_genomes_to_tickets(list1,

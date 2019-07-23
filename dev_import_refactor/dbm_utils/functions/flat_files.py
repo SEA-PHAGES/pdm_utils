@@ -419,7 +419,7 @@ def check_flat_file_type(filepath):
 
 
 
-def copy_data_to_flat_file(matched_data_obj, type, flag = "ticket"):
+def copy_data_to_flat_file(bundle, type, flag = "ticket"):
     """Copy data from an 'add' genome object to a 'flat_file' genome object.
     The 'add' genome contains data not stored in the flat file.
     The 'flat_file' attributes that should be populated need
@@ -427,8 +427,8 @@ def copy_data_to_flat_file(matched_data_obj, type, flag = "ticket"):
     The 'type' parameter indicates the type of genome that can be used to
     populate the 'flat_file' genome object."""
 
-    if "flat_file" in matched_data_obj.genome_dict.keys():
-        genome1 = matched_data_obj.genome_dict["flat_file"]
+    if "flat_file" in bundle.genome_dict.keys():
+        genome1 = bundle.genome_dict["flat_file"]
         genome1.cluster = flag
         genome1.subcluster = flag
         genome1.phage_name = flag # TODO should this attribute be copied?
@@ -441,17 +441,17 @@ def copy_data_to_flat_file(matched_data_obj, type, flag = "ticket"):
         genome1.retrieve_record = flag
         genome1.set_empty_fields(flag)
 
-        if type in matched_data_obj.genome_dict.keys():
+        if type in bundle.genome_dict.keys():
 
-            genome2 = matched_data_obj.genome_dict[type]
+            genome2 = bundle.genome_dict[type]
 
             # Copy all data that is set to 'ticket' and
-            # add to DataGroup object.
+            # add to Bundle object.
             genome_pair = GenomePair.GenomePair()
             genome_pair.genome1 = genome1
             genome_pair.genome2 = genome2
             genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-            matched_data_obj.set_genome_pair(genome_pair, genome1.type, genome2.type)
+            bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
         # Now record an error if there are still fields
         # that need to be copied.

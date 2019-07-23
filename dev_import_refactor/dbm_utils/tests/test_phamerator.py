@@ -6,7 +6,7 @@ from functions import phamerator
 from classes import Genome
 from classes import Cds
 from datetime import datetime
-from classes import DataGroup
+from classes import Bundle
 
 
 class TestPhameratorFunctions(unittest.TestCase):
@@ -613,7 +613,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome1.cluster = "B"
         self.genome1._empty_fields = True
 
-        self.matched_data_obj1 = DataGroup.DataGroup()
+        self.bundle1 = Bundle.Bundle()
 
 
         self.genome2 = Genome.Genome()
@@ -626,9 +626,9 @@ class TestPhameratorFunctions2(unittest.TestCase):
         """Check that an "add" genome with no fields set to 'retain' is
         not impacted."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
-        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
-        genome1 = self.matched_data_obj1.genome_dict["add"]
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
+        phamerator.copy_data_from_phamerator(self.bundle1, "add")
+        genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._empty_fields)
         with self.subTest():
@@ -642,11 +642,11 @@ class TestPhameratorFunctions2(unittest.TestCase):
         """Check that an "add" genome with host_genus field set to 'retain' is
         populated correctly."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        self.matched_data_obj1.genome_dict[self.genome2.type] = self.genome2
-        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
-        genome1 = self.matched_data_obj1.genome_dict["add"]
+        self.bundle1.genome_dict[self.genome2.type] = self.genome2
+        phamerator.copy_data_from_phamerator(self.bundle1, "add")
+        genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._empty_fields)
         with self.subTest():
@@ -661,12 +661,12 @@ class TestPhameratorFunctions2(unittest.TestCase):
         not populated correctly."""
 
         self.genome1.type = "invalid"
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
+        phamerator.copy_data_from_phamerator(self.bundle1, "add")
         with self.subTest():
             self.assertEqual(
-                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+                len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retain")
         with self.subTest():
@@ -676,12 +676,12 @@ class TestPhameratorFunctions2(unittest.TestCase):
         """Check that an "add" genome with host_genus field set to 'retain' is
         not populated correctly when "invalid" type is requested."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "invalid")
+        phamerator.copy_data_from_phamerator(self.bundle1, "invalid")
         with self.subTest():
             self.assertEqual(
-                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+                len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retain")
         with self.subTest():
@@ -692,15 +692,15 @@ class TestPhameratorFunctions2(unittest.TestCase):
         not populated correctly when there is no matching "phamerator"
         genomet type."""
 
-        self.matched_data_obj1.genome_dict[self.genome1.type] = self.genome1
+        self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
         self.genome1._empty_fields = False
-        phamerator.copy_data_from_phamerator(self.matched_data_obj1, "add")
+        phamerator.copy_data_from_phamerator(self.bundle1, "add")
         with self.subTest():
             self.assertTrue(self.genome1._empty_fields)
         with self.subTest():
             self.assertEqual(
-                len(self.matched_data_obj1.genome_pair_dict.keys()), 0)
+                len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retain")
         with self.subTest():

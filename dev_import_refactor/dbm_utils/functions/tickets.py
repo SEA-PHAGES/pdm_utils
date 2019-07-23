@@ -116,13 +116,13 @@ def compare_tickets(list_of_tickets):
 
 
 
-def copy_ticket_to_genome(matched_object):
+def copy_ticket_to_genome(bundle):
     """Construct genome objects and populate them appropriately using data
-    from import ticket. This function operates on a DataGroup object
+    from import ticket. This function operates on a Bundle object
     instead of a Genome object because some tickets (such as 'replace')
     need to instantiate more than one Genome object."""
 
-    ticket = matched_object.ticket
+    ticket = bundle.ticket
 
     if (ticket.type == "add" or ticket.type == "replace"):
         genome1 = Genome.Genome()
@@ -139,7 +139,7 @@ def copy_ticket_to_genome(matched_object):
         genome1.annotation_qc = ticket.annotation_qc
         genome1.retrieve_record = ticket.retrieve_record
 
-        matched_object.genome_dict[genome1.type] = genome1
+        bundle.genome_dict[genome1.type] = genome1
 
         if ticket.type == "replace":
 
@@ -147,7 +147,7 @@ def copy_ticket_to_genome(matched_object):
             genome2.type = "remove"
             genome2.set_phage_id(ticket.secondary_phage_id)
 
-            matched_object.genome_dict[genome2.type] = genome2
+            bundle.genome_dict[genome2.type] = genome2
 
     # TODO 'update' ticket option will eventually be deleted.
     elif ticket.type == "update":
@@ -162,7 +162,7 @@ def copy_ticket_to_genome(matched_object):
         # genome.set_cluster(ticket.cluster)
         # genome.set_subcluster(ticket.subcluster)
         # genome.set_cluster_subcluster()
-        # matched_object.genome_dict[genome.type] = genome
+        # bundle.genome_dict[genome.type] = genome
         pass
 
     # TODO 'remove' ticket option will eventually be deleted.
@@ -172,7 +172,7 @@ def copy_ticket_to_genome(matched_object):
         # genome = Genome.Genome()
         # genome.type = "remove"
         # genome.set_phage_id(ticket.primary_phage_id)
-        # matched_object.genome_dict[genome.type] = genome
+        # bundle.genome_dict[genome.type] = genome
         pass
 
     else:
@@ -182,25 +182,25 @@ def copy_ticket_to_genome(matched_object):
 
 
 
-def create_matched_object_dict(list_of_group_objects):
-    """Create a dictionary of DataGroup objects based on their ticket type.
+def create_bundle_dict(list_of_bundle_objects):
+    """Create a dictionary of Bundle objects based on their ticket type.
     Key = ticket type (e.g. update, add, etc.).
-    Value = list of DataGroup objects."""
+    Value = list of Bundle objects."""
 
     type_set = set()
-    for matched_object in list_of_group_objects:
-        type_set.add(matched_object.ticket.type)
+    for bundle in list_of_bundle_objects:
+        type_set.add(bundle.ticket.type)
 
     ticket_type_dict = {}
     for type in type_set:
-        group_object_list = []
+        bundle_object_list = []
         index = 0
-        while index < len(list_of_group_objects):
-            matched_object = list_of_group_objects[index]
-            if matched_object.ticket.type == type:
-                group_object_list.append(matched_object)
+        while index < len(list_of_bundle_objects):
+            bundle = list_of_bundle_objects[index]
+            if bundle.ticket.type == type:
+                bundle_object_list.append(bundle)
             index += 1
-        ticket_type_dict[type] = group_object_list
+        ticket_type_dict[type] = bundle_object_list
 
     return ticket_type_dict
 
@@ -260,13 +260,13 @@ def prepare_tickets(ticket_filename):
 # can assign the PhageID from either the filename or a flat file record
 # field. As a result, all genomes can be matched to tickets using the
 # Genome object phage_id.
-# def assign_match_strategy(list_of_group_objects):
+# def assign_match_strategy(list_of_bundle_objects):
 #
 #     strategy = ""
 #     strategies = set()
 #
-#     for group_obj in list_of_group_objects:
-#         strategies.add(group_obj.ticket.match_strategy)
+#     for bundle_obj in list_of_bundle_objects:
+#         strategies.add(bundle_obj.ticket.match_strategy)
 #
 #
 #     if len(strategies) > 1:
@@ -293,16 +293,16 @@ def prepare_tickets(ticket_filename):
 # field. As a result, all genomes can be matched to tickets using the
 # Genome object phage_id.
 # TODO fix unit tests.
-# def match_genomes_to_tickets(list_of_group_objects, all_flat_file_data, key):
+# def match_genomes_to_tickets(list_of_bundle_objects, all_flat_file_data, key):
 #     """Match genome objects parsed from files to tickets."""
 #
 #     # Determine what the strategy is to match tickets to flat files.
-#     strategy, strategy_eval = assign_match_strategy(list_of_group_objects)
+#     strategy, strategy_eval = assign_match_strategy(list_of_bundle_objects)
 #
 #     # Create list of all ticket identifiers.
 #     ticket_id_list = []
-#     for group_obj in list_of_group_objects:
-#         ticket_id_list.append(group_obj.ticket.primary_phage_id)
+#     for bundle_obj in list_of_bundle_objects:
+#         ticket_id_list.append(bundle_obj.ticket.primary_phage_id)
 #
 #
 #     # Create list of all genome identifiers based on the strategy.
@@ -335,14 +335,14 @@ def prepare_tickets(ticket_filename):
 #
 #     # Match genomes to tickets using the unique identifiers.
 #     index2 = 0
-#     while index2 < len(list_of_group_objects):
+#     while index2 < len(list_of_bundle_objects):
 #
-#         group_obj = list_of_group_objects[index2]
-#         match_id = group_obj.ticket.primary_phage_id
+#         bundle_obj = list_of_bundle_objects[index2]
+#         match_id = bundle_obj.ticket.primary_phage_id
 #
 #         if match_id in matched_unique_ids:
 #             genome_object = genome_dict.pop(match_id)
-#             group_obj.genome_dict[key] = genome_object
+#             bundle_obj.genome_dict[key] = genome_object
 #
 #         index2 += 1
 #

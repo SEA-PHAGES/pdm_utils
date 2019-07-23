@@ -210,7 +210,7 @@ files_in_folder = basic.identify_files(genome_dir)
 
 
 
-# TODO match record to ticket in matched_data object.
+# TODO match record to ticket in bundle object.
 
 
 # TODO parsing from import table:

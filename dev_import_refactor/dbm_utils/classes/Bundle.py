@@ -3,7 +3,7 @@
 from classes import Eval
 from functions import phamerator
 
-class DataGroup:
+class Bundle:
 
     # Initialize all attributes:
     def __init__(self):
@@ -81,7 +81,7 @@ class DataGroup:
 
         definition = "Check if a %s genome type has been " % key + \
                         "matched to the ticket."
-        eval = Eval.Eval("DATAGROUP", definition, result, status)
+        eval = Eval.Eval("BUNDLE", definition, result, status)
         self.evaluations.append(eval)
 
     def check_genome_dictionary(self, key, expect = True):
@@ -105,7 +105,7 @@ class DataGroup:
                 status = "error"
 
         definition = "Check if the %s genome is present." % key
-        eval = Eval.Eval("DATAGROUP", definition, result, status)
+        eval = Eval.Eval("BUNDLE", definition, result, status)
         self.evaluations.append(eval)
 
     def check_genome_pair_dictionary(self, key, expect = True):
@@ -129,11 +129,11 @@ class DataGroup:
                 status = "error"
 
         definition = "Check if the %s genome_pair is present." % key
-        eval = Eval.Eval("DATAGROUP", definition, result, status)
+        eval = Eval.Eval("BUNDLE", definition, result, status)
         self.evaluations.append(eval)
 
     def check_for_errors(self):
-        """Check evaluation lists of all objects contained in the DataGroup
+        """Check evaluation lists of all objects contained in the Bundle
         and determine how many errors there are."""
 
         for eval in self.evaluations:

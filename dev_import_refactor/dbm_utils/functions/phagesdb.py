@@ -231,16 +231,16 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from_phagesdb(matched_data_obj, type, flag = "retrieve"):
-    """If a genome object stored in the DataGroup object has
+def copy_data_from_phagesdb(bundle, type, flag = "retrieve"):
+    """If a genome object stored in the Bundle object has
     attributes that are set to be 'retrieved' and auto-filled,
     retrieve the data from PhagesDB to complete the genome.
     The 'type' parameter indicates the type of genome that may need
     to be populated from PhagesDB."""
 
-    if type in matched_data_obj.genome_dict.keys():
+    if type in bundle.genome_dict.keys():
 
-        genome1 = matched_data_obj.genome_dict[type]
+        genome1 = bundle.genome_dict[type]
         genome1.set_empty_fields(flag)
 
         if genome1._empty_fields:
@@ -254,15 +254,15 @@ def copy_data_from_phagesdb(matched_data_obj, type, flag = "retrieve"):
 
                 genome2 = Genome.Genome()
                 parse_phagesdb_data(genome2, data_dict)
-                matched_data_obj.genome_dict[genome2.type] = genome2
+                bundle.genome_dict[genome2.type] = genome2
 
 
-                # Copy all retrieved data and add to DataGroup object.
+                # Copy all retrieved data and add to Bundle object.
                 genome_pair = GenomePair.GenomePair()
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-                matched_data_obj.set_genome_pair(genome_pair, genome1.type, genome2.type)
+                bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
 
         # Now record an error if there are still fields

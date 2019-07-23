@@ -87,7 +87,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
 
 
         genome = fasta_files.create_parsed_flat_file(filename)
-        bundle = DataGroup.DataGroup()
+        bundle = Bundle.Bundle()
         bundle.genome_dict[genome.type] = genome
 
         # Match ticket (if available) to flat file.
@@ -120,7 +120,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
     for key in ticket_dict.keys():
 
         unmatched_ticket = ticket_dict.pop(key)
-        bundle = DataGroup.DataGroup()
+        bundle = Bundle.Bundle()
         bundle.ticket = unmatched_ticket
 
         # TODO run a list of evaluations based on ticket type.
@@ -129,7 +129,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
 
 
 
-    #return list_of_matched_objects
+    #return list_of_bundles
 
 
 
@@ -195,8 +195,8 @@ def main2(bundle, sql_obj, host_genera_set = set(), phage_id_set = set(),
 
 
 
-    evaluate.check_datagroup_for_import(matched_obj)
-    matched_obj.check_for_errors()
+    evaluate.check_bundle_for_import(bundle)
+    bundle.check_for_errors()
 
 
 
@@ -204,7 +204,7 @@ def main2(bundle, sql_obj, host_genera_set = set(), phage_id_set = set(),
 
 
 
-def import_into_database(list_of_matched_objects, sql_obj):
+def import_into_database(list_of_bundles, sql_obj):
     """Construct collection of SQL statements for evaluated data and
     execute statements to add the data into the database."""
 
@@ -212,10 +212,10 @@ def import_into_database(list_of_matched_objects, sql_obj):
 
     # Create all SQL statements for all tickets with no errors.
     index11 = 0
-    while index11 < len(list_of_matched_objects):
-            matched_object = list_of_matched_objects[index11]
-            if matched_object.errors == 0:
-                matched_object.create_sql_statements()
+    while index11 < len(list_of_bundles):
+            bundle = list_of_bundles[index11]
+            if bundle.errors == 0:
+                bundle.create_sql_statements()
 
 
 

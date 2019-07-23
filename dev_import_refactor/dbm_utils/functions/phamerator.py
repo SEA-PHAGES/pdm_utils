@@ -317,31 +317,31 @@ def create_genome_insert_statements(genome):
 
 
 
-def copy_data_from_phamerator(matched_data_obj, type, flag = "retain"):
-    """If a genome object stored in the DataGroup object has
+def copy_data_from_phamerator(bundle, type, flag = "retain"):
+    """If a genome object stored in the Bundle object has
     attributes that are set to be 'retained' from Phamerator,
     copy any necessary data from the Phamerator genome to the new genome.
     The 'type' parameter indicates the type of genome that may need
     to be populated from Phamerator."""
 
-    if type in matched_data_obj.genome_dict.keys():
+    if type in bundle.genome_dict.keys():
 
-        genome1 = matched_data_obj.genome_dict[type]
+        genome1 = bundle.genome_dict[type]
         genome1.set_empty_fields(flag)
 
         if genome1._empty_fields:
 
-            if "phamerator" in matched_data_obj.genome_dict.keys():
+            if "phamerator" in bundle.genome_dict.keys():
 
-                genome2 = matched_data_obj.genome_dict["phamerator"]
+                genome2 = bundle.genome_dict["phamerator"]
 
                 # Copy all data that is set to be copied and
-                # add to DataGroup object.
+                # add to Bundle object.
                 genome_pair = GenomePair.GenomePair()
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-                matched_data_obj.set_genome_pair(genome_pair, genome1.type, genome2.type)
+                bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
         # Now record an error if there are still fields
         # that need to be retained.
