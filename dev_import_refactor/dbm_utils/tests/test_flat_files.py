@@ -1287,7 +1287,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -1414,7 +1414,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -1533,7 +1533,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -1657,7 +1657,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -1780,7 +1780,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -1903,7 +1903,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2024,7 +2024,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2143,7 +2143,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2253,7 +2253,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2371,7 +2371,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2494,7 +2494,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "")
+            self.assertEqual(self.genome.seq, "")
         with self.subTest():
             self.assertEqual(self.genome._length, 0)
         with self.subTest():
@@ -2607,7 +2607,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2725,7 +2725,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2843,7 +2843,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -2943,7 +2943,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -3066,7 +3066,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():
@@ -3188,7 +3188,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "ATGC")
+            self.assertEqual(self.genome.seq, "ATGC")
         with self.subTest():
             self.assertEqual(self.genome._length, 4)
         with self.subTest():

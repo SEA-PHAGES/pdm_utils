@@ -74,7 +74,7 @@ class TestGenomeClass(unittest.TestCase):
         seq = "aaggcga"
         self.genome.set_sequence(seq)
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "AAGGCGA")
+            self.assertEqual(self.genome.seq, "AAGGCGA")
         with self.subTest():
             self.assertEqual(self.genome._length, 7)
         with self.subTest():
@@ -85,7 +85,7 @@ class TestGenomeClass(unittest.TestCase):
         seq = ""
         self.genome.set_sequence(seq)
         with self.subTest():
-            self.assertEqual(self.genome.sequence, "")
+            self.assertEqual(self.genome.seq, "")
         with self.subTest():
             self.assertEqual(self.genome._length, 0)
         with self.subTest():
@@ -767,14 +767,14 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_nucleotides_1(self):
         """All nucleotides are in the alphabet."""
         alphabet = set(["A","B","C"])
-        self.genome.sequence = "AB"
+        self.genome.seq = "AB"
         self.genome.check_nucleotides(alphabet)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_nucleotides_2(self):
         """Some nucleotides are not in the alphabet."""
         alphabet = set(["A","B","C"])
-        self.genome.sequence = "AD"
+        self.genome.seq = "AD"
         self.genome.check_nucleotides(alphabet)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
@@ -1333,7 +1333,7 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the sequence
         is in the seq_set and is expected to be in the set."""
         value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.genome.sequence = Seq("ATCG")
+        self.genome.seq = Seq("ATCG")
         self.genome.check_sequence(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
@@ -1341,7 +1341,7 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that an error is produced when the sequence
         is not in the seq_set and is expected to be in the set."""
         value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.genome.sequence = Seq("TTTTT")
+        self.genome.seq = Seq("TTTTT")
         self.genome.check_sequence(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
@@ -1349,7 +1349,7 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the sequence
         is not in the seq_set and is not expected to be in the set."""
         value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.genome.sequence = Seq("TTTTT")
+        self.genome.seq = Seq("TTTTT")
         self.genome.check_sequence(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
@@ -1357,7 +1357,7 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that an error is produced when the sequence
         is in the seq_set and is not expected to be in the set."""
         value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.genome.sequence = Seq("ATCG")
+        self.genome.seq = Seq("ATCG")
         self.genome.check_sequence(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 

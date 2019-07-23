@@ -280,7 +280,7 @@ def create_genome_insert_statement(genome):
         genome.accession, \
         genome.name, \
         genome.host_genus, \
-        genome.sequence, \
+        genome.seq, \
         genome._length, \
         genome._gc, \
         genome.annotation_status, \

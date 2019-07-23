@@ -127,7 +127,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, output_host)
         with self.subTest():
-            self.assertEqual(self.genome1.sequence, output_sequence)
+            self.assertEqual(self.genome1.seq, output_sequence)
         with self.subTest():
             self.assertEqual(self.genome1.annotation_status, output_status)
         with self.subTest():
@@ -206,7 +206,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, output_host)
         with self.subTest():
-            self.assertEqual(self.genome1.sequence, output_sequence)
+            self.assertEqual(self.genome1.seq, output_sequence)
         with self.subTest():
             self.assertEqual(self.genome1.annotation_status, output_status)
         with self.subTest():
@@ -543,7 +543,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
-        self.genome1.sequence = "ATCG"
+        self.genome1.seq = "ATCG"
         self.genome1._length = 4
         self.genome1._gc = 0.5001
         self.genome1.date_last_modified = '1/1/2000'
@@ -573,7 +573,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
-        self.genome1.sequence = "ATCG"
+        self.genome1.seq = "ATCG"
         self.genome1._length = 4
         self.genome1._gc = 0.5001
         self.genome1.date_last_modified = '1/1/2000'

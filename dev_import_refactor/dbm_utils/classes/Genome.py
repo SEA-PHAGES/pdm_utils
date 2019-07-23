@@ -27,7 +27,7 @@ class Genome:
         self.subcluster = "" #A1, A2, etc.
         self.id = "" # Unique identifier. Case sensitive, no "_Draft".
         self.name = "" # Case sensitive and contains "_Draft".
-        self.sequence = "" # Biopython Seq object
+        self.seq = "" # Biopython Seq object
 
 
 
@@ -247,11 +247,11 @@ class Genome:
     def set_sequence(self, value):
         """Set the nucleotide sequence and compute the length."""
 
-        self.sequence = value.upper() # Biopython Seq object
-        self._length = len(self.sequence)
+        self.seq = value.upper() # Biopython Seq object
+        self._length = len(self.seq)
 
         if self._length > 0:
-            self._gc = round(GC(self.sequence), 4)
+            self._gc = round(GC(self.seq), 4)
         else:
             self._gc = -1
 
@@ -593,7 +593,7 @@ class Genome:
     def check_sequence(self, seq_set, expect = False):
         """Check that the name is valid."""
 
-        value = basic.check_value_expected_in_set(self.sequence,
+        value = basic.check_value_expected_in_set(self.seq,
                 seq_set, expect)
         if value:
             result = "The sequence is valid."
@@ -789,7 +789,7 @@ class Genome:
         # Instead, Bio.Alphabet.IUPAC.unambiguous_dna alphabet can be passed
         # to the check_nucleotides method.
 
-        nucleotide_set = set(self.sequence)
+        nucleotide_set = set(self.seq)
         nucleotide_error_set = nucleotide_set - dna_alphabet_set
 
         if len(nucleotide_error_set) > 0:

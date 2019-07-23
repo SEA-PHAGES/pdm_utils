@@ -691,7 +691,7 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.accession = "ABC123"
         self.genome.record_filename = "Trixie.gb"
         self.genome.record = "abcd"
-        self.genome.sequence = "ATCG"
+        self.genome.seq = "ATCG"
 
         self.null_set = set([""])
 
@@ -807,7 +807,7 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no sequence."""
 
-        self.genome.sequence = ""
+        self.genome.seq = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
         for eval in self.genome.evaluations:

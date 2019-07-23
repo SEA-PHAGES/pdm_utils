@@ -52,7 +52,7 @@ class CdsFeature:
         # Thiis enables several QC checks
         # that utilize Biopython, such as retrieving the nucleotide
         # sequence from the parent genome and re-translating the CDS.
-        self.sequence = "" # Biopython Seq object containing nucleotide seq.
+        self.seq = "" # Biopython Seq object containing nucleotide seq.
 
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
         self.gene_number = ""

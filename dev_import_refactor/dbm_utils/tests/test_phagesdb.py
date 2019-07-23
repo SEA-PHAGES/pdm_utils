@@ -247,9 +247,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
-            self.assertEqual(self.genome.sequence[:8], "GGTCGGTT")
+            self.assertEqual(self.genome.seq[:8], "GGTCGGTT")
         with self.subTest():
-            self.assertEqual(self.genome.sequence[-8:], "GTCGGTTA")
+            self.assertEqual(self.genome.seq[-8:], "GTCGGTTA")
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
@@ -303,9 +303,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
-            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+            self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -357,9 +357,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
-            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+            self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -411,9 +411,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
-            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+            self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -465,9 +465,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
-            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+            self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -520,9 +520,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
-            self.assertEqual(self.genome.sequence[:8], expected_seq_start)
+            self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.sequence[-8:], expected_seq_end)
+            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -573,7 +573,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record, "")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, expected_seq)
+            self.assertEqual(self.genome.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -624,7 +624,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record, "")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, expected_seq)
+            self.assertEqual(self.genome.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():
@@ -675,7 +675,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record, "")
         with self.subTest():
-            self.assertEqual(self.genome.sequence, expected_seq)
+            self.assertEqual(self.genome.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
         with self.subTest():

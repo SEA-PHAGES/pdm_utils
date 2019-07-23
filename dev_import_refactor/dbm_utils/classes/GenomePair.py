@@ -96,8 +96,8 @@ class GenomePair:
                 second.name = first.name
             if (second.host_genus == keyword or keyword is None):
                 second.host_genus = first.host_genus
-            if (second.sequence == keyword or keyword is None):
-                second.sequence = first.sequence
+            if (second.seq == keyword or keyword is None):
+                second.seq = first.seq
             if (second.accession == keyword or keyword is None):
                 second.accession = first.accession
             if (second.author == keyword or keyword is None):
@@ -452,7 +452,7 @@ class GenomePair:
     def compare_genome_sequence(self):
         """Compare the sequence of each genome."""
 
-        if self.genome1.sequence != self.genome2.sequence:
+        if self.genome1.seq != self.genome2.seq:
             result = "The two genomes have different sequences."
             status = "error"
 

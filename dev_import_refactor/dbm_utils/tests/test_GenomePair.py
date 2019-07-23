@@ -248,7 +248,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = 1
         self.genome1.name = 2
         self.genome1.host_genus = 3
-        self.genome1.sequence = 4
+        self.genome1.seq = 4
         self.genome1.accession = 5
         self.genome1.author = 6
         self.genome1.annotation_status = 7
@@ -309,7 +309,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.host_genus, 3)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.sequence, 4)
+            self.assertEqual(self.genome_pair.genome2.seq, 4)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.accession, 5)
         with self.subTest():
@@ -464,15 +464,15 @@ class TestGenomePairClass(unittest.TestCase):
 
     def test_compare_genome_sequence_1(self):
         """Check that identical sequences produce no warning."""
-        self.genome1.sequence = "ABCD"
-        self.genome2.sequence = "ABCD"
+        self.genome1.seq = "ABCD"
+        self.genome2.seq = "ABCD"
         self.genome_pair.compare_genome_sequence()
         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_genome_sequence_2(self):
         """Check that different sequences produce a warning."""
-        self.genome1.sequence = "ABCD"
-        self.genome2.sequence = "ABCDE"
+        self.genome1.seq = "ABCD"
+        self.genome2.seq = "ABCDE"
         self.genome_pair.compare_genome_sequence()
         self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
