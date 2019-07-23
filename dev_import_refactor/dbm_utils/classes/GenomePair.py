@@ -168,8 +168,6 @@ class GenomePair:
                 second.source_features = first.source_features
             if (second._source_features_tally == keyword or keyword is None):
                 second._source_features_tally = first._source_features_tally
-            if (second.search_record_filename == keyword or keyword is None):
-                second.search_record_filename = first.search_record_filename
             if (second._record_description_phage_name == keyword \
                 or keyword is None):
 

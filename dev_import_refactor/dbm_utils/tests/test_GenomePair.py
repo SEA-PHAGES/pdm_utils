@@ -282,7 +282,6 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._trna_features_tally = 38
         self.genome1.source_features = 39
         self.genome1._source_features_tally = 40
-        self.genome1.search_record_filename = 41
         self.genome1._record_description_phage_name = 42
         self.genome1._record_source_phage_name = 43
         self.genome1._record_organism_phage_name = 44
@@ -379,8 +378,6 @@ class TestGenomePairClass(unittest.TestCase):
             self.assertEqual(self.genome_pair.genome2.source_features, 39)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2._source_features_tally, 40)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.search_record_filename, 41)
         with self.subTest():
             self.assertEqual(
                 self.genome_pair.genome2._record_description_phage_name, 42)

@@ -1255,8 +1255,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -1384,8 +1382,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -1506,8 +1502,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1630,8 +1624,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -1756,8 +1748,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -1881,8 +1871,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -2003,8 +1991,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2127,8 +2113,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -2236,8 +2220,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2356,8 +2338,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2482,8 +2462,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -2596,8 +2574,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -2717,8 +2693,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -2837,8 +2811,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -2938,8 +2910,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
@@ -3064,8 +3034,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "")
         with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "")
-        with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
@@ -3187,8 +3155,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(self.genome.record_filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "phage_zzz")
         with self.subTest():
             self.assertEqual(self.genome.record_name, "XYZ123")
         with self.subTest():

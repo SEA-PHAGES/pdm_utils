@@ -106,7 +106,6 @@ class Genome:
 
 
         # Computed datafields: common to flat file (NCBI) records
-        self.search_record_filename = "" # Lowercase file name
 
 
         self._record_description_phage_name = ""
@@ -135,7 +134,6 @@ class Genome:
         record_filename = split_filepath[-1]
         record_filename = record_filename.split('.')[0]
         self.record_filename = record_filename
-        self.search_record_filename = record_filename.lower()
 
 
     # Common to Phamerator

@@ -36,10 +36,7 @@ class TestGenomeClass(unittest.TestCase):
         """Confirm file path is split appropriately."""
         filepath = "/path/to/folder/Trixie.gbk"
         self.genome.set_record_filename(filepath)
-        with self.subTest():
-            self.assertEqual(self.genome.record_filename, "Trixie")
-        with self.subTest():
-            self.assertEqual(self.genome.search_record_filename, "trixie")
+        self.assertEqual(self.genome.record_filename, "Trixie")
 
 
 
