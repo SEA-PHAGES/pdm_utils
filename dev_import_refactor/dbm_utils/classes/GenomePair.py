@@ -140,8 +140,6 @@ class GenomePair:
                 second.translation_table = first.translation_table
             if (second.record == keyword or keyword is None):
                 second.record = first.record
-            if (second.search_name == keyword or keyword is None):
-                second.search_name = first.search_name
             if (second._length == keyword or keyword is None):
                 second._length = first._length
             if (second._gc == keyword or keyword is None):

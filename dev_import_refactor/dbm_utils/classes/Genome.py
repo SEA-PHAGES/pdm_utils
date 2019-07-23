@@ -80,7 +80,6 @@ class Genome:
 
 
         # Computed datafields: common to all genomes
-        self.search_name = '' # Lowercase phage_name
         self._length = 0 # Size of the nucleotide sequence
         self._gc = 0 # %GC content
         self.evaluations = [] # List of warnings and errors about the genome
