@@ -1311,7 +1311,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id,"KatherineG")
+            self.assertEqual(self.genome.id,"KatherineG")
         with self.subTest():
             self.assertEqual(self.genome.type, "flat_file")
 
@@ -3265,7 +3265,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_flat_file_data_19(self):
         """Verify retrieved flat file data is parsed correctly with
-        phage_id field specified as non-standard field."""
+        id field specified as non-standard field."""
 
         description = "Mycobacterium phage L5 complete genome"
         organism = "Gordonia phage KatherineG"
@@ -3288,7 +3288,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             record,
                             phage_id_field = "record_description_phage_name")
 
-        self.assertEqual(self.genome.phage_id, "L5")
+        self.assertEqual(self.genome.id, "L5")
 
 
 
@@ -3322,7 +3322,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
         self.genome1 = Genome.Genome()
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.cluster = "B"
         self.genome1.type = "flat_file"
         self.genome1._empty_fields = False
@@ -3332,7 +3332,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
         self.genome2 = Genome.Genome()
-        self.genome2.phage_id = "L5"
+        self.genome2.id = "L5"
         self.genome2.type = "add"
         self.genome2.cluster = "A"
         self.genome2.subcluster = "A2"

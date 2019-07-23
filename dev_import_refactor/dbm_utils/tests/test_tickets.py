@@ -626,7 +626,7 @@ class TestTicketFunctions4(unittest.TestCase):
         tickets.copy_ticket_to_genome(self.bundle1)
         matched_genome = self.bundle1.genome_dict["add"]
         with self.subTest():
-            self.assertEqual(matched_genome.phage_id, "Trixie")
+            self.assertEqual(matched_genome.id, "Trixie")
         with self.subTest():
             self.assertEqual(matched_genome.phage_name, "Trixie_Draft")
         with self.subTest():
@@ -658,11 +658,11 @@ class TestTicketFunctions4(unittest.TestCase):
         matched_genome2 = self.bundle2.genome_dict["remove"]
 
         with self.subTest():
-            self.assertEqual(matched_genome1.phage_id, "Trixie")
+            self.assertEqual(matched_genome1.id, "Trixie")
         with self.subTest():
             self.assertEqual(matched_genome1.phage_name, "Trixie_Draft")
         with self.subTest():
-            self.assertEqual(matched_genome2.phage_id, "L5")
+            self.assertEqual(matched_genome2.id, "L5")
         with self.subTest():
             self.assertEqual(matched_genome2.phage_name, "")
 
@@ -713,7 +713,7 @@ class TestTicketFunctions4(unittest.TestCase):
 #
 #         self.bundle1.ticket.primary_phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "phage_id"
-#         self.genome1.phage_id = "Trixie"
+#         self.genome1.id = "Trixie"
 #
 #
 #         list1 = [self.bundle1] # Trixie
@@ -724,7 +724,7 @@ class TestTicketFunctions4(unittest.TestCase):
 #                                                     "phamerator")
 #
 #         matched_genome = list1[0].genome_dict["phamerator"]
-#         id = matched_genome.phage_id
+#         id = matched_genome.id
 #         expected_id = "Trixie"
 #         with self.subTest():
 #             self.assertEqual(id, expected_id)

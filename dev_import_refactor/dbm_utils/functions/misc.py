@@ -9,8 +9,8 @@ from Bio.Alphabet import IUPAC
 
 
 
-def match_genome_by_phage_id(bundle_obj, genome_dict, key1, key2 = None):
-    """Match genome object to another genome object using phage_id.
+def match_genome_by_id(bundle_obj, genome_dict, key1, key2 = None):
+    """Match genome object to another genome object using id.
     The 'key1' parameter provides the type of genome stored in the Bundle
     genome dictionary to base the match from.
     The 'key2' parameter provides the type of genome to be stored in
@@ -18,8 +18,8 @@ def match_genome_by_phage_id(bundle_obj, genome_dict, key1, key2 = None):
 
     try:
         ref_genome = bundle_obj.genome_dict[key1]
-        if ref_genome.phage_id in genome_dict.keys():
-            matched_genome = genome_dict[ref_genome.phage_id]
+        if ref_genome.id in genome_dict.keys():
+            matched_genome = genome_dict[ref_genome.id]
 
             if key2 is None:
                 bundle_obj.genome_dict[matched_genome.type] = matched_genome
@@ -33,7 +33,7 @@ def match_genome_by_phage_id(bundle_obj, genome_dict, key1, key2 = None):
 
 # TODO this is probably not needed anymore.
 def match_genomes(list_of_bundle_objects, genome_dict, key1, key2 = None):
-    """Match genome object to another genome object using phage_id.
+    """Match genome object to another genome object using id.
     The 'key1' parameter provides the type of genome stored in the Bundle
     genome dictionary to base the match from.
     The 'key2' parameter provides the type of genome to be stored in
@@ -46,8 +46,8 @@ def match_genomes(list_of_bundle_objects, genome_dict, key1, key2 = None):
 
         try:
             ref_genome = bundle_obj.genome_dict[key1]
-            if ref_genome.phage_id in genome_dict.keys():
-                matched_genome = genome_dict[ref_genome.phage_id]
+            if ref_genome.id in genome_dict.keys():
+                matched_genome = genome_dict[ref_genome.id]
 
                 if key2 is None:
                     bundle_obj.genome_dict[matched_genome.type] = matched_genome

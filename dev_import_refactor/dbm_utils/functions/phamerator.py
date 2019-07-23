@@ -24,7 +24,7 @@ def parse_phamerator_data(genome, data_tuple):
     11 = RetrieveRecord
     """
 
-    genome.set_phage_id(data_tuple[0])
+    genome.set_id(data_tuple[0])
     genome.phage_name = data_tuple[1]
     genome.set_host(data_tuple[2])
     genome.set_sequence(data_tuple[3])
@@ -73,7 +73,7 @@ def create_phamerator_dict(phamerator_data_tuples):
     for genome_tuple in phamerator_data_tuples:
         genome = Genome.Genome()
         parse_phamerator_data(genome,genome_tuple)
-        genome_dict[genome.phage_id] = genome
+        genome_dict[genome.id] = genome
 
     return genome_dict
 
@@ -92,7 +92,7 @@ def create_data_sets(genome_dict):
     for genome_id in genome_dict.keys():
 
         genome = genome_dict[genome_id]
-        phage_id_set.add(genome.phage_id)
+        phage_id_set.add(genome.id)
         host_genus_set.add(genome.host_genus)
         status_set.add(genome.annotation_status)
         cluster_set.add(genome.cluster)
@@ -181,7 +181,7 @@ def create_genome_update_statements(genome):
 
     table = "phage"
     field1 = "PhageID"
-    value1 = genome.phage_id
+    value1 = genome.id
     statements = []
 
     statements.append(create_update_statement( \
@@ -224,7 +224,7 @@ def create_genome_delete_statement(genome):
 
     table = "phage"
     field1 = "PhageID"
-    value1 = genome.phage_id
+    value1 = genome.id
     statements = []
     statements.append(create_delete_statement(table, field1, value1))
     return statements
@@ -276,7 +276,7 @@ def create_genome_insert_statement(genome):
         "AnnotationAuthor) " + \
         "VALUES (" + \
         "'%s', '%s', '%s', '%s', '%s', %s, %s, '%s', '%s', '%s', '%s', '%s');" \
-        % (genome.phage_id, \
+        % (genome.id, \
         genome.accession, \
         genome.phage_name, \
         genome.host_genus, \
@@ -298,7 +298,7 @@ def create_genome_insert_statements(genome):
 
     table = "phage"
     field1 = "PhageID"
-    value1 = genome.phage_id
+    value1 = genome.id
 
     statements = []
     statements.append(create_genome_insert_statement(genome))

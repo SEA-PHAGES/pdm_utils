@@ -198,106 +198,106 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_phage_id_1(self):
+    def test_set_id_1(self):
         """Check that name without '_Draft' suffix is not changed."""
         phage_name = "Trixie"
-        self.genome.set_phage_id(phage_name)
+        self.genome.set_id(phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, "Trixie")
+            self.assertEqual(self.genome.id, "Trixie")
         with self.subTest():
             self.assertEqual(self.genome.search_id, "trixie")
 
-    def test_set_phage_id_2(self):
+    def test_set_id_2(self):
         """Check that '_Draft' suffix is removed."""
         phage_name = "Trixie_Draft"
-        self.genome.set_phage_id(phage_name)
+        self.genome.set_id(phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, "Trixie")
+            self.assertEqual(self.genome.id, "Trixie")
         with self.subTest():
             self.assertEqual(self.genome.search_id, "trixie")
 
 
 
 
-    def test_set_phage_id_from_field_1(self):
-        """Check that the phage_id is set from the phage_name field."""
+    def test_set_id_from_field_1(self):
+        """Check that the id is set from the phage_name field."""
         self.genome.phage_name = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("phage_name")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("phage_name")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_2(self):
-        """Check that the phage_id is set from the accession field."""
+    def test_set_id_from_field_2(self):
+        """Check that the id is set from the accession field."""
         self.genome.accession = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("accession")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("accession")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_3(self):
-        """Check that the phage_id is set from the record_name field."""
+    def test_set_id_from_field_3(self):
+        """Check that the id is set from the record_name field."""
         self.genome.record_name = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_name")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_name")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_4(self):
-        """Check that the phage_id is set from the record_id field."""
+    def test_set_id_from_field_4(self):
+        """Check that the id is set from the record_id field."""
         self.genome.record_id = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_id")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_id")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_5(self):
-        """Check that the phage_id is set from the record_accession field."""
+    def test_set_id_from_field_5(self):
+        """Check that the id is set from the record_accession field."""
         self.genome.record_accession = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_accession")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_accession")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_6(self):
-        """Check that the phage_id is set from the record_description field."""
+    def test_set_id_from_field_6(self):
+        """Check that the id is set from the record_description field."""
         self.genome.record_description = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_description")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_description")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_7(self):
-        """Check that the phage_id is set from the record_source field."""
+    def test_set_id_from_field_7(self):
+        """Check that the id is set from the record_source field."""
         self.genome.record_source = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_source")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_source")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_8(self):
-        """Check that the phage_id is set from the record_organism field."""
+    def test_set_id_from_field_8(self):
+        """Check that the id is set from the record_organism field."""
         self.genome.record_organism = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_organism")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_organism")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_9(self):
-        """Check that the phage_id is set from the record_filename field."""
+    def test_set_id_from_field_9(self):
+        """Check that the id is set from the record_filename field."""
         self.genome.record_filename = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_filename")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_filename")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_10(self):
-        """Check that the phage_id is set from the
+    def test_set_id_from_field_10(self):
+        """Check that the id is set from the
         record_description_phage_name field."""
         self.genome._record_description_phage_name = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_description_phage_name")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_description_phage_name")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_11(self):
-        """Check that the phage_id is set from the
+    def test_set_id_from_field_11(self):
+        """Check that the id is set from the
         record_source_phage_name field."""
         self.genome._record_source_phage_name = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_source_phage_name")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_source_phage_name")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_12(self):
-        """Check that the phage_id is set from the
+    def test_set_id_from_field_12(self):
+        """Check that the id is set from the
         record_organism_phage_name field."""
         self.genome._record_organism_phage_name = "Trixie_Draft"
-        self.genome.set_phage_id_from_field("record_organism_phage_name")
-        self.assertEqual(self.genome.phage_id, "Trixie")
+        self.genome.set_id_from_field("record_organism_phage_name")
+        self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_phage_id_from_field_13(self):
-        """Check that the phage_id is empty from an invalid field."""
-        self.genome.set_phage_id_from_field("invalid")
-        self.assertEqual(self.genome.phage_id, "")
+    def test_set_id_from_field_13(self):
+        """Check that the id is empty from an invalid field."""
+        self.genome.set_id_from_field("invalid")
+        self.assertEqual(self.genome.id, "")
 
 
 
@@ -872,14 +872,14 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_check_record_description_phage_name_1(self):
         """Check that no warning is produced."""
-        self.genome.phage_id = "Trixie"
+        self.genome.id = "Trixie"
         self.genome._record_description_phage_name = "Trixie"
         self.genome.check_record_description_phage_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_description_phage_name_2(self):
         """Check that a warning is produced."""
-        self.genome.phage_id = "L5"
+        self.genome.id = "L5"
         self.genome._record_description_phage_name = "Trixie"
         self.genome.check_record_description_phage_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
@@ -889,14 +889,14 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_check_record_source_phage_name_1(self):
         """Check that no warning is produced."""
-        self.genome.phage_id = "Trixie"
+        self.genome.id = "Trixie"
         self.genome._record_source_phage_name = "Trixie"
         self.genome.check_record_source_phage_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_source_phage_name_2(self):
         """Check that a warning is produced."""
-        self.genome.phage_id = "L5"
+        self.genome.id = "L5"
         self.genome._record_source_phage_name = "Trixie"
         self.genome.check_record_source_phage_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
@@ -906,14 +906,14 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_check_record_organism_phage_name_1(self):
         """Check that no warning is produced."""
-        self.genome.phage_id = "Trixie"
+        self.genome.id = "Trixie"
         self.genome._record_organism_phage_name = "Trixie"
         self.genome.check_record_organism_phage_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_record_organism_phage_name_2(self):
         """Check that a warning is produced."""
-        self.genome.phage_id = "L5"
+        self.genome.id = "L5"
         self.genome._record_organism_phage_name = "Trixie"
         self.genome.check_record_organism_phage_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
@@ -1093,36 +1093,36 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_phage_id_1(self):
-        """Verify that no error is produced when the phage_id
-        is in the phage_id_set and is expected to be in the set."""
+    def test_check_id_1(self):
+        """Verify that no error is produced when the id
+        is in the id_set and is expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_id = "Trixie"
-        self.genome.check_phage_id(value_set, True)
+        self.genome.id = "Trixie"
+        self.genome.check_id(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_phage_id_2(self):
-        """Verify that an error is produced when the phage_id
-        is not in the phage_id_set and is expected to be in the set."""
+    def test_check_id_2(self):
+        """Verify that an error is produced when the id
+        is not in the id_set and is expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_id = "D29"
-        self.genome.check_phage_id(value_set, True)
+        self.genome.id = "D29"
+        self.genome.check_id(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_phage_id_3(self):
-        """Verify that no error is produced when the phage_id
-        is not in the phage_id_set and is not expected to be in the set."""
+    def test_check_id_3(self):
+        """Verify that no error is produced when the id
+        is not in the id_set and is not expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_id = "D29"
-        self.genome.check_phage_id(value_set, False)
+        self.genome.id = "D29"
+        self.genome.check_id(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_phage_id_4(self):
-        """Verify that an error is produced when the phage_id
-        is in the phage_id_set and is not expected to be in the set."""
+    def test_check_id_4(self):
+        """Verify that an error is produced when the id
+        is in the id_set and is not expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_id = "Trixie"
-        self.genome.check_phage_id(value_set, False)
+        self.genome.id = "Trixie"
+        self.genome.check_id(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 

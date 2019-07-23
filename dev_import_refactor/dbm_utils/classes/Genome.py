@@ -25,7 +25,7 @@ class Genome:
         self.family = "" # Siphoviridae, Myoviridae, etc.
         self.cluster = "" # A, B, C, Singleton, etc.
         self.subcluster = "" #A1, A2, etc.
-        self.phage_id = "" # Unique identifier. Case sensitive, no "_Draft".
+        self.id = "" # Unique identifier. Case sensitive, no "_Draft".
         self.phage_name = "" # Case sensitive and contains "_Draft".
         self.sequence = "" # Biopython Seq object
 
@@ -80,7 +80,7 @@ class Genome:
 
 
         # Computed datafields: common to all genomes
-        self.search_id = '' # Lowercase phage_id
+        self.search_id = '' # Lowercase id
         self.search_name = '' # Lowercase phage_name
         self._length = 0 # Size of the nucleotide sequence
         self._gc = 0 # %GC content
@@ -142,41 +142,41 @@ class Genome:
 
     # Common to Phamerator
 
-    def set_phage_id(self, value):
-        """Set the phage_id and search_id."""
+    def set_id(self, value):
+        """Set the id and search_id."""
 
-        self.phage_id = basic.edit_suffix(value, "remove")
-        self.search_id = self.phage_id.lower()
+        self.id = basic.edit_suffix(value, "remove")
+        self.search_id = self.id.lower()
 
-    def set_phage_id_from_field(self, value):
-        """Set the phage_id from a value parsed from the indicated field."""
+    def set_id_from_field(self, value):
+        """Set the id from a value parsed from the indicated field."""
 
         if value == "phage_name":
-            self.set_phage_id(self.phage_name)
+            self.set_id(self.phage_name)
         elif value == "accession":
-            self.set_phage_id(self.accession)
+            self.set_id(self.accession)
         elif value == "record_name":
-            self.set_phage_id(self.record_name)
+            self.set_id(self.record_name)
         elif value == "record_id":
-            self.set_phage_id(self.record_id)
+            self.set_id(self.record_id)
         elif value == "record_accession":
-            self.set_phage_id(self.record_accession)
+            self.set_id(self.record_accession)
         elif value == "record_description":
-            self.set_phage_id(self.record_description)
+            self.set_id(self.record_description)
         elif value == "record_source":
-            self.set_phage_id(self.record_source)
+            self.set_id(self.record_source)
         elif value == "record_organism":
-            self.set_phage_id(self.record_organism)
+            self.set_id(self.record_organism)
         elif value == "record_filename":
-            self.set_phage_id(self.record_filename)
+            self.set_id(self.record_filename)
         elif value == "record_description_phage_name":
-            self.set_phage_id(self._record_description_phage_name)
+            self.set_id(self._record_description_phage_name)
         elif value == "record_source_phage_name":
-            self.set_phage_id(self._record_source_phage_name)
+            self.set_id(self._record_source_phage_name)
         elif value == "record_organism_phage_name":
-            self.set_phage_id(self._record_organism_phage_name)
+            self.set_id(self._record_organism_phage_name)
         else:
-            self.set_phage_id("")
+            self.set_id("")
 
     def set_host_genus_from_field(self, value):
         """Set the host_genus from a value parsed from the indicated field."""
@@ -491,19 +491,19 @@ class Genome:
 
 
     # Evaluations.
-    def check_phage_id(self, phage_id_set, expect = False):
-        """Check that the phage_id is valid."""
+    def check_id(self, id_set, expect = False):
+        """Check that the id is valid."""
 
-        value = basic.check_value_expected_in_set(self.phage_id,
-                phage_id_set, expect)
+        value = basic.check_value_expected_in_set(self.id,
+                id_set, expect)
         if value:
-            result = "The phage_id is valid."
+            result = "The id is valid."
             status = "correct"
         else:
-            result = "The phage_id is not valid."
+            result = "The id is not valid."
             status = "error"
 
-        definition = "Check that the phage_id is valid."
+        definition = "Check that the id is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
@@ -873,9 +873,9 @@ class Genome:
         """Check phage name spelling in the record description field."""
 
 
-        if self.phage_id != self._record_description_phage_name:
+        if self.id != self._record_description_phage_name:
             result = "The phage name in the record_description field " + \
-                        "does not match the phage_id."
+                        "does not match the id."
             status = "error"
 
         else:
@@ -892,9 +892,9 @@ class Genome:
         """Check phage name spelling in the record source field."""
 
 
-        if self.phage_id != self._record_source_phage_name:
+        if self.id != self._record_source_phage_name:
             result = "The phage name in the record_source field " + \
-                        "does not match the phage_id."
+                        "does not match the id."
             status = "error"
 
         else:
@@ -910,9 +910,9 @@ class Genome:
         """Check phage name spelling in the record organism field."""
 
 
-        if self.phage_id != self._record_organism_phage_name:
+        if self.id != self._record_organism_phage_name:
             result = "The phage name in the record_organism field " + \
-                        "does not match the phage_id."
+                        "does not match the id."
             status = "error"
 
         else:

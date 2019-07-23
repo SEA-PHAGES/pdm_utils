@@ -187,8 +187,8 @@ from functions import phamerator
 from functions import flat_files
 from functions import tickets
 
-# TODO command now should include an argument that specifies phage_id_field
-# from which phage_id should be assigned as flat files are parsed.
+# TODO command now should include an argument that specifies id_field
+# from which id should be assigned as flat files are parsed.
 
 
 # TODO confirm arguments are structured properly.

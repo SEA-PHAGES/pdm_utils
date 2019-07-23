@@ -59,15 +59,15 @@ class GenomePair:
             else:
                 # If unable to identify direction of copy, set to False.
                 direction = False
-        elif attr == "phage_id":
-            if (self.genome1.phage_id == first and \
-                self.genome2.phage_id == second):
+        elif attr == "id":
+            if (self.genome1.id == first and \
+                self.genome2.id == second):
 
                 first = self.genome1
                 second = self.genome2
 
-            elif (self.genome1.phage_id == second and \
-                self.genome2.phage_id == first):
+            elif (self.genome1.id == second and \
+                self.genome2.id == first):
 
                 first = self.genome2
                 second = self.genome1
@@ -84,9 +84,9 @@ class GenomePair:
 
             # Do not copy over the 'type' attribute that is used to
             # differentiate the two genomes.
-            if not attr == "phage_id":
-                if (second.phage_id == keyword or keyword is None):
-                    second.phage_id = first.phage_id
+            if not attr == "id":
+                if (second.id == keyword or keyword is None):
+                    second.id = first.id
             if not attr == "type":
                 if (second.type == keyword or keyword is None):
                     second.type = first.type
@@ -439,17 +439,17 @@ class GenomePair:
 
 
 
-    def compare_phage_id(self):
-        """Compare the phage_id of each genome."""
+    def compare_id(self):
+        """Compare the id of each genome."""
 
-        if self.genome1.phage_id != self.genome2.phage_id:
-            result = "The two genomes have different phage_ids."
+        if self.genome1.id != self.genome2.id:
+            result = "The two genomes have different ids."
             status = "error"
         else:
-            result = "The primary_phage_id and secondary_phage_id are the same."
+            result = "The two genomes have the same ids."
             status = "correct"
 
-        definition = "Compare the phage_id of each genome."
+        definition = "Compare the id of each genome."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 

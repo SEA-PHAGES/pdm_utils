@@ -233,7 +233,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, "Trixie")
+            self.assertEqual(self.genome.id, "Trixie")
         with self.subTest():
             self.assertEqual(self.genome.search_id, "trixie")
         with self.subTest():
@@ -292,7 +292,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -349,7 +349,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -406,7 +406,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -463,7 +463,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -521,7 +521,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -577,7 +577,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -631,7 +631,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -685,7 +685,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.phage_id, expected_phage_id)
+            self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
             self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
@@ -811,7 +811,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
 
 
         self.genome1 = Genome.Genome()
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
@@ -888,9 +888,9 @@ class TestPhagesDBFunctions2(unittest.TestCase):
 
     def test_copy_data_from_phagesdb_5(self):
         """Check that an "add" genome with host_genus field set to 'retrieve' is
-        not populated correctly when phage_id is not valid."""
+        not populated correctly when id is not valid."""
 
-        self.genome1.phage_id = "invalid"
+        self.genome1.id = "invalid"
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
         self.genome1._empty_fields = False

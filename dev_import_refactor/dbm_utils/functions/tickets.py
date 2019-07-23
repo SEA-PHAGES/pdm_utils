@@ -127,7 +127,7 @@ def copy_ticket_to_genome(bundle):
     if (ticket.type == "add" or ticket.type == "replace"):
         genome1 = Genome.Genome()
         genome1.type = "add"
-        genome1.set_phage_id(ticket.primary_phage_id)
+        genome1.set_id(ticket.primary_phage_id)
         genome1.phage_name = ticket.primary_phage_id
         genome1.set_host(ticket.host_genus)
         genome1.set_accession(ticket.accession)
@@ -145,7 +145,7 @@ def copy_ticket_to_genome(bundle):
 
             genome2 = Genome.Genome()
             genome2.type = "remove"
-            genome2.set_phage_id(ticket.secondary_phage_id)
+            genome2.set_id(ticket.secondary_phage_id)
 
             bundle.genome_dict[genome2.type] = genome2
 
@@ -155,7 +155,7 @@ def copy_ticket_to_genome(bundle):
         # TODO unit test.
         # genome = Genome.Genome()
         # genome.type = "update"
-        # genome.set_phage_id(ticket.primary_phage_id)
+        # genome.set_id(ticket.primary_phage_id)
         # genome.set_host(ticket.host_genus)
         # genome.set_accession(ticket.accession)
         # genome.annotation_status = ticket.annotation_status
@@ -171,7 +171,7 @@ def copy_ticket_to_genome(bundle):
         # TODO unit test.
         # genome = Genome.Genome()
         # genome.type = "remove"
-        # genome.set_phage_id(ticket.primary_phage_id)
+        # genome.set_id(ticket.primary_phage_id)
         # bundle.genome_dict[genome.type] = genome
         pass
 
@@ -259,7 +259,7 @@ def prepare_tickets(ticket_filename):
 # TODO this function may no longer be needed. Genome object methods
 # can assign the PhageID from either the filename or a flat file record
 # field. As a result, all genomes can be matched to tickets using the
-# Genome object phage_id.
+# Genome object id.
 # def assign_match_strategy(list_of_bundle_objects):
 #
 #     strategy = ""
@@ -291,7 +291,7 @@ def prepare_tickets(ticket_filename):
 # TODO this function may no longer be needed. Genome object methods
 # can assign the PhageID from either the filename or a flat file record
 # field. As a result, all genomes can be matched to tickets using the
-# Genome object phage_id.
+# Genome object id.
 # TODO fix unit tests.
 # def match_genomes_to_tickets(list_of_bundle_objects, all_flat_file_data, key):
 #     """Match genome objects parsed from files to tickets."""
@@ -313,7 +313,7 @@ def prepare_tickets(ticket_filename):
 #         genome_object = all_flat_file_data[index1]
 #
 #         if strategy == "phage_id":
-#             genome_id = genome_object.phage_id
+#             genome_id = genome_object.id
 #         elif strategy == "filename":
 #             genome_id = genome_object.filename
 #         else:

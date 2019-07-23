@@ -32,11 +32,11 @@ class TestGenomePairClass(unittest.TestCase):
     def test_copy_data_1(self):
         """Check that phage_name is copied from genome1 to genome2,
         type is the identifying attribute, using 'copy' keyword."""
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.type = "import"
 
@@ -44,17 +44,17 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.phage_id, "D29")
+            self.assertEqual(self.genome_pair.genome2.id, "D29")
 
     def test_copy_data_2(self):
         """Check that phage_name is copied from genome2 to genome1,
         type is the identifying attribute, using 'copy' keyword."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "Trixie"
         self.genome2.type = "import"
 
@@ -62,18 +62,18 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome1.phage_name, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome1.phage_id, "L5")
+            self.assertEqual(self.genome_pair.genome1.id, "L5")
 
     def test_copy_data_3(self):
         """Check that no phage_name is copied from genome1 to genome2,
         type is the identifying attribute, using 'copy' keyword,
         since genome2 does not contain keyword."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "Trixie"
         self.genome2.type = "import"
 
@@ -82,57 +82,57 @@ class TestGenomePairClass(unittest.TestCase):
 
     def test_copy_data_4(self):
         """Check that phage_name is copied from genome1 to genome2,
-        phage_id is the identifying attribute, using 'copy' keyword."""
-        self.genome1.phage_id = "L5"
+        id is the identifying attribute, using 'copy' keyword."""
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("phage_id", "L5", "D29", "copy")
+        self.genome_pair.copy_data("id", "L5", "D29", "copy")
         self.assertEqual(self.genome_pair.genome2.phage_name, "Trixie")
 
     def test_copy_data_5(self):
         """Check that phage_name is copied from genome2 to genome1,
-        phage_id is the identifying attribute, using 'copy' keyword."""
+        id is the identifying attribute, using 'copy' keyword."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "Trixie"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("phage_id", "D29", "L5", "copy")
+        self.genome_pair.copy_data("id", "D29", "L5", "copy")
         self.assertEqual(self.genome_pair.genome1.phage_name, "Trixie")
 
     def test_copy_data_6(self):
         """Check that phage_name is copied from genome2 to genome1,
-        phage_id is the identifying attribute, using 'copy' keyword."""
+        id is the identifying attribute, using 'copy' keyword."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "Trixie"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("phage_id", "D29", "L5", "copy")
+        self.genome_pair.copy_data("id", "D29", "L5", "copy")
         self.assertEqual(self.genome_pair.genome1.phage_name, "Trixie")
 
     def test_copy_data_7(self):
         """Check that no data is copied if direction of copy is
         not determined since the 'first' and 'second' parameter values
         are not found in the 'attr' attribute."""
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.type = "phamerator"
 
@@ -144,17 +144,17 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that no data is copied if direction of copy is
         not determined since the 'first' and 'second' parameter values
         are identical."""
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "L5"
+        self.genome2.id = "L5"
         self.genome2.phage_name = "copy"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "phamerator"
 
-        self.genome_pair.copy_data("phage_id", "L5", "L5", "copy")
+        self.genome_pair.copy_data("id", "L5", "L5", "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
@@ -163,18 +163,18 @@ class TestGenomePairClass(unittest.TestCase):
     def test_copy_data_9(self):
         """Check that no data is copied if direction of copy is
         not determined since the 'first' parameter value is not found
-        in either genome, using 'phage_id' attribute."""
-        self.genome1.phage_id = "L5"
+        in either genome, using 'id' attribute."""
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "phamerator"
 
-        self.genome_pair.copy_data("phage_id", "Trixie", "L5", "copy")
+        self.genome_pair.copy_data("id", "Trixie", "L5", "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
@@ -183,18 +183,18 @@ class TestGenomePairClass(unittest.TestCase):
     def test_copy_data_10(self):
         """Check that no data is copied if direction of copy is
         not determined since the 'second' parameter value is not found
-        in either genome, using 'phage_id' attribute."""
-        self.genome1.phage_id = "L5"
+        in either genome, using 'id' attribute."""
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "phamerator"
 
-        self.genome_pair.copy_data("phage_id", "L5", "Trixie", "copy")
+        self.genome_pair.copy_data("id", "L5", "Trixie", "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
@@ -204,12 +204,12 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that no data is copied if direction of copy is
         not determined since the 'first' parameter value is not found
         in either genome, using 'type' attribute."""
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "import"
@@ -224,12 +224,12 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that no data is copied if direction of copy is
         not determined since the 'second' parameter value is not found
         in either genome, using 'type' attribute."""
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "Trixie"
         self.genome1.host_genus = "copy"
         self.genome1.type = "phamerator"
 
-        self.genome2.phage_id = "D29"
+        self.genome2.id = "D29"
         self.genome2.phage_name = "copy"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "import"
@@ -245,7 +245,7 @@ class TestGenomePairClass(unittest.TestCase):
         is copied if no keyword is provided."""
 
         self.genome1.type = "phamerator"
-        self.genome1.phage_id = 1
+        self.genome1.id = 1
         self.genome1.phage_name = 2
         self.genome1.host_genus = 3
         self.genome1.sequence = 4
@@ -306,7 +306,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.type, "import")
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.phage_id, 1)
+            self.assertEqual(self.genome_pair.genome2.id, 1)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.phage_name, 2)
         with self.subTest():
@@ -431,19 +431,19 @@ class TestGenomePairClass(unittest.TestCase):
                 self.genome_pair.genome2._cds_duplicate_end_strand_ids, 54)
 
     def test_copy_data_14(self):
-        """Check that all data (except for 'phage_id' attribute)
+        """Check that all data (except for 'id' attribute)
         is copied if no keyword is provided."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.type = 1
         self.genome1.phage_name = 2
 
-        self.genome2.phage_id = "Trixie"
+        self.genome2.id = "Trixie"
 
-        self.genome_pair.copy_data("phage_id", "L5", "Trixie")
+        self.genome_pair.copy_data("id", "L5", "Trixie")
 
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.phage_id, "Trixie")
+            self.assertEqual(self.genome_pair.genome2.id, "Trixie")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.type, 1)
         with self.subTest():
@@ -452,20 +452,20 @@ class TestGenomePairClass(unittest.TestCase):
 
 
 
-    def test_compare_phage_id_1(self):
+    def test_compare_id_1(self):
         """Check that an error is produced if the
-        phage_id is not the same."""
-        self.genome1.phage_id = "Trixie"
-        self.genome2.phage_id = "L5"
-        self.genome_pair.compare_phage_id()
+        id is not the same."""
+        self.genome1.id = "Trixie"
+        self.genome2.id = "L5"
+        self.genome_pair.compare_id()
         self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
-    def test_compare_phage_id_2(self):
+    def test_compare_id_2(self):
         """Check that no error is produced if the
-        phage_id is the same."""
-        self.genome1.phage_id = "Trixie"
-        self.genome2.phage_id = "Trixie"
-        self.genome_pair.compare_phage_id()
+        id is the same."""
+        self.genome1.id = "Trixie"
+        self.genome2.id = "Trixie"
+        self.genome_pair.compare_id()
         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
 

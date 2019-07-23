@@ -166,7 +166,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
     # Phage Name, PhageID and SearchID
     phage_name = parse_phagesdb_phage_name(data_dict)
     genome_obj.phage_name = phage_name
-    genome_obj.set_phage_id(phage_name)
+    genome_obj.set_id(phage_name)
 
     # Host
     host_genus = parse_phagesdb_host_genus(data_dict)
@@ -245,7 +245,7 @@ def copy_data_from_phagesdb(bundle, type, flag = "retrieve"):
 
         if genome1._empty_fields:
 
-            phage_url = construct_phage_url(genome1.phage_id)
+            phage_url = construct_phage_url(genome1.id)
             data_dict = retrieve_phagesdb_data(phage_url)
 
             # If there was an error with retrieving data from PhagesDB,

@@ -122,7 +122,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         output_seq_length = 4
 
         with self.subTest():
-            self.assertEqual(self.genome1.phage_id, output_phage_id)
+            self.assertEqual(self.genome1.id, output_phage_id)
         with self.subTest():
             self.assertEqual(self.genome1.phage_name, output_phage_name)
         with self.subTest():
@@ -204,7 +204,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         output_seq_length = 4
 
         with self.subTest():
-            self.assertEqual(self.genome1.phage_id, output_phage_id)
+            self.assertEqual(self.genome1.id, output_phage_id)
         with self.subTest():
             self.assertEqual(self.genome1.phage_name, output_phage_name)
         with self.subTest():
@@ -367,7 +367,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_genome_update_statements_1(self):
         """Verify list of statements are created correctly."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
@@ -423,7 +423,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_genome_delete_statement_1(self):
         """Verify list of DELETE statements are created correctly."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         statements = phamerator.create_genome_delete_statement(self.genome1)
         exp_statements = 1
         exp = "DELETE FROM phage WHERE PhageID = 'L5';"
@@ -544,7 +544,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_genome_insert_statement_1(self):
         """Verify genome INSERT statement is created correctly."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
@@ -574,7 +574,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_genome_insert_statements_1(self):
         """Verify list of genome INSERT statements is created correctly."""
 
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.phage_name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
@@ -607,7 +607,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
 
         self.genome1 = Genome.Genome()
-        self.genome1.phage_id = "L5"
+        self.genome1.id = "L5"
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
@@ -617,7 +617,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
 
         self.genome2 = Genome.Genome()
-        self.genome2.phage_id = "L5"
+        self.genome2.id = "L5"
         self.genome2.type = "phamerator"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.cluster = "A"

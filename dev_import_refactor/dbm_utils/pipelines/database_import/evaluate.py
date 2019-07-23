@@ -83,7 +83,7 @@ def check_phagesdb_genome(genome_obj, null_set):
     """Check a Genome object for specific errors when it has been
     parsed from PhagesDB data in preparation for completing import tickets."""
 
-    genome_obj.check_phage_id(null_set, False)
+    genome_obj.check_id(null_set, False)
     genome_obj.check_phage_name(null_set, False)
     genome_obj.check_host_genus(null_set, False)
     genome_obj.check_cluster(null_set, False)
@@ -196,8 +196,8 @@ def check_genome_to_import(genome_obj, type):
     """Check a Genome object for errors."""
 
     if type == "add":
-        genome_obj.check_phage_id(phage_id_set, False)
-        genome_obj.check_phage_id(null_set, False)
+        genome_obj.check_id(phage_id_set, False)
+        genome_obj.check_id(null_set, False)
         genome_obj.check_phage_name(phage_id_set, False) # TODO is this needed?
         genome_obj.check_phage_name(null_set, False) # TODO is this needed?
         genome_obj.check_sequence(seq_set, False)
@@ -205,7 +205,7 @@ def check_genome_to_import(genome_obj, type):
 
     # Certain checks if it is a 'replace' ticket.
     else:
-        genome_obj.check_phage_id(phage_id_set, True)
+        genome_obj.check_id(phage_id_set, True)
         genome_obj.check_phage_name(phage_id_set, True) # TODO is this needed?
         genome_obj.check_sequence(seq_set, True)
 

@@ -51,7 +51,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
 
 
 
-    # Create a dictionary of tickets based on the phage_id.
+    # Create a dictionary of tickets based on the primary_phage_id.
     ticket_dict = {}
     index2 = 0
     while index2 < len(ticket_list):
@@ -91,7 +91,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
         bundle.genome_dict[genome.type] = genome
 
         # Match ticket (if available) to flat file.
-        matched_ticket = ticket_dict.pop(genome.phage_id, None)
+        matched_ticket = ticket_dict.pop(genome.id, None)
         bundle.ticket = matched_ticket
 
 
@@ -182,7 +182,7 @@ def main2(bundle, sql_obj, host_genera_set = set(), phage_id_set = set(),
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
     if matched_ticket.type == "replace":
         phamerator_genome = \
-            phamerator.create_phamerator_genome(sql_obj, genome.phage_id)
+            phamerator.create_phamerator_genome(sql_obj, genome.id)
 
 
         # If any attributes in flat_file are set to 'retain', copy data
