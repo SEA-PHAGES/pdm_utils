@@ -80,7 +80,6 @@ class Genome:
 
 
         # Computed datafields: common to all genomes
-        self.search_id = '' # Lowercase id
         self.search_name = '' # Lowercase phage_name
         self._length = 0 # Size of the nucleotide sequence
         self._gc = 0 # %GC content
@@ -143,10 +142,9 @@ class Genome:
     # Common to Phamerator
 
     def set_id(self, value):
-        """Set the id and search_id."""
+        """Set the id."""
 
         self.id = basic.edit_suffix(value, "remove")
-        self.search_id = self.id.lower()
 
     def set_id_from_field(self, value):
         """Set the id from a value parsed from the indicated field."""

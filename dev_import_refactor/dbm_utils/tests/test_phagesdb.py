@@ -235,8 +235,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.id, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome.search_id, "trixie")
-        with self.subTest():
             self.assertEqual(self.genome.cluster, "A")
         with self.subTest():
             self.assertEqual(self.genome.subcluster, "A2")
@@ -274,7 +272,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = ""
         expected_phage_id = ""
-        expected_search_id = ""
         expected_cluster = "A"
         expected_subcluster = "A2"
         expected_host = "Mycobacterium"
@@ -293,8 +290,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -331,7 +326,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
-        expected_search_id = "trixie"
         expected_cluster = ""
         expected_subcluster = "A2"
         expected_host = "Mycobacterium"
@@ -350,8 +344,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -388,7 +380,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
-        expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = ""
         expected_host = "Mycobacterium"
@@ -407,8 +398,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -445,7 +434,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
-        expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = "A2"
         expected_host = ""
@@ -464,8 +452,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -502,7 +488,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
-        expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = "A2"
         expected_host = "Mycobacterium"
@@ -522,8 +507,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -560,7 +543,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
-        expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = "A2"
         expected_host = "Mycobacterium"
@@ -578,8 +560,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -614,7 +594,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
-        expected_search_id = "trixie"
         expected_cluster = "A"
         expected_subcluster = "A2"
         expected_host = "Mycobacterium"
@@ -632,8 +611,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():
@@ -668,7 +645,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         expected_phage_name = ""
         expected_phage_id = ""
-        expected_search_id = ""
         expected_cluster = ""
         expected_subcluster = ""
         expected_host = ""
@@ -686,8 +662,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.phage_name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, expected_search_id)
         with self.subTest():
             self.assertEqual(self.genome.cluster, expected_cluster)
         with self.subTest():

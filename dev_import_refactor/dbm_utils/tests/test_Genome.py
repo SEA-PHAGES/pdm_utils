@@ -202,19 +202,13 @@ class TestGenomeClass(unittest.TestCase):
         """Check that name without '_Draft' suffix is not changed."""
         phage_name = "Trixie"
         self.genome.set_id(phage_name)
-        with self.subTest():
-            self.assertEqual(self.genome.id, "Trixie")
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, "trixie")
+        self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_2(self):
         """Check that '_Draft' suffix is removed."""
         phage_name = "Trixie_Draft"
         self.genome.set_id(phage_name)
-        with self.subTest():
-            self.assertEqual(self.genome.id, "Trixie")
-        with self.subTest():
-            self.assertEqual(self.genome.search_id, "trixie")
+        self.assertEqual(self.genome.id, "Trixie")
 
 
 
