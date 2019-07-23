@@ -128,7 +128,7 @@ def copy_ticket_to_genome(bundle):
         genome1 = Genome.Genome()
         genome1.type = "add"
         genome1.set_id(ticket.primary_phage_id)
-        genome1.phage_name = ticket.primary_phage_id
+        genome1.name = ticket.primary_phage_id
         genome1.set_host(ticket.host_genus)
         genome1.set_accession(ticket.accession)
         genome1.annotation_status = ticket.annotation_status

@@ -211,9 +211,9 @@ class TestGenomeClass(unittest.TestCase):
 
 
     def test_set_id_from_field_1(self):
-        """Check that the id is set from the phage_name field."""
-        self.genome.phage_name = "Trixie_Draft"
-        self.genome.set_id_from_field("phage_name")
+        """Check that the id is set from the name field."""
+        self.genome.name = "Trixie_Draft"
+        self.genome.set_id_from_field("name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_2(self):
@@ -266,23 +266,23 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_id_from_field_10(self):
         """Check that the id is set from the
-        record_description_phage_name field."""
-        self.genome._record_description_phage_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_description_phage_name")
+        record_description_name field."""
+        self.genome._record_description_name = "Trixie_Draft"
+        self.genome.set_id_from_field("record_description_name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_11(self):
         """Check that the id is set from the
-        record_source_phage_name field."""
-        self.genome._record_source_phage_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_source_phage_name")
+        record_source_name field."""
+        self.genome._record_source_name = "Trixie_Draft"
+        self.genome.set_id_from_field("record_source_name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_12(self):
         """Check that the id is set from the
-        record_organism_phage_name field."""
-        self.genome._record_organism_phage_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_organism_phage_name")
+        record_organism_name field."""
+        self.genome._record_organism_name = "Trixie_Draft"
+        self.genome.set_id_from_field("record_organism_name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_13(self):
@@ -861,52 +861,52 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_record_description_phage_name_1(self):
+    def test_check_record_description_name_1(self):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
-        self.genome._record_description_phage_name = "Trixie"
-        self.genome.check_record_description_phage_name()
+        self.genome._record_description_name = "Trixie"
+        self.genome.check_record_description_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_description_phage_name_2(self):
+    def test_check_record_description_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
-        self.genome._record_description_phage_name = "Trixie"
-        self.genome.check_record_description_phage_name()
+        self.genome._record_description_name = "Trixie"
+        self.genome.check_record_description_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_source_phage_name_1(self):
+    def test_check_record_source_name_1(self):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
-        self.genome._record_source_phage_name = "Trixie"
-        self.genome.check_record_source_phage_name()
+        self.genome._record_source_name = "Trixie"
+        self.genome.check_record_source_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_source_phage_name_2(self):
+    def test_check_record_source_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
-        self.genome._record_source_phage_name = "Trixie"
-        self.genome.check_record_source_phage_name()
+        self.genome._record_source_name = "Trixie"
+        self.genome.check_record_source_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_organism_phage_name_1(self):
+    def test_check_record_organism_name_1(self):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
-        self.genome._record_organism_phage_name = "Trixie"
-        self.genome.check_record_organism_phage_name()
+        self.genome._record_organism_name = "Trixie"
+        self.genome.check_record_organism_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_organism_phage_name_2(self):
+    def test_check_record_organism_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
-        self.genome._record_organism_phage_name = "Trixie"
-        self.genome.check_record_organism_phage_name()
+        self.genome._record_organism_name = "Trixie"
+        self.genome.check_record_organism_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1120,36 +1120,36 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_phage_name_1(self):
-        """Verify that no error is produced when the phage_name
-        is in the phage_name_set and is expected to be in the set."""
+    def test_check_name_1(self):
+        """Verify that no error is produced when the name
+        is in the name_set and is expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_name = "Trixie"
-        self.genome.check_phage_name(value_set, True)
+        self.genome.name = "Trixie"
+        self.genome.check_name(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_phage_name_2(self):
-        """Verify that an error is produced when the phage_name
-        is not in the phage_name_set and is expected to be in the set."""
+    def test_check_name_2(self):
+        """Verify that an error is produced when the name
+        is not in the name_set and is expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_name = "D29"
-        self.genome.check_phage_name(value_set, True)
+        self.genome.name = "D29"
+        self.genome.check_name(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_phage_name_3(self):
-        """Verify that no error is produced when the phage_name
-        is not in the phage_name_set and is not expected to be in the set."""
+    def test_check_name_3(self):
+        """Verify that no error is produced when the name
+        is not in the name_set and is not expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_name = "D29"
-        self.genome.check_phage_name(value_set, False)
+        self.genome.name = "D29"
+        self.genome.check_name(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_phage_name_4(self):
-        """Verify that an error is produced when the phage_name
-        is in the phage_name_set and is not expected to be in the set."""
+    def test_check_name_4(self):
+        """Verify that an error is produced when the name
+        is in the name_set and is not expected to be in the set."""
         value_set = set(["Trixie", "L5"])
-        self.genome.phage_name = "Trixie"
-        self.genome.check_phage_name(value_set, False)
+        self.genome.name = "Trixie"
+        self.genome.check_name(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1556,7 +1556,7 @@ class TestGenomeClass(unittest.TestCase):
         expected_host = ""
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_description_phage_name, expected_phage)
+                self.genome._record_description_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_description_host_genus, expected_host)
@@ -1569,7 +1569,7 @@ class TestGenomeClass(unittest.TestCase):
         expected_host = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_description_phage_name, expected_phage)
+                self.genome._record_description_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_description_host_genus, expected_host)
@@ -1585,7 +1585,7 @@ class TestGenomeClass(unittest.TestCase):
         expected_host = ""
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_source_phage_name, expected_phage)
+                self.genome._record_source_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_source_host_genus, expected_host)
@@ -1598,7 +1598,7 @@ class TestGenomeClass(unittest.TestCase):
         expected_host = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_source_phage_name, expected_phage)
+                self.genome._record_source_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_source_host_genus, expected_host)
@@ -1614,7 +1614,7 @@ class TestGenomeClass(unittest.TestCase):
         expected_host = ""
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_organism_phage_name, expected_phage)
+                self.genome._record_organism_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_organism_host_genus, expected_host)
@@ -1627,7 +1627,7 @@ class TestGenomeClass(unittest.TestCase):
         expected_host = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_organism_phage_name, expected_phage)
+                self.genome._record_organism_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.genome._record_organism_host_genus, expected_host)

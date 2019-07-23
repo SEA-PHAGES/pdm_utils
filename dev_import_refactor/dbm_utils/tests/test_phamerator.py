@@ -123,7 +123,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.id, output_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome1.phage_name, output_phage_name)
+            self.assertEqual(self.genome1.name, output_phage_name)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, output_host)
         with self.subTest():
@@ -202,7 +202,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.id, output_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome1.phage_name, output_phage_name)
+            self.assertEqual(self.genome1.name, output_phage_name)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, output_host)
         with self.subTest():
@@ -539,7 +539,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         """Verify genome INSERT statement is created correctly."""
 
         self.genome1.id = "L5"
-        self.genome1.phage_name = "L5_Draft"
+        self.genome1.name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
@@ -569,7 +569,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         """Verify list of genome INSERT statements is created correctly."""
 
         self.genome1.id = "L5"
-        self.genome1.phage_name = "L5_Draft"
+        self.genome1.name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"

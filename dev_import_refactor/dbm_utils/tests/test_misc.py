@@ -16,23 +16,23 @@ class TestMiscFunctions(unittest.TestCase):
 
         self.genome1 = Genome.Genome()
         self.genome1.id = "Trixie"
-        self.genome1.phage_name = "Genome1"
+        self.genome1.name = "Genome1"
         self.genome1.type = "phamerator"
 
         self.genome2 = Genome.Genome()
         self.genome2.id = "Trixie"
-        self.genome2.phage_name = "Genome2"
+        self.genome2.name = "Genome2"
         self.genome2.type = "flat_file"
 
 
         self.genome3 = Genome.Genome()
         self.genome3.id = "L5"
-        self.genome3.phage_name = "Genome3"
+        self.genome3.name = "Genome3"
         self.genome3.type = "phamerator"
 
         self.genome4 = Genome.Genome()
         self.genome4.id = "L5"
-        self.genome4.phage_name = "Genome4"
+        self.genome4.name = "Genome4"
         self.genome4.type = "flat_file"
 
         self.bundle1 = Bundle.Bundle()
@@ -53,7 +53,7 @@ class TestMiscFunctions(unittest.TestCase):
         misc.match_genome_by_id(
             self.bundle1, genomes_to_match, "phamerator")
         matched_genome = self.bundle1.genome_dict["flat_file"]
-        self.assertEqual(matched_genome.phage_name, "Genome2")
+        self.assertEqual(matched_genome.name, "Genome2")
 
     def test_match_genome_by_id_2(self):
         """Verify that no genome is matched since there is no
@@ -84,7 +84,7 @@ class TestMiscFunctions(unittest.TestCase):
         misc.match_genome_by_id(
             self.bundle1, genomes_to_match, "phamerator", "new_type")
         matched_genome = self.bundle1.genome_dict["new_type"]
-        self.assertEqual(matched_genome.phage_name, "Genome2")
+        self.assertEqual(matched_genome.name, "Genome2")
 
 
 
@@ -103,7 +103,7 @@ class TestMiscFunctions(unittest.TestCase):
         genomes_to_match = {self.genome2.id: self.genome2}
         misc.match_genomes(list1, genomes_to_match, "phamerator", "new_genome")
         matched_genome = list1[0].genome_dict["new_genome"]
-        self.assertEqual(matched_genome.phage_name, "Genome2")
+        self.assertEqual(matched_genome.name, "Genome2")
 
 
     def test_match_genomes_2(self):
@@ -148,9 +148,9 @@ class TestMiscFunctions(unittest.TestCase):
         matched_genome2 = list1[0].genome_dict["new_genome"]
         matched_genome4 = list1[1].genome_dict["new_genome"]
         with self.subTest():
-            self.assertEqual(matched_genome2.phage_name, "Genome2")
+            self.assertEqual(matched_genome2.name, "Genome2")
         with self.subTest():
-            self.assertEqual(matched_genome4.phage_name, "Genome4")
+            self.assertEqual(matched_genome4.name, "Genome4")
 
     def test_match_genomes_6(self):
         """Verify that one genome is matched correctly with the 'key2'
@@ -161,7 +161,7 @@ class TestMiscFunctions(unittest.TestCase):
         genomes_to_match = {self.genome2.id: self.genome2}
         misc.match_genomes(list1, genomes_to_match, "phamerator")
         matched_genome = list1[0].genome_dict["flat_file"]
-        self.assertEqual(matched_genome.phage_name, "Genome2")
+        self.assertEqual(matched_genome.name, "Genome2")
 
 
 

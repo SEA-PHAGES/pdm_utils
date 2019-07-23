@@ -1259,7 +1259,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -1271,7 +1271,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -1279,7 +1279,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -1386,7 +1386,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -1398,7 +1398,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -1406,7 +1406,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -1507,7 +1507,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, "")
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, "")
+            self.assertEqual(self.genome._record_organism_name, "")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, "")
         with self.subTest():
@@ -1517,7 +1517,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -1525,7 +1525,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -1629,7 +1629,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -1641,7 +1641,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -1649,7 +1649,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -1752,7 +1752,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -1764,7 +1764,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -1772,7 +1772,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -1875,7 +1875,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -1887,7 +1887,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -1895,7 +1895,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -1996,7 +1996,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2008,7 +2008,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, "")
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2016,7 +2016,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2117,7 +2117,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2129,7 +2129,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2137,7 +2137,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, "")
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, "")
+            self.assertEqual(self.genome._record_source_name, "")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, "")
         with self.subTest():
@@ -2225,7 +2225,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2237,7 +2237,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2245,7 +2245,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2343,7 +2343,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2355,7 +2355,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2363,7 +2363,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2466,7 +2466,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2478,7 +2478,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2486,7 +2486,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2579,7 +2579,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2591,7 +2591,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2599,7 +2599,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2697,7 +2697,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2709,7 +2709,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2717,7 +2717,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2815,7 +2815,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2827,7 +2827,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2835,7 +2835,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -2915,7 +2915,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -2927,7 +2927,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -2935,7 +2935,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -3038,7 +3038,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -3050,7 +3050,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -3058,7 +3058,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -3160,7 +3160,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._record_organism_phage_name, \
+            self.assertEqual(self.genome._record_organism_name, \
                                 "KatherineG")
         with self.subTest():
             self.assertEqual(self.genome._record_organism_host_genus, \
@@ -3172,7 +3172,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_description, description)
         with self.subTest():
-            self.assertEqual(self.genome._record_description_phage_name, \
+            self.assertEqual(self.genome._record_description_name, \
                                 "L5")
         with self.subTest():
             self.assertEqual(self.genome._record_description_host_genus, \
@@ -3180,7 +3180,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.record_source, source)
         with self.subTest():
-            self.assertEqual(self.genome._record_source_phage_name, \
+            self.assertEqual(self.genome._record_source_name, \
                                 "phiC31")
         with self.subTest():
             self.assertEqual(self.genome._record_source_host_genus, \
@@ -3252,7 +3252,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_flat_file_data(
                             self.genome,
                             record,
-                            phage_id_field = "record_description_phage_name")
+                            phage_id_field = "record_description_name")
 
         self.assertEqual(self.genome.id, "L5")
 
@@ -3302,7 +3302,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.genome2.type = "add"
         self.genome2.cluster = "A"
         self.genome2.subcluster = "A2"
-        self.genome2.phage_name = "L5_Draft"
+        self.genome2.name = "L5_Draft"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.accession = "ABC123"
         self.genome2.cluster_subcluster = "C"
@@ -3327,7 +3327,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome1.subcluster, "A2")
         with self.subTest():
-            self.assertEqual(genome1.phage_name, "L5_Draft")
+            self.assertEqual(genome1.name, "L5_Draft")
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():

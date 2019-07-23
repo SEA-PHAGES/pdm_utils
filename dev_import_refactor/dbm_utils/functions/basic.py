@@ -361,7 +361,7 @@ def parse_names_from_record_field(description):
     generic_words = set(["complete", "genome", "phage", "unclassified"])
 
     host_genus = ""
-    phage_name = ""
+    name = ""
 
     # Remove trailing whitespace and split into a list.
     description = description.strip()
@@ -411,7 +411,7 @@ def parse_names_from_record_field(description):
                 host_genus = word[:-5]
 
             elif word_lower not in generic_words:
-                phage_name = word
+                name = word
 
             else:
                 pass
@@ -422,12 +422,12 @@ def parse_names_from_record_field(description):
             if (word_lower[-5:] == "phage" or \
                 word_lower[-5:] == "virus"):
 
-                phage_name = split_description[index + 1]
+                name = split_description[index + 1]
 
         index += 1
 
 
-    return (phage_name, host_genus)
+    return (name, host_genus)
 
 
 

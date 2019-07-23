@@ -25,7 +25,7 @@ def parse_phamerator_data(genome, data_tuple):
     """
 
     genome.set_id(data_tuple[0])
-    genome.phage_name = data_tuple[1]
+    genome.name = data_tuple[1]
     genome.set_host(data_tuple[2])
     genome.set_sequence(data_tuple[3])
     genome.annotation_status = data_tuple[4]
@@ -278,7 +278,7 @@ def create_genome_insert_statement(genome):
         "'%s', '%s', '%s', '%s', '%s', %s, %s, '%s', '%s', '%s', '%s', '%s');" \
         % (genome.id, \
         genome.accession, \
-        genome.phage_name, \
+        genome.name, \
         genome.host_genus, \
         genome.sequence, \
         genome._length, \

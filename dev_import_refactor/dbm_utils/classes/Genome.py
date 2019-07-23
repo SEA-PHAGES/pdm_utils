@@ -26,7 +26,7 @@ class Genome:
         self.cluster = "" # A, B, C, Singleton, etc.
         self.subcluster = "" #A1, A2, etc.
         self.id = "" # Unique identifier. Case sensitive, no "_Draft".
-        self.phage_name = "" # Case sensitive and contains "_Draft".
+        self.name = "" # Case sensitive and contains "_Draft".
         self.sequence = "" # Biopython Seq object
 
 
@@ -108,9 +108,9 @@ class Genome:
         # Computed datafields: common to flat file (NCBI) records
 
 
-        self._record_description_phage_name = ""
-        self._record_source_phage_name = ""
-        self._record_organism_phage_name = ""
+        self._record_description_name = ""
+        self._record_source_name = ""
+        self._record_organism_name = ""
         self._record_description_host_genus = ""
         self._record_source_host_genus = ""
         self._record_organism_host_genus = ""
@@ -146,8 +146,8 @@ class Genome:
     def set_id_from_field(self, value):
         """Set the id from a value parsed from the indicated field."""
 
-        if value == "phage_name":
-            self.set_id(self.phage_name)
+        if value == "name":
+            self.set_id(self.name)
         elif value == "accession":
             self.set_id(self.accession)
         elif value == "record_name":
@@ -164,12 +164,12 @@ class Genome:
             self.set_id(self.record_organism)
         elif value == "record_filename":
             self.set_id(self.record_filename)
-        elif value == "record_description_phage_name":
-            self.set_id(self._record_description_phage_name)
-        elif value == "record_source_phage_name":
-            self.set_id(self._record_source_phage_name)
-        elif value == "record_organism_phage_name":
-            self.set_id(self._record_organism_phage_name)
+        elif value == "record_description_name":
+            self.set_id(self._record_description_name)
+        elif value == "record_source_name":
+            self.set_id(self._record_source_name)
+        elif value == "record_organism_name":
+            self.set_id(self._record_organism_name)
         else:
             self.set_id("")
 
@@ -203,27 +203,27 @@ class Genome:
         """Retrieve the phage name and host_genus name from the record's
         'description' field."""
         string = self.record_description
-        phage_name, host_genus = \
+        name, host_genus = \
             basic.parse_names_from_record_field(string)
-        self._record_description_phage_name = phage_name
+        self._record_description_name = name
         self._record_description_host_genus = host_genus
 
     def parse_record_source(self):
         """Retrieve the phage name and host_genus name from the record's
         'source' field."""
         string = self.record_source
-        phage_name, host_genus = \
+        name, host_genus = \
             basic.parse_names_from_record_field(string)
-        self._record_source_phage_name = phage_name
+        self._record_source_name = name
         self._record_source_host_genus = host_genus
 
     def parse_record_organism(self):
         """Retrieve the phage name and host_genus name from the record's
         'organism' field."""
         string = self.record_organism
-        phage_name, host_genus = \
+        name, host_genus = \
             basic.parse_names_from_record_field(string)
-        self._record_organism_phage_name = phage_name
+        self._record_organism_name = name
         self._record_organism_host_genus = host_genus
 
 
@@ -502,19 +502,19 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_phage_name(self, phage_name_set, expect = False):
-        """Check that the phage_name is valid."""
+    def check_name(self, name_set, expect = False):
+        """Check that the name is valid."""
 
-        value = basic.check_value_expected_in_set(self.phage_name,
-                phage_name_set, expect)
+        value = basic.check_value_expected_in_set(self.name,
+                name_set, expect)
         if value:
-            result = "The phage_name is valid."
+            result = "The name is valid."
             status = "correct"
         else:
-            result = "The phage_name is not valid."
+            result = "The name is not valid."
             status = "error"
 
-        definition = "Check that the phage_name is valid."
+        definition = "Check that the name is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
@@ -591,7 +591,7 @@ class Genome:
 
     # TODO this may need to be updated to account for Seq alphabets better.
     def check_sequence(self, seq_set, expect = False):
-        """Check that the phage_name is valid."""
+        """Check that the name is valid."""
 
         value = basic.check_value_expected_in_set(self.sequence,
                 seq_set, expect)
@@ -864,11 +864,11 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_record_description_phage_name(self):
+    def check_record_description_name(self):
         """Check phage name spelling in the record description field."""
 
 
-        if self.id != self._record_description_phage_name:
+        if self.id != self._record_description_name:
             result = "The phage name in the record_description field " + \
                         "does not match the id."
             status = "error"
@@ -883,11 +883,11 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_record_source_phage_name(self):
+    def check_record_source_name(self):
         """Check phage name spelling in the record source field."""
 
 
-        if self.id != self._record_source_phage_name:
+        if self.id != self._record_source_name:
             result = "The phage name in the record_source field " + \
                         "does not match the id."
             status = "error"
@@ -901,11 +901,11 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_record_organism_phage_name(self):
+    def check_record_organism_name(self):
         """Check phage name spelling in the record organism field."""
 
 
-        if self.id != self._record_organism_phage_name:
+        if self.id != self._record_organism_name:
             result = "The phage name in the record_organism field " + \
                         "does not match the id."
             status = "error"

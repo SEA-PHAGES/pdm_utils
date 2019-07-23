@@ -46,7 +46,7 @@ class TestSourceFeatureClass(unittest.TestCase):
         expected_host_genus = ""
         with self.subTest():
             self.assertEqual(\
-                self.feature._organism_phage_name, expected_phage)
+                self.feature._organism_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.feature._organism_host_genus, expected_host_genus)
@@ -59,7 +59,7 @@ class TestSourceFeatureClass(unittest.TestCase):
         expected_host_genus = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.feature._organism_phage_name, expected_phage)
+                self.feature._organism_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
                 self.feature._organism_host_genus, expected_host_genus)
@@ -105,18 +105,18 @@ class TestSourceFeatureClass(unittest.TestCase):
 
 
 
-    def test_check_organism_phage_name_1(self):
+    def test_check_organism_name_1(self):
         """Check that no warning is produced."""
         self.feature.parent_phage_id = "Trixie"
-        self.feature._organism_phage_name = "Trixie"
-        self.feature.check_organism_phage_name()
+        self.feature._organism_name = "Trixie"
+        self.feature.check_organism_name()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_organism_phage_name_2(self):
+    def test_check_organism_name_2(self):
         """Check that a warning is produced."""
         self.feature.parent_phage_id = "L5"
-        self.feature._organism_phage_name = "Trixie"
-        self.feature.check_organism_phage_name()
+        self.feature._organism_name = "Trixie"
+        self.feature.check_organism_name()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 

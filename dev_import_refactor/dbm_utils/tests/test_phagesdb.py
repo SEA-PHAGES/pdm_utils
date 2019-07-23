@@ -231,7 +231,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, "Trixie")
+            self.assertEqual(self.genome.name, "Trixie")
         with self.subTest():
             self.assertEqual(self.genome.id, "Trixie")
         with self.subTest():
@@ -287,7 +287,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -341,7 +341,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -395,7 +395,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -449,7 +449,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -504,7 +504,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -557,7 +557,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -608,7 +608,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():
@@ -659,7 +659,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.phage_name, expected_phage_name)
+            self.assertEqual(self.genome.name, expected_phage_name)
         with self.subTest():
             self.assertEqual(self.genome.id, expected_phage_id)
         with self.subTest():

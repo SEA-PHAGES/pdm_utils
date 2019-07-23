@@ -241,7 +241,7 @@ def parse_flat_file_data(genome_obj, \
                             retrieved_record, \
                             filepath = "", \
                             translation_table = 11, \
-                            phage_id_field = "record_organism_phage_name"):
+                            phage_id_field = "record_organism_name"):
 
     """Parses a GenBank-formatted flat file into a Genome object using
     data that has already been parsed by Bio.SeqIO.
@@ -431,7 +431,7 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
         genome1 = bundle.genome_dict["flat_file"]
         genome1.cluster = flag
         genome1.subcluster = flag
-        genome1.phage_name = flag # TODO should this attribute be copied?
+        genome1.name = flag # TODO should this attribute be copied?
         genome1.host_genus = flag
         genome1.accession = flag
         genome1.cluster_subcluster = flag
@@ -521,7 +521,7 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
 
 
 def create_parsed_flat_file_list(all_files,
-                                phage_id_field = "record_organism_phage_name"):
+                                phage_id_field = "record_organism_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 
@@ -564,7 +564,7 @@ def create_parsed_flat_file_list(all_files,
 
 # TODO unit test.
 def create_parsed_flat_file(filename,
-                                phage_id_field = "record_organism_phage_name"):
+                                phage_id_field = "record_organism_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 

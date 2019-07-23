@@ -684,7 +684,7 @@ class TestEvaluateClass2(unittest.TestCase):
     def setUp(self):
         self.genome = Genome.Genome()
         self.genome.id = "Trixie"
-        self.genome.phage_name = "Trixie_Draft"
+        self.genome.name = "Trixie_Draft"
         self.genome.host_genus = "Mycobacterium"
         self.genome.cluster = "A"
         self.genome.subcluster = "A2"
@@ -727,9 +727,9 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_check_phagesdb_genome_3(self):
         """Verify an error is produced with a PhagesDB genome with
-        no phage_name."""
+        no name."""
 
-        self.genome.phage_name = ""
+        self.genome.name = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
         for eval in self.genome.evaluations:

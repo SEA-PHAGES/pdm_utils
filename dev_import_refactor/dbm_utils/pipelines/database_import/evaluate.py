@@ -84,7 +84,7 @@ def check_phagesdb_genome(genome_obj, null_set):
     parsed from PhagesDB data in preparation for completing import tickets."""
 
     genome_obj.check_id(null_set, False)
-    genome_obj.check_phage_name(null_set, False)
+    genome_obj.check_name(null_set, False)
     genome_obj.check_host_genus(null_set, False)
     genome_obj.check_cluster(null_set, False)
     genome_obj.check_subcluster(null_set, False)
@@ -198,15 +198,15 @@ def check_genome_to_import(genome_obj, type):
     if type == "add":
         genome_obj.check_id(phage_id_set, False)
         genome_obj.check_id(null_set, False)
-        genome_obj.check_phage_name(phage_id_set, False) # TODO is this needed?
-        genome_obj.check_phage_name(null_set, False) # TODO is this needed?
+        genome_obj.check_name(phage_id_set, False) # TODO is this needed?
+        genome_obj.check_name(null_set, False) # TODO is this needed?
         genome_obj.check_sequence(seq_set, False)
         genome_obj.check_sequence(null_set, False)
 
     # Certain checks if it is a 'replace' ticket.
     else:
         genome_obj.check_id(phage_id_set, True)
-        genome_obj.check_phage_name(phage_id_set, True) # TODO is this needed?
+        genome_obj.check_name(phage_id_set, True) # TODO is this needed?
         genome_obj.check_sequence(seq_set, True)
 
 
@@ -232,9 +232,9 @@ def check_genome_to_import(genome_obj, type):
     genome_obj.check_nucleotides(alphabet = alphabet) # TODO decide how to implement alphabet
     genome_obj.check_annotation_status_accession()
     genome_obj.check_annotation_status_descriptions()
-    genome_obj.check_record_description_phage_name()
-    genome_obj.check_record_source_phage_name()
-    genome_obj.check_record_organism_phage_name()
+    genome_obj.check_record_description_name()
+    genome_obj.check_record_source_name()
+    genome_obj.check_record_organism_name()
     genome_obj.check_record_description_host_genus()
     genome_obj.check_record_source_host_genus()
     genome_obj.check_record_organism_host_genus()
@@ -305,7 +305,7 @@ def check_trna_for_import(trna_obj):
 def check_source_for_import(src_obj):
     """Check a SourceFeature object for errors."""
 
-    src_obj.check_organism_phage_name()
+    src_obj.check_organism_name()
     src_obj.check_organism_host_genus()
     src_obj.check_host_host_genus()
     src_obj.check_lab_host_host_genus()

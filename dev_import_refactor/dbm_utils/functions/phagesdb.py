@@ -165,7 +165,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
     # Phage Name, PhageID and SearchID
     phage_name = parse_phagesdb_phage_name(data_dict)
-    genome_obj.phage_name = phage_name
+    genome_obj.name = phage_name
     genome_obj.set_id(phage_name)
 
     # Host

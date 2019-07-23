@@ -628,7 +628,7 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome.id, "Trixie")
         with self.subTest():
-            self.assertEqual(matched_genome.phage_name, "Trixie_Draft")
+            self.assertEqual(matched_genome.name, "Trixie_Draft")
         with self.subTest():
             self.assertEqual(matched_genome.type, "add")
         with self.subTest():
@@ -660,11 +660,11 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome1.id, "Trixie")
         with self.subTest():
-            self.assertEqual(matched_genome1.phage_name, "Trixie_Draft")
+            self.assertEqual(matched_genome1.name, "Trixie_Draft")
         with self.subTest():
             self.assertEqual(matched_genome2.id, "L5")
         with self.subTest():
-            self.assertEqual(matched_genome2.phage_name, "")
+            self.assertEqual(matched_genome2.name, "")
 
     def test_copy_ticket_to_genome_3(self):
         """Verify data from 'invalid' ticket is not added to genome."""

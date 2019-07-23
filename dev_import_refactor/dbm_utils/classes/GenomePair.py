@@ -92,8 +92,8 @@ class GenomePair:
                     second.type = first.type
 
             # All other fields can be copied as needed.
-            if (second.phage_name == keyword or keyword is None):
-                second.phage_name = first.phage_name
+            if (second.name == keyword or keyword is None):
+                second.name = first.name
             if (second.host_genus == keyword or keyword is None):
                 second.host_genus = first.host_genus
             if (second.sequence == keyword or keyword is None):
@@ -168,23 +168,23 @@ class GenomePair:
                 second.source_features = first.source_features
             if (second._source_features_tally == keyword or keyword is None):
                 second._source_features_tally = first._source_features_tally
-            if (second._record_description_phage_name == keyword \
+            if (second._record_description_name == keyword \
                 or keyword is None):
 
-                second._record_description_phage_name = \
-                    first._record_description_phage_name
+                second._record_description_name = \
+                    first._record_description_name
 
-            if (second._record_source_phage_name == keyword \
+            if (second._record_source_name == keyword \
                 or keyword is None):
 
-                second._record_source_phage_name = \
-                    first._record_source_phage_name
+                second._record_source_name = \
+                    first._record_source_name
 
-            if (second._record_organism_phage_name == keyword \
+            if (second._record_organism_name == keyword \
                 or keyword is None):
 
-                second._record_organism_phage_name = \
-                    first._record_organism_phage_name
+                second._record_organism_name = \
+                    first._record_organism_name
 
             if (second._record_description_host_genus == keyword \
                 or keyword is None):
