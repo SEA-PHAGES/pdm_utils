@@ -13,6 +13,7 @@ class GenomeTicket:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
+        self.id = "" # Unique identifier
         self.type = "" # Add, Replace, Remove, UPDATE
 
         # Attribute used to populate Genome objects for any ticket type.

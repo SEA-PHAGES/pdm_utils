@@ -100,14 +100,25 @@ class TestTicketFunctions1(unittest.TestCase):
             self.assertEqual(self.ticket.secondary_phage_id, "none")
 
     def test_parse_import_ticket_2(self):
+        """Verify id is set appropriately."""
+        tickets.parse_import_ticket(self.ticket,
+                                    self.normal_ticket_list,
+                                    id = "TicketXYZ")
+        self.assertEqual(self.ticket.id, "TicketXYZ")
+
+    def test_parse_import_ticket_3(self):
         """Verify improperly structured data is not parsed."""
         tickets.parse_import_ticket(self.ticket, self.short_ticket_list)
         self.assertEqual(self.ticket.type, "")
 
-    def test_parse_import_ticket_3(self):
+    def test_parse_import_ticket_4(self):
         """Verify improperly structured data is not parsed."""
         tickets.parse_import_ticket(self.ticket, self.long_ticket_list)
         self.assertEqual(self.ticket.type, "")
+
+
+
+
 
 
 
@@ -125,6 +136,10 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             type = list_of_tickets[1].type
             self.assertEqual(type, "replace")
+        with self.subTest():
+            self.assertEqual(list_of_tickets[0].id, 1)
+        with self.subTest():
+            self.assertEqual(list_of_tickets[1].id, 2)
 
 
     def test_parse_import_tickets_2(self):

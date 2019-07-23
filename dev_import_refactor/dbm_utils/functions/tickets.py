@@ -11,7 +11,8 @@ from classes import Genome
 def parse_import_ticket(
                         ticket,
                         data_list,
-                        expected_size = constants.IMPORT_TABLE_SIZE):
+                        expected_size = constants.IMPORT_TABLE_SIZE,
+                        id = ""):
     """Parses list of data and creates an import ticket.
         Expected data structure:
         0. Import action
@@ -34,6 +35,7 @@ def parse_import_ticket(
     # Verify the row of information has the correct number of fields to parse.
     if len(data_list) == expected_size:
 
+        ticket.id = id
         ticket.set_type(data_list[0])
         ticket.set_description_field(data_list[7])
         ticket.set_run_mode(data_list[11])
@@ -63,11 +65,13 @@ def parse_import_tickets(list_of_lists):
     that failed to be parsed.
     """
 
+    counter = 1
     list_of_tickets = []
     for list_of_data in list_of_lists:
         ticket = Ticket.GenomeTicket()
-        parse_import_ticket(ticket, list_of_data)
+        parse_import_ticket(ticket, list_of_data, id = counter)
         list_of_tickets.append(ticket)
+        counter += 1
     return list_of_tickets
 
 
