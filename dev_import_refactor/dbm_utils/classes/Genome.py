@@ -40,7 +40,7 @@ class Genome:
         # Common to Phamerator
         self.cluster_subcluster = "" # Combined cluster_subcluster data.
         self.annotation_status = "" # Final, Draft, Gbk version of genome data
-        self.date = ""
+        self.date = "" # Used for the DateLastModified field.
         self.annotation_author = "" # 1 (Hatfull), 0 (Genbank)
         self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
         self.retrieve_record = "" # 1 (auto update), 0 (do not auto update)
