@@ -241,48 +241,48 @@ def parse_flat_file_data(genome_obj, \
                             retrieved_record, \
                             filepath = "", \
                             translation_table = 11, \
-                            phage_id_field = "record_organism_name"):
+                            phage_id_field = "organism_name"):
 
     """Parses a GenBank-formatted flat file into a Genome object using
     data that has already been parsed by Bio.SeqIO.
     """
 
     # Keep track of the file from which the record is derived.
-    genome_obj.set_record_filename(filepath)
+    genome_obj.set_filename(filepath)
 
 
     try:
-        genome_obj.record_name = retrieved_record.name
+        genome_obj.name = retrieved_record.name
 
         # It appears that if name is not present, Biopython auto-populates
         # this attribute as "<unknown name>"
-        if genome_obj.record_name == "<unknown name>":
-            genome_obj.record_name = ""
+        if genome_obj.name == "<unknown name>":
+            genome_obj.name = ""
 
     except:
-        genome_obj.record_name = ""
+        genome_obj.name = ""
 
 
 
     try:
-        genome_obj.record_organism = retrieved_record.annotations['organism']
+        genome_obj.organism = retrieved_record.annotations['organism']
     except:
-        genome_obj.record_organism = ""
+        genome_obj.organism = ""
 
     # Identifies host and phage name from organism field.
-    genome_obj.parse_record_organism()
+    genome_obj.parse_organism()
 
 
     try:
-        genome_obj.record_id = retrieved_record.id
+        genome_obj.id = retrieved_record.id
 
         # It appears that if id is not present, Biopython auto-populates
         # this attribute as "<unknown id>"
-        if genome_obj.record_id == "<unknown id>":
-            genome_obj.record_id = ""
+        if genome_obj.id == "<unknown id>":
+            genome_obj.id = ""
 
     except:
-        genome_obj.record_id = ""
+        genome_obj.id = ""
 
     try:
         # Since accessions are stored in a list, there may be more than
@@ -296,26 +296,26 @@ def parse_flat_file_data(genome_obj, \
 
 
     try:
-        genome_obj.record_description = retrieved_record.description
+        genome_obj.description = retrieved_record.description
 
         # It appears that if description is not present, Biopython
         # auto-populates this attribute as "<unknown description>"
-        if genome_obj.record_description == "<unknown description>":
-            genome_obj.record_description = ""
+        if genome_obj.description == "<unknown description>":
+            genome_obj.description = ""
 
     except:
-        genome_obj.record_description = ""
+        genome_obj.description = ""
 
     # Identifies host and phage name from description field.
-    genome_obj.parse_record_description()
+    genome_obj.parse_description()
 
     try:
-        genome_obj.record_source = retrieved_record.annotations['source']
+        genome_obj.source = retrieved_record.annotations['source']
     except:
-        genome_obj.record_source = ""
+        genome_obj.source = ""
 
     # Identifies host and phage name from record source field.
-    genome_obj.parse_record_source()
+    genome_obj.parse_source()
 
 
 
@@ -334,10 +334,10 @@ def parse_flat_file_data(genome_obj, \
                 authors_list.append(ref.authors)
 
         authors_string = ';'.join(authors_list)
-        genome_obj.record_authors = authors_string
+        genome_obj.authors = authors_string
 
     except:
-        genome_obj.record_authors = ""
+        genome_obj.authors = ""
 
 
 
@@ -350,9 +350,9 @@ def parse_flat_file_data(genome_obj, \
 
     try:
         date = retrieved_record.annotations["date"]
-        genome_obj.record_date = datetime.strptime(date,'%d-%b-%Y')
+        genome_obj.date = datetime.strptime(date,'%d-%b-%Y')
     except:
-        genome_obj.record_date = basic.convert_empty("", "empty_datetime_obj")
+        genome_obj.date = basic.convert_empty("", "empty_datetime_obj")
         # TODO throw an error if no date?
 
 
@@ -461,7 +461,7 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
 
 
 
-def create_parsed_flat_file(filename, id_field = "record_organism_name"):
+def create_parsed_flat_file(filename, id_field = "organism_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 
@@ -470,7 +470,7 @@ def create_parsed_flat_file(filename, id_field = "record_organism_name"):
     # If there is no parseable record, a genome object is still
     # created and populated with 'type and 'filename'.
     genome.type = "flat_file"
-    genome.set_record_filename(filename)
+    genome.set_filename(filename)
     valid = check_flat_file_type(filename)
 
     if valid:
@@ -489,7 +489,7 @@ def create_parsed_flat_file(filename, id_field = "record_organism_name"):
     return genome
 
 
-def create_parsed_flat_file_list(all_files, id_field = "record_organism_name"):
+def create_parsed_flat_file_list(all_files, id_field = "organism_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 

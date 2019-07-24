@@ -84,7 +84,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         input_status = "final"
         input_cluster = "A"
         input_subcluster = "A2"
-        input_date_last_modified = datetime.strptime('1/1/2000', '%m/%d/%Y')
+        input_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
         input_accession = "  ABC123.1  "
         input_annotation_author = "1"
         input_annotation_qc = "1"
@@ -96,7 +96,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                         input_sequence,
                         input_status,
                         input_cluster,
-                        input_date_last_modified,
+                        input_date,
                         input_accession,
                         input_subcluster,
                         input_annotation_author,
@@ -112,7 +112,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         output_status = "final"
         output_cluster = "A"
         output_subcluster = "A2"
-        output_date_last_modified = datetime.strptime('1/1/2000', '%m/%d/%Y')
+        output_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
         output_accession = "ABC123"
         output_annotation_author = "1"
         output_annotation_qc = "1"
@@ -135,8 +135,8 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.subcluster, output_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome1.date_last_modified, \
-                output_date_last_modified)
+            self.assertEqual(self.genome1.date, \
+                output_date)
         with self.subTest():
             self.assertEqual(self.genome1.accession, output_accession)
         with self.subTest():
@@ -163,7 +163,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         input_status = "final"
         input_cluster = "SINGLETON"
         input_subcluster = "NONE"
-        input_date_last_modified = None
+        input_date = None
         input_accession = None
         input_annotation_author = "1"
         input_annotation_qc = "1"
@@ -175,7 +175,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                         input_sequence,
                         input_status,
                         input_cluster,
-                        input_date_last_modified,
+                        input_date,
                         input_accession,
                         input_subcluster,
                         input_annotation_author,
@@ -191,7 +191,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         output_status = "final"
         output_cluster = "singleton"
         output_subcluster = ""
-        output_date_last_modified = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        output_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
         output_accession = ""
         output_annotation_author = "1"
         output_annotation_qc = "1"
@@ -214,8 +214,8 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.subcluster, output_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome1.date_last_modified, \
-                output_date_last_modified)
+            self.assertEqual(self.genome1.date, \
+                output_date)
         with self.subTest():
             self.assertEqual(self.genome1.accession, output_accession)
         with self.subTest():
@@ -546,7 +546,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.seq = "ATCG"
         self.genome1._length = 4
         self.genome1._gc = 0.5001
-        self.genome1.date_last_modified = '1/1/2000'
+        self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_qc = "1"
         self.genome1.annotation_author = "1"
@@ -576,7 +576,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.seq = "ATCG"
         self.genome1._length = 4
         self.genome1._gc = 0.5001
-        self.genome1.date_last_modified = '1/1/2000'
+        self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_qc = "1"
         self.genome1.annotation_author = "1"

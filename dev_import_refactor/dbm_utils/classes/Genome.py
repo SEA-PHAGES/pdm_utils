@@ -40,7 +40,7 @@ class Genome:
         # Common to Phamerator
         self.cluster_subcluster = "" # Combined cluster_subcluster data.
         self.annotation_status = "" # Final, Draft, Gbk version of genome data
-        self.date_last_modified = ""
+        self.date = ""
         self.annotation_author = "" # 1 (Hatfull), 0 (Genbank)
         self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
         self.retrieve_record = "" # 1 (auto update), 0 (do not auto update)
@@ -53,24 +53,15 @@ class Genome:
 
 
         # Common to GenBank-formatted flat file (NCBI) records
-
-        self.record_filename = "" # The file name from which the record is derived
-        self.record_description = ""
-        self.record_source = ""
-        self.record_organism = ""
-        self.record_authors = ""
+        self.filename = "" # The file name from which the record is derived
+        self.description = ""
+        self.source = ""
+        self.organism = ""
+        self.authors = ""
 
 
         # TODO necessary to retain this?
         self.record = "" # Holds parsed Biopython SeqRecord object.
-
-
-
-        # Duplicated fields from flat file that can probably be deleted.
-        self.record_name = ""
-        self.record_id = "" # TODO might not need this anymore
-        self.record_accession = ""
-        self.record_date = ""
 
 
 
@@ -108,12 +99,12 @@ class Genome:
         # Computed datafields: common to flat file (NCBI) records
 
 
-        self._record_description_name = ""
-        self._record_source_name = ""
-        self._record_organism_name = ""
-        self._record_description_host_genus = ""
-        self._record_source_host_genus = ""
-        self._record_organism_host_genus = ""
+        self._description_name = ""
+        self._source_name = ""
+        self._organism_name = ""
+        self._description_host_genus = ""
+        self._source_host_genus = ""
+        self._organism_host_genus = ""
 
 
         self._cds_processed_product_descriptions_tally = 0
@@ -127,13 +118,13 @@ class Genome:
 
 
 
-    def set_record_filename(self, value):
-        """Set the record_filename. Discard the path and file extension."""
+    def set_filename(self, value):
+        """Set the filename. Discard the path and file extension."""
 
         split_filepath = value.split('/')
-        record_filename = split_filepath[-1]
-        record_filename = record_filename.split('.')[0]
-        self.record_filename = record_filename
+        filename = split_filepath[-1]
+        filename = filename.split('.')[0]
+        self.filename = filename
 
 
     # Common to Phamerator
@@ -150,81 +141,71 @@ class Genome:
             self.set_id(self.name)
         elif value == "accession":
             self.set_id(self.accession)
-        elif value == "record_name":
-            self.set_id(self.record_name)
-        elif value == "record_id":
-            self.set_id(self.record_id)
-        elif value == "record_accession":
-            self.set_id(self.record_accession)
-        elif value == "record_description":
-            self.set_id(self.record_description)
-        elif value == "record_source":
-            self.set_id(self.record_source)
-        elif value == "record_organism":
-            self.set_id(self.record_organism)
-        elif value == "record_filename":
-            self.set_id(self.record_filename)
-        elif value == "record_description_name":
-            self.set_id(self._record_description_name)
-        elif value == "record_source_name":
-            self.set_id(self._record_source_name)
-        elif value == "record_organism_name":
-            self.set_id(self._record_organism_name)
+        elif value == "description":
+            self.set_id(self.description)
+        elif value == "source":
+            self.set_id(self.source)
+        elif value == "organism":
+            self.set_id(self.organism)
+        elif value == "filename":
+            self.set_id(self.filename)
+        elif value == "description_name":
+            self.set_id(self._description_name)
+        elif value == "source_name":
+            self.set_id(self._source_name)
+        elif value == "organism_name":
+            self.set_id(self._organism_name)
         else:
             self.set_id("")
 
     def set_host_genus_from_field(self, value):
         """Set the host_genus from a value parsed from the indicated field."""
 
-        if value == "record_name":
-            self.set_host(self.record_name)
-        elif value =="record_id":
-            self.set_host(self.record_id)
-        elif value =="record_accession":
-            self.set_host(self.record_accession)
-        elif value =="record_description":
-            self.set_host(self.record_description)
-        elif value =="record_source":
-            self.set_host(self.record_source)
-        elif value =="record_organism":
-            self.set_host(self.record_organism)
-        elif value =="record_filename":
-            self.set_host(self.record_filename)
-        elif value =="record_description_host_genus":
-            self.set_host(self._record_description_host_genus)
-        elif value =="record_source_host_genus":
-            self.set_host(self._record_source_host_genus)
-        elif value =="record_organism_host_genus":
-            self.set_host(self._record_organism_host_genus)
+        if value == "name":
+            self.set_host(self.name)
+        elif value =="description":
+            self.set_host(self.description)
+        elif value =="source":
+            self.set_host(self.source)
+        elif value =="organism":
+            self.set_host(self.organism)
+        elif value =="filename":
+            self.set_host(self.filename)
+        elif value =="description_host_genus":
+            self.set_host(self._description_host_genus)
+        elif value =="source_host_genus":
+            self.set_host(self._source_host_genus)
+        elif value =="organism_host_genus":
+            self.set_host(self._organism_host_genus)
         else:
             self.set_host("")
 
-    def parse_record_description(self):
+    def parse_description(self):
         """Retrieve the phage name and host_genus name from the record's
         'description' field."""
-        string = self.record_description
+        string = self.description
         name, host_genus = \
             basic.parse_names_from_record_field(string)
-        self._record_description_name = name
-        self._record_description_host_genus = host_genus
+        self._description_name = name
+        self._description_host_genus = host_genus
 
-    def parse_record_source(self):
+    def parse_source(self):
         """Retrieve the phage name and host_genus name from the record's
         'source' field."""
-        string = self.record_source
+        string = self.source
         name, host_genus = \
             basic.parse_names_from_record_field(string)
-        self._record_source_name = name
-        self._record_source_host_genus = host_genus
+        self._source_name = name
+        self._source_host_genus = host_genus
 
-    def parse_record_organism(self):
+    def parse_organism(self):
         """Retrieve the phage name and host_genus name from the record's
         'organism' field."""
-        string = self.record_organism
+        string = self.organism
         name, host_genus = \
             basic.parse_names_from_record_field(string)
-        self._record_organism_name = name
-        self._record_organism_host_genus = host_genus
+        self._organism_name = name
+        self._organism_host_genus = host_genus
 
 
     def set_host(self, value, format = "empty_string"):
@@ -387,12 +368,12 @@ class Genome:
         self.subcluster = basic.convert_empty(self.subcluster, format)
 
 
-    def set_date_last_modified(self, value, format = "empty_datetime_obj"):
-        """Set the date_last_modified field. Originally this field in
+    def set_date(self, value, format = "empty_datetime_obj"):
+        """Set the date field. Originally this field in
         Phamerator was not used, so for many genomes this field is empty.
         """
 
-        self.date_last_modified = basic.convert_empty(value, format)
+        self.date = basic.convert_empty(value, format)
 
 
     def set_annotation_author(self,value):
@@ -626,10 +607,10 @@ class Genome:
 
     # TODO implement.
     # TODO unit test.
-    def check_date_last_modified(self):
-        """Check that the date_last_modified is valid."""
+    def check_date(self):
+        """Check that the date is valid."""
 
-        # definition = "Check that the date_last_modified is valid."
+        # definition = "Check that the date is valid."
         # eval = Eval.Eval("GENOME", definition, result, status)
         # self.evaluations.append(eval)
         pass
@@ -680,19 +661,19 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_filename(self, filename_set, expect = False):
-        """Check that the record_filename is valid."""
+    def check_filename(self, filename_set, expect = False):
+        """Check that the filename is valid."""
 
-        value = basic.check_value_expected_in_set(self.record_filename,
+        value = basic.check_value_expected_in_set(self.filename,
                 filename_set, expect)
         if value:
-            result = "The record_filename is valid."
+            result = "The filename is valid."
             status = "correct"
         else:
-            result = "The record_filename is not valid."
+            result = "The filename is not valid."
             status = "error"
 
-        definition = "Check that the record_filename is valid."
+        definition = "Check that the filename is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
@@ -864,12 +845,12 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_record_description_name(self):
+    def check_description_name(self):
         """Check phage name spelling in the record description field."""
 
 
-        if self.id != self._record_description_name:
-            result = "The phage name in the record_description field " + \
+        if self.id != self._description_name:
+            result = "The phage name in the description field " + \
                         "does not match the id."
             status = "error"
 
@@ -883,12 +864,12 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_record_source_name(self):
+    def check_source_name(self):
         """Check phage name spelling in the record source field."""
 
 
-        if self.id != self._record_source_name:
-            result = "The phage name in the record_source field " + \
+        if self.id != self._source_name:
+            result = "The phage name in the source field " + \
                         "does not match the id."
             status = "error"
 
@@ -901,12 +882,12 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_record_organism_name(self):
+    def check_organism_name(self):
         """Check phage name spelling in the record organism field."""
 
 
-        if self.id != self._record_organism_name:
-            result = "The phage name in the record_organism field " + \
+        if self.id != self._organism_name:
+            result = "The phage name in the organism field " + \
                         "does not match the id."
             status = "error"
 
@@ -918,12 +899,12 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_description_host_genus(self):
+    def check_description_host_genus(self):
         """Check host_genus name spelling in the record description field."""
 
 
-        if self.host_genus != self._record_description_host_genus:
-            result = "The host_genus name in the record_description field " + \
+        if self.host_genus != self._description_host_genus:
+            result = "The host_genus name in the description field " + \
                         "does not match the host_genus."
             status = "error"
 
@@ -935,12 +916,12 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_source_host_genus(self):
+    def check_source_host_genus(self):
         """Check host_genus name spelling in the record source field."""
 
 
-        if self.host_genus != self._record_source_host_genus:
-            result = "The host_genus name in the record_source field " + \
+        if self.host_genus != self._source_host_genus:
+            result = "The host_genus name in the source field " + \
                         "does not match the host_genus."
             status = "error"
 
@@ -952,12 +933,12 @@ class Genome:
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_record_organism_host_genus(self):
+    def check_organism_host_genus(self):
         """Check host_genus name spelling in the record organism field."""
 
 
-        if self.host_genus != self._record_organism_host_genus:
-            result = "The host_genus name in the record_organism field " + \
+        if self.host_genus != self._organism_host_genus:
+            result = "The host_genus name in the organism field " + \
                         "does not match the host_genus."
             status = "error"
 
@@ -977,7 +958,7 @@ class Genome:
     # allowing a list of author names to be provided so that more
     # than one author can be searched for in the long author string
     # parsed from the record.
-    def check_author(self, expected_authors = ""):
+    def check_authors(self, expected_authors = ""):
         """Check author name spelling.
         When AnnotationAuthor is set to 1, it will expect to find the
         provided author in the list of authors.
@@ -985,7 +966,7 @@ class Genome:
         provided author in the list of authors."""
 
 
-        authors = self.record_authors.lower()
+        authors = self.authors.lower()
         pattern = re.compile(expected_authors.lower())
         search_result = pattern.search(authors)
 

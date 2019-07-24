@@ -254,19 +254,15 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.cluster = 8
         self.genome1.subcluster = 9
         self.genome1.cluster_subcluster = 10
-        self.genome1.date_last_modified = 12
+        self.genome1.date = 12
         self.genome1.annotation_author = 13
         self.genome1.annotation_qc = 14
         self.genome1.retrieve_record = 15
-        self.genome1.record_name = 16
-        self.genome1.record_id = 17
-        self.genome1.record_accession = 18
-        self.genome1.record_description = 19
-        self.genome1.record_source = 20
-        self.genome1.record_organism = 21
-        self.genome1.record_authors = 22
-        self.genome1.record_date = 23
-        self.genome1.record_filename = 24
+        self.genome1.description = 19
+        self.genome1.source = 20
+        self.genome1.organism = 21
+        self.genome1.authors = 22
+        self.genome1.filename = 24
         self.genome1.translation_table = 25
         self.genome1.record = 26
         self.genome1._length = 29
@@ -281,12 +277,12 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._trna_features_tally = 38
         self.genome1.source_features = 39
         self.genome1._source_features_tally = 40
-        self.genome1._record_description_name = 42
-        self.genome1._record_source_name = 43
-        self.genome1._record_organism_name = 44
-        self.genome1._record_description_host_genus = 45
-        self.genome1._record_source_host_genus = 46
-        self.genome1._record_organism_host_genus = 47
+        self.genome1._description_name = 42
+        self.genome1._source_name = 43
+        self.genome1._organism_name = 44
+        self.genome1._description_host_genus = 45
+        self.genome1._source_host_genus = 46
+        self.genome1._organism_host_genus = 47
         self.genome1._cds_processed_product_descriptions_tally = 48
         self.genome1._cds_processed_function_descriptions_tally = 49
         self.genome1._cds_processed_note_descriptions_tally = 50
@@ -320,7 +316,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.cluster_subcluster, 10)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.date_last_modified, 12)
+            self.assertEqual(self.genome_pair.genome2.date, 12)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.annotation_author, 13)
         with self.subTest():
@@ -328,23 +324,15 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.retrieve_record, 15)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_name, 16)
+            self.assertEqual(self.genome_pair.genome2.description, 19)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_id, 17)
+            self.assertEqual(self.genome_pair.genome2.source, 20)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_accession, 18)
+            self.assertEqual(self.genome_pair.genome2.organism, 21)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_description, 19)
+            self.assertEqual(self.genome_pair.genome2.authors, 22)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_source, 20)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_organism, 21)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_authors, 22)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_date, 23)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record_filename, 24)
+            self.assertEqual(self.genome_pair.genome2.filename, 24)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.translation_table, 25)
         with self.subTest():
@@ -377,22 +365,22 @@ class TestGenomePairClass(unittest.TestCase):
             self.assertEqual(self.genome_pair.genome2._source_features_tally, 40)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_description_name, 42)
+                self.genome_pair.genome2._description_name, 42)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_source_name, 43)
+                self.genome_pair.genome2._source_name, 43)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_organism_name, 44)
+                self.genome_pair.genome2._organism_name, 44)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_description_host_genus, 45)
+                self.genome_pair.genome2._description_host_genus, 45)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_source_host_genus, 46)
+                self.genome_pair.genome2._source_host_genus, 46)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._record_organism_host_genus, 47)
+                self.genome_pair.genome2._organism_host_genus, 47)
         with self.subTest():
             self.assertEqual(
                 self.genome_pair.genome2._cds_processed_product_descriptions_tally,

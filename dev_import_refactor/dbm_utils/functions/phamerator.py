@@ -31,7 +31,7 @@ def parse_phamerator_data(genome, data_tuple):
     genome.annotation_status = data_tuple[4]
     genome.set_cluster(data_tuple[5])
     genome.set_subcluster(data_tuple[8])
-    genome.set_date_last_modified(data_tuple[6])
+    genome.set_date(data_tuple[6])
     genome.set_accession(data_tuple[7])
     genome.annotation_author = str(data_tuple[9])
     genome.annotation_qc = str(data_tuple[10])
@@ -284,7 +284,7 @@ def create_genome_insert_statement(genome):
         genome._length, \
         genome._gc, \
         genome.annotation_status, \
-        genome.date_last_modified, \
+        genome.date, \
         genome.retrieve_record, \
         genome.annotation_qc, \
         genome.annotation_author)

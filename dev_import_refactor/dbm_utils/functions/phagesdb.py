@@ -186,12 +186,12 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
     # Fasta file URL
     fastafile_url = parse_phagesdb_filename(data_dict)
-    genome_obj.record_filename = fastafile_url
+    genome_obj.filename = fastafile_url
 
 
     # Fasta file record
-    if genome_obj.record_filename != "":
-        fasta_file = retrieve_phagesdb_fasta(genome_obj.record_filename)
+    if genome_obj.filename != "":
+        fasta_file = retrieve_phagesdb_fasta(genome_obj.filename)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
@@ -202,8 +202,8 @@ def parse_phagesdb_data(genome_obj,data_dict):
             fasta_record = misc.create_fasta_seqrecord(fasta_data[0], fasta_data[1])
             genome_obj.record = fasta_record
             genome_obj.seq = fasta_record.seq
-            genome_obj.record_description = fasta_record.description
-            genome_obj.parse_record_description()
+            genome_obj.description = fasta_record.description
+            genome_obj.parse_description()
 
     genome_obj.type = "phagesdb"
 

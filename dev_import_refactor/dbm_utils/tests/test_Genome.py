@@ -32,11 +32,11 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_record_filename_1(self):
+    def test_set_filename_1(self):
         """Confirm file path is split appropriately."""
         filepath = "/path/to/folder/Trixie.gbk"
-        self.genome.set_record_filename(filepath)
-        self.assertEqual(self.genome.record_filename, "Trixie")
+        self.genome.set_filename(filepath)
+        self.assertEqual(self.genome.filename, "Trixie")
 
 
 
@@ -222,67 +222,49 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.set_id_from_field("accession")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_3(self):
-        """Check that the id is set from the record_name field."""
-        self.genome.record_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_name")
-        self.assertEqual(self.genome.id, "Trixie")
-
-    def test_set_id_from_field_4(self):
-        """Check that the id is set from the record_id field."""
-        self.genome.record_id = "Trixie_Draft"
-        self.genome.set_id_from_field("record_id")
-        self.assertEqual(self.genome.id, "Trixie")
-
-    def test_set_id_from_field_5(self):
-        """Check that the id is set from the record_accession field."""
-        self.genome.record_accession = "Trixie_Draft"
-        self.genome.set_id_from_field("record_accession")
-        self.assertEqual(self.genome.id, "Trixie")
-
     def test_set_id_from_field_6(self):
-        """Check that the id is set from the record_description field."""
-        self.genome.record_description = "Trixie_Draft"
-        self.genome.set_id_from_field("record_description")
+        """Check that the id is set from the description field."""
+        self.genome.description = "Trixie_Draft"
+        self.genome.set_id_from_field("description")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_7(self):
-        """Check that the id is set from the record_source field."""
-        self.genome.record_source = "Trixie_Draft"
-        self.genome.set_id_from_field("record_source")
+        """Check that the id is set from the source field."""
+        self.genome.source = "Trixie_Draft"
+        self.genome.set_id_from_field("source")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_8(self):
-        """Check that the id is set from the record_organism field."""
-        self.genome.record_organism = "Trixie_Draft"
-        self.genome.set_id_from_field("record_organism")
+        """Check that the id is set from the organism field."""
+        self.genome.organism = "Trixie_Draft"
+        self.genome.set_id_from_field("organism")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_9(self):
-        """Check that the id is set from the record_filename field."""
-        self.genome.record_filename = "Trixie_Draft"
-        self.genome.set_id_from_field("record_filename")
+        """Check that the id is set from the filename field."""
+        self.genome.filename = "Trixie_Draft"
+        self.genome.set_id_from_field("filename")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_10(self):
         """Check that the id is set from the
-        record_description_name field."""
-        self.genome._record_description_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_description_name")
+        description_name field."""
+        self.genome._description_name = "Trixie_Draft"
+        self.genome.set_id_from_field("description_name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_11(self):
         """Check that the id is set from the
-        record_source_name field."""
-        self.genome._record_source_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_source_name")
+        source_name field."""
+        self.genome._source_name = "Trixie_Draft"
+        self.genome.set_id_from_field("source_name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_12(self):
         """Check that the id is set from the
-        record_organism_name field."""
-        self.genome._record_organism_name = "Trixie_Draft"
-        self.genome.set_id_from_field("record_organism_name")
+        organism_name field."""
+        self.genome._organism_name = "Trixie_Draft"
+        self.genome.set_id_from_field("organism_name")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_from_field_13(self):
@@ -294,66 +276,54 @@ class TestGenomeClass(unittest.TestCase):
 
 
     def test_set_host_genus_from_field_1(self):
-        """Check that the host_genus is set from the record_name field."""
-        self.genome.record_name = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_name")
-        self.assertEqual(self.genome.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_from_field_2(self):
-        """Check that the host_genus is set from the record_id field."""
-        self.genome.record_id = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_id")
-        self.assertEqual(self.genome.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_from_field_3(self):
-        """Check that the host_genus is set from the record_accession field."""
-        self.genome.record_accession = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_accession")
+        """Check that the host_genus is set from the name field."""
+        self.genome.name = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("name")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_4(self):
-        """Check that the host_genus is set from the record_description field."""
-        self.genome.record_description = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_description")
+        """Check that the host_genus is set from the description field."""
+        self.genome.description = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("description")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_5(self):
-        """Check that the host_genus is set from the record_source field."""
-        self.genome.record_source = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_source")
+        """Check that the host_genus is set from the source field."""
+        self.genome.source = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("source")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_6(self):
-        """Check that the host_genus is set from the record_organism field."""
-        self.genome.record_organism = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_organism")
+        """Check that the host_genus is set from the organism field."""
+        self.genome.organism = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("organism")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_7(self):
-        """Check that the host_genus is set from the record_filename field."""
-        self.genome.record_filename = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_filename")
+        """Check that the host_genus is set from the filename field."""
+        self.genome.filename = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("filename")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_8(self):
         """Check that the host_genus is set from the
-        record_description_host_genus field."""
-        self.genome._record_description_host_genus = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_description_host_genus")
+        description_host_genus field."""
+        self.genome._description_host_genus = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("description_host_genus")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_9(self):
         """Check that the host_genus is set from the
-        record_source_host_genus field."""
-        self.genome._record_source_host_genus = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_source_host_genus")
+        source_host_genus field."""
+        self.genome._source_host_genus = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("source_host_genus")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_10(self):
         """Check that the host_genus is set from the
-        record_organism_host_genus field."""
-        self.genome._record_organism_host_genus = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("record_organism_host_genus")
+        organism_host_genus field."""
+        self.genome._organism_host_genus = "Mycobacterium smegmatis"
+        self.genome.set_host_genus_from_field("organism_host_genus")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
     def test_set_host_genus_from_field_11(self):
@@ -471,48 +441,48 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_date_last_modified_1(self):
-        """Check that date_last_modified is set appropriately."""
-        date_last_modified = datetime.strptime('1/1/1900', '%m/%d/%Y')
-        self.genome.set_date_last_modified(date_last_modified, "empty_string")
-        self.assertEqual(self.genome.date_last_modified, date_last_modified)
+    def test_set_date_1(self):
+        """Check that date is set appropriately."""
+        date = datetime.strptime('1/1/1900', '%m/%d/%Y')
+        self.genome.set_date(date, "empty_string")
+        self.assertEqual(self.genome.date, date)
 
-    def test_set_date_last_modified_2(self):
-        """Check that a None date_last_modified is set appropriately
+    def test_set_date_2(self):
+        """Check that a None date is set appropriately
         from None."""
-        date_last_modified = None
-        self.genome.set_date_last_modified(date_last_modified, "empty_string")
-        self.assertEqual(self.genome.date_last_modified, "")
+        date = None
+        self.genome.set_date(date, "empty_string")
+        self.assertEqual(self.genome.date, "")
 
-    def test_set_date_last_modified_3(self):
-        """Check that filled date_last_modified is set appropriately
+    def test_set_date_3(self):
+        """Check that filled date is set appropriately
         from None."""
-        date_last_modified1 = None
-        date_last_modified2 = datetime.strptime('1/1/0001', '%m/%d/%Y')
-        self.genome.set_date_last_modified(date_last_modified1, \
+        date1 = None
+        date2 = datetime.strptime('1/1/0001', '%m/%d/%Y')
+        self.genome.set_date(date1, \
                                             "empty_datetime_obj")
-        self.assertEqual(self.genome.date_last_modified, date_last_modified2)
+        self.assertEqual(self.genome.date, date2)
 
-    def test_set_date_last_modified_4(self):
-        """Check that None date_last_modified is set appropriately
+    def test_set_date_4(self):
+        """Check that None date is set appropriately
         from None."""
-        date_last_modified = None
-        self.genome.set_date_last_modified(date_last_modified, "none_object")
-        self.assertIsNone(self.genome.date_last_modified)
+        date = None
+        self.genome.set_date(date, "none_object")
+        self.assertIsNone(self.genome.date)
 
-    def test_set_date_last_modified_5(self):
-        """Check that None date_last_modified is set appropriately
+    def test_set_date_5(self):
+        """Check that None date is set appropriately
         from empty string."""
-        date_last_modified = ""
-        self.genome.set_date_last_modified(date_last_modified, "none_object")
-        self.assertIsNone(self.genome.date_last_modified)
+        date = ""
+        self.genome.set_date(date, "none_object")
+        self.assertIsNone(self.genome.date)
 
-    def test_set_date_last_modified_6(self):
-        """Check that empty string date_last_modified is set appropriately from
+    def test_set_date_6(self):
+        """Check that empty string date is set appropriately from
         incorrect strategy."""
-        date_last_modified = None
-        self.genome.set_date_last_modified(date_last_modified, "invalid")
-        self.assertEqual(self.genome.date_last_modified, None)
+        date = None
+        self.genome.set_date(date, "invalid")
+        self.assertEqual(self.genome.date, None)
 
 
 
@@ -861,138 +831,138 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_record_description_name_1(self):
+    def test_check_description_name_1(self):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
-        self.genome._record_description_name = "Trixie"
-        self.genome.check_record_description_name()
+        self.genome._description_name = "Trixie"
+        self.genome.check_description_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_description_name_2(self):
+    def test_check_description_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
-        self.genome._record_description_name = "Trixie"
-        self.genome.check_record_description_name()
+        self.genome._description_name = "Trixie"
+        self.genome.check_description_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_source_name_1(self):
+    def test_check_source_name_1(self):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
-        self.genome._record_source_name = "Trixie"
-        self.genome.check_record_source_name()
+        self.genome._source_name = "Trixie"
+        self.genome.check_source_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_source_name_2(self):
+    def test_check_source_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
-        self.genome._record_source_name = "Trixie"
-        self.genome.check_record_source_name()
+        self.genome._source_name = "Trixie"
+        self.genome.check_source_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_organism_name_1(self):
+    def test_check_organism_name_1(self):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
-        self.genome._record_organism_name = "Trixie"
-        self.genome.check_record_organism_name()
+        self.genome._organism_name = "Trixie"
+        self.genome.check_organism_name()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_organism_name_2(self):
+    def test_check_organism_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
-        self.genome._record_organism_name = "Trixie"
-        self.genome.check_record_organism_name()
+        self.genome._organism_name = "Trixie"
+        self.genome.check_organism_name()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_description_host_genus_1(self):
+    def test_check_description_host_genus_1(self):
         """Check that no warning is produced."""
         self.genome.host_genus = "Mycobacterium"
-        self.genome._record_description_host_genus = "Mycobacterium"
-        self.genome.check_record_description_host_genus()
+        self.genome._description_host_genus = "Mycobacterium"
+        self.genome.check_description_host_genus()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_description_host_genus_2(self):
+    def test_check_description_host_genus_2(self):
         """Check that a warning is produced."""
         self.genome.host_genus = "Gordonia"
-        self.genome._record_description_host_genus = "Mycobacterium"
-        self.genome.check_record_description_host_genus()
+        self.genome._description_host_genus = "Mycobacterium"
+        self.genome.check_description_host_genus()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_source_host_genus_1(self):
+    def test_check_source_host_genus_1(self):
         """Check that no warning is produced."""
         self.genome.host_genus = "Mycobacterium"
-        self.genome._record_source_host_genus = "Mycobacterium"
-        self.genome.check_record_source_host_genus()
+        self.genome._source_host_genus = "Mycobacterium"
+        self.genome.check_source_host_genus()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_source_host_genus_2(self):
+    def test_check_source_host_genus_2(self):
         """Check that a warning is produced."""
         self.genome.host_genus = "Gordonia"
-        self.genome._record_source_host_genus = "Mycobacterium"
-        self.genome.check_record_source_host_genus()
+        self.genome._source_host_genus = "Mycobacterium"
+        self.genome.check_source_host_genus()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_record_organism_host_genus_1(self):
+    def test_check_organism_host_genus_1(self):
         """Check that no warning is produced."""
         self.genome.host_genus = "Mycobacterium"
-        self.genome._record_organism_host_genus = "Mycobacterium"
-        self.genome.check_record_organism_host_genus()
+        self.genome._organism_host_genus = "Mycobacterium"
+        self.genome.check_organism_host_genus()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_organism_host_genus_2(self):
+    def test_check_organism_host_genus_2(self):
         """Check that a warning is produced."""
         self.genome.host_genus = "Gordonia"
-        self.genome._record_organism_host_genus = "Mycobacterium"
-        self.genome.check_record_organism_host_genus()
+        self.genome._organism_host_genus = "Mycobacterium"
+        self.genome.check_organism_host_genus()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
 
-    def test_check_author_1(self):
+    def test_check_authors_1(self):
         """Check that no warning is produced when author is expected
         and present."""
-        self.genome.record_authors = "abcd; efgh; hatfull; xyz"
+        self.genome.authors = "abcd; efgh; hatfull; xyz"
         self.genome.annotation_author = 1
-        self.genome.check_author("Hatfull")
+        self.genome.check_authors("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_author_2(self):
+    def test_check_authors_2(self):
         """Check that no warning is produced when author is not expected
         and not present."""
-        self.genome.record_authors = "abcd; efgh; xyz"
+        self.genome.authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 0
-        self.genome.check_author("Hatfull")
+        self.genome.check_authors("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_author_3(self):
+    def test_check_authors_3(self):
         """Check that warning is produced when author is expected
         and not present."""
-        self.genome.record_authors = "abcd; efgh; xyz"
+        self.genome.authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 1
-        self.genome.check_author("Hatfull")
+        self.genome.check_authors("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_author_4(self):
+    def test_check_authors_4(self):
         """Check that warning is produced when author is not expected
         and present."""
-        self.genome.record_authors = "abcd; efgh; hatfull; xyz"
+        self.genome.authors = "abcd; efgh; hatfull; xyz"
         self.genome.annotation_author = 0
-        self.genome.check_author("Hatfull")
+        self.genome.check_authors("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1472,36 +1442,36 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_record_filename_1(self):
-        """Verify that no error is produced when the record_filename
+    def test_check_filename_1(self):
+        """Verify that no error is produced when the filename
         is in the filename_set and is expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.record_filename = "Trixie"
-        self.genome.check_record_filename(value_set, True)
+        self.genome.filename = "Trixie"
+        self.genome.check_filename(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_filename_2(self):
-        """Verify that an error is produced when the record_filename
+    def test_check_filename_2(self):
+        """Verify that an error is produced when the filename
         is not in the filename_set and is expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.record_filename = "L5"
-        self.genome.check_record_filename(value_set, True)
+        self.genome.filename = "L5"
+        self.genome.check_filename(value_set, True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_record_filename_3(self):
-        """Verify that no error is produced when the record_filename
+    def test_check_filename_3(self):
+        """Verify that no error is produced when the filename
         is not in the filename_set and is not expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.record_filename = "L5"
-        self.genome.check_record_filename(value_set, False)
+        self.genome.filename = "L5"
+        self.genome.check_filename(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_record_filename_4(self):
-        """Verify that an error is produced when the record_filename
+    def test_check_filename_4(self):
+        """Verify that an error is produced when the filename
         is in the filename_set and is not expected to be in the set."""
         value_set = set(["Trixie"])
-        self.genome.record_filename = "Trixie"
-        self.genome.check_record_filename(value_set, False)
+        self.genome.filename = "Trixie"
+        self.genome.check_filename(value_set, False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1544,89 +1514,89 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_parse_record_description_1(self):
+    def test_parse_description_1(self):
         """Verify empty string is parsed correctly."""
-        self.genome.record_description = ""
-        self.genome.parse_record_description()
+        self.genome.description = ""
+        self.genome.parse_description()
         expected_phage = ""
         expected_host = ""
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_description_name, expected_phage)
+                self.genome._description_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_description_host_genus, expected_host)
+                self.genome._description_host_genus, expected_host)
 
-    def test_parse_record_description_2(self):
+    def test_parse_description_2(self):
         """Verify string is parsed correctly."""
-        self.genome.record_description = "asdf Mycobacterium phage Trixie."
-        self.genome.parse_record_description()
+        self.genome.description = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_description()
         expected_phage = "Trixie"
         expected_host = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_description_name, expected_phage)
+                self.genome._description_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_description_host_genus, expected_host)
+                self.genome._description_host_genus, expected_host)
 
 
 
 
-    def test_parse_record_source_1(self):
+    def test_parse_source_1(self):
         """Verify empty string is parsed correctly."""
-        self.genome.record_source = ""
-        self.genome.parse_record_source()
+        self.genome.source = ""
+        self.genome.parse_source()
         expected_phage = ""
         expected_host = ""
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_source_name, expected_phage)
+                self.genome._source_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_source_host_genus, expected_host)
+                self.genome._source_host_genus, expected_host)
 
-    def test_parse_record_source_2(self):
+    def test_parse_source_2(self):
         """Verify string is parsed correctly."""
-        self.genome.record_source = "asdf Mycobacterium phage Trixie."
-        self.genome.parse_record_source()
+        self.genome.source = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_source()
         expected_phage = "Trixie"
         expected_host = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_source_name, expected_phage)
+                self.genome._source_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_source_host_genus, expected_host)
+                self.genome._source_host_genus, expected_host)
 
 
 
 
-    def test_parse_record_organism_1(self):
+    def test_parse_organism_1(self):
         """Verify empty string is parsed correctly."""
-        self.genome.record_organism = ""
-        self.genome.parse_record_organism()
+        self.genome.organism = ""
+        self.genome.parse_organism()
         expected_phage = ""
         expected_host = ""
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_organism_name, expected_phage)
+                self.genome._organism_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_organism_host_genus, expected_host)
+                self.genome._organism_host_genus, expected_host)
 
-    def test_parse_record_organism_2(self):
+    def test_parse_organism_2(self):
         """Verify string is parsed correctly."""
-        self.genome.record_organism = "asdf Mycobacterium phage Trixie."
-        self.genome.parse_record_organism()
+        self.genome.organism = "asdf Mycobacterium phage Trixie."
+        self.genome.parse_organism()
         expected_phage = "Trixie"
         expected_host = "Mycobacterium"
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_organism_name, expected_phage)
+                self.genome._organism_name, expected_phage)
         with self.subTest():
             self.assertEqual(\
-                self.genome._record_organism_host_genus, expected_host)
+                self.genome._organism_host_genus, expected_host)
 
 
 

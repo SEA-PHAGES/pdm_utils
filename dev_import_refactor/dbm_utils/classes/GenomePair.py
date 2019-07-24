@@ -108,32 +108,24 @@ class GenomePair:
                 second.subcluster = first.subcluster
             if (second.cluster_subcluster == keyword or keyword is None):
                 second.cluster_subcluster = first.cluster_subcluster
-            if (second.date_last_modified == keyword or keyword is None):
-                second.date_last_modified = first.date_last_modified
+            if (second.date == keyword or keyword is None):
+                second.date = first.date
             if (second.annotation_author == keyword or keyword is None):
                 second.annotation_author = first.annotation_author
             if (second.annotation_qc == keyword or keyword is None):
                 second.annotation_qc = first.annotation_qc
             if (second.retrieve_record == keyword or keyword is None):
                 second.retrieve_record = first.retrieve_record
-            if (second.record_name == keyword or keyword is None):
-                second.record_name = first.record_name
-            if (second.record_id == keyword or keyword is None):
-                second.record_id = first.record_id
-            if (second.record_accession == keyword or keyword is None):
-                second.record_accession = first.record_accession
-            if (second.record_description == keyword or keyword is None):
-                second.record_description = first.record_description
-            if (second.record_source == keyword or keyword is None):
-                second.record_source = first.record_source
-            if (second.record_organism == keyword or keyword is None):
-                second.record_organism = first.record_organism
-            if (second.record_authors == keyword or keyword is None):
-                second.record_authors = first.record_authors
-            if (second.record_date == keyword or keyword is None):
-                second.record_date = first.record_date
-            if (second.record_filename == keyword or keyword is None):
-                second.record_filename = first.record_filename
+            if (second.description == keyword or keyword is None):
+                second.description = first.description
+            if (second.source == keyword or keyword is None):
+                second.source = first.source
+            if (second.organism == keyword or keyword is None):
+                second.organism = first.organism
+            if (second.authors == keyword or keyword is None):
+                second.authors = first.authors
+            if (second.filename == keyword or keyword is None):
+                second.filename = first.filename
             if (second.translation_table == keyword or keyword is None):
                 second.translation_table = first.translation_table
             if (second.record == keyword or keyword is None):
@@ -166,38 +158,38 @@ class GenomePair:
                 second.source_features = first.source_features
             if (second._source_features_tally == keyword or keyword is None):
                 second._source_features_tally = first._source_features_tally
-            if (second._record_description_name == keyword \
+            if (second._description_name == keyword \
                 or keyword is None):
 
-                second._record_description_name = \
-                    first._record_description_name
+                second._description_name = \
+                    first._description_name
 
-            if (second._record_source_name == keyword \
+            if (second._source_name == keyword \
                 or keyword is None):
 
-                second._record_source_name = \
-                    first._record_source_name
+                second._source_name = \
+                    first._source_name
 
-            if (second._record_organism_name == keyword \
+            if (second._organism_name == keyword \
                 or keyword is None):
 
-                second._record_organism_name = \
-                    first._record_organism_name
+                second._organism_name = \
+                    first._organism_name
 
-            if (second._record_description_host_genus == keyword \
+            if (second._description_host_genus == keyword \
                 or keyword is None):
 
-                second._record_description_host_genus = \
-                    first._record_description_host_genus
+                second._description_host_genus = \
+                    first._description_host_genus
 
-            if (second._record_source_host_genus == keyword or keyword is None):
-                second._record_source_host_genus = \
-                    first._record_source_host_genus
-            if (second._record_organism_host_genus == keyword \
+            if (second._source_host_genus == keyword or keyword is None):
+                second._source_host_genus = \
+                    first._source_host_genus
+            if (second._organism_host_genus == keyword \
                 or keyword is None):
 
-                second._record_organism_host_genus = \
-                    first._record_organism_host_genus
+                second._organism_host_genus = \
+                    first._organism_host_genus
 
             if (second._cds_processed_product_descriptions_tally == keyword \
                 or keyword is None):

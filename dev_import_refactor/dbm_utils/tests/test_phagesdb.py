@@ -243,7 +243,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, url)
+            self.assertEqual(self.genome.filename, url)
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
@@ -251,7 +251,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.seq[-8:], "GTCGGTTA")
         with self.subTest():
-            self.assertEqual(self.genome.record_description, description)
+            self.assertEqual(self.genome.description, description)
         with self.subTest():
             self.assertEqual(self.genome.type, "phagesdb")
         with self.subTest():
@@ -299,7 +299,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
@@ -353,7 +353,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
@@ -407,7 +407,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
@@ -461,7 +461,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
@@ -516,7 +516,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
@@ -569,7 +569,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertEqual(self.genome.record, "")
         with self.subTest():
@@ -620,7 +620,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertEqual(self.genome.record, "")
         with self.subTest():
@@ -671,7 +671,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.record_filename, expected_filename)
+            self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
             self.assertEqual(self.genome.record, "")
         with self.subTest():
