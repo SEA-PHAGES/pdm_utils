@@ -966,37 +966,33 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_author_1(self):
         """Check that no warning is produced when author is expected
         and present."""
-        self.genome.author = "Hatfull"
         self.genome.record_authors = "abcd; efgh; hatfull; xyz"
         self.genome.annotation_author = 1
-        self.genome.check_author()
+        self.genome.check_author("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_author_2(self):
         """Check that no warning is produced when author is not expected
         and not present."""
-        self.genome.author = "Hatfull"
         self.genome.record_authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 0
-        self.genome.check_author()
+        self.genome.check_author("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_author_3(self):
         """Check that warning is produced when author is expected
         and not present."""
-        self.genome.author = "Hatfull"
         self.genome.record_authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 1
-        self.genome.check_author()
+        self.genome.check_author("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_author_4(self):
         """Check that warning is produced when author is not expected
         and present."""
-        self.genome.author = "Hatfull"
         self.genome.record_authors = "abcd; efgh; hatfull; xyz"
         self.genome.annotation_author = 0
-        self.genome.check_author()
+        self.genome.check_author("Hatfull")
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 

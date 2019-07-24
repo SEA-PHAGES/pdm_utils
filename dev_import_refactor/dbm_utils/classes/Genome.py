@@ -34,7 +34,6 @@ class Genome:
         # Common to all genomes
         self.host_genus = ""
         self.accession = ""
-        self.author = "" # TODO do I need this in addition to annotation_author?
 
 
 
@@ -55,22 +54,23 @@ class Genome:
 
         # Common to GenBank-formatted flat file (NCBI) records
 
+        self.record_filename = "" # The file name from which the record is derived
+        self.record_description = ""
+        self.record_source = ""
+        self.record_organism = ""
+        self.record_authors = ""
+
+
         # TODO necessary to retain this?
         self.record = "" # Holds parsed Biopython SeqRecord object.
 
 
 
-        self.record_filename = "" # The file name from which the record is derived
+        # Duplicated fields from flat file that can probably be deleted.
         self.record_name = ""
         self.record_id = "" # TODO might not need this anymore
         self.record_accession = ""
-        self.record_description = ""
-        self.record_source = ""
-        self.record_organism = ""
-        self.record_authors = ""
         self.record_date = ""
-
-
 
 
 
@@ -977,7 +977,7 @@ class Genome:
     # allowing a list of author names to be provided so that more
     # than one author can be searched for in the long author string
     # parsed from the record.
-    def check_author(self):
+    def check_author(self, expected_authors = ""):
         """Check author name spelling.
         When AnnotationAuthor is set to 1, it will expect to find the
         provided author in the list of authors.
@@ -986,7 +986,7 @@ class Genome:
 
 
         authors = self.record_authors.lower()
-        pattern = re.compile(self.author.lower())
+        pattern = re.compile(expected_authors.lower())
         search_result = pattern.search(authors)
 
         if self.annotation_author == 1 and search_result == None:
@@ -1006,6 +1006,12 @@ class Genome:
         definition = "Check authorship."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
+
+
+
+
+
+
 
 
     def check_cds_feature_tally(self):

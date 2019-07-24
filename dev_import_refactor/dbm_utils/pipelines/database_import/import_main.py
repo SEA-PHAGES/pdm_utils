@@ -67,7 +67,8 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
 
 
 
-    # If there is at least one file to process, retrieve data from phagesdb.
+    # If there is at least one file to process, retrieve data from phagesdb to
+    # create sets of valid host genera, clusters, and subclusters.
     if len(files_in_folder) > 0:
         phagesdb_host_genera_set = phagesdb.create_host_genus_set()
 

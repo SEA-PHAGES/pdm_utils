@@ -182,7 +182,6 @@ except:
 
 
 
-import prepare_tickets
 from functions import phamerator
 from functions import flat_files
 from functions import tickets

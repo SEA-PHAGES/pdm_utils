@@ -459,69 +459,37 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
         genome1.check_empty_fields()
 
 
-# # TODO now that evals are not generated within functions, this
-# # function is probably not needed.
-# def parse_flat_file(filepath):
-#     """Determine whether the file contains a single GenBank-formatted record
-#     that can be parsed by Biopython SeqIO.
-#     Files may contain 0, 1, or >1 parseable records.
-#     When SeqIO parses files, if there are 0 Genbank-formatted records,
-#     it does not throw an error, but simply moves on.
-#     Only when there is one record in the file is the parsed data returned.
-#     It is not clear how often there multiple records are present in
-#     non-SEA-PHAGES GenBank records, but it is a good idea to verify
-#     there is only one record per file before proceeding."""
-#
-#
-#     records = []
-#     record = None
-#
-#     # If Biopython is unable to parse the file, an error is encountered.
-#     try:
-#         records = list(SeqIO.parse(filepath, "genbank"))
-#     except:
-#         records = None
-#
-#     if records is None:
-#
-#         # result = "Biopython is unable to parse this file, " + \
-#         #     "so it will not be processed."
-#         # status = "error"
-#         pass
-#
-#     elif len(records) == 0:
-#
-#         # result = "Biopython did not find any GenBank-formatted records, " + \
-#         #     "so it will not be processed."
-#         # status = "error"
-#         pass
-#
-#     elif len(records) > 1:
-#
-#         # result = "Biopython found multiple records, " + \
-#         #     "so it will not be processed."
-#         # status = "error"
-#         pass
-#
-#     else:
-#         # result = "Record was successfully parsed."
-#         # status = "correct"
-#         # record = records[0]
-#         pass
-#
-#
-#     # TODO add an eval id?
-#     # definition = "Parse the flat file record."
-#     # eval = Eval.Eval(id = "", \
-#     #                 definition = definition, \
-#     #                 result = result, \
-#     #                 status = status)
-#
-#     return records
 
 
-def create_parsed_flat_file_list(all_files,
-                                phage_id_field = "record_organism_name"):
+def create_parsed_flat_file(filename, id_field = "record_organism_name"):
+    """Create a list of genome objects containing data parsed from
+    flat files."""
+
+    genome = Genome.Genome()
+
+    # If there is no parseable record, a genome object is still
+    # created and populated with 'type and 'filename'.
+    genome.type = "flat_file"
+    genome.set_record_filename(filename)
+    valid = check_flat_file_type(filename)
+
+    if valid:
+
+        try:
+            records = list(SeqIO.parse(filename, "genbank"))
+        except:
+            records = []
+
+        if len(records) == 1:
+            parse_flat_file_data(genome, records[0], filename, id_field)
+        else:
+            pass
+    else:
+        pass
+    return genome
+
+
+def create_parsed_flat_file_list(all_files, id_field = "record_organism_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 
@@ -531,23 +499,15 @@ def create_parsed_flat_file_list(all_files,
 
     for filename in all_files:
 
-        if check_flat_file_type(filename):
+        genome = create_parsed_flat_file(filename, id_field = id_field)
+        genomes.append(genome)
 
-            try:
-                records = list(SeqIO.parse(filename, "genbank"))
-            except:
-                records = []
+        if genome.id == "":
 
-            if len(records) == 1:
-                genome_obj = Genome.Genome()
-                parse_flat_file_data(
-                    genome_obj, records[0], filename, phage_id_field)
-                valid_files.append(filename)
-                genomes.append(genome_obj)
-            else:
-                failed_files.append(filename)
-        else:
+            # If the file was not parsed, the id will remain empty.
             failed_files.append(filename)
+        else:
+            valid_files.append(filename)
 
     return (genomes, valid_files, failed_files)
 
@@ -562,34 +522,6 @@ def create_parsed_flat_file_list(all_files,
 
 
 
-# TODO unit test.
-def create_parsed_flat_file(filename,
-                                phage_id_field = "record_organism_name"):
-    """Create a list of genome objects containing data parsed from
-    flat files."""
-
-    genome_obj = Genome.Genome()
-
-    if check_flat_file_type(filename):
-
-        try:
-            records = list(SeqIO.parse(filename, "genbank"))
-        except:
-            records = []
-
-        if len(records) == 1:
-            parse_flat_file_data(
-                genome_obj, records[0], filename, phage_id_field)
-            genomes.append(genome_obj)
-        else:
-
-            # If there is no parseable record, a genome object is still
-            # created and populated with 'type and 'filename'.
-            genome_obj.type = "flat_file"
-            genome_obj.set_record_filename(filename)
-    else:
-        pass
-    return genome
 
 
 
