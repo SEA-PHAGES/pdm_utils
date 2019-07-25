@@ -126,7 +126,7 @@ def create_data_sets(genome_dict):
 # TODO unit test.
 def create_seq_set(sql_obj):
     """Create set of genome sequences currently in PhameratorDB."""
-    # Query MySQL for all unique host genera.
+    # Query MySQL for all unique nucleotide sequences.
     # return a set of sequences
     pass
 
@@ -134,9 +134,12 @@ def create_seq_set(sql_obj):
 
 # TODO implement.
 # TODO unit test.
-def create_phage_id_set(sql_obj):
+def create_phage_id_set():
     """Create set of phage_ids currently in PhameratorDB."""
-    # Query MySQL for all unique host genera.
+
+    statement = "SELECT PhageID FROM phage"
+
+    # Query MySQL for all unique phage_ids.
     # return a set of phage_ids
     pass
 
@@ -392,6 +395,8 @@ def retrieve_sql_data(sql_obj, phage_id):
 
 #TODO delete below once confirmed it is functionalized
 
+# TODO implement.
+# TODO unit test.
 def retrieve_sql_data(sql_obj):
 
 
@@ -460,6 +465,8 @@ def retrieve_sql_data(sql_obj):
 
 
 # TODO need to work on this.
+# TODO implement.
+# TODO unit test.
 def implement_update_statements():
 
     #If it looks like there is a problem with some of the genomes on the list,
@@ -519,6 +526,8 @@ def implement_update_statements():
 
 
 # TODO need to work on this.
+# TODO implement.
+# TODO unit test.
 def implement_remove_statements():
 
     #If it looks like there is a problem with some of the genomes on the list,

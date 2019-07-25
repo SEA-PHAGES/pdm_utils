@@ -7,7 +7,17 @@ from classes import Genome
 from classes import Cds
 from datetime import datetime
 from classes import Bundle
+from constants import constants
 
+
+# For integration testing.
+import getpass, subprocess, os
+import pymysql
+# import paramiko
+# paramiko.util.log_to_file("/tmp/paramiko.log")
+
+user = getpass.getpass(prompt="mysql username: ")
+pwd = getpass.getpass(prompt="mysql password: ")
 
 class TestPhameratorFunctions(unittest.TestCase):
 
@@ -709,10 +719,90 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
 
 
+# TODO integration testing below. It may be better to move this to a new file.
+
+class TestPhameratorFunctions3(unittest.TestCase):
+
+
+
+    def setUp(self):
+
+        self.db = "test_schema4"
+        self.schema_file = self.db + ".sql"
+
+        # First create the database within mysql.
+        self.connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        cursorclass = pymysql.cursors.DictCursor)
+
+        with self.connection.cursor() as cursor:
+            sql = "CREATE DATABASE %s" % self.db
+            cursor.execute(sql)
+        self.connection.commit()
+
+
+        # Now import the empty schema from file.
+        # Seems like pymysql has trouble with this step, so use subprocess.
+        schema_filepath = \
+            os.path.join(os.path.dirname(__file__),
+                        "test_files/",
+                        self.schema_file)
+
+        handle = open(schema_filepath, "r")
+        command_string = "mysql -u %s -p%s %s" % (user, pwd, self.db)
+        command_list = command_string.split(" ")
+        proc = subprocess.check_call(command_list, stdin = handle)
+        handle.close()
+
+
+        with self.connection.cursor() as cursor:
+            sql = "USE %s" % self.db
+            cursor.execute(sql)
+
+
+    def test_create_phage_id_set_1(self):
+        """Retrieve a set of all data from PhageID column."""
+
+        input_phage_ids = ["L5", "Trixie", "D29"]
+        with self.connection.cursor() as cursor:
+            for id in input_phage_ids:
+                sql = \
+                    "INSERT INTO phage (PhageID, Accession, Name, " + \
+                    "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                    "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                    "AnnotationAuthor) " + \
+                    "VALUES (" + \
+                    "'%s', '', '', '', '', 1, 1, '', '%s', 1, 1, 1);" % \
+                    (id, constants.EMPTY_DATE)
+                cursor.execute(sql)
+            self.connection.commit()
+
+        # Retrieve the newly-inserted data.
+        with self.connection.cursor() as cursor:
+            sql = "SELECT PhageID FROM phage"
+            cursor.execute(sql)
+            result = cursor.fetchall()
+
+        self.assertEqual(len(result), 3)
 
 
 
 
+
+    def tearDown(self):
+        #
+        # connection = pymysql.connect(host = "localhost",
+        #                                 user = user,
+        #                                 password = pwd,
+        #                                 cursorclass = pymysql.cursors.DictCursor)
+
+        with self.connection.cursor() as cursor:
+            sql = "DROP DATABASE %s" % self.db
+            cursor.execute(sql)
+        self.connection.commit()
+        self.connection.close()
+        # pass
 
 
 if __name__ == '__main__':
