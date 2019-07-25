@@ -12,8 +12,10 @@ except ImportError:
 	sys.exit(1)
 
 # Import functions from other k_phamerate scripts.
-from MySQLConnectionHandler import MySQLConnectionHandler
-from MMseqsPhameratorHandler import MMseqsPhameratorHandler
+from main_scripts.python3.classes.MySQLConnectionHandler import \
+	MySQLConnectionHandler
+from main_scripts.python3.classes.MMseqsPhameratorHandler import \
+	MMseqsPhameratorHandler
 
 # Set up argparse to interact with users at the command line interface.
 script_description = """
