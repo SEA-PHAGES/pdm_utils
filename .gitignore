@@ -1,3 +1,5 @@
 .idea/
 main_scripts/python3/*.pyc
+main_scripts/__pycache__/
 main_scripts/python3/__pycache__/
+main_scripts/python3/classes/__pycache__/
