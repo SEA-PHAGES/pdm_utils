@@ -34,7 +34,6 @@ class MySQLConnectionHandler:
 
         # Store pymysql connection object once it's created
         self.connection = None
-        self.have_connection = False
 
         # Variables needed to establish a connection
         self.username = username
@@ -99,12 +98,11 @@ class MySQLConnectionHandler:
                 self.test_database()
                 # If database is valid
                 if self.valid_database is True:
-                    # Create connection and set flag to True
+                    # Create connection
                     self.connection = pms.connect("localhost",
                                                   self.username,
                                                   self.password,
                                                   self.database)
-                    self.have_connection = True
                 # If database is invalid
                 else:
                     # Print bad database message
@@ -124,12 +122,11 @@ class MySQLConnectionHandler:
                     self.test_database()
                     # If database is valid
                     if self.valid_database is True:
-                        # Create connection and set flag to True
+                        # Create connection
                         self.connection = pms.connect("localhost",
                                                       self.username,
                                                       self.password,
                                                       self.database)
-                        self.have_connection = True
                     # If database is invalid
                     else:
                         # Print bad database message
@@ -147,7 +144,13 @@ class MySQLConnectionHandler:
         return
 
     def get_connection_status(self):
-        return self.have_connection
+        """
+        Returns True if the connection is open. False if the connection
+        has been closed.
+        :return:
+        """
+        if self.connection is not None:
+            return self.connection.open
 
     def get_connection(self):
         return self.connection
@@ -160,7 +163,6 @@ class MySQLConnectionHandler:
         if self.connection:
             self.connection.close()
             self.connection = None
-            self.have_connection = False
 
     def ask_username_and_password(self):
         """
