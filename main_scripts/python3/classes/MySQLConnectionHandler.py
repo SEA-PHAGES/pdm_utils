@@ -91,7 +91,7 @@ class MySQLConnectionHandler:
 
     def create_connection(self):
         # If a connection doesn't already exist
-        if self.have_connection is False:
+        if self.connection is None or self.connection.open is False:
             # If credentials have already been validated
             if self.valid_credentials is True:
                 # Test database
