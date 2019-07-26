@@ -3,8 +3,8 @@ import getpass
 
 
 class MySQLConnectionHandler:
-    def __init__(self, host=None, username=None, password=None,
-                 database=None, attempts=3):
+    def __init__(self, username=None, password=None, database=None,
+                 attempts=3):
         """
         This object is intended to handle creation of a connection to
         a MySQL database.  It gives a user 3 attempts to input valid
@@ -48,10 +48,6 @@ class MySQLConnectionHandler:
         self.valid_credentials = False
         self.valid_database = False
 
-        # Note: Added by Travis
-        self.host = None
-        self.have_connection = False
-
     def set_username(self, value):
         """
         Sets username attribute to input value.
@@ -76,14 +72,25 @@ class MySQLConnectionHandler:
         """
         self.database = value
 
+    # TODO unit test.
     def get_credential_status(self):
+        """
+        Return True if username and password are valid, False if not.
+        :return:
+        """
         return self.valid_credentials
 
+    # TODO unit test.
     def get_credentials(self):
+        """
+        Gives user x attempts to input correct username and password,
+        assuming valid credentials aren't already had.
+        :return:
+        """
         while self.valid_credentials is False:
             if self.attempts_remaining > 0:
                 self.ask_username_and_password()
-                self.test_username_and_password()
+                self.validate_credentials()
                 # If self.valid_credentials is still false, bad user/pass
                 if self.valid_credentials is False:
                     if self.attempts_remaining >= 1:
@@ -93,17 +100,23 @@ class MySQLConnectionHandler:
                         print(self.messages["too many attempts"])
                         return
 
+
+    # TODO unit test.
     def create_connection(self):
+        """
+        If a connection doesn't already exist, attempts to create one.
+        :return:
+        """
         # If a connection doesn't already exist
-        if self.have_connection is False:
+        if self.connection is None or self.connection.open is False:
             # If credentials have already been validated
             if self.valid_credentials is True:
                 # Test database
-                self.test_database()
+                self.validate_database_access()
                 # If database is valid
                 if self.valid_database is True:
                     # Create connection
-                    self.connection = pms.connect(self.host,
+                    self.connection = pms.connect("localhost",
                                                   self.username,
                                                   self.password,
                                                   self.database)
@@ -115,7 +128,7 @@ class MySQLConnectionHandler:
             # If credentials have not been validated
             else:
                 # Test them
-                self.test_username_and_password()
+                self.validate_credentials()
                 # If tested credentials are not valid
                 if self.valid_credentials is False:
                     # Prompt user for credentials with x attempts
@@ -123,11 +136,11 @@ class MySQLConnectionHandler:
                 # If credentials are now valid
                 if self.valid_credentials is True:
                     # Test database
-                    self.test_database()
+                    self.validate_database_access()
                     # If database is valid
                     if self.valid_database is True:
                         # Create connection
-                        self.connection = pms.connect(self.host,
+                        self.connection = pms.connect("localhost",
                                                       self.username,
                                                       self.password,
                                                       self.database)
@@ -147,6 +160,7 @@ class MySQLConnectionHandler:
 
         return
 
+    # TODO unit test.
     def get_connection_status(self):
         """
         Returns True if the connection is open. False if the connection
@@ -156,9 +170,15 @@ class MySQLConnectionHandler:
         if self.connection is not None:
             return self.connection.open
 
+    # TODO unit test.
     def get_connection(self):
+        """
+        Returns the pymysql connection object
+        :return:
+        """
         return self.connection
 
+    # TODO unit test.
     def close_connection(self):
         """
         Calls close method on pymysql connection object
@@ -168,6 +188,7 @@ class MySQLConnectionHandler:
             self.connection.close()
             self.connection = None
 
+    # TODO unit test.
     def ask_username_and_password(self):
         """
         Reverse increments (decrements? don't think that's a word...)
@@ -180,7 +201,7 @@ class MySQLConnectionHandler:
         self.password = getpass.getpass(prompt="MySQL password: ")
         return
 
-    def test_username_and_password(self):
+    def validate_credentials(self):
         """
         Tries to connect to MySQL localhost using the verified username
         and password. Successful connection triggers setting successful
@@ -188,23 +209,23 @@ class MySQLConnectionHandler:
         :return:
         """
         try:
-            con = pms.connect(self.host, self.username, self.password)
+            con = pms.connect("localhost", self.username, self.password)
             con.close()
             self.valid_credentials = True
         except pms.err.Error:
             self.valid_credentials = False
         return
 
-    def test_database(self):
+    def validate_database_access(self):
         """
         Tries to connect to the specified database using the verified
         username and password. If username and password haven't been
         verified yet it returns without doing anything.
         :return:
         """
-        if self.valid_credentials:
+        if self.valid_credentials is True:
             try:
-                con = pms.connect(self.host, self.username, self.password,
+                con = pms.connect("localhost", self.username, self.password,
                                   self.database)
                 con.close()
                 self.valid_database = True

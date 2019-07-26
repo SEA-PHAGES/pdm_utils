@@ -628,18 +628,51 @@ def lower_case(value):
     return value
 
 
+def close_files(list_of_filehandles):
+    """
+    Closes all the files in a list of open file handles.
+    :param list_of_filehandles: A list of open file handles
+    :return:
+    """
+    for handle in list_of_filehandles:
+        handle.close()
+    return
 
-#TODO Unit test below
+
+def ask_yes_no(prompt="", response_attempt = 1):
+    """
+    Function to get the user's yes/no response to a question.
+    Accepts variations of yes/y, true/t, no/n, false/f.
+    :param prompt: the question to ask the user.
+    :return Boolean: default is False (e.g. user hits Enter w/o typing
+    anything else), but variations of yes or true responses will return
+    True instead.
+    The response attempt parameter indicates the number of attempts
+    allowed before the function exits. This prevents the script from getting
+    stuck in a loop.
+    """
+    response = None
+    response_valid = False
+    while response_valid is False and response_attempt > 0:
+        response = get_input(prompt)
+        response_attempt -= 1
+        if response.lower() in set(["yes", "y", "t", "true"]):
+            response = True
+            response_valid = True
+        elif response.lower() in set(["no", "n", "f", "false", ""]):
+            response = False
+            response_valid = True
+        else:
+            response = None
+            print("Invalid response.")
+
+    return response
 
 
+def get_input(prompt=""):
+    return input(prompt)
 
 
-
-
-
-
-
-# TODO unit test.
 def identify_files(path_to_folder):
     """Create a list of filenames from an indicated directory."""
 
@@ -653,8 +686,85 @@ def identify_files(path_to_folder):
     return files_in_folder
 
 
+def expand_path(input_path):
+    """
+    Attempts to coerce input paths in any relative format into an
+    absolute path.
+    :param input_path: the path to be expanded
+    :return expanded_path: the expanded path
+    """
+    # "~" needs to be expanded first
+    home_dir = os.path.expanduser("~")
+
+    if input_path[0] == "~":
+        expanded_path = home_dir + input_path[1:]
+    else:
+        expanded_path = input_path
+
+    # os.path.abspath will resolve ./ or ../ present in the path
+    expanded_path = os.path.abspath(expanded_path)
+    return expanded_path
 
 
+def verify_path(filepath, kind=None):
+    """
+    Verifies that a given filepath exists, and if a kind is given,
+    it verifies that it exists as the indicated kind.
+    :param filepath: full path to the desired file/directory.
+    :param kind: ("file", "dir"), corresponding with paths to be
+    checked as either files or directories.
+    :return Boolean: True if filepath is verified, False otherwise.
+    """
+    if kind == "file":
+        if os.path.isfile(filepath) is True:
+            return True
+        else:
+            return False
+    elif kind == "dir":
+        if os.path.isdir(filepath) is True:
+            return True
+        else:
+            return False
+    elif kind is None:
+        if os.path.exists(filepath) is True:
+            return True
+        else:
+            return False
+    else:
+
+        # TODO not sure if this should print a statement, or if it
+        # should only return False.
+        print("{} is not a valid kind for this function.".format(kind),
+              "Please try again",
+              "use one of (None, dir, file).")
+        return False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#TODO Unit test below
 
 
 

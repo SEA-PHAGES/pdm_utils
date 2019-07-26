@@ -33,79 +33,79 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         self.handler.set_password(self.valid_pwd)
         self.assertEqual(self.handler.password, self.valid_pwd)
 
-    def test_test_username_and_password_1(self):
+    def test_validate_credentials_1(self):
         """Verify that valid credentials are validated."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pwd
         self.handler.host = "localhost"
-        self.handler.test_username_and_password()
+        self.handler.validate_credentials()
         self.assertTrue(self.handler.valid_credentials)
 
-    def test_test_username_and_password_2(self):
+    def test_validate_credentials_2(self):
         """Verify that invalid username produces an error."""
         self.handler.username = self.invalid_user
         self.handler.password = self.valid_pwd
         self.handler.host = "localhost"
         self.handler.valid_credentials = True
-        self.handler.test_username_and_password()
+        self.handler.validate_credentials()
         self.assertFalse(self.handler.valid_credentials)
 
-    def test_test_username_and_password_3(self):
+    def test_validate_credentials_3(self):
         """Verify that invalid password produces an error."""
         self.handler.username = self.valid_user
         self.handler.password = self.invalid_pwd
         self.handler.host = "localhost"
         self.handler.valid_credentials = True
-        self.handler.test_username_and_password()
+        self.handler.validate_credentials()
         self.assertFalse(self.handler.valid_credentials)
 
 
 
 
-    def test_test_database_checked_1(self):
+    def test_validate_database_access_checked_1(self):
         """Verify that valid credentials produce no error."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pwd
         self.handler.database = self.valid_db
         self.handler.valid_credentials = True
-        self.handler.test_database()
+        self.handler.validate_database_access()
         self.assertTrue(self.handler.valid_database)
 
-    def test_test_database_checked_2(self):
+    def test_validate_database_access_checked_2(self):
         """Verify that valid credentials produce an error when the
         valid_credentials flag is False."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pwd
         self.handler.database = self.valid_db
         self.handler.valid_credentials = False
-        self.handler.test_database()
+        self.handler.validate_database_access()
         self.assertFalse(self.handler.valid_database)
 
 
-    def test_test_database_checked_3(self):
+    def test_validate_database_access_checked_3(self):
         """Verify that invalid username produces an error when the
         valid_credentials flag is True."""
         self.handler.username = self.invalid_user
         self.handler.password = self.valid_pwd
         self.handler.database = self.valid_db
         self.handler.valid_credentials = True
-        self.handler.test_database()
+        self.handler.validate_database_access()
         self.assertFalse(self.handler.valid_database)
 
     def test_create_connection_1(self):
-        """Verify that valid credentials produces no error."""
+        """Verify that valid credentials produce no error."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pwd
         self.handler.database = self.valid_db
+        self.handler.connection = False
         self.handler.create_connection()
-        with self.subTest():
-            self.assertEqual(self.handler.database, "Actino_Draft")
-            self.assertEqual(self.handler.attempts_remaining, 3)
-            self.assertEqual(self.handler.username, "anonymous")
-            self.assertEqual(self.handler.password, "anonymous")
-            self.assertTrue(self.handler.have_connection)
-            self.assertTrue(self.handler.valid_credentials)
-            self.assertTrue(self.handler.valid_database)
+        self.assertTrue(self.handler.connection)
+
+
+
+
+    # TODO develop more unit tests for create_connection() method and
+    # for other methods.
     #
     # def test_create_connection_unchecked_bad_creds_good_db(self):
     #     """."""
@@ -137,7 +137,7 @@ class TestMySQLConnectionHandler(unittest.TestCase):
     #     self.handler.set_username("anonymous")
     #     self.handler.set_password("anonymous")
     #     self.handler.set_database("Actino_Draft")
-    #     self.handler.test_username_and_password()
+    #     self.handler.validate_credentials()
     #     self.handler.create_connection()
     #     with self.subTest():
     #         self.assertEqual(self.handler.database, "Actino_Draft")
@@ -153,7 +153,7 @@ class TestMySQLConnectionHandler(unittest.TestCase):
     #     self.handler.set_username("anonymous")
     #     self.handler.set_password("anonymous")
     #     self.handler.set_database("Actino_Draft")
-    #     self.handler.test_username_and_password()
+    #     self.handler.validate_credentials()
     #     self.handler.create_connection()
     #     with self.subTest():
     #         self.assertEqual(self.handler.database, "Actino_Draft")
