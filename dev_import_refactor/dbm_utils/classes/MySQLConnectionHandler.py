@@ -34,7 +34,7 @@ class MySQLConnectionHandler:
 
         # Store pymysql connection object once it's created
         self.connection = None
-
+        self.connection_open = False
         # Variables needed to establish a connection
         self.username = username
         self.password = password
@@ -108,7 +108,7 @@ class MySQLConnectionHandler:
         :return:
         """
         # If a connection doesn't already exist
-        if self.connection is None or self.connection.open is False:
+        if self.connection is None or self.connection_open is False:
             # If credentials have already been validated
             if self.valid_credentials is True:
                 # Test database
@@ -168,7 +168,7 @@ class MySQLConnectionHandler:
         :return:
         """
         if self.connection is not None:
-            return self.connection.open
+            return self.connection_open
 
     # TODO unit test.
     def get_connection(self):

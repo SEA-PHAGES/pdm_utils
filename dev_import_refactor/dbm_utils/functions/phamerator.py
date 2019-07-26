@@ -4,6 +4,7 @@
 from classes import Genome
 from classes import GenomePair
 from functions import basic
+import pymysql
 
 
 def parse_phamerator_data(genome, data_tuple):
@@ -121,27 +122,37 @@ def create_data_sets(genome_dict):
 
 
 
+def create_phage_id_set(sql_handle):
+    """Create set of phage_ids currently in PhameratorDB."""
+
+    sql = "SELECT PhageID FROM phage"
+
+    # Create the connection.
+    connection = pymysql.connect(host = "localhost",
+                                    user = sql_handle.username,
+                                    password = sql_handle.password,
+                                    database = sql_handle.database,
+                                    cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    cur.execute(sql)
+    result = cur.fetchall()
+    connection.close()
+    return result
+
+
 
 # TODO implement.
 # TODO unit test.
 def create_seq_set(sql_obj):
     """Create set of genome sequences currently in PhameratorDB."""
+
+
     # Query MySQL for all unique nucleotide sequences.
     # return a set of sequences
     pass
 
 
 
-# TODO implement.
-# TODO unit test.
-def create_phage_id_set():
-    """Create set of phage_ids currently in PhameratorDB."""
-
-    statement = "SELECT PhageID FROM phage"
-
-    # Query MySQL for all unique phage_ids.
-    # return a set of phage_ids
-    pass
 
 
 

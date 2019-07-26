@@ -4,7 +4,6 @@ The tests assume the host is 'localhost' and there is a
 
 import unittest
 from classes import MySQLConnectionHandler
-import getpass
 
 
 class TestMySQLConnectionHandler(unittest.TestCase):
@@ -92,12 +91,16 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         self.handler.validate_database_access()
         self.assertFalse(self.handler.valid_database)
 
+
+
+
+
+    # TODO not working correctly since there is a connection.open attribute problem.
     def test_create_connection_1(self):
         """Verify that valid credentials produce no error."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pwd
         self.handler.database = self.valid_db
-        self.handler.connection = False
         self.handler.create_connection()
         self.assertTrue(self.handler.connection)
 

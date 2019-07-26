@@ -8,6 +8,7 @@ from classes import Cds
 from datetime import datetime
 from classes import Bundle
 from constants import constants
+from classes import MySQLConnectionHandler
 
 
 # For integration testing.
@@ -726,21 +727,32 @@ class TestPhameratorFunctions3(unittest.TestCase):
 
 
     def setUp(self):
+        """In order to test MySQL database-related functions, create a
+        new, empty 'test' database and structure it using the
+        same schema as in PhameratorDB.
+        Each unittest will populate the empty database as needed."""
 
         self.db = "test_schema4"
         self.schema_file = self.db + ".sql"
 
+
+        self.sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        self.sql_handle.username = user
+        self.sql_handle.password = pwd
+        self.sql_handle.database = self.db
+
+
         # First create the database within mysql.
-        self.connection = pymysql.connect(host = "localhost",
+        connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
 
-        with self.connection.cursor() as cursor:
-            sql = "CREATE DATABASE %s" % self.db
-            cursor.execute(sql)
-        self.connection.commit()
-
+        sql = "CREATE DATABASE %s" % self.db
+        cur = connection.cursor()
+        cur.execute(sql)
+        connection.commit()
+        connection.close()
 
         # Now import the empty schema from file.
         # Seems like pymysql has trouble with this step, so use subprocess.
@@ -756,34 +768,37 @@ class TestPhameratorFunctions3(unittest.TestCase):
         handle.close()
 
 
-        with self.connection.cursor() as cursor:
-            sql = "USE %s" % self.db
-            cursor.execute(sql)
+
 
 
     def test_create_phage_id_set_1(self):
         """Retrieve a set of all data from PhageID column."""
 
         input_phage_ids = ["L5", "Trixie", "D29"]
-        with self.connection.cursor() as cursor:
-            for id in input_phage_ids:
-                sql = \
-                    "INSERT INTO phage (PhageID, Accession, Name, " + \
-                    "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                    "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                    "AnnotationAuthor) " + \
-                    "VALUES (" + \
-                    "'%s', '', '', '', '', 1, 1, '', '%s', 1, 1, 1);" % \
-                    (id, constants.EMPTY_DATE)
-                cursor.execute(sql)
-            self.connection.commit()
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id in input_phage_ids:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id, constants.EMPTY_DATE)
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
 
-        # Retrieve the newly-inserted data.
-        with self.connection.cursor() as cursor:
-            sql = "SELECT PhageID FROM phage"
-            cursor.execute(sql)
-            result = cursor.fetchall()
-
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        result = phamerator.create_phage_id_set(sql_handle)
         self.assertEqual(len(result), 3)
 
 
@@ -791,18 +806,35 @@ class TestPhameratorFunctions3(unittest.TestCase):
 
 
     def tearDown(self):
-        #
-        # connection = pymysql.connect(host = "localhost",
-        #                                 user = user,
-        #                                 password = pwd,
-        #                                 cursorclass = pymysql.cursors.DictCursor)
 
-        with self.connection.cursor() as cursor:
-            sql = "DROP DATABASE %s" % self.db
-            cursor.execute(sql)
-        self.connection.commit()
-        self.connection.close()
-        # pass
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        cursorclass = pymysql.cursors.DictCursor)
+
+        sql = "DROP DATABASE %s" % self.db
+        cur = connection.cursor()
+        cur.execute(sql)
+        connection.commit()
+        connection.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
