@@ -15,7 +15,7 @@ class SourceFeature:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
-        self.type_id = "source"
+        self.type = "source"
         self.left_boundary = "" # TODO implement this.
         self.right_boundary = "" # TODO implement this.
         self.organism = ""
@@ -24,7 +24,7 @@ class SourceFeature:
 
 
         # Common to Phamerator.
-        self.parent_phage_id = ""
+        self.parent_genome_id = ""
         self.parent_host_genus = ""
 
 
@@ -86,9 +86,9 @@ class SourceFeature:
     def check_organism_name(self):
         """Check phage name spelling in the organism field."""
 
-        if self.parent_phage_id != self._organism_name:
+        if self.parent_genome_id != self._organism_name:
             result = "The phage name in the organism field " + \
-                        "does not match the parent_phage_id."
+                        "does not match the parent_genome_id."
             status = "error"
 
         else:

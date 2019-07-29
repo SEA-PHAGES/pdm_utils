@@ -17,7 +17,11 @@ class CdsFeature:
         # Initialize all non-calculated attributes:
 
         # Datafields from Phamerator database.
-        self.type_id = "CDS"
+
+        # TODO: eventually change how id is computed.
+        self.id = "" # Gene ID comprised of PhageID and Gene name
+        self.name = ""
+        self.type = "CDS"
         self.left_boundary = "" # Genomic position
         self.right_boundary = "" # Genomic position
         self.start = "" # Genomic position
@@ -33,13 +37,10 @@ class CdsFeature:
 
 
         # Common to Phamerator.
-        self.parent_phage_id = ""
+        self.parent_genome_id = ""
         self.parent_translation_table = ""
 
 
-        # TODO: eventually change how Gene_ID is computed.
-        self.gene_id = "" # Gene ID comprised of PhageID and Gene name
-        self.gene_name = ""
         self.primary_description = ""
         self.processed_primary_description = "" # Non-generic gene descriptions
 
@@ -71,7 +72,6 @@ class CdsFeature:
         # Computed attributes:
 
         #Common to all. Computed internally.
-        self._search_id = ""
         self._translation_length = 0
         self._nucleotide_length = 0 # Replaces gene_length, stored in Phamerator?
         self._left_right_strand_id = ()
@@ -123,13 +123,10 @@ class CdsFeature:
     #         eval_object = Eval.EvalResult()
     #     self.evaluations.append(eval_object)
 
-    def set_phage_id(self, value):
-        """Set the phage_id and search_id at the same time, removing
-        '_Draft' suffix if present."""
+    def set_parent_genome_id(self, value):
+        """Set the parent_genome_id."""
 
-        self.parent_phage_id = value
-        self._search_id = \
-            basic.edit_suffix(self.parent_phage_id, "remove")
+        self.parent_genome_id = value
 
     def choose_description(self, value):
         """Set the primary description and processed primary description."""

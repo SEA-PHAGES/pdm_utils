@@ -250,6 +250,119 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
+
+
+
+
+
+
+
+
+
+
+    def test_parse_phamerator_genome_data_1(self):
+        """Verify standard Phamerator genome data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+
+        data_dict = {"PhageID":"L5",
+                     "Accession":"ABC123",
+                     "Name":"L5_Draft",
+                     "HostStrain":"Mycobacterium",
+                     "Sequence":"ATCG".encode("utf-8"),
+                     "SequenceLength":10,
+                     "DateLastModified":constants.EMPTY_DATE,
+                     "Notes":"abc".encode("utf-8"),
+                     "GC":12.12,
+                     "Cluster":"B",
+                     "Cluster2":"A",
+                     "Subcluster2":"A2",
+                     "status":"final",
+                     "RetrieveRecord":1,
+                     "AnnotationQC":1,
+                     "AnnotationAuthor":1}
+
+        phamerator.parse_phamerator_genome_data(self.genome1, data_dict)
+
+        with self.subTest():
+            self.assertEqual(self.genome1.id, "L5")
+        with self.subTest():
+            self.assertEqual(self.genome1.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.genome1.name, "L5_Draft")
+        with self.subTest():
+            self.assertEqual(self.genome1.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.genome1.seq, "ATCG")
+        with self.subTest():
+            self.assertEqual(self.genome1._length, 10)
+        with self.subTest():
+            self.assertEqual(self.genome1.date, constants.EMPTY_DATE)
+        with self.subTest():
+            self.assertEqual(self.genome1.description, "abc")
+        with self.subTest():
+            self.assertEqual(self.genome1._gc, 12.12)
+        with self.subTest():
+            self.assertEqual(self.genome1.cluster_subcluster, "B")
+        with self.subTest():
+            self.assertEqual(self.genome1.cluster, "A")
+        with self.subTest():
+            self.assertEqual(self.genome1.subcluster, "A2")
+        with self.subTest():
+            self.assertEqual(self.genome1.annotation_status, "final")
+        with self.subTest():
+            self.assertEqual(self.genome1.retrieve_record, 1)
+        with self.subTest():
+            self.assertEqual(self.genome1.annotation_qc, 1)
+        with self.subTest():
+            self.assertEqual(self.genome1.annotation_author, 1)
+        with self.subTest():
+            self.assertEqual(self.genome1.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome1.type, "phamerator")
+
+
+    def test_parse_phamerator_genome_data_2(self):
+        """Verify truncated Phamerator genome data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+
+        data_dict = {"PhageID":"L5"}
+        phamerator.parse_phamerator_genome_data(self.genome1, data_dict)
+        with self.subTest():
+            self.assertEqual(self.genome1.id, "L5")
+        with self.subTest():
+            self.assertEqual(self.genome1.name, "")
+        with self.subTest():
+            self.assertEqual(self.genome1.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(self.genome1.type, "phamerator")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def test_create_phamerator_dict_1(self):
         """Verify Phamerator MySQL query output is parsed correctly."""
 
@@ -444,13 +557,13 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_cds_insert_statement_1(self):
         """Verify CDS INSERT statement is created correctly."""
 
-        self.cds1.gene_id = "SEA_L5_123"
-        self.cds1.phage_id = "L5"
+        self.cds1.id = "SEA_L5_123"
+        self.cds1.parent_genome_id = "L5"
         self.cds1.left_boundary = 5
         self.cds1.right_boundary = 10
         self.cds1._translation_length = 20
-        self.cds1.gene_name = "Int"
-        self.cds1.type_id = "CDS"
+        self.cds1.name = "Int"
+        self.cds1.type = "CDS"
         self.cds1.translation = "ACKLG"
         self.cds1.strand = "forward"
         self.cds1.processed_primary_description = "integrase"
@@ -473,37 +586,37 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_cds_insert_statements_1(self):
         """Verify list of CDS INSERT statements is created correctly."""
 
-        self.cds1.gene_id = "SEA_L5_123"
-        self.cds1.phage_id = "L5"
+        self.cds1.id = "SEA_L5_123"
+        self.cds1.parent_genome_id = "L5"
         self.cds1.left_boundary = 5
         self.cds1.right_boundary = 10
         self.cds1._translation_length = 20
-        self.cds1.gene_name = "Int"
-        self.cds1.type_id = "CDS"
+        self.cds1.name = "Int"
+        self.cds1.type = "CDS"
         self.cds1.translation = "ACKLG"
         self.cds1.strand = "forward"
         self.cds1.processed_primary_description = "integrase"
         self.cds1.locus_tag = "TAG1"
 
-        self.cds2.gene_id = "SEA_TRIXIE_123"
-        self.cds2.phage_id = "Trixie"
+        self.cds2.id = "SEA_TRIXIE_123"
+        self.cds2.parent_genome_id = "Trixie"
         self.cds2.left_boundary = 1
         self.cds2.right_boundary = 100
         self.cds2._translation_length = 15
-        self.cds2.gene_name = "parA"
-        self.cds2.type_id = "CDS"
+        self.cds2.name = "parA"
+        self.cds2.type = "CDS"
         self.cds2.translation = "PPGLA"
         self.cds2.strand = "reverse"
         self.cds2.processed_primary_description = "parA"
         self.cds2.locus_tag = "TAG2"
 
-        self.cds3.gene_id = "SEA_D29_123"
-        self.cds3.phage_id = "D29"
+        self.cds3.id = "SEA_D29_123"
+        self.cds3.parent_genome_id = "D29"
         self.cds3.left_boundary = 42
         self.cds3.right_boundary = 62
         self.cds3._translation_length = 3
-        self.cds3.gene_name = "D29_123"
-        self.cds3.type_id = "CDS"
+        self.cds3.name = "D29_123"
+        self.cds3.type = "CDS"
         self.cds3.translation = "AVY"
         self.cds3.strand = "reverse"
         self.cds3.processed_primary_description = ""
@@ -742,15 +855,25 @@ class TestPhameratorFunctions3(unittest.TestCase):
         self.sql_handle.database = self.db
 
 
-        # First create the database within mysql.
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
-
-        sql = "CREATE DATABASE %s" % self.db
         cur = connection.cursor()
+
+        # First, test if a test database already exists within mysql.
+        # If there is, delete it so that a fresh test database is installed.
+        sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
+              "WHERE SCHEMA_NAME = '%s'" % self.db
         cur.execute(sql)
+        result = cur.fetchall()
+
+        if len(result) != 0:
+            cur.execute("DROP DATABASE %s" % self.db)
+            connection.commit()
+
+        # Next, create the database within mysql.
+        cur.execute("CREATE DATABASE %s" % self.db)
         connection.commit()
         connection.close()
 
@@ -805,6 +928,239 @@ class TestPhameratorFunctions3(unittest.TestCase):
 
 
 
+
+
+
+
+
+    def test_create_seq_set_1(self):
+        """Retrieve a set of all data from Sequence column."""
+
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"],
+                                    ["D29", "GGCC"]]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        result = phamerator.create_seq_set(sql_handle)
+        with self.subTest():
+            self.assertEqual(len(result), 3)
+        with self.subTest():
+            self.assertTrue("ATCG" in result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def test_retrieve_sql_data_1(self):
+        """Verify that a dictionary of data is retrieved for a valid PhageID."""
+
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"],
+                                    ["D29", "GGCC"]]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        data_dict = phamerator.retrieve_sql_data(sql_handle, "L5")
+        with self.subTest():
+            self.assertEqual(len(data_dict.keys()), 12)
+        with self.subTest():
+            self.assertEqual(data_dict["PhageID"], "L5")
+
+
+
+
+
+
+
+    def test_retrieve_sql_data_2(self):
+        """Verify that an empty dictionary of data is retrieved
+        for an invalid PhageID."""
+
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"],
+                                    ["D29", "GGCC"]]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        data_dict = phamerator.retrieve_sql_data(sql_handle, "EagleEye")
+        self.assertEqual(len(data_dict.keys()), 0)
+
+
+
+
+
+    def test_create_phamerator_genome_1(self):
+        """Verify that a Genome object is constructed correctly for a
+        valid PhageID."""
+
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"],
+                                    ["D29", "GGCC"]]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) VALUES (" + \
+                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
+                 % (id_and_seq[0], id_and_seq[1]) + \
+                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                % constants.EMPTY_DATE
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        genome = phamerator.create_phamerator_genome(sql_handle, "L5")
+        with self.subTest():
+            self.assertEqual(genome.id, "L5")
+        with self.subTest():
+            self.assertEqual(genome.seq, "ATCG")
+        with self.subTest():
+            self.assertEqual(genome.date, constants.EMPTY_DATE)
+
+
+
+
+
+    def test_create_phamerator_genome_2(self):
+        """Verify that an emptyu Genome object is constructed for an
+        invalid PhageID."""
+
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"],
+                                    ["D29", "GGCC"]]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) VALUES (" + \
+                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
+                 % (id_and_seq[0], id_and_seq[1]) + \
+                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                % constants.EMPTY_DATE
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        genome = phamerator.create_phamerator_genome(sql_handle, "EagleEye")
+        with self.subTest():
+            self.assertEqual(genome.id, "")
+        with self.subTest():
+            self.assertEqual(genome.seq, "")
+        with self.subTest():
+            self.assertEqual(genome.type, "phamerator")
+
+
+
+
+
+
+
     def tearDown(self):
 
         connection = pymysql.connect(host = "localhost",
@@ -812,9 +1168,8 @@ class TestPhameratorFunctions3(unittest.TestCase):
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
 
-        sql = "DROP DATABASE %s" % self.db
         cur = connection.cursor()
-        cur.execute(sql)
+        cur.execute("DROP DATABASE %s" % self.db)
         connection.commit()
         connection.close()
 

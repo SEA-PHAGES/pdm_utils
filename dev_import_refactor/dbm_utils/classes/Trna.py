@@ -15,7 +15,7 @@ class TrnaFeature:
         # Initialize all non-calculated attributes:
 
         #Datafields from Phamerator database:
-        self.type_id = '' #Feature type: CDS, GenomeBoundary,or tRNA
+        self.type = '' #Feature type: CDS, GenomeBoundary,or tRNA
         self.left_boundary = '' #Position of left boundary of feature, 0-indexed
         self.right_boundary = '' #Position of right boundary of feature, 0-indexed
         self.strand = '' #'forward', 'reverse', or 'NA'
@@ -23,9 +23,9 @@ class TrnaFeature:
 
 
         #Common to Phamerator
-        self.phage_id = ''
-        self.gene_id = '' #tRNA ID comprised of PhageID and Gene name
-        self.gene_name = ''
+        self.parent_genome_id = ''
+        self.id = '' #tRNA ID comprised of PhageID and Gene name
+        self.name = ''
         self.notes = ''
         self.search_notes = '' #non-generic descriptions
 

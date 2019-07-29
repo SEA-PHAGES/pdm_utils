@@ -270,23 +270,17 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-    def test_set_phage_id_1(self):
+    def test_set_parent_genome_id_1(self):
         """Test no draft suffix."""
         phage_id = "Trixie"
-        self.feature.set_phage_id(phage_id)
-        with self.subTest():
-            self.assertEqual(self.feature.parent_phage_id, "Trixie")
-        with self.subTest():
-            self.assertEqual(self.feature._search_id, "Trixie")
+        self.feature.set_parent_genome_id(phage_id)
+        self.assertEqual(self.feature.parent_genome_id, "Trixie")
 
-    def test_set_phage_id_2(self):
+    def test_set_parent_genome_id_2(self):
         """Test draft suffix."""
         phage_id = "Trixie_Draft"
-        self.feature.set_phage_id(phage_id)
-        with self.subTest():
-            self.assertEqual(self.feature.parent_phage_id, "Trixie_Draft")
-        with self.subTest():
-            self.assertEqual(self.feature._search_id, "Trixie")
+        self.feature.set_parent_genome_id(phage_id)
+        self.assertEqual(self.feature.parent_genome_id, "Trixie_Draft")
 
 
     #TODO: remove this unit test after I decide whether or not to keep

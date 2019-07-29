@@ -7,6 +7,10 @@ from functions import basic
 import pymysql
 
 
+
+
+# TODO this may no longer be needed now that
+# parse_phamerator_genome_data() is available.
 def parse_phamerator_data(genome, data_tuple):
     """Parses tuple of data derived from a Phamerator database
     and populates a genome object.
@@ -42,20 +46,154 @@ def parse_phamerator_data(genome, data_tuple):
 
 
 
-# TODO unit test.
-def create_phamerator_genome(sql_obj, phage_id):
+
+
+
+def parse_phamerator_genome_data(genome, data_dict, trans_table = 11):
+    """Parses a dictionary of data derived from a Phamerator database
+    and populates a genome object. It provides the flexibility to populate
+    a genome object even when a few selected fields of data are needed.
+    """
+
+    try:
+        genome.id = data_dict["PhageID"]
+    except:
+        pass
+
+    try:
+        genome.accession = data_dict["Accession"]
+    except:
+        pass
+
+    try:
+        genome.name = data_dict["Name"]
+    except:
+        pass
+
+    try:
+        genome.host_genus = data_dict["HostStrain"]
+    except:
+        pass
+
+    try:
+        # Sequence data is stored as MEDIUMBLOB, so decode to string.
+        genome.seq = data_dict["Sequence"].decode("utf-8")
+    except:
+        pass
+
+    try:
+        genome._length = data_dict["SequenceLength"]
+    except:
+        pass
+
+
+    try:
+        genome.date = data_dict["DateLastModified"]
+    except:
+        pass
+
+    try:
+        genome.description = data_dict["Notes"].decode("utf-8")
+    except:
+        pass
+
+    try:
+        genome._gc = data_dict["GC"]
+    except:
+        pass
+
+    try:
+        genome.set_cluster_subcluster(data_dict["Cluster"])
+    except:
+        pass
+
+    try:
+
+        # Singletons are stored in PhameratorDB as NULL, which gets
+        # returned as None.
+        genome.set_cluster(data_dict["Cluster2"])
+    except:
+        pass
+
+    try:
+        genome.set_subcluster(data_dict["Subcluster2"])
+    except:
+        pass
+
+    try:
+        genome.annotation_status = data_dict["status"]
+    except:
+        pass
+
+    try:
+        genome.retrieve_record = data_dict["RetrieveRecord"]
+    except:
+        pass
+
+    try:
+        genome.annotation_qc = data_dict["AnnotationQC"]
+    except:
+        pass
+
+    try:
+        genome.annotation_author = data_dict["AnnotationAuthor"]
+    except:
+        pass
+
+
+    genome.translation_table = trans_table
+    genome.type = "phamerator"
+
+
+
+
+
+
+
+def retrieve_sql_data(sql_handle, phage_id):
+    """Retrieve data from Phamerator for a single genome."""
+
+    statement1 = "SELECT PhageID, Name, HostStrain, Sequence, status, \
+                 Cluster2, DateLastModified, Accession, Subcluster2, \
+                 AnnotationAuthor, AnnotationQC, RetrieveRecord \
+                 FROM phage"
+
+    statement2 = " WHERE PhageID = '%s'" % phage_id
+    statement3 = statement1 + statement2
+
+    # Create the connection.
+    connection = pymysql.connect(host = "localhost",
+                                    user = sql_handle.username,
+                                    password = sql_handle.password,
+                                    database = sql_handle.database,
+                                    cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    cur.execute(statement3)
+
+    # Data is returned as a list of items, where each item is a
+    # dictionary of SQL data for each PhageID.
+    result_list = cur.fetchall()
+    connection.close()
+
+    if len(result_list) == 1:
+        data_dict = result_list[0]
+    else:
+        data_dict = {}
+
+    return data_dict
+
+
+
+
+def create_phamerator_genome(sql_handle, phage_id):
     """
     Returns a Genome object containing data parsed from MySQL
     Phamerator database.
     """
 
-    genome_tuple = retrieve_sql_data(sql_obj, phage_id)
-
+    data_dict = retrieve_sql_data(sql_handle, phage_id)
     genome = Genome.Genome()
-    if sql_data:
-        parse_phamerator_data(genome, genome_tuple)
-    else:
-        genome.type = "phamerator"
+    parse_phamerator_genome_data(genome, data_dict)
 
     return genome
 
@@ -79,6 +217,8 @@ def create_phamerator_dict(phamerator_data_tuples):
     return genome_dict
 
 
+
+# TODO this may no longer be needed.
 def create_data_sets(genome_dict):
     """
     Create sets of all unique values for several fields in the Phamerator data.
@@ -122,34 +262,62 @@ def create_data_sets(genome_dict):
 
 
 
+
+# TODO revamp so that sql handler makes the query instead of
+# simply passing data to pymysql.
 def create_phage_id_set(sql_handle):
     """Create set of phage_ids currently in PhameratorDB."""
-
-    sql = "SELECT PhageID FROM phage"
 
     # Create the connection.
     connection = pymysql.connect(host = "localhost",
                                     user = sql_handle.username,
                                     password = sql_handle.password,
-                                    database = sql_handle.database,
-                                    cursorclass = pymysql.cursors.DictCursor)
+                                    database = sql_handle.database)
     cur = connection.cursor()
-    cur.execute(sql)
-    result = cur.fetchall()
+    cur.execute("SELECT PhageID FROM phage")
+
+    # Data is returned as a tuple of tuples: (("L5",), ("Trixie",), etc.)
+    result_tuple = cur.fetchall()
     connection.close()
-    return result
+
+    # Convert to a set of PhageIDs.
+    result_set = set([])
+    for tup in result_tuple:
+        result_set.add(tup[0])
+
+    return result_set
 
 
 
-# TODO implement.
-# TODO unit test.
-def create_seq_set(sql_obj):
+# TODO revamp so that sql handler makes the query instead of
+# simply passing data to pymysql.
+def create_seq_set(sql_handle):
     """Create set of genome sequences currently in PhameratorDB."""
 
 
-    # Query MySQL for all unique nucleotide sequences.
-    # return a set of sequences
-    pass
+    # Create the connection.
+    connection = pymysql.connect(host = "localhost",
+                                    user = sql_handle.username,
+                                    password = sql_handle.password,
+                                    database = sql_handle.database)
+    cur = connection.cursor()
+    cur.execute("SELECT Sequence FROM phage")
+
+    # Data is returned as a tuple of tuples
+    result_tuple = cur.fetchall()
+    connection.close()
+
+    # Convert to a set of sequences.
+    # Sequence data is stored as MEDIUMBLOB, so data is returned as bytes
+    # (("b'AATT",), ("b'TTCC",), etc.)
+    result_set = set([])
+    for tup in result_tuple:
+        result_set.add(tup[0].decode("utf-8"))
+
+    return result_set
+
+
+
 
 
 
@@ -231,7 +399,7 @@ def create_delete_statement(table, field1, data1):
 
 
 
-# TODO I may not need this function.
+# TODO this may no longer be needed.
 def create_genome_delete_statement(genome):
     """Create a genome-level DELETE statements using data
     in a Genome object."""
@@ -253,13 +421,13 @@ def create_cds_insert_statement(cds_feature):
         "translation, Orientation, Notes, LocusTag) " + \
         "VALUES " + \
         "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % \
-        (cds_feature.gene_id, \
-        cds_feature.phage_id, \
+        (cds_feature.id, \
+        cds_feature.parent_genome_id, \
         cds_feature.left_boundary, \
         cds_feature.right_boundary, \
         cds_feature._translation_length, \
-        cds_feature.gene_name, \
-        cds_feature.type_id, \
+        cds_feature.name, \
+        cds_feature.type, \
         cds_feature.translation, \
         cds_feature.strand, \
         cds_feature.processed_primary_description, \
@@ -377,96 +545,13 @@ def copy_data_from_phamerator(bundle, type, flag = "retain"):
 # TODO unit test below.
 
 
-# TODO implement.
-# TODO unit test.
-def retrieve_sql_data(sql_obj, phage_id):
-    """Retrieve data from Phamerator for a single genome."""
-
-    statement1 = "SELECT PhageID, \
-                            Name, \
-                            HostStrain, \
-                            Sequence, \
-                            status, \
-                            Cluster2, \
-                            DateLastModified, \
-                            Accession,\
-                            Subcluster2, \
-                            AnnotationAuthor,\
-                            AnnotationQC, \
-                            RetrieveRecord \
-                            FROM phage"
-
-    statement2 = " WHERE PhageID = '%s'" % phage_id
-
-    statement3 = statement1 + statement2
-    # returns a tuple of data containing PhageID, Host, Cluster, etc.
-    pass
-
-
-
-#TODO delete below once confirmed it is functionalized
-
-# TODO implement.
-# TODO unit test.
-def retrieve_sql_data(sql_obj):
-
-
-    #Retrieve database version
-    #Retrieve current data in database
-    #0 = PhageID
-    #1 = Name
-    #2 = HostStrain
-    #3 = Sequence
-    #4 = status
-    #5 = Cluster2
-    #6 = DateLastModified
-    #7 = Accession
-    #8 = Subcluster2
-    #9 = AnnotationAuthor
-    #10 = AnnotationQC
-    #11 = RetrieveRecord
-    try:
-        con = mdb.connect(mysqlhost, username, password, database)
-        con.autocommit(False)
-        cur = con.cursor()
-    except:
-        print("Unsuccessful attempt to connect to the database. Please verify the database, username, and password.")
-        output_file.close()
-        sys.exit(1)
-
-    try:
-
-        cur.execute("START TRANSACTION")
-        cur.execute("SELECT version FROM version")
-        db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID, \
-                            Name, \
-                            HostStrain, \
-                            Sequence, \
-                            status, \
-                            Cluster2, \
-                            DateLastModified, \
-                            Accession,\
-                            Subcluster2, \
-                            AnnotationAuthor,\
-                            AnnotationQC, \
-                            RetrieveRecord \
-                            FROM phage")
-        current_genome_data_tuples = cur.fetchall()
-        cur.execute("COMMIT")
-        cur.close()
-        con.autocommit(True)
-    except:
-        mdb_exit("\nUnable to access the database to retrieve genome information.\nNo changes have been made to the database.")
-
-
-    con.close()
 
 
 
 
-    return list_of_tuples
-    # TODO delete above once confirmed it is functionalized
+
+
+
 
 
 

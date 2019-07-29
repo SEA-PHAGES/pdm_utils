@@ -374,13 +374,13 @@ def parse_flat_file_data(genome_obj, \
         cds_object_list = []
 
 
-    # TODO the parent_phage_id can't be set until the genome id
+    # TODO the parent_genome_id can't be set until the genome id
     # is set. But the phage_id is not determined from within the
     # flat file. It is inputted externally, such as from a ticket.
-    # Once the ticket is used to set the id, the parent_phage_id
+    # Once the ticket is used to set the id, the parent_genome_id
     # atttributes can be set for all features.
     # for cds in cds_object_list:
-    #     cds.parent_phage_id = genome_obj.id
+    #     cds.parent_genome_id = genome_obj.id
 
 
     if "source" in feature_dict.keys():

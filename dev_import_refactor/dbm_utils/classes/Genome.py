@@ -292,16 +292,20 @@ class Genome:
 
 
 
-    #Common to Phamerator and phagesdb
-
-    def set_cluster(self,value):
+    def set_cluster(self, value):
         """Set the cluster, and modify singleton if needed."""
 
-        value = value.strip()
-        if value.lower() == "singleton":
-            self.cluster = value.lower()
-        else:
-            self.cluster = value
+
+        if isinstance(value, str):
+            value = value.strip()
+            if value.lower() == "singleton":
+                self.cluster = value.lower()
+            else:
+                self.cluster = value
+
+        if value is None:
+            self.cluster = "singleton"
+
 
 
     def set_subcluster(self, value, format = "empty_string"):
@@ -312,21 +316,33 @@ class Genome:
         self.subcluster = basic.convert_empty(value, format)
 
 
-    def set_cluster_subcluster(self):
-        """Set the combined Cluster-Subcluster field using the Cluster
-        and Subcluster designations."""
+    def set_cluster_subcluster(self, value="internal"):
+        """Set the combined Cluster-Subcluster field. If the
+        value is set to 'internal', it is determined from the Cluster
+        and Subcluster designations. Otherwise, the value is directly
+        used to populate this field."""
 
-        if (self.subcluster is None or \
-            self.subcluster.lower() == "none" or \
-            self.subcluster == ""):
 
-            if self.cluster is None:
-                self.cluster_subcluster = "singleton"
+        if value is "internal":
+            if (self.subcluster is None or \
+                self.subcluster.lower() == "none" or \
+                self.subcluster == ""):
+
+                if self.cluster is None:
+                    self.cluster_subcluster = "singleton"
+                else:
+                    self.cluster_subcluster = self.cluster
             else:
-                self.cluster_subcluster = self.cluster
-        else:
-            self.cluster_subcluster = self.subcluster
+                self.cluster_subcluster = self.subcluster
 
+        elif value is None:
+            self.cluster_subcluster = "singleton"
+
+        elif value.lower() == "singleton":
+            self.cluster_subcluster = value.lower()
+
+        else:
+            self.cluster_subcluster = value
 
     def split_cluster_subcluster(self, format = "none_string"):
         """From the combined cluster_subcluster value,

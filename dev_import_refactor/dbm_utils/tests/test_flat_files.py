@@ -224,7 +224,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -290,7 +290,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "")
         with self.subTest():
@@ -359,7 +359,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -423,7 +423,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -487,7 +487,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -551,7 +551,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -615,7 +615,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -679,7 +679,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -743,7 +743,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -808,7 +808,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature, 1)
 
         with self.subTest():
-            self.assertEqual(self.cds.type_id, "CDS")
+            self.assertEqual(self.cds.type, "CDS")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
