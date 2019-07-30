@@ -85,168 +85,166 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.cds3 = Cds.CdsFeature()
 
 
-    def test_parse_phamerator_data_1(self):
-        """Verify standard Phamerator genome data is parsed correctly."""
-
-        input_phage_id = "Trixie_Draft"
-        input_phage_name = "Trixie_Draft"
-        input_host = "   Mycobacterium smegmatis  "
-        input_sequence = "atcg"
-        input_status = "final"
-        input_cluster = "A"
-        input_subcluster = "A2"
-        input_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
-        input_accession = "  ABC123.1  "
-        input_annotation_author = "1"
-        input_annotation_qc = "1"
-        input_retrieve_record = "1"
-
-        data_tuple = (input_phage_id,
-                        input_phage_name,
-                        input_host,
-                        input_sequence,
-                        input_status,
-                        input_cluster,
-                        input_date,
-                        input_accession,
-                        input_subcluster,
-                        input_annotation_author,
-                        input_annotation_qc,
-                        input_retrieve_record)
-
-        phamerator.parse_phamerator_data(self.genome1, data_tuple)
-
-        output_phage_id = "Trixie"
-        output_phage_name = "Trixie_Draft"
-        output_host = "Mycobacterium"
-        output_sequence = "ATCG"
-        output_status = "final"
-        output_cluster = "A"
-        output_subcluster = "A2"
-        output_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
-        output_accession = "ABC123"
-        output_annotation_author = "1"
-        output_annotation_qc = "1"
-        output_retrieve_record = "1"
-        output_type = "phamerator"
-        output_seq_length = 4
-
-        with self.subTest():
-            self.assertEqual(self.genome1.id, output_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome1.name, output_phage_name)
-        with self.subTest():
-            self.assertEqual(self.genome1.host_genus, output_host)
-        with self.subTest():
-            self.assertEqual(self.genome1.seq, output_sequence)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_status, output_status)
-        with self.subTest():
-            self.assertEqual(self.genome1.cluster, output_cluster)
-        with self.subTest():
-            self.assertEqual(self.genome1.subcluster, output_subcluster)
-        with self.subTest():
-            self.assertEqual(self.genome1.date, \
-                output_date)
-        with self.subTest():
-            self.assertEqual(self.genome1.accession, output_accession)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_author, \
-                output_annotation_author)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
-        with self.subTest():
-            self.assertEqual(self.genome1.retrieve_record, \
-                output_retrieve_record)
-        with self.subTest():
-            self.assertEqual(self.genome1._length, output_seq_length)
-        with self.subTest():
-            self.assertEqual(self.genome1.type, output_type)
 
 
-    def test_parse_phamerator_data_2(self):
-        """Verify empty Phamerator genome data is parsed correctly."""
-
-        input_phage_id = "Trixie_Draft"
-        input_phage_name = "Trixie_Draft"
-        input_host = ""
-        input_sequence = "atcg"
-        input_status = "final"
-        input_cluster = "SINGLETON"
-        input_subcluster = "NONE"
-        input_date = None
-        input_accession = None
-        input_annotation_author = "1"
-        input_annotation_qc = "1"
-        input_retrieve_record = "1"
-
-        data_tuple = (input_phage_id,
-                        input_phage_name,
-                        input_host,
-                        input_sequence,
-                        input_status,
-                        input_cluster,
-                        input_date,
-                        input_accession,
-                        input_subcluster,
-                        input_annotation_author,
-                        input_annotation_qc,
-                        input_retrieve_record)
-
-        phamerator.parse_phamerator_data(self.genome1, data_tuple)
-
-        output_phage_id = "Trixie"
-        output_phage_name = "Trixie_Draft"
-        output_host = ""
-        output_sequence = "ATCG"
-        output_status = "final"
-        output_cluster = "singleton"
-        output_subcluster = ""
-        output_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
-        output_accession = ""
-        output_annotation_author = "1"
-        output_annotation_qc = "1"
-        output_retrieve_record = "1"
-        output_type = "phamerator"
-        output_seq_length = 4
-
-        with self.subTest():
-            self.assertEqual(self.genome1.id, output_phage_id)
-        with self.subTest():
-            self.assertEqual(self.genome1.name, output_phage_name)
-        with self.subTest():
-            self.assertEqual(self.genome1.host_genus, output_host)
-        with self.subTest():
-            self.assertEqual(self.genome1.seq, output_sequence)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_status, output_status)
-        with self.subTest():
-            self.assertEqual(self.genome1.cluster, output_cluster)
-        with self.subTest():
-            self.assertEqual(self.genome1.subcluster, output_subcluster)
-        with self.subTest():
-            self.assertEqual(self.genome1.date, \
-                output_date)
-        with self.subTest():
-            self.assertEqual(self.genome1.accession, output_accession)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_author, \
-                output_annotation_author)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
-        with self.subTest():
-            self.assertEqual(self.genome1.retrieve_record, \
-                output_retrieve_record)
-        with self.subTest():
-            self.assertEqual(self.genome1._length, output_seq_length)
-        with self.subTest():
-            self.assertEqual(self.genome1.type, output_type)
-
-
-
-
-
-
+    # # TODO this may no longer be needed now that
+    # # parse_genome_data() is available.
+    # def test_parse_phamerator_data_1(self):
+    #     """Verify standard Phamerator genome data is parsed correctly."""
+    #
+    #     input_phage_id = "Trixie_Draft"
+    #     input_phage_name = "Trixie_Draft"
+    #     input_host = "   Mycobacterium smegmatis  "
+    #     input_sequence = "atcg"
+    #     input_status = "final"
+    #     input_cluster = "A"
+    #     input_subcluster = "A2"
+    #     input_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
+    #     input_accession = "  ABC123.1  "
+    #     input_annotation_author = "1"
+    #     input_annotation_qc = "1"
+    #     input_retrieve_record = "1"
+    #
+    #     data_tuple = (input_phage_id,
+    #                     input_phage_name,
+    #                     input_host,
+    #                     input_sequence,
+    #                     input_status,
+    #                     input_cluster,
+    #                     input_date,
+    #                     input_accession,
+    #                     input_subcluster,
+    #                     input_annotation_author,
+    #                     input_annotation_qc,
+    #                     input_retrieve_record)
+    #
+    #     phamerator.parse_phamerator_data(self.genome1, data_tuple)
+    #
+    #     output_phage_id = "Trixie"
+    #     output_phage_name = "Trixie_Draft"
+    #     output_host = "Mycobacterium"
+    #     output_sequence = "ATCG"
+    #     output_status = "final"
+    #     output_cluster = "A"
+    #     output_subcluster = "A2"
+    #     output_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
+    #     output_accession = "ABC123"
+    #     output_annotation_author = "1"
+    #     output_annotation_qc = "1"
+    #     output_retrieve_record = "1"
+    #     output_type = "phamerator"
+    #     output_seq_length = 4
+    #
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.id, output_phage_id)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.name, output_phage_name)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.host_genus, output_host)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.seq, output_sequence)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.annotation_status, output_status)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.cluster, output_cluster)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.subcluster, output_subcluster)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.date, \
+    #             output_date)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.accession, output_accession)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.annotation_author, \
+    #             output_annotation_author)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.retrieve_record, \
+    #             output_retrieve_record)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1._length, output_seq_length)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.type, output_type)
+    #
+    #
+    # def test_parse_phamerator_data_2(self):
+    #     """Verify empty Phamerator genome data is parsed correctly."""
+    #
+    #     input_phage_id = "Trixie_Draft"
+    #     input_phage_name = "Trixie_Draft"
+    #     input_host = ""
+    #     input_sequence = "atcg"
+    #     input_status = "final"
+    #     input_cluster = "SINGLETON"
+    #     input_subcluster = "NONE"
+    #     input_date = None
+    #     input_accession = None
+    #     input_annotation_author = "1"
+    #     input_annotation_qc = "1"
+    #     input_retrieve_record = "1"
+    #
+    #     data_tuple = (input_phage_id,
+    #                     input_phage_name,
+    #                     input_host,
+    #                     input_sequence,
+    #                     input_status,
+    #                     input_cluster,
+    #                     input_date,
+    #                     input_accession,
+    #                     input_subcluster,
+    #                     input_annotation_author,
+    #                     input_annotation_qc,
+    #                     input_retrieve_record)
+    #
+    #     phamerator.parse_phamerator_data(self.genome1, data_tuple)
+    #
+    #     output_phage_id = "Trixie"
+    #     output_phage_name = "Trixie_Draft"
+    #     output_host = ""
+    #     output_sequence = "ATCG"
+    #     output_status = "final"
+    #     output_cluster = "singleton"
+    #     output_subcluster = ""
+    #     output_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
+    #     output_accession = ""
+    #     output_annotation_author = "1"
+    #     output_annotation_qc = "1"
+    #     output_retrieve_record = "1"
+    #     output_type = "phamerator"
+    #     output_seq_length = 4
+    #
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.id, output_phage_id)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.name, output_phage_name)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.host_genus, output_host)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.seq, output_sequence)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.annotation_status, output_status)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.cluster, output_cluster)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.subcluster, output_subcluster)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.date, \
+    #             output_date)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.accession, output_accession)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.annotation_author, \
+    #             output_annotation_author)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.retrieve_record, \
+    #             output_retrieve_record)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1._length, output_seq_length)
+    #     with self.subTest():
+    #         self.assertEqual(self.genome1.type, output_type)
 
 
 
@@ -260,7 +258,13 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_parse_phamerator_genome_data_1(self):
+
+
+
+
+
+
+    def test_parse_genome_data_1(self):
         """Verify standard Phamerator genome data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
@@ -281,7 +285,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "AnnotationQC":1,
                      "AnnotationAuthor":1}
 
-        phamerator.parse_phamerator_genome_data(self.genome1, data_dict)
+        phamerator.parse_genome_data(self.genome1, data_dict)
 
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
@@ -321,12 +325,12 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(self.genome1.type, "phamerator")
 
 
-    def test_parse_phamerator_genome_data_2(self):
+    def test_parse_genome_data_2(self):
         """Verify truncated Phamerator genome data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"PhageID":"L5"}
-        phamerator.parse_phamerator_genome_data(self.genome1, data_dict)
+        phamerator.parse_genome_data(self.genome1, data_dict)
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
         with self.subTest():
@@ -349,76 +353,133 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
+    def test_parse_cds_data_1(self):
+        """Verify standard Phamerator CDS data is parsed correctly
+        from a data dictionary returned from a SQL query."""
 
+        data_dict = {"GeneID":"L5_001",
+                     "PhageID":"L5",
+                     "Start":10,
+                     "Stop":100,
+                     "Length":1000,
+                     "Name":"1",
+                     "TypeID":"CDS",
+                     "translation":"AGGPT",
+                     "Orientation":"F",
+                     "Notes":"description".encode("utf-8"),
+                     "LocusTag":"SEA_L5_001"}
 
-
-
-
-
-
-
-
-
-
-
-
-
-    def test_create_phamerator_dict_1(self):
-        """Verify Phamerator MySQL query output is parsed correctly."""
-
-        data_tuples = (self.data_tuple1, self.data_tuple2, self.data_tuple3)
-        genome_dict = phamerator.create_phamerator_dict(data_tuples)
-        genome_l5 = genome_dict["L5"]
-        genome_trixie = genome_dict["Trixie"]
-        genome_katherineg = genome_dict["KatherineG"]
+        phamerator.parse_cds_data(self.cds1, data_dict)
 
         with self.subTest():
-            self.assertEqual(len(genome_dict.keys()), 3)
+            self.assertEqual(self.cds1.id, "L5_001")
         with self.subTest():
-            self.assertEqual(genome_l5.accession, "ABC123")
+            self.assertEqual(self.cds1.parent_genome_id, "L5")
         with self.subTest():
-            self.assertEqual(genome_trixie.accession, "EFG123")
+            self.assertEqual(self.cds1.left_boundary, 10)
         with self.subTest():
-            self.assertEqual(genome_katherineg.accession, "XYZ123")
+            self.assertEqual(self.cds1.right_boundary, 100)
+        with self.subTest():
+            self.assertEqual(self.cds1._nucleotide_length, 1000)
+        with self.subTest():
+            self.assertEqual(self.cds1.name, "1")
+        with self.subTest():
+            self.assertEqual(self.cds1.type, "CDS")
+        with self.subTest():
+            self.assertEqual(self.cds1.translation, "AGGPT")
+        with self.subTest():
+            self.assertEqual(self.cds1.strand, "F")
+        with self.subTest():
+            self.assertEqual(self.cds1.primary_description, "description")
+        with self.subTest():
+            self.assertEqual(self.cds1.locus_tag, "SEA_L5_001")
+        with self.subTest():
+            self.assertEqual(self.cds1.translation_table, 11)
+
+
+    def test_parse_cds_data_2(self):
+        """Verify truncated Phamerator CDS data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+
+        data_dict = {"GeneID":"L5_001",
+                     "PhageID":"L5",
+                     "Start":10}
+        phamerator.parse_cds_data(self.cds1, data_dict)
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_001")
+        with self.subTest():
+            self.assertEqual(self.cds1.parent_genome_id, "L5")
+        with self.subTest():
+            self.assertEqual(self.cds1.left_boundary, 10)
+        with self.subTest():
+            self.assertEqual(self.cds1.translation_table, 11)
 
 
 
 
 
 
-    def test_create_data_sets_1(self):
-        """Verify multiple sets of unique Phamerator data are produced.
-        Verify that empty accession is not added.
-        Verify that empty subcluster is not added."""
 
-        data_tuples = (self.data_tuple1,
-                        self.data_tuple2,
-                        self.data_tuple3,
-                        self.data_tuple4)
-        genome_dict = phamerator.create_phamerator_dict(data_tuples)
-        returned_dict = phamerator.create_data_sets(genome_dict)
 
-        exp_ids = set(["L5","Trixie","KatherineG","XYZ"])
-        exp_host = set(["Mycobacterium","Gordonia","Arthrobacter"])
-        exp_status = set(["final","gbk"])
-        exp_cluster = set(["A","X"])
-        exp_subcluster = set(["A2","A15"])
-        exp_accession = set(["ABC123","EFG123","XYZ123"])
 
-        with self.subTest():
-            self.assertEqual(len(returned_dict.keys()), 6)
-        with self.subTest():
-            self.assertEqual(returned_dict["phage_id"], exp_ids)
-        with self.subTest():
-            self.assertEqual(returned_dict["host_genus"], exp_host)
-        with self.subTest():
-            self.assertEqual(returned_dict["annotation_status"], exp_status)
-        with self.subTest():
-            self.assertEqual(returned_dict["cluster"], exp_cluster)
-        with self.subTest():
-            self.assertEqual(returned_dict["subcluster"], exp_subcluster)
-        with self.subTest():
-            self.assertEqual(returned_dict["accession"], exp_accession)
+    ## TODO this may no longer be needed.
+    #
+    # def test_create_phamerator_dict_1(self):
+    #     """Verify Phamerator MySQL query output is parsed correctly."""
+    #
+    #     data_tuples = (self.data_tuple1, self.data_tuple2, self.data_tuple3)
+    #     genome_dict = phamerator.create_phamerator_dict(data_tuples)
+    #     genome_l5 = genome_dict["L5"]
+    #     genome_trixie = genome_dict["Trixie"]
+    #     genome_katherineg = genome_dict["KatherineG"]
+    #
+    #     with self.subTest():
+    #         self.assertEqual(len(genome_dict.keys()), 3)
+    #     with self.subTest():
+    #         self.assertEqual(genome_l5.accession, "ABC123")
+    #     with self.subTest():
+    #         self.assertEqual(genome_trixie.accession, "EFG123")
+    #     with self.subTest():
+    #         self.assertEqual(genome_katherineg.accession, "XYZ123")
+    #
+    #
+    #
+    #
+    #
+    #
+    # def test_create_data_sets_1(self):
+    #     """Verify multiple sets of unique Phamerator data are produced.
+    #     Verify that empty accession is not added.
+    #     Verify that empty subcluster is not added."""
+    #
+    #     data_tuples = (self.data_tuple1,
+    #                     self.data_tuple2,
+    #                     self.data_tuple3,
+    #                     self.data_tuple4)
+    #     genome_dict = phamerator.create_phamerator_dict(data_tuples)
+    #     returned_dict = phamerator.create_data_sets(genome_dict)
+    #
+    #     exp_ids = set(["L5","Trixie","KatherineG","XYZ"])
+    #     exp_host = set(["Mycobacterium","Gordonia","Arthrobacter"])
+    #     exp_status = set(["final","gbk"])
+    #     exp_cluster = set(["A","X"])
+    #     exp_subcluster = set(["A2","A15"])
+    #     exp_accession = set(["ABC123","EFG123","XYZ123"])
+    #
+    #     with self.subTest():
+    #         self.assertEqual(len(returned_dict.keys()), 6)
+    #     with self.subTest():
+    #         self.assertEqual(returned_dict["phage_id"], exp_ids)
+    #     with self.subTest():
+    #         self.assertEqual(returned_dict["host_genus"], exp_host)
+    #     with self.subTest():
+    #         self.assertEqual(returned_dict["annotation_status"], exp_status)
+    #     with self.subTest():
+    #         self.assertEqual(returned_dict["cluster"], exp_cluster)
+    #     with self.subTest():
+    #         self.assertEqual(returned_dict["subcluster"], exp_subcluster)
+    #     with self.subTest():
+    #         self.assertEqual(returned_dict["accession"], exp_accession)
 
 
 
@@ -991,7 +1052,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
 
 
 
-    def test_retrieve_sql_data_1(self):
+    def test_retrieve_genome_data_1(self):
         """Verify that a dictionary of data is retrieved for a valid PhageID."""
 
 
@@ -1021,20 +1082,15 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
-        data_dict = phamerator.retrieve_sql_data(sql_handle, "L5")
+        result_list = phamerator.retrieve_genome_data(sql_handle, "L5")
         with self.subTest():
-            self.assertEqual(len(data_dict.keys()), 12)
+            self.assertEqual(len(result_list[0].keys()), 12)
         with self.subTest():
-            self.assertEqual(data_dict["PhageID"], "L5")
+            self.assertEqual(result_list[0]["PhageID"], "L5")
 
 
-
-
-
-
-
-    def test_retrieve_sql_data_2(self):
-        """Verify that an empty dictionary of data is retrieved
+    def test_retrieve_genome_data_2(self):
+        """Verify that an empty list is retrieved
         for an invalid PhageID."""
 
 
@@ -1064,8 +1120,8 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
-        data_dict = phamerator.retrieve_sql_data(sql_handle, "EagleEye")
-        self.assertEqual(len(data_dict.keys()), 0)
+        result_list = phamerator.retrieve_genome_data(sql_handle, "EagleEye")
+        self.assertEqual(len(result_list), 0)
 
 
 
@@ -1103,20 +1159,17 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
-        genome = phamerator.create_phamerator_genome(sql_handle, "L5")
+        genome_list = phamerator.create_phamerator_genome(sql_handle, "L5")
         with self.subTest():
-            self.assertEqual(genome.id, "L5")
+            self.assertEqual(genome_list[0].id, "L5")
         with self.subTest():
-            self.assertEqual(genome.seq, "ATCG")
+            self.assertEqual(genome_list[0].seq, "ATCG")
         with self.subTest():
-            self.assertEqual(genome.date, constants.EMPTY_DATE)
-
-
-
+            self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
 
 
     def test_create_phamerator_genome_2(self):
-        """Verify that an emptyu Genome object is constructed for an
+        """Verify that an empty Genome object is constructed for an
         invalid PhageID."""
 
 
@@ -1147,15 +1200,269 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
-        genome = phamerator.create_phamerator_genome(sql_handle, "EagleEye")
-        with self.subTest():
-            self.assertEqual(genome.id, "")
-        with self.subTest():
-            self.assertEqual(genome.seq, "")
-        with self.subTest():
-            self.assertEqual(genome.type, "phamerator")
+        genome_list = phamerator.create_phamerator_genome(sql_handle, "EagleEye")
+        self.assertEqual(len(genome_list), 0)
+        # with self.subTest():
+        #     self.assertEqual(genome.seq, "")
+        # with self.subTest():
+        #     self.assertEqual(genome.type, "phamerator")
 
 
+
+
+
+
+
+    def test_retrieve_cds_data_1(self):
+        """Verify that a list of data is retrieved for a valid PhageID."""
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"]]
+
+        input_cds_data = [["L5_001", "L5"],
+                          ["L5_002", "L5"],
+                          ["L5_003", "L5"]]
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql1 = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql1)
+
+        for cds_data in input_cds_data:
+            sql2 = "INSERT INTO gene " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "translation, Orientation, Notes, LocusTag) " + \
+                "VALUES " + \
+                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                (cds_data[0], cds_data[1])
+            cur.execute(sql2)
+
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        result_list = phamerator.retrieve_cds_data(sql_handle, "L5")
+        with self.subTest():
+            self.assertEqual(len(result_list), 3)
+        with self.subTest():
+            self.assertEqual(result_list[0]["PhageID"], "L5")
+
+
+
+
+
+    def test_retrieve_cds_data_2(self):
+        """Verify that an empty list of data is retrieved
+        for an invalid PhageID."""
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"]]
+        input_cds_data = [["L5_001", "L5"]]
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql1 = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql1)
+
+        for cds_data in input_cds_data:
+            sql2 = "INSERT INTO gene " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "translation, Orientation, Notes, LocusTag) " + \
+                "VALUES " + \
+                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                (cds_data[0], cds_data[1])
+            cur.execute(sql2)
+
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        result_list = phamerator.retrieve_cds_data(sql_handle, "Trixie")
+        self.assertEqual(len(result_list), 0)
+
+
+
+
+
+
+
+    def test_retrieve_cds_data_3(self):
+        """Verify that a list of all CDS data is retrieved when no
+        PhageID is provided."""
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"]]
+
+        input_cds_data = [["L5_001", "L5"],
+                          ["L5_002", "L5"],
+                          ["L5_003", "L5"],
+                          ["TRIXIE_001", "Trixie"],
+                          ["TRIXIE_002", "Trixie"]]
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql1 = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql1)
+
+        for cds_data in input_cds_data:
+            sql2 = "INSERT INTO gene " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "translation, Orientation, Notes, LocusTag) " + \
+                "VALUES " + \
+                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                (cds_data[0], cds_data[1])
+            cur.execute(sql2)
+
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        result_list = phamerator.retrieve_cds_data(sql_handle)
+        self.assertEqual(len(result_list), 5)
+
+
+
+###
+
+    def test_create_cds_1(self):
+        """Verify that a Cds object is constructed correctly for a
+        valid PhageID."""
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"]]
+        input_cds_data = [["L5_001", "L5"]]
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql1 = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql1)
+
+        for cds_data in input_cds_data:
+            sql2 = "INSERT INTO gene " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "translation, Orientation, Notes, LocusTag) " + \
+                "VALUES " + \
+                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                (cds_data[0], cds_data[1])
+            cur.execute(sql2)
+
+        connection.commit()
+        connection.close()
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        cds_list = phamerator.create_cds(sql_handle, "L5")
+
+        with self.subTest():
+            self.assertEqual(len(cds_list), 1)
+        with self.subTest():
+            self.assertEqual(cds_list[0].id, "L5_001")
+        with self.subTest():
+            self.assertEqual(cds_list[0].parent_genome_id, "L5")
+
+
+
+
+
+
+
+    def test_create_cds_2(self):
+        """Verify that an empty Cds object is constructed for an
+        invalid PhageID."""
+
+        input_phage_ids_and_seqs = [["L5", "ATCG"]]
+        input_cds_data = [["L5_001", "L5"]]
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql1 = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+            cur.execute(sql1)
+
+        for cds_data in input_cds_data:
+            sql2 = "INSERT INTO gene " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "translation, Orientation, Notes, LocusTag) " + \
+                "VALUES " + \
+                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                (cds_data[0], cds_data[1])
+            cur.execute(sql2)
+        connection.commit()
+        connection.close()
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        cds_list = phamerator.create_cds(sql_handle, "Trixie")
+        self.assertEqual(len(cds_list), 0)
 
 
 

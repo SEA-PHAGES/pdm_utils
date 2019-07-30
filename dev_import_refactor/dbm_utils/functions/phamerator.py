@@ -3,45 +3,13 @@
 
 from classes import Genome
 from classes import GenomePair
+from classes import Cds
 from functions import basic
 import pymysql
 
 
 
 
-# TODO this may no longer be needed now that
-# parse_phamerator_genome_data() is available.
-def parse_phamerator_data(genome, data_tuple):
-    """Parses tuple of data derived from a Phamerator database
-    and populates a genome object.
-    Expected data structure:
-    0 = PhageID
-    1 = Name
-    2 = HostStrain
-    3 = Sequence
-    4 = status
-    5 = Cluster2
-    6 = DateLastModified
-    7 = Accession
-    8 = Subcluster2
-    9 = AnnotationAuthor
-    10 = AnnotationQC
-    11 = RetrieveRecord
-    """
-
-    genome.set_id(data_tuple[0])
-    genome.name = data_tuple[1]
-    genome.set_host(data_tuple[2])
-    genome.set_sequence(data_tuple[3])
-    genome.annotation_status = data_tuple[4]
-    genome.set_cluster(data_tuple[5])
-    genome.set_subcluster(data_tuple[8])
-    genome.set_date(data_tuple[6])
-    genome.set_accession(data_tuple[7])
-    genome.annotation_author = str(data_tuple[9])
-    genome.annotation_qc = str(data_tuple[10])
-    genome.retrieve_record = str(data_tuple[11])
-    genome.type = "phamerator"
 
 
 
@@ -49,9 +17,10 @@ def parse_phamerator_data(genome, data_tuple):
 
 
 
-def parse_phamerator_genome_data(genome, data_dict, trans_table = 11):
-    """Parses a dictionary of data derived from a Phamerator database
-    and populates a genome object. It provides the flexibility to populate
+def parse_genome_data(genome, data_dict, trans_table = 11):
+    """Parses a dictionary of data derived from the phage table
+    of a Phamerator database and populates a genome object.
+    It provides the flexibility to populate
     a genome object even when a few selected fields of data are needed.
     """
 
@@ -145,21 +114,107 @@ def parse_phamerator_genome_data(genome, data_dict, trans_table = 11):
     genome.type = "phamerator"
 
 
+def parse_cds_data(cds, data_dict, trans_table = 11):
+    """Parses a dictionary of data derived from the gene table
+    of a Phamerator database and populates a Cds object.
+    It provides the flexibility to populate
+    a Cds object even when a few selected fields of data are needed.
+    """
+
+    try:
+        cds.id = data_dict["GeneID"]
+    except:
+        pass
+
+    try:
+        cds.parent_genome_id = data_dict["PhageID"]
+    except:
+        pass
+
+    try:
+        cds.left_boundary = data_dict["Start"]
+    except:
+        pass
+
+    try:
+        cds.right_boundary = data_dict["Stop"]
+    except:
+        pass
+
+    try:
+        cds._nucleotide_length = data_dict["Length"]
+    except:
+        pass
+
+    try:
+        cds.name = data_dict["Name"]
+    except:
+        pass
+
+    try:
+        cds.type = data_dict["TypeID"]
+    except:
+        pass
+
+    try:
+        cds.translation = data_dict["translation"]
+    except:
+        pass
+
+    try:
+        cds.strand = data_dict["Orientation"]
+    except:
+        pass
+
+    try:
+        cds.primary_description = data_dict["Notes"].decode("utf-8")
+    except:
+        pass
+
+    try:
+        cds.locus_tag = data_dict["LocusTag"]
+    except:
+        pass
+
+    try:
+        cds.translation_table = trans_table
+    except:
+        pass
 
 
 
 
 
-def retrieve_sql_data(sql_handle, phage_id):
-    """Retrieve data from Phamerator for a single genome."""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO revamp so that sql handler makes the query instead of
+# simply passing data to pymysql.
+def retrieve_genome_data(sql_handle, phage_id=None):
+    """Retrieve genome data from Phamerator for a single genome."""
 
     statement1 = "SELECT PhageID, Name, HostStrain, Sequence, status, \
                  Cluster2, DateLastModified, Accession, Subcluster2, \
                  AnnotationAuthor, AnnotationQC, RetrieveRecord \
                  FROM phage"
 
-    statement2 = " WHERE PhageID = '%s'" % phage_id
-    statement3 = statement1 + statement2
+    if phage_id is not None:
+        statement2 = " WHERE PhageID = '%s'" % phage_id
+        statement3 = statement1 + statement2
+    else:
+        statement3 = statement1
 
     # Create the connection.
     connection = pymysql.connect(host = "localhost",
@@ -175,90 +230,101 @@ def retrieve_sql_data(sql_handle, phage_id):
     result_list = cur.fetchall()
     connection.close()
 
-    if len(result_list) == 1:
-        data_dict = result_list[0]
-    else:
-        data_dict = {}
+    # if len(result_list) == 0:
+    #     result_list = [{}]
 
-    return data_dict
+    #     data_dict = result_list[0]
+    # else:
+    #     data_dict = {}
+    # return data_dict
+
+    return result_list
 
 
 
-
-def create_phamerator_genome(sql_handle, phage_id):
+def create_phamerator_genome(sql_handle, phage_id=None):
     """
     Returns a Genome object containing data parsed from MySQL
     Phamerator database.
     """
 
-    data_dict = retrieve_sql_data(sql_handle, phage_id)
-    genome = Genome.Genome()
-    parse_phamerator_genome_data(genome, data_dict)
+    result_list = retrieve_genome_data(sql_handle, phage_id)
 
-    return genome
-
-
-
-
-
-def create_phamerator_dict(phamerator_data_tuples):
-    """
-    Returns a dictionary of Phamerator data retrieved from MySQL query.
-    Key = PhageID.
-    Value = Genome object containing parsed MySQL data.
-    """
-
-    genome_dict = {}
-    for genome_tuple in phamerator_data_tuples:
+    genome_list = []
+    for data_dict in result_list:
         genome = Genome.Genome()
-        parse_phamerator_data(genome,genome_tuple)
-        genome_dict[genome.id] = genome
-
-    return genome_dict
+        parse_genome_data(genome, data_dict)
+        genome_list.append(genome)
 
 
+    return genome_list
 
-# TODO this may no longer be needed.
-def create_data_sets(genome_dict):
+
+
+
+
+
+
+
+
+
+
+
+# TODO revamp so that sql handler makes the query instead of
+# simply passing data to pymysql.
+def retrieve_cds_data(sql_handle, phage_id=None):
+    """Retrieve all CDS data from Phamerator for a single genome."""
+
+    statement1 = "SELECT \
+                 GeneID, PhageID, Start, Stop, Length, Name, \
+                 TypeID, translation, Orientation, Notes, LocusTag \
+                 FROM gene"
+
+    if phage_id is not None:
+        statement2 = " WHERE PhageID = '%s'" % phage_id
+        statement3 = statement1 + statement2
+    else:
+        statement3 = statement1
+
+    # Create the connection.
+    connection = pymysql.connect(host = "localhost",
+                                    user = sql_handle.username,
+                                    password = sql_handle.password,
+                                    database = sql_handle.database,
+                                    cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    cur.execute(statement3)
+
+    # Data is returned as a list of items, where each item is a
+    # dictionary of SQL data for each CDS.
+    result_list = cur.fetchall()
+    connection.close()
+
+    return result_list
+
+
+def create_cds(sql_handle, phage_id):
     """
-    Create sets of all unique values for several fields in the Phamerator data.
+    Returns a Cds object containing data parsed from MySQL
+    Phamerator database.
     """
-    phage_id_set = set()
-    host_genus_set = set()
-    status_set = set()
-    cluster_set = set()
-    accession_set = set()
-    subcluster_set = set()
 
-    for genome_id in genome_dict.keys():
+    result_list = retrieve_cds_data(sql_handle, phage_id)
+    cds_list = []
+    for data_dict in result_list:
+        cds = Cds.CdsFeature()
+        parse_cds_data(cds, result_list[0])
+        cds_list.append(cds)
 
-        genome = genome_dict[genome_id]
-        phage_id_set.add(genome.id)
-        host_genus_set.add(genome.host_genus)
-        status_set.add(genome.annotation_status)
-        cluster_set.add(genome.cluster)
+    return cds_list
 
-        # TODO this was not implemented in original import script,
-        # so maybe the subcluster 'empty check' is not needed.
-        # Only add to the accession set if there was an accession,
-        # and not if it was empty.
-        if basic.check_empty(genome.subcluster) == False:
-            subcluster_set.add(genome.subcluster)
 
-        # Only add to the accession set if there was an accession,
-        # and not if it was empty.
-        if basic.check_empty(genome.accession) == False:
-            accession_set.add(genome.accession)
 
-    dictionary_of_sets = {}
-    dictionary_of_sets["phage_id"] = phage_id_set
-    dictionary_of_sets["host_genus"] = host_genus_set
-    dictionary_of_sets["annotation_status"] = status_set
-    dictionary_of_sets["cluster"] = cluster_set
-    dictionary_of_sets["subcluster"] = subcluster_set
-    dictionary_of_sets["accession"] = accession_set
 
-    return dictionary_of_sets
+
+
+
+
 
 
 
@@ -689,6 +755,7 @@ def implement_remove_statements():
 
 
 
+#TODO below: functions that may no longer be needed.
 
 
 
@@ -696,8 +763,102 @@ def implement_remove_statements():
 
 
 
+# # TODO this may no longer be needed now that
+# # parse_genome_data() is available.
+# def parse_phamerator_data(genome, data_tuple):
+#     """Parses tuple of data derived from a Phamerator database
+#     and populates a genome object.
+#     Expected data structure:
+#     0 = PhageID
+#     1 = Name
+#     2 = HostStrain
+#     3 = Sequence
+#     4 = status
+#     5 = Cluster2
+#     6 = DateLastModified
+#     7 = Accession
+#     8 = Subcluster2
+#     9 = AnnotationAuthor
+#     10 = AnnotationQC
+#     11 = RetrieveRecord
+#     """
+#
+#     genome.set_id(data_tuple[0])
+#     genome.name = data_tuple[1]
+#     genome.set_host(data_tuple[2])
+#     genome.set_sequence(data_tuple[3])
+#     genome.annotation_status = data_tuple[4]
+#     genome.set_cluster(data_tuple[5])
+#     genome.set_subcluster(data_tuple[8])
+#     genome.set_date(data_tuple[6])
+#     genome.set_accession(data_tuple[7])
+#     genome.annotation_author = str(data_tuple[9])
+#     genome.annotation_qc = str(data_tuple[10])
+#     genome.retrieve_record = str(data_tuple[11])
+#     genome.type = "phamerator"
 
 
 
+
+
+# TODO this may no longer be needed now that
+# parse_genome_data() is available.
+# def create_phamerator_dict(phamerator_data_tuples):
+#     """
+#     Returns a dictionary of Phamerator data retrieved from MySQL query.
+#     Key = PhageID.
+#     Value = Genome object containing parsed MySQL data.
+#     """
+#
+#     genome_dict = {}
+#     for genome_tuple in phamerator_data_tuples:
+#         genome = Genome.Genome()
+#         parse_phamerator_data(genome,genome_tuple)
+#         genome_dict[genome.id] = genome
+#
+#     return genome_dict
+
+#
+# # TODO this may no longer be needed.
+# def create_data_sets(genome_dict):
+#     """
+#     Create sets of all unique values for several fields in the Phamerator data.
+#     """
+#     phage_id_set = set()
+#     host_genus_set = set()
+#     status_set = set()
+#     cluster_set = set()
+#     accession_set = set()
+#     subcluster_set = set()
+#
+#     for genome_id in genome_dict.keys():
+#
+#         genome = genome_dict[genome_id]
+#         phage_id_set.add(genome.id)
+#         host_genus_set.add(genome.host_genus)
+#         status_set.add(genome.annotation_status)
+#         cluster_set.add(genome.cluster)
+#
+#         # TODO this was not implemented in original import script,
+#         # so maybe the subcluster 'empty check' is not needed.
+#         # Only add to the accession set if there was an accession,
+#         # and not if it was empty.
+#         if basic.check_empty(genome.subcluster) == False:
+#             subcluster_set.add(genome.subcluster)
+#
+#         # Only add to the accession set if there was an accession,
+#         # and not if it was empty.
+#         if basic.check_empty(genome.accession) == False:
+#             accession_set.add(genome.accession)
+#
+#     dictionary_of_sets = {}
+#     dictionary_of_sets["phage_id"] = phage_id_set
+#     dictionary_of_sets["host_genus"] = host_genus_set
+#     dictionary_of_sets["annotation_status"] = status_set
+#     dictionary_of_sets["cluster"] = cluster_set
+#     dictionary_of_sets["subcluster"] = subcluster_set
+#     dictionary_of_sets["accession"] = accession_set
+#
+#     return dictionary_of_sets
 
 ###
