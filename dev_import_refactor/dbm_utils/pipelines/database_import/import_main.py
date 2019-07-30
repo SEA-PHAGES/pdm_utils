@@ -87,7 +87,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
     for filename in files_in_folder:
 
 
-        genome = fasta_files.create_parsed_flat_file(filename)
+        genome = flat_files.create_parsed_flat_file(filename)
         bundle = Bundle.Bundle()
         bundle.genome_dict[genome.type] = genome
 
