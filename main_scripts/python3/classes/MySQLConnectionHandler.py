@@ -58,6 +58,7 @@ class MySQLConnectionHandler:
         Returns self.username
         :return: self.username
         """
+        # Unit test passed
         return self._username
 
     @username.setter
@@ -67,6 +68,7 @@ class MySQLConnectionHandler:
         :param value: value to attach to self.username variable
         :return:
         """
+        # Unit test passed
         self._username = value
         self._credential_status = False
 
@@ -76,6 +78,7 @@ class MySQLConnectionHandler:
         Returns self.password
         :return: self.password
         """
+        # Unit test passed
         return self._password
 
     @password.setter
@@ -85,6 +88,7 @@ class MySQLConnectionHandler:
         :param value: value to attach to self.password variable
         :return:
         """
+        # Unit test passed
         self._password = value
         self._credential_status = False
 
@@ -94,6 +98,7 @@ class MySQLConnectionHandler:
         Returns self.database
         :return: self.database
         """
+        # Unit test passed
         return self._database
 
     @database.setter
@@ -103,6 +108,7 @@ class MySQLConnectionHandler:
         :param value: value to attach to self.database variable
         :return:
         """
+        # Unit test passed
         self._database = value
         self._database_status = False
         
@@ -113,6 +119,7 @@ class MySQLConnectionHandler:
         verified yet it returns without doing anything.
         :return:
         """
+        # Integration test passed
         if self.credential_status is True:
             try:
                 con = pms.connect("localhost", self.username, self.password,
@@ -129,6 +136,7 @@ class MySQLConnectionHandler:
         Returns self.attempts_remaining
         :return: self.attempts_remaining
         """
+        # Unit test passed
         return self._login_attempts
 
     @login_attempts.setter
@@ -138,6 +146,7 @@ class MySQLConnectionHandler:
         :param value: value to attach to self.attempts_remaining variable
         :return:
         """
+        # Unit test passed
         self._login_attempts = value
 
     @property
@@ -146,6 +155,7 @@ class MySQLConnectionHandler:
         Returns self.credential_status
         :return: self.credential_status
         """
+        # Unit test passed
         return self._credential_status
 
     @credential_status.setter
@@ -155,6 +165,7 @@ class MySQLConnectionHandler:
         :param value: value to attach to self.credential_status
         :return:
         """
+        # Unit tests passed
         # Make sure value is Boolean before setting the flag
         if value is True or value is False:
             self._credential_status = value
@@ -170,6 +181,7 @@ class MySQLConnectionHandler:
         assuming valid credentials aren't already had.
         :return:
         """
+        # TODO: integration test
         # If current credentials are unverified or
         while self.credential_status is False:
             if self.login_attempts > 0:
@@ -191,6 +203,7 @@ class MySQLConnectionHandler:
         MySQL _username and _password.
         :return:
         """
+        # TODO: integration test
         self.login_attempts = self.login_attempts - 1
         self.username = getpass.getpass(prompt="MySQL username: ")
         self.password = getpass.getpass(prompt="MySQL password: ")
@@ -203,6 +216,7 @@ class MySQLConnectionHandler:
         login flag to True. Otherwise, flag persists at False.
         :return:
         """
+        # TODO: integration test
         try:
             con = pms.connect("localhost", self.username, self.password)
             con.close()
@@ -217,6 +231,7 @@ class MySQLConnectionHandler:
         has been closed.
         :return:
         """
+        # TODO: integration test
         if self.connection is not None:
             return self.connection.open
         else:
@@ -227,6 +242,7 @@ class MySQLConnectionHandler:
         If connection status is False, open a new connection.
         :return:
         """
+        # TODO: integration tests
         # If a connection doesn't already exist (or if existing connection
         # was closed)
         if self.connection_status is False:
@@ -282,10 +298,14 @@ class MySQLConnectionHandler:
 
     def execute_query(self, query):
         """
-
+        If connection exists and is open, attempts to attach a DictCursor
+        to the connection and execute the input query. If connection doesn't
+        exist or has been closed, tries to open a new one before creating
+        DictCursor and executing query.
         :param query:
         :return:
         """
+        # TODO: integration tests
         if self.connection_status is True:
             try:
                 cursor = self.connection.cursor(pms.cursors.DictCursor)
@@ -312,11 +332,15 @@ class MySQLConnectionHandler:
 
     def execute_transaction(self, statement_list):
         """
-
+        If connection exists and is open, attempts to attach a cursor to
+        the connection and execute the commands in the input list. If
+        connection doesn't exist or has been closed, tries to open a new one
+        before creating DictCursor and executing query.
         :param statement_list: a list of MySQL insert/update statements to
         execute
         :return:
         """
+        # TODO: integration tests
         if self.connection_status is True:
             try:
                 cursor = self.connection.cursor()
@@ -360,6 +384,7 @@ class MySQLConnectionHandler:
         Calls close method on pymysql connection object
         :return:
         """
+        # TODO: integration tests
         if self.connection_status is True:
             self.connection.close()
             self.connection = None
