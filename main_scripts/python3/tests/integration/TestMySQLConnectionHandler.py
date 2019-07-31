@@ -152,6 +152,102 @@ class TestMySQLConnectionHandler(unittest.TestCase):
 		with self.subTest():
 			self.assertFalse(self.handler.connection_status())
 
+	def test_close_connection_3(self):
+		"""Close connection should fail to close connection if valid
+		connection has already been closed."""
+		self.handler.username = self.valid_user
+		self.handler.password = self.valid_pass
+		self.handler.database = self.valid_db
+		self.handler.credential_status = True
+		self.handler._database_status = True
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNotNone(self.handler.connection)
+		with self.subTest():
+			self.assertTrue(self.handler.connection_status())
+		self.handler.close_connection()
+		with self.subTest():
+			self.assertIsNone(self.handler.connection)
+		with self.subTest():
+			self.assertFalse(self.handler.connection_status())
+		self.handler.close_connection()
+		with self.subTest():
+			self.assertIsNone(self.handler.connection)
+		with self.subTest():
+			self.assertFalse(self.handler.connection_status())
+
+	def test_open_connection_2(self):
+		"""Connection should not be made if valid credentials are used with
+		an invalid database - unvalidated valid credentials."""
+		self.handler.username = self.valid_user
+		self.handler.password = self.valid_pass
+		self.handler.database = self.invalid_db
+		self.handler._database_status = False
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNone(self.handler.connection)
+
+	def test_open_connection_3(self):
+		"""Connection should not be made if valid credentials are used with
+		an invalid database - validated valid credentials."""
+		self.handler.username = self.valid_user
+		self.handler.password = self.valid_pass
+		self.handler.database = self.invalid_db
+		self.handler.credential_status = True
+		self.handler._database_status = False
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNone(self.handler.connection)
+
+	def test_open_connection_4(self):
+		"""If invalid credentials are used with a valid database, should be
+		prompted for correct credentials - unvalidated invalid credentials."""
+		self.handler.username = self.invalid_user
+		self.handler.password = self.invalid_pass
+		self.handler.database = self.valid_db
+		self.handler._database_status = True
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNotNone(self.handler.connection)
+
+	def test_open_connection_5(self):
+		"""Should fail to open connection if one already exists."""
+		self.handler.username = self.valid_user
+		self.handler.password = self.valid_pass
+		self.handler.database = self.valid_db
+		self.handler.credential_status = True
+		self.handler._database_status = True
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNotNone(self.handler.connection)
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNotNone(self.handler.connection)
+		with self.subTest():
+			self.assertTrue(self.handler.connection_status())
+
+	def test_open_connection_6(self):
+		"""Should succeed in opening a new connection if valid connection
+		was closed."""
+		self.handler.username = self.valid_user
+		self.handler.password = self.valid_pass
+		self.handler.database = self.valid_db
+		self.handler.credential_status = True
+		self.handler._database_status = True
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNotNone(self.handler.connection)
+		self.handler.close_connection()
+		with self.subTest():
+			self.assertIsNone(self.handler.connection)
+		with self.subTest():
+			self.assertFalse(self.handler.connection_status())
+		self.handler.open_connection()
+		with self.subTest():
+			self.assertIsNotNone(self.handler.connection)
+		with self.subTest():
+			self.assertTrue(self.handler.connection_status())
+
 
 if __name__ == "__main__":
 	unittest.main()

@@ -231,7 +231,7 @@ class MySQLConnectionHandler:
         has been closed.
         :return:
         """
-        # TODO: integration test
+        # Integration tests (some tests joint with close_connection) passed
         if self.connection is not None:
             return self.connection.open
         else:
@@ -242,7 +242,7 @@ class MySQLConnectionHandler:
         If connection status is False, open a new connection.
         :return:
         """
-        # TODO: integration tests
+        # Integration tests passed
         # If a connection doesn't already exist (or if existing connection
         # was closed)
         if self.connection_status() is False:
@@ -384,7 +384,7 @@ class MySQLConnectionHandler:
         Calls close method on pymysql connection object
         :return:
         """
-        # TODO: integration tests
+        # Integration tests passed
         if self.connection_status() is True:
             self.connection.close()
             self.connection = None
