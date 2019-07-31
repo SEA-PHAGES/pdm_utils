@@ -181,7 +181,7 @@ class MySQLConnectionHandler:
         assuming valid credentials aren't already had.
         :return:
         """
-        # TODO: integration test
+        # Integration tests passed
         # If current credentials are unverified or
         while self.credential_status is False:
             if self.login_attempts > 0:
@@ -203,7 +203,7 @@ class MySQLConnectionHandler:
         MySQL _username and _password.
         :return:
         """
-        # TODO: integration test
+        # Integration test passed
         self.login_attempts = self.login_attempts - 1
         self.username = getpass.getpass(prompt="MySQL username: ")
         self.password = getpass.getpass(prompt="MySQL password: ")
@@ -216,7 +216,7 @@ class MySQLConnectionHandler:
         login flag to True. Otherwise, flag persists at False.
         :return:
         """
-        # TODO: integration test
+        # Integration tests passed
         try:
             con = pms.connect("localhost", self.username, self.password)
             con.close()
@@ -245,7 +245,7 @@ class MySQLConnectionHandler:
         # TODO: integration tests
         # If a connection doesn't already exist (or if existing connection
         # was closed)
-        if self.connection_status is False:
+        if self.connection_status() is False:
             # If credentials have already been validated
             if self.credential_status is True:
                 # Test database
@@ -306,7 +306,7 @@ class MySQLConnectionHandler:
         :return:
         """
         # TODO: integration tests
-        if self.connection_status is True:
+        if self.connection_status() is True:
             try:
                 cursor = self.connection.cursor(pms.cursors.DictCursor)
                 cursor.execute(query)
@@ -317,7 +317,7 @@ class MySQLConnectionHandler:
                 print("Error {}: {}".format(err.args[0], err.args[1]))
         else:
             self.open_connection()
-            if self.connection_status is True:
+            if self.connection_status() is True:
                 try:
                     cursor = self.connection.cursor(pms.cursors.DictCursor)
                     cursor.execute(query)
@@ -341,7 +341,7 @@ class MySQLConnectionHandler:
         :return:
         """
         # TODO: integration tests
-        if self.connection_status is True:
+        if self.connection_status() is True:
             try:
                 cursor = self.connection.cursor()
                 cursor.execute("START TRANSACTION")
@@ -359,7 +359,7 @@ class MySQLConnectionHandler:
                 print("Error {}: {}".format(err.args[0], err.args[1]))
         else:
             self.open_connection()
-            if self.connection_status is True:
+            if self.connection_status() is True:
                 try:
                     cursor = self.connection.cursor()
                     cursor.execute("START TRANSACTION")
@@ -385,7 +385,7 @@ class MySQLConnectionHandler:
         :return:
         """
         # TODO: integration tests
-        if self.connection_status is True:
+        if self.connection_status() is True:
             self.connection.close()
             self.connection = None
 
