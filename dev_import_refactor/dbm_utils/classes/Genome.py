@@ -34,6 +34,7 @@ class Genome:
         # Common to all genomes
         self.host_genus = ""
         self.accession = ""
+        self.lifestyle = "" # E.g. temperate, obligately lytic, unknown, etc.
 
 
 

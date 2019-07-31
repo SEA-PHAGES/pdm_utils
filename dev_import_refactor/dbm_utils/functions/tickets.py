@@ -8,13 +8,21 @@ from classes import Genome
 
 
 
-def parse_import_ticket(
-                        ticket,
-                        data_list,
-                        expected_size = constants.IMPORT_TABLE_SIZE,
-                        id = ""):
-    """Parses list of data and creates an import ticket.
-        Expected data structure:
+
+
+
+
+def parse_import_ticket_data(ticket, data_list,
+                             expected_size = constants.IMPORT_TABLE_SIZE,
+                             id = "", direction="list_to_ticket"):
+    """Converts import ticket data between a list and Ticket object formats.
+    'ticket' is a Ticket object.
+    'data_list' is a list.
+    'expected_size' indicates how many elements should be in the data_list.
+    'direction' indicates whether data in the list should populate a
+    Ticket object ('list_to_ticket') or data in a Ticket object should
+    populate a list ('ticket_to_list').
+    The expected data structure of the data list:
         0. Import action
         1. Primary PhageID
         2. Host
@@ -27,35 +35,112 @@ def parse_import_ticket(
         9. Annotation QC
         10. Retrieve Record
         11. Run mode
-        12. Secondary PhageID
     """
-
-    ticket._parsed_fields = len(data_list)
+    # Note: by providing the ability to transfer data from both
+    # a list-to-ticket and a ticket-to-list, it helps ensure that
+    # conversion between the two formats is consistent.
 
     # Verify the row of information has the correct number of fields to parse.
     if len(data_list) == expected_size:
 
-        ticket.id = id
-        ticket.set_type(data_list[0])
-        ticket.set_description_field(data_list[7])
-        ticket.set_run_mode(data_list[11])
+        if direction == "list_to_ticket":
+            ticket._parsed_fields = len(data_list)
+            ticket.id = id
+
+
+        if direction == "list_to_ticket":
+            ticket.set_type(data_list[0])
+        elif direction == "ticket_to_list":
+            data_list[0] = ticket.type
+        else:
+            pass
+
+
+        if direction == "list_to_ticket":
+            ticket.set_description_field(data_list[7])
+        elif direction == "ticket_to_list":
+            data_list[7] = ticket.description_field
+        else:
+            pass
+
+
+        if direction == "list_to_ticket":
+            ticket.set_run_mode(data_list[11])
+        elif direction == "ticket_to_list":
+            data_list[11] = ticket.run_mode
+        else:
+            pass
 
 
         # This data will eventually populate a Genome object.
-        ticket.set_primary_phage_id(data_list[1])
-        ticket.set_host(data_list[2])
-        ticket.set_cluster(data_list[3])
-        ticket.set_subcluster(data_list[4])
-        ticket.set_annotation_status(data_list[5])
-        ticket.set_annotation_author(data_list[6])
-        ticket.set_accession(data_list[8])
-        ticket.set_annotation_qc(data_list[9])
-        ticket.set_retrieve_record(data_list[10])
 
-        # This data will eventually populate a second Genome object.
-        ticket.set_secondary_phage_id(data_list[12])
+        if direction == "list_to_ticket":
+            ticket.set_primary_phage_id(data_list[1])
+        elif direction == "ticket_to_list":
+            data_list[1] = ticket.primary_phage_id
+        else:
+            pass
 
-    return ticket
+        if direction == "list_to_ticket":
+            ticket.set_host(data_list[2])
+        elif direction == "ticket_to_list":
+            data_list[2] = ticket.host_genus
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_cluster(data_list[3])
+        elif direction == "ticket_to_list":
+            data_list[3] = ticket.cluster
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_subcluster(data_list[4])
+        elif direction == "ticket_to_list":
+            data_list[4] = ticket.subcluster
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_annotation_status(data_list[5])
+        elif direction == "ticket_to_list":
+            data_list[5] = ticket.annotation_status
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_annotation_author(data_list[6])
+        elif direction == "ticket_to_list":
+            data_list[6] = ticket.annotation_author
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_accession(data_list[8])
+        elif direction == "ticket_to_list":
+            data_list[8] = ticket.accession
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_annotation_qc(data_list[9])
+        elif direction == "ticket_to_list":
+            data_list[9] = ticket.annotation_qc
+        else:
+            pass
+
+        if direction == "list_to_ticket":
+            ticket.set_retrieve_record(data_list[10])
+        elif direction == "ticket_to_list":
+            data_list[10] = ticket.retrieve_record
+        else:
+            pass
+
+
+
+
+
 
 
 
@@ -69,7 +154,7 @@ def parse_import_tickets(list_of_lists):
     list_of_tickets = []
     for list_of_data in list_of_lists:
         ticket = Ticket.GenomeTicket()
-        parse_import_ticket(ticket, list_of_data, id = counter)
+        parse_import_ticket_data(ticket, list_of_data, id = counter)
         list_of_tickets.append(ticket)
         counter += 1
     return list_of_tickets
@@ -398,6 +483,56 @@ def prepare_tickets(ticket_filename):
 
 
 
+# TODO probably no longer needed now that parse_import_ticket_data is
+# reversible.
+# def parse_import_ticket(
+#                         ticket,
+#                         data_list,
+#                         expected_size = constants.IMPORT_TABLE_SIZE,
+#                         id = ""):
+#     """Parses list of data and creates an import ticket.
+#         Expected data structure:
+#         0. Import action
+#         1. Primary PhageID
+#         2. Host
+#         3. Cluster
+#         4. Subcluster
+#         5. Status
+#         6. Annotation Author
+#         7. Feature field
+#         8. Accession
+#         9. Annotation QC
+#         10. Retrieve Record
+#         11. Run mode
+#         12. Secondary PhageID
+#     """
+#
+#     ticket._parsed_fields = len(data_list)
+#
+#     # Verify the row of information has the correct number of fields to parse.
+#     if len(data_list) == expected_size:
+#
+#         ticket.id = id
+#         ticket.set_type(data_list[0])
+#         ticket.set_description_field(data_list[7])
+#         ticket.set_run_mode(data_list[11])
+#
+#
+#         # This data will eventually populate a Genome object.
+#         ticket.set_primary_phage_id(data_list[1])
+#         ticket.set_host(data_list[2])
+#         ticket.set_cluster(data_list[3])
+#         ticket.set_subcluster(data_list[4])
+#         ticket.set_annotation_status(data_list[5])
+#         ticket.set_annotation_author(data_list[6])
+#         ticket.set_accession(data_list[8])
+#         ticket.set_annotation_qc(data_list[9])
+#         ticket.set_retrieve_record(data_list[10])
+#
+#         # This data will eventually populate a second Genome object.
+#         #ticket.set_secondary_phage_id(data_list[12])
+#
+#     return ticket
 
 
 

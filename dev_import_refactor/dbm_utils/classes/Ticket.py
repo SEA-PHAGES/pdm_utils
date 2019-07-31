@@ -35,6 +35,8 @@ class GenomeTicket:
         self.retrieve_record = ""
         self.accession = ""
 
+
+        # TODO this attribute can probably be deleted
         # Attribute used to populate Genome objects for 'replace' ticket types.
         self.secondary_phage_id = ""
 

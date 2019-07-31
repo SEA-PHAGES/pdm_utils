@@ -28,8 +28,7 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "ABC123",
                                 1,
                                 1,
-                                "phagesdb",
-                                "none"]
+                                "phagesdb"]
 
         self.short_ticket_list = ["add",
                                 "Trixie",
@@ -65,56 +64,74 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "XYZ456",
                                 1,
                                 1,
-                                "phagesdb",
-                                "KatherineG"]
+                                "phagesdb"]
 
-    def test_parse_import_ticket_1(self):
-        """Verify properly structured data is parsed correctly."""
-        tickets.parse_import_ticket(self.ticket, self.normal_ticket_list)
 
-        with self.subTest():
-            self.assertEqual(self.ticket.type, "add")
-        with self.subTest():
-            self.assertEqual(self.ticket.primary_phage_id, "Trixie")
-        with self.subTest():
-            self.assertEqual(self.ticket.host_genus, "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(self.ticket.cluster, "A")
-        with self.subTest():
-            self.assertEqual(self.ticket.subcluster, "A2")
-        with self.subTest():
-            self.assertEqual(self.ticket.annotation_status, "final")
-        with self.subTest():
-            self.assertEqual(self.ticket.annotation_author, "hatfull")
-        with self.subTest():
-            self.assertEqual(self.ticket.annotation_qc, 1)
-        with self.subTest():
-            self.assertEqual(self.ticket.retrieve_record, 1)
-        with self.subTest():
-            self.assertEqual(self.ticket.description_field, "product")
-        with self.subTest():
-            self.assertEqual(self.ticket.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(self.ticket.run_mode, "phagesdb")
-        with self.subTest():
-            self.assertEqual(self.ticket.secondary_phage_id, "none")
+        self.empty_ticket_list = [None, None, None, None, None, None,
+                                  None, None, None, None, None, None,]
 
-    def test_parse_import_ticket_2(self):
-        """Verify id is set appropriately."""
-        tickets.parse_import_ticket(self.ticket,
-                                    self.normal_ticket_list,
-                                    id = "TicketXYZ")
-        self.assertEqual(self.ticket.id, "TicketXYZ")
+        self.filled_ticket = Ticket.GenomeTicket()
+        self.filled_ticket.type = "add"
+        self.filled_ticket.primary_phage_id = "Trixie"
+        self.filled_ticket.host_genus = "Mycobacterium"
+        self.filled_ticket.cluster = "A"
+        self.filled_ticket.subcluster = "A2"
+        self.filled_ticket.annotation_status = "final"
+        self.filled_ticket.annotation_author = "hatfull"
+        self.filled_ticket.annotation_qc = 1
+        self.filled_ticket.retrieve_record = 1
+        self.filled_ticket.description_field = "product"
+        self.filled_ticket.accession = "ABC123"
+        self.filled_ticket.run_mode = "phagesdb"
 
-    def test_parse_import_ticket_3(self):
-        """Verify improperly structured data is not parsed."""
-        tickets.parse_import_ticket(self.ticket, self.short_ticket_list)
-        self.assertEqual(self.ticket.type, "")
 
-    def test_parse_import_ticket_4(self):
-        """Verify improperly structured data is not parsed."""
-        tickets.parse_import_ticket(self.ticket, self.long_ticket_list)
-        self.assertEqual(self.ticket.type, "")
+
+
+    # def test_parse_import_ticket_1(self):
+    #     """Verify properly structured data is parsed correctly."""
+    #     tickets.parse_import_ticket(self.ticket, self.normal_ticket_list)
+    #
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.type, "add")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.primary_phage_id, "Trixie")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.host_genus, "Mycobacterium")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.cluster, "A")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.subcluster, "A2")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.annotation_status, "final")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.annotation_author, "hatfull")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.annotation_qc, 1)
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.retrieve_record, 1)
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.description_field, "product")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.accession, "ABC123")
+    #     with self.subTest():
+    #         self.assertEqual(self.ticket.run_mode, "phagesdb")
+    #
+    # def test_parse_import_ticket_2(self):
+    #     """Verify id is set appropriately."""
+    #     tickets.parse_import_ticket(self.ticket,
+    #                                 self.normal_ticket_list,
+    #                                 id = "TicketXYZ")
+    #     self.assertEqual(self.ticket.id, "TicketXYZ")
+    #
+    # def test_parse_import_ticket_3(self):
+    #     """Verify improperly structured data is not parsed."""
+    #     tickets.parse_import_ticket(self.ticket, self.short_ticket_list)
+    #     self.assertEqual(self.ticket.type, "")
+    #
+    # def test_parse_import_ticket_4(self):
+    #     """Verify improperly structured data is not parsed."""
+    #     tickets.parse_import_ticket(self.ticket, self.long_ticket_list)
+    #     self.assertEqual(self.ticket.type, "")
 
 
 
@@ -174,6 +191,133 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             type = list_of_tickets[2].type
             self.assertEqual(type, "")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
+
+    def test_parse_import_ticket_data_1(self):
+        """Verify properly structured data is parsed correctly."""
+        tickets.parse_import_ticket_data(self.ticket, self.normal_ticket_list)
+
+        with self.subTest():
+            self.assertEqual(self.ticket.type, "add")
+        with self.subTest():
+            self.assertEqual(self.ticket.primary_phage_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(self.ticket.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.ticket.cluster, "A")
+        with self.subTest():
+            self.assertEqual(self.ticket.subcluster, "A2")
+        with self.subTest():
+            self.assertEqual(self.ticket.annotation_status, "final")
+        with self.subTest():
+            self.assertEqual(self.ticket.annotation_author, "hatfull")
+        with self.subTest():
+            self.assertEqual(self.ticket.annotation_qc, 1)
+        with self.subTest():
+            self.assertEqual(self.ticket.retrieve_record, 1)
+        with self.subTest():
+            self.assertEqual(self.ticket.description_field, "product")
+        with self.subTest():
+            self.assertEqual(self.ticket.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(self.ticket.run_mode, "phagesdb")
+
+    def test_parse_import_ticket_data_2(self):
+        """Verify id is set appropriately."""
+        tickets.parse_import_ticket_data(self.ticket,
+                                    self.normal_ticket_list,
+                                    id = "TicketXYZ")
+        self.assertEqual(self.ticket.id, "TicketXYZ")
+
+    def test_parse_import_ticket_data_3(self):
+        """Verify improperly structured data is not parsed."""
+        tickets.parse_import_ticket_data(self.ticket, self.short_ticket_list)
+        self.assertEqual(self.ticket.type, "")
+
+    def test_parse_import_ticket_data_4(self):
+        """Verify improperly structured data is not parsed."""
+        tickets.parse_import_ticket_data(self.ticket, self.long_ticket_list)
+        self.assertEqual(self.ticket.type, "")
+
+
+
+
+
+
+    def test_parse_import_ticket_data_5(self):
+        """Verify properly structured data is parsed correctly."""
+
+        tickets.parse_import_ticket_data(self.filled_ticket,
+                                         self.empty_ticket_list,
+                                         direction = "ticket_to_list")
+
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[0], "add")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[1], "Trixie")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[2], "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[3], "A")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[4], "A2")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[5], "final")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[6], "hatfull")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[9], 1)
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[10], 1)
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[7], "product")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[8], "ABC123")
+        with self.subTest():
+            self.assertEqual(self.empty_ticket_list[11], "phagesdb")
+
+
+
+
+    def test_parse_import_ticket_data_6(self):
+        """Verify no changes are made if the direction is invalid."""
+
+        tickets.parse_import_ticket_data(self.filled_ticket,
+                                         self.empty_ticket_list,
+                                         direction = "invalid")
+
+        with self.subTest():
+            self.assertIsNone(self.empty_ticket_list[0])
+        with self.subTest():
+            self.assertEqual(self.filled_ticket.type, "add")
+
+
+
+###
+
+
+
+
+
 
 
 

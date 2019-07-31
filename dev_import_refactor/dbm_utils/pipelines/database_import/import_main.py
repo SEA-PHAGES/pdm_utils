@@ -7,6 +7,9 @@ from functions import tickets
 from functions import flat_files
 from functions import phagesdb
 from functions import phamerator
+from classes import Bundle
+from pipelines.database_import import evaluate
+from constants import constants
 
 
 
@@ -14,22 +17,27 @@ from functions import phamerator
 
 
 
-def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
+def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
     """The 'lists_of_ticket_data' parameter is a list, where each
     element is a list of ticket data.
-    The 'list_of_flat_file_data' parameter is a list, where each
-    element is data parsed from a flat_file into a Biopython SeqRecord.
-    The 'sql_obj' parameter handles MySQL connections."""
+    The 'files_in_folder' parameter is a list, where each
+    element is a filename to be parsed.
+    The 'sql_handle' parameter handles MySQL connections."""
 
 
+    # Will hold all results data. These can be used by various types of
+    # user interfaces to present the summary of import.
+    success_ticket_list = []
+    failed_ticket_list = []
+    success_filename_list = []
+    failed_filename_list = []
+    evaluation_dict = {}
+    query_dict = {}
 
-
-
-    # Convert to ticket objects.
+    # Convert ticket data to Ticket objects.
     # Data is returned as a list of ticket objects.
-    # lists_of_ticket_data = read.csv(ticket_filename)
     ticket_list = tickets.parse_import_tickets(lists_of_ticket_data)
-
+    print("Tickets parsed")
 
 
     # Evaluate the tickets to ensure they are structured properly.
@@ -43,12 +51,13 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
                                         constants.EMPTY_SET,
                                         constants.RUN_MODE_SET)
         index1 += 1
+    print("Ticket structure checked")
 
 
     # Now that individual tickets have been validated,
     # validate the entire group of tickets.
     tickets.compare_tickets(ticket_list)
-
+    print("Tickets compared")
 
 
     # Create a dictionary of tickets based on the primary_phage_id.
@@ -56,6 +65,8 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
     index2 = 0
     while index2 < len(ticket_list):
         ticket_dict[ticket_list[index2].primary_phage_id] = ticket_list[index2]
+        index2 += 1
+    print("Ticket dictionary created")
 
 
 
@@ -80,6 +91,7 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
         phagesdb_cluster_set = set()
         phagesdb_subcluster_set = set()
 
+    print("PhagesDB sets retrieved")
 
 
     # To minimize memory usage, each flat_file is evaluated one by one.
@@ -98,12 +110,12 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
 
 
         # Create sets of unique values for different data fields.
-        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_obj)
-        phamerator_seq_set = phamerator.create_seq_set(sql_obj)
+        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
+        phamerator_seq_set = phamerator.create_seq_set(sql_handle)
 
         # Perform all evaluations based on the ticket type.
-        import_main.main2(bundle,
-                            sql_obj,
+        import_main.main2(bundle = bundle,
+                            sql_handle = sql_handle,
                             phage_id_set = phamerator_phage_id_set,
                             seq_set = phamerator_seq_set,
                             host_genera_set = phagesdb_host_genera_set,
@@ -111,15 +123,53 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
                             subcluster_set = phagesdb_subcluster_set)
 
 
-        # Now import the data into the database.
-        import_main.import_into_database(bundle, sql_obj)
 
+        # Now that all evaluations have been performed,
+        # determine if there are any errors.
+        eval_sub_dict = bundle.get_evaluations() # TODO implement this method.
+        errors = 0
+        for key in eval_sub_dict.keys():
+            eval_list = eval_sub_dict[key]
+            for eval in eval_list:
+                if eval.status == "error"
+                    errors += 1
+
+
+
+        # TODO construct a basic.get_empty_ticket() function.
+        empty_ticket = [None, None, None, None, None, None,
+                        None, None, None, None, None, None, ]
+        ticket_data =  tickets.parse_import_ticket_data(\
+                            bundle.ticket, empty_ticket,
+                            direction = "ticket_to_list")))
+
+        if errors == 0:
+
+
+            # Now import the data into the database if there are no errors and
+            # if there is MySQL connection data provided.
+            if sql_handle is not None:
+                bundle.create_sql_statements()
+
+                # TODO confirm the handler method name and that it can
+                # handle a list of queries.
+                sql_handle.execute(bundle.sql_queries)
+                sql_handle.commit()
+
+                # If successful, keep track of query data.
+                query_dict[bundle.ticket.primary_phage_id] = bundle.sql_queries
+                success_ticket_list.append(ticket_data)
+            else:
+                success_ticket_list.append(ticket_data)
+
+        else:
+            failed_ticket_list.append(ticket_data)
 
 
     # Tickets were popped off the ticket dictionary as they were matched
     # to flat files. If there are any tickets left, errors need to be counted.
-    for key in ticket_dict.keys():
-
+    key_list = set(ticket_dict.keys())
+    for key in key_list:
         unmatched_ticket = ticket_dict.pop(key)
         bundle = Bundle.Bundle()
         bundle.ticket = unmatched_ticket
@@ -131,12 +181,13 @@ def main1(lists_of_ticket_data, list_of_flat_file_data, sql_obj = None):
 
 
     #return list_of_bundles
+    return (success_ticket_list, failed_ticket_list, success_filename_list,
+            failed_filename_list, evaluation_dict, query_dict)
 
 
 
 
-
-def main2(bundle, sql_obj, host_genera_set = set(), phage_id_set = set(),
+def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
             seq_set = set(), cluster_set = set(), subcluster_set = set()):
     """Evaluate data within a single Bundle object."""
 
@@ -183,7 +234,7 @@ def main2(bundle, sql_obj, host_genera_set = set(), phage_id_set = set(),
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
     if matched_ticket.type == "replace":
         phamerator_genome = \
-            phamerator.create_phamerator_genome(sql_obj, genome.id)
+            phamerator.create_phamerator_genome(sql_handle, genome.id)
 
 
         # If any attributes in flat_file are set to 'retain', copy data
@@ -205,13 +256,13 @@ def main2(bundle, sql_obj, host_genera_set = set(), phage_id_set = set(),
 
 
 
-def import_into_database(list_of_bundles, sql_obj):
+def import_into_database(bundle, sql_handle):
     """Construct collection of SQL statements for evaluated data and
     execute statements to add the data into the database."""
 
 
 
-    # Create all SQL statements for all tickets with no errors.
+    # Create all SQL statements.
     index11 = 0
     while index11 < len(list_of_bundles):
             bundle = list_of_bundles[index11]
