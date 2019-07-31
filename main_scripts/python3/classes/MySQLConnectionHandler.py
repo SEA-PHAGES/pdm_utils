@@ -36,81 +36,206 @@ class MySQLConnectionHandler:
         self.connection = None
 
         # Variables needed to establish a connection
-        self.username = username
-        self.password = password
-        self.database = database
+        # Used by username, password, and database @properties
+        self._username = username
+        self._password = password
+        self._database = database
 
         # How many login attempts can the user make?
-        self.attempts_remaining = attempts
+        # Used by login_attempts @property
+        self._login_attempts = attempts
 
-        # valid_credentials flag lets us know whether user/pass work
-        # valid_database flag lets us know whether user has access to db
-        self.valid_credentials = False
-        self.valid_database = False
+        # Flag to track whether the user and password have been validated
+        # Used by credential_status @property
+        self._credential_status = False
 
-    def set_username(self, value):
+        # Flag to track whether the database has been validated
+        self._database_status = False
+        
+    @property
+    def username(self):
         """
-        Sets username attribute to input value.
-        :param value:
+        Returns self.username
+        :return: self.username
+        """
+        return self._username
+
+    @username.setter
+    def username(self, value):
+        """
+        Sets self.username. Also resets self.credential_status to False.
+        :param value: value to attach to self.username variable
         :return:
         """
-        self.username = value
+        self._username = value
+        self._credential_status = False
 
-    def set_password(self, value):
+    @property
+    def password(self):
         """
-        Sets password attribute to input value.
-        :param value:
+        Returns self.password
+        :return: self.password
+        """
+        return self._password
+
+    @password.setter
+    def password(self, value):
+        """
+        Sets self.password. Also resets self.credential_status to False.
+        :param value: value to attach to self.password variable
         :return:
         """
-        self.password = value
+        self._password = value
+        self._credential_status = False
 
-    def set_database(self, value):
+    @property
+    def database(self):
         """
-        Sets database attribute to input value.
-        :param value:
+        Returns self.database
+        :return: self.database
+        """
+        return self._database
+
+    @database.setter
+    def database(self, value):
+        """
+        Sets self.database. Also resets self.database_status to False.
+        :param value: value to attach to self.database variable
         :return:
         """
-        self.database = value
-
-    def get_credential_status(self):
+        self._database = value
+        self._database_status = False
+        
+    def validate_database_access(self):
         """
-        Return True if username and password are valid, False if not.
+        Tries to connect to the specified database using the verified
+        username and password. If _username and _password haven't been
+        verified yet it returns without doing anything.
         :return:
         """
-        return self.valid_credentials
+        if self.credential_status is True:
+            try:
+                con = pms.connect("localhost", self.username, self.password,
+                                  self.database)
+                con.close()
+                self._database_status = True
+            except pms.err.Error:
+                self._database_status = False
+        return
+
+    @property
+    def login_attempts(self):
+        """
+        Returns self.attempts_remaining
+        :return: self.attempts_remaining
+        """
+        return self._login_attempts
+
+    @login_attempts.setter
+    def login_attempts(self, value):
+        """
+        Sets self.attempts_remaining
+        :param value: value to attach to self.attempts_remaining variable
+        :return:
+        """
+        self._login_attempts = value
+
+    @property
+    def credential_status(self):
+        """
+        Returns self.credential_status
+        :return: self.credential_status
+        """
+        return self._credential_status
+
+    @credential_status.setter
+    def credential_status(self, value):
+        """
+        Sets self.credential_status
+        :param value: value to attach to self.credential_status
+        :return:
+        """
+        # Make sure value is Boolean before setting the flag
+        if value is True or value is False:
+            self._credential_status = value
+        else:
+            print("{} is not an allowed type for this Boolean flag".format(
+                type(value)))
+            print("Using False")
+            self._credential_status = False
 
     def get_credentials(self):
         """
-        Gives user x attempts to input correct username and password,
+        Gives user x attempts to input correct _username and _password,
         assuming valid credentials aren't already had.
         :return:
         """
-        while self.valid_credentials is False:
-            if self.attempts_remaining > 0:
+        # If current credentials are unverified or
+        while self.credential_status is False:
+            if self.login_attempts > 0:
                 self.ask_username_and_password()
                 self.validate_credentials()
-                # If self.valid_credentials is still false, bad user/pass
-                if self.valid_credentials is False:
-                    if self.attempts_remaining >= 1:
+                # If self.credential_status is still false, bad user/pass
+                if self.credential_status is False:
+                    if self.login_attempts >= 1:
                         print(self.messages["bad user or pass"].format(
                             self.username))
                     else:
                         print(self.messages["too many attempts"])
                         return
 
-    def create_connection(self):
+    def ask_username_and_password(self):
         """
-        If a connection doesn't already exist, attempts to create one.
+        Reverse increments (decrements? don't think that's a word...)
+        the number of attempts remaining, then prompts the user for a
+        MySQL _username and _password.
         :return:
         """
-        # If a connection doesn't already exist
-        if self.connection is None or self.connection.open is False:
+        self.login_attempts = self.login_attempts - 1
+        self.username = getpass.getpass(prompt="MySQL username: ")
+        self.password = getpass.getpass(prompt="MySQL password: ")
+        return
+
+    def validate_credentials(self):
+        """
+        Tries to connect to MySQL localhost using the verified _username
+        and _password. Successful connection triggers setting successful
+        login flag to True. Otherwise, flag persists at False.
+        :return:
+        """
+        try:
+            con = pms.connect("localhost", self.username, self.password)
+            con.close()
+            self.credential_status = True
+        except pms.err.Error:
+            self.credential_status = False
+        return
+
+    def connection_status(self):
+        """
+        Returns True if the connection is open. False if the connection
+        has been closed.
+        :return:
+        """
+        if self.connection is not None:
+            return self.connection.open
+        else:
+            return False
+
+    def open_connection(self):
+        """
+        If connection status is False, open a new connection.
+        :return:
+        """
+        # If a connection doesn't already exist (or if existing connection
+        # was closed)
+        if self.connection_status is False:
             # If credentials have already been validated
-            if self.valid_credentials is True:
+            if self.credential_status is True:
                 # Test database
                 self.validate_database_access()
                 # If database is valid
-                if self.valid_database is True:
+                if self._database_status is True:
                     # Create connection
                     self.connection = pms.connect("localhost",
                                                   self.username,
@@ -126,15 +251,15 @@ class MySQLConnectionHandler:
                 # Test them
                 self.validate_credentials()
                 # If tested credentials are not valid
-                if self.valid_credentials is False:
+                if self.credential_status is False:
                     # Prompt user for credentials with x attempts
                     self.get_credentials()
                 # If credentials are now valid
-                if self.valid_credentials is True:
+                if self.credential_status is True:
                     # Test database
                     self.validate_database_access()
                     # If database is valid
-                    if self.valid_database is True:
+                    if self._database_status is True:
                         # Create connection
                         self.connection = pms.connect("localhost",
                                                       self.username,
@@ -153,74 +278,90 @@ class MySQLConnectionHandler:
         else:
             # Print already connected message
             print(self.messages["already connected"])
-
         return
 
-    def get_connection_status(self):
+    def execute_query(self, query):
         """
-        Returns True if the connection is open. False if the connection
-        has been closed.
-        :return:
-        """
-        if self.connection is not None:
-            return self.connection.open
 
-    def get_connection(self):
-        """
-        Returns the pymysql connection object
+        :param query:
         :return:
         """
-        return self.connection
+        if self.connection_status is True:
+            try:
+                cursor = self.connection.cursor(pms.cursors.DictCursor)
+                cursor.execute(query)
+                results = cursor.fetchall()
+                cursor.close()
+                return results
+            except pms.err.Error as err:
+                print("Error {}: {}".format(err.args[0], err.args[1]))
+        else:
+            self.open_connection()
+            if self.connection_status is True:
+                try:
+                    cursor = self.connection.cursor(pms.cursors.DictCursor)
+                    cursor.execute(query)
+                    results = cursor.fetchall()
+                    cursor.close()
+                    return results
+                except pms.err.Error as err:
+                    print("Error {}: {}".format(err.args[0], err.args[1]))
+            else:
+                print("Failed to open new connection. Cannot query without "
+                      "an open connection")
+
+    def execute_transaction(self, statement_list):
+        """
+
+        :param statement_list: a list of MySQL insert/update statements to
+        execute
+        :return:
+        """
+        if self.connection_status is True:
+            try:
+                cursor = self.connection.cursor()
+                cursor.execute("START TRANSACTION")
+                for statement in statement_list:
+                    try:
+                        cursor.execute(statement)
+                    except pms.err.ProgrammingError:
+                        print("{} is not a valid command".format(statement))
+                        cursor.execute("ROLLBACK")
+                        cursor.close()
+                        break
+                cursor.execute("COMMIT")
+                cursor.close()
+            except pms.err.Error as err:
+                print("Error {}: {}".format(err.args[0], err.args[1]))
+        else:
+            self.open_connection()
+            if self.connection_status is True:
+                try:
+                    cursor = self.connection.cursor()
+                    cursor.execute("START TRANSACTION")
+                    for statement in statement_list:
+                        try:
+                            cursor.execute(statement)
+                        except pms.err.ProgrammingError:
+                            print("{} is not a valid command".format(statement))
+                            cursor.execute("ROLLBACK")
+                            cursor.close()
+                            break
+                    cursor.execute("COMMIT")
+                    cursor.close()
+                except pms.err.Error as err:
+                    print("Error {}: {}".format(err.args[0], err.args[1]))
+            else:
+                print("Failed to open new connection. Cannot execute "
+                      "transaction without an open connection")
 
     def close_connection(self):
         """
         Calls close method on pymysql connection object
         :return:
         """
-        if self.connection:
+        if self.connection_status is True:
             self.connection.close()
             self.connection = None
 
-    def ask_username_and_password(self):
-        """
-        Reverse increments (decrements? don't think that's a word...)
-        the number of attempts remaining, then prompts the user for a
-        MySQL username and password.
-        :return:
-        """
-        self.attempts_remaining -= 1
-        self.username = getpass.getpass(prompt="MySQL username: ")
-        self.password = getpass.getpass(prompt="MySQL password: ")
-        return
 
-    def validate_credentials(self):
-        """
-        Tries to connect to MySQL localhost using the verified username
-        and password. Successful connection triggers setting successful
-        login flag to True. Otherwise, flag persists at False.
-        :return:
-        """
-        try:
-            con = pms.connect("localhost", self.username, self.password)
-            con.close()
-            self.valid_credentials = True
-        except pms.err.Error:
-            self.valid_credentials = False
-        return
-
-    def validate_database_access(self):
-        """
-        Tries to connect to the specified database using the verified
-        username and password. If username and password haven't been
-        verified yet it returns without doing anything.
-        :return:
-        """
-        if self.valid_credentials is True:
-            try:
-                con = pms.connect("localhost", self.username, self.password,
-                                  self.database)
-                con.close()
-                self.valid_database = True
-            except pms.err.Error:
-                self.valid_database = False
-        return
