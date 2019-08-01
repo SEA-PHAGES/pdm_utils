@@ -16,6 +16,10 @@ IMPORT_TABLE_SIZE = 12
 NAME_SUFFIX = "_Draft"
 
 ANNOTATION_STATUS_SET = set(["draft", "final", "gbk"])
+ANNOTATION_AUTHOR_SET = set([0,1])
+ANNOTATION_QC_SET = set([0,1])
+RETRIEVE_RECORD_SET = set([0,1])
+
 
 EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')
 
@@ -44,12 +48,12 @@ PROTEIN_ALPHABET = set(IUPAC.ExtendedIUPACProtein.letters)
 # Update = make changes to one or more fields related to a genome
 # already present in the database (e.g. HostStrain, Cluster, Subcluster, etc.)
 TICKET_TYPE_SET = set(["add", "remove", "replace", "update"])
-
+IMPORT_TICKET_TYPE_SET = set(["add", "replace",])
 
 
 # TODO is this constant still needed?
 # Create set of most common gene description genbank qualifiers.
-DESCRIPTION_FIELDS = set(["product", "note", "function"])
+DESCRIPTION_FIELD_SET = set(["product", "note", "function"])
 
 
 # Create list of potential host names to ignore.

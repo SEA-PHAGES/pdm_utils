@@ -3,7 +3,51 @@
 
 from constants import constants
 
-def check_ticket_structure(ticket, type_set, null_set, run_mode_set):
+
+
+
+
+#
+# def check_import_ticket_structure(
+#         ticket,
+#         type_set=constants.IMPORT_TICKET_TYPE_SET,
+#         annotation_status_set=constants.ANNOTATION_STATUS_SET,
+#         description_field_set=constants.DESCRIPTION_FIELD_SET,
+#         annotation_author_set=constants.ANNOTATION_AUTHOR_SET,
+#         run_mode_set=constants.RUN_MODE_SET,
+#         null_set=constants.EMPTY_SET):
+#     """Evaluate a ticket to confirm it is structured appropriately.
+#     The assumptions for how each field is populated varies depending on
+#     the type of ticket."""
+#
+#     # This function simply evaluates whether there is data in the
+#     # appropriate ticket attributes given the type of ticket.
+#     # It confirms that ticket attributes 'type', 'run_mode', and
+#     # 'description_field' are populated with specific values.
+#     # But it does not evaluate the quality of the data itself for
+#     # the other fields, since those are genome-specific fields and
+#     # can be checked within Genome objects.
+#
+#     #null_set = set(["none"])
+#
+#     # This is the only evaluation that is not dependent on the ticket type.
+#     ticket.check_type(type_set, True)
+#     ticket.check_primary_phage_id(null_set, False)
+#     ticket.check_host_genus(null_set, False)
+#     ticket.check_cluster(null_set, False)
+#     ticket.check_annotation_status(annotation_status_set)
+#     ticket.check_description_field(description_field_set)
+#     ticket.check_annotation_author(annotation_author_set)
+#     ticket.check_run_mode(run_mode_set)
+#
+#     # No need to evaluate the Accession and Subcluster fields
+#     # since they may or may not be populated.
+#
+
+
+
+# TODO this may no longer be needed.
+def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket."""

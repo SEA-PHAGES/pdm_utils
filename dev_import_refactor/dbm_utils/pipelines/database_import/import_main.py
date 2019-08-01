@@ -37,27 +37,23 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
     # Convert ticket data to Ticket objects.
     # Data is returned as a list of ticket objects.
     ticket_list = tickets.parse_import_tickets(lists_of_ticket_data)
-    print("Tickets parsed")
+    # print("Tickets parsed")
 
 
     # Evaluate the tickets to ensure they are structured properly.
-
-
-    # TODO not sure if I should pass a list of valid types to this function.
+    # At this point, the quality of the ticket data is not evaluated,
+    # just that the ticket contains fields populated or empty as expected.
     index1 = 0
     while index1 < len(ticket_list):
-        evaluate.check_ticket_structure(ticket_list[index1],
-                                        constants.TICKET_TYPE_SET,
-                                        constants.EMPTY_SET,
-                                        constants.RUN_MODE_SET)
+        evaluate.check_ticket_structure(ticket_list[index1]),
         index1 += 1
-    print("Ticket structure checked")
+    # print("Ticket structure checked")
 
 
     # Now that individual tickets have been validated,
     # validate the entire group of tickets.
     tickets.compare_tickets(ticket_list)
-    print("Tickets compared")
+    # print("Tickets compared")
 
 
     # Create a dictionary of tickets based on the primary_phage_id.
@@ -66,117 +62,137 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
     while index2 < len(ticket_list):
         ticket_dict[ticket_list[index2].primary_phage_id] = ticket_list[index2]
         index2 += 1
-    print("Ticket dictionary created")
+    # print("Ticket dictionary created")
 
 
 
 
-    # TODO check for ticket errors = exit script if not structured correctly?
+    # Check for ticket errors.
+    ticket_errors = 0
+    for key in ticket_dict.keys():
+        ticket = ticket_dict[key]
+        for eval in ticket.evaluations:
+            if eval.status == "error":
+                ticket_errors += 1
 
 
+    # If there are no ticket errors, proceed with evaluating flat files.
+    if ticket_errors == 0:
 
+        # If there is at least one file to process, retrieve data from
+        # phagesdb to create sets of valid host genera, clusters,
+        # and subclusters.
+        if (len(files_in_folder) > 0 and ticket_errors == 0):
+            phagesdb_host_genera_set = phagesdb.create_host_genus_set()
 
-
-
-    # If there is at least one file to process, retrieve data from phagesdb to
-    # create sets of valid host genera, clusters, and subclusters.
-    if len(files_in_folder) > 0:
-        phagesdb_host_genera_set = phagesdb.create_host_genus_set()
-
-        phagesdb_cluster_set, \
-        phagesdb_subcluster_set = phagesdb.create_cluster_subcluster_sets()
-
-    else:
-        phagesdb_host_genera_set = set()
-        phagesdb_cluster_set = set()
-        phagesdb_subcluster_set = set()
-
-    print("PhagesDB sets retrieved")
-
-
-    # To minimize memory usage, each flat_file is evaluated one by one.
-
-    for filename in files_in_folder:
-
-
-        genome = flat_files.create_parsed_flat_file(filename)
-        bundle = Bundle.Bundle()
-        bundle.genome_dict[genome.type] = genome
-
-        # Match ticket (if available) to flat file.
-        matched_ticket = ticket_dict.pop(genome.id, None)
-        bundle.ticket = matched_ticket
-
-
-
-        # Create sets of unique values for different data fields.
-        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
-        phamerator_seq_set = phamerator.create_seq_set(sql_handle)
-
-        # Perform all evaluations based on the ticket type.
-        import_main.main2(bundle = bundle,
-                            sql_handle = sql_handle,
-                            phage_id_set = phamerator_phage_id_set,
-                            seq_set = phamerator_seq_set,
-                            host_genera_set = phagesdb_host_genera_set,
-                            cluster_set = phagesdb_cluster_set,
-                            subcluster_set = phagesdb_subcluster_set)
-
-
-
-        # Now that all evaluations have been performed,
-        # determine if there are any errors.
-        eval_sub_dict = bundle.get_evaluations() # TODO implement this method.
-        errors = 0
-        for key in eval_sub_dict.keys():
-            eval_list = eval_sub_dict[key]
-            for eval in eval_list:
-                if eval.status == "error"
-                    errors += 1
-
-
-
-        # TODO construct a basic.get_empty_ticket() function.
-        empty_ticket = [None, None, None, None, None, None,
-                        None, None, None, None, None, None, ]
-        ticket_data =  tickets.parse_import_ticket_data(\
-                            bundle.ticket, empty_ticket,
-                            direction = "ticket_to_list")))
-
-        if errors == 0:
-
-
-            # Now import the data into the database if there are no errors and
-            # if there is MySQL connection data provided.
-            if sql_handle is not None:
-                bundle.create_sql_statements()
-
-                # TODO confirm the handler method name and that it can
-                # handle a list of queries.
-                sql_handle.execute(bundle.sql_queries)
-                sql_handle.commit()
-
-                # If successful, keep track of query data.
-                query_dict[bundle.ticket.primary_phage_id] = bundle.sql_queries
-                success_ticket_list.append(ticket_data)
-            else:
-                success_ticket_list.append(ticket_data)
+            phagesdb_cluster_set, \
+            phagesdb_subcluster_set = phagesdb.create_cluster_subcluster_sets()
 
         else:
-            failed_ticket_list.append(ticket_data)
+            phagesdb_host_genera_set = set()
+            phagesdb_cluster_set = set()
+            phagesdb_subcluster_set = set()
+
+        # print("PhagesDB sets retrieved")
+
+
+        # To minimize memory usage, each flat_file is evaluated one by one.
+        bundle_count = 1
+        for filename in files_in_folder:
+
+
+            genome = flat_files.create_parsed_flat_file(filename)
+            bundle = Bundle.Bundle()
+            bundle.id = bundle_count
+            bundle.genome_dict[genome.type] = genome
+
+            # Match ticket (if available) to flat file.
+            matched_ticket = ticket_dict.pop(genome.id, None)
+            bundle.ticket = matched_ticket
+
+
+
+            # Create sets of unique values for different data fields.
+            # Since data from each parsed flat file is imported into the
+            # database one file at a time, these sets are not static.
+            # So these sets should be recomputed for every flat file evaluated.
+            phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
+            phamerator_seq_set = phamerator.create_seq_set(sql_handle)
+
+
+            # TODO implement the main2 function.
+            # Perform all evaluations based on the ticket type.
+            import_main.main2(bundle = bundle,
+                                sql_handle = sql_handle,
+                                phage_id_set = phamerator_phage_id_set,
+                                seq_set = phamerator_seq_set,
+                                host_genera_set = phagesdb_host_genera_set,
+                                cluster_set = phagesdb_cluster_set,
+                                subcluster_set = phagesdb_subcluster_set)
+
+
+
+            # Now that all evaluations have been performed,
+            # determine if there are any errors.
+
+
+
+
+            # TODO construct a basic.get_empty_ticket() function?
+            empty_ticket = [None] * 12
+            ticket_data =  tickets.parse_import_ticket_data(\
+                                bundle.ticket, empty_ticket,\
+                                direction = "ticket_to_list")
+
+            bundle.check_for_errors()
+            if errors == 0:
+
+                # Now import the data into the database if there are no errors and
+                # if there is MySQL connection data provided.
+                if sql_handle is not None:
+                    bundle.create_sql_statements()
+
+                    # TODO confirm the handler method name and that it can
+                    # handle a list of queries.
+                    sql_handle.execute(bundle.sql_queries)
+                    sql_handle.commit()
+
+                    # If successful, keep track of query data.
+                    query_dict[bundle.ticket.primary_phage_id] = bundle.sql_queries
+                else:
+                    pass
+                success_ticket_list.append(ticket_data)
+                success_filename_list.append(bundle.genome_dict["add"].filename)
+
+            else:
+                failed_ticket_list.append(ticket_data)
+                failed_filename_list.append(bundle.genome_dict["add"].filename)
+
+            # TODO implement the get_evaluations() method.
+            evaluation_dict[bundle.id] = bundle.get_evaluations()
+            bundle_count += 1
 
 
     # Tickets were popped off the ticket dictionary as they were matched
     # to flat files. If there are any tickets left, errors need to be counted.
-    key_list = set(ticket_dict.keys())
+    key_list = ticket_dict.keys()
     for key in key_list:
         unmatched_ticket = ticket_dict.pop(key)
         bundle = Bundle.Bundle()
+        bundle.id = bundle_count
         bundle.ticket = unmatched_ticket
 
         # TODO run a list of evaluations based on ticket type.
+        # TODO determine which evaluate function is best.
+        evaluate.tickets(unmatched_ticket)
+        evaluation_dict[bundle.id] = {"ticket":unmatched_ticket.evaluations}
+        bundle_count += 1
 
-
+        empty_ticket = [None] * 12
+        ticket_data =  tickets.parse_import_ticket_data(\
+                            unmatched_ticket, empty_ticket,\
+                            direction = "ticket_to_list")
+        failed_ticket_list.append(ticket_data)
 
 
 
@@ -245,7 +261,8 @@ def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
 
 
 
-
+    # TODO confirm that evaluation checks that fields like
+    # annotation_qc are structured properly - int and not str.
 
     evaluate.check_bundle_for_import(bundle)
     bundle.check_for_errors()

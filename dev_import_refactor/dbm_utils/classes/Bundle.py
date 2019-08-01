@@ -9,6 +9,7 @@ class Bundle:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
+        self.id = ""
         self.ticket = ""
         self.genome_dict = {}
         self.genome_pair_dict = {}
@@ -177,6 +178,41 @@ class Bundle:
 
 
 
+    # TODO implement.
+    # TODO unit test.
+    def get_evaluations(self):
+        """Iterate through the various objects stored in the Bundle
+        object and return a dictionary of evaluation lists.
+        """
+
+        eval_dict = {}
+        if len(self.evaluations) > 0:
+            eval_dict["bundle"] = self.evaluations
+
+        if isinstance(self.ticket, Ticket.GenomeTicket):
+            if len(self.ticket.evaluations) > 0:
+                eval_dict["ticket"] = self.evaluations
+
+        for key in self.genome_dict.keys():
+
+            genome = self.genome_dict[key]
+            genome_key = "genome_" + key
+
+            if len(genome.evaluations) > 0:
+                eval_dict[genome_key] = genome.evaluations
+
+            for cds in genome.cds_features:
+                cds_key = "cds_" + cds.id
+                if len(cds.evaluations) > 0:
+                    eval_dict[cds_key] = cds.evaluations
+
+        for key in self.genome_pair_dict.keys():
+            genome_pair = self.genome_pair_dict[key]
+            genome_pair_key = "genome_pair_" + key
+            if len(genome_pair.evaluations) > 0:
+                eval_dict[genome_pair_key] = genome_pair.evaluations
+
+        return eval_dict
 
 
 

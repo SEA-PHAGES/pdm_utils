@@ -26,8 +26,8 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "Hatfull",
                                 "Product",
                                 "ABC123",
-                                1,
-                                1,
+                                "1",
+                                "1",
                                 "phagesdb"]
 
         self.short_ticket_list = ["add",
@@ -47,8 +47,8 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "Hatfull",
                                 "Product",
                                 "ABC123",
-                                1,
-                                1,
+                                "1",
+                                "1",
                                 "phagesdb",
                                 "none",
                                 "extra"]
@@ -62,13 +62,12 @@ class TestTicketFunctions1(unittest.TestCase):
                                 "Hatfull",
                                 "Product",
                                 "XYZ456",
-                                1,
-                                1,
+                                "1",
+                                "1",
                                 "phagesdb"]
 
 
-        self.empty_ticket_list = [None, None, None, None, None, None,
-                                  None, None, None, None, None, None,]
+        self.empty_ticket_list = [None] * 12
 
         self.filled_ticket = Ticket.GenomeTicket()
         self.filled_ticket.type = "add"
@@ -285,9 +284,9 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.empty_ticket_list[6], "hatfull")
         with self.subTest():
-            self.assertEqual(self.empty_ticket_list[9], 1)
+            self.assertEqual(self.empty_ticket_list[9], "1")
         with self.subTest():
-            self.assertEqual(self.empty_ticket_list[10], 1)
+            self.assertEqual(self.empty_ticket_list[10], "1")
         with self.subTest():
             self.assertEqual(self.empty_ticket_list[7], "product")
         with self.subTest():

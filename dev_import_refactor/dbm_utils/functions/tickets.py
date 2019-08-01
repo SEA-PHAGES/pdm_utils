@@ -105,14 +105,21 @@ def parse_import_ticket_data(ticket, data_list,
         if direction == "list_to_ticket":
             ticket.set_annotation_status(data_list[5])
         elif direction == "ticket_to_list":
-            data_list[5] = ticket.annotation_status
+            data_list[5] = str(ticket.annotation_status)
         else:
             pass
 
         if direction == "list_to_ticket":
+            # Convert to integer if possible.
+            try:
+                data_list[6] = int(data_list[6])
+            except:
+                pass
             ticket.set_annotation_author(data_list[6])
+
         elif direction == "ticket_to_list":
-            data_list[6] = ticket.annotation_author
+            # Convert to string.
+            data_list[6] = str(ticket.annotation_author)
         else:
             pass
 
@@ -124,16 +131,28 @@ def parse_import_ticket_data(ticket, data_list,
             pass
 
         if direction == "list_to_ticket":
+            # Convert to integer if possible.
+            try:
+                data_list[9] = int(data_list[9])
+            except:
+                pass
             ticket.set_annotation_qc(data_list[9])
         elif direction == "ticket_to_list":
-            data_list[9] = ticket.annotation_qc
+            # Convert to string.
+            data_list[9] = str(ticket.annotation_qc)
         else:
             pass
 
         if direction == "list_to_ticket":
+            # Convert to integer if possible.
+            try:
+                data_list[10] = int(data_list[10])
+            except:
+                pass
             ticket.set_retrieve_record(data_list[10])
         elif direction == "ticket_to_list":
-            data_list[10] = ticket.retrieve_record
+            # Convert to string.
+            data_list[10] = str(ticket.retrieve_record)
         else:
             pass
 

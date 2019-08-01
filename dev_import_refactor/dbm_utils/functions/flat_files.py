@@ -237,11 +237,12 @@ def create_feature_dictionary(feature_list):
 
 
 
-def parse_flat_file_data(genome_obj, \
-                            retrieved_record, \
-                            filepath = "", \
-                            translation_table = 11, \
-                            phage_id_field = "organism_name"):
+def parse_flat_file_data(
+        genome_obj, \
+        retrieved_record, \
+        filepath = "", \
+        translation_table = 11, \
+        phage_id_field = "organism_name"):
 
     """Parses a GenBank-formatted flat file into a Genome object using
     data that has already been parsed by Bio.SeqIO.
@@ -467,10 +468,16 @@ def create_parsed_flat_file(filename, id_field = "organism_name"):
 
     genome = Genome.Genome()
 
+
+    # TODO currently the parse_flat_file_data() sets filename and type,
+    # so this is redundant. But some attribute needs to be set
+    # even if there is a problem with parsing the record in the file.
+
     # If there is no parseable record, a genome object is still
     # created and populated with 'type and 'filename'.
     genome.type = "flat_file"
     genome.set_filename(filename)
+
     valid = check_flat_file_type(filename)
 
     if valid:
