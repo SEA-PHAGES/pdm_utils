@@ -41,40 +41,13 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_host_1(self):
-        """Check that host_genus name is split appropriately."""
-        host = "Mycobacterium smegmatis"
-        self.genome.set_host(host, "none_string")
-        self.assertEqual(self.genome.host_genus, "Mycobacterium")
-
-    def test_set_host_2(self):
-        """Check that whitespace is removed."""
-        host = "  Mycobacterium smegmatis  "
-        self.genome.set_host(host, "none_string")
-        self.assertEqual(self.genome.host_genus, "Mycobacterium")
-
-    def test_set_host_3(self):
-        """Check that none is set appropriately."""
-        host = ""
-        self.genome.set_host(host, "none_string")
-        self.assertEqual(self.genome.host_genus, "none")
-
-    def test_set_host_4(self):
-        """Check that None object is set appropriately."""
-        host = ""
-        self.genome.set_host(host, "none_object")
-        self.assertIsNone(self.genome.host_genus)
-
-
-
-
-
     def test_set_sequence_1(self):
         """Check that sequence is set appropriately."""
-        seq = "aaggcga"
-        self.genome.set_sequence(seq)
+        self.genome.set_sequence("aaggcga")
         with self.subTest():
             self.assertEqual(self.genome.seq, "AAGGCGA")
+        with self.subTest():
+            self.assertIsInstance(self.genome.seq, Seq)
         with self.subTest():
             self.assertEqual(self.genome._length, 7)
         with self.subTest():
@@ -86,6 +59,8 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.set_sequence(seq)
         with self.subTest():
             self.assertEqual(self.genome.seq, "")
+        with self.subTest():
+            self.assertIsInstance(self.genome.seq, Seq)
         with self.subTest():
             self.assertEqual(self.genome._length, 0)
         with self.subTest():
@@ -197,138 +172,171 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_id_1(self):
         """Check that name without '_Draft' suffix is not changed."""
-        phage_name = "Trixie"
-        self.genome.set_id(phage_name)
+        self.genome.set_id(value="Trixie")
         self.assertEqual(self.genome.id, "Trixie")
 
     def test_set_id_2(self):
         """Check that '_Draft' suffix is removed."""
-        phage_name = "Trixie_Draft"
-        self.genome.set_id(phage_name)
+        self.genome.set_id(value="Trixie_Draft")
         self.assertEqual(self.genome.id, "Trixie")
 
-
-
-
-    def test_set_id_from_field_1(self):
-        """Check that the id is set from the name field."""
+    def test_set_id_3(self):
+        """Check that the id is set from the name attribute."""
         self.genome.name = "Trixie_Draft"
-        self.genome.set_id_from_field("name")
+        self.genome.set_id(attribute="name")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_2(self):
-        """Check that the id is set from the accession field."""
+    def test_set_id_4(self):
+        """Check that the id is set from the accession attribute."""
         self.genome.accession = "Trixie_Draft"
-        self.genome.set_id_from_field("accession")
+        self.genome.set_id(attribute="accession")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_6(self):
-        """Check that the id is set from the description field."""
+    def test_set_id_5(self):
+        """Check that the id is set from the description attribute."""
         self.genome.description = "Trixie_Draft"
-        self.genome.set_id_from_field("description")
+        self.genome.set_id(attribute="description")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_7(self):
-        """Check that the id is set from the source field."""
+    def test_set_id_6(self):
+        """Check that the id is set from the source attribute."""
         self.genome.source = "Trixie_Draft"
-        self.genome.set_id_from_field("source")
+        self.genome.set_id(attribute="source")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_8(self):
-        """Check that the id is set from the organism field."""
+    def test_set_id_7(self):
+        """Check that the id is set from the organism attribute."""
         self.genome.organism = "Trixie_Draft"
-        self.genome.set_id_from_field("organism")
+        self.genome.set_id(attribute="organism")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_9(self):
-        """Check that the id is set from the filename field."""
+    def test_set_id_8(self):
+        """Check that the id is set from the filename attribute."""
         self.genome.filename = "Trixie_Draft"
-        self.genome.set_id_from_field("filename")
+        self.genome.set_id(attribute="filename")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_10(self):
+    def test_set_id_9(self):
         """Check that the id is set from the
-        description_name field."""
+        description_name attribute."""
         self.genome._description_name = "Trixie_Draft"
-        self.genome.set_id_from_field("description_name")
+        self.genome.set_id(attribute="description_name")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_11(self):
+    def test_set_id_10(self):
         """Check that the id is set from the
-        source_name field."""
+        source_name attribute."""
         self.genome._source_name = "Trixie_Draft"
-        self.genome.set_id_from_field("source_name")
+        self.genome.set_id(attribute="source_name")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_12(self):
+    def test_set_id_11(self):
         """Check that the id is set from the
-        organism_name field."""
+        organism_name attribute."""
         self.genome._organism_name = "Trixie_Draft"
-        self.genome.set_id_from_field("organism_name")
+        self.genome.set_id(attribute="organism_name")
         self.assertEqual(self.genome.id, "Trixie")
 
-    def test_set_id_from_field_13(self):
-        """Check that the id is empty from an invalid field."""
-        self.genome.set_id_from_field("invalid")
+    def test_set_id_12(self):
+        """Check that the id is empty from an invalid attribute."""
+        self.genome.id = "not empty"
+        self.genome.set_id(attribute="invalid")
+        self.assertEqual(self.genome.id, "")
+
+    def test_set_id_13(self):
+        """Check that the id is empty from no value or attribute."""
+        self.genome.id = "not empty"
+        self.genome.set_id()
         self.assertEqual(self.genome.id, "")
 
 
 
 
-    def test_set_host_genus_from_field_1(self):
-        """Check that the host_genus is set from the name field."""
+    def test_set_host_genus_1(self):
+        """Check that host_genus name is split appropriately."""
+        host = "Mycobacterium smegmatis"
+        self.genome.set_host_genus(value=host, format="none_string")
+        self.assertEqual(self.genome.host_genus, "Mycobacterium")
+
+    def test_set_host_genus_2(self):
+        """Check that whitespace is removed."""
+        host = "  Mycobacterium smegmatis  "
+        self.genome.set_host_genus(value=host, format="none_string")
+        self.assertEqual(self.genome.host_genus, "Mycobacterium")
+
+    def test_set_host_genus_3(self):
+        """Check that none is set appropriately."""
+        host = ""
+        self.genome.set_host_genus(value=host, format="none_string")
+        self.assertEqual(self.genome.host_genus, "none")
+
+    def test_set_host_genus_4(self):
+        """Check that None object is set appropriately."""
+        host = ""
+        self.genome.set_host_genus(value=host, format="none_object")
+        self.assertIsNone(self.genome.host_genus)
+
+    def test_set_host_genus_5(self):
+        """Check that the host_genus is set from the name attribute."""
         self.genome.name = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("name")
+        self.genome.set_host_genus(attribute="name")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_4(self):
-        """Check that the host_genus is set from the description field."""
+    def test_set_host_genus_6(self):
+        """Check that the host_genus is set from the description attribute."""
         self.genome.description = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("description")
+        self.genome.set_host_genus(attribute="description")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_5(self):
-        """Check that the host_genus is set from the source field."""
+    def test_set_host_genus_7(self):
+        """Check that the host_genus is set from the source attribute."""
         self.genome.source = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("source")
+        self.genome.set_host_genus(attribute="source")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_6(self):
-        """Check that the host_genus is set from the organism field."""
+    def test_set_host_genus_8(self):
+        """Check that the host_genus is set from the organism attribute."""
         self.genome.organism = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("organism")
+        self.genome.set_host_genus(attribute="organism")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_7(self):
-        """Check that the host_genus is set from the filename field."""
+    def test_set_host_genus_9(self):
+        """Check that the host_genus is set from the filename attribute."""
         self.genome.filename = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("filename")
+        self.genome.set_host_genus(attribute="filename")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_8(self):
+    def test_set_host_genus_10(self):
         """Check that the host_genus is set from the
-        description_host_genus field."""
+        description_host_genus attribute."""
         self.genome._description_host_genus = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("description_host_genus")
+        self.genome.set_host_genus(attribute="description_host_genus")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_9(self):
+    def test_set_host_genus_11(self):
         """Check that the host_genus is set from the
-        source_host_genus field."""
+        source_host_genus attribute."""
         self.genome._source_host_genus = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("source_host_genus")
+        self.genome.set_host_genus(attribute="source_host_genus")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_10(self):
+    def test_set_host_genus_12(self):
         """Check that the host_genus is set from the
-        organism_host_genus field."""
+        organism_host_genus attribute."""
         self.genome._organism_host_genus = "Mycobacterium smegmatis"
-        self.genome.set_host_genus_from_field("organism_host_genus")
+        self.genome.set_host_genus(attribute="organism_host_genus")
         self.assertEqual(self.genome.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_from_field_11(self):
-        """Check that the host_genus is empty from an invalid field."""
-        self.genome.set_host_genus_from_field("invalid")
+    def test_set_host_genus_13(self):
+        """Check that the host_genus is empty from an invalid attribute."""
+        self.genome.set_host_genus(attribute="invalid")
+        self.assertEqual(self.genome.host_genus, "")
+
+    def test_set_host_genus_14(self):
+        """Check that the host_genus is empty from an empty value and
+        empty attribute."""
+        self.genome.host_genus = "not empty"
+        self.genome.set_host_genus()
         self.assertEqual(self.genome.host_genus, "")
 
 
@@ -740,20 +748,20 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_compare_cluster_subcluster_structure_1(self):
+    def test_check_compatible_cluster_and_subcluster_1(self):
         """Check that compatible Cluster and subcluster
         do not produce an error."""
         self.genome.cluster = "A"
         self.genome.subcluster = "A1"
-        self.genome.compare_cluster_subcluster_structure()
+        self.genome.check_compatible_cluster_and_subcluster()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_compare_cluster_subcluster_structure_2(self):
+    def test_check_compatible_cluster_and_subcluster_2(self):
         """Check that incompatible Cluster and subcluster
         produce an error."""
         self.genome.cluster = "A"
         self.genome.subcluster = "B1"
-        self.genome.compare_cluster_subcluster_structure()
+        self.genome.check_compatible_cluster_and_subcluster()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -776,25 +784,25 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_annotation_status_accession_1(self):
+    def test_check_compatible_status_and_accession_1(self):
         """Check final annotation_status with accession."""
         self.genome.annotation_status = "final"
         self.genome.accession = "ABC123"
-        self.genome.check_annotation_status_accession()
+        self.genome.check_compatible_status_and_accession()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_annotation_status_accession_2(self):
+    def test_check_compatible_status_and_accession_2(self):
         """Check final annotation_status with no accession."""
         self.genome.annotation_status = "final"
         self.genome.accession = ""
-        self.genome.check_annotation_status_accession()
+        self.genome.check_compatible_status_and_accession()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_annotation_status_accession_3(self):
+    def test_check_compatible_status_and_accession_3(self):
         """Check draft annotation_status with no accession."""
         self.genome.annotation_status = "draft"
         self.genome.accession = ""
-        self.genome.check_annotation_status_accession()
+        self.genome.check_compatible_status_and_accession()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
@@ -802,47 +810,47 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_annotation_status_descriptions_1(self):
+    def test_check_compatible_status_and_descriptions_1(self):
         """Check that draft genome with no descriptions does not produce
         an error."""
         self.genome.annotation_status = "draft"
-        self.genome.check_annotation_status_descriptions()
+        self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_annotation_status_descriptions_2(self):
+    def test_check_compatible_status_and_descriptions_2(self):
         """Check that draft genome with a description produces an error."""
         self.genome.annotation_status = "draft"
         self.genome._cds_processed_primary_descriptions_tally = 1
-        self.genome.check_annotation_status_descriptions()
+        self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_annotation_status_descriptions_3(self):
+    def test_check_compatible_status_and_descriptions_3(self):
         """Check that final genome with a description does not produce
         an error."""
         self.genome.annotation_status = "final"
         self.genome._cds_processed_primary_descriptions_tally = 1
-        self.genome.check_annotation_status_descriptions()
+        self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_annotation_status_descriptions_4(self):
+    def test_check_compatible_status_and_descriptions_4(self):
         """Check that final genome with no descriptions produces an error."""
         self.genome.annotation_status = "final"
-        self.genome.check_annotation_status_descriptions()
+        self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_annotation_status_descriptions_5(self):
+    def test_check_compatible_status_and_descriptions_5(self):
         """Check that gbk genome with no descriptions does not produce
         an error."""
         self.genome.annotation_status = "gbk"
-        self.genome.check_annotation_status_descriptions()
+        self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_annotation_status_descriptions_6(self):
+    def test_check_compatible_status_and_descriptions_6(self):
         """Check that gbk genome with descriptions does not produce
         an error."""
         self.genome.annotation_status = "gbk"
         self.genome._cds_processed_primary_descriptions_tally = 1
-        self.genome.check_annotation_status_descriptions()
+        self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
@@ -961,9 +969,9 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_authors_1(self):
         """Check that no warning is produced when author is expected
         and present."""
-        self.genome.authors = "abcd; efgh; hatfull; xyz"
+        self.genome.authors = "abcd; efgh; HATFULL; xyz"
         self.genome.annotation_author = 1
-        self.genome.check_authors("Hatfull")
+        self.genome.check_authors()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_authors_2(self):
@@ -971,25 +979,42 @@ class TestGenomeClass(unittest.TestCase):
         and not present."""
         self.genome.authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 0
-        self.genome.check_authors("Hatfull")
+        self.genome.check_authors()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_authors_3(self):
-        """Check that warning is produced when author is expected
+        """Check that a warning is produced when author is expected
         and not present."""
         self.genome.authors = "abcd; efgh; xyz"
         self.genome.annotation_author = 1
-        self.genome.check_authors("Hatfull")
+        self.genome.check_authors()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_authors_4(self):
-        """Check that warning is produced when author is not expected
+        """Check that a warning is produced when author is not expected
         and present."""
-        self.genome.authors = "abcd; efgh; hatfull; xyz"
+        self.genome.authors = "abcd; efgh; HATFULL; xyz"
         self.genome.annotation_author = 0
-        self.genome.check_authors("Hatfull")
+        self.genome.check_authors()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
+    def test_check_authors_5(self):
+        """Check that no warning is produced when author is expected
+        and present in supplied set."""
+        check_set = set(["abcd"])
+        self.genome.authors = "abcd; efgh; xyz"
+        self.genome.annotation_author = 1
+        self.genome.check_authors(check_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_authors_6(self):
+        """Check that no warning is produced when author is expected
+        and present in a supplied set of multiple authors."""
+        check_set = set(["abcd", "efgh", "hatfull"])
+        self.genome.authors = "hatfull; 1234; xyz"
+        self.genome.annotation_author = 1
+        self.genome.check_authors(check_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
 
@@ -1055,19 +1080,19 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_empty_fields_1(self):
+    def test_set_value_flag_1(self):
         """Verify that the 'retain' setting is set to True."""
-        self.genome._empty_fields = False
+        self.genome._value_flag = False
         self.genome.cluster = "retain"
-        self.genome.set_empty_fields("retain")
-        self.assertTrue(self.genome._empty_fields)
+        self.genome.set_value_flag("retain")
+        self.assertTrue(self.genome._value_flag)
 
-    def test_set_empty_fields_2(self):
+    def test_set_value_flag_2(self):
         """Verify that the 'retain' setting is set to False."""
-        self.genome._empty_fields = True
+        self.genome._value_flag = True
         self.genome.cluster = "A"
-        self.genome.set_empty_fields("retain")
-        self.assertFalse(self.genome._empty_fields)
+        self.genome.set_value_flag("retain")
+        self.assertFalse(self.genome._value_flag)
 
 
 
@@ -1407,8 +1432,24 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_annotation_author_3(self):
         """Verify that an error is produced when the annotation_author
         is not valid."""
-        self.genome.annotation_author = 3
+        self.genome.annotation_author = "1"
         self.genome.check_annotation_author()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_annotation_author_4(self):
+        """Verify that no error is produced when the annotation_author
+        is valid based on a supplied set."""
+        check_set = set(["1", "2"])
+        self.genome.annotation_author = "1"
+        self.genome.check_annotation_author(check_set=check_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_annotation_author_5(self):
+        """Verify that an error is produced when the annotation_author
+        is not valid based on a supplied set."""
+        check_set = set(["1", "2"])
+        self.genome.annotation_author = 1
+        self.genome.check_annotation_author(check_set=check_set)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1431,8 +1472,24 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_annotation_qc_3(self):
         """Verify that an error is produced when the annotation_qc
         is not valid."""
-        self.genome.annotation_qc = 3
+        self.genome.annotation_qc = "1"
         self.genome.check_annotation_qc()
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_annotation_qc_4(self):
+        """Verify that no error is produced when the annotation_qc
+        is valid based on a supplied set."""
+        check_set = set(["1", "2"])
+        self.genome.annotation_qc = "1"
+        self.genome.check_annotation_qc(check_set=check_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_annotation_qc_5(self):
+        """Verify that an error is produced when the annotation_qc
+        is invalid based on a supplied set."""
+        check_set = set(["1", "2"])
+        self.genome.annotation_qc = 1
+        self.genome.check_annotation_qc(check_set=check_set)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1455,14 +1512,25 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_retrieve_record_3(self):
         """Verify that an error is produced when the retrieve_record
         is not valid."""
-        self.genome.retrieve_record = 3
+        self.genome.retrieve_record = "1"
         self.genome.check_retrieve_record()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
+    def test_check_retrieve_record_4(self):
+        """Verify that no error is produced when the retrieve_record
+        is valid based on a supplied set."""
+        check_set = set(["1", "2"])
+        self.genome.retrieve_record = "1"
+        self.genome.check_retrieve_record(check_set)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-
-
-
+    def test_check_retrieve_record_5(self):
+        """Verify that no error is produced when the retrieve_record
+        is valid based on a supplied set."""
+        check_set = set(["1", "2"])
+        self.genome.retrieve_record = 1
+        self.genome.check_retrieve_record(check_set)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
 
@@ -1725,32 +1793,32 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_empty_fields_1(self):
-        """Verify that no error is produced when the _empty_fields
+    def test_check_value_flag_1(self):
+        """Verify that no error is produced when the _value_flag
         field is True and is expected to be True."""
-        self.genome._empty_fields = True
-        self.genome.check_empty_fields(True)
+        self.genome._value_flag = True
+        self.genome.check_value_flag(True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_empty_fields_2(self):
-        """Verify that an error is produced when the _empty_fields
+    def test_check_value_flag_2(self):
+        """Verify that an error is produced when the _value_flag
         field is False and is expected to be True."""
-        self.genome._empty_fields = False
-        self.genome.check_empty_fields(True)
+        self.genome._value_flag = False
+        self.genome.check_value_flag(True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
-    def test_check_empty_fields_3(self):
-        """Verify that no error is produced when the _empty_fields
+    def test_check_value_flag_3(self):
+        """Verify that no error is produced when the _value_flag
         field is False and is expected to be False."""
-        self.genome._empty_fields = False
-        self.genome.check_empty_fields(False)
+        self.genome._value_flag = False
+        self.genome.check_value_flag(False)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
-    def test_check_empty_fields_4(self):
-        """Verify that an error is produced when the _empty_fields
+    def test_check_value_flag_4(self):
+        """Verify that an error is produced when the _value_flag
         field is True and is expected to be False."""
-        self.genome._empty_fields = True
-        self.genome.check_empty_fields(False)
+        self.genome._value_flag = True
+        self.genome.check_value_flag(False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 

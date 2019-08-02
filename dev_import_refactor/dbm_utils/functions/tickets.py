@@ -231,9 +231,9 @@ def copy_ticket_to_genome(bundle):
     if (ticket.type == "add" or ticket.type == "replace"):
         genome1 = Genome.Genome()
         genome1.type = "add"
-        genome1.set_id(ticket.primary_phage_id)
+        genome1.set_id(value=ticket.primary_phage_id)
         genome1.name = ticket.primary_phage_id
-        genome1.set_host(ticket.host_genus)
+        genome1.set_host_genus(ticket.host_genus)
         genome1.set_accession(ticket.accession)
         genome1.annotation_status = ticket.annotation_status
         genome1.set_cluster(ticket.cluster)
@@ -249,7 +249,7 @@ def copy_ticket_to_genome(bundle):
 
             genome2 = Genome.Genome()
             genome2.type = "remove"
-            genome2.set_id(ticket.secondary_phage_id)
+            genome2.set_id(value=ticket.secondary_phage_id)
 
             bundle.genome_dict[genome2.type] = genome2
 
@@ -260,7 +260,7 @@ def copy_ticket_to_genome(bundle):
         # genome = Genome.Genome()
         # genome.type = "update"
         # genome.set_id(ticket.primary_phage_id)
-        # genome.set_host(ticket.host_genus)
+        # genome.set_host_genus(ticket.host_genus)
         # genome.set_accession(ticket.accession)
         # genome.annotation_status = ticket.annotation_status
         # genome.set_cluster(ticket.cluster)

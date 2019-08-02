@@ -15,10 +15,6 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
 from classes import Bundle
 
-# For integration testing.
-import os
-
-
 class TestFlatFileFunctions1(unittest.TestCase):
 
 
@@ -3251,7 +3247,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.genome1.id = "L5"
         self.genome1.cluster = "B"
         self.genome1.type = "flat_file"
-        self.genome1._empty_fields = False
+        self.genome1._value_flag = False
         self.genome1.translation_table = "empty"
 
         self.bundle1 = Bundle.Bundle()
@@ -3281,7 +3277,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         flat_files.copy_data_to_flat_file(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
-            self.assertFalse(genome1._empty_fields)
+            self.assertFalse(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.cluster, "A")
         with self.subTest():
@@ -3324,7 +3320,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         flat_files.copy_data_to_flat_file(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
-            self.assertTrue(genome1._empty_fields)
+            self.assertTrue(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.evaluations[0].status, "error")
 
@@ -3338,7 +3334,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         flat_files.copy_data_to_flat_file(self.bundle1, "add", "empty")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
-            self.assertFalse(genome1._empty_fields)
+            self.assertFalse(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.cluster, "A")
         with self.subTest():

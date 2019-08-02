@@ -4,6 +4,7 @@
 
 import unittest
 from pipelines.database_import import import_main
+from constants import constants
 
 class TestImportMain(unittest.TestCase):
 
@@ -44,7 +45,7 @@ class TestImportMain(unittest.TestCase):
         lists_of_tickets = [ticket_list1, ticket_list2]
 
         list_of_filenames = []
-        import_main.main1(lists_of_tickets, list_of_filenames)
+        # import_main.main1(lists_of_tickets, list_of_filenames)
 
 
 

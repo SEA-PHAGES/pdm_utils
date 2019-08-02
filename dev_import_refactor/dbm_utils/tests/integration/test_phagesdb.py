@@ -6,6 +6,7 @@ from classes import Genome
 from constants import constants
 import unittest
 from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
 
 
 
@@ -79,6 +80,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.seq[:8], "GGTCGGTT")
         with self.subTest():
             self.assertEqual(self.genome.seq[-8:], "GTCGGTTA")
+        with self.subTest():
+            self.assertIsInstance(self.genome.seq, Seq)
         with self.subTest():
             self.assertEqual(self.genome.description, description)
         with self.subTest():
@@ -585,7 +588,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
-        self.genome1._empty_fields = True
+        self.genome1._value_flag = True
 
         self.bundle1 = Bundle.Bundle()
 
@@ -600,7 +603,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._empty_fields)
+            self.assertFalse(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
@@ -617,7 +620,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._empty_fields)
+            self.assertFalse(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
@@ -663,10 +666,10 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.id = "invalid"
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retrieve"
-        self.genome1._empty_fields = False
+        self.genome1._value_flag = False
         phagesdb.copy_data_from_phagesdb(self.bundle1, "add")
         with self.subTest():
-            self.assertTrue(self.genome1._empty_fields)
+            self.assertTrue(self.genome1._value_flag)
         with self.subTest():
             self.assertEqual(
                 len(self.bundle1.genome_pair_dict.keys()), 0)

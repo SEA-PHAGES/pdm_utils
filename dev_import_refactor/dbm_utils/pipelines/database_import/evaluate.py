@@ -189,8 +189,8 @@ def check_bundle_for_import(bundle):
         bundle.check_genome_dict("flat_file")
         bundle.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
 
-        ticket.set_empty_fields("retrieve")
-        if ticket._empty_fields:
+        ticket.set_value_flag("retrieve")
+        if ticket._value_flag:
             bundle.check_genome_dict("phagesdb")
             bundle.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
 
@@ -201,8 +201,8 @@ def check_bundle_for_import(bundle):
         bundle.check_genome_pair_dict("flat_file_phamerator") # TODO Ordered correctly?
         bundle.check_genome_pair_dict("remove_phamerator") # TODO Ordered correctly? Also - is this needed?
 
-        ticket.set_empty_fields("retain")
-        if ticket._empty_fields:
+        ticket.set_value_flag("retain")
+        if ticket._value_flag:
             bundle.check_genome_pair_dict("add_phamerator") # TODO Ordered correctly?
 
 
@@ -269,11 +269,11 @@ def check_genome_to_import(genome_obj, type):
     genome_obj.check_filename() # TODO is this needed?
     genome_obj.check_subcluster_structure()
     genome_obj.check_cluster_structure()
-    genome_obj.compare_cluster_subcluster_structure()
+    genome_obj.check_compatible_cluster_and_subcluster()
     # genome_obj.check_accession(accession_set, False) # TODO is this needed?
     genome_obj.check_nucleotides(alphabet = alphabet) # TODO decide how to implement alphabet
-    genome_obj.check_annotation_status_accession()
-    genome_obj.check_annotation_status_descriptions()
+    genome_obj.check_compatible_status_and_accession()
+    genome_obj.check_compatible_status_and_descriptions()
     genome_obj.check_description_name()
     genome_obj.check_source_name()
     genome_obj.check_organism_name()
@@ -284,7 +284,7 @@ def check_genome_to_import(genome_obj, type):
     genome_obj.check_cds_feature_tally()
     genome_obj.check_cds_start_end_ids() # TODO decide how to evaluate duplicate feature coordinates.
     genome_obj.check_cds_end_strand_ids() # TODO decide how to evaluate duplicate feature coordinates.
-    genome_obj.check_empty_fields()
+    genome_obj.check_value_flag()
 
     # Check all CDS features
     index1 = 0

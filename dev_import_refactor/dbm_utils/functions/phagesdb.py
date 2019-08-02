@@ -166,11 +166,11 @@ def parse_phagesdb_data(genome_obj,data_dict):
     # Phage Name, PhageID and SearchID
     phage_name = parse_phagesdb_phage_name(data_dict)
     genome_obj.name = phage_name
-    genome_obj.set_id(phage_name)
+    genome_obj.set_id(value=phage_name)
 
     # Host
     host_genus = parse_phagesdb_host_genus(data_dict)
-    genome_obj.set_host(host_genus, "empty_string")
+    genome_obj.set_host_genus(host_genus, "empty_string")
 
     # Accession
     accession = parse_phagesdb_accession(data_dict)
@@ -200,7 +200,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
             fasta_data = parse_fasta_file(fasta_file)
             fasta_record = misc.create_fasta_seqrecord(fasta_data[0], fasta_data[1])
-            genome_obj.seq = fasta_record.seq
+            genome_obj.set_sequence(fasta_record.seq)
             genome_obj.description = fasta_record.description
             genome_obj.parse_description()
 
@@ -240,9 +240,9 @@ def copy_data_from_phagesdb(bundle, type, flag = "retrieve"):
     if type in bundle.genome_dict.keys():
 
         genome1 = bundle.genome_dict[type]
-        genome1.set_empty_fields(flag)
+        genome1.set_value_flag(flag)
 
-        if genome1._empty_fields:
+        if genome1._value_flag:
 
             phage_url = construct_phage_url(genome1.id)
             data_dict = retrieve_phagesdb_data(phage_url)
@@ -266,8 +266,8 @@ def copy_data_from_phagesdb(bundle, type, flag = "retrieve"):
 
         # Now record an error if there are still fields
         # that need to be retrieved.
-        genome1.set_empty_fields(flag)
-        genome1.check_empty_fields()
+        genome1.set_value_flag(flag)
+        genome1.check_value_flag()
 
 
 def retrieve_phagesdb_data_list(url):

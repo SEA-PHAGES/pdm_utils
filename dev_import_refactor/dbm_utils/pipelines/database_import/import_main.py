@@ -45,7 +45,10 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
     # just that the ticket contains fields populated or empty as expected.
     index1 = 0
     while index1 < len(ticket_list):
-        evaluate.check_ticket_structure(ticket_list[index1]),
+        evaluate.check_ticket_structure(ticket_list[index1],
+                                        constants.IMPORT_TICKET_TYPE_SET,
+                                        constants.EMPTY_DATE,
+                                        constants.RUN_MODE_SET),
         index1 += 1
     # print("Ticket structure checked")
 

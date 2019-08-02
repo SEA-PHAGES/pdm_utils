@@ -46,7 +46,7 @@ def parse_genome_data(genome, data_dict, trans_table = 11):
 
     try:
         # Sequence data is stored as MEDIUMBLOB, so decode to string.
-        genome.seq = data_dict["Sequence"].decode("utf-8")
+        genome.set_sequence(data_dict["Sequence"].decode("utf-8"))
     except:
         pass
 
@@ -575,9 +575,9 @@ def copy_data_from_phamerator(bundle, type, flag = "retain"):
     if type in bundle.genome_dict.keys():
 
         genome1 = bundle.genome_dict[type]
-        genome1.set_empty_fields(flag)
+        genome1.set_value_flag(flag)
 
-        if genome1._empty_fields:
+        if genome1._value_flag:
 
             if "phamerator" in bundle.genome_dict.keys():
 
@@ -593,8 +593,8 @@ def copy_data_from_phamerator(bundle, type, flag = "retain"):
 
         # Now record an error if there are still fields
         # that need to be retained.
-        genome1.set_empty_fields(flag)
-        genome1.check_empty_fields()
+        genome1.set_value_flag(flag)
+        genome1.check_value_flag()
 
 
 
@@ -785,7 +785,7 @@ def implement_remove_statements():
 #
 #     genome.set_id(data_tuple[0])
 #     genome.name = data_tuple[1]
-#     genome.set_host(data_tuple[2])
+#     genome.set_host_genus(data_tuple[2])
 #     genome.set_sequence(data_tuple[3])
 #     genome.annotation_status = data_tuple[4]
 #     genome.set_cluster(data_tuple[5])

@@ -358,7 +358,7 @@ def parse_flat_file_data(
 
 
     # Now that record fields are parsed, set the phage_id.
-    genome_obj.set_id_from_field(phage_id_field)
+    genome_obj.set_id(attribute=phage_id_field)
 
     genome_obj.type = "flat_file"
 
@@ -440,7 +440,7 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
         genome1.annotation_author = flag
         genome1.annotation_qc = flag
         genome1.retrieve_record = flag
-        genome1.set_empty_fields(flag)
+        genome1.set_value_flag(flag)
 
         if type in bundle.genome_dict.keys():
 
@@ -456,8 +456,8 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
 
         # Now record an error if there are still fields
         # that need to be copied.
-        genome1.set_empty_fields(flag)
-        genome1.check_empty_fields()
+        genome1.set_value_flag(flag)
+        genome1.check_value_flag()
 
 
 

@@ -9,6 +9,7 @@ from datetime import datetime
 from classes import Bundle
 from constants import constants
 from classes import MySQLConnectionHandler
+from Bio.Seq import Seq
 
 
 
@@ -289,6 +290,8 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(self.genome1.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.genome1.seq, "ATCG")
+        with self.subTest():
+            self.assertIsInstance(self.genome1.seq, Seq)
         with self.subTest():
             self.assertEqual(self.genome1._length, 10)
         with self.subTest():
@@ -782,7 +785,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
         self.genome1.cluster = "B"
-        self.genome1._empty_fields = True
+        self.genome1._value_flag = True
 
         self.bundle1 = Bundle.Bundle()
 
@@ -801,7 +804,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         phamerator.copy_data_from_phamerator(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._empty_fields)
+            self.assertFalse(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
@@ -819,7 +822,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         phamerator.copy_data_from_phamerator(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
-            self.assertFalse(genome1._empty_fields)
+            self.assertFalse(genome1._value_flag)
         with self.subTest():
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
@@ -865,10 +868,10 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        self.genome1._empty_fields = False
+        self.genome1._value_flag = False
         phamerator.copy_data_from_phamerator(self.bundle1, "add")
         with self.subTest():
-            self.assertTrue(self.genome1._empty_fields)
+            self.assertTrue(self.genome1._value_flag)
         with self.subTest():
             self.assertEqual(
                 len(self.bundle1.genome_pair_dict.keys()), 0)
