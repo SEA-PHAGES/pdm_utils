@@ -134,7 +134,6 @@ def check_phagesdb_genome(genome_obj, null_set):
     genome_obj.check_subcluster(null_set, False)
     genome_obj.check_accession(null_set, False)
     genome_obj.check_filename(null_set, False)
-    #genome_obj.check_record(null_set, False)
     genome_obj.check_sequence(null_set, False)
 
 
@@ -268,7 +267,6 @@ def check_genome_to_import(genome_obj, type):
     genome_obj.check_annotation_qc()
     genome_obj.check_retrieve_record()
     genome_obj.check_filename() # TODO is this needed?
-    # genome_obj.check_record() # TODO is this needed?
     genome_obj.check_subcluster_structure()
     genome_obj.check_cluster_structure()
     genome_obj.compare_cluster_subcluster_structure()

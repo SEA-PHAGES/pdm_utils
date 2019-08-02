@@ -11,15 +11,9 @@ import re
 
 
 class Genome:
-
-    # Initialize all attributes:
     def __init__(self):
 
-
-
-        # Non-computed datafields:
-
-        # Genome classification
+        # The following attributes are common to any genome.
         self.nucleic_acid_type = "" # dsDNA, ssDNA, etc.
         self.order = "" # Caudovirales, Nidovirales, etc.
         self.family = "" # Siphoviridae, Myoviridae, etc.
@@ -28,95 +22,60 @@ class Genome:
         self.id = "" # Unique identifier. Case sensitive, no "_Draft".
         self.name = "" # Case sensitive and contains "_Draft".
         self.seq = "" # Biopython Seq object
-
-
-
-        # Common to all genomes
+        self._length = 0 # Size of the nucleotide sequence
+        self._gc = 0 # %GC content
         self.host_genus = ""
         self.accession = ""
         self.lifestyle = "" # E.g. temperate, obligately lytic, unknown, etc.
+        self.translation_table = ""
 
-
-
-        # Common to Phamerator
-        self.cluster_subcluster = "" # Combined cluster_subcluster data.
+        # The following attributes are common to PhameratorDB.
+        self.cluster_subcluster = "" # Combined cluster/subcluster data.
         self.annotation_status = "" # Final, Draft, Gbk version of genome data
         self.date = "" # Used for the DateLastModified field.
-        self.annotation_author = "" # 1 (Hatfull), 0 (Genbank)
+        self.annotation_author = "" # 1 (can be changed), 0 (can not be changed)
         self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
         self.retrieve_record = "" # 1 (auto update), 0 (do not auto update)
 
-
-        self.translation_table = ""
-        self.type = "" # Describes how this genome is used
-                        # (e.g. import, phamerator, phagesdb, etc.)
-
-
-
-        # Common to GenBank-formatted flat file (NCBI) records
-        self.filename = "" # The file name from which the record is derived
+        # The following attributes are common to
+        # GenBank-formatted flat file records.
         self.description = ""
+        self._description_name = ""
+        self._description_host_genus = ""
         self.source = ""
+        self._source_name = ""
+        self._source_host_genus = ""
         self.organism = ""
-        self.authors = ""
+        self._organism_name = ""
+        self._organism_host_genus = ""
+        self.authors = "" # Compiled list of all authors named in the record.
 
-
-        # TODO necessary to retain this?
-        self.record = "" # Holds parsed Biopython SeqRecord object.
-
-
-
-
-
-        # Computed datafields
-
-
-        # Computed datafields: common to all genomes
-        self._length = 0 # Size of the nucleotide sequence
-        self._gc = 0 # %GC content
-        self.evaluations = [] # List of warnings and errors about the genome
-        self._empty_fields = False
-
-
-        #Common to annotated genomes
+        # The following attributes are computed datafields that are
+        # common to annotated genomes.
         self.cds_features = [] # List of all parsed CDS features
         self._cds_features_tally = 0
         self._cds_start_end_ids = []
         self._cds_end_strand_ids = []
         self._cds_processed_primary_descriptions_tally = 0
-
-
-        self.trna_features = []
-        self._trna_features_tally = 0
-
-
-        self.source_features = []
-        self._source_features_tally = 0
-
-
-
-
-
-        # Computed datafields: common to flat file (NCBI) records
-
-
-        self._description_name = ""
-        self._source_name = ""
-        self._organism_name = ""
-        self._description_host_genus = ""
-        self._source_host_genus = ""
-        self._organism_host_genus = ""
-
-
         self._cds_processed_product_descriptions_tally = 0
         self._cds_processed_function_descriptions_tally = 0
         self._cds_processed_note_descriptions_tally = 0
+        self._cds_unique_start_end_ids = set() # TODO still in development.
+        self._cds_duplicate_start_end_ids = set() # TODO still in development.
+        self._cds_unique_end_strand_ids = set() # TODO still in development.
+        self._cds_duplicate_end_strand_ids = set() # TODO still in development.
+        self.trna_features = []
+        self._trna_features_tally = 0
+        self.source_features = []
+        self._source_features_tally = 0
 
-        self._cds_unique_start_end_ids = set()
-        self._cds_duplicate_start_end_ids = set()
-        self._cds_unique_end_strand_ids = set()
-        self._cds_duplicate_end_strand_ids = set()
-
+        # The following attributes are usefule for processing data
+        # from various data sources.
+        self.filename = "" # The file name from which the data is derived
+        self.type = "" # Identifier to describes how this genome is used
+                       # (e.g. import, phamerator, phagesdb, etc.)
+        self.evaluations = [] # List of warnings and errors about the data
+        self._empty_fields = False
 
 
     def set_filename(self, value):
@@ -693,26 +652,6 @@ class Genome:
         definition = "Check that the filename is valid."
         eval = Eval.Eval("GENOME", definition, result, status)
         self.evaluations.append(eval)
-
-
-    # TODO is this needed?
-    def check_record(self, record_set, expect = False):
-        """Check that the record is valid."""
-
-        value = basic.check_value_expected_in_set(self.record,
-                record_set, expect)
-        if value:
-            result = "The record is valid."
-            status = "correct"
-        else:
-            result = "The record is not valid."
-            status = "error"
-
-        definition = "Check that the record is valid."
-        eval = Eval.Eval("GENOME", definition, result, status)
-        self.evaluations.append(eval)
-
-
 
 
     def check_subcluster_structure(self):

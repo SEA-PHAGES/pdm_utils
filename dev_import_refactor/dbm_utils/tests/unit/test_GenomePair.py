@@ -264,7 +264,6 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.authors = 22
         self.genome1.filename = 24
         self.genome1.translation_table = 25
-        self.genome1.record = 26
         self.genome1._length = 29
         self.genome1._gc = 30
         self.genome1.evaluations = 31
@@ -335,8 +334,6 @@ class TestGenomePairClass(unittest.TestCase):
             self.assertEqual(self.genome_pair.genome2.filename, 24)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.translation_table, 25)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.record, 26)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2._length, 29)
         with self.subTest():

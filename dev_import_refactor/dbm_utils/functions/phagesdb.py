@@ -200,7 +200,6 @@ def parse_phagesdb_data(genome_obj,data_dict):
 
             fasta_data = parse_fasta_file(fasta_file)
             fasta_record = misc.create_fasta_seqrecord(fasta_data[0], fasta_data[1])
-            genome_obj.record = fasta_record
             genome_obj.seq = fasta_record.seq
             genome_obj.description = fasta_record.description
             genome_obj.parse_description()

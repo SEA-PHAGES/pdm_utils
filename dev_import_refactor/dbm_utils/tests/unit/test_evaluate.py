@@ -690,7 +690,6 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.subcluster = "A2"
         self.genome.accession = "ABC123"
         self.genome.filename = "Trixie.gb"
-        self.genome.record = "abcd"
         self.genome.seq = "ATCG"
 
         self.null_set = set([""])

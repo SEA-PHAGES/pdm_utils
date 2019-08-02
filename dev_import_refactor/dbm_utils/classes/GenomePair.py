@@ -128,8 +128,6 @@ class GenomePair:
                 second.filename = first.filename
             if (second.translation_table == keyword or keyword is None):
                 second.translation_table = first.translation_table
-            if (second.record == keyword or keyword is None):
-                second.record = first.record
             if (second._length == keyword or keyword is None):
                 second._length = first._length
             if (second._gc == keyword or keyword is None):

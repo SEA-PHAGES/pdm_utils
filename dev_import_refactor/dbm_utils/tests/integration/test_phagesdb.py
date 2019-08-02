@@ -76,8 +76,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, url)
         with self.subTest():
-            self.assertTrue(isinstance(self.genome.record, SeqRecord))
-        with self.subTest():
             self.assertEqual(self.genome.seq[:8], "GGTCGGTT")
         with self.subTest():
             self.assertEqual(self.genome.seq[-8:], "GTCGGTTA")
@@ -132,8 +130,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertTrue(isinstance(self.genome.record, SeqRecord))
-        with self.subTest():
             self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
             self.assertEqual(self.genome.seq[-8:], expected_seq_end)
@@ -185,8 +181,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
-        with self.subTest():
-            self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
             self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
@@ -240,8 +234,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertTrue(isinstance(self.genome.record, SeqRecord))
-        with self.subTest():
             self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
             self.assertEqual(self.genome.seq[-8:], expected_seq_end)
@@ -293,8 +285,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
-        with self.subTest():
-            self.assertTrue(isinstance(self.genome.record, SeqRecord))
         with self.subTest():
             self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
@@ -349,8 +339,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertTrue(isinstance(self.genome.record, SeqRecord))
-        with self.subTest():
             self.assertEqual(self.genome.seq[:8], expected_seq_start)
         with self.subTest():
             self.assertEqual(self.genome.seq[-8:], expected_seq_end)
@@ -402,8 +390,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.record, "")
-        with self.subTest():
             self.assertEqual(self.genome.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
@@ -453,8 +439,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.record, "")
-        with self.subTest():
             self.assertEqual(self.genome.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.genome.type, expected_type)
@@ -503,8 +487,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.genome.accession, expected_accession)
         with self.subTest():
             self.assertEqual(self.genome.filename, expected_filename)
-        with self.subTest():
-            self.assertEqual(self.genome.record, "")
         with self.subTest():
             self.assertEqual(self.genome.seq, expected_seq)
         with self.subTest():
