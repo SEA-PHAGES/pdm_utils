@@ -59,11 +59,11 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
     # print("Tickets compared")
 
 
-    # Create a dictionary of tickets based on the primary_phage_id.
+    # Create a dictionary of tickets based on the phage_id.
     ticket_dict = {}
     index2 = 0
     while index2 < len(ticket_list):
-        ticket_dict[ticket_list[index2].primary_phage_id] = ticket_list[index2]
+        ticket_dict[ticket_list[index2].phage_id] = ticket_list[index2]
         index2 += 1
     # print("Ticket dictionary created")
 
@@ -161,7 +161,7 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
                     sql_handle.commit()
 
                     # If successful, keep track of query data.
-                    query_dict[bundle.ticket.primary_phage_id] = bundle.sql_queries
+                    query_dict[bundle.ticket.phage_id] = bundle.sql_queries
                 else:
                     pass
                 success_ticket_list.append(ticket_data)

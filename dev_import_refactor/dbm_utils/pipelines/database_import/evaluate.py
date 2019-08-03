@@ -32,7 +32,7 @@ from constants import constants
 #
 #     # This is the only evaluation that is not dependent on the ticket type.
 #     ticket.check_type(type_set, True)
-#     ticket.check_primary_phage_id(null_set, False)
+#     ticket.check_phage_id(null_set, False)
 #     ticket.check_host_genus(null_set, False)
 #     ticket.check_cluster(null_set, False)
 #     ticket.check_annotation_status(annotation_status_set)
@@ -66,7 +66,7 @@ def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
     ticket.check_type(type_set, True)
 
     if (ticket.type == "add" or ticket.type == "replace"):
-        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_phage_id(null_set, False)
         ticket.check_host_genus(null_set, False)
         ticket.check_cluster(null_set, False)
         ticket.check_annotation_status(null_set, False)
@@ -77,23 +77,24 @@ def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
         # No need to evaluate the Accession and Subcluster fields
         # since they may or may not be populated.
 
-        if ticket.type == "replace":
-            ticket.check_secondary_phage_id(null_set, False)
-        else:
-            ticket.check_secondary_phage_id(null_set, True)
+        # TODO no more secondary_phage_id attribute, so this may need
+        # to evaluate something else.
+        # if ticket.type == "replace":
+        #     ticket.check_secondary_phage_id(null_set, False)
+        # else:
+        #     ticket.check_secondary_phage_id(null_set, True)
 
 
     # TODO this may be deleted.
     # TODO unit test.
     elif ticket.type == "update":
-        ticket.check_primary_phage_id(null_set, False)
+        ticket.check_phage_id(null_set, False)
         ticket.check_host_genus(null_set, False)
         ticket.check_cluster(null_set, False)
         ticket.check_annotation_status(null_set, False)
         ticket.check_description_field(null_set, False)
         ticket.check_annotation_author(null_set, False)
         ticket.check_run_mode(null_set, True)
-        ticket.check_secondary_phage_id(null_set, True)
 
         # No need to evaluate the Accession and Subcluster fields
         # since they may or may not be populated.
@@ -104,8 +105,7 @@ def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
     elif ticket.type == "remove":
 
         # Everything except the primary phage_id field should be 'none'
-        ticket.check_primary_phage_id(null_set, False)
-        ticket.check_secondary_phage_id(null_set, True)
+        ticket.check_phage_id(null_set, False)
         ticket.check_host_genus(null_set, True)
         ticket.check_subcluster(null_set, True)
         ticket.check_cluster(null_set, True)
@@ -253,7 +253,6 @@ def check_genome_to_import(genome_obj, type):
         genome_obj.check_sequence(seq_set, True)
 
 
-    # remove genome = ticket.check_secondary_phage_id(phage_id_set)
     # ticket = ticket.check_description_field(description_field_set)
     # ticket = ticket.check_run_mode(run_mode_set)
 
@@ -369,7 +368,6 @@ def compare_genomes(genome_pair_obj):
     genome_pair_obj.compare_host_genus()
     genome_pair_obj.compare_author()
 
-    # genomepair = ticket.check_primary_secondary_phage_ids()
 
 
     # TODO at this stage check the annotation_status of the genome. If it is a final,
@@ -400,8 +398,8 @@ def check_replace_tickets(bundle):
         #
         # # If the genome to be added is not spelled the same as the genome
         # # to be removed, the new genome needs to have a unique name.
-        # if self.primary_phage_id != self.secondary_phage_id:
-        #     ticket.check_primary_phage_id(phage_id_set, False)
+        # if self.phage_id != self.secondary_phage_id:
+        #     ticket.check_phage_id(phage_id_set, False)
         #
         # # No need to evaluate the following fields:
         # # Accession = it will either be an accession or it will be "none"

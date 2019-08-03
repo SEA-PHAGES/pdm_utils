@@ -17,7 +17,7 @@ class GenomeTicket:
         self.type = "" # Add, Replace, Remove, UPDATE
 
         # Attribute used to populate Genome objects for any ticket type.
-        self.primary_phage_id = ""
+        self.phage_id = ""
 
         # Attribute used to evaluate all 'add' and 'replace' ticket types.
         self.run_mode = ""
@@ -34,11 +34,6 @@ class GenomeTicket:
         self.annotation_qc = ""
         self.retrieve_record = ""
         self.accession = ""
-
-
-        # TODO this attribute can probably be deleted
-        # Attribute used to populate Genome objects for 'replace' ticket types.
-        self.secondary_phage_id = ""
 
 
 
@@ -73,9 +68,9 @@ class GenomeTicket:
         """Set the run_mode."""
         self.run_mode = value.lower()
 
-    def set_primary_phage_id(self, value):
-        """Set the primary_phage_id."""
-        self.primary_phage_id = basic.lower_case(value)
+    def set_phage_id(self, value):
+        """Set the phage_id."""
+        self.phage_id = basic.lower_case(value)
 
     def set_host(self, value):
         """Set the host_genus."""
@@ -109,9 +104,6 @@ class GenomeTicket:
         """Set the set_retrieve_record."""
         self.retrieve_record = basic.lower_case(value)
 
-    def set_secondary_phage_id(self, value):
-        """Set the secondary_phage_id."""
-        self.secondary_phage_id = basic.lower_case(value)
 
 
 
@@ -155,12 +147,12 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_primary_phage_id(self, value_set, expected = True):
-        """Check if the primary_phage_id is populated with an empty value.
+    def check_phage_id(self, value_set, expected = True):
+        """Check if the phage_id is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
         output = basic.check_value_expected_in_set(
-                    self.primary_phage_id, value_set, expected)
+                    self.phage_id, value_set, expected)
 
         if output:
             result = "The field is populated correctly."
@@ -169,28 +161,11 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
 
-        definition = "Check if primary_phage_id field is correctly populated."
+        definition = "Check if phage_id field is correctly populated."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_secondary_phage_id(self, value_set, expected = True):
-        """Check if the secondary_phage_id is populated with an empty value.
-        The provided set contains a list of possible empty values."""
-
-        output = basic.check_value_expected_in_set(
-                    self.secondary_phage_id, value_set, expected)
-
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-
-        definition = "Check if secondary_phage_id field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
-        self.evaluations.append(eval)
 
 
     def check_host_genus(self, value_set, expected = True):
@@ -345,38 +320,23 @@ class GenomeTicket:
         self.evaluations.append(eval)
 
 
-    def check_duplicate_primary_phage_id(self, set_of_duplicates):
-        """Check if the primary_phage_id is unique to this ticket by
+    def check_duplicate_phage_id(self, set_of_duplicates):
+        """Check if the phage_id is unique to this ticket by
         checking if it is found within a list of previously
         determined duplicate phage_ids."""
 
-        if self.primary_phage_id in set_of_duplicates:
-            result = "The primary_phage_id is not unique to this ticket."
+        if self.phage_id in set_of_duplicates:
+            result = "The phage_id is not unique to this ticket."
             status = "error"
         else:
-            result = "The primary_phage_id is unique to this ticket"
+            result = "The phage_id is unique to this ticket"
             status = "correct"
 
-        definition = "Check if the primary_phage_id is unique to this ticket."
+        definition = "Check if the phage_id is unique to this ticket."
         eval = Eval.Eval("TICKET", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_duplicate_secondary_phage_id(self, set_of_duplicates):
-        """Check if the primary_phage_id is unique to this ticket by
-        checking if it is found within a list of previously
-        determined duplicate phage_ids."""
-
-        if self.secondary_phage_id in set_of_duplicates:
-            result = "The secondary_phage_id is not unique to this ticket."
-            status = "error"
-        else:
-            result = "The secondary_phage_id is unique to this ticket"
-            status = "correct"
-
-        definition = "Check if the secondary_phage_id is unique to this ticket."
-        eval = Eval.Eval("TICKET", definition, result, status)
-        self.evaluations.append(eval)
 
 
     def check_duplicate_accession(self, set_of_duplicates):

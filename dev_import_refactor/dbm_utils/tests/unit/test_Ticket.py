@@ -23,12 +23,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         # Standard update ticket
         self.update_ticket = Ticket.GenomeTicket()
         self.update_ticket.type = "update"
-        self.update_ticket.primary_phage_id = "Trixie"
+        self.update_ticket.phage_id = "Trixie"
         self.update_ticket.host_genus = "Mycobacterium"
         self.update_ticket.cluster = "A"
         self.update_ticket.annotation_status = "Final"
         self.update_ticket.description_field = "none"
-        self.update_ticket.secondary_phage_id = "none"
         self.update_ticket.annotation_author = "1"
         self.update_ticket.run_mode = "none"
 
@@ -37,12 +36,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         # Standard add ticket
         self.add_ticket = Ticket.GenomeTicket()
         self.add_ticket.type = "add"
-        self.add_ticket.primary_phage_id = "Trixie"
+        self.add_ticket.phage_id = "Trixie"
         self.add_ticket.host_genus = "Mycobacterium"
         self.add_ticket.cluster = "A"
         self.add_ticket.annotation_status = "draft"
         self.add_ticket.description_field = "Product"
-        self.add_ticket.secondary_phage_id = "none"
         self.add_ticket.annotation_author = "1"
         self.add_ticket.run_mode = "phagesdb"
 
@@ -50,7 +48,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         # Standard remove ticket
         self.remove_ticket = Ticket.GenomeTicket()
         self.remove_ticket.type = "remove"
-        self.remove_ticket.primary_phage_id = "none"
+        self.remove_ticket.phage_id = "none"
         self.remove_ticket.host_genus = "none"
         self.remove_ticket.cluster = "none"
         self.remove_ticket.subcluster = "none"
@@ -59,21 +57,18 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.remove_ticket.accession = "none"
         self.remove_ticket.annotation_author = "none"
         self.remove_ticket.run_mode = "none"
-        self.remove_ticket.secondary_phage_id = "Trixie"
 
 
         # Standard replace ticket
         self.replace_ticket = Ticket.GenomeTicket()
         self.replace_ticket.type = "replace"
-        self.replace_ticket.primary_phage_id = "Trixie"
+        self.replace_ticket.phage_id = "Trixie"
         self.replace_ticket.host_genus = "Mycobacterium"
         self.replace_ticket.cluster = "A"
         self.replace_ticket.annotation_status = "draft"
         self.replace_ticket.description_field = "Product"
-        self.replace_ticket.secondary_phage_id = "none"
         self.replace_ticket.annotation_author = "1"
         self.replace_ticket.run_mode = "phagesdb"
-        self.replace_ticket.secondary_phage_id = "Trixie"
         ###TODO above eventually move to test_evaluate.
 
 
@@ -94,17 +89,17 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_set_primary_phage_id_1(self):
+    def test_set_phage_id_1(self):
         """Check that value is not lowercased when not 'none'."""
         value = "Trixie"
-        self.ticket.set_primary_phage_id(value)
-        self.assertEqual(self.ticket.primary_phage_id, "Trixie")
+        self.ticket.set_phage_id(value)
+        self.assertEqual(self.ticket.phage_id, "Trixie")
 
-    def test_set_primary_phage_id_2(self):
+    def test_set_phage_id_2(self):
         """Check that value is lowercased when 'none'."""
         value = "NONE"
-        self.ticket.set_primary_phage_id(value)
-        self.assertEqual(self.ticket.primary_phage_id, "none")
+        self.ticket.set_phage_id(value)
+        self.assertEqual(self.ticket.phage_id, "none")
 
 
 
@@ -250,21 +245,6 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_set_secondary_phage_id_1(self):
-        """Check that value is not lowercased when not 'none'."""
-        value = "Trixie"
-        self.ticket.set_secondary_phage_id(value)
-        self.assertEqual(self.ticket.secondary_phage_id, "Trixie")
-
-    def test_set_secondary_phage_id_2(self):
-        """Check that value is lowercased when 'none'."""
-        value = "NONE"
-        self.ticket.set_secondary_phage_id(value)
-        self.assertEqual(self.ticket.secondary_phage_id, "none")
-
-
-
-
     def test_set_run_mode_1(self):
         """Check that value is lowercased when not 'none'."""
         value = "PhagesDB"
@@ -316,42 +296,21 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_check_primary_phage_id_1(self):
+    def test_check_phage_id_1(self):
         """Check that no error is produced if the
-        primary_phage_id is not present in the empty/null set
+        phage_id is not present in the empty/null set
         and not expected to be in the set."""
         set1 = set(["none"])
-        self.ticket.primary_phage_id = "Trixie"
-        self.ticket.check_primary_phage_id(set1, False)
+        self.ticket.phage_id = "Trixie"
+        self.ticket.check_phage_id(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
-    def test_check_primary_phage_id_2(self):
+    def test_check_phage_id_2(self):
         """Check that an error is produced if the
-        primary_phage_id is present in the empty/null set."""
+        phage_id is present in the empty/null set."""
         set1 = set(["none"])
-        self.ticket.primary_phage_id = "none"
-        self.ticket.check_primary_phage_id(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
-
-
-
-
-    def test_check_secondary_phage_id_1(self):
-        """Check that no error is produced if the
-        secondary_phage_id is not present in the empty/null set
-        and not expected to be in the set."""
-        set1 = set(["none"])
-        self.ticket.secondary_phage_id = "Trixie"
-        self.ticket.check_secondary_phage_id(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
-    def test_check_secondary_phage_id_2(self):
-        """Check that an error is produced if the
-        secondary_phage_id is present in the empty/null set
-        and not expected to be in the set."""
-        set1 = set(["none"])
-        self.ticket.secondary_phage_id = "none"
-        self.ticket.check_secondary_phage_id(set1, False)
+        self.ticket.phage_id = "none"
+        self.ticket.check_phage_id(set1, False)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
@@ -525,40 +484,24 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_check_duplicate_primary_phage_id_1(self):
+    def test_check_duplicate_phage_id_1(self):
         """Check that no error is produced if the
-        primary_phage_id is not present in the set of duplicated values."""
+        phage_id is not present in the set of duplicated values."""
         dupe_set = set(["Trixie", "L5"])
-        self.ticket.primary_phage_id = "D29"
-        self.ticket.check_duplicate_primary_phage_id(dupe_set)
+        self.ticket.phage_id = "D29"
+        self.ticket.check_duplicate_phage_id(dupe_set)
         self.assertEqual(self.ticket.evaluations[0].status, "correct")
 
-    def test_check_duplicate_primary_phage_id_2(self):
+    def test_check_duplicate_phage_id_2(self):
         """Check that an error is produced if the
-        primary_phage_id is present in the set of duplicated values."""
+        phage_id is present in the set of duplicated values."""
         dupe_set = set(["Trixie", "L5"])
-        self.ticket.primary_phage_id = "Trixie"
-        self.ticket.check_duplicate_primary_phage_id(dupe_set)
+        self.ticket.phage_id = "Trixie"
+        self.ticket.check_duplicate_phage_id(dupe_set)
         self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 
-
-    def test_check_duplicate_secondary_phage_id_1(self):
-        """Check that no error is produced if the
-        secondary_phage_id is not present in the set of duplicated values."""
-        dupe_set = set(["Trixie", "L5"])
-        self.ticket.secondary_phage_id = "D29"
-        self.ticket.check_duplicate_secondary_phage_id(dupe_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
-
-    def test_check_duplicate_secondary_phage_id_2(self):
-        """Check that an error is produced if the
-        secondary_phage_id is present in the set of duplicated values."""
-        dupe_set = set(["Trixie", "L5"])
-        self.ticket.secondary_phage_id = "Trixie"
-        self.ticket.check_duplicate_secondary_phage_id(dupe_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
 
 
 

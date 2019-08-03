@@ -75,9 +75,9 @@ def parse_import_ticket_data(ticket, data_list,
         # This data will eventually populate a Genome object.
 
         if direction == "list_to_ticket":
-            ticket.set_primary_phage_id(data_list[1])
+            ticket.set_phage_id(data_list[1])
         elif direction == "ticket_to_list":
-            data_list[1] = ticket.primary_phage_id
+            data_list[1] = ticket.phage_id
         else:
             pass
 
@@ -183,7 +183,7 @@ def parse_import_tickets(list_of_lists):
 
 
 # This function has been substantially simplified if Remove tickets
-# store the genome to be removed in the primary_phage_id field, and if
+# store the genome to be removed in the phage_id field, and if
 # it does not try to keep track of the types of tickets from which the
 # conflict arises.
 def compare_tickets(list_of_tickets):
@@ -197,13 +197,8 @@ def compare_tickets(list_of_tickets):
     # Skip "none" values since they are expected to be duplicated.
     for ticket in list_of_tickets:
 
-        if ticket.primary_phage_id != "none":
-            phage_id_list.append(ticket.primary_phage_id)
-
-        if (ticket.secondary_phage_id != "none" and \
-            ticket.primary_phage_id != ticket.secondary_phage_id):
-
-            phage_id_list.append(ticket.secondary_phage_id)
+        if ticket.phage_id != "none":
+            phage_id_list.append(ticket.phage_id)
 
         if ticket.accession != "none":
             accession_list.append(ticket.accession)
@@ -214,8 +209,7 @@ def compare_tickets(list_of_tickets):
 
     for ticket in list_of_tickets:
 
-        ticket.check_duplicate_primary_phage_id(phage_id_dupe_set)
-        ticket.check_duplicate_secondary_phage_id(phage_id_dupe_set)
+        ticket.check_duplicate_phage_id(phage_id_dupe_set)
         ticket.check_duplicate_accession(accession_dupe_set)
 
 
@@ -231,8 +225,8 @@ def copy_ticket_to_genome(bundle):
     if (ticket.type == "add" or ticket.type == "replace"):
         genome1 = Genome.Genome()
         genome1.type = "add"
-        genome1.set_id(value=ticket.primary_phage_id)
-        genome1.name = ticket.primary_phage_id
+        genome1.set_id(value=ticket.phage_id)
+        genome1.name = ticket.phage_id
         genome1.set_host_genus(ticket.host_genus)
         genome1.set_accession(ticket.accession)
         genome1.annotation_status = ticket.annotation_status
@@ -245,13 +239,14 @@ def copy_ticket_to_genome(bundle):
 
         bundle.genome_dict[genome1.type] = genome1
 
-        if ticket.type == "replace":
 
-            genome2 = Genome.Genome()
-            genome2.type = "remove"
-            genome2.set_id(value=ticket.secondary_phage_id)
-
-            bundle.genome_dict[genome2.type] = genome2
+        # TODO probably no need to create a second genome.
+        # if ticket.type == "replace":
+        #
+        #     genome2 = Genome.Genome()
+        #     genome2.type = "remove"
+        #
+        #     bundle.genome_dict[genome2.type] = genome2
 
     # TODO 'update' ticket option will eventually be deleted.
     elif ticket.type == "update":
@@ -259,7 +254,7 @@ def copy_ticket_to_genome(bundle):
         # TODO unit test.
         # genome = Genome.Genome()
         # genome.type = "update"
-        # genome.set_id(ticket.primary_phage_id)
+        # genome.set_id(ticket.phage_id)
         # genome.set_host_genus(ticket.host_genus)
         # genome.set_accession(ticket.accession)
         # genome.annotation_status = ticket.annotation_status
@@ -275,7 +270,7 @@ def copy_ticket_to_genome(bundle):
         # TODO unit test.
         # genome = Genome.Genome()
         # genome.type = "remove"
-        # genome.set_id(ticket.primary_phage_id)
+        # genome.set_id(ticket.phage_id)
         # bundle.genome_dict[genome.type] = genome
         pass
 
@@ -406,7 +401,7 @@ def prepare_tickets(ticket_filename):
 #     # Create list of all ticket identifiers.
 #     ticket_id_list = []
 #     for bundle_obj in list_of_bundle_objects:
-#         ticket_id_list.append(bundle_obj.ticket.primary_phage_id)
+#         ticket_id_list.append(bundle_obj.ticket.phage_id)
 #
 #
 #     # Create list of all genome identifiers based on the strategy.
@@ -442,7 +437,7 @@ def prepare_tickets(ticket_filename):
 #     while index2 < len(list_of_bundle_objects):
 #
 #         bundle_obj = list_of_bundle_objects[index2]
-#         match_id = bundle_obj.ticket.primary_phage_id
+#         match_id = bundle_obj.ticket.phage_id
 #
 #         if match_id in matched_unique_ids:
 #             genome_object = genome_dict.pop(match_id)
@@ -538,7 +533,7 @@ def prepare_tickets(ticket_filename):
 #
 #
 #         # This data will eventually populate a Genome object.
-#         ticket.set_primary_phage_id(data_list[1])
+#         ticket.set_phage_id(data_list[1])
 #         ticket.set_host(data_list[2])
 #         ticket.set_cluster(data_list[3])
 #         ticket.set_subcluster(data_list[4])
@@ -548,8 +543,6 @@ def prepare_tickets(ticket_filename):
 #         ticket.set_annotation_qc(data_list[9])
 #         ticket.set_retrieve_record(data_list[10])
 #
-#         # This data will eventually populate a second Genome object.
-#         #ticket.set_secondary_phage_id(data_list[12])
 #
 #     return ticket
 
@@ -559,7 +552,7 @@ def prepare_tickets(ticket_filename):
 # TODO this can probably be deleted. It is a more complex compare_tickets
 # function that tries to keep track of ticket type.
 # # This needs to be changed again. Remove tickets now store
-# # the genome to be removed within the primary_phage_id.
+# # the genome to be removed within the phage_id.
 # def compare_tickets2(list_of_tickets):
 #     """Compare all tickets to each other to determine if
 #     there are any ticket conflicts."""
@@ -579,13 +572,13 @@ def prepare_tickets(ticket_filename):
 #     # Skip "none" values since they are expected to be duplicated.
 #     for ticket in list_of_tickets:
 #
-#         if ticket.primary_phage_id != "none":
+#         if ticket.phage_id != "none":
 #             if ticket.type == "update":
-#                 update_primary_id_list.append(ticket.primary_phage_id)
+#                 update_primary_id_list.append(ticket.phage_id)
 #             elif ticket.type == "add":
-#                 add_primary_id_list.append(ticket.primary_phage_id)
+#                 add_primary_id_list.append(ticket.phage_id)
 #             elif ticket.type == "replace":
-#                 replace_primary_id_list.append(ticket.primary_phage_id)
+#                 replace_primary_id_list.append(ticket.phage_id)
 #             else:
 #                 pass
 #

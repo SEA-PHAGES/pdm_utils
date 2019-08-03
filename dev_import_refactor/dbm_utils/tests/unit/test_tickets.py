@@ -71,7 +71,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         self.filled_ticket = Ticket.GenomeTicket()
         self.filled_ticket.type = "add"
-        self.filled_ticket.primary_phage_id = "Trixie"
+        self.filled_ticket.phage_id = "Trixie"
         self.filled_ticket.host_genus = "Mycobacterium"
         self.filled_ticket.cluster = "A"
         self.filled_ticket.subcluster = "A2"
@@ -93,7 +93,7 @@ class TestTicketFunctions1(unittest.TestCase):
     #     with self.subTest():
     #         self.assertEqual(self.ticket.type, "add")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.primary_phage_id, "Trixie")
+    #         self.assertEqual(self.ticket.phage_id, "Trixie")
     #     with self.subTest():
     #         self.assertEqual(self.ticket.host_genus, "Mycobacterium")
     #     with self.subTest():
@@ -218,7 +218,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.ticket.type, "add")
         with self.subTest():
-            self.assertEqual(self.ticket.primary_phage_id, "Trixie")
+            self.assertEqual(self.ticket.phage_id, "Trixie")
         with self.subTest():
             self.assertEqual(self.ticket.host_genus, "Mycobacterium")
         with self.subTest():
@@ -326,14 +326,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "Trixie"
+        ticket1.phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
-        ticket2.primary_phage_id = "L5"
-        ticket2.secondary_phage_id = "L5"
+        ticket2.phage_id = "L5"
         ticket2.accession = "EFG456"
 
         list_of_tickets = [ticket1, ticket2]
@@ -350,9 +348,9 @@ class TestTicketFunctions1(unittest.TestCase):
                 ticket2_errors += 1
 
         with self.subTest():
-            self.assertEqual(len(ticket1.evaluations), 3)
+            self.assertEqual(len(ticket1.evaluations), 2)
         with self.subTest():
-            self.assertEqual(len(ticket2.evaluations), 3)
+            self.assertEqual(len(ticket2.evaluations), 2)
         with self.subTest():
             self.assertEqual(ticket1_errors, 0)
         with self.subTest():
@@ -363,14 +361,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
-        ticket1.primary_phage_id = "none"
-        ticket1.secondary_phage_id = "none"
+        ticket1.phage_id = "none"
         ticket1.accession = "none"
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "none"
+        ticket2.phage_id = "none"
         ticket2.accession = "none"
 
         list_of_tickets = [ticket1, ticket2]
@@ -397,14 +393,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "none"
+        ticket1.phage_id = "Trixie"
         ticket1.accession = "none"
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
-        ticket2.primary_phage_id = "Trixie"
-        ticket2.secondary_phage_id = "none"
+        ticket2.phage_id = "Trixie"
         ticket2.accession = "none"
 
         list_of_tickets = [ticket1, ticket2]
@@ -425,53 +419,19 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(ticket2_errors, 1)
 
-    def test_compare_tickets_4(self):
-        """Verify two tickets with Secondary Phage ID duplicates
-        do generate an error."""
 
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "replace"
-        ticket1.primary_phage_id = "none"
-        ticket1.secondary_phage_id = "Trixie"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "replace"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "Trixie"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
-                ticket2_errors += 1
-
-        with self.subTest():
-            self.assertEqual(ticket1_errors, 1)
-        with self.subTest():
-            self.assertEqual(ticket2_errors, 1)
 
     def test_compare_tickets_5(self):
         """Verify two tickets with Accession duplicates do generate an error."""
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
-        ticket1.primary_phage_id = "none"
-        ticket1.secondary_phage_id = "none"
+        ticket1.phage_id = "none"
         ticket1.accession = "ABC123"
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
-        ticket2.primary_phage_id = "none"
-        ticket2.secondary_phage_id = "none"
+        ticket2.phage_id = "none"
         ticket2.accession = "ABC123"
 
         list_of_tickets = [ticket1, ticket2]
@@ -498,14 +458,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
         ticket1 = Ticket.GenomeTicket()
         ticket1.type = "replace"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "none"
+        ticket1.phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
         ticket2 = Ticket.GenomeTicket()
         ticket2.type = "replace"
-        ticket2.primary_phage_id = "Trixie"
-        ticket2.secondary_phage_id = "none"
+        ticket2.phage_id = "Trixie"
         ticket2.accession = "ABC123"
 
         list_of_tickets = [ticket1, ticket2]
@@ -526,39 +484,6 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(ticket2_errors, 2)
 
-    def test_compare_tickets_7(self):
-        """Verify a conflict between a Primary Phage ID and a
-        Secondary Phage ID does generate an error."""
-
-        ticket1 = Ticket.GenomeTicket()
-        ticket1.type = "add"
-        ticket1.primary_phage_id = "Trixie"
-        ticket1.secondary_phage_id = "none"
-        ticket1.accession = "none"
-
-        ticket2 = Ticket.GenomeTicket()
-        ticket2.type = "replace"
-        ticket2.primary_phage_id = "L5"
-        ticket2.secondary_phage_id = "Trixie"
-        ticket2.accession = "none"
-
-        list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
-                ticket2_errors += 1
-
-        with self.subTest():
-            self.assertEqual(ticket1_errors, 1)
-        with self.subTest():
-            self.assertEqual(ticket2_errors, 1)
 
 
 
@@ -570,8 +495,8 @@ class TestTicketFunctions2(unittest.TestCase):
         self.ticket1 = Ticket.GenomeTicket()
         self.ticket2 = Ticket.GenomeTicket()
 
-        self.ticket1.primary_phage_id = "Trixie"
-        self.ticket2.primary_phage_id = "L5"
+        self.ticket1.phage_id = "Trixie"
+        self.ticket2.phage_id = "L5"
 
         self.bundle1 = Bundle.Bundle()
         self.bundle2 = Bundle.Bundle()
@@ -708,7 +633,7 @@ class TestTicketFunctions4(unittest.TestCase):
         # Add ticket.
         self.add_ticket = Ticket.GenomeTicket()
         self.add_ticket.type = "add"
-        self.add_ticket.primary_phage_id = "Trixie_Draft"
+        self.add_ticket.phage_id = "Trixie_Draft"
         self.add_ticket.run_mode = "phagesdb"
         self.add_ticket.description_field = "product"
         self.add_ticket.host_genus = "Mycobacterium smegmatis"
@@ -719,14 +644,13 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.annotation_qc = 1
         self.add_ticket.retrieve_record = 1
         self.add_ticket.accession = "ABC123.1"
-        self.add_ticket.secondary_phage_id = "none"
         self.bundle1 = Bundle.Bundle()
         self.bundle1.ticket = self.add_ticket
 
         # Remove ticket.
         self.remove_ticket = Ticket.GenomeTicket()
         self.remove_ticket.type = "replace"
-        self.remove_ticket.primary_phage_id = "Trixie_Draft"
+        self.remove_ticket.phage_id = "Trixie_Draft"
         self.remove_ticket.run_mode = "phagesdb"
         self.remove_ticket.description_field = "product"
         self.remove_ticket.host_genus = "Mycobacterium smegmatis"
@@ -737,7 +661,6 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.annotation_qc = 1
         self.remove_ticket.retrieve_record = 1
         self.remove_ticket.accession = "ABC123.1"
-        self.remove_ticket.secondary_phage_id = "L5"
         self.bundle2 = Bundle.Bundle()
         self.bundle2.ticket = self.remove_ticket
 
@@ -747,7 +670,7 @@ class TestTicketFunctions4(unittest.TestCase):
         # Invalid ticket.
         self.invalid_ticket = Ticket.GenomeTicket()
         self.invalid_ticket.type = "invalid"
-        self.invalid_ticket.primary_phage_id = "Trixie_Draft"
+        self.invalid_ticket.phage_id = "Trixie_Draft"
         self.invalid_ticket.run_mode = "phagesdb"
         self.invalid_ticket.description_field = "product"
         self.invalid_ticket.host_genus = "Mycobacterium smegmatis"
@@ -758,7 +681,6 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.annotation_qc = 1
         self.invalid_ticket.retrieve_record = 1
         self.invalid_ticket.accession = "ABC123.1"
-        self.invalid_ticket.secondary_phage_id = "L5"
         self.bundle3 = Bundle.Bundle()
         self.bundle3.ticket = self.invalid_ticket
 
@@ -793,21 +715,22 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome.accession, "ABC123")
 
-    def test_copy_ticket_to_genome_2(self):
-        """Verify data from 'remove' ticket is added to genome."""
-
-        tickets.copy_ticket_to_genome(self.bundle2)
-        matched_genome1 = self.bundle2.genome_dict["add"]
-        matched_genome2 = self.bundle2.genome_dict["remove"]
-
-        with self.subTest():
-            self.assertEqual(matched_genome1.id, "Trixie")
-        with self.subTest():
-            self.assertEqual(matched_genome1.name, "Trixie_Draft")
-        with self.subTest():
-            self.assertEqual(matched_genome2.id, "L5")
-        with self.subTest():
-            self.assertEqual(matched_genome2.name, "")
+    # TODO this is probably no longer needed.
+    # def test_copy_ticket_to_genome_2(self):
+    #     """Verify data from 'remove' ticket is added to genome."""
+    #
+    #     tickets.copy_ticket_to_genome(self.bundle2)
+    #     matched_genome1 = self.bundle2.genome_dict["add"]
+    #     # matched_genome2 = self.bundle2.genome_dict["remove"]
+    #
+    #     with self.subTest():
+    #         self.assertEqual(matched_genome1.id, "Trixie")
+    #     with self.subTest():
+    #         self.assertEqual(matched_genome1.name, "Trixie_Draft")
+    #     # with self.subTest():
+    #     #     self.assertEqual(matched_genome2.id, "L5")
+    #     # with self.subTest():
+    #     #     self.assertEqual(matched_genome2.name, "")
 
     def test_copy_ticket_to_genome_3(self):
         """Verify data from 'invalid' ticket is not added to genome."""
@@ -854,7 +777,7 @@ class TestTicketFunctions4(unittest.TestCase):
 #     def test_match_genomes_to_tickets_1(self):
 #         """Verify that one genome is matched to ticket using phage_id."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "phage_id"
 #         self.genome1.id = "Trixie"
 #
@@ -877,7 +800,7 @@ class TestTicketFunctions4(unittest.TestCase):
 #     def test_match_genomes_to_tickets_2(self):
 #         """Verify that one genome is matched to ticket using filename."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
@@ -900,7 +823,7 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that one genome is matched to ticket,
 #         and one genome is not matched (no matching ticket), using filename."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #         self.genome2.filename = "L5"
@@ -925,11 +848,11 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that one ticket is matched to genome,
 #         and one ticket is not matched (no matching genome), using filename."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.phage_id = "L5"
 #         self.bundle2.ticket.match_strategy = "filename"
 #
 #         list1 = [self.bundle1, self.bundle2] # Trixie, L5
@@ -952,11 +875,11 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that two genomes are matched to tickets,
 #         using filename."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.phage_id = "L5"
 #         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
@@ -987,11 +910,11 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that no genomes are matched to tickets due to
 #         conflicting strategies."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "phage_id"
 #         self.genome1.filename = "Trixie"
 #
-#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.phage_id = "L5"
 #         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
@@ -1013,15 +936,15 @@ class TestTicketFunctions4(unittest.TestCase):
 #         """Verify that three genomes are matched to tickets,
 #         using filename."""
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.phage_id = "L5"
 #         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
-#         self.bundle3.ticket.primary_phage_id = "D29"
+#         self.bundle3.ticket.phage_id = "D29"
 #         self.bundle3.ticket.match_strategy = "filename"
 #         self.genome3.filename = "D29"
 #
@@ -1058,18 +981,18 @@ class TestTicketFunctions4(unittest.TestCase):
 #         and two tickets are not matched (same identifier), using filename."""
 #
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.phage_id = "L5"
 #         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #
-#         self.bundle3.ticket.primary_phage_id = "D29"
+#         self.bundle3.ticket.phage_id = "D29"
 #         self.bundle3.ticket.match_strategy = "filename"
 #
-#         self.bundle4.ticket.primary_phage_id = "D29"
+#         self.bundle4.ticket.phage_id = "D29"
 #         self.bundle4.ticket.match_strategy = "filename"
 #
 #         list1 = [self.bundle1, self.bundle2,
@@ -1104,11 +1027,11 @@ class TestTicketFunctions4(unittest.TestCase):
 #         and two genomes are not matched (same identifier), using filename."""
 #
 #
-#         self.bundle1.ticket.primary_phage_id = "Trixie"
+#         self.bundle1.ticket.phage_id = "Trixie"
 #         self.bundle1.ticket.match_strategy = "filename"
 #         self.genome1.filename = "Trixie"
 #
-#         self.bundle2.ticket.primary_phage_id = "L5"
+#         self.bundle2.ticket.phage_id = "L5"
 #         self.bundle2.ticket.match_strategy = "filename"
 #         self.genome2.filename = "L5"
 #

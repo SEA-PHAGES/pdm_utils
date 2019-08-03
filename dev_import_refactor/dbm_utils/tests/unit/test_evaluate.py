@@ -20,7 +20,7 @@ class TestEvaluateClass(unittest.TestCase):
 
         self.add_ticket1 = Ticket.GenomeTicket()
         self.add_ticket1.type = "add"
-        self.add_ticket1.primary_phage_id = "Trixie_Draft"
+        self.add_ticket1.phage_id = "Trixie_Draft"
         self.add_ticket1.run_mode = "phagesdb"
         self.add_ticket1.description_field = "product"
         self.add_ticket1.host_genus = "Mycobacterium smegmatis"
@@ -31,7 +31,6 @@ class TestEvaluateClass(unittest.TestCase):
         self.add_ticket1.annotation_qc = 1
         self.add_ticket1.retrieve_record = 1
         self.add_ticket1.accession = "ABC123.1"
-        self.add_ticket1.secondary_phage_id = "none"
 
 
     def test_check_ticket_structure_1(self):
@@ -45,7 +44,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(self.add_ticket1.evaluations), 9)
+            self.assertEqual(len(self.add_ticket1.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -70,10 +69,10 @@ class TestEvaluateClass(unittest.TestCase):
 
     def test_check_ticket_structure_3(self):
         """Verify an error is produced with an incorrectly structured
-        'add' ticket 'primary_phage_id' field."""
+        'add' ticket 'phage_id' field."""
 
         ticket = self.add_ticket1
-        ticket.primary_phage_id = "none"
+        ticket.phage_id = "none"
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
@@ -81,7 +80,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -99,7 +98,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -117,7 +116,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -135,7 +134,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -153,7 +152,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -171,7 +170,7 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -189,27 +188,10 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
-
-    def test_check_ticket_structure_10(self):
-        """Verify an error is produced with an incorrectly structured
-        'add' ticket 'secondary_phage_id' field."""
-
-        ticket = self.add_ticket1
-        ticket.secondary_phage_id = "L5"
-        evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
-        errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
-        with self.subTest():
-            self.assertEqual(errors, 1)
 
 
     def test_check_ticket_structure_11(self):
@@ -218,7 +200,7 @@ class TestEvaluateClass(unittest.TestCase):
 
         ticket = self.add_ticket1
         ticket.type = "replace"
-        ticket.secondary_phage_id = "L5"
+        # ticket.secondary_phage_id = "L5"
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
@@ -226,28 +208,29 @@ class TestEvaluateClass(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
+            self.assertEqual(len(ticket.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 0)
 
-
-    def test_check_ticket_structure_12(self):
-        """Verify an error is produced with an incorrectly structured
-        'replace' ticket 'secondary_phage_id' field."""
-
-        ticket = self.add_ticket1
-        ticket.type = "replace"
-        ticket.secondary_phage_id = "none"
-        evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
-        errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 9)
-        with self.subTest():
-            self.assertEqual(errors, 1)
+    # TODO now that there is no secondary_phage_id, this may need to be
+    # re-evaluated.
+    # def test_check_ticket_structure_12(self):
+    #     """Verify an error is produced with an incorrectly structured
+    #     'replace' ticket 'secondary_phage_id' field."""
+    #
+    #     ticket = self.add_ticket1
+    #     ticket.type = "replace"
+    #     ticket.secondary_phage_id = "none"
+    #     evaluate.check_ticket_structure(
+    #         ticket, self.type_set, self.null_set, self.run_mode_set)
+    #     errors = 0
+    #     for eval in ticket.evaluations:
+    #         if eval.status == "error":
+    #             errors += 1
+    #     with self.subTest():
+    #         self.assertEqual(len(ticket.evaluations), 9)
+    #     with self.subTest():
+    #         self.assertEqual(errors, 1)
 
 
 
@@ -354,7 +337,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_add_ticket_3(self):
     #     """Primary Phage ID is none."""
     #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.primary_phage_id = "none"
+    #     self.add_ticket.phage_id = "none"
     #     self.add_ticket.check_add_ticket(phage_id_set)
     #     self.assertEqual(len(self.add_ticket.evaluations), 1)
     #
@@ -437,7 +420,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_remove_ticket_2(self):
     #     """Primary Phage ID is not none."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.primary_phage_id = "Trixie"
+    #     self.remove_ticket.phage_id = "Trixie"
     #     self.remove_ticket.check_remove_ticket(phage_id_set)
     #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
     #
@@ -521,7 +504,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_replace_ticket_2(self):
     #     """Primary Phage ID is none."""
     #     phage_id_set = set(["Trixie","L5","RedRock","none"])
-    #     self.replace_ticket.primary_phage_id = "none"
+    #     self.replace_ticket.phage_id = "none"
     #     self.replace_ticket.secondary_phage_id = "none"
     #     self.replace_ticket.check_replace_ticket(phage_id_set)
     #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
@@ -529,7 +512,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_replace_ticket_3(self):
     #     """Primary Phage ID not present and different from Secondary Phage ID."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.primary_phage_id = "D29"
+    #     self.replace_ticket.phage_id = "D29"
     #     self.replace_ticket.secondary_phage_id = "L5"
     #     self.replace_ticket.check_replace_ticket(phage_id_set)
     #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
@@ -572,7 +555,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_replace_ticket_9(self):
     #     """Secondary Phage ID is not present."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.primary_phage_id = "D29"
+    #     self.replace_ticket.phage_id = "D29"
     #     self.replace_ticket.secondary_phage_id = "D29"
     #     self.replace_ticket.check_replace_ticket(phage_id_set)
     #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
@@ -640,7 +623,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_ticket_6(self):
     #     """Check remove ticket with Primary Phage ID not none."""
     #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.primary_phage_id = "Trixie"
+    #     self.remove_ticket.phage_id = "Trixie"
     #     self.remove_ticket.check_ticket(phage_id_set)
     #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
     #
@@ -653,7 +636,7 @@ class TestEvaluateClass(unittest.TestCase):
     # def test_check_ticket_8(self):
     #     """Check replace ticket when Primary Phage ID is none."""
     #     phage_id_set = set(["Trixie","L5","RedRock","none"])
-    #     self.replace_ticket.primary_phage_id = "none"
+    #     self.replace_ticket.phage_id = "none"
     #     self.replace_ticket.secondary_phage_id = "none"
     #     self.replace_ticket.check_ticket(phage_id_set)
     #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
