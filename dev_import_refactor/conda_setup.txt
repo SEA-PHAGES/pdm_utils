@@ -1,4 +1,4 @@
-conda create --name phamerator mysql python pip biopython
+conda create --name phamerator mysql python pip biopython pymysql paramiko
 source activate phamerator
 
 
@@ -14,6 +14,3 @@ Python 3.7.3
 
 
 
-
-conda create --name phamerator2 mysql python pip biopython pymysql paramiko
-source activate phamerator2
