@@ -157,7 +157,7 @@ def parse_cds_data(cds, data_dict, trans_table = 11):
         pass
 
     try:
-        cds.translation = data_dict["translation"]
+        cds.set_translation(data_dict["translation"])
     except:
         pass
 

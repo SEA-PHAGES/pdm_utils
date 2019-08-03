@@ -220,7 +220,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -259,8 +259,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -286,7 +284,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "")
         with self.subTest():
@@ -325,8 +323,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -355,7 +351,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -394,8 +390,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -419,7 +413,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -458,8 +452,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -483,7 +475,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -522,8 +514,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -547,7 +537,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -586,8 +576,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -611,7 +599,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -650,8 +638,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -675,7 +661,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -714,8 +700,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
@@ -739,7 +723,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         flat_files.parse_cds_feature(self.cds, seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
+            self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -778,75 +762,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "")
         with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 11)
-        with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
-
-
-    def test_parse_cds_feature_10(self):
-        """Verify CDS features is parsed with modified
-        parent translation table."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
-                            "gene_x": ["1"]}
-
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
-                    qualifiers = qualifier_dict)
-
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature, 1)
-        flat_files.parse_cds_feature(self.cds, seqfeature, 1)
-
-        with self.subTest():
-            self.assertEqual(self.cds.type, "CDS")
-        with self.subTest():
-            self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
-        with self.subTest():
-            self.assertEqual(self.cds.strand, "F")
-        with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
-        with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
-        with self.subTest():
-            self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
-        with self.subTest():
-            self.assertEqual(self.cds.coordinate_format, "0_half_open")
-        with self.subTest():
-            self.assertEqual(self.cds.translation, "ABCDE")
-        with self.subTest():
-            self.assertEqual(self.cds._translation_length, 5)
-        with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
-        with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
-        with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
-        with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
-        with self.subTest():
-            self.assertEqual(self.cds.function_description, \
-                "hypothetical protein")
-        with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
-        with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
-        with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
-        with self.subTest():
-            self.assertEqual(self.cds.gene_number, "")
-        with self.subTest():
-            self.assertEqual(self.cds.parent_translation_table, 1)
-        with self.subTest():
-            self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
-
 
 
 

@@ -4,57 +4,50 @@ to maintain and update SEA-PHAGES phage genomics data.
 
 from functions import basic
 from classes import Eval
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 import re
 
 
 
 
 class CdsFeature:
+    """Class to hold data about a CDS feature."""
 
-    # Initialize all attributes:
     def __init__(self):
 
-        # Initialize all non-calculated attributes:
-
-        # Datafields from Phamerator database.
+        # The following attributes are common to any CDS.
 
         # TODO: eventually change how id is computed.
         self.id = "" # Gene ID comprised of PhageID and Gene name
         self.name = ""
-        self.type = "CDS"
         self.left_boundary = "" # Genomic position
         self.right_boundary = "" # Genomic position
         self.start = "" # Genomic position
         self.end = "" # Genomic position
         self.strand = "" #'forward', 'reverse', or 'NA'
         self.compound_parts = 0 # Number of regions that form the feature
-        self.translation = "" # Biopython Seq object with protein alphabet.
         self.translation_table = ""
+        self.translation = "" # Biopython Seq object.
+        self._translation_length = 0
+        self.seq = "" # Biopython Seq object containing nucleotide seq.
+        self._nucleotide_length = 0 # Replaces gene_length, stored in Phamerator?
+
+        # Thiis enables several QC checks
+        # that utilize Biopython, such as retrieving the nucleotide
+        # sequence from the parent genome and re-translating the CDS.
+        self.seqfeature = None # Biopython SeqFeature object.
 
         # Indexing format for coordinates. Current valid formats:
         # 0-based half open (stored in Phamerator), 1-based closed.
         self.coordinate_format = ""
-
-
-        # Common to Phamerator.
         self.parent_genome_id = ""
-        self.parent_translation_table = ""
-
-
         self.primary_description = ""
         self.processed_primary_description = "" # Non-generic gene descriptions
 
 
-
-        # Common to NCBI.
-
-
-        self.seqfeature = None # Biopython SeqFeature object.
-        # Thiis enables several QC checks
-        # that utilize Biopython, such as retrieving the nucleotide
-        # sequence from the parent genome and re-translating the CDS.
-        self.seq = "" # Biopython Seq object containing nucleotide seq.
-
+        # The following attributes are common to
+        # GenBank-formatted flat file records.
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
         self.gene_number = ""
         self.product_description = ""
@@ -64,69 +57,20 @@ class CdsFeature:
         self.processed_function_description = ""
         self.processed_note_description = ""
 
-        # Common to all.
+        # The following attributes are usefule for processing data
+        # from various data sources.
         self.evaluations = []
-
-
-
-        # Computed attributes:
-
-        #Common to all. Computed internally.
-        self._translation_length = 0
-        self._nucleotide_length = 0 # Replaces gene_length, stored in Phamerator?
+        self.type = ""
         self._left_right_strand_id = ()
         self._end_strand_id = ()
         self._start_end_id = ()
 
 
 
-        # TODO may need to move these attributes to an inherited class.
-        # # Computed error attributes.
-        # self._amino_acid_errors = False
-        # self._boundary_error = False
-        # self._total_errors = 0
-        #
-        #
-        # self._unmatched_error = False # Indicates if it is matched or not.
-        #
-        #
-        #
-        # #Common to NCBI
-        # self._locus_tag_missing = False
-        # self._locus_tag_typo = False # Requies phage name in Genome object.
-        # self._description_field_error = False
-        # self._compound_parts_error = False #TODO implement this error
-
-
-
-
-
-
-
-
-
-
-
-
-    # Define all attribute setters:
-
-
-    # def set_evaluation(self, type, message1 = None, message2 = None):
-    #     """Creates an EvalResult object and adds it to the list of all
-    #     evaluations.
-    #     """
-    #     if type == "warning":
-    #         eval_object = Eval.construct_warning(message1, message2)
-    #     elif type == "error":
-    #         eval_object = Eval.construct_error(message1)
-    #     else:
-    #         eval_object = Eval.EvalResult()
-    #     self.evaluations.append(eval_object)
-
     def set_parent_genome_id(self, value):
         """Set the parent_genome_id."""
-
         self.parent_genome_id = value
+
 
     def choose_description(self, value):
         """Set the primary description and processed primary description."""
@@ -135,32 +79,51 @@ class CdsFeature:
             self.primary_description = self.product_description
             self.processed_primary_description = \
                 self.processed_primary_description
-
         elif value == "function":
             self.primary_description = self.function_description
             self.processed_primary_description = \
                 self.processed_function_description
-
         elif value == "note":
             self.primary_description = self.note_description
             self.processed_primary_description = \
                 self.processed_note_description
-
         else:
             pass
 
 
+    def set_translation(self, value=None, translate=False):
+        """Set translation and its length."""
 
-
-    def set_translation(self, value):
-        """Sets translation and determines length of translation.
-        """
-        self.translation = value.upper()
+        if isinstance(value, Seq):
+            self.translation = value
+        elif value is not None:
+            try:
+                self.translation = Seq(value.upper(), IUPAC.protein)
+            except:
+                self.translation = Seq("", IUPAC.protein)
+        elif translate:
+            # Use Biopython to translate the nucleotide sequece.
+            # cds=True indicates that it is expected to be a valid CDS
+            # sequence:
+            #   1. it begins with a valid start codon,
+            #   2. it ends with a stop codon,
+            #   3. it is divisible by 3,
+            #   4. it translates non-standard start codons to methionine.
+            # If these criteria are not met, an error is thrown.
+            try:
+                self.translation = self.seq.translate(
+                                        table=self.translation_table,
+                                        cds=True)
+            except:
+                self.translation = Seq("", IUPAC.protein)
+        else:
+            self.translation = Seq("", IUPAC.protein)
         self._translation_length = len(self.translation)
 
-    def set_strand(self, value, format, case = False):
-        """Sets strand based on indicated format.
-        """
+
+
+    def set_strand(self, value, format, case=False):
+        """Sets strand based on indicated format."""
         self.strand = basic.reformat_strand(value, format, case)
 
     def set_start_end(self):
@@ -181,7 +144,8 @@ class CdsFeature:
             pass
 
     def set_location_id(self):
-        """ Create a tuple of feature location data.
+        """Create a tuple of feature location data.
+
         For left and right boundaries of the feature, it doesn't matter
         whether the feature is complex with a translational frameshift or not.
         Retrieving the "left" and "right" boundary attributes return the very
@@ -190,10 +154,11 @@ class CdsFeature:
         If only the feature "end" coordinate is used, strand information is
         required.
         If "start" and "end" coordinates are used instead of "left" and "right"
-        coordinates, no strand information is required."""
+        coordinates, no strand information is required.
+        """
         self._left_right_strand_id = (self.left_boundary, \
-                                    self.right_boundary, \
-                                    self.strand)
+                                      self.right_boundary, \
+                                      self.strand)
         self._end_strand_id = (self.end, self.strand)
         self._start_end_id = (self.start, self.end)
 
@@ -207,14 +172,11 @@ class CdsFeature:
         if self.coordinate_format == "0_half_open":
             self._nucleotide_length = \
                 self.right_boundary - self.left_boundary
-
         elif self.coordinate_format == "1_closed":
             self._nucleotide_length = \
                 self.right_boundary - self.left_boundary + 1
-
         else:
             self._nucleotide_length = -1
-
 
 
     def reformat_left_and_right_boundaries(self, new_format):
@@ -224,9 +186,9 @@ class CdsFeature:
 
         new_left, new_right = \
             basic.reformat_coordinates(self.left_boundary, \
-                                        self.right_boundary, \
-                                        self.coordinate_format, \
-                                        new_format)
+                                       self.right_boundary, \
+                                       self.coordinate_format, \
+                                       new_format)
 
         if (new_left != "" and new_right != ""):
             self.left_boundary = new_left
@@ -234,21 +196,20 @@ class CdsFeature:
             self.coordinate_format = new_format
 
 
-
-
-    # TODO implement.
-    # TODO unit test.
-    def set_nucleotide_sequence(self, parent_genome):
+    def set_nucleotide_sequence(self, parent_genome_seq):
         """Retrieves the nucleotide sequence from the parent genome."""
-        # TODO pass the nucleotide sequence of the parent genome.
-        # Use self.seqfeature object - this has methods to retrieve the
-        # nucleotide sequence. The seqfeature object contains the entire
+
+        # The seqfeature object contains the entire
         # coordinates from the flat file record, including all compound
         # parts and fuzzy coordinates. So the retrieved sequence may
         # not exactly match the length indicated from the
         # self.left_boundary and self.right_boundary attributes.
-        pass
+        try:
+            self.seq = self.seqfeature.extract(parent_genome_seq)
+        except:
 
+            # TODO not sure if this is the proper alphabet to use.
+            self.seq = Seq("", IUPAC.ambiguous_dna)
 
 
 
@@ -260,8 +221,7 @@ class CdsFeature:
     # Evaluations.
 
     def check_amino_acids(self, protein_alphabet_set):
-        """Check whether all amino acids in the translation are valid.
-        """
+        """Check whether all amino acids in the translation are valid."""
         amino_acid_set = set(self.translation)
         amino_acid_error_set = amino_acid_set - protein_alphabet_set
 
@@ -274,10 +234,7 @@ class CdsFeature:
             status = "correct"
 
         definition = "Check validity of amino acid residues."
-        eval = Eval.Eval(id = "CDS0001", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS0001", definition, result, status = status)
         self.evaluations.append(eval)
 
     def check_translation_length(self):
@@ -290,14 +247,11 @@ class CdsFeature:
             status = "correct"
 
         definition = "Confirm there is a translation."
-        eval = Eval.Eval(id = "CDS0002", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS0002", definition, result, status)
         self.evaluations.append(eval)
 
 
-    # TODO this method can be improved by taking account coordinate
+    # TODO this method can be improved by taking into account coordinate
     # indexing format. The current implementation assumes only one format.
     # Also, instead of computing the nucleotide length, this can now
     # reference the self._nucleotide_length attribute.
@@ -322,10 +276,7 @@ class CdsFeature:
             status = "untested"
 
         definition = "Confirm the translation and nucleotide lengths."
-        eval = Eval.Eval(id = "CDS0003", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -346,10 +297,7 @@ class CdsFeature:
             status = "correct"
 
         definition = "Check if the strand is set appropriately."
-        eval = Eval.Eval(id = "CDS0004", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -379,10 +327,7 @@ class CdsFeature:
 
         definition = "Check if the left and right boundary coordinates " + \
                         "are exact or fuzzy."
-        eval = Eval.Eval(id = "CDS0005", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -410,10 +355,7 @@ class CdsFeature:
             status = "untested"
 
         definition = "Check if the locus_tag status is expected."
-        eval = Eval.Eval(id = "CDS0006", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -434,10 +376,7 @@ class CdsFeature:
             status = "correct"
 
         definition = "Check if the locus_tag contains a typo."
-        eval = Eval.Eval(id = "CDS0007", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -456,10 +395,7 @@ class CdsFeature:
             status = "correct"
 
         definition = "Check if there is a discrepancy between description fields."
-        eval = Eval.Eval(id = "CDS0008", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -473,16 +409,13 @@ class CdsFeature:
             status = "correct"
 
         definition = "Check that translation table data is present."
-        eval = Eval.Eval(id = "CDS0009", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_translation_table_typo(self):
+    def check_translation_table_typo(self, parent_trans_table=11):
         """Check that translation table data matches data from parent Genome."""
 
-        if self.translation_table != self.parent_translation_table:
+        if self.translation_table != parent_trans_table:
             result = "The feature contains a translation table that " + \
                         "is different from the parent Genome translation table."
             status = "error"
@@ -492,10 +425,7 @@ class CdsFeature:
             status = "correct"
 
         definition = "Check that feature contains the exected translation table."
-        eval = Eval.Eval(id = "CDS0010", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 

@@ -1,6 +1,9 @@
 """ Unit tests for the CDS class."""
 
 from classes import Cds
+from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 import unittest
 
 
@@ -14,43 +17,119 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-
     def test_set_strand_1(self):
+        """Verify 'f' is converted correctly."""
         self.feature.set_strand("f", "fr_long")
         self.assertEqual(self.feature.strand, "forward")
 
     def test_set_strand_2(self):
+        """Verify 'r' is converted correctly."""
         self.feature.set_strand("reverse", "fr_short")
         self.assertEqual(self.feature.strand, "r")
 
 
+
+
+
     def test_set_translation_1(self):
-        self.feature.set_translation("abcd")
+        """Verify that sequence and length is set from valid Seq object."""
+        self.feature.set_translation(Seq("MF"))
         with self.subTest():
-            self.assertEqual(self.feature.translation, "ABCD")
+            self.assertEqual(self.feature.translation, "MF")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 4)
+            self.assertEqual(self.feature._translation_length, 2)
 
+    def test_set_translation_2(self):
+        """Verify that sequence and length is set from valid input."""
+        self.feature.set_translation("mf")
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "MF")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 2)
 
+    def test_set_translation_3(self):
+        """Verify that sequence and length is set from invalid input."""
+        self.feature.set_translation(1)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 0)
 
+    def test_set_translation_4(self):
+        """Verify that sequence and length is set from translating
+        valid nucleotide sequence."""
+        self.feature.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.set_translation(translate=True)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "MF")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 2)
 
+    def test_set_translation_5(self):
+        """Verify that sequence and length is set from translating
+        valid nucleotide sequence (contains non-standard start codon)."""
+        self.feature.seq = Seq("GTGTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.set_translation(translate=True)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "MF")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 2)
 
-    # TODO probably don't need these now.
-    # def test_set_evaluation_1(self):
-    #     self.feature.set_evaluation("none")
-    #     self.assertEqual(len(self.feature.evaluations), 1)
-    #
-    # def test_set_evaluation_2(self):
-    #     self.feature.set_evaluation("warning","message1")
-    #     self.assertEqual(len(self.feature.evaluations), 1)
-    #
-    # def test_set_evaluation_3(self):
-    #     self.feature.set_evaluation("error","message1","message2")
-    #     self.assertEqual(len(self.feature.evaluations), 1)
+    def test_set_translation_6(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains one additional codon
+        after stop codon)."""
+        self.feature.seq = Seq("GTGTTTTGAATG", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.set_translation(translate=True)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 0)
 
+    def test_set_translation_7(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains ambiguous nucleotides)."""
+        self.feature.seq = Seq("GTGRRRTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.set_translation(translate=True)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 0)
 
+    def test_set_translation_8(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains an extra nucleotide)."""
+        self.feature.seq = Seq("GTGATTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.set_translation(translate=True)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 0)
 
+    def test_set_translation_9(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains an invalid start codon)."""
+        self.feature.seq = Seq("GTATTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.set_translation(translate=True)
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 0)
 
+    def test_set_translation_10(self):
+        """Verify that sequence and length is set when no options are
+        selected."""
+        self.feature.set_translation()
+        with self.subTest():
+            self.assertEqual(self.feature.translation, "")
+        with self.subTest():
+            self.assertEqual(self.feature._translation_length, 0)
 
 
 
@@ -483,10 +562,34 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+    def test_set_nucleotide_sequence_1(self):
+        """Verify that expected sequence is extracted from top strand."""
+        parent_genome_seq = Seq("AATTCG")
+        self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
+                                             type="CDS",
+                                             strand=1)
+        self.feature.set_nucleotide_sequence(parent_genome_seq)
+        expected_seq = Seq("ATTC")
+        self.assertEqual(self.feature.seq, expected_seq)
 
+    def test_set_nucleotide_sequence_2(self):
+        """Verify that expected sequence is extracted from bottom strand."""
+        parent_genome_seq = Seq("AATTCG")
+        self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
+                                             type="CDS",
+                                             strand=-1)
+        self.feature.set_nucleotide_sequence(parent_genome_seq)
+        expected_seq = Seq("GAAT")
+        self.assertEqual(self.feature.seq, expected_seq)
 
-
-
+    def test_set_nucleotide_sequence_3(self):
+        """Verify that no sequence is extracted if the 'seqfeature'
+        attribute is not a Biopython SeqFeature object."""
+        parent_genome_seq = Seq("AATTCG")
+        self.feature.seqfeature = ""
+        self.feature.set_nucleotide_sequence(parent_genome_seq)
+        expected_seq = Seq("")
+        self.assertEqual(self.feature.seq, expected_seq)
 
 
 
@@ -576,21 +679,24 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
-
     def test_check_translation_table_typo_1(self):
         """Verify no error is produced."""
-        self.feature.translation_table = "11"
-        self.feature.parent_translation_table = "11"
+        self.feature.translation_table = 11
         self.feature.check_translation_table_typo()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_translation_table_typo_2(self):
         """Verify an error is produced."""
-        self.feature.translation_table = ""
-        self.feature.parent_translation_table = "11"
+        self.feature.translation_table = "11"
         self.feature.check_translation_table_typo()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
+    def test_check_translation_table_typo_3(self):
+        """Verify no error is produced when a modified translation
+        table is supplied."""
+        self.feature.translation_table = "11"
+        self.feature.check_translation_table_typo("11")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
 
 

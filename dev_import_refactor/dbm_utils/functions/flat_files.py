@@ -79,7 +79,7 @@ def parse_coordinates(feature):
     return (left_boundary, right_boundary, parts)
 
 
-def parse_cds_feature(cds, feature, parent_translation_table = 11):
+def parse_cds_feature(cds, feature):
     """Parses a Biopython CDS SeqFeature.
     """
 
@@ -150,11 +150,6 @@ def parse_cds_feature(cds, feature, parent_translation_table = 11):
         cds.gene_number = feature.qualifiers["gene"][0]
     except:
         cds.gene_number = ""
-
-
-
-    cds.parent_translation_table = parent_translation_table
-
 
 
 
