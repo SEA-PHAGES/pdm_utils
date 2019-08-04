@@ -135,8 +135,8 @@ class TestBundleClass2(unittest.TestCase):
     def setUp(self):
 
         self.ticket1 = Ticket.GenomeTicket()
-        self.cds1 = Cds.CdsFeature()
-        self.cds2 = Cds.CdsFeature()
+        self.cds1 = Cds.Cds()
+        self.cds2 = Cds.Cds()
         self.genome1 = Genome.Genome()
         self.genome1.type = "flat_file"
         self.genome1.cds_features.append(self.cds1)

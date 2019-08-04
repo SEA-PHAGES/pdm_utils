@@ -1,18 +1,36 @@
 """ Unit tests for the CDS class."""
 
 from classes import Cds
-from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 import unittest
 
 
 
-class TestCdsFeatureClass(unittest.TestCase):
+class TestCdsClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.feature = Cds.CdsFeature()
+        self.feature = Cds.Cds()
+
+
+
+
+    def test_set_translation_table_1(self):
+        """Verify translation_table is set correctly from valid integer."""
+        self.feature.set_translation_table(11)
+        self.assertEqual(self.feature.translation_table, 11)
+
+    def test_set_translation_table_2(self):
+        """Verify translation_table is set correctly from valid string."""
+        self.feature.set_translation_table("11")
+        self.assertEqual(self.feature.translation_table, 11)
+
+    def test_set_translation_table_2(self):
+        """Verify translation_table is set correctly from invalid string."""
+        self.feature.set_translation_table("x")
+        self.assertEqual(self.feature.translation_table, -1)
 
 
 
@@ -30,10 +48,60 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+    def test_translate_seq_1(self):
+        """Verify translation is produced from valid nucleotide sequence."""
+        self.feature.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        translation = self.feature.translate_seq()
+        self.assertEqual(translation, "MF")
+
+    def test_translate_seq_2(self):
+        """Verify translation is produced from valid nucleotide sequence
+        that contains a non-standard start codon."""
+        self.feature.seq = Seq("GTGTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        translation = self.feature.translate_seq()
+        self.assertEqual(translation, "MF")
+
+    def test_translate_seq_3(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains one additional codon
+        after stop codon)."""
+        self.feature.seq = Seq("GTGTTTTGAATG", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        translation = self.feature.translate_seq()
+        self.assertEqual(translation, "")
+
+    def test_translate_seq_4(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains ambiguous nucleotides)."""
+        self.feature.seq = Seq("GTGRRRTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        translation = self.feature.translate_seq()
+        self.assertEqual(translation, "")
+
+    def test_translate_seq_5(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains an extra nucleotide)."""
+        self.feature.seq = Seq("GTGATTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        translation = self.feature.translate_seq()
+        self.assertEqual(translation, "")
+
+    def test_translate_seq_6(self):
+        """Verify that sequence and length is set from translating
+        invalid nucleotide sequence (contains an invalid start codon)."""
+        self.feature.seq = Seq("GTATTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        translation = self.feature.translate_seq()
+        self.assertEqual(translation, "")
+
+
+
 
     def test_set_translation_1(self):
         """Verify that sequence and length is set from valid Seq object."""
-        self.feature.set_translation(Seq("MF"))
+        self.feature.set_translation(Seq("mf"))
         with self.subTest():
             self.assertEqual(self.feature.translation, "MF")
         with self.subTest():
@@ -68,17 +136,6 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_translation_5(self):
         """Verify that sequence and length is set from translating
-        valid nucleotide sequence (contains non-standard start codon)."""
-        self.feature.seq = Seq("GTGTTTTGA", IUPAC.unambiguous_dna)
-        self.feature.translation_table = 11
-        self.feature.set_translation(translate=True)
-        with self.subTest():
-            self.assertEqual(self.feature.translation, "MF")
-        with self.subTest():
-            self.assertEqual(self.feature._translation_length, 2)
-
-    def test_set_translation_6(self):
-        """Verify that sequence and length is set from translating
         invalid nucleotide sequence (contains one additional codon
         after stop codon)."""
         self.feature.seq = Seq("GTGTTTTGAATG", IUPAC.unambiguous_dna)
@@ -89,40 +146,7 @@ class TestCdsFeatureClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature._translation_length, 0)
 
-    def test_set_translation_7(self):
-        """Verify that sequence and length is set from translating
-        invalid nucleotide sequence (contains ambiguous nucleotides)."""
-        self.feature.seq = Seq("GTGRRRTTTTGA", IUPAC.unambiguous_dna)
-        self.feature.translation_table = 11
-        self.feature.set_translation(translate=True)
-        with self.subTest():
-            self.assertEqual(self.feature.translation, "")
-        with self.subTest():
-            self.assertEqual(self.feature._translation_length, 0)
-
-    def test_set_translation_8(self):
-        """Verify that sequence and length is set from translating
-        invalid nucleotide sequence (contains an extra nucleotide)."""
-        self.feature.seq = Seq("GTGATTTTGA", IUPAC.unambiguous_dna)
-        self.feature.translation_table = 11
-        self.feature.set_translation(translate=True)
-        with self.subTest():
-            self.assertEqual(self.feature.translation, "")
-        with self.subTest():
-            self.assertEqual(self.feature._translation_length, 0)
-
-    def test_set_translation_9(self):
-        """Verify that sequence and length is set from translating
-        invalid nucleotide sequence (contains an invalid start codon)."""
-        self.feature.seq = Seq("GTATTTTGA", IUPAC.unambiguous_dna)
-        self.feature.translation_table = 11
-        self.feature.set_translation(translate=True)
-        with self.subTest():
-            self.assertEqual(self.feature.translation, "")
-        with self.subTest():
-            self.assertEqual(self.feature._translation_length, 0)
-
-    def test_set_translation_10(self):
+    def test_set_translation_6(self):
         """Verify that sequence and length is set when no options are
         selected."""
         self.feature.set_translation()
@@ -130,6 +154,7 @@ class TestCdsFeatureClass(unittest.TestCase):
             self.assertEqual(self.feature.translation, "")
         with self.subTest():
             self.assertEqual(self.feature._translation_length, 0)
+
 
 
 
@@ -161,8 +186,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_start_end_1(self):
         """Forward strand feature, long format."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "forward"
         start = 5
         end = 10
@@ -174,8 +199,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_start_end_2(self):
         """Reverse strand feature, long format."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "reverse"
         start = 10
         end = 5
@@ -187,8 +212,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_start_end_3(self):
         """Reverse strand feature, short format."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "r"
         start = 10
         end = 5
@@ -200,8 +225,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_start_end_4(self):
         """Non-standard strand feature."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "other"
         start = ""
         end = ""
@@ -213,8 +238,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_start_end_5(self):
         """Operator strand feature."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "+"
         start = 5
         end = 10
@@ -226,8 +251,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_start_end_6(self):
         """Numeric strand feature."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = -1
         start = 10
         end = 5
@@ -243,8 +268,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_location_id_1(self):
         """Forward strand feature, both values should be set."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "forward"
         self.feature.start = 5
         self.feature.end = 10
@@ -261,8 +286,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_location_id_2(self):
         """Reverse strand feature, both values should be set."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "reverse"
         self.feature.start = 10
         self.feature.end = 5
@@ -279,8 +304,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_location_id_3(self):
         """Test forward strand numeric format."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = 1
         self.feature.start = 5
         self.feature.end = 10
@@ -297,8 +322,8 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_set_location_id_4(self):
         """Test non-standard strand format."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.strand = "abcd"
         location_id_1 = (5, 10, "abcd")
         location_id_2 = ("", "abcd")
@@ -326,53 +351,37 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_check_boundaries_1(self):
         """Test correct boundaries."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 10
+        self.feature.left = 5
+        self.feature.right = 10
         self.feature.check_boundaries()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_boundaries_2(self):
         """Test incorrect left boundary."""
-        self.feature.left_boundary = "a"
-        self.feature.right_boundary = 10
+        self.feature.left = "a"
+        self.feature.right = 10
         self.feature.check_boundaries()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_boundaries_3(self):
         """Test incorrect right boundary."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = "a"
+        self.feature.left = 5
+        self.feature.right = "a"
         self.feature.check_boundaries()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
-
-
-
-    def test_set_parent_genome_id_1(self):
-        """Test no draft suffix."""
-        phage_id = "Trixie"
-        self.feature.set_parent_genome_id(phage_id)
-        self.assertEqual(self.feature.parent_genome_id, "Trixie")
-
-    def test_set_parent_genome_id_2(self):
-        """Test draft suffix."""
-        phage_id = "Trixie_Draft"
-        self.feature.set_parent_genome_id(phage_id)
-        self.assertEqual(self.feature.parent_genome_id, "Trixie_Draft")
-
-
     #TODO: remove this unit test after I decide whether or not to keep
-    # the set_primary_description function.
-    # de test_set_primary_description_1(self):
+    # the set_description function.
+    # de test_set_description_1(self):
     #     """Test primary description."""
     #     description1 = "ABCD"
     #     description2 = "EFGH"
-    #     self.feature.set_primary_description(description1, description2)
+    #     self.feature.set_description(description1, description2)
     #     with self.subTest():
-    #         self.assertEqual(self.feature.primary_description, "ABCD")
+    #         self.assertEqual(self.feature.description, "ABCD")
     #     with self.subTest():
-    #         self.assertEqual(self.feature.processed_primary_description, "EFGH")
+    #         self.assertEqual(self.feature.processed_description, "EFGH")
 
 
 
@@ -413,20 +422,20 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_check_description_1(self):
         """Product is present and function is present."""
-        self.feature.processed_product_description = "ABC"
-        self.feature.processed_function_description = "EFG"
+        self.feature.processed_product = "ABC"
+        self.feature.processed_function = "EFG"
         self.feature.check_description()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_2(self):
         """Product is present and function is absent."""
-        self.feature.processed_product_description = "ABC"
+        self.feature.processed_product = "ABC"
         self.feature.check_description()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_3(self):
         """Product is absent and function is present."""
-        self.feature.processed_function_description = "EFG"
+        self.feature.processed_function = "EFG"
         self.feature.check_description()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
@@ -455,8 +464,8 @@ class TestCdsFeatureClass(unittest.TestCase):
     def test_check_lengths_1(self):
         """The translation length is correct."""
         self.feature.compound_parts = 1
-        self.feature.left_boundary = 0
-        self.feature.right_boundary = 11
+        self.feature.left = 0
+        self.feature.right = 11
         self.feature.set_translation("ABC")
         self.feature.check_lengths()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -464,8 +473,8 @@ class TestCdsFeatureClass(unittest.TestCase):
     def test_check_lengths_2(self):
         """The translation length is not correct."""
         self.feature.compound_parts = 1
-        self.feature.left_boundary = 0
-        self.feature.right_boundary = 12
+        self.feature.left = 0
+        self.feature.right = 12
         self.feature.set_translation("ABC")
         self.feature.check_lengths()
         self.assertEqual(self.feature.evaluations[0].status, "error")
@@ -473,8 +482,8 @@ class TestCdsFeatureClass(unittest.TestCase):
     def test_check_lengths_3(self):
         """Compound feature is not computed."""
         self.feature.compound_parts = 2
-        self.feature.left_boundary = 0
-        self.feature.right_boundary = 12
+        self.feature.left = 0
+        self.feature.right = 12
         self.feature.set_translation("ABC")
         self.feature.check_lengths()
         self.assertEqual(self.feature.evaluations[0].status, "untested")
@@ -485,29 +494,29 @@ class TestCdsFeatureClass(unittest.TestCase):
     def test_set_nucleotide_length_1(self):
         """Verify the nucleotide length is correct for a 0-based
         half-open interval."""
-        self.feature.left_boundary = 0
-        self.feature.right_boundary = 11
+        self.feature.left = 0
+        self.feature.right = 11
         self.feature.coordinate_format = "0_half_open"
         self.feature.set_nucleotide_length()
-        self.assertEqual(self.feature._nucleotide_length, 11)
+        self.assertEqual(self.feature._length, 11)
 
     def test_set_nucleotide_length_2(self):
         """Verify the nucleotide length is correct for a 1-based
         closed interval."""
-        self.feature.left_boundary = 0
-        self.feature.right_boundary = 11
+        self.feature.left = 0
+        self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         self.feature.set_nucleotide_length()
-        self.assertEqual(self.feature._nucleotide_length, 12)
+        self.assertEqual(self.feature._length, 12)
 
     def test_set_nucleotide_length_3(self):
         """Verify the nucleotide length is not set for invalid
         coordinate format."""
-        self.feature.left_boundary = 0
-        self.feature.right_boundary = 11
+        self.feature.left = 0
+        self.feature.right = 11
         self.feature.coordinate_format = "invalid"
         self.feature.set_nucleotide_length()
-        self.assertEqual(self.feature._nucleotide_length, -1)
+        self.assertEqual(self.feature._length, -1)
 
 
 
@@ -517,82 +526,128 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_reformat_left_and_right_boundaries_1(self):
         """Verify the coordinates are converted to 1-based closed interval."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 11
+        self.feature.left = 5
+        self.feature.right = 11
         self.feature.coordinate_format = "0_half_open"
         new_format = "1_closed"
         self.feature.reformat_left_and_right_boundaries(new_format)
         with self.subTest():
-            self.assertEqual(self.feature.left_boundary, 6)
+            self.assertEqual(self.feature.left, 6)
         with self.subTest():
-            self.assertEqual(self.feature.right_boundary, 11)
+            self.assertEqual(self.feature.right, 11)
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, new_format)
 
     def test_reformat_left_and_right_boundaries_2(self):
         """Verify the coordinates are converted to 0-based half open interval."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 11
+        self.feature.left = 5
+        self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "0_half_open"
         self.feature.reformat_left_and_right_boundaries(new_format)
         with self.subTest():
-            self.assertEqual(self.feature.left_boundary, 4)
+            self.assertEqual(self.feature.left, 4)
         with self.subTest():
-            self.assertEqual(self.feature.right_boundary, 11)
+            self.assertEqual(self.feature.right, 11)
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, new_format)
 
     def test_reformat_left_and_right_boundaries_3(self):
         """Verify the coordinates are not converted."""
-        self.feature.left_boundary = 5
-        self.feature.right_boundary = 11
+        self.feature.left = 5
+        self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "invalid"
         self.feature.reformat_left_and_right_boundaries(new_format)
         with self.subTest():
-            self.assertEqual(self.feature.left_boundary, 5)
+            self.assertEqual(self.feature.left, 5)
         with self.subTest():
-            self.assertEqual(self.feature.right_boundary, 11)
+            self.assertEqual(self.feature.right, 11)
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, "1_closed")
 
 
 
 
-
-
     def test_set_nucleotide_sequence_1(self):
+        """Verify that supplied Seq object is set correctly."""
+        seq = Seq("aattcg")
+        self.feature.set_nucleotide_sequence(value=seq)
+        with self.subTest():
+            self.assertEqual(self.feature.seq, "AATTCG")
+        with self.subTest():
+            self.assertIsInstance(self.feature.seq, Seq)
+
+    def test_set_nucleotide_sequence_2(self):
+        """Verify that supplied sequence is set correclty
+        (converted to Seq object)."""
+        seq = "aattcg"
+        self.feature.set_nucleotide_sequence(value=seq)
+        with self.subTest():
+            self.assertEqual(self.feature.seq, "AATTCG")
+        with self.subTest():
+            self.assertIsInstance(self.feature.seq, Seq)
+
+    def test_set_nucleotide_sequence_3(self):
+        """Verify that supplied invalid sequence is set correctly
+        (converted to empty Seq object)."""
+        seq = 1
+        self.feature.set_nucleotide_sequence(value=seq)
+        with self.subTest():
+            self.assertEqual(self.feature.seq, "")
+        with self.subTest():
+            self.assertIsInstance(self.feature.seq, Seq)
+
+    def test_set_nucleotide_sequence_4(self):
         """Verify that expected sequence is extracted from top strand."""
-        parent_genome_seq = Seq("AATTCG")
+        seq = Seq("AATTCG")
         self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
                                              type="CDS",
                                              strand=1)
-        self.feature.set_nucleotide_sequence(parent_genome_seq)
+        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
         expected_seq = Seq("ATTC")
         self.assertEqual(self.feature.seq, expected_seq)
 
-    def test_set_nucleotide_sequence_2(self):
+    def test_set_nucleotide_sequence_5(self):
         """Verify that expected sequence is extracted from bottom strand."""
-        parent_genome_seq = Seq("AATTCG")
+        seq = Seq("AATTCG")
         self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
                                              type="CDS",
                                              strand=-1)
-        self.feature.set_nucleotide_sequence(parent_genome_seq)
+        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
         expected_seq = Seq("GAAT")
         self.assertEqual(self.feature.seq, expected_seq)
 
-    def test_set_nucleotide_sequence_3(self):
+    def test_set_nucleotide_sequence_6(self):
         """Verify that no sequence is extracted if the 'seqfeature'
         attribute is not a Biopython SeqFeature object."""
-        parent_genome_seq = Seq("AATTCG")
+        seq = Seq("AATTCG")
         self.feature.seqfeature = ""
-        self.feature.set_nucleotide_sequence(parent_genome_seq)
+        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
         expected_seq = Seq("")
         self.assertEqual(self.feature.seq, expected_seq)
 
+    def test_set_nucleotide_sequence_7(self):
+        """Verify that expected sequence is extracted from a compound
+        feature."""
+        seq = Seq("AATTCGAGCT")
+        self.feature.seqfeature = \
+            SeqFeature(CompoundLocation([FeatureLocation(1, 5, strand=1),
+                                         FeatureLocation(3, 7, strand=1)]),
+                       type="CDS")
+        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
+        # feature #1 = ATTC
+        # feature #2 = TCGA
+        expected_seq = Seq("ATTCTCGA")
+        self.assertEqual(self.feature.seq, expected_seq)
 
-
+    def test_set_nucleotide_sequence_8(self):
+        """Verify that empty Seq object set when no parameters selected."""
+        self.feature.set_nucleotide_sequence()
+        with self.subTest():
+            self.assertEqual(self.feature.seq, "")
+        with self.subTest():
+            self.assertIsInstance(self.feature.seq, Seq)
 
 
 
@@ -624,43 +679,43 @@ class TestCdsFeatureClass(unittest.TestCase):
 
     def test_choose_description_1(self):
         """Verify product description is assigned to primary description."""
-        self.feature.product_description = "ABCD"
-        self.feature.processed_primary_description = "EFGH"
+        self.feature.product = "ABCD"
+        self.feature.processed_product = "EFGH"
         self.feature.choose_description("product")
         with self.subTest():
-            self.assertEqual(self.feature.primary_description, "ABCD")
+            self.assertEqual(self.feature.description, "ABCD")
         with self.subTest():
-            self.assertEqual(self.feature.processed_primary_description, "EFGH")
+            self.assertEqual(self.feature.processed_description, "EFGH")
 
     def test_choose_description_2(self):
         """Verify function description is assigned to primary description."""
-        self.feature.function_description = "ABCD"
-        self.feature.processed_function_description = "EFGH"
+        self.feature.function = "ABCD"
+        self.feature.processed_function = "EFGH"
         self.feature.choose_description("function")
         with self.subTest():
-            self.assertEqual(self.feature.primary_description, "ABCD")
+            self.assertEqual(self.feature.description, "ABCD")
         with self.subTest():
-            self.assertEqual(self.feature.processed_primary_description, "EFGH")
+            self.assertEqual(self.feature.processed_description, "EFGH")
 
     def test_choose_description_3(self):
         """Verify note description is assigned to primary description."""
-        self.feature.note_description = "ABCD"
-        self.feature.processed_note_description = "EFGH"
+        self.feature.note = "ABCD"
+        self.feature.processed_note = "EFGH"
         self.feature.choose_description("note")
         with self.subTest():
-            self.assertEqual(self.feature.primary_description, "ABCD")
+            self.assertEqual(self.feature.description, "ABCD")
         with self.subTest():
-            self.assertEqual(self.feature.processed_primary_description, "EFGH")
+            self.assertEqual(self.feature.processed_description, "EFGH")
 
     def test_choose_description_4(self):
         """Verify no description is assigned to primary description."""
-        self.feature.note_description = "ABCD"
-        self.feature.processed_note_description = "EFGH"
+        self.feature.note = "ABCD"
+        self.feature.processed_note = "EFGH"
         self.feature.choose_description("invalid")
         with self.subTest():
-            self.assertEqual(self.feature.primary_description, "")
+            self.assertEqual(self.feature.description, "")
         with self.subTest():
-            self.assertEqual(self.feature.processed_primary_description, "")
+            self.assertEqual(self.feature.processed_description, "")
 
 
 
@@ -701,6 +756,54 @@ class TestCdsFeatureClass(unittest.TestCase):
 
 
 
+    def test_check_translation_1(self):
+        """Verify no error is produced by a correct translation."""
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature._translation_length = 2
+        self.feature.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.check_translation()
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_translation_2(self):
+        """Verify an error is produced by a translation with an internal
+        stop codon."""
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature._translation_length = 2
+        self.feature.seq = Seq("ATGTTTTGATGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.check_translation()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_translation_3(self):
+        """Verify an error is produced by a translation shorter than
+        expected."""
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature._translation_length = 2
+        self.feature.seq = Seq("ATGTTTATGTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.check_translation()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_translation_4(self):
+        """Verify an error is produced by a translation longer than
+        expected."""
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature._translation_length = 2
+        self.feature.seq = Seq("ATGTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.check_translation()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_translation_5(self):
+        """Verify an error is produced by a translation different than
+        expected (but same length)."""
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature._translation_length = 2
+        self.feature.seq = Seq("ATGATGTGA", IUPAC.unambiguous_dna)
+        self.feature.translation_table = 11
+        self.feature.check_translation()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 

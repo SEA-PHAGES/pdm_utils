@@ -39,13 +39,13 @@ def parse_coordinates(feature):
         isinstance(feature.location, CompoundLocation)):
 
         if feature.strand is None:
-            left_boundary = -1
-            right_boundary = -1
+            left = -1
+            right = -1
             parts = 0
 
         elif isinstance(feature.location, FeatureLocation):
-            left_boundary = int(feature.location.start)
-            right_boundary = int(feature.location.end)
+            left = int(feature.location.start)
+            right = int(feature.location.end)
             parts = 1
 
         elif isinstance(feature.location, CompoundLocation):
@@ -58,25 +58,25 @@ def parse_coordinates(feature):
 
                 # Retrieve compound feature positions based on strand.
                 if feature.strand == 1:
-                    left_boundary = int(feature.location.parts[0].start)
-                    right_boundary = int(feature.location.parts[1].end)
+                    left = int(feature.location.parts[0].start)
+                    right = int(feature.location.parts[1].end)
 
                 elif feature.strand == -1:
-                    left_boundary = int(feature.location.parts[1].start)
-                    right_boundary = int(feature.location.parts[0].end)
+                    left = int(feature.location.parts[1].start)
+                    right = int(feature.location.parts[0].end)
 
                 else:
                     pass
             else:
-                left_boundary = -1
-                right_boundary = -1
+                left = -1
+                right = -1
 
     else:
-        left_boundary = -1
-        right_boundary = -1
+        left = -1
+        right = -1
         parts = 0
 
-    return (left_boundary, right_boundary, parts)
+    return (left, right, parts)
 
 
 def parse_cds_feature(cds, feature):
@@ -94,8 +94,8 @@ def parse_cds_feature(cds, feature):
     # Orientation
     cds.set_strand(feature.strand, "fr_short", case = True)
 
-    cds.left_boundary, \
-    cds.right_boundary, \
+    cds.left, \
+    cds.right, \
     cds.compound_parts = parse_coordinates(feature)
 
 
@@ -115,36 +115,38 @@ def parse_cds_feature(cds, feature):
 
 
     try:
-        cds.translation_table = feature.qualifiers["transl_table"][0]
+        translation_table = feature.qualifiers["transl_table"][0]
     except:
-        cds.translation_table = ""
+        translation_table = -1
+    cds.set_translation_table(translation_table)
+
 
     try:
-        cds.product_description, \
-        cds.processed_product_description = \
+        cds.product, \
+        cds.processed_product = \
             basic.reformat_description(feature.qualifiers["product"][0])
 
     except:
-        cds.product_description = ""
-        cds.processed_product_description = ""
+        cds.product = ""
+        cds.processed_product = ""
 
     try:
-        cds.function_description, \
-        cds.processed_function_description = \
+        cds.function, \
+        cds.processed_function = \
             basic.reformat_description(feature.qualifiers["function"][0])
 
     except:
-        cds.function_description = ""
-        cds.processed_function_description = ""
+        cds.function = ""
+        cds.processed_function = ""
 
     try:
-        cds.note_description, \
-        cds.processed_note_description = \
+        cds.note, \
+        cds.processed_note = \
             basic.reformat_description(feature.qualifiers["note"][0])
 
     except:
-        cds.note_description = ""
-        cds.processed_note_description = ""
+        cds.note = ""
+        cds.processed_note = ""
 
     try:
         cds.gene_number = feature.qualifiers["gene"][0]
@@ -155,11 +157,11 @@ def parse_cds_feature(cds, feature):
 
 
 def create_cds_objects(biopython_feature_list):
-    """Convert all Biopython CDS SeqFeatures to CdsFeature objects."""
+    """Convert all Biopython CDS SeqFeatures to Cds objects."""
     cds_object_list = []
 
     for feature in biopython_feature_list:
-        cds = Cds.CdsFeature()
+        cds = Cds.Cds()
         parse_cds_feature(cds, feature)
         cds_object_list.append(cds)
 
@@ -370,13 +372,13 @@ def parse_flat_file_data(
         cds_object_list = []
 
 
-    # TODO the parent_genome_id can't be set until the genome id
+    # TODO the genome_id can't be set until the genome id
     # is set. But the phage_id is not determined from within the
     # flat file. It is inputted externally, such as from a ticket.
-    # Once the ticket is used to set the id, the parent_genome_id
+    # Once the ticket is used to set the id, the genome_id
     # atttributes can be set for all features.
     # for cds in cds_object_list:
-    #     cds.parent_genome_id = genome_obj.id
+    #     cds.genome_id = genome_obj.id
 
 
     if "source" in feature_dict.keys():

@@ -16,17 +16,17 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-        self.cds1 = Cds.CdsFeature()
-        self.cds1.processed_primary_description = ""
-        self.cds1.processed_product_description = ""
-        self.cds1.processed_function_description = ""
-        self.cds1.processed_note_description = ""
+        self.cds1 = Cds.Cds()
+        self.cds1.processed_description = ""
+        self.cds1.processed_product = ""
+        self.cds1.processed_function = ""
+        self.cds1.processed_note = ""
 
-        self.cds2 = Cds.CdsFeature()
-        self.cds2.processed_primary_description = ""
-        self.cds2.processed_product_description = ""
-        self.cds2.processed_function_description = ""
-        self.cds2.processed_note_description = ""
+        self.cds2 = Cds.Cds()
+        self.cds2.processed_description = ""
+        self.cds2.processed_product = ""
+        self.cds2.processed_function = ""
+        self.cds2.processed_note = ""
 
 
 
@@ -121,11 +121,11 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_cds_ids_1(self):
         """Check that CDS feature identifier lists are set."""
-        cds1 = Cds.CdsFeature()
+        cds1 = Cds.Cds()
         cds1._start_end_id = (1, 5)
         cds1._end_strand_id = (5, "forward")
 
-        cds2 = Cds.CdsFeature()
+        cds2 = Cds.Cds()
         cds2._start_end_id = (21, 2)
         cds2._end_strand_id = (2, "reverse")
 
@@ -544,147 +544,147 @@ class TestGenomeClass(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 0)
+                self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 0)
+                self.genome._cds_processed_products_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 0)
+                self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 0)
+                self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_2(self):
         """Check that processed primary description tally
         is incremented."""
-        self.cds1.processed_primary_description = "abcd"
+        self.cds1.processed_description = "abcd"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.tally_descriptions()
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 1)
+                self.genome._cds_processed_descriptions_tally, 1)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 0)
+                self.genome._cds_processed_products_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 0)
+                self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 0)
+                self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_3(self):
         """Check that processed product description tally
         is incremented."""
-        self.cds1.processed_product_description = "abcd"
+        self.cds1.processed_product = "abcd"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.tally_descriptions()
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 0)
+                self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 1)
+                self.genome._cds_processed_products_tally, 1)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 0)
+                self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 0)
+                self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_4(self):
         """Check that processed function description tally
         is incremented."""
-        self.cds1.processed_function_description = "abcd"
+        self.cds1.processed_function = "abcd"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.tally_descriptions()
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 0)
+                self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 0)
+                self.genome._cds_processed_products_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 1)
+                self.genome._cds_processed_functions_tally, 1)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 0)
+                self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_5(self):
         """Check that processed note description tally
         is incremented."""
-        self.cds1.processed_note_description = "abcd"
+        self.cds1.processed_note = "abcd"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.tally_descriptions()
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 0)
+                self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 0)
+                self.genome._cds_processed_products_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 0)
+                self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 1)
+                self.genome._cds_processed_notes_tally, 1)
 
     def test_tally_descriptions_6(self):
         """Check that all description tallies are incremented."""
-        self.cds1.processed_primary_description = "abcd"
-        self.cds1.processed_product_description = "efgh"
-        self.cds1.processed_function_description = "ijkl"
-        self.cds1.processed_note_description = "mnop"
+        self.cds1.processed_description = "abcd"
+        self.cds1.processed_product = "efgh"
+        self.cds1.processed_function = "ijkl"
+        self.cds1.processed_note = "mnop"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.tally_descriptions()
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 1)
+                self.genome._cds_processed_descriptions_tally, 1)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 1)
+                self.genome._cds_processed_products_tally, 1)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 1)
+                self.genome._cds_processed_functions_tally, 1)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 1)
+                self.genome._cds_processed_notes_tally, 1)
 
     def test_tally_descriptions_7(self):
         """Check that all description tallies are incremented for
         all CDS features."""
-        self.cds1.processed_primary_description = "abcd"
-        self.cds1.processed_product_description = "efgh"
-        self.cds1.processed_function_description = "ijkl"
-        self.cds1.processed_note_description = "mnop"
+        self.cds1.processed_description = "abcd"
+        self.cds1.processed_product = "efgh"
+        self.cds1.processed_function = "ijkl"
+        self.cds1.processed_note = "mnop"
 
-        self.cds2.processed_primary_description = "ab"
-        self.cds2.processed_product_description = "cd"
-        self.cds2.processed_function_description = "ef"
-        self.cds2.processed_note_description = "gh"
+        self.cds2.processed_description = "ab"
+        self.cds2.processed_product = "cd"
+        self.cds2.processed_function = "ef"
+        self.cds2.processed_note = "gh"
 
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.tally_descriptions()
 
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_primary_descriptions_tally, 2)
+                self.genome._cds_processed_descriptions_tally, 2)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_product_descriptions_tally, 2)
+                self.genome._cds_processed_products_tally, 2)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_function_descriptions_tally, 2)
+                self.genome._cds_processed_functions_tally, 2)
         with self.subTest():
             self.assertEqual( \
-                self.genome._cds_processed_note_descriptions_tally, 2)
+                self.genome._cds_processed_notes_tally, 2)
 
 
 
@@ -820,7 +820,7 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_compatible_status_and_descriptions_2(self):
         """Check that draft genome with a description produces an error."""
         self.genome.annotation_status = "draft"
-        self.genome._cds_processed_primary_descriptions_tally = 1
+        self.genome._cds_processed_descriptions_tally = 1
         self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
@@ -828,7 +828,7 @@ class TestGenomeClass(unittest.TestCase):
         """Check that final genome with a description does not produce
         an error."""
         self.genome.annotation_status = "final"
-        self.genome._cds_processed_primary_descriptions_tally = 1
+        self.genome._cds_processed_descriptions_tally = 1
         self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
@@ -849,7 +849,7 @@ class TestGenomeClass(unittest.TestCase):
         """Check that gbk genome with descriptions does not produce
         an error."""
         self.genome.annotation_status = "gbk"
-        self.genome._cds_processed_primary_descriptions_tally = 1
+        self.genome._cds_processed_descriptions_tally = 1
         self.genome.check_compatible_status_and_descriptions()
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 

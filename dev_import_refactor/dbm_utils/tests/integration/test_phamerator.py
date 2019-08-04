@@ -535,7 +535,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_list[0].id, "L5_001")
         with self.subTest():
-            self.assertEqual(cds_list[0].parent_genome_id, "L5")
+            self.assertEqual(cds_list[0].genome_id, "L5")
 
 
 

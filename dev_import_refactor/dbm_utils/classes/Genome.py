@@ -59,10 +59,10 @@ class Genome:
         self._cds_features_tally = 0
         self._cds_start_end_ids = []
         self._cds_end_strand_ids = []
-        self._cds_processed_primary_descriptions_tally = 0
-        self._cds_processed_product_descriptions_tally = 0
-        self._cds_processed_function_descriptions_tally = 0
-        self._cds_processed_note_descriptions_tally = 0
+        self._cds_processed_descriptions_tally = 0
+        self._cds_processed_products_tally = 0
+        self._cds_processed_functions_tally = 0
+        self._cds_processed_notes_tally = 0
         self._cds_unique_start_end_ids = set() # TODO still in development.
         self._cds_duplicate_start_end_ids = set() # TODO still in development.
         self._cds_unique_end_strand_ids = set() # TODO still in development.
@@ -363,14 +363,14 @@ class Genome:
     def tally_descriptions(self):
         """Tally the non-generic CDS descriptions."""
         for cds in self.cds_features:
-            if cds.processed_primary_description != "":
-                self._cds_processed_primary_descriptions_tally += 1
-            if cds.processed_product_description != "":
-                self._cds_processed_product_descriptions_tally += 1
-            if cds.processed_function_description != "":
-                self._cds_processed_function_descriptions_tally += 1
-            if cds.processed_note_description != "":
-                self._cds_processed_note_descriptions_tally += 1
+            if cds.processed_description != "":
+                self._cds_processed_descriptions_tally += 1
+            if cds.processed_product != "":
+                self._cds_processed_products_tally += 1
+            if cds.processed_function != "":
+                self._cds_processed_functions_tally += 1
+            if cds.processed_note != "":
+                self._cds_processed_notes_tally += 1
 
 
     def identify_unique_cds_start_end_ids(self):
@@ -751,12 +751,12 @@ class Genome:
         # There are no expectations for other types of genomes.
 
         if (self.annotation_status == 'draft' and \
-                self._cds_processed_primary_descriptions_tally > 0):
+                self._cds_processed_descriptions_tally > 0):
             result = "The genome is draft status " + \
                      "but contains CDS descriptions."
             status = "error"
         elif (self.annotation_status == 'final' and \
-                self._cds_processed_primary_descriptions_tally == 0):
+                self._cds_processed_descriptions_tally == 0):
             result = "The genome is final status " + \
                      "but does not contain any CDS descriptions."
             status = "error"

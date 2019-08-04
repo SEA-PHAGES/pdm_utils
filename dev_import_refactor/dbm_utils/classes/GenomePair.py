@@ -20,8 +20,8 @@ class GenomePair:
         self.evaluations = []
 
         self.matched_cds_list = [] # List of MatchedCds objects. TODO this contains perfect and imperfect matches
-        self.unmatched_cds_genome1 = [] # List of CdsFeature objects
-        self.unmatched_cds_genome2 = [] # List of CdsFeature objects
+        self.unmatched_cds_genome1 = [] # List of Cds objects
+        self.unmatched_cds_genome2 = [] # List of Cds objects
 
 
 
@@ -142,11 +142,11 @@ class GenomePair:
                 second._cds_start_end_ids = first._cds_start_end_ids
             if (second._cds_end_strand_ids == keyword or keyword is None):
                 second._cds_end_strand_ids = first._cds_end_strand_ids
-            if (second._cds_processed_primary_descriptions_tally == keyword \
+            if (second._cds_processed_descriptions_tally == keyword \
                 or keyword is None):
 
-                second._cds_processed_primary_descriptions_tally = \
-                    first._cds_processed_primary_descriptions_tally
+                second._cds_processed_descriptions_tally = \
+                    first._cds_processed_descriptions_tally
 
             if (second.trna_features == keyword or keyword is None):
                 second.trna_features = first.trna_features
@@ -189,23 +189,23 @@ class GenomePair:
                 second._organism_host_genus = \
                     first._organism_host_genus
 
-            if (second._cds_processed_product_descriptions_tally == keyword \
+            if (second._cds_processed_products_tally == keyword \
                 or keyword is None):
 
-                second._cds_processed_product_descriptions_tally = \
-                    first._cds_processed_product_descriptions_tally
+                second._cds_processed_products_tally = \
+                    first._cds_processed_products_tally
 
-            if (second._cds_processed_function_descriptions_tally == keyword \
+            if (second._cds_processed_functions_tally == keyword \
                 or keyword is None):
 
-                second._cds_processed_function_descriptions_tally = \
-                    first._cds_processed_function_descriptions_tally
+                second._cds_processed_functions_tally = \
+                    first._cds_processed_functions_tally
 
-            if (second._cds_processed_note_descriptions_tally == keyword \
+            if (second._cds_processed_notes_tally == keyword \
                 or keyword is None):
 
-                second._cds_processed_note_descriptions_tally = \
-                    first._cds_processed_note_descriptions_tally
+                second._cds_processed_notes_tally = \
+                    first._cds_processed_notes_tally
 
             if (second._cds_unique_start_end_ids == keyword \
                 or keyword is None):

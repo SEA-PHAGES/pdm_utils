@@ -311,7 +311,7 @@ def check_genome_to_import(genome_obj, type):
 # TODO implement.
 # TODO unit test.
 def check_cds_for_import(cds_obj):
-    """Check a CdsFeature object for errors."""
+    """Check a Cds object for errors."""
 
     # TODO decide how to implement alphabet
     cds_obj.check_amino_acids(alphabet = alphabet)

@@ -45,21 +45,21 @@ class MatchedCdsFeatures:
     def compare_phamerator_ncbi_cds_features(self):
 
         if self.__phamerator_feature.get_strand() == 'forward':
-            if str(self.__phamerator_feature.get_left_boundary()) != str(self.__ncbi_feature.get_left_boundary()):
+            if str(self.__phamerator_feature.get_left()) != str(self.__ncbi_feature.get_left()):
                 self.__phamerator_ncbi_different_start_sites = True
         elif self.__phamerator_feature.get_strand() == 'reverse':
-            if str(self.__phamerator_feature.get_right_boundary()) != str(self.__ncbi_feature.get_right_boundary()):
+            if str(self.__phamerator_feature.get_right()) != str(self.__ncbi_feature.get_right()):
                 self.__phamerator_ncbi_different_start_sites = True
         else:
             pass
 
 
-        product_description_set = set()
-        product_description_set.add(self.__phamerator_feature.get_search_notes())
-        product_description_set.add(self.__ncbi_feature.get_search_product_description())
+        product_set = set()
+        product_set.add(self.__phamerator_feature.get_search_notes())
+        product_set.add(self.__ncbi_feature.get_search_product())
 
 
-        if len(product_description_set) != 1:
+        if len(product_set) != 1:
             self.__phamerator_ncbi_different_descriptions = True
 
         if self.__phamerator_feature.get_translation() != self.__ncbi_feature.get_translation():

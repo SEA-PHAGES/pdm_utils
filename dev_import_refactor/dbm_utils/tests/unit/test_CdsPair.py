@@ -11,8 +11,8 @@ class TestCdsPairClass(unittest.TestCase):
 
     def setUp(self):
         self.cds_pair = CdsPair.CdsPair()
-        self.cds1 = Cds.CdsFeature()
-        self.cds2 = Cds.CdsFeature()
+        self.cds1 = Cds.Cds()
+        self.cds2 = Cds.Cds()
 
 
 

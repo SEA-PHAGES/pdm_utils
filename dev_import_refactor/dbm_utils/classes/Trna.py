@@ -16,14 +16,14 @@ class TrnaFeature:
 
         #Datafields from Phamerator database:
         self.type = '' #Feature type: CDS, GenomeBoundary,or tRNA
-        self.left_boundary = '' #Position of left boundary of feature, 0-indexed
-        self.right_boundary = '' #Position of right boundary of feature, 0-indexed
+        self.left = '' #Position of left boundary of feature, 0-indexed
+        self.right = '' #Position of right boundary of feature, 0-indexed
         self.strand = '' #'forward', 'reverse', or 'NA'
         self.length = ''
 
 
         #Common to Phamerator
-        self.parent_genome_id = ''
+        self.genome_id = ''
         self.id = '' #tRNA ID comprised of PhageID and Gene name
         self.name = ''
         self.notes = ''
@@ -35,8 +35,8 @@ class TrnaFeature:
         #Common to NCBI
         self.locus_tag = '' #Gene ID comprised of PhageID and Gene name
         self.gene_number = ''
-        self.product_description = ''
-        self.processed_product_description = ''
+        self.product = ''
+        self.processed_product = ''
 
 
 

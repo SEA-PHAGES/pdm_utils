@@ -127,22 +127,22 @@ def parse_cds_data(cds, data_dict, trans_table = 11):
         pass
 
     try:
-        cds.parent_genome_id = data_dict["PhageID"]
+        cds.genome_id = data_dict["PhageID"]
     except:
         pass
 
     try:
-        cds.left_boundary = data_dict["Start"]
+        cds.left = data_dict["Start"]
     except:
         pass
 
     try:
-        cds.right_boundary = data_dict["Stop"]
+        cds.right = data_dict["Stop"]
     except:
         pass
 
     try:
-        cds._nucleotide_length = data_dict["Length"]
+        cds._length = data_dict["Length"]
     except:
         pass
 
@@ -167,7 +167,7 @@ def parse_cds_data(cds, data_dict, trans_table = 11):
         pass
 
     try:
-        cds.primary_description = data_dict["Notes"].decode("utf-8")
+        cds.description = data_dict["Notes"].decode("utf-8")
     except:
         pass
 
@@ -312,7 +312,7 @@ def create_cds(sql_handle, phage_id):
     result_list = retrieve_cds_data(sql_handle, phage_id)
     cds_list = []
     for data_dict in result_list:
-        cds = Cds.CdsFeature()
+        cds = Cds.Cds()
         parse_cds_data(cds, result_list[0])
         cds_list.append(cds)
 
@@ -488,15 +488,15 @@ def create_cds_insert_statement(cds_feature):
         "VALUES " + \
         "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % \
         (cds_feature.id, \
-        cds_feature.parent_genome_id, \
-        cds_feature.left_boundary, \
-        cds_feature.right_boundary, \
+        cds_feature.genome_id, \
+        cds_feature.left, \
+        cds_feature.right, \
         cds_feature._translation_length, \
         cds_feature.name, \
         cds_feature.type, \
         cds_feature.translation, \
         cds_feature.strand, \
-        cds_feature.processed_primary_description, \
+        cds_feature.processed_description, \
         cds_feature.locus_tag)
     return statement
 

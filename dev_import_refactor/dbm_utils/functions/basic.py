@@ -103,7 +103,7 @@ def reformat_strand(input_value, format, case = False):
 
 # TODO this function can probably be improved. Maybe it should return
 # an eval object?
-# TODO also, coordinates in CdsFeature object can be stored as strings,
+# TODO also, coordinates in Cds object can be stored as strings,
 # so this function needs to take that into account.
 def reformat_coordinates(left, right, current, new):
     """Converts common coordinate formats, including:

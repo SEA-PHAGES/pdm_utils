@@ -11,7 +11,7 @@ import re
 
 
 
-class CdsFeature:
+class Cds:
     """Class to hold data about a CDS feature."""
 
     def __init__(self):
@@ -21,19 +21,23 @@ class CdsFeature:
         # TODO: eventually change how id is computed.
         self.id = "" # Gene ID comprised of PhageID and Gene name
         self.name = ""
-        self.left_boundary = "" # Genomic position
-        self.right_boundary = "" # Genomic position
+        self.genome_id = "" # Genome from which CDS feature is derived.
+        self.left = "" # Genomic position
+        self.right = "" # Genomic position
         self.start = "" # Genomic position
         self.end = "" # Genomic position
-        self.strand = "" #'forward', 'reverse', or 'NA'
-        self.compound_parts = 0 # Number of regions that form the feature
+        self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
+        self.compound_parts = 0 # Number of regions that define the feature
         self.translation_table = ""
-        self.translation = "" # Biopython Seq object.
+        self.translation = "" # Biopython amino acid Seq object.
         self._translation_length = 0
-        self.seq = "" # Biopython Seq object containing nucleotide seq.
-        self._nucleotide_length = 0 # Replaces gene_length, stored in Phamerator?
+        self.seq = "" # Biopython nucleotide Seq object.
+        self._length = 0 # Replaces gene_length, stored in Phamerator?
+        self._left_right_strand_id = ()
+        self._end_strand_id = ()
+        self._start_end_id = ()
 
-        # Thiis enables several QC checks
+        # This enables several QC checks
         # that utilize Biopython, such as retrieving the nucleotide
         # sequence from the parent genome and re-translating the CDS.
         self.seqfeature = None # Biopython SeqFeature object.
@@ -41,85 +45,91 @@ class CdsFeature:
         # Indexing format for coordinates. Current valid formats:
         # 0-based half open (stored in Phamerator), 1-based closed.
         self.coordinate_format = ""
-        self.parent_genome_id = ""
-        self.primary_description = ""
-        self.processed_primary_description = "" # Non-generic gene descriptions
+        self.description = ""
+        self.processed_description = "" # Non-generic gene descriptions
 
 
         # The following attributes are common to
         # GenBank-formatted flat file records.
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
         self.gene_number = ""
-        self.product_description = ""
-        self.function_description = ""
-        self.note_description = ""
-        self.processed_product_description = ""
-        self.processed_function_description = ""
-        self.processed_note_description = ""
+        self.product = ""
+        self.function = ""
+        self.note = ""
+        self.processed_product = ""
+        self.processed_function = ""
+        self.processed_note = ""
 
         # The following attributes are usefule for processing data
         # from various data sources.
         self.evaluations = []
         self.type = ""
-        self._left_right_strand_id = ()
-        self._end_strand_id = ()
-        self._start_end_id = ()
 
-
-
-    def set_parent_genome_id(self, value):
-        """Set the parent_genome_id."""
-        self.parent_genome_id = value
 
 
     def choose_description(self, value):
         """Set the primary description and processed primary description."""
 
         if value == "product":
-            self.primary_description = self.product_description
-            self.processed_primary_description = \
-                self.processed_primary_description
+            self.description = self.product
+            self.processed_description = self.processed_product
         elif value == "function":
-            self.primary_description = self.function_description
-            self.processed_primary_description = \
-                self.processed_function_description
+            self.description = self.function
+            self.processed_description = self.processed_function
         elif value == "note":
-            self.primary_description = self.note_description
-            self.processed_primary_description = \
-                self.processed_note_description
+            self.description = self.note
+            self.processed_description = self.processed_note
         else:
             pass
+
+
+    def translate_seq(self):
+        """Translate the CDS nucleotide sequence.
+
+        Use Biopython to translate the nucleotide sequece.
+        The method expects the nucleotide sequence to be a valid CDS
+        sequence in which:
+          1. it begins with a valid start codon,
+          2. it ends with a stop codon,
+          3. it contains only one stop codon,
+          4. its length is divisible by 3,
+          5. it translates non-standard start codons to methionine.
+        If these criteria are not met, an empty Seq object is returned.
+        """
+
+        try:
+            translation = self.seq.translate(table=self.translation_table,
+                                             cds=True)
+        except:
+            translation = Seq("", IUPAC.protein)
+        return translation
+
 
 
     def set_translation(self, value=None, translate=False):
         """Set translation and its length."""
 
         if isinstance(value, Seq):
-            self.translation = value
+            self.translation = value.upper()
         elif value is not None:
             try:
                 self.translation = Seq(value.upper(), IUPAC.protein)
             except:
                 self.translation = Seq("", IUPAC.protein)
         elif translate:
-            # Use Biopython to translate the nucleotide sequece.
-            # cds=True indicates that it is expected to be a valid CDS
-            # sequence:
-            #   1. it begins with a valid start codon,
-            #   2. it ends with a stop codon,
-            #   3. it is divisible by 3,
-            #   4. it translates non-standard start codons to methionine.
-            # If these criteria are not met, an error is thrown.
-            try:
-                self.translation = self.seq.translate(
-                                        table=self.translation_table,
-                                        cds=True)
-            except:
-                self.translation = Seq("", IUPAC.protein)
+            self.translation = self.translate_seq()
         else:
             self.translation = Seq("", IUPAC.protein)
         self._translation_length = len(self.translation)
 
+
+    def set_translation_table(self, value):
+        """Set translation table integer."""
+
+        try:
+            self.translation_table = int(value)
+        except:
+            self.translation_table = -1
 
 
     def set_strand(self, value, format, case=False):
@@ -135,11 +145,11 @@ class CdsFeature:
         strand = basic.reformat_strand(self.strand, "fr_long")
 
         if strand == "forward":
-            self.start = self.left_boundary
-            self.end = self.right_boundary
+            self.start = self.left
+            self.end = self.right
         elif strand == "reverse":
-            self.start = self.right_boundary
-            self.end = self.left_boundary
+            self.start = self.right
+            self.end = self.left
         else:
             pass
 
@@ -156,8 +166,8 @@ class CdsFeature:
         If "start" and "end" coordinates are used instead of "left" and "right"
         coordinates, no strand information is required.
         """
-        self._left_right_strand_id = (self.left_boundary, \
-                                      self.right_boundary, \
+        self._left_right_strand_id = (self.left, \
+                                      self.right, \
                                       self.strand)
         self._end_strand_id = (self.end, self.strand)
         self._start_end_id = (self.start, self.end)
@@ -170,13 +180,13 @@ class CdsFeature:
         """
 
         if self.coordinate_format == "0_half_open":
-            self._nucleotide_length = \
-                self.right_boundary - self.left_boundary
+            self._length = \
+                self.right - self.left
         elif self.coordinate_format == "1_closed":
-            self._nucleotide_length = \
-                self.right_boundary - self.left_boundary + 1
+            self._length = \
+                self.right - self.left + 1
         else:
-            self._nucleotide_length = -1
+            self._length = -1
 
 
     def reformat_left_and_right_boundaries(self, new_format):
@@ -185,33 +195,47 @@ class CdsFeature:
         change. However, it does not update start and end attributes."""
 
         new_left, new_right = \
-            basic.reformat_coordinates(self.left_boundary, \
-                                       self.right_boundary, \
+            basic.reformat_coordinates(self.left, \
+                                       self.right, \
                                        self.coordinate_format, \
                                        new_format)
 
         if (new_left != "" and new_right != ""):
-            self.left_boundary = new_left
-            self.right_boundary = new_right
+            self.left = new_left
+            self.right = new_right
             self.coordinate_format = new_format
 
 
-    def set_nucleotide_sequence(self, parent_genome_seq):
-        """Retrieves the nucleotide sequence from the parent genome."""
+    def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
+        """Set the nucleotide sequence of the feature.
 
-        # The seqfeature object contains the entire
-        # coordinates from the flat file record, including all compound
-        # parts and fuzzy coordinates. So the retrieved sequence may
-        # not exactly match the length indicated from the
-        # self.left_boundary and self.right_boundary attributes.
-        try:
-            self.seq = self.seqfeature.extract(parent_genome_seq)
-        except:
+        The method can directly set the attribute from a supplied 'value',
+        or it can retrieve the sequence from the parent genome."""
 
-            # TODO not sure if this is the proper alphabet to use.
+        if isinstance(value, Seq):
+            self.seq = value.upper()
+        elif value is not None:
+            try:
+                self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
+            except:
+                self.seq = Seq("", IUPAC.ambiguous_dna)
+        elif parent_genome_seq is not None:
+            # The seqfeature object contains the entire
+            # coordinates from the flat file record, including all compound
+            # parts and fuzzy coordinates. So the retrieved sequence may
+            # not exactly match the length indicated from the
+            # self.left and self.right attributes.
+            try:
+                self.seq = self.seqfeature.extract(parent_genome_seq)
+            except:
+                # TODO not sure if this is the proper alphabet to use.
+                self.seq = Seq("", IUPAC.ambiguous_dna)
+        else:
             self.seq = Seq("", IUPAC.ambiguous_dna)
 
-
+        # TODO consider whether _length should be automatically set,
+        # parallel to genome method.
+        # self._length = len(self.seq)
 
 
 
@@ -254,13 +278,13 @@ class CdsFeature:
     # TODO this method can be improved by taking into account coordinate
     # indexing format. The current implementation assumes only one format.
     # Also, instead of computing the nucleotide length, this can now
-    # reference the self._nucleotide_length attribute.
+    # reference the self._length attribute.
     def check_lengths(self):
         """Confirm coordinates match translation length.
         This method can only be used on non-compound features."""
 
         if self.compound_parts == 1:
-            length1 = self.right_boundary - self.left_boundary + 1
+            length1 = self.right - self.left + 1
             length2 = (self._translation_length * 3) + 3
 
             if length1 != length2:
@@ -289,7 +313,7 @@ class CdsFeature:
 
         if (strand == 1 or self.strand == -1):
             result = "The feature strand is not determined: " \
-                + str((self.left_boundary, self.right_boundary))
+                + str((self.left, self.right))
             status = "error"
 
         else:
@@ -306,19 +330,19 @@ class CdsFeature:
         This method assumes that if the coordinates are not exact, they
         have been set to -1 or are not integers."""
 
-        if not (str(self.left_boundary).isdigit() and \
-            str(self.right_boundary).isdigit()):
+        if not (str(self.left).isdigit() and \
+            str(self.right).isdigit()):
 
             result = "The feature boundaries are not determined: " \
-                + str((self.left_boundary, self.right_boundary))
+                + str((self.left, self.right))
             status = "error"
 
-        elif (self.left_boundary == -1 or \
-            self.right_boundary == -1):
+        elif (self.left == -1 or \
+            self.right == -1):
 
             # TODO unit test this elif clause.
             result = "The feature boundaries are not determined: " \
-                + str((self.left_boundary, self.right_boundary))
+                + str((self.left, self.right))
             status = "error"
 
         else:
@@ -383,9 +407,9 @@ class CdsFeature:
     def check_description(self):
         """If the product description is empty or generic, and the
         function or note descriptions are not, there is an error."""
-        if self.processed_product_description == '' and \
-            (self.processed_function_description != '' or \
-            self.processed_note_description != ''):
+        if self.processed_product == '' and \
+            (self.processed_function != '' or \
+            self.processed_note != ''):
 
             result = "The feature is missing a product description."
             status = "error"
@@ -424,23 +448,31 @@ class CdsFeature:
             result = "The feature contains the expected translation table."
             status = "correct"
 
-        definition = "Check that feature contains the exected translation table."
+        definition = "Check that feature contains the expected translation table."
         eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
-    # TODO implement.
-    # TODO unit test.
     def check_translation(self):
-        """Check that the current translation matches the expected
-        translation."""
-        # Once the nucleotide sequence is retrieved using the SeqFeature
-        # methods, use Biopython to translate the nucleotide sequence.
-        # This method can confirm that the CDS contains an initial start
-        # codon, a final stop codon, no stop codons in the middle,
-        # and that the translated product matches the translated product
-        # stored in self.translation.
-        pass
+        """Check that the current and expected translations match."""
+
+        translation = self.translate_seq()
+        if self._translation_length < len(translation):
+            result = "The translation length is shorter than expected."
+            status = "error"
+        elif self._translation_length > len(translation):
+            result = "The translation length is longer than expected."
+            status = "error"
+        elif self.translation != translation:
+            result = "The translation is different than expected."
+            status = "error"
+        else:
+            result = "The translation is correct."
+            status = "correct"
+        definition = "Check that the feature contains the expected translation."
+        eval = Eval.Eval("CDS", definition, result, status)
+        self.evaluations.append(eval)
+
 
 
 

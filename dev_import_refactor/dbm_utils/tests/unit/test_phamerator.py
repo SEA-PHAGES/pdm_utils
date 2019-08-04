@@ -73,9 +73,9 @@ class TestPhameratorFunctions(unittest.TestCase):
                             "0",
                             "0")
 
-        self.cds1 = Cds.CdsFeature()
-        self.cds2 = Cds.CdsFeature()
-        self.cds3 = Cds.CdsFeature()
+        self.cds1 = Cds.Cds()
+        self.cds2 = Cds.Cds()
+        self.cds3 = Cds.Cds()
 
 
 
@@ -369,13 +369,13 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds1.id, "L5_001")
         with self.subTest():
-            self.assertEqual(self.cds1.parent_genome_id, "L5")
+            self.assertEqual(self.cds1.genome_id, "L5")
         with self.subTest():
-            self.assertEqual(self.cds1.left_boundary, 10)
+            self.assertEqual(self.cds1.left, 10)
         with self.subTest():
-            self.assertEqual(self.cds1.right_boundary, 100)
+            self.assertEqual(self.cds1.right, 100)
         with self.subTest():
-            self.assertEqual(self.cds1._nucleotide_length, 1000)
+            self.assertEqual(self.cds1._length, 1000)
         with self.subTest():
             self.assertEqual(self.cds1.name, "1")
         with self.subTest():
@@ -385,7 +385,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds1.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds1.primary_description, "description")
+            self.assertEqual(self.cds1.description, "description")
         with self.subTest():
             self.assertEqual(self.cds1.locus_tag, "SEA_L5_001")
         with self.subTest():
@@ -403,9 +403,9 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds1.id, "L5_001")
         with self.subTest():
-            self.assertEqual(self.cds1.parent_genome_id, "L5")
+            self.assertEqual(self.cds1.genome_id, "L5")
         with self.subTest():
-            self.assertEqual(self.cds1.left_boundary, 10)
+            self.assertEqual(self.cds1.left, 10)
         with self.subTest():
             self.assertEqual(self.cds1.translation_table, 11)
 
@@ -614,15 +614,15 @@ class TestPhameratorFunctions(unittest.TestCase):
         """Verify CDS INSERT statement is created correctly."""
 
         self.cds1.id = "SEA_L5_123"
-        self.cds1.parent_genome_id = "L5"
-        self.cds1.left_boundary = 5
-        self.cds1.right_boundary = 10
+        self.cds1.genome_id = "L5"
+        self.cds1.left = 5
+        self.cds1.right = 10
         self.cds1._translation_length = 20
         self.cds1.name = "Int"
         self.cds1.type = "CDS"
         self.cds1.translation = "ACKLG"
         self.cds1.strand = "forward"
-        self.cds1.processed_primary_description = "integrase"
+        self.cds1.processed_description = "integrase"
         self.cds1.locus_tag = "TAG1"
 
         statement = phamerator.create_cds_insert_statement(self.cds1)
@@ -643,39 +643,39 @@ class TestPhameratorFunctions(unittest.TestCase):
         """Verify list of CDS INSERT statements is created correctly."""
 
         self.cds1.id = "SEA_L5_123"
-        self.cds1.parent_genome_id = "L5"
-        self.cds1.left_boundary = 5
-        self.cds1.right_boundary = 10
+        self.cds1.genome_id = "L5"
+        self.cds1.left = 5
+        self.cds1.right = 10
         self.cds1._translation_length = 20
         self.cds1.name = "Int"
         self.cds1.type = "CDS"
         self.cds1.translation = "ACKLG"
         self.cds1.strand = "forward"
-        self.cds1.processed_primary_description = "integrase"
+        self.cds1.processed_description = "integrase"
         self.cds1.locus_tag = "TAG1"
 
         self.cds2.id = "SEA_TRIXIE_123"
-        self.cds2.parent_genome_id = "Trixie"
-        self.cds2.left_boundary = 1
-        self.cds2.right_boundary = 100
+        self.cds2.genome_id = "Trixie"
+        self.cds2.left = 1
+        self.cds2.right = 100
         self.cds2._translation_length = 15
         self.cds2.name = "parA"
         self.cds2.type = "CDS"
         self.cds2.translation = "PPGLA"
         self.cds2.strand = "reverse"
-        self.cds2.processed_primary_description = "parA"
+        self.cds2.processed_description = "parA"
         self.cds2.locus_tag = "TAG2"
 
         self.cds3.id = "SEA_D29_123"
-        self.cds3.parent_genome_id = "D29"
-        self.cds3.left_boundary = 42
-        self.cds3.right_boundary = 62
+        self.cds3.genome_id = "D29"
+        self.cds3.left = 42
+        self.cds3.right = 62
         self.cds3._translation_length = 3
         self.cds3.name = "D29_123"
         self.cds3.type = "CDS"
         self.cds3.translation = "AVY"
         self.cds3.strand = "reverse"
-        self.cds3.processed_primary_description = ""
+        self.cds3.processed_description = ""
         self.cds3.locus_tag = ""
 
         cds_features = [self.cds1, self.cds2, self.cds3]

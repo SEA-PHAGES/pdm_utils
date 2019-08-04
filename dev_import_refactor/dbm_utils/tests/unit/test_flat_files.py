@@ -19,7 +19,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.cds = Cds.CdsFeature()
+        self.cds = Cds.Cds()
         self.source = Source.SourceFeature()
         self.genome = Genome.Genome()
 
@@ -226,9 +226,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -240,22 +240,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -290,9 +290,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -304,22 +304,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -357,9 +357,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, -1)
+            self.assertEqual(self.cds.left, -1)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, -1)
+            self.assertEqual(self.cds.right, -1)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 3)
         # with self.subTest():
@@ -371,22 +371,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 0)
+            self.assertEqual(self.cds._length, 0)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -419,9 +419,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -433,22 +433,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 0)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -481,9 +481,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -495,22 +495,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "")
+            self.assertEqual(self.cds.translation_table, -1)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -543,9 +543,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -557,22 +557,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "")
+            self.assertEqual(self.cds.product, "")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -605,9 +605,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -619,22 +619,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -667,9 +667,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -681,22 +681,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "")
+            self.assertEqual(self.cds.note, "")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "1")
         with self.subTest():
@@ -729,9 +729,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds.left_boundary, 2)
+            self.assertEqual(self.cds.left, 2)
         with self.subTest():
-            self.assertEqual(self.cds.right_boundary, 10)
+            self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
         # with self.subTest():
@@ -743,22 +743,22 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds._nucleotide_length, 8)
+            self.assertEqual(self.cds._length, 8)
         with self.subTest():
-            self.assertEqual(self.cds.translation_table, "11")
+            self.assertEqual(self.cds.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.cds.product_description, "unknown")
+            self.assertEqual(self.cds.product, "unknown")
         with self.subTest():
-            self.assertEqual(self.cds.processed_product_description, "")
+            self.assertEqual(self.cds.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds.function_description, \
+            self.assertEqual(self.cds.function, \
                 "hypothetical protein")
         with self.subTest():
-            self.assertEqual(self.cds.processed_function_description, "")
+            self.assertEqual(self.cds.processed_function, "")
         with self.subTest():
-            self.assertEqual(self.cds.note_description, "gp5")
+            self.assertEqual(self.cds.note, "gp5")
         with self.subTest():
-            self.assertEqual(self.cds.processed_note_description, "")
+            self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
             self.assertEqual(self.cds.gene_number, "")
         with self.subTest():
