@@ -5,7 +5,7 @@ from constants import constants
 import os
 
 #Note: used to be 'find_name' function.
-def find_expression(expression,list_of_items):
+def find_expression(expression, list_of_items):
     """Searches through a list of items and counts the number of items
     that match the expression.
     """
@@ -20,27 +20,26 @@ def find_expression(expression,list_of_items):
 
 
 
-def edit_suffix(value, option, suffix = constants.NAME_SUFFIX):
+def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
     """Adds or removes the indicated suffix to an input value.
     The suffix is not added if the input value already has the suffix."""
 
     if option.lower() == "add":
-        if value[-6:].lower() != suffix.lower():
-            value += "_Draft"
+        if not value.lower().endswith(suffix.lower()):
+            value = value + suffix
     elif option.lower() == "remove":
-        if value[-6:].lower() == suffix.lower():
-            value = value[:-6]
+        if value.lower().endswith(suffix.lower()):
+            value = value.strip(suffix)
     else:
         pass
-
-    return(value)
+    return value
 
 
 
 #Old 'parse_strand' function and 'parse_strand_for_import' function combined.
 # Note: parse_strand_for_import used to convert numeric to long string format.
 # E.g. 1 == forward
-def reformat_strand(input_value, format, case = False):
+def reformat_strand(input_value, format, case=False):
     """Converts common strand orientation formats, including:
     'fr_long' ('forward', 'reverse')
     'fr_short' ('f', 'r')
@@ -51,7 +50,8 @@ def reformat_strand(input_value, format, case = False):
     'wc_long' ('watson', 'crick')
     'wc_short' ('w','c')
     'operator' ('+', '-')
-    'numeric' (1, -1)."""
+    'numeric' (1, -1).
+    """
 
     format_dict = {"fr_long":["forward", "reverse"],
                     "fr_short":["f", "r"],
@@ -167,7 +167,7 @@ def reformat_coordinates(left, right, current, new):
 
 
 
-def check_empty(value, lower = True):
+def check_empty(value, lower=True):
     """Checks if the value represents a null value."""
 
     if (lower == True and isinstance(value, str)):
@@ -180,7 +180,7 @@ def check_empty(value, lower = True):
     return result
 
 
-def convert_empty(input_value, format, upper = False):
+def convert_empty(input_value, format, upper=False):
     """Converts common NULL value formats, including:
     'empty_string' = ''
     'none_string' = 'none'
@@ -555,7 +555,7 @@ def identify_two_list_duplicates(item1_list, item2_list):
 
     return item3_set
 
-def check_value_expected_in_set(value, set1, expected = True):
+def check_value_expected_in_set(value, set1, expected=True):
     """Check if a value is present within a set and if it is expected.
     """
 
@@ -639,7 +639,7 @@ def close_files(list_of_filehandles):
     return
 
 
-def ask_yes_no(prompt="", response_attempt = 1):
+def ask_yes_no(prompt="", response_attempt=1):
     """
     Function to get the user's yes/no response to a question.
     Accepts variations of yes/y, true/t, no/n, false/f.

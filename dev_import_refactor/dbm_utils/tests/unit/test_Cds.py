@@ -1,6 +1,7 @@
 """ Unit tests for the CDS class."""
 
 from classes import Cds
+from constants import constants
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
@@ -159,27 +160,34 @@ class TestCdsClass(unittest.TestCase):
 
 
     def test_check_amino_acids_1(self):
-        """All amino acids in alphabet."""
-        alphabet = set(["A","B","C"])
-        self.feature.translation = "AB"
-        self.feature.check_amino_acids(alphabet)
+        """Verify no error is produced if all amino acids
+        are in the protein alphabet."""
+        self.feature.translation = "ADE"
+        self.feature.check_amino_acids()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_amino_acids_2(self):
-        """Some amino acids not in alphabet."""
-        alphabet = set(["A","B","C"])
-        self.feature.translation = "AD"
-        self.feature.check_amino_acids(alphabet)
+        """Verify an error is produced if some amino acids
+        are not in the protein alphabet."""
+        self.feature.translation = "ABDE"
+        self.feature.check_amino_acids()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
+    def test_check_amino_acids_3(self):
+        """Verify no error is produced if all amino acids
+        are in a custom protein alphabet."""
+        alphabet = set(["A","B","C", "D", "E", "F"])
+        self.feature.translation = "ABDE"
+        self.feature.check_amino_acids(alphabet)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-
-
-
-
-
-
-
+    def test_check_amino_acids_4(self):
+        """Verify an error is produced if some amino acids
+        are not in a custom protein alphabet."""
+        alphabet = set(["A","B","C", "D", "E", "F"])
+        self.feature.translation = "ABDEG"
+        self.feature.check_amino_acids(alphabet)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -339,12 +347,33 @@ class TestCdsClass(unittest.TestCase):
 
 
 
+    def test_check_strand_1(self):
+        """Verify no error is produced when the strand is
+        formatted correctly using default settings."""
+        self.feature.strand = "F"
+        self.feature.check_strand()
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
+    def test_check_strand_2(self):
+        """Verify an error is produced when the strand is
+        formatted incorrectly using default settings."""
+        self.feature.strand = 1
+        self.feature.check_strand()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
+    def test_check_strand_3(self):
+        """Verify no error is produced when the strand is
+        formatted correctly using custom settings."""
+        self.feature.strand = 1
+        self.feature.check_strand(format="numeric", case=False)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-
-
-
+    def test_check_strand_4(self):
+        """Verify an error is produced when the strand is
+        formatted incorrectly using custom settings."""
+        self.feature.strand = "F"
+        self.feature.check_strand(format="numeric", case=False)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -389,56 +418,93 @@ class TestCdsClass(unittest.TestCase):
     def test_check_locus_tag_present_1(self):
         """Check if absent locus tag is expected to be absent."""
         self.feature.locus_tag = ""
-        self.feature.check_locus_tag_present("absent")
+        self.feature.check_locus_tag_present(False)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_present_2(self):
         """Check if absent locus tag is expected to be present."""
         self.feature.locus_tag = ""
-        self.feature.check_locus_tag_present("present")
+        self.feature.check_locus_tag_present(True)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_present_3(self):
         """Check if present locus tag is expected to be present."""
         self.feature.locus_tag = "ABCD"
-        self.feature.check_locus_tag_present("present")
+        self.feature.check_locus_tag_present(True)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_present_4(self):
         """Check if present locus tag is expected to be absent."""
         self.feature.locus_tag = "ABCD"
-        self.feature.check_locus_tag_present("absent")
+        self.feature.check_locus_tag_present(False)
         self.assertEqual(self.feature.evaluations[0].status, "error")
-
-    def test_check_locus_tag_present_5(self):
-        """Skip evaluation if not a valid expectation."""
-        self.feature.locus_tag = "ABCD"
-        self.feature.check_locus_tag_present("invalid")
-        self.assertEqual(self.feature.evaluations[0].status, "untested")
-
 
 
 
 
     def test_check_description_1(self):
-        """Product is present and function is present."""
+        """Verify no error is produced when a description is present in
+        the processed_product as expected and the processed_function and
+        the processed_note are empty."""
         self.feature.processed_product = "ABC"
-        self.feature.processed_function = "EFG"
         self.feature.check_description()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_2(self):
-        """Product is present and function is absent."""
-        self.feature.processed_product = "ABC"
-        self.feature.check_description()
+        """Verify no error is produced when a description is present in
+        the processed_function as expected and the processed_product and
+        the processed_note are empty."""
+        self.feature.processed_function = "ABC"
+        self.feature.check_description(description_field="function")
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_3(self):
-        """Product is absent and function is present."""
-        self.feature.processed_function = "EFG"
+        """Verify no error is produced when a description is present in
+        the processed_note as expected and the processed_product and
+        the processed_function are empty."""
+        self.feature.processed_note = "ABC"
+        self.feature.check_description(description_field="note")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_description_4(self):
+        """Verify an error is produced when a description is not present in
+        the processed_product but there is a description in
+        the processed_function."""
+        self.feature.processed_function = "ABC"
         self.feature.check_description()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
+    def test_check_description_5(self):
+        """Verify an error is produced when a description is not present in
+        the processed_function but there is a description in
+        the processed_product."""
+        self.feature.processed_product = "ABC"
+        self.feature.check_description(description_field="function")
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_description_6(self):
+        """Verify an error is produced when a description is not present in
+        the processed_function but there is a description in
+        the processed_product."""
+        self.feature.processed_product = "ABC"
+        self.feature.check_description(description_field="note")
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_description_7(self):
+        """Verify an error is produced when a description is not present due
+        to an invalid input but there is a description in
+        the processed_product."""
+        self.feature.processed_product = "ABC"
+        self.feature.check_description(description_field="invalid")
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_description_8(self):
+        """Verify no error is produced when a description is present in
+        the processed_product as expected as well as the processed_function."""
+        self.feature.processed_product = "ABC"
+        self.feature.processed_function = "FGH"
+        self.feature.check_description()
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
 
 
@@ -677,41 +743,41 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_choose_description_1(self):
+    def test_set_description_1(self):
         """Verify product description is assigned to primary description."""
         self.feature.product = "ABCD"
         self.feature.processed_product = "EFGH"
-        self.feature.choose_description("product")
+        self.feature.set_description("product")
         with self.subTest():
             self.assertEqual(self.feature.description, "ABCD")
         with self.subTest():
             self.assertEqual(self.feature.processed_description, "EFGH")
 
-    def test_choose_description_2(self):
+    def test_set_description_2(self):
         """Verify function description is assigned to primary description."""
         self.feature.function = "ABCD"
         self.feature.processed_function = "EFGH"
-        self.feature.choose_description("function")
+        self.feature.set_description("function")
         with self.subTest():
             self.assertEqual(self.feature.description, "ABCD")
         with self.subTest():
             self.assertEqual(self.feature.processed_description, "EFGH")
 
-    def test_choose_description_3(self):
+    def test_set_description_3(self):
         """Verify note description is assigned to primary description."""
         self.feature.note = "ABCD"
         self.feature.processed_note = "EFGH"
-        self.feature.choose_description("note")
+        self.feature.set_description("note")
         with self.subTest():
             self.assertEqual(self.feature.description, "ABCD")
         with self.subTest():
             self.assertEqual(self.feature.processed_description, "EFGH")
 
-    def test_choose_description_4(self):
+    def test_set_description_4(self):
         """Verify no description is assigned to primary description."""
         self.feature.note = "ABCD"
         self.feature.processed_note = "EFGH"
-        self.feature.choose_description("invalid")
+        self.feature.set_description("invalid")
         with self.subTest():
             self.assertEqual(self.feature.description, "")
         with self.subTest():
@@ -722,13 +788,13 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_translation_table_present_1(self):
         """Verify no error is produced."""
-        self.feature.translation_table = "11"
+        self.feature.translation_table = 11
         self.feature.check_translation_table_present()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_translation_table_present_2(self):
         """Verify an error is produced."""
-        self.feature.translation_table = ""
+        self.feature.translation_table = "11"
         self.feature.check_translation_table_present()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 

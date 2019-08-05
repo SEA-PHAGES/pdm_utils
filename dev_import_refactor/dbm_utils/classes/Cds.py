@@ -3,6 +3,7 @@ to maintain and update SEA-PHAGES phage genomics data.
 """
 
 from functions import basic
+from constants import constants
 from classes import Eval
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
@@ -67,8 +68,9 @@ class Cds:
 
 
 
-    def choose_description(self, value):
-        """Set the primary description and processed primary description."""
+    def set_description(self, value):
+        """Set the description and processed_description attributes from the
+        selected attribute."""
 
         if value == "product":
             self.description = self.product
@@ -173,20 +175,6 @@ class Cds:
         self._start_end_id = (self.start, self.end)
 
 
-    def set_nucleotide_length(self):
-        """From the set coordinates, determine the length of the
-        nucleotide sequence. This method is not correct for
-        non-compound features.
-        """
-
-        if self.coordinate_format == "0_half_open":
-            self._length = \
-                self.right - self.left
-        elif self.coordinate_format == "1_closed":
-            self._length = \
-                self.right - self.left + 1
-        else:
-            self._length = -1
 
 
     def reformat_left_and_right_boundaries(self, new_format):
@@ -205,12 +193,49 @@ class Cds:
             self.right = new_right
             self.coordinate_format = new_format
 
+    # TODO unit test the new option.
+    def set_nucleotide_length(self, option=False):
+        """Set the length of the nucleotide sequence.
+
+        Nucleotide length can be computed multiple ways.
+        If the 'option' parameter is False, the 'left' and 'right'
+        coordinates are used to determine the length (and take into
+        account the 'coordinate_format' attribute. However, for
+        compound features, this value may not be accurate. If the
+        'option' parameter is True, the nucleotide sequence is used
+        to determine the length. When the sequence reflects the
+        entire feature (including compound features), the length
+        will be accurate.
+        """
+
+        if option:
+            self._length = len(self.seq)
+            pass
+        else:
+            if self.coordinate_format == "0_half_open":
+                self._length = \
+                    self.right - self.left
+            elif self.coordinate_format == "1_closed":
+                self._length = \
+                    self.right - self.left + 1
+            else:
+                self._length = -1
+
 
     def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
         """Set the nucleotide sequence of the feature.
 
-        The method can directly set the attribute from a supplied 'value',
-        or it can retrieve the sequence from the parent genome."""
+        This method can directly set the attribute from a supplied 'value',
+        or it can retrieve the sequence from the parent genome using
+        Biopython. In this latter case, it relies on a Biopython SeqFeature
+        object for the sequence extraction method and coordinates.
+        If this object was generated from a Biopython-parsed
+        GenBank-formatted flat file, the coordinates are by default
+        '0-based half-open', the object contains coordinates for every
+        part of the feature (e.g. if it is a compound feature) and
+        fuzzy locations. As a result, the retrieved sequence may not
+        exactly match the length indicated from the 'left' and 'right'
+        coordinates."""
 
         if isinstance(value, Seq):
             self.seq = value.upper()
@@ -220,11 +245,6 @@ class Cds:
             except:
                 self.seq = Seq("", IUPAC.ambiguous_dna)
         elif parent_genome_seq is not None:
-            # The seqfeature object contains the entire
-            # coordinates from the flat file record, including all compound
-            # parts and fuzzy coordinates. So the retrieved sequence may
-            # not exactly match the length indicated from the
-            # self.left and self.right attributes.
             try:
                 self.seq = self.seqfeature.extract(parent_genome_seq)
             except:
@@ -244,7 +264,7 @@ class Cds:
 
     # Evaluations.
 
-    def check_amino_acids(self, protein_alphabet_set):
+    def check_amino_acids(self, protein_alphabet_set=constants.PROTEIN_ALPHABET):
         """Check whether all amino acids in the translation are valid."""
         amino_acid_set = set(self.translation)
         amino_acid_error_set = amino_acid_set - protein_alphabet_set
@@ -304,22 +324,17 @@ class Cds:
         self.evaluations.append(eval)
 
 
-
-    # TODO unit test.
-    def check_strand(self):
+    def check_strand(self, format="fr_short", case=True):
         """Check if strand is set appropriately."""
-
-        strand = basic.reformat_strand(self.strand, format = "numeric")
-
-        if (strand == 1 or self.strand == -1):
-            result = "The feature strand is not determined: " \
-                + str((self.left, self.right))
-            status = "error"
-
-        else:
-            result = "Feature strand is correct."
+        expected_strand = basic.reformat_strand(self.strand,
+                                                format=format,
+                                                case=case)
+        if self.strand == expected_strand:
+            result = "The feature strand is correct."
             status = "correct"
-
+        else:
+            result = "The feature strand is not correct."
+            status = "error"
         definition = "Check if the strand is set appropriately."
         eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
@@ -355,32 +370,40 @@ class Cds:
         self.evaluations.append(eval)
 
 
-    def check_locus_tag_present(self, expectation):
+    def check_locus_tag_present(self, expect=True):
         """Check if status of locus tag matches expectations."""
-        if expectation == "present":
-            if self.locus_tag == "":
-                result = "The feature has no locus tag."
-                status = "error"
-            else:
-                result = "The locus_tag is as expected."
-                status = "correct"
 
-        elif expectation == "absent":
-            if self.locus_tag != "":
-                result = "The feature has a locus tag."
-                status = "error"
-            else:
-                result = "The locus_tag is as expected."
-                status = "correct"
-
-        # TODO unit test.
+        if self.locus_tag != "":
+            present = True
         else:
-            result = "The presence/absence of the locus_tag was not evaluated."
-            status = "untested"
+            present = False
+
+        if expect:
+            if present:
+                result = "The locus_tag is present."
+                status = "correct"
+            else:
+                result = "The locus_tag is not present."
+                status = "error"
+
+        else:
+            if present:
+                result = "The locus_tag is present."
+                status = "error"
+            else:
+                result = "The locus_tag is not present."
+                status = "correct"
 
         definition = "Check if the locus_tag status is expected."
         eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
+
+
+
+
+
+
+
 
 
 
@@ -404,18 +427,36 @@ class Cds:
         self.evaluations.append(eval)
 
 
-    def check_description(self):
-        """If the product description is empty or generic, and the
-        function or note descriptions are not, there is an error."""
-        if self.processed_product == '' and \
-            (self.processed_function != '' or \
-            self.processed_note != ''):
+    def check_description(self, description_field="product"):
+        """Check if there are CDS descriptions in unexpected fields
+        when the indicated field is empty or generic."""
 
-            result = "The feature is missing a product description."
-            status = "error"
+        description = ""
+        description_set = set()
 
+        if description_field == "product":
+            description = self.processed_product
         else:
-            result = "The feature description is correct."
+            if self.processed_product != "":
+                description_set.add(self.processed_product)
+
+        if description_field == "function":
+            description = self.processed_function
+        else:
+            if self.processed_function != "":
+                description_set.add(self.processed_function)
+
+        if description_field == "note":
+            description = self.processed_note
+        else:
+            if self.processed_note != "":
+                description_set.add(self.processed_note)
+
+        if (description == "" and len(description_set) > 0):
+            result = "The description is not in the expected field."
+            status = "error"
+        else:
+            result = "The description is in the expected field."
             status = "correct"
 
         definition = "Check if there is a discrepancy between description fields."
@@ -425,12 +466,13 @@ class Cds:
 
     def check_translation_table_present(self):
         """Check that translation table data is present."""
-        if self.translation_table == "":
-            result = "The feature is missing a translation table."
-            status = "error"
-        else:
+
+        if isinstance(self.translation_table, int):
             result = "The feature contains a translation table."
             status = "correct"
+        else:
+            result = "The feature is missing a translation table."
+            status = "error"
 
         definition = "Check that translation table data is present."
         eval = Eval.Eval("CDS", definition, result, status)

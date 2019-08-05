@@ -38,7 +38,7 @@ EMPTY_SET = set(["",
 
 # Set up dna and protein alphabets to verify sequence integrity
 DNA_ALPHABET = set(IUPAC.IUPACUnambiguousDNA.letters)
-PROTEIN_ALPHABET = set(IUPAC.ExtendedIUPACProtein.letters)
+PROTEIN_ALPHABET = set(IUPAC.protein.letters)
 
 
 # Set of all types of allowable ticket actions using this script.
