@@ -511,7 +511,7 @@ class MMseqsPhameratorHandler:
 			query = "SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count," \
 					"a.name, b.color FROM pham AS a INNER JOIN pham_color AS " \
 					"b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE " \
-					"ccolor != '#FFFFFF' AND count = 1"
+					"color != '#FFFFFF' AND count = 1"
 			result_list = self.mysql_handler.execute_query(query)
 			print("Found {} miscolored orphams to fix...".format(len(result_list)))
 
