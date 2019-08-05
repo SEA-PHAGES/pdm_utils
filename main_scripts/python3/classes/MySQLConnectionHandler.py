@@ -336,8 +336,8 @@ class MySQLConnectionHandler:
         the connection and execute the commands in the input list. If
         connection doesn't exist or has been closed, tries to open a new one
         before creating DictCursor and executing query.
-        :param statement_list: a list of MySQL insert/update statements to
-        execute
+        :param statement_list: a list of any number of MySQL statements with
+        no expectation that anything will return
         :return:
         """
         # TODO: integration tests
@@ -347,6 +347,7 @@ class MySQLConnectionHandler:
                 cursor.execute("START TRANSACTION")
                 for statement in statement_list:
                     try:
+                        print(statement)
                         cursor.execute(statement)
                     except pms.err.ProgrammingError:
                         print("{} is not a valid command".format(statement))
@@ -365,6 +366,7 @@ class MySQLConnectionHandler:
                     cursor.execute("START TRANSACTION")
                     for statement in statement_list:
                         try:
+                            print(statement)
                             cursor.execute(statement)
                         except pms.err.ProgrammingError:
                             print("{} is not a valid command".format(statement))

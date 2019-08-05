@@ -12,10 +12,8 @@ except ImportError:
 	sys.exit(1)
 
 # Import functions from other k_phamerate scripts.
-from main_scripts.python3.classes.MySQLConnectionHandler import \
-	MySQLConnectionHandler
-from main_scripts.python3.classes.MMseqsPhameratorHandler import \
-	MMseqsPhameratorHandler
+from classes.MySQLConnectionHandler import MySQLConnectionHandler
+from classes.MMseqsPhameratorHandler import MMseqsPhameratorHandler
 
 # Set up argparse to interact with users at the command line interface.
 script_description = """
@@ -32,15 +30,21 @@ args = parser.parse_args()
 database = args.database_name[0].split("=")[-1]
 
 # Establish the database connection using the MySQLConnectionHandler object
-mysql_handler = MySQLConnectionHandler(database)
-mysql_handler.create_connection()
-mysql_connection = mysql_handler.connection
+mysql_handler = MySQLConnectionHandler()
+mysql_handler.database = database
+mysql_handler.open_connection()
+
+# Script will only continue if connection was successfully established
+if mysql_handler.connection_status() is True:
+	pass
+else:
+	sys.exit(1)
 
 # Record pham analysis start time.
 start = datetime.datetime.now()
 
 # Create and set up MMseqsPhameratorHandler object
-pham_handler = MMseqsPhameratorHandler(mysql_connection)
+pham_handler = MMseqsPhameratorHandler(mysql_handler)
 pham_handler.filter_redundant = True
 
 # Set MMseqs2 clustering parameters

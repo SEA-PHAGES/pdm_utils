@@ -8,7 +8,7 @@ import colorsys
 
 
 class MMseqsPhameratorHandler:
-	def __init__(self, mysql_connection):
+	def __init__(self, mysql_handler):
 		"""
 		This object is intended to handle the phameration of genes in
 		a Phamerator database using MMseqs2.  It has methods and
@@ -24,7 +24,7 @@ class MMseqsPhameratorHandler:
 		:param mysql_connection: a pymysql connection object
 		"""
 		# MySQL connection object to be used for querying the database
-		self.connection = mysql_connection
+		self.mysql_handler = mysql_handler
 
 		# Flag to filter genes with duplicate translations, or not
 		self.filter_redundant = True
@@ -99,21 +99,21 @@ class MMseqsPhameratorHandler:
 		:return:
 		"""
 		try:
-			cur = self.connection.cursor()
-			cur.execute("SELECT a.name, a.GeneID, b.color FROM (SELECT "
-						"p.name, g.GeneID FROM gene g INNER JOIN pham p ON "
-						"g.GeneID = p.GeneID) AS a INNER JOIN pham_color AS "
-						"b ON a.name = b.name ORDER BY a.Name ASC")
-			tuples = cur.fetchall()
-			cur.close()
+			query = "SELECT a.name, a.GeneID, b.color FROM (SELECT p.name," \
+					"g.GeneID FROM gene g INNER JOIN pham p ON g.GeneID = " \
+					"p.GeneID) AS a INNER JOIN pham_color AS b ON a.name = " \
+					"b.name ORDER BY a.Name ASC"
+			result_list = self.mysql_handler.execute_query(query)
 		except pms.err.InternalError as e:
 			print("Error {}: {}".format(e.args[0], e.args[1]))
 			sys.exit(1)
 
-		print("{} old genes".format(len(tuples)))
+		print("{} old genes".format(len(result_list)))
 
-		for t in tuples:
-			name, geneid, color = t
+		for dictionary in result_list:
+			name = dictionary["name"]
+			geneid = dictionary["GeneID"]
+			color = dictionary["color"]
 			if name in self.old_phams.keys():
 				self.old_phams[name] = self.old_phams[name] | set([geneid])
 			else:
@@ -131,20 +131,18 @@ class MMseqsPhameratorHandler:
 		:return: 
 		"""
 		try:
-			cur = self.connection.cursor()
-			cur.execute("SELECT GeneID FROM gene WHERE GeneID NOT IN ("
-						"SELECT g.GeneID FROM gene AS g INNER JOIN pham AS "
-						"p ON g.GeneID =  p.GeneID)")
-			tuples = cur.fetchall()
-			cur.close()
+			query = "SELECT GeneID FROM gene WHERE GeneID NOT IN (SELECT " \
+					"g.GeneID FROM gene AS g INNER JOIN pham AS p ON " \
+					"g.GeneID = p.GeneID)"
+			result_list = self.mysql_handler.execute_query(query)
 		except pms.err.InternalError as e:
 			print("Error {}: {}".format(e.args[0], e.args[1]))
 			sys.exit(1)
 
-		print("{} new genes".format(len(tuples)))
+		print("{} new genes".format(len(result_list)))
 
-		for t in tuples:
-			geneid = t[0]
+		for dictionary in result_list:
+			geneid = dictionary["GeneID"]
 			self.new_genes = self.new_genes | set([geneid])
 		return
 
@@ -160,22 +158,19 @@ class MMseqsPhameratorHandler:
 		"""
 		# Interact with database.
 		try:
-			cur = self.connection.cursor()
-			# Clear old pham data
-			cur.execute("TRUNCATE TABLE pham")
-			cur.execute("TRUNCATE TABLE pham_color")
-			cur.execute("COMMIT")
+			# Clear old pham data - auto commits at end of transaction
+			commands = ["TRUNCATE TABLE pham", "TRUNCATE TABLE pham_color"]
+			self.mysql_handler.execute_transaction(commands)
 
-			# Retrieve GeneIDs and their translations
-			cur.execute("SELECT GeneID, translation FROM gene")
-			tuples = cur.fetchall()
-			cur.close()
+			query = "SELECT GeneID, translation FROM gene"
+			result_list = self.mysql_handler.execute_query(query)
 		except pms.err.Error as err:
 			print("Error: {}".format(err))
 			sys.exit(1)
 
 		# Write GeneIDs and translations to file
 		try:
+			print("Writing genes to fasta file")
 			f = open("{}/{}".format(self.temp_dir, self.fasta_input), "w")
 		except IOError as e:
 			print("Error {}: {}".format(e.args[0], e.args[1]))
@@ -184,9 +179,10 @@ class MMseqsPhameratorHandler:
 		# Write all gene data if self.filter_redundant is set to False
 		if self.filter_redundant is False:
 			try:
-				for t in tuples:
-					f.write(">{}\n".format(t[0]))
-					f.write("{}\n".format(t[1].replace("-", "M")))
+				for dictionary in result_list:
+					f.write(">{}\n".format(dictionary["GeneID"]))
+					f.write("{}\n".format(dictionary["translation"].replace(
+						"-", "M")))
 			except IOError as err:
 				print("Error {}: {}".format(err.args[0], err.args[1]))
 				sys.exit(1)
@@ -195,10 +191,11 @@ class MMseqsPhameratorHandler:
 		else:
 			try:
 				trans_and_geneids = {}
-				for t in tuples:
-					geneids = trans_and_geneids.get(t[1], set())
-					geneids.add(t[0])
-					trans_and_geneids[t[1]] = geneids
+				for dictionary in result_list:
+					geneids = trans_and_geneids.get(dictionary["translation"],
+													set())
+					geneids.add(dictionary["GeneID"])
+					trans_and_geneids[dictionary["translation"]] = geneids
 
 				for trans in trans_and_geneids.keys():
 					geneid = random.sample(trans_and_geneids[trans], 1)[0]
@@ -449,21 +446,21 @@ class MMseqsPhameratorHandler:
 		pham_color table.
 		:return:
 		"""
-		cur = self.connection.cursor()
 		try:
+			commands = []
 			print("Inserting Pham Data")
 			for key in self.new_phams.keys():
 				for gene in self.new_phams[key]:
-					cur.execute("INSERT INTO pham (GeneID, name) VALUES "
-								"('{}', {})".format(gene, key))
+					commands.append("INSERT INTO pham (GeneID, name) VALUES "
+									"('{}', {})".format(gene, key))
+			self.mysql_handler.execute_transaction(commands)
 
+			commands = []
 			print("Inserting Color Data")
 			for key in self.new_colors.keys():
-				cur.execute("INSERT IGNORE INTO pham_color (name, color) "
-							"VALUES ({}, '{}')".format(key,
-													   self.new_colors[key]))
-			cur.execute("COMMIT")
-			cur.close()
+				commands.append("INSERT INTO pham_color (name, color) VALUES "
+								"({}, '{}')".format(key, self.new_colors[key]))
+			self.mysql_handler.execute_transaction(commands)
 		except pms.err.Error as err:
 			print("Error: {}".format(err))
 			sys.exit(1)
@@ -478,18 +475,21 @@ class MMseqsPhameratorHandler:
 		phams and orphams were found.
 		:return:
 		"""
-		cur = self.connection.cursor()
 		try:
 			print("Phixing Phalsely Hued Phams...")
-			cur.execute("SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count, "
-						"a.name, b.color FROM pham AS a INNER JOIN pham_color "
-						"AS b ON a.name = b.name GROUP BY a.name, b.id) AS "
-						"c WHERE color = '#FFFFFF' AND count > 1")
-			tuples = cur.fetchall()
-			print("Found {} miscolored phams to fix".format(len(tuples)))
+			query = "SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count, " \
+					"a.name, b.color FROM pham AS a INNER JOIN pham_color AS " \
+					"b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE " \
+					"color = '#FFFFFF' AND count > 1"
+			result_list = self.mysql_handler.execute_query(query)
+			print("Found {} miscolored phams to fix".format(len(result_list)))
 
-			for t in tuples:
-				pham_id, count, name, color = t
+			commands = []
+			for dictionary in result_list:
+				pham_id = dictionary["id"]
+				count = dictionary["count"]
+				name = dictionary["name"]
+				color = dictionary["color"]
 				h = s = v = 0
 				while h <= 0:
 					h = random.random()
@@ -503,24 +503,29 @@ class MMseqsPhameratorHandler:
 													  int(rgb[2]))
 				new_color = hexrgb
 
-				cur.execute("UPDATE pham_color SET color = '{}' WHERE id = "
-							"'{}'".format(new_color, pham_id))
-			print("Phixing Phalsely Phlagged Orphams...")
-			cur.execute("SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count, "
-						"a.name, b.color FROM pham AS a INNER JOIN pham_color "
-						"AS b ON a.name = b.name GROUP BY a.name, b.id) AS "
-						"c WHERE color != '#FFFFFF' AND count = 1")
-			tuples = cur.fetchall()
-			print("Found {} miscolored orphams to fix...".format(len(tuples)))
+				commands.append("UPDATE pham_color SET color = '{}' WHERE "
+								"id = '{}'".format(new_color, pham_id))
+			self.mysql_handler.execute_transaction(commands)
 
-			for t in tuples:
-				pham_id, count, name, color = t
+			print("Phixing Phalsely Phlagged Orphams...")
+			query = "SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count," \
+					"a.name, b.color FROM pham AS a INNER JOIN pham_color AS " \
+					"b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE " \
+					"ccolor != '#FFFFFF' AND count = 1"
+			result_list = self.mysql_handler.execute_query(query)
+			print("Found {} miscolored orphams to fix...".format(len(result_list)))
+
+			commands = []
+			for dictionary in result_list:
+				pham_id = dictionary["id"]
+				count = dictionary["count"]
+				name = dictionary["name"]
+				color = dictionary["color"]
 				new_color = "#FFFFFF"
 
-				cur.execute("UPDATE pham_color SET color = '{}' WHERE id = "
-							"'{}'".format(new_color, pham_id))
+				commands.append("UPDATE pham_color SET color = '{}' WHERE "
+								"id = '{}'".format(new_color, pham_id))
+			self.mysql_handler.execute_transaction(commands)
 
-			cur.execute("COMMIT")
-			cur.close()
 		except pms.err.Error as err:
 			print("Error: {}".format(err))
