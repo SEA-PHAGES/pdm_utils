@@ -7,14 +7,20 @@ from classes import Genome
 from classes import Cds
 from constants import constants
 from classes import MySQLConnectionHandler
-import getpass, subprocess, os
+import subprocess, os
 import pymysql
+# import getpass
 # import paramiko
 # paramiko.util.log_to_file("/tmp/paramiko.log")
 
-user = getpass.getpass(prompt="mysql username: ")
-pwd = getpass.getpass(prompt="mysql password: ")
+# user = getpass.getpass(prompt="mysql username: ")
+# pwd = getpass.getpass(prompt="mysql password: ")
 
+
+# The following integration tests user the 'tester' MySQL user.
+# It is expected that this user has all privileges for 'test_db' database.
+user = 'tester'
+pwd = 'tester'
 
 
 class TestPhameratorFunctions(unittest.TestCase):
@@ -27,8 +33,11 @@ class TestPhameratorFunctions(unittest.TestCase):
         same schema as in PhameratorDB.
         Each unittest will populate the empty database as needed."""
 
-        self.db = "test_schema4"
-        self.schema_file = self.db + ".sql"
+        # self.db = "test_schema4"
+        # self.schema_file = self.db + ".sql"
+
+        self.db = "test_db"
+        self.schema_file = "test_schema4.sql"
 
 
         self.sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
