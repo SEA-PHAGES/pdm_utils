@@ -343,25 +343,25 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_check_boundaries_1(self):
+    def test_check_coordinates_1(self):
         """Test correct boundaries."""
         self.feature.left = 5
         self.feature.right = 10
-        self.feature.check_boundaries()
+        self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_boundaries_2(self):
+    def test_check_coordinates_2(self):
         """Test incorrect left boundary."""
         self.feature.left = "a"
         self.feature.right = 10
-        self.feature.check_boundaries()
+        self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
-    def test_check_boundaries_3(self):
+    def test_check_coordinates_3(self):
         """Test incorrect right boundary."""
         self.feature.left = 5
         self.feature.right = "a"
-        self.feature.check_boundaries()
+        self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
@@ -489,39 +489,6 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-
-
-
-    def test_check_lengths_1(self):
-        """The translation length is correct."""
-        self.feature.compound_parts = 1
-        self.feature.left = 0
-        self.feature.right = 11
-        self.feature.set_translation("ABC")
-        self.feature.check_lengths()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
-
-    def test_check_lengths_2(self):
-        """The translation length is not correct."""
-        self.feature.compound_parts = 1
-        self.feature.left = 0
-        self.feature.right = 12
-        self.feature.set_translation("ABC")
-        self.feature.check_lengths()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-    def test_check_lengths_3(self):
-        """Compound feature is not computed."""
-        self.feature.compound_parts = 2
-        self.feature.left = 0
-        self.feature.right = 12
-        self.feature.set_translation("ABC")
-        self.feature.check_lengths()
-        self.assertEqual(self.feature.evaluations[0].status, "untested")
-
-
-
-
     def test_set_nucleotide_length_1(self):
         """Verify the nucleotide length is correct when computed directly
         from a sequence."""
@@ -562,13 +529,13 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_reformat_left_and_right_boundaries_1(self):
+    def test_reformat_left_and_right_1(self):
         """Verify the coordinates are converted to 1-based closed interval."""
         self.feature.left = 5
         self.feature.right = 11
         self.feature.coordinate_format = "0_half_open"
         new_format = "1_closed"
-        self.feature.reformat_left_and_right_boundaries(new_format)
+        self.feature.reformat_left_and_right(new_format)
         with self.subTest():
             self.assertEqual(self.feature.left, 6)
         with self.subTest():
@@ -576,13 +543,13 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, new_format)
 
-    def test_reformat_left_and_right_boundaries_2(self):
+    def test_reformat_left_and_right_2(self):
         """Verify the coordinates are converted to 0-based half open interval."""
         self.feature.left = 5
         self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "0_half_open"
-        self.feature.reformat_left_and_right_boundaries(new_format)
+        self.feature.reformat_left_and_right(new_format)
         with self.subTest():
             self.assertEqual(self.feature.left, 4)
         with self.subTest():
@@ -590,13 +557,13 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, new_format)
 
-    def test_reformat_left_and_right_boundaries_3(self):
+    def test_reformat_left_and_right_3(self):
         """Verify the coordinates are not converted."""
         self.feature.left = 5
         self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "invalid"
-        self.feature.reformat_left_and_right_boundaries(new_format)
+        self.feature.reformat_left_and_right(new_format)
         with self.subTest():
             self.assertEqual(self.feature.left, 5)
         with self.subTest():
@@ -812,37 +779,23 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_check_translation_table_present_1(self):
+    def test_check_translation_table_1(self):
         """Verify no error is produced."""
         self.feature.translation_table = 11
-        self.feature.check_translation_table_present()
+        self.feature.check_translation_table()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_translation_table_present_2(self):
+    def test_check_translation_table_2(self):
         """Verify an error is produced."""
         self.feature.translation_table = "11"
-        self.feature.check_translation_table_present()
+        self.feature.check_translation_table()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
-
-
-    def test_check_translation_table_typo_1(self):
-        """Verify no error is produced."""
-        self.feature.translation_table = 11
-        self.feature.check_translation_table_typo()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
-
-    def test_check_translation_table_typo_2(self):
-        """Verify an error is produced."""
-        self.feature.translation_table = "11"
-        self.feature.check_translation_table_typo()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-    def test_check_translation_table_typo_3(self):
+    def test_check_translation_table_3(self):
         """Verify no error is produced when a modified translation
         table is supplied."""
         self.feature.translation_table = "11"
-        self.feature.check_translation_table_typo("11")
+        self.feature.check_translation_table("11")
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
 

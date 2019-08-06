@@ -1152,68 +1152,62 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(self.genome.filename, "Phage_ZZZ")
+            self.assertEqual(genome.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.name, "XYZ123")
+            self.assertEqual(genome.name, "XYZ123")
         with self.subTest():
-            self.assertEqual(self.genome.organism, organism)
+            self.assertEqual(genome.organism, organism)
         with self.subTest():
-            self.assertEqual(self.genome._organism_name, \
-                                "KatherineG")
+            self.assertEqual(genome._organism_name, "KatherineG")
         with self.subTest():
-            self.assertEqual(self.genome._organism_host_genus, \
-                                "Gordonia")
+            self.assertEqual(genome._organism_host_genus, "Gordonia")
         with self.subTest():
-            self.assertEqual(self.genome.accession, "ABC123")
+            self.assertEqual(genome.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(self.genome.description, description)
+            self.assertEqual(genome.description, description)
         with self.subTest():
-            self.assertEqual(self.genome._description_name, \
-                                "L5")
+            self.assertEqual(genome._description_name, "L5")
         with self.subTest():
-            self.assertEqual(self.genome._description_host_genus, \
-                                "Mycobacterium")
+            self.assertEqual(genome._description_host_genus, "Mycobacterium")
         with self.subTest():
-            self.assertEqual(self.genome.source, source)
+            self.assertEqual(genome.source, source)
         with self.subTest():
-            self.assertEqual(self.genome._source_name, \
-                                "phiC31")
+            self.assertEqual(genome._source_name, "phiC31")
         with self.subTest():
-            self.assertEqual(self.genome._source_host_genus, \
-                                "Streptomyces")
+            self.assertEqual(genome._source_host_genus, "Streptomyces")
         with self.subTest():
-            self.assertEqual(self.genome.authors, "Jane;Doe;Smith")
+            self.assertEqual(genome.authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(self.genome.seq, "ATGC")
+            self.assertEqual(genome.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.genome._length, 4)
+            self.assertEqual(genome._length, 4)
         with self.subTest():
-            self.assertEqual(self.genome._gc, 50.00)
+            self.assertEqual(genome._gc, 50.00)
         with self.subTest():
-            self.assertEqual(self.genome.date, exp_date)
+            self.assertEqual(genome.date, exp_date)
         with self.subTest():
-            self.assertEqual(len(self.genome.cds_features), 2)
+            self.assertEqual(len(genome.cds_features), 2)
         with self.subTest():
-            self.assertEqual(len(self.genome.source_features), 1)
+            self.assertEqual(len(genome.source_features), 1)
         with self.subTest():
-            self.assertEqual(len(self.genome.trna_features), 1)
+            self.assertEqual(len(genome.trna_features), 1)
         with self.subTest():
-            self.assertEqual(self.genome._cds_features_tally, 2)
+            self.assertEqual(genome._cds_features_tally, 2)
         with self.subTest():
-            self.assertEqual(self.genome._source_features_tally, 1)
+            self.assertEqual(genome._source_features_tally, 1)
         with self.subTest():
-            self.assertEqual(self.genome._trna_features_tally, 1)
+            self.assertEqual(genome._trna_features_tally, 1)
         with self.subTest():
-            self.assertEqual(self.genome.translation_table, 11)
+            self.assertEqual(genome.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.genome.id,"KatherineG")
+            self.assertEqual(genome.id,"KatherineG")
         with self.subTest():
-            self.assertEqual(self.genome.type, "flat_file")
+            self.assertEqual(genome.type, "flat_file")
 
 
 
@@ -1274,69 +1268,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             features = feature_list, \
                             )
 
-
-
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
-
-        exp_date = datetime.strptime(date,'%d-%b-%Y')
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
         with self.subTest():
             self.assertEqual(self.genome.name, "")
-        with self.subTest():
-            self.assertEqual(self.genome.organism, organism)
-        with self.subTest():
-            self.assertEqual(self.genome._organism_name, \
-                                "KatherineG")
-        with self.subTest():
-            self.assertEqual(self.genome._organism_host_genus, \
-                                "Gordonia")
-        with self.subTest():
-            self.assertEqual(self.genome.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(self.genome.description, description)
-        with self.subTest():
-            self.assertEqual(self.genome._description_name, \
-                                "L5")
-        with self.subTest():
-            self.assertEqual(self.genome._description_host_genus, \
-                                "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(self.genome.source, source)
-        with self.subTest():
-            self.assertEqual(self.genome._source_name, \
-                                "phiC31")
-        with self.subTest():
-            self.assertEqual(self.genome._source_host_genus, \
-                                "Streptomyces")
-        with self.subTest():
-            self.assertEqual(self.genome.authors, "Jane;Doe;Smith")
-        with self.subTest():
-            self.assertEqual(self.genome.seq, "ATGC")
-        with self.subTest():
-            self.assertEqual(self.genome._length, 4)
-        with self.subTest():
-            self.assertEqual(self.genome._gc, 50.00)
-        with self.subTest():
-            self.assertEqual(self.genome.date, exp_date)
-        with self.subTest():
-            self.assertEqual(len(self.genome.cds_features), 2)
-        with self.subTest():
-            self.assertEqual(len(self.genome.source_features), 1)
-        with self.subTest():
-            self.assertEqual(len(self.genome.trna_features), 1)
-        with self.subTest():
-            self.assertEqual(self.genome._cds_features_tally, 2)
-        with self.subTest():
-            self.assertEqual(self.genome._source_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome._trna_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome.translation_table, 11)
-        with self.subTest():
-            self.assertEqual(self.genome.type, "flat_file")
+
 
 
     def test_parse_flat_file_data_3(self):
@@ -1396,64 +1335,16 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
-
-        exp_date = datetime.strptime(date,'%d-%b-%Y')
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
-        with self.subTest():
-            self.assertEqual(self.genome.name, "XYZ123")
         with self.subTest():
             self.assertEqual(self.genome.organism, "")
         with self.subTest():
             self.assertEqual(self.genome._organism_name, "")
         with self.subTest():
             self.assertEqual(self.genome._organism_host_genus, "")
-        with self.subTest():
-            self.assertEqual(self.genome.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(self.genome.description, description)
-        with self.subTest():
-            self.assertEqual(self.genome._description_name, \
-                                "L5")
-        with self.subTest():
-            self.assertEqual(self.genome._description_host_genus, \
-                                "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(self.genome.source, source)
-        with self.subTest():
-            self.assertEqual(self.genome._source_name, \
-                                "phiC31")
-        with self.subTest():
-            self.assertEqual(self.genome._source_host_genus, \
-                                "Streptomyces")
-        with self.subTest():
-            self.assertEqual(self.genome.authors, "Jane;Doe;Smith")
-        with self.subTest():
-            self.assertEqual(self.genome.seq, "ATGC")
-        with self.subTest():
-            self.assertEqual(self.genome._length, 4)
-        with self.subTest():
-            self.assertEqual(self.genome._gc, 50.00)
-        with self.subTest():
-            self.assertEqual(self.genome.date, exp_date)
-        with self.subTest():
-            self.assertEqual(len(self.genome.cds_features), 2)
-        with self.subTest():
-            self.assertEqual(len(self.genome.source_features), 1)
-        with self.subTest():
-            self.assertEqual(len(self.genome.trna_features), 1)
-        with self.subTest():
-            self.assertEqual(self.genome._cds_features_tally, 2)
-        with self.subTest():
-            self.assertEqual(self.genome._source_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome._trna_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome.translation_table, 11)
-        with self.subTest():
-            self.assertEqual(self.genome.type, "flat_file")
 
 
     def test_parse_flat_file_data_4(self):
@@ -1516,68 +1407,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
-
-        exp_date = datetime.strptime(date,'%d-%b-%Y')
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.name, "XYZ123")
-        with self.subTest():
-            self.assertEqual(self.genome.organism, organism)
-        with self.subTest():
-            self.assertEqual(self.genome._organism_name, \
-                                "KatherineG")
-        with self.subTest():
-            self.assertEqual(self.genome._organism_host_genus, \
-                                "Gordonia")
-        with self.subTest():
             self.assertEqual(self.genome.id, "KatherineG")
-        with self.subTest():
-            self.assertEqual(self.genome.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(self.genome.description, description)
-        with self.subTest():
-            self.assertEqual(self.genome._description_name, \
-                                "L5")
-        with self.subTest():
-            self.assertEqual(self.genome._description_host_genus, \
-                                "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(self.genome.source, source)
-        with self.subTest():
-            self.assertEqual(self.genome._source_name, \
-                                "phiC31")
-        with self.subTest():
-            self.assertEqual(self.genome._source_host_genus, \
-                                "Streptomyces")
-        with self.subTest():
-            self.assertEqual(self.genome.authors, "Jane;Doe;Smith")
-        with self.subTest():
-            self.assertEqual(self.genome.seq, "ATGC")
-        with self.subTest():
-            self.assertEqual(self.genome._length, 4)
-        with self.subTest():
-            self.assertEqual(self.genome._gc, 50.00)
-        with self.subTest():
-            self.assertEqual(self.genome.date, exp_date)
-        with self.subTest():
-            self.assertEqual(len(self.genome.cds_features), 2)
-        with self.subTest():
-            self.assertEqual(len(self.genome.source_features), 1)
-        with self.subTest():
-            self.assertEqual(len(self.genome.trna_features), 1)
-        with self.subTest():
-            self.assertEqual(self.genome._cds_features_tally, 2)
-        with self.subTest():
-            self.assertEqual(self.genome._source_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome._trna_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome.translation_table, 11)
-        with self.subTest():
-            self.assertEqual(self.genome.type, "flat_file")
+
 
 
     def test_parse_flat_file_data_5(self):
@@ -1639,66 +1475,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
-
-        exp_date = datetime.strptime(date,'%d-%b-%Y')
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.name, "XYZ123")
-        with self.subTest():
-            self.assertEqual(self.genome.organism, organism)
-        with self.subTest():
-            self.assertEqual(self.genome._organism_name, \
-                                "KatherineG")
-        with self.subTest():
-            self.assertEqual(self.genome._organism_host_genus, \
-                                "Gordonia")
-        with self.subTest():
             self.assertEqual(self.genome.accession, "")
-        with self.subTest():
-            self.assertEqual(self.genome.description, description)
-        with self.subTest():
-            self.assertEqual(self.genome._description_name, \
-                                "L5")
-        with self.subTest():
-            self.assertEqual(self.genome._description_host_genus, \
-                                "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(self.genome.source, source)
-        with self.subTest():
-            self.assertEqual(self.genome._source_name, \
-                                "phiC31")
-        with self.subTest():
-            self.assertEqual(self.genome._source_host_genus, \
-                                "Streptomyces")
-        with self.subTest():
-            self.assertEqual(self.genome.authors, "Jane;Doe;Smith")
-        with self.subTest():
-            self.assertEqual(self.genome.seq, "ATGC")
-        with self.subTest():
-            self.assertEqual(self.genome._length, 4)
-        with self.subTest():
-            self.assertEqual(self.genome._gc, 50.00)
-        with self.subTest():
-            self.assertEqual(self.genome.date, exp_date)
-        with self.subTest():
-            self.assertEqual(len(self.genome.cds_features), 2)
-        with self.subTest():
-            self.assertEqual(len(self.genome.source_features), 1)
-        with self.subTest():
-            self.assertEqual(len(self.genome.trna_features), 1)
-        with self.subTest():
-            self.assertEqual(self.genome._cds_features_tally, 2)
-        with self.subTest():
-            self.assertEqual(self.genome._source_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome._trna_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome.translation_table, 11)
-        with self.subTest():
-            self.assertEqual(self.genome.type, "flat_file")
+
 
 
     def test_parse_flat_file_data_6(self):
@@ -1760,66 +1543,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
-
-        exp_date = datetime.strptime(date,'%d-%b-%Y')
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(self.genome.name, "XYZ123")
-        with self.subTest():
-            self.assertEqual(self.genome.organism, organism)
-        with self.subTest():
-            self.assertEqual(self.genome._organism_name, \
-                                "KatherineG")
-        with self.subTest():
-            self.assertEqual(self.genome._organism_host_genus, \
-                                "Gordonia")
-        with self.subTest():
             self.assertEqual(self.genome.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(self.genome.description, description)
-        with self.subTest():
-            self.assertEqual(self.genome._description_name, \
-                                "L5")
-        with self.subTest():
-            self.assertEqual(self.genome._description_host_genus, \
-                                "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(self.genome.source, source)
-        with self.subTest():
-            self.assertEqual(self.genome._source_name, \
-                                "phiC31")
-        with self.subTest():
-            self.assertEqual(self.genome._source_host_genus, \
-                                "Streptomyces")
-        with self.subTest():
-            self.assertEqual(self.genome.authors, "Jane;Doe;Smith")
-        with self.subTest():
-            self.assertEqual(self.genome.seq, "ATGC")
-        with self.subTest():
-            self.assertEqual(self.genome._length, 4)
-        with self.subTest():
-            self.assertEqual(self.genome._gc, 50.00)
-        with self.subTest():
-            self.assertEqual(self.genome.date, exp_date)
-        with self.subTest():
-            self.assertEqual(len(self.genome.cds_features), 2)
-        with self.subTest():
-            self.assertEqual(len(self.genome.source_features), 1)
-        with self.subTest():
-            self.assertEqual(len(self.genome.trna_features), 1)
-        with self.subTest():
-            self.assertEqual(self.genome._cds_features_tally, 2)
-        with self.subTest():
-            self.assertEqual(self.genome._source_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome._trna_features_tally, 1)
-        with self.subTest():
-            self.assertEqual(self.genome.translation_table, 11)
-        with self.subTest():
-            self.assertEqual(self.genome.type, "flat_file")
+
 
 
     def test_parse_flat_file_data_7(self):
@@ -1879,7 +1609,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -1998,7 +1728,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2104,7 +1834,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2220,7 +1950,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2341,7 +2071,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2452,7 +2182,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2568,7 +2298,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2684,7 +2414,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2782,7 +2512,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2903,7 +2633,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        flat_files.parse_flat_file_data(self.genome, record)
+        self.genome = flat_files.parse_flat_file_data(record)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -3023,7 +2753,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        flat_files.parse_flat_file_data(self.genome, record, filepath)
+        self.genome = flat_files.parse_flat_file_data(record, filepath)
 
         exp_date = basic.convert_empty("","empty_datetime_obj")
 
@@ -3093,8 +2823,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             id = "OPQ123.1", \
                             name = "XYZ123", \
                             )
-        flat_files.parse_flat_file_data(self.genome, record, \
-                                        translation_table = 1)
+
+        self.genome = flat_files.parse_flat_file_data(record,
+                                                      translation_table = 1)
         self.assertEqual(self.genome.translation_table, 1)
 
 
@@ -3121,10 +2852,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             description = description, \
                             )
 
-        flat_files.parse_flat_file_data(
-                            self.genome,
-                            record,
-                            phage_id_field = "description_name")
+        self.genome = flat_files.parse_flat_file_data(record,
+                                        phage_id_field = "description_name")
 
         self.assertEqual(self.genome.id, "L5")
 

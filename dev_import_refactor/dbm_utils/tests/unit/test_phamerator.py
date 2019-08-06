@@ -278,7 +278,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "AnnotationQC":1,
                      "AnnotationAuthor":1}
 
-        phamerator.parse_genome_data(self.genome1, data_dict)
+        self.genome1 = phamerator.parse_genome_data(data_dict)
 
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
@@ -325,7 +325,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"PhageID":"L5"}
-        phamerator.parse_genome_data(self.genome1, data_dict)
+        self.genome1 = phamerator.parse_genome_data(data_dict)
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
         with self.subTest():

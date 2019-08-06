@@ -24,28 +24,21 @@ class Cds:
         self.id = "" # Gene ID comprised of PhageID and Gene name
         self.name = ""
         self.genome_id = "" # Genome from which CDS feature is derived.
+        self.seqfeature = None # Biopython SeqFeature object.
         self.left = "" # Genomic position
         self.right = "" # Genomic position
+        self.coordinate_format = "" # Indexing format used for coordinates.
         self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
         self.compound_parts = 0 # Number of regions that define the feature
         self.translation_table = ""
         self.translation = "" # Biopython amino acid Seq object.
         self._translation_length = 0
         self.seq = "" # Biopython nucleotide Seq object.
-        self._length = 0 # Replaces gene_length, stored in Phamerator?
+        self._length = 0
         self._left_right_strand_id = ()
         self._end_strand_id = ()
         self._start_end_id = ()
-
-        # This enables several QC checks
-        # that utilize Biopython, such as retrieving the nucleotide
-        # sequence from the parent genome and re-translating the CDS.
-        self.seqfeature = None # Biopython SeqFeature object.
-
-        # Indexing format for coordinates. Current valid formats:
-        # 0-based half open (stored in Phamerator), 1-based closed.
-        self.coordinate_format = ""
-        self.description = ""
+        self.description = "" # Raw gene description
         self.processed_description = "" # Non-generic gene descriptions
 
 
@@ -85,6 +78,24 @@ class Cds:
             pass
 
 
+    def get_start_end(self):
+        """Return the coordinates in start-end format."""
+
+        # Ensure format of strand info.
+        strand = basic.reformat_strand(self.strand, "fr_long")
+
+        if strand == "forward":
+            start = self.left
+            end = self.right
+        elif strand == "reverse":
+            start = self.right
+            end = self.left
+        else:
+            start = -1
+            end = -1
+
+        return (start, end)
+
     def translate_seq(self):
         """Translate the CDS nucleotide sequence.
 
@@ -105,7 +116,6 @@ class Cds:
         except:
             translation = Seq("", IUPAC.protein)
         return translation
-
 
 
     def set_translation(self, value=None, translate=False):
@@ -142,7 +152,7 @@ class Cds:
     def set_location_id(self):
         """Create a tuple of feature location data.
 
-        For left and right boundaries of the feature, it doesn't matter
+        For left and right coordinates of the feature, it doesn't matter
         whether the feature is complex with a translational frameshift or not.
         Retrieving the "left" and "right" boundary attributes return the very
         beginning and end of the feature, disregarding the
@@ -159,10 +169,8 @@ class Cds:
         self._start_end_id = (start, end)
 
 
-
-
-    def reformat_left_and_right_boundaries(self, new_format):
-        """Convert left and right boundaries to new coordinate format.
+    def reformat_left_and_right(self, new_format):
+        """Convert left and right coordinates to new coordinate format.
         This also updates the coordinate format attribute to reflect
         change. However, it does not update start and end attributes.
         """
@@ -269,33 +277,30 @@ class Cds:
 
     # Evaluations.
 
-    def check_translation_table_present(self):
-        """Check that translation table data is present."""
+    def check_translation_table(self, check_table=11):
+        """Check that the translation table is correct."""
 
-        if isinstance(self.translation_table, int):
-            result = "The feature contains a translation table."
+        if self.translation_table == check_table:
+            result = "The translation table is correct."
             status = "correct"
         else:
-            result = "The feature is missing a translation table."
+            result = "The translation table is not correct."
             status = "error"
-
-        definition = "Check that translation table data is present."
+        definition = "Check that the translation table is correct."
         eval = Eval.Eval("CDS0001", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_translation_table_typo(self, parent_trans_table=11):
-        """Check that translation table data matches data from parent Genome."""
 
-        if self.translation_table != parent_trans_table:
-            result = "The feature contains a translation table that " + \
-                        "is different from the parent Genome translation table."
+    def check_translation_length(self):
+        """Confirm that a translation is present."""
+        if self._translation_length < 1:
+            result = "A translation is not present."
             status = "error"
-
         else:
-            result = "The feature contains the expected translation table."
+            result = "A translation is present."
             status = "correct"
 
-        definition = "Check that feature contains the expected translation table."
+        definition = "Check that there is a translation present."
         eval = Eval.Eval("CDS0002", definition, result, status)
         self.evaluations.append(eval)
 
@@ -321,10 +326,10 @@ class Cds:
         self.evaluations.append(eval)
 
 
-    def check_amino_acids(self, protein_alphabet_set=constants.PROTEIN_ALPHABET):
+    def check_amino_acids(self, check_set=constants.PROTEIN_ALPHABET):
         """Check whether all amino acids in the translation are valid."""
         amino_acid_set = set(self.translation)
-        amino_acid_error_set = amino_acid_set - protein_alphabet_set
+        amino_acid_error_set = amino_acid_set - check_set
 
         if len(amino_acid_error_set) > 0:
             result = "There are unexpected amino acids in the translation: " \
@@ -336,58 +341,6 @@ class Cds:
 
         definition = "Check validity of amino acid residues."
         eval = Eval.Eval("CDS0004", definition, result, status = status)
-        self.evaluations.append(eval)
-
-
-    # TODO this may no longer be needed since check_translation()
-    # evaluates this as well.
-    def check_translation_length(self):
-        """Confirm that a translation is present."""
-        if self._translation_length < 1:
-            result = "A translation is not present."
-            status = "error"
-        else:
-            result = "A translation is present."
-            status = "correct"
-
-        definition = "Confirm there is a translation present."
-        eval = Eval.Eval("CDS0005", definition, result, status)
-        self.evaluations.append(eval)
-
-
-
-    #HERE
-    # TODO this may no longer needed. Length of gene computed from
-    # translation length is not necessarily relevant, and the
-    # check_translation() method verifies the integrity of the translation.
-    def check_lengths(self):
-        """Confirm coordinates match translation length.
-        This method only operates on non-compound features.
-        """
-
-        # TODO this method can be improved by taking into account coordinate
-        # indexing format. The current implementation assumes only one format.
-        # Also, instead of computing the nucleotide length, this can now
-        # reference the self._length attribute.
-
-        if self.compound_parts == 1:
-            length1 = self.right - self.left + 1
-            length2 = (self._translation_length * 3) + 3
-
-            if length1 != length2:
-                result = "The translation and nucleotide lengths " + \
-                            "do not match."
-                status = "error"
-            else:
-                result = "The translation and nucleotide lengths match."
-                status = "correct"
-
-        else:
-            result = "The translation and nucleotide lengths were not compared."
-            status = "untested"
-
-        definition = "Compare the translation and nucleotide lengths."
-        eval = Eval.Eval("CDS0006", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -403,39 +356,33 @@ class Cds:
             result = "The feature strand is not correct."
             status = "error"
         definition = "Check if the strand is set appropriately."
-        eval = Eval.Eval("CDS0007", definition, result, status)
+        eval = Eval.Eval("CDS0005", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_boundaries(self):
+    def check_coordinates(self):
         """Check if coordinates are exact.
 
         This method assumes that if the coordinates are not exact, they
         have been set to -1 or are not integers.
         """
 
-        if not (str(self.left).isdigit() and \
-            str(self.right).isdigit()):
-
-            result = "The feature boundaries are not determined: " \
+        if not (str(self.left).isdigit() and str(self.right).isdigit()):
+            result = "The feature coordinates are not determined: " \
                 + str((self.left, self.right))
             status = "error"
-
-        elif (self.left == -1 or \
-            self.right == -1):
-
+        elif (self.left == -1 or self.right == -1):
             # TODO unit test this elif clause.
-            result = "The feature boundaries are not determined: " \
+            result = "The feature coordinates are not determined: " \
                 + str((self.left, self.right))
             status = "error"
-
         else:
-            result = "Feature boundaries are exact."
+            result = "Feature coordinates are exact."
             status = "correct"
 
         definition = "Check if the left and right boundary coordinates " + \
                         "are exact or fuzzy."
-        eval = Eval.Eval("CDS0008", definition, result, status)
+        eval = Eval.Eval("CDS0006", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -454,7 +401,6 @@ class Cds:
             else:
                 result = "The locus_tag is not present."
                 status = "error"
-
         else:
             if present:
                 result = "The locus_tag is present."
@@ -462,28 +408,42 @@ class Cds:
             else:
                 result = "The locus_tag is not present."
                 status = "correct"
-
         definition = "Check if the locus_tag status is expected."
-        eval = Eval.Eval("CDS0009", definition, result, status)
+        eval = Eval.Eval("CDS0007", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_locus_tag_typo(self, value):
-        """Check if the locus tag contains potential typos."""
-        pattern = re.compile(value.lower())
+    def check_locus_tag_typo(self, check_value):
+        """Check if the locus_tag contains potential typos."""
+        pattern = re.compile(check_value.lower())
         search_result = pattern.search(self.locus_tag.lower())
 
         if search_result == None:
-
-            result = "The feature locus tag has a typo."
+            result = "The locus_tag has a typo."
             status = "error"
-
         else:
-            result = "The feature locus tag is correct."
+            result = "The locus_tag is correct."
             status = "correct"
-
         definition = "Check if the locus_tag contains a typo."
-        eval = Eval.Eval("CDS0010", definition, result, status)
+        eval = Eval.Eval("CDS0008", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    # TODO identical to check_locus_tag_typo().
+    # TODO unittest?
+    def check_id_typo(self, check_value):
+        """Check if the id contains potential typos."""
+        pattern = re.compile(check_value.lower())
+        search_result = pattern.search(self.locus_tag.lower())
+
+        if search_result == None:
+            result = "The id has a typo."
+            status = "error"
+        else:
+            result = "The id is correct."
+            status = "correct"
+        definition = "Check if the id contains a typo."
+        eval = Eval.Eval("CDS0009", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -523,31 +483,9 @@ class Cds:
             status = "correct"
 
         definition = "Check if there is a discrepancy between description fields."
-        eval = Eval.Eval("CDS0011", definition, result, status)
+        eval = Eval.Eval("CDS0010", definition, result, status)
         self.evaluations.append(eval)
 
 
 
-
-
-    # TODO this may not be needed.
-    # TODO implement.
-    # TODO unit test.
-    def get_start_end(self):
-        """Return the coordinates in start-end format."""
-
-        # Ensure format of strand info.
-        strand = basic.reformat_strand(self.strand, "fr_long")
-
-        if strand == "forward":
-            start = self.left
-            end = self.right
-        elif strand == "reverse":
-            start = self.right
-            end = self.left
-        else:
-            start = -1
-            end = -1
-
-        return (start, end)
 ###

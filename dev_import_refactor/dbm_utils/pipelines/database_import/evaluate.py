@@ -316,14 +316,12 @@ def check_cds_for_import(cds_obj):
     # TODO decide how to implement alphabet
     cds_obj.check_amino_acids(alphabet = alphabet)
     cds_obj.check_translation_length()
-    cds_obj.check_lengths()
     cds_obj.check_strand()
-    cds_obj.check_boundaries()
+    cds_obj.check_coordinates()
     cds_obj.check_locus_tag_present()
     cds_obj.check_locus_tag_typo()
     cds_obj.check_description()
-    cds_obj.check_translation_table_present()
-    cds_obj.check_translation_table_typo()
+    cds_obj.check_translation_table()
     cds_obj.check_translation()
 
 

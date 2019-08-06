@@ -106,9 +106,6 @@ def retrieve_phagesdb_fasta(fastafile_url):
     return fasta_data
 
 
-
-
-# TODO obsolete, once a biopython-based parser has been built?
 def parse_fasta_file(fasta_file):
     """Parses sequence data from a fasta-formatted file.
     """
@@ -140,28 +137,12 @@ def parse_fasta_file(fasta_file):
 
 
 
-
-
-
-# TODO implement
-# TODO unit test.
-def parse_fasta_file2(fasta_file):
-    """Parses sequence data from a fasta-formatted file using Biopython.
-    """
-
-    # TODO need to work out whether SeqIO can retrieve the data
-    # directly from the server or whether the data needs to be first
-    # retrieved and then parsed.
-    # Using SeqIO to retrieve a record from PhagesDB server did not work.
-
-    pass
-
-
-
-def parse_phagesdb_data(genome_obj,data_dict):
+def parse_phagesdb_data(data_dict):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
     Genome object.
     """
+
+    genome_obj = Genome.Genome()
 
     # Phage Name, PhageID and SearchID
     phage_name = parse_phagesdb_phage_name(data_dict)
@@ -209,7 +190,7 @@ def parse_phagesdb_data(genome_obj,data_dict):
     evaluate.check_phagesdb_genome(genome_obj, set([""]))
 
 
-
+    return genome_obj
 
 
 
@@ -230,7 +211,7 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from_phagesdb(bundle, type, flag = "retrieve"):
+def copy_data_from_phagesdb(bundle, type, flag="retrieve"):
     """If a genome object stored in the Bundle object has
     attributes that are set to be 'retrieved' and auto-filled,
     retrieve the data from PhagesDB to complete the genome.
@@ -251,8 +232,7 @@ def copy_data_from_phagesdb(bundle, type, flag = "retrieve"):
             # an empty dictionary is returned.
             if len(data_dict.keys()) != 0:
 
-                genome2 = Genome.Genome()
-                parse_phagesdb_data(genome2, data_dict)
+                genome2 = parse_phagesdb_data(data_dict)
                 bundle.genome_dict[genome2.type] = genome2
 
 
@@ -281,7 +261,7 @@ def retrieve_phagesdb_data_list(url):
     return data_list
 
 
-def create_host_genus_set(url = constants.API_HOST_GENERA):
+def create_host_genus_set(url=constants.API_HOST_GENERA):
     """Create a set of host genera currently in PhagesDB.
     The parameter is a list, and each element is a dictionary of data
     pertaining to a different host genus."""
@@ -300,7 +280,7 @@ def create_host_genus_set(url = constants.API_HOST_GENERA):
     return host_genera_set
 
 
-def create_cluster_subcluster_sets(url = constants.API_CLUSTERS):
+def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
     """Create sets of clusters and subclusters currently in PhagesDB.
     The parameter is a list, and each element is a dictionary of data
     pertaining to a different cluster."""

@@ -53,7 +53,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
 
         description = "Mycobacterium phage L5"
@@ -100,7 +100,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
@@ -152,7 +152,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -204,7 +204,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -256,7 +256,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -308,7 +308,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -361,7 +361,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file_x": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -410,7 +410,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -459,7 +459,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file_x": url}
-        phagesdb.parse_phagesdb_data(self.genome, data_dict)
+        self.genome = phagesdb.parse_phagesdb_data(data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""

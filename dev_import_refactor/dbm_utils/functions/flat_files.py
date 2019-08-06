@@ -235,7 +235,6 @@ def create_feature_dictionary(feature_list):
 
 
 def parse_flat_file_data(
-        genome_obj, \
         retrieved_record, \
         filepath = "", \
         translation_table = 11, \
@@ -246,6 +245,7 @@ def parse_flat_file_data(
     """
 
     # Keep track of the file from which the record is derived.
+    genome_obj = Genome.Genome()
     genome_obj.set_filename(filepath)
 
 
@@ -402,6 +402,7 @@ def parse_flat_file_data(
     genome_obj.set_trna_features(trna_object_list)
     # genome_obj.set_tmrna_features(tmrna_object_list)
 
+    return genome_obj
 
 
 def check_flat_file_type(filepath):
@@ -463,18 +464,6 @@ def create_parsed_flat_file(filename, id_field = "organism_name"):
     """Create a list of genome objects containing data parsed from
     flat files."""
 
-    genome = Genome.Genome()
-
-
-    # TODO currently the parse_flat_file_data() sets filename and type,
-    # so this is redundant. But some attribute needs to be set
-    # even if there is a problem with parsing the record in the file.
-
-    # If there is no parseable record, a genome object is still
-    # created and populated with 'type and 'filename'.
-    genome.type = "flat_file"
-    genome.set_filename(filename)
-
     valid = check_flat_file_type(filename)
 
     if valid:
@@ -485,11 +474,21 @@ def create_parsed_flat_file(filename, id_field = "organism_name"):
             records = []
 
         if len(records) == 1:
-            parse_flat_file_data(genome, records[0], filename, id_field)
+            genome = parse_flat_file_data(records[0], filename, id_field)
         else:
-            pass
+            genome = Genome.Genome()
     else:
-        pass
+        genome = Genome.Genome()
+
+    # TODO currently the parse_flat_file_data() sets filename and type,
+    # so this is redundant. But some attribute needs to be set
+    # even if there is a problem with parsing the record in the file.
+
+    # If there is no parseable record, a genome object is still
+    # created and populated with 'type and 'filename'.
+    genome.type = "flat_file"
+    genome.set_filename(filename)
+
     return genome
 
 

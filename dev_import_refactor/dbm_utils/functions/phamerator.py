@@ -17,12 +17,14 @@ import pymysql
 
 
 
-def parse_genome_data(genome, data_dict, trans_table = 11):
+def parse_genome_data(data_dict, trans_table=11):
     """Parses a dictionary of data derived from the phage table
     of a Phamerator database and populates a genome object.
     It provides the flexibility to populate
     a genome object even when a few selected fields of data are needed.
     """
+
+    genome = Genome.Genome()
 
     try:
         genome.id = data_dict["PhageID"]
@@ -113,8 +115,9 @@ def parse_genome_data(genome, data_dict, trans_table = 11):
     genome.translation_table = trans_table
     genome.type = "phamerator"
 
+    return genome
 
-def parse_cds_data(cds, data_dict, trans_table = 11):
+def parse_cds_data(cds, data_dict, trans_table=11):
     """Parses a dictionary of data derived from the gene table
     of a Phamerator database and populates a Cds object.
     It provides the flexibility to populate
@@ -244,7 +247,7 @@ def retrieve_genome_data(sql_handle, phage_id=None):
 
 def create_phamerator_genome(sql_handle, phage_id=None):
     """
-    Returns a Genome object containing data parsed from MySQL
+    Returns a list of Genome objects containing data parsed from MySQL
     Phamerator database.
     """
 
@@ -252,8 +255,7 @@ def create_phamerator_genome(sql_handle, phage_id=None):
 
     genome_list = []
     for data_dict in result_list:
-        genome = Genome.Genome()
-        parse_genome_data(genome, data_dict)
+        genome = parse_genome_data(data_dict)
         genome_list.append(genome)
 
 
@@ -565,7 +567,7 @@ def create_genome_insert_statements(genome):
 
 
 
-def copy_data_from_phamerator(bundle, type, flag = "retain"):
+def copy_data_from_phamerator(bundle, type, flag="retain"):
     """If a genome object stored in the Bundle object has
     attributes that are set to be 'retained' from Phamerator,
     copy any necessary data from the Phamerator genome to the new genome.
