@@ -7,6 +7,7 @@ from constants import constants
 from classes import Eval
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 import re
 
 
@@ -25,6 +26,7 @@ class Cds:
         self.genome_id = "" # Genome from which CDS feature is derived.
         self.left = "" # Genomic position
         self.right = "" # Genomic position
+        self.left_is_start = None
         self.start = "" # Genomic position
         self.end = "" # Genomic position
         self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
@@ -70,7 +72,8 @@ class Cds:
 
     def set_description(self, value):
         """Set the description and processed_description attributes from the
-        selected attribute."""
+        selected attribute.
+        """
 
         if value == "product":
             self.description = self.product
@@ -180,7 +183,8 @@ class Cds:
     def reformat_left_and_right_boundaries(self, new_format):
         """Convert left and right boundaries to new coordinate format.
         This also updates the coordinate format attribute to reflect
-        change. However, it does not update start and end attributes."""
+        change. However, it does not update start and end attributes.
+        """
 
         new_left, new_right = \
             basic.reformat_coordinates(self.left, \
@@ -193,8 +197,8 @@ class Cds:
             self.right = new_right
             self.coordinate_format = new_format
 
-    # TODO unit test the new option.
-    def set_nucleotide_length(self, option=False):
+
+    def set_nucleotide_length(self, seq=False):
         """Set the length of the nucleotide sequence.
 
         Nucleotide length can be computed multiple ways.
@@ -208,7 +212,7 @@ class Cds:
         will be accurate.
         """
 
-        if option:
+        if seq:
             self._length = len(self.seq)
             pass
         else:
@@ -235,7 +239,8 @@ class Cds:
         part of the feature (e.g. if it is a compound feature) and
         fuzzy locations. As a result, the retrieved sequence may not
         exactly match the length indicated from the 'left' and 'right'
-        coordinates."""
+        coordinates.
+        """
 
         if isinstance(value, Seq):
             self.seq = value.upper()
@@ -253,9 +258,28 @@ class Cds:
         else:
             self.seq = Seq("", IUPAC.ambiguous_dna)
 
-        # TODO consider whether _length should be automatically set,
-        # parallel to genome method.
-        # self._length = len(self.seq)
+
+    def set_seqfeature(self):
+        """Set the 'seqfeature' attribute.
+
+        The 'seqfeature' attribute stores a Biopython SeqFeature object,
+        which contains methods valuable to extracting sequence data
+        relevant to the feature.
+        """
+
+        # SeqFeature methods rely on coordinates in 0-based half-open
+        # format and strand to be numeric.
+        new_left, new_right = \
+            basic.reformat_coordinates(self.left, \
+                                       self.right, \
+                                       self.coordinate_format, \
+                                       "0_half_open")
+
+        new_strand = basic.reformat_strand(self.strand, "numeric")
+
+        self.seqfeature = SeqFeature(FeatureLocation(new_left, new_right),
+                                     strand=new_strand)
+
 
 
 
@@ -263,6 +287,58 @@ class Cds:
 
 
     # Evaluations.
+
+    def check_translation_table_present(self):
+        """Check that translation table data is present."""
+
+        if isinstance(self.translation_table, int):
+            result = "The feature contains a translation table."
+            status = "correct"
+        else:
+            result = "The feature is missing a translation table."
+            status = "error"
+
+        definition = "Check that translation table data is present."
+        eval = Eval.Eval("CDS0001", definition, result, status)
+        self.evaluations.append(eval)
+
+    def check_translation_table_typo(self, parent_trans_table=11):
+        """Check that translation table data matches data from parent Genome."""
+
+        if self.translation_table != parent_trans_table:
+            result = "The feature contains a translation table that " + \
+                        "is different from the parent Genome translation table."
+            status = "error"
+
+        else:
+            result = "The feature contains the expected translation table."
+            status = "correct"
+
+        definition = "Check that feature contains the expected translation table."
+        eval = Eval.Eval("CDS0002", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_translation(self):
+        """Check that the current and expected translations match."""
+
+        translation = self.translate_seq()
+        if self._translation_length < len(translation):
+            result = "The translation length is shorter than expected."
+            status = "error"
+        elif self._translation_length > len(translation):
+            result = "The translation length is longer than expected."
+            status = "error"
+        elif self.translation != translation:
+            result = "The translation is different than expected."
+            status = "error"
+        else:
+            result = "The translation is correct."
+            status = "correct"
+        definition = "Check that the feature contains the expected translation."
+        eval = Eval.Eval("CDS0003", definition, result, status)
+        self.evaluations.append(eval)
+
 
     def check_amino_acids(self, protein_alphabet_set=constants.PROTEIN_ALPHABET):
         """Check whether all amino acids in the translation are valid."""
@@ -278,49 +354,59 @@ class Cds:
             status = "correct"
 
         definition = "Check validity of amino acid residues."
-        eval = Eval.Eval("CDS0001", definition, result, status = status)
+        eval = Eval.Eval("CDS0004", definition, result, status = status)
         self.evaluations.append(eval)
 
+
+    # TODO this may no longer be needed since check_translation()
+    # evaluates this as well.
     def check_translation_length(self):
         """Confirm that a translation is present."""
         if self._translation_length < 1:
-            result = "There is no translation."
+            result = "A translation is not present."
             status = "error"
         else:
-            result = "Translation is identified."
+            result = "A translation is present."
             status = "correct"
 
-        definition = "Confirm there is a translation."
-        eval = Eval.Eval("CDS0002", definition, result, status)
+        definition = "Confirm there is a translation present."
+        eval = Eval.Eval("CDS0005", definition, result, status)
         self.evaluations.append(eval)
 
 
-    # TODO this method can be improved by taking into account coordinate
-    # indexing format. The current implementation assumes only one format.
-    # Also, instead of computing the nucleotide length, this can now
-    # reference the self._length attribute.
+
+    #HERE
+    # TODO this may no longer needed. Length of gene computed from
+    # translation length is not necessarily relevant, and the
+    # check_translation() method verifies the integrity of the translation.
     def check_lengths(self):
         """Confirm coordinates match translation length.
-        This method can only be used on non-compound features."""
+        This method only operates on non-compound features.
+        """
+
+        # TODO this method can be improved by taking into account coordinate
+        # indexing format. The current implementation assumes only one format.
+        # Also, instead of computing the nucleotide length, this can now
+        # reference the self._length attribute.
 
         if self.compound_parts == 1:
             length1 = self.right - self.left + 1
             length2 = (self._translation_length * 3) + 3
 
             if length1 != length2:
-                result = "The translation length and nucleotide length " + \
+                result = "The translation and nucleotide lengths " + \
                             "do not match."
                 status = "error"
             else:
-                result = "Translation and nucleotide lengths match."
+                result = "The translation and nucleotide lengths match."
                 status = "correct"
 
         else:
-            result = "Translation and nucleotide lengths not compared."
+            result = "The translation and nucleotide lengths were not compared."
             status = "untested"
 
-        definition = "Confirm the translation and nucleotide lengths."
-        eval = Eval.Eval("CDS", definition, result, status)
+        definition = "Compare the translation and nucleotide lengths."
+        eval = Eval.Eval("CDS0006", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -336,14 +422,16 @@ class Cds:
             result = "The feature strand is not correct."
             status = "error"
         definition = "Check if the strand is set appropriately."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval("CDS0007", definition, result, status)
         self.evaluations.append(eval)
 
 
     def check_boundaries(self):
-        """Check if start and end coordinates are exact.
+        """Check if coordinates are exact.
+
         This method assumes that if the coordinates are not exact, they
-        have been set to -1 or are not integers."""
+        have been set to -1 or are not integers.
+        """
 
         if not (str(self.left).isdigit() and \
             str(self.right).isdigit()):
@@ -366,7 +454,7 @@ class Cds:
 
         definition = "Check if the left and right boundary coordinates " + \
                         "are exact or fuzzy."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval("CDS0008", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -395,17 +483,8 @@ class Cds:
                 status = "correct"
 
         definition = "Check if the locus_tag status is expected."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval("CDS0009", definition, result, status)
         self.evaluations.append(eval)
-
-
-
-
-
-
-
-
-
 
 
     def check_locus_tag_typo(self, value):
@@ -423,13 +502,16 @@ class Cds:
             status = "correct"
 
         definition = "Check if the locus_tag contains a typo."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval("CDS0010", definition, result, status)
         self.evaluations.append(eval)
 
 
     def check_description(self, description_field="product"):
-        """Check if there are CDS descriptions in unexpected fields
-        when the indicated field is empty or generic."""
+        """Check if there are CDS descriptions in unexpected fields.
+
+        This method evaluates if the indicated field is empty or generic,
+        and other fields contain non-generic data.
+        """
 
         description = ""
         description_set = set()
@@ -460,60 +542,9 @@ class Cds:
             status = "correct"
 
         definition = "Check if there is a discrepancy between description fields."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval("CDS0011", definition, result, status)
         self.evaluations.append(eval)
 
-
-    def check_translation_table_present(self):
-        """Check that translation table data is present."""
-
-        if isinstance(self.translation_table, int):
-            result = "The feature contains a translation table."
-            status = "correct"
-        else:
-            result = "The feature is missing a translation table."
-            status = "error"
-
-        definition = "Check that translation table data is present."
-        eval = Eval.Eval("CDS", definition, result, status)
-        self.evaluations.append(eval)
-
-    def check_translation_table_typo(self, parent_trans_table=11):
-        """Check that translation table data matches data from parent Genome."""
-
-        if self.translation_table != parent_trans_table:
-            result = "The feature contains a translation table that " + \
-                        "is different from the parent Genome translation table."
-            status = "error"
-
-        else:
-            result = "The feature contains the expected translation table."
-            status = "correct"
-
-        definition = "Check that feature contains the expected translation table."
-        eval = Eval.Eval("CDS", definition, result, status)
-        self.evaluations.append(eval)
-
-
-    def check_translation(self):
-        """Check that the current and expected translations match."""
-
-        translation = self.translate_seq()
-        if self._translation_length < len(translation):
-            result = "The translation length is shorter than expected."
-            status = "error"
-        elif self._translation_length > len(translation):
-            result = "The translation length is longer than expected."
-            status = "error"
-        elif self.translation != translation:
-            result = "The translation is different than expected."
-            status = "error"
-        else:
-            result = "The translation is correct."
-            status = "correct"
-        definition = "Check that the feature contains the expected translation."
-        eval = Eval.Eval("CDS", definition, result, status)
-        self.evaluations.append(eval)
 
 
 

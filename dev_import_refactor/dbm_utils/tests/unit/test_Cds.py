@@ -558,6 +558,13 @@ class TestCdsClass(unittest.TestCase):
 
 
     def test_set_nucleotide_length_1(self):
+        """Verify the nucleotide length is correct when computed directly
+        from a sequence."""
+        self.feature.seq = Seq("ATCG", IUPAC.unambiguous_dna)
+        self.feature.set_nucleotide_length(seq=True)
+        self.assertEqual(self.feature._length, 4)
+
+    def test_set_nucleotide_length_2(self):
         """Verify the nucleotide length is correct for a 0-based
         half-open interval."""
         self.feature.left = 0
@@ -566,7 +573,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature._length, 11)
 
-    def test_set_nucleotide_length_2(self):
+    def test_set_nucleotide_length_3(self):
         """Verify the nucleotide length is correct for a 1-based
         closed interval."""
         self.feature.left = 0
@@ -575,7 +582,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature._length, 12)
 
-    def test_set_nucleotide_length_3(self):
+    def test_set_nucleotide_length_4(self):
         """Verify the nucleotide length is not set for invalid
         coordinate format."""
         self.feature.left = 0
@@ -714,6 +721,60 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(self.feature.seq, "")
         with self.subTest():
             self.assertIsInstance(self.feature.seq, Seq)
+
+
+
+
+
+
+    def test_set_seqfeature_1(self):
+        """Verify seqfeature is set correctly with no changes."""
+        self.feature.left = 2
+        self.feature.right = 5
+        self.feature.strand = 1
+        self.feature.coordinate_format = "0_half_open"
+        self.feature.set_seqfeature()
+        with self.subTest():
+            self.assertEqual(self.feature.seqfeature.strand, 1)
+        with self.subTest():
+            self.assertEqual(\
+                self.feature.seqfeature.location.start.position, 2)
+        with self.subTest():
+            self.assertEqual(\
+                self.feature.seqfeature.location.end.position, 5)
+
+    def test_set_seqfeature_2(self):
+        """Verify seqfeature is set correctly with left coordinate and
+        strand reformatted."""
+        self.feature.left = 2
+        self.feature.right = 5
+        self.feature.strand = "F"
+        self.feature.coordinate_format = "1_closed"
+        self.feature.set_seqfeature()
+        with self.subTest():
+            self.assertEqual(self.feature.seqfeature.strand, 1)
+        with self.subTest():
+            self.assertEqual(\
+                self.feature.seqfeature.location.start.position, 1)
+        with self.subTest():
+            self.assertEqual(\
+                self.feature.seqfeature.location.end.position, 5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
