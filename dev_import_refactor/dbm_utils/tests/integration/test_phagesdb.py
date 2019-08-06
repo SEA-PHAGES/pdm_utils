@@ -24,26 +24,26 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
-    def test_retrieve_phagesdb_fasta_1(self):
+    def test_retrieve_fasta_data_1(self):
         """Verify fasta data is retrieved and no error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        fasta_data = phagesdb.retrieve_phagesdb_fasta(url)
+        fasta_data = phagesdb.retrieve_fasta_data(url)
         expected_fasta_data_header = ">Mycobacterium phage L5"
         self.assertEqual(fasta_data[:23], expected_fasta_data_header)
 
-    def test_retrieve_phagesdb_fasta_2(self):
+    def test_retrieve_fasta_data_2(self):
         """Verify fasta data is not retrieved and an error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5_x.fasta"
-        fasta_data = phagesdb.retrieve_phagesdb_fasta(url)
+        fasta_data = phagesdb.retrieve_fasta_data(url)
         expected_fasta_data_header = ""
         self.assertEqual(fasta_data, expected_fasta_data_header)
 
 
 
 
-    def test_parse_phagesdb_data_1(self):
+    def test_parse_genome_data_1(self):
         """Verify genome object is parsed from PhagesDB."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -53,7 +53,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
 
         description = "Mycobacterium phage L5"
@@ -90,7 +90,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 0)
 
 
-    def test_parse_phagesdb_data_2(self):
+    def test_parse_genome_data_2(self):
         """Verify error is produced from no phage_name key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -100,7 +100,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
@@ -142,7 +142,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 2)
 
 
-    def test_parse_phagesdb_data_3(self):
+    def test_parse_genome_data_3(self):
         """Verify error is produced from no pcluster key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -152,7 +152,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -194,7 +194,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 1)
 
 
-    def test_parse_phagesdb_data_4(self):
+    def test_parse_genome_data_4(self):
         """Verify error is produced from no psubcluster key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -204,7 +204,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -246,7 +246,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 1)
 
 
-    def test_parse_phagesdb_data_5(self):
+    def test_parse_genome_data_5(self):
         """Verify error is produced from no isolation_host key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -256,7 +256,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -298,7 +298,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 1)
 
 
-    def test_parse_phagesdb_data_6(self):
+    def test_parse_genome_data_6(self):
         """Verify error is produced from no genbank_accession key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -308,7 +308,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -351,7 +351,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 1)
 
 
-    def test_parse_phagesdb_data_7(self):
+    def test_parse_genome_data_7(self):
         """Verify error is produced from no fasta_file key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -361,7 +361,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file_x": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -400,7 +400,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 2)
 
 
-    def test_parse_phagesdb_data_8(self):
+    def test_parse_genome_data_8(self):
         """Verify error is produced from incorrect fasta_file URL."""
 
         url = "https://phagesdb.org/media/fastas/L5_x.fasta"
@@ -410,7 +410,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -449,7 +449,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(errors, 1)
 
 
-    def test_parse_phagesdb_data_9(self):
+    def test_parse_genome_data_9(self):
         """Verify that errors accumulate."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
@@ -459,7 +459,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file_x": url}
-        self.genome = phagesdb.parse_phagesdb_data(data_dict)
+        self.genome = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
@@ -500,34 +500,34 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
-    def test_retrieve_phagesdb_data_1(self):
+    def test_retrieve_genome_data_1(self):
         """Verify data is retrieved from PhagesDB with no error produced."""
 
         url = self.API_PREFIX + "L5" + self.API_SUFFIX
-        data_dict = phagesdb.retrieve_phagesdb_data(url)
+        data_dict = phagesdb.retrieve_genome_data(url)
         expected_phage_name = "L5"
         self.assertEqual(data_dict["phage_name"], expected_phage_name)
 
-    def test_retrieve_phagesdb_data_2(self):
+    def test_retrieve_genome_data_2(self):
         """Verify data is not retrieved from PhagesDB and an error produced."""
 
         url = self.API_PREFIX + "L5_x" + self.API_SUFFIX
-        data_dict = phagesdb.retrieve_phagesdb_data(url)
+        data_dict = phagesdb.retrieve_genome_data(url)
         self.assertEqual(len(data_dict.keys()), 0)
 
 
 
 
-    def test_retrieve_phagesdb_data_list_1(self):
+    def test_retrieve_data_list_1(self):
         """Confirm that data is successfully retrieved."""
         url = constants.API_CLUSTERS
-        data_list = phagesdb.retrieve_phagesdb_data_list(url)
+        data_list = phagesdb.retrieve_data_list(url)
         self.assertTrue(len(data_list) > 0)
 
-    def test_retrieve_phagesdb_data_list_2(self):
+    def test_retrieve_data_list_2(self):
         """Confirm that data is not successfully retrieved."""
         url = 'invalid url'
-        data_list = phagesdb.retrieve_phagesdb_data_list(url)
+        data_list = phagesdb.retrieve_data_list(url)
         self.assertTrue(len(data_list) == 0)
 
 

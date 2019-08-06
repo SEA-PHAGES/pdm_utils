@@ -81,7 +81,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
     # # TODO this may no longer be needed now that
-    # # parse_genome_data() is available.
+    # # parse_phage_table_data() is available.
     # def test_parse_phamerator_data_1(self):
     #     """Verify standard Phamerator genome data is parsed correctly."""
     #
@@ -257,7 +257,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_parse_genome_data_1(self):
+    def test_parse_phage_table_data_1(self):
         """Verify standard Phamerator genome data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
@@ -278,7 +278,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "AnnotationQC":1,
                      "AnnotationAuthor":1}
 
-        self.genome1 = phamerator.parse_genome_data(data_dict)
+        self.genome1 = phamerator.parse_phage_table_data(data_dict)
 
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
@@ -320,12 +320,12 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(self.genome1.type, "phamerator")
 
 
-    def test_parse_genome_data_2(self):
+    def test_parse_phage_table_data_2(self):
         """Verify truncated Phamerator genome data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"PhageID":"L5"}
-        self.genome1 = phamerator.parse_genome_data(data_dict)
+        self.genome1 = phamerator.parse_phage_table_data(data_dict)
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
         with self.subTest():
@@ -348,7 +348,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_parse_cds_data_1(self):
+    def test_parse_gene_table_data_1(self):
         """Verify standard Phamerator CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
@@ -364,50 +364,50 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "Notes":"description".encode("utf-8"),
                      "LocusTag":"SEA_L5_001"}
 
-        phamerator.parse_cds_data(self.cds1, data_dict)
+        cds1 = phamerator.parse_gene_table_data(data_dict)
 
         with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_001")
+            self.assertEqual(cds1.id, "L5_001")
         with self.subTest():
-            self.assertEqual(self.cds1.genome_id, "L5")
+            self.assertEqual(cds1.genome_id, "L5")
         with self.subTest():
-            self.assertEqual(self.cds1.left, 10)
+            self.assertEqual(cds1.left, 10)
         with self.subTest():
-            self.assertEqual(self.cds1.right, 100)
+            self.assertEqual(cds1.right, 100)
         with self.subTest():
-            self.assertEqual(self.cds1._length, 1000)
+            self.assertEqual(cds1._length, 1000)
         with self.subTest():
-            self.assertEqual(self.cds1.name, "1")
+            self.assertEqual(cds1.name, "1")
         with self.subTest():
-            self.assertEqual(self.cds1.type, "CDS")
+            self.assertEqual(cds1.type, "CDS")
         with self.subTest():
-            self.assertEqual(self.cds1.translation, "AGGPT")
+            self.assertEqual(cds1.translation, "AGGPT")
         with self.subTest():
-            self.assertEqual(self.cds1.strand, "F")
+            self.assertEqual(cds1.strand, "F")
         with self.subTest():
-            self.assertEqual(self.cds1.description, "description")
+            self.assertEqual(cds1.description, "description")
         with self.subTest():
-            self.assertEqual(self.cds1.locus_tag, "SEA_L5_001")
+            self.assertEqual(cds1.locus_tag, "SEA_L5_001")
         with self.subTest():
-            self.assertEqual(self.cds1.translation_table, 11)
+            self.assertEqual(cds1.translation_table, 11)
 
 
-    def test_parse_cds_data_2(self):
+    def test_parse_gene_table_data_2(self):
         """Verify truncated Phamerator CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"GeneID":"L5_001",
                      "PhageID":"L5",
                      "Start":10}
-        phamerator.parse_cds_data(self.cds1, data_dict)
+        cds1 = phamerator.parse_gene_table_data(data_dict)
         with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_001")
+            self.assertEqual(cds1.id, "L5_001")
         with self.subTest():
-            self.assertEqual(self.cds1.genome_id, "L5")
+            self.assertEqual(cds1.genome_id, "L5")
         with self.subTest():
-            self.assertEqual(self.cds1.left, 10)
+            self.assertEqual(cds1.left, 10)
         with self.subTest():
-            self.assertEqual(self.cds1.translation_table, 11)
+            self.assertEqual(cds1.translation_table, 11)
 
 
 

@@ -8,24 +8,10 @@ from functions import basic
 import pymysql
 
 
-
-
-
-
-
-
-
-
-
-def parse_genome_data(data_dict, trans_table=11):
-    """Parses a dictionary of data derived from the phage table
-    of a Phamerator database and populates a genome object.
-    It provides the flexibility to populate
-    a genome object even when a few selected fields of data are needed.
-    """
+def parse_phage_table_data(data_dict, trans_table=11):
+    """Parse a Phamerator database dictionary to create a Genome object."""
 
     genome = Genome.Genome()
-
     try:
         genome.id = data_dict["PhageID"]
     except:
@@ -57,7 +43,6 @@ def parse_genome_data(data_dict, trans_table=11):
     except:
         pass
 
-
     try:
         genome.date = data_dict["DateLastModified"]
     except:
@@ -79,7 +64,6 @@ def parse_genome_data(data_dict, trans_table=11):
         pass
 
     try:
-
         # Singletons are stored in PhameratorDB as NULL, which gets
         # returned as None.
         genome.set_cluster(data_dict["Cluster2"])
@@ -111,19 +95,15 @@ def parse_genome_data(data_dict, trans_table=11):
     except:
         pass
 
-
     genome.translation_table = trans_table
     genome.type = "phamerator"
-
     return genome
 
-def parse_cds_data(cds, data_dict, trans_table=11):
-    """Parses a dictionary of data derived from the gene table
-    of a Phamerator database and populates a Cds object.
-    It provides the flexibility to populate
-    a Cds object even when a few selected fields of data are needed.
-    """
 
+def parse_gene_table_data(data_dict, trans_table=11):
+    """Parse a Phamerator database dictionary to create a Cds object."""
+
+    cds = Cds.Cds()
     try:
         cds.id = data_dict["GeneID"]
     except:
@@ -183,41 +163,22 @@ def parse_cds_data(cds, data_dict, trans_table=11):
         cds.translation_table = trans_table
     except:
         pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return cds
 
 
 
 # TODO revamp so that sql handler makes the query instead of
-# simply passing data to pymysql.
-def retrieve_genome_data(sql_handle, phage_id=None):
-    """Retrieve genome data from Phamerator for a single genome."""
+# simply passing data to pymysql, and merge with retrieve_gene_table_data()
+def retrieve_phage_table_data(sql_handle, query=None, phage_id=None):
+    """Retrieve genome data from Phamerator for a single genome.
 
-    statement1 = "SELECT PhageID, Name, HostStrain, Sequence, status, \
-                 Cluster2, DateLastModified, Accession, Subcluster2, \
-                 AnnotationAuthor, AnnotationQC, RetrieveRecord \
-                 FROM phage"
+    The function expects a query that selects valid, specific columns
+    from the Phage table but does not condition on a PhageID.
+    (e.g. 'SELECT PhageID,Cluster FROM phage')
+    """
 
     if phage_id is not None:
-        statement2 = " WHERE PhageID = '%s'" % phage_id
-        statement3 = statement1 + statement2
-    else:
-        statement3 = statement1
+        query = query + " WHERE PhageID = '%s'" % phage_id
 
     # Create the connection.
     connection = pymysql.connect(host = "localhost",
@@ -226,67 +187,70 @@ def retrieve_genome_data(sql_handle, phage_id=None):
                                     database = sql_handle.database,
                                     cursorclass = pymysql.cursors.DictCursor)
     cur = connection.cursor()
-    cur.execute(statement3)
+    cur.execute(query)
 
     # Data is returned as a list of items, where each item is a
     # dictionary of SQL data for each PhageID.
     result_list = cur.fetchall()
     connection.close()
-
-    # if len(result_list) == 0:
-    #     result_list = [{}]
-
-    #     data_dict = result_list[0]
-    # else:
-    #     data_dict = {}
-    # return data_dict
-
     return result_list
 
 
 
-def create_phamerator_genome(sql_handle, phage_id=None):
-    """
-    Returns a list of Genome objects containing data parsed from MySQL
+# TODO add options to incorporate CDS objects and tRNA objects.
+# TODO add options to provide custom queries to retrieve
+# specific fields of the database.
+# TODO unittest query options.
+def parse_genome_data(sql_handle, phage_id=None, phage_query=None,
+                      gene_query=None, trna_query=None):
+    """Returns a list of Genome objects containing data parsed from MySQL
     Phamerator database.
-    """
 
-    result_list = retrieve_genome_data(sql_handle, phage_id)
+    If the 'phage_id' parameter contains a valid PhageID, a Genome
+    object will be constructed only for that phage. If the 'phage_id'
+    parameter is None, Genome objects for all phages in the database
+    will be constructed.
+    If the 'gene_query' parameter is not None, Cds objects for all of
+    the phage's CDS features in the gene table will be constructed
+    and added to the Genome object using the provided query.
+    If the 'trna_query' parameter is True, Trna objects for all of
+    the phage's tRNA features in the tRNA table will be constructed
+    add added to the Genome object using the provided query.
+    """
 
     genome_list = []
-    for data_dict in result_list:
-        genome = parse_genome_data(data_dict)
+    result_list1 = retrieve_phage_table_data(
+                      sql_handle, phage_id=phage_id, query=phage_query)
+    for data_dict in result_list1:
+        genome = parse_phage_table_data(data_dict)
+
+        if gene_query is not None:
+            cds_list = parse_cds_data(
+                          sql_handle, phage_id=genome.id, query=gene_query)
+            genome.cds_features = cds_list
+        if trna_query is not None:
+            # TODO develop this step once tRNA table and objects are built.
+            pass
         genome_list.append(genome)
-
-
     return genome_list
 
 
 
-
-
-
-
-
-
-
-
-
+# TODO this can probably be combined with the retrieve_phage_table_data()
+# function since it is generalized enough that it is no longer specific
+# for the gene table.
 # TODO revamp so that sql handler makes the query instead of
 # simply passing data to pymysql.
-def retrieve_cds_data(sql_handle, phage_id=None):
-    """Retrieve all CDS data from Phamerator for a single genome."""
+def retrieve_gene_table_data(sql_handle, query=None, phage_id=None):
+    """Retrieve all CDS data from Phamerator for a single genome.
 
-    statement1 = "SELECT \
-                 GeneID, PhageID, Start, Stop, Length, Name, \
-                 TypeID, translation, Orientation, Notes, LocusTag \
-                 FROM gene"
+    The function expects a query that selects valid, specific columns
+    from the Gene table but does not condition on a PhageID.
+    (e.g. 'SELECT GeneID,PhageID,Translation FROM gene')
+    """
 
     if phage_id is not None:
-        statement2 = " WHERE PhageID = '%s'" % phage_id
-        statement3 = statement1 + statement2
-    else:
-        statement3 = statement1
+        query = query + " WHERE PhageID = '%s'" % phage_id
 
     # Create the connection.
     connection = pymysql.connect(host = "localhost",
@@ -295,38 +259,26 @@ def retrieve_cds_data(sql_handle, phage_id=None):
                                     database = sql_handle.database,
                                     cursorclass = pymysql.cursors.DictCursor)
     cur = connection.cursor()
-    cur.execute(statement3)
+    cur.execute(query)
 
     # Data is returned as a list of items, where each item is a
     # dictionary of SQL data for each CDS.
     result_list = cur.fetchall()
     connection.close()
-
     return result_list
 
 
-def create_cds(sql_handle, phage_id):
-    """
-    Returns a Cds object containing data parsed from MySQL
-    Phamerator database.
+def parse_cds_data(sql_handle, phage_id=None, query=None):
+    """Returns Cds objects containing data parsed from a Phamerator database.
     """
 
-    result_list = retrieve_cds_data(sql_handle, phage_id)
     cds_list = []
+    result_list = retrieve_gene_table_data(
+                    sql_handle, query=query, phage_id=phage_id)
     for data_dict in result_list:
-        cds = Cds.Cds()
-        parse_cds_data(cds, result_list[0])
+        cds = parse_gene_table_data(result_list[0])
         cds_list.append(cds)
-
     return cds_list
-
-
-
-
-
-
-
-
 
 
 
@@ -766,7 +718,7 @@ def implement_remove_statements():
 
 
 # # TODO this may no longer be needed now that
-# # parse_genome_data() is available.
+# # parse_phage_table_data() is available.
 # def parse_phamerator_data(genome, data_tuple):
 #     """Parses tuple of data derived from a Phamerator database
 #     and populates a genome object.
@@ -804,7 +756,7 @@ def implement_remove_statements():
 
 
 # TODO this may no longer be needed now that
-# parse_genome_data() is available.
+# parse_phage_table_data() is available.
 # def create_phamerator_dict(phamerator_data_tuples):
 #     """
 #     Returns a dictionary of Phamerator data retrieved from MySQL query.

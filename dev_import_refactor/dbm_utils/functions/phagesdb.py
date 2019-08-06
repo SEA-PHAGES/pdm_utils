@@ -11,7 +11,7 @@ import json
 from functions import misc
 
 
-def parse_phagesdb_phage_name(data_dict):
+def parse_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB."""
     try:
         phage_name = data_dict['phage_name']
@@ -20,9 +20,9 @@ def parse_phagesdb_phage_name(data_dict):
     return phage_name
 
 
-
-def parse_phagesdb_cluster(data_dict):
+def parse_cluster(data_dict):
     """Retrieve Cluster from PhagesDB.
+
     If the phage is clustered, 'pcluster' is a dictionary, and one key is
     the Cluster data (Cluster or 'Singleton').
     If for some reason no Cluster info is added at the time
@@ -43,15 +43,17 @@ def parse_phagesdb_cluster(data_dict):
     return cluster
 
 
-def parse_phagesdb_subcluster(data_dict):
+def parse_subcluster(data_dict):
     """Retrieve Subcluster from PhagesDB.
+
     If for some reason no cluster info is added at the time
     the genome is added to PhagesDB, 'psubcluster' may automatically be
     set to NULL, which gets returned as None.
     If the phage is a Singleton, 'psubcluster' is None.
     If the phage is clustered but not subclustered, 'psubcluster' is None.
     If the phage is clustered and subclustered, 'psubcluster'
-    is a dictionary, and one key is the Subcluster data."""
+    is a dictionary, and one key is the Subcluster data.
+    """
 
     try:
         if data_dict["psubcluster"] is None:
@@ -63,7 +65,7 @@ def parse_phagesdb_subcluster(data_dict):
     return subcluster
 
 
-def parse_phagesdb_host_genus(data_dict):
+def parse_host_genus(data_dict):
     """Retrieve host_genus from PhagesDB."""
     try:
         host_genus = data_dict["isolation_host"]["genus"]
@@ -72,18 +74,16 @@ def parse_phagesdb_host_genus(data_dict):
     return host_genus
 
 
-def parse_phagesdb_accession(data_dict):
+def parse_accession(data_dict):
     """Retrieve Accession from PhagesDB."""
     try:
         accession = data_dict["genbank_accession"]
     except:
         accession = ""
-
     return accession
 
 
-
-def parse_phagesdb_filename(data_dict):
+def parse_fasta_filename(data_dict):
     """Retrieve fasta filename from PhagesDB."""
 
     try:
@@ -93,7 +93,7 @@ def parse_phagesdb_filename(data_dict):
     return fastafile_url
 
 
-def retrieve_phagesdb_fasta(fastafile_url):
+def retrieve_fasta_data(fastafile_url):
     """Retrieve fasta file from PhagesDB."""
 
     try:
@@ -106,80 +106,72 @@ def retrieve_phagesdb_fasta(fastafile_url):
     return fasta_data
 
 
-def parse_fasta_file(fasta_file):
-    """Parses sequence data from a fasta-formatted file.
+def parse_fasta_data(fasta_string):
+    """Parses data returned from a fasta-formatted file.
     """
     # All sequence rows in the fasta file may not have equal widths,
     # so some processing of the data is required. If you split by newline,
     # the header is retained in the first list element.
-    split_fasta_data = fasta_file.split('\n')
-
+    split_fasta_data = fasta_string.split('\n')
     header = ""
     sequence = ""
 
     if len(split_fasta_data) > 1:
-
         header = split_fasta_data[0]
         if header[0] == ">":
-            header = header[1:] # remove '>' symbol.
+            header = header[1:] # Remove '>' symbol.
 
-        header = header.strip() # remove any whitespace
+        header = header.strip() # Remove any whitespace
         index = 1
         while index < len(split_fasta_data):
-
             # Strip off potential whitespace before appending, such as '\r'.
             sequence = sequence + split_fasta_data[index].strip()
             index += 1
-
     result = (header, sequence)
-
     return result
 
 
-
-def parse_phagesdb_data(data_dict):
+def parse_genome_data(data_dict):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
     Genome object.
     """
 
     genome_obj = Genome.Genome()
 
-    # Phage Name, PhageID and SearchID
-    phage_name = parse_phagesdb_phage_name(data_dict)
+    # Phage Name, PhageID
+    phage_name = parse_phage_name(data_dict)
     genome_obj.name = phage_name
     genome_obj.set_id(value=phage_name)
 
     # Host
-    host_genus = parse_phagesdb_host_genus(data_dict)
+    host_genus = parse_host_genus(data_dict)
     genome_obj.set_host_genus(host_genus, "empty_string")
 
     # Accession
-    accession = parse_phagesdb_accession(data_dict)
+    accession = parse_accession(data_dict)
     genome_obj.set_accession(accession, "empty_string")
 
     # Cluster
-    cluster = parse_phagesdb_cluster(data_dict)
+    cluster = parse_cluster(data_dict)
     genome_obj.set_cluster(cluster)
 
     #Subcluster
-    subcluster = parse_phagesdb_subcluster(data_dict)
+    subcluster = parse_subcluster(data_dict)
     genome_obj.set_subcluster(subcluster, "empty_string")
 
     # Fasta file URL
-    fastafile_url = parse_phagesdb_filename(data_dict)
+    fastafile_url = parse_fasta_filename(data_dict)
     genome_obj.filename = fastafile_url
-
 
     # Fasta file record
     if genome_obj.filename != "":
-        fasta_file = retrieve_phagesdb_fasta(genome_obj.filename)
+        fasta_file = retrieve_fasta_data(genome_obj.filename)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
         # Genome sequence and parsed record
         if fasta_file != "":
-
-            fasta_data = parse_fasta_file(fasta_file)
+            fasta_data = parse_fasta_data(fasta_file)
             fasta_record = misc.create_fasta_seqrecord(fasta_data[0], fasta_data[1])
             genome_obj.set_sequence(fasta_record.seq)
             genome_obj.description = fasta_record.description
@@ -187,15 +179,12 @@ def parse_phagesdb_data(data_dict):
 
     genome_obj.type = "phagesdb"
 
+    # TODO should this be moved to the import_main script?
     evaluate.check_phagesdb_genome(genome_obj, set([""]))
-
-
     return genome_obj
 
 
-
-
-def retrieve_phagesdb_data(phage_url):
+def retrieve_genome_data(phage_url):
     """Retrieve all data from PhagesDB for a specific phage."""
 
     try:
@@ -205,6 +194,7 @@ def retrieve_phagesdb_data(phage_url):
         data_dict = {}
     return data_dict
 
+
 def construct_phage_url(phage_name):
     """Create URL to retrieve phage-specific data from PhagesDB."""
     phage_url = constants.API_PREFIX + phage_name + constants.API_SUFFIX
@@ -212,29 +202,28 @@ def construct_phage_url(phage_name):
 
 
 def copy_data_from_phagesdb(bundle, type, flag="retrieve"):
-    """If a genome object stored in the Bundle object has
+    """Copy data from PhagesDB.
+
+    If a genome object stored in the Bundle object has
     attributes that are set to be 'retrieved' and auto-filled,
     retrieve the data from PhagesDB to complete the genome.
     The 'type' parameter indicates the type of genome that may need
-    to be populated from PhagesDB."""
+    to be populated from PhagesDB.
+    """
 
     if type in bundle.genome_dict.keys():
-
         genome1 = bundle.genome_dict[type]
         genome1.set_value_flag(flag)
 
         if genome1._value_flag:
-
             phage_url = construct_phage_url(genome1.id)
-            data_dict = retrieve_phagesdb_data(phage_url)
+            data_dict = retrieve_genome_data(phage_url)
 
             # If there was an error with retrieving data from PhagesDB,
             # an empty dictionary is returned.
             if len(data_dict.keys()) != 0:
-
-                genome2 = parse_phagesdb_data(data_dict)
+                genome2 = parse_genome_data(data_dict)
                 bundle.genome_dict[genome2.type] = genome2
-
 
                 # Copy all retrieved data and add to Bundle object.
                 genome_pair = GenomePair.GenomePair()
@@ -243,16 +232,14 @@ def copy_data_from_phagesdb(bundle, type, flag="retrieve"):
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)
                 bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
-
         # Now record an error if there are still fields
         # that need to be retrieved.
         genome1.set_value_flag(flag)
         genome1.check_value_flag()
 
 
-def retrieve_phagesdb_data_list(url):
+def retrieve_data_list(url):
     """Retrieve list of data from PhagesDB."""
-
     try:
         data_json = urllib.request.urlopen(url)
         data_list = json.loads(data_json.read())
@@ -263,14 +250,15 @@ def retrieve_phagesdb_data_list(url):
 
 def create_host_genus_set(url=constants.API_HOST_GENERA):
     """Create a set of host genera currently in PhagesDB.
+
     The parameter is a list, and each element is a dictionary of data
-    pertaining to a different host genus."""
+    pertaining to a different host genus.
+    """
 
     try:
-        output = retrieve_phagesdb_data_list(url)
+        output = retrieve_data_list(url)
     except:
         output = []
-
     host_genera_set = set()
     for genus_dict in output:
         try:
@@ -282,11 +270,13 @@ def create_host_genus_set(url=constants.API_HOST_GENERA):
 
 def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
     """Create sets of clusters and subclusters currently in PhagesDB.
+
     The parameter is a list, and each element is a dictionary of data
-    pertaining to a different cluster."""
+    pertaining to a different cluster.
+    """
 
     try:
-        output = retrieve_phagesdb_data_list(url)
+        output = retrieve_data_list(url)
     except:
         output = []
 
@@ -294,8 +284,7 @@ def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
     subcluster_set = set()
     for data in output:
         try:
-            # This set will contain "Singleton".
-            cluster_set.add(data["cluster"])
+            cluster_set.add(data["cluster"]) # This set contains 'Singleton'.
             try:
                 subclusters_list = data["subclusters_set"]
                 subcluster_set = subcluster_set | set(subclusters_list)
@@ -303,7 +292,6 @@ def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
                 pass
         except:
             pass
-
     return (cluster_set, subcluster_set)
 
 

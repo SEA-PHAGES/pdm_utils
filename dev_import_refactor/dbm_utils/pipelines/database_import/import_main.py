@@ -15,6 +15,13 @@ from constants import constants
 
 
 
+# TODO incorporate this standard phage table query to retrieve all
+# genome-level data from PhameratorDB:
+# statement1 = "SELECT PhageID, Name, HostStrain, Sequence, status, \
+#              Cluster2, DateLastModified, Accession, Subcluster2, \
+#              AnnotationAuthor, AnnotationQC, RetrieveRecord \
+#              FROM phage"
+
 
 
 def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
@@ -233,6 +240,8 @@ def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
     phagesdb.copy_data_from_phagesdb(bundle, "flat_file")
+
+
 
 
     # Each flat_file genome should now contain all requisite data from PhagesDB.
