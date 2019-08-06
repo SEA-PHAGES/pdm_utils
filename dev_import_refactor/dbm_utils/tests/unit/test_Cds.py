@@ -192,83 +192,54 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_set_start_end_1(self):
+    def test_get_start_end_1(self):
         """Forward strand feature, long format."""
         self.feature.left = 5
         self.feature.right = 10
         self.feature.strand = "forward"
-        start = 5
-        end = 10
-        self.feature.set_start_end()
+        start, end = self.feature.get_start_end()
         with self.subTest():
-            self.assertEqual(self.feature.start, start)
+            self.assertEqual(start, 5)
         with self.subTest():
-            self.assertEqual(self.feature.end, end)
+            self.assertEqual(end, 10)
 
-    def test_set_start_end_2(self):
-        """Reverse strand feature, long format."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "reverse"
-        start = 10
-        end = 5
-        self.feature.set_start_end()
-        with self.subTest():
-            self.assertEqual(self.feature.start, start)
-        with self.subTest():
-            self.assertEqual(self.feature.end, end)
-
-    def test_set_start_end_3(self):
+    def test_get_start_end_2(self):
         """Reverse strand feature, short format."""
         self.feature.left = 5
         self.feature.right = 10
         self.feature.strand = "r"
-        start = 10
-        end = 5
-        self.feature.set_start_end()
+        start, end = self.feature.get_start_end()
         with self.subTest():
-            self.assertEqual(self.feature.start, start)
+            self.assertEqual(start, 10)
         with self.subTest():
-            self.assertEqual(self.feature.end, end)
+            self.assertEqual(end, 5)
 
-    def test_set_start_end_4(self):
+    def test_get_start_end_3(self):
         """Non-standard strand feature."""
         self.feature.left = 5
         self.feature.right = 10
         self.feature.strand = "other"
-        start = ""
-        end = ""
-        self.feature.set_start_end()
+        start, end = self.feature.get_start_end()
         with self.subTest():
-            self.assertEqual(self.feature.start, start)
+            self.assertEqual(start, -1)
         with self.subTest():
-            self.assertEqual(self.feature.end, end)
+            self.assertEqual(end, -1)
 
-    def test_set_start_end_5(self):
-        """Operator strand feature."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "+"
-        start = 5
-        end = 10
-        self.feature.set_start_end()
-        with self.subTest():
-            self.assertEqual(self.feature.start, start)
-        with self.subTest():
-            self.assertEqual(self.feature.end, end)
 
-    def test_set_start_end_6(self):
-        """Numeric strand feature."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = -1
-        start = 10
-        end = 5
-        self.feature.set_start_end()
-        with self.subTest():
-            self.assertEqual(self.feature.start, start)
-        with self.subTest():
-            self.assertEqual(self.feature.end, end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -279,8 +250,6 @@ class TestCdsClass(unittest.TestCase):
         self.feature.left = 5
         self.feature.right = 10
         self.feature.strand = "forward"
-        self.feature.start = 5
-        self.feature.end = 10
         location_id_1 = (5, 10, "forward")
         location_id_2 = (10, "forward")
         location_id_3 = (5, 10)
@@ -297,8 +266,6 @@ class TestCdsClass(unittest.TestCase):
         self.feature.left = 5
         self.feature.right = 10
         self.feature.strand = "reverse"
-        self.feature.start = 10
-        self.feature.end = 5
         location_id_1 = (5, 10, "reverse")
         location_id_2 = (5, "reverse")
         location_id_3 = (10, 5)
@@ -315,8 +282,6 @@ class TestCdsClass(unittest.TestCase):
         self.feature.left = 5
         self.feature.right = 10
         self.feature.strand = 1
-        self.feature.start = 5
-        self.feature.end = 10
         location_id_1 = (5, 10, 1)
         location_id_2 = (10, 1)
         location_id_3 = (5, 10)
@@ -334,8 +299,8 @@ class TestCdsClass(unittest.TestCase):
         self.feature.right = 10
         self.feature.strand = "abcd"
         location_id_1 = (5, 10, "abcd")
-        location_id_2 = ("", "abcd")
-        location_id_3 = ("", "")
+        location_id_2 = (-1, "abcd")
+        location_id_3 = (-1, -1)
         self.feature.set_location_id()
         with self.subTest():
             self.assertEqual(self.feature._left_right_strand_id, location_id_1)

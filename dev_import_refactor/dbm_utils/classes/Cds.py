@@ -26,9 +26,6 @@ class Cds:
         self.genome_id = "" # Genome from which CDS feature is derived.
         self.left = "" # Genomic position
         self.right = "" # Genomic position
-        self.left_is_start = None
-        self.start = "" # Genomic position
-        self.end = "" # Genomic position
         self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
         self.compound_parts = 0 # Number of regions that define the feature
         self.translation_table = ""
@@ -141,22 +138,6 @@ class Cds:
         """Sets strand based on indicated format."""
         self.strand = basic.reformat_strand(value, format, case)
 
-    def set_start_end(self):
-        """Determines which boundary coordinate is the start and end of
-        gene based on the strand.
-        """
-
-        # Ensure format of strand info.
-        strand = basic.reformat_strand(self.strand, "fr_long")
-
-        if strand == "forward":
-            self.start = self.left
-            self.end = self.right
-        elif strand == "reverse":
-            self.start = self.right
-            self.end = self.left
-        else:
-            pass
 
     def set_location_id(self):
         """Create a tuple of feature location data.
@@ -171,11 +152,11 @@ class Cds:
         If "start" and "end" coordinates are used instead of "left" and "right"
         coordinates, no strand information is required.
         """
-        self._left_right_strand_id = (self.left, \
-                                      self.right, \
-                                      self.strand)
-        self._end_strand_id = (self.end, self.strand)
-        self._start_end_id = (self.start, self.end)
+        self._left_right_strand_id = (self.left, self.right, self.strand)
+
+        start, end = self.get_start_end()
+        self._end_strand_id = (end, self.strand)
+        self._start_end_id = (start, end)
 
 
 
@@ -549,7 +530,24 @@ class Cds:
 
 
 
+    # TODO this may not be needed.
+    # TODO implement.
+    # TODO unit test.
+    def get_start_end(self):
+        """Return the coordinates in start-end format."""
 
+        # Ensure format of strand info.
+        strand = basic.reformat_strand(self.strand, "fr_long")
 
+        if strand == "forward":
+            start = self.left
+            end = self.right
+        elif strand == "reverse":
+            start = self.right
+            end = self.left
+        else:
+            start = -1
+            end = -1
 
+        return (start, end)
 ###
