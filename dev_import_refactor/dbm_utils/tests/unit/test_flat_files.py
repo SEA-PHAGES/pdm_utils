@@ -20,7 +20,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def setUp(self):
         self.cds = Cds.Cds()
-        self.source = Source.SourceFeature()
+        self.source = Source.Source()
         self.genome = Genome.Genome()
 
     def test_parse_coordinates_1(self):
@@ -200,7 +200,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_cds_feature_1(self):
+    def test_parse_cds_seqfeature_1(self):
         """Verify CDS features is parsed."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -216,8 +216,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -231,8 +230,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -264,7 +261,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_cds_feature_2(self):
+    def test_parse_cds_seqfeature_2(self):
         """Verify CDS features is parsed with no locus tag."""
         qualifier_dict = {"locus_tag_x": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -280,8 +277,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -295,8 +291,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -326,7 +320,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_3(self):
+    def test_parse_cds_seqfeature_3(self):
         """Verify CDS features is parsed with problematic coordinates."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -347,8 +341,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             strand = 1, \
             qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -362,8 +355,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, -1)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 3)
-        # with self.subTest():
-        #     self.assertIsNotNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -393,7 +384,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_4(self):
+    def test_parse_cds_seqfeature_4(self):
         """Verify CDS features is parsed with no translation."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation_x": ["ABCDE"], \
@@ -409,8 +400,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -424,8 +414,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -455,7 +443,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_5(self):
+    def test_parse_cds_seqfeature_5(self):
         """Verify CDS features is parsed with no translation table."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -471,8 +459,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -486,8 +473,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -517,7 +502,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_6(self):
+    def test_parse_cds_seqfeature_6(self):
         """Verify CDS features is parsed with no product."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -533,8 +518,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -548,8 +532,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -579,7 +561,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_7(self):
+    def test_parse_cds_seqfeature_7(self):
         """Verify CDS features is parsed with no function."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -595,8 +577,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -610,8 +591,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -641,7 +620,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_8(self):
+    def test_parse_cds_seqfeature_8(self):
         """Verify CDS features is parsed with no note."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -657,8 +636,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -672,8 +650,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -703,7 +679,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
 
-    def test_parse_cds_feature_9(self):
+    def test_parse_cds_seqfeature_9(self):
         """Verify CDS features is parsed with no gene."""
         qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
                             "translation": ["ABCDE"], \
@@ -719,8 +695,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        # eval_result = flat_files.parse_cds_feature(self.cds, seqfeature)
-        flat_files.parse_cds_feature(self.cds, seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
@@ -734,8 +709,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.right, 10)
         with self.subTest():
             self.assertEqual(self.cds.compound_parts, 1)
-        # with self.subTest():
-        #     self.assertIsNone(eval_result)
         with self.subTest():
             self.assertEqual(self.cds.coordinate_format, "0_half_open")
         with self.subTest():
@@ -766,13 +739,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_create_feature_dictionary_1(self):
+    def test_create_seqfeature_dictionary_1(self):
         """Verify feature dictionary is constructed correctly with
         one feature."""
 
         feature_list = [SeqFeature(type = "CDS")]
 
-        feature_dict = flat_files.create_feature_dictionary(feature_list)
+        feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
 
         with self.subTest():
             self.assertEqual(len(feature_dict.keys()), 1)
@@ -780,19 +753,19 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(len(feature_dict["CDS"]), 1)
 
 
-    def test_create_feature_dictionary_2(self):
+    def test_create_seqfeature_dictionary_2(self):
         """Verify feature dictionary is constructed correctly with
         no features."""
 
         feature_list = []
 
-        feature_dict = flat_files.create_feature_dictionary(feature_list)
+        feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
 
         with self.subTest():
             self.assertEqual(len(feature_dict.keys()), 0)
 
 
-    def test_create_feature_dictionary_3(self):
+    def test_create_seqfeature_dictionary_3(self):
         """Verify feature dictionary is constructed correctly with
         several different feature types."""
 
@@ -804,7 +777,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             SeqFeature(type = "other"), \
             SeqFeature(type = "gene")]
 
-        feature_dict = flat_files.create_feature_dictionary(feature_list)
+        feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
 
         with self.subTest():
             self.assertEqual(len(feature_dict.keys()), 5)
@@ -927,7 +900,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_source_feature_1(self):
+    def test_parse_source_seqfeature_1(self):
         """Verify source feature is parsed."""
 
         string1 = "Mycobacterium phage Trixie"
@@ -943,7 +916,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        flat_files.parse_source_feature(self.source, seqfeature)
+        self.source = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.source.organism, string1)
@@ -953,7 +926,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.source.lab_host, string3)
 
 
-    def test_parse_source_feature_2(self):
+    def test_parse_source_seqfeature_2(self):
         """Verify source feature is parsed with no organism qualifier."""
 
         string1 = "Mycobacterium phage Trixie"
@@ -969,7 +942,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        flat_files.parse_source_feature(self.source, seqfeature)
+        self.source = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.source.organism, "")
@@ -979,7 +952,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.source.lab_host, string3)
 
 
-    def test_parse_source_feature_3(self):
+    def test_parse_source_seqfeature_3(self):
         """Verify source feature is parsed with no host qualifier."""
 
         string1 = "Mycobacterium phage Trixie"
@@ -995,7 +968,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        flat_files.parse_source_feature(self.source, seqfeature)
+        self.source = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.source.organism, string1)
@@ -1005,7 +978,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.source.lab_host, string3)
 
 
-    def test_parse_source_feature_4(self):
+    def test_parse_source_seqfeature_4(self):
         """Verify source feature is parsed with no lab_host qualifier."""
 
         string1 = "Mycobacterium phage Trixie"
@@ -1021,7 +994,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        flat_files.parse_source_feature(self.source, seqfeature)
+        self.source = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
             self.assertEqual(self.source.organism, string1)
@@ -1093,7 +1066,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_1(self):
+    def test_parse_genome_data_1(self):
         """Verify retrieved flat file data is parsed correctly."""
 
         seqfeature1 = SeqFeature(FeatureLocation( \
@@ -1152,7 +1125,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        genome = flat_files.parse_flat_file_data(record, filepath)
+        genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -1211,7 +1184,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_2(self):
+    def test_parse_genome_data_2(self):
         """Verify retrieved flat file data is parsed correctly with no
         record name."""
 
@@ -1269,7 +1242,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1278,7 +1251,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_3(self):
+    def test_parse_genome_data_3(self):
         """Verify retrieved flat file data is parsed correctly with no
         record organism."""
 
@@ -1335,7 +1308,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1347,7 +1320,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome._organism_host_genus, "")
 
 
-    def test_parse_flat_file_data_4(self):
+    def test_parse_genome_data_4(self):
         """Verify retrieved flat file data is parsed correctly with no
         record id."""
 
@@ -1407,7 +1380,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1416,7 +1389,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_5(self):
+    def test_parse_genome_data_5(self):
         """Verify retrieved flat file data is parsed correctly with no
         accession."""
 
@@ -1475,7 +1448,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1484,7 +1457,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_6(self):
+    def test_parse_genome_data_6(self):
         """Verify retrieved flat file data is parsed correctly with more
         than one accession."""
 
@@ -1543,7 +1516,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         with self.subTest():
             self.assertEqual(self.genome.filename, "Phage_ZZZ")
@@ -1552,7 +1525,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_7(self):
+    def test_parse_genome_data_7(self):
         """Verify retrieved flat file data is parsed correctly with no
         record description."""
 
@@ -1609,7 +1582,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -1671,7 +1644,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_8(self):
+    def test_parse_genome_data_8(self):
         """Verify retrieved flat file data is parsed correctly with no
         record source."""
 
@@ -1728,7 +1701,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -1788,7 +1761,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_9(self):
+    def test_parse_genome_data_9(self):
         """Verify retrieved flat file data is parsed correctly with no
         references."""
 
@@ -1834,7 +1807,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -1896,7 +1869,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_10(self):
+    def test_parse_genome_data_10(self):
         """Verify retrieved flat file data is parsed correctly with
         references that contain no authors."""
 
@@ -1950,7 +1923,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2012,7 +1985,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_11(self):
+    def test_parse_genome_data_11(self):
         """Verify retrieved flat file data is parsed correctly with an
         empty sequence."""
 
@@ -2071,7 +2044,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2133,7 +2106,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_12(self):
+    def test_parse_genome_data_12(self):
         """Verify retrieved flat file data is parsed correctly with no
         CDS features."""
 
@@ -2182,7 +2155,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2244,7 +2217,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_13(self):
+    def test_parse_genome_data_13(self):
         """Verify retrieved flat file data is parsed correctly with no
         source features."""
 
@@ -2298,7 +2271,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2360,7 +2333,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_14(self):
+    def test_parse_genome_data_14(self):
         """Verify retrieved flat file data is parsed correctly with no
         tRNA features."""
 
@@ -2414,7 +2387,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2476,7 +2449,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_15(self):
+    def test_parse_genome_data_15(self):
         """Verify retrieved flat file data is parsed correctly with no
         features."""
 
@@ -2512,7 +2485,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2575,7 +2548,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_16(self):
+    def test_parse_genome_data_16(self):
         """Verify retrieved flat file data is parsed correctly with no
         filepath provided."""
 
@@ -2633,7 +2606,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             features = feature_list, \
                             )
 
-        self.genome = flat_files.parse_flat_file_data(record)
+        self.genome = flat_files.parse_genome_data(record)
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2695,7 +2668,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_17(self):
+    def test_parse_genome_data_17(self):
         """Verify retrieved flat file data is parsed correctly with no
         date provided."""
 
@@ -2753,7 +2726,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.genome = flat_files.parse_flat_file_data(record, filepath)
+        self.genome = flat_files.parse_genome_data(record, filepath)
 
         exp_date = basic.convert_empty("","empty_datetime_obj")
 
@@ -2815,7 +2788,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.genome.type, "flat_file")
 
 
-    def test_parse_flat_file_data_18(self):
+    def test_parse_genome_data_18(self):
         """Verify retrieved flat file data is parsed correctly with
         modified translation table."""
 
@@ -2824,7 +2797,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             name = "XYZ123", \
                             )
 
-        self.genome = flat_files.parse_flat_file_data(record,
+        self.genome = flat_files.parse_genome_data(record,
                                                       translation_table = 1)
         self.assertEqual(self.genome.translation_table, 1)
 
@@ -2832,7 +2805,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-    def test_parse_flat_file_data_19(self):
+    def test_parse_genome_data_19(self):
         """Verify retrieved flat file data is parsed correctly with
         id field specified as non-standard field."""
 
@@ -2852,7 +2825,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             description = description, \
                             )
 
-        self.genome = flat_files.parse_flat_file_data(record,
+        self.genome = flat_files.parse_genome_data(record,
                                         phage_id_field = "description_name")
 
         self.assertEqual(self.genome.id, "L5")
@@ -2863,18 +2836,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-
-    def test_check_flat_file_type_1(self):
-        """Verify valid file does not produce an error."""
-        filepath = "/path/to/file/l5.gb"
-        result = flat_files.check_flat_file_type(filepath)
-        self.assertTrue(result)
-
-    def test_check_flat_file_type_2(self):
-        """Verify invalid file produces an error."""
-        filepath = "/path/to/file/l5.exe"
-        result = flat_files.check_flat_file_type(filepath)
-        self.assertFalse(result)
+    # TODO this is probably no longer needed.
+    # def test_check_extension_1(self):
+    #     """Verify valid file does not produce an error."""
+    #     filepath = "/path/to/file/l5.gb"
+    #     result = flat_files.check_extension(filepath)
+    #     self.assertTrue(result)
+    #
+    # def test_check_extension_2(self):
+    #     """Verify invalid file produces an error."""
+    #     filepath = "/path/to/file/l5.exe"
+    #     result = flat_files.check_extension(filepath)
+    #     self.assertFalse(result)
 
 
 
@@ -2914,12 +2887,12 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.genome2.translation_table = 11
 
 
-    def test_copy_data_to_flat_file_1(self):
+    def test_copy_data_to_1(self):
         """Check that a "flat_file" genome is successfully populated."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to_flat_file(self.bundle1, "add")
+        flat_files.copy_data_to(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -2949,20 +2922,20 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(genome1.evaluations[0].status, "correct")
 
 
-    def test_copy_data_to_flat_file_2(self):
+    def test_copy_data_to_2(self):
         """Check that the function can handle a missing "flat_file" genome."""
 
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to_flat_file(self.bundle1, "add")
+        flat_files.copy_data_to(self.bundle1, "add")
         self.assertEqual(len(self.bundle1.genome_pair_dict.keys()), 0)
 
 
-    def test_copy_data_to_flat_file_3(self):
+    def test_copy_data_to_3(self):
         """Check that a "flat_file" genome is not successfully populated
         when a second genome is absent."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        flat_files.copy_data_to_flat_file(self.bundle1, "add")
+        flat_files.copy_data_to(self.bundle1, "add")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertTrue(genome1._value_flag)
@@ -2970,13 +2943,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(genome1.evaluations[0].status, "error")
 
 
-    def test_copy_data_to_flat_file_4(self):
+    def test_copy_data_to_4(self):
         """Check that a "flat_file" genome is successfully populated when
         a non-standard field flag is used."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to_flat_file(self.bundle1, "add", "empty")
+        flat_files.copy_data_to(self.bundle1, "add", "empty")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)

@@ -196,11 +196,9 @@ def retrieve_phage_table_data(sql_handle, query=None, phage_id=None):
     return result_list
 
 
-
-# TODO add options to incorporate CDS objects and tRNA objects.
-# TODO add options to provide custom queries to retrieve
-# specific fields of the database.
-# TODO unittest query options.
+# TODO this can be improved by allowing a list of phage_ids to be
+# passed. Currently it can handle only a single phage_id or all phage_ids
+# in the database.
 def parse_genome_data(sql_handle, phage_id=None, phage_query=None,
                       gene_query=None, trna_query=None):
     """Returns a list of Genome objects containing data parsed from MySQL
@@ -269,8 +267,8 @@ def retrieve_gene_table_data(sql_handle, query=None, phage_id=None):
 
 
 def parse_cds_data(sql_handle, phage_id=None, query=None):
-    """Returns Cds objects containing data parsed from a Phamerator database.
-    """
+    """Returns Cds objects containing data parsed from a
+    Phamerator database."""
 
     cds_list = []
     result_list = retrieve_gene_table_data(
@@ -279,8 +277,6 @@ def parse_cds_data(sql_handle, phage_id=None, query=None):
         cds = parse_gene_table_data(result_list[0])
         cds_list.append(cds)
     return cds_list
-
-
 
 
 # TODO revamp so that sql handler makes the query instead of
@@ -304,9 +300,7 @@ def create_phage_id_set(sql_handle):
     result_set = set([])
     for tup in result_tuple:
         result_set.add(tup[0])
-
     return result_set
-
 
 
 # TODO revamp so that sql handler makes the query instead of
@@ -333,21 +327,7 @@ def create_seq_set(sql_handle):
     result_set = set([])
     for tup in result_tuple:
         result_set.add(tup[0].decode("utf-8"))
-
     return result_set
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def create_update_statement(table, field1, value1, field2, value2):
@@ -385,28 +365,20 @@ def create_genome_update_statements(genome):
     field1 = "PhageID"
     value1 = genome.id
     statements = []
-
     statements.append(create_update_statement( \
         table, field1, value1, "HostStrain", genome.host_genus))
-
     statements.append(create_update_statement( \
         table, field1, value1, "status", genome.annotation_status))
-
     statements.append(create_update_statement( \
         table, field1, value1, "Accession", genome.accession))
-
     statements.append(create_update_statement( \
         table, field1, value1, "AnnotationAuthor", genome.author))
-
     statements.append(create_update_statement( \
         table, field1, value1, "Cluster", genome.cluster_subcluster))
-
     statements.append(create_update_statement( \
         table, field1, value1, "Cluster2", genome.cluster))
-
     statements.append(create_update_statement( \
         table, field1, value1, "Subcluster2", genome.subcluster))
-
     return statements
 
 
@@ -414,9 +386,6 @@ def create_delete_statement(table, field1, data1):
     """Create MySQL DELETE statement."""
     statement = "DELETE FROM %s WHERE %s = '%s';" % (table, field1, data1)
     return statement
-
-
-
 
 
 # TODO this may no longer be needed.
@@ -434,7 +403,6 @@ def create_genome_delete_statement(genome):
 
 def create_cds_insert_statement(cds_feature):
     """Create a CDS-level INSERT statement using data in a CDS object."""
-
 
     statement = "INSERT INTO gene " + \
         "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
@@ -466,7 +434,6 @@ def create_cds_insert_statements(list_of_features):
     return statements
 
 
-
 def create_genome_insert_statement(genome):
     """Create a genome-level INSERT statements using data
     in a Genome object."""
@@ -490,7 +457,6 @@ def create_genome_insert_statement(genome):
         genome.retrieve_record, \
         genome.annotation_qc, \
         genome.annotation_author)
-
     return statement
 
 
@@ -501,26 +467,21 @@ def create_genome_insert_statements(genome):
     table = "phage"
     field1 = "PhageID"
     value1 = genome.id
-
     statements = []
     statements.append(create_genome_insert_statement(genome))
-
-
     statements.append(create_update_statement( \
         table, field1, value1, "Cluster", genome.cluster_subcluster))
-
     statements.append(create_update_statement( \
         table, field1, value1, "Cluster2", genome.cluster))
-
     statements.append(create_update_statement( \
         table, field1, value1, "Subcluster2", genome.subcluster))
-
     return statements
 
 
+def copy_data_from(bundle, type, flag="retain"):
+    """Copy data from a 'phamerator' genome object.
 
-def copy_data_from_phamerator(bundle, type, flag="retain"):
-    """If a genome object stored in the Bundle object has
+    If a genome object stored in the Bundle object has
     attributes that are set to be 'retained' from Phamerator,
     copy any necessary data from the Phamerator genome to the new genome.
     The 'type' parameter indicates the type of genome that may need
@@ -549,6 +510,21 @@ def copy_data_from_phamerator(bundle, type, flag="retain"):
         # that need to be retained.
         genome1.set_value_flag(flag)
         genome1.check_value_flag()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

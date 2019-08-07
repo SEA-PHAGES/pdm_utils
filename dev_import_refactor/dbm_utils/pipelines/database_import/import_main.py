@@ -230,7 +230,7 @@ def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
     # Now that the flat file to be imported is parsed and matched to a ticket,
     # use the ticket to populate specific genome-level fields such as
     # host, cluster, subcluster, etc.
-    flat_files.copy_data_to_flat_file(bundle, "add")
+    flat_files.copy_data_to(bundle, "add")
 
 
 
@@ -239,7 +239,8 @@ def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
 
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
-    phagesdb.copy_data_from_phagesdb(bundle, "flat_file")
+    phagesdb.copy_data_from(bundle, "flat_file")
+
 
 
 
@@ -267,7 +268,7 @@ def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
 
         # If any attributes in flat_file are set to 'retain', copy data
         # from the phamerator genome.
-        phamerator.copy_data_from_phamerator(bundle, "flat_file")
+        phamerator.copy_data_from(bundle, "flat_file")
 
 
 

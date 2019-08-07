@@ -377,9 +377,6 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(len(genome_list[0].cds_features), 0)
 
 
-
-
-
     def test_parse_genome_data_2(self):
         """Verify that an empty Genome object list is constructed for an
         invalid PhageID."""
@@ -421,7 +418,6 @@ class TestPhameratorFunctions(unittest.TestCase):
                           sql_handle, phage_id="EagleEye",
                           phage_query=phage_query)
         self.assertEqual(len(genome_list), 0)
-
 
 
     def test_parse_genome_data_3(self):
@@ -495,78 +491,80 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(len(genome_list[0].cds_features), 3)
 
 
+    def test_parse_genome_data_4(self):
+        """Verify that multiple Genome objects with CDS features
+        are constructed correctly for multiple valid PhageIDs."""
 
-    # HERE
-    # TODO implement.
-    # def test_parse_genome_data_4(self):
-    #     """Verify that multiple Genome objects with CDS features
-    #     are constructed correctly for multiple valid PhageIDs."""
-    #
-    #     input_phage_ids_and_seqs = [["L5", "ATCG"],
-    #                                 ["Trixie", "AATT"],
-    #                                 ["D29", "GGCC"]]
-    #
-    #     input_cds_data = [["L5_001", "L5"],
-    #                       ["L5_002", "L5"],
-    #                       ["L5_003", "L5"],
-    #                       ["TRIXIE_001", "Trixie"],
-    #                       ["TRIXIE_002", "Trixie"]]
-    #
-    #     connection = pymysql.connect(host = "localhost",
-    #                                     user = user,
-    #                                     password = pwd,
-    #                                     database = self.db,
-    #                                     cursorclass = pymysql.cursors.DictCursor)
-    #     cur = connection.cursor()
-    #     for id_and_seq in input_phage_ids_and_seqs:
-    #         sql1 = \
-    #             "INSERT INTO phage (PhageID, Accession, Name, " + \
-    #             "HostStrain, Sequence, SequenceLength, GC, status, " + \
-    #             "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-    #             "AnnotationAuthor) VALUES (" + \
-    #             "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
-    #              % (id_and_seq[0], id_and_seq[1]) + \
-    #             " 1, 10.10, 'final', '%s', 1, 1, 1);" \
-    #             % constants.EMPTY_DATE
-    #         cur.execute(sql1)
-    #
-    #     for cds_data in input_cds_data:
-    #         sql2 = "INSERT INTO gene " + \
-    #             "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
-    #             "translation, Orientation, Notes, LocusTag) " + \
-    #             "VALUES " + \
-    #             "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
-    #             (cds_data[0], cds_data[1])
-    #         cur.execute(sql2)
-    #
-    #     connection.commit()
-    #     connection.close()
-    #
-    #     phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status, \
-    #                  Cluster2, DateLastModified, Accession, Subcluster2, \
-    #                  AnnotationAuthor, AnnotationQC, RetrieveRecord \
-    #                  FROM phage"
-    #     gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name, \
-    #                  TypeID, translation, Orientation, Notes, LocusTag \
-    #                  FROM gene"
-    #
-    #     sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
-    #     sql_handle.username = user
-    #     sql_handle.password = pwd
-    #     sql_handle.database = self.db
-    #     genome_list = phamerator.parse_genome_data(
-    #                     sql_handle, phage_query=phage_query,
-    #                     gene_query=gene_query)
-    #     with self.subTest():
-    #         self.assertEqual(len(genome_list), 1)
-    #     with self.subTest():
-    #         self.assertEqual(genome_list[0].id, "L5")
-    #     with self.subTest():
-    #         self.assertEqual(genome_list[0].seq, "ATCG")
-    #     with self.subTest():
-    #         self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
-    #     with self.subTest():
-    #         self.assertEqual(len(genome_list[0].cds_features), 3)
+        input_phage_ids_and_seqs = [["L5", "ATCG"],
+                                    ["Trixie", "AATT"],
+                                    ["D29", "GGCC"]]
+
+        input_cds_data = [["L5_001", "L5"],
+                          ["L5_002", "L5"],
+                          ["L5_003", "L5"],
+                          ["TRIXIE_001", "Trixie"],
+                          ["TRIXIE_002", "Trixie"]]
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_seq in input_phage_ids_and_seqs:
+            sql1 = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) VALUES (" + \
+                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
+                 % (id_and_seq[0], id_and_seq[1]) + \
+                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                % constants.EMPTY_DATE
+            cur.execute(sql1)
+
+        for cds_data in input_cds_data:
+            sql2 = "INSERT INTO gene " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "translation, Orientation, Notes, LocusTag) " + \
+                "VALUES " + \
+                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                (cds_data[0], cds_data[1])
+            cur.execute(sql2)
+
+        connection.commit()
+        connection.close()
+
+        phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status, \
+                     Cluster2, DateLastModified, Accession, Subcluster2, \
+                     AnnotationAuthor, AnnotationQC, RetrieveRecord \
+                     FROM phage"
+        gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name, \
+                     TypeID, translation, Orientation, Notes, LocusTag \
+                     FROM gene"
+
+        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        genome_list = phamerator.parse_genome_data(
+                        sql_handle, phage_query=phage_query,
+                        gene_query=gene_query)
+
+        genome_dict = {}
+        for genome in genome_list:
+            genome_dict[genome.id] = genome
+
+        with self.subTest():
+            self.assertEqual(len(genome_list), 3)
+        with self.subTest():
+            self.assertEqual(genome_dict["L5"].seq, "ATCG")
+        with self.subTest():
+            self.assertEqual(len(genome_dict["L5"].cds_features), 3)
+        with self.subTest():
+            self.assertEqual(len(genome_dict["Trixie"].cds_features), 2)
+        with self.subTest():
+            self.assertEqual(len(genome_dict["D29"].cds_features), 0)
 
 
 

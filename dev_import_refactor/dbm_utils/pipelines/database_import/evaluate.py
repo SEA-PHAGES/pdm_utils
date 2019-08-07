@@ -342,7 +342,7 @@ def check_trna_for_import(trna_obj):
 # TODO implement.
 # TODO unit test.
 def check_source_for_import(src_obj):
-    """Check a SourceFeature object for errors."""
+    """Check a Source object for errors."""
 
     src_obj.check_organism_name()
     src_obj.check_organism_host_genus()

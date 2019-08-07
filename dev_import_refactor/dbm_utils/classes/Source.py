@@ -9,7 +9,7 @@ import re
 
 
 
-class SourceFeature:
+class Source:
 
     # Initialize all attributes:
     def __init__(self):

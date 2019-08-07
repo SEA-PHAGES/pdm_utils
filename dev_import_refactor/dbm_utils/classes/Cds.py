@@ -35,9 +35,10 @@ class Cds:
         self._translation_length = 0
         self.seq = "" # Biopython nucleotide Seq object.
         self._length = 0
-        self._left_right_strand_id = ()
-        self._end_strand_id = ()
-        self._start_end_id = ()
+
+
+        # The following attributes are common to PhameratorDB.
+        self.pham = ""
         self.description = "" # Raw gene description
         self.processed_description = "" # Non-generic gene descriptions
 
@@ -57,6 +58,9 @@ class Cds:
         # from various data sources.
         self.evaluations = []
         self.type = ""
+        self._left_right_strand_id = ()
+        self._end_strand_id = ()
+        self._start_end_id = ()
 
 
 

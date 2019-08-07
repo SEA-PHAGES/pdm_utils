@@ -5,35 +5,11 @@ import unittest
 
 
 
-class TestSourceFeatureClass(unittest.TestCase):
+class TestSourceClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.feature = Source.SourceFeature()
-
-
-
-
-
-
-    # TODO this is probably no longer needed.
-    # def test_set_evaluation_1(self):
-    #     """Set an empty evaluation object."""
-    #     self.feature.set_evaluation("none")
-    #     self.assertEqual(len(self.feature.evaluations), 1)
-    #
-    # def test_set_evaluation_2(self):
-    #     """Set a warning evaluation object."""
-    #     self.feature.set_evaluation("warning","message1")
-    #     self.assertEqual(len(self.feature.evaluations), 1)
-    #
-    # def test_set_evaluation_3(self):
-    #     """Set an error evaluation object."""
-    #     self.feature.set_evaluation("error","message1","message2")
-    #     self.assertEqual(len(self.feature.evaluations), 1)
-
-
-
+        self.feature = Source.Source()
 
 
 

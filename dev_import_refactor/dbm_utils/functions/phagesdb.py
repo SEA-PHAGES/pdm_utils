@@ -107,8 +107,7 @@ def retrieve_fasta_data(fastafile_url):
 
 
 def parse_fasta_data(fasta_string):
-    """Parses data returned from a fasta-formatted file.
-    """
+    """Parses data returned from a fasta-formatted file."""
     # All sequence rows in the fasta file may not have equal widths,
     # so some processing of the data is required. If you split by newline,
     # the header is retained in the first list element.
@@ -136,52 +135,50 @@ def parse_genome_data(data_dict):
     Genome object.
     """
 
-    genome_obj = Genome.Genome()
+    genome = Genome.Genome()
+    genome.type = "phagesdb"
 
     # Phage Name, PhageID
     phage_name = parse_phage_name(data_dict)
-    genome_obj.name = phage_name
-    genome_obj.set_id(value=phage_name)
+    genome.name = phage_name
+    genome.set_id(value=phage_name)
 
     # Host
     host_genus = parse_host_genus(data_dict)
-    genome_obj.set_host_genus(host_genus, "empty_string")
+    genome.set_host_genus(host_genus, "empty_string")
 
     # Accession
     accession = parse_accession(data_dict)
-    genome_obj.set_accession(accession, "empty_string")
+    genome.set_accession(accession, "empty_string")
 
     # Cluster
     cluster = parse_cluster(data_dict)
-    genome_obj.set_cluster(cluster)
+    genome.set_cluster(cluster)
 
     #Subcluster
     subcluster = parse_subcluster(data_dict)
-    genome_obj.set_subcluster(subcluster, "empty_string")
+    genome.set_subcluster(subcluster, "empty_string")
 
     # Fasta file URL
     fastafile_url = parse_fasta_filename(data_dict)
-    genome_obj.filename = fastafile_url
+    genome.filename = fastafile_url
 
     # Fasta file record
-    if genome_obj.filename != "":
-        fasta_file = retrieve_fasta_data(genome_obj.filename)
+    if genome.filename != "":
+        fasta_file = retrieve_fasta_data(genome.filename)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
         # Genome sequence and parsed record
         if fasta_file != "":
-            fasta_data = parse_fasta_data(fasta_file)
-            fasta_record = misc.create_fasta_seqrecord(fasta_data[0], fasta_data[1])
-            genome_obj.set_sequence(fasta_record.seq)
-            genome_obj.description = fasta_record.description
-            genome_obj.parse_description()
+            header, seq = parse_fasta_data(fasta_file)
+            genome.set_sequence(seq)
+            genome.description = header
+            genome.parse_description()
 
-    genome_obj.type = "phagesdb"
-
-    # TODO should this be moved to the import_main script?
-    evaluate.check_phagesdb_genome(genome_obj, set([""]))
-    return genome_obj
+    # TODO not sure if these evaluations should be in this function or not.
+    evaluate.check_phagesdb_genome(genome, set([""]))
+    return genome
 
 
 def retrieve_genome_data(phage_url):
@@ -201,8 +198,8 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from_phagesdb(bundle, type, flag="retrieve"):
-    """Copy data from PhagesDB.
+def copy_data_from(bundle, type, flag="retrieve"):
+    """Copy data from a 'phagesdb' genome object.
 
     If a genome object stored in the Bundle object has
     attributes that are set to be 'retrieved' and auto-filled,

@@ -2,9 +2,6 @@
 GenBank-formatted flat files."""
 
 
-
-
-
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
@@ -25,304 +22,254 @@ from classes import GenomePair
 # SeqFeature object are not integers, so this needs to be accounted for.
 # Also, this function doesn't test to confirm that coordinates are
 # ExactPosition objects (i.e. non-fuzzy coordinates).
-def parse_coordinates(feature):
-    """Parse the boundary coordinates for a biopython feature object
-    derived from a GenBank-formatted flat file.
+def parse_coordinates(seqfeature):
+    """Parse the boundary coordinates from a GenBank-formatted flat file.
+
+    The functions takes a Biopython SeqFeature object containing data
+    that was parsed from the feature in the flat file.
     Parsing these coordinates can be tricky.
     There can be more than one set of coordinates if it is
     a compound location. Also, the boundaries may not be precise;
     instead they may be open or fuzzy.
     """
 
+    if (isinstance(seqfeature.location, FeatureLocation) or \
+        isinstance(seqfeature.location, CompoundLocation)):
 
-    if (isinstance(feature.location, FeatureLocation) or \
-        isinstance(feature.location, CompoundLocation)):
-
-        if feature.strand is None:
+        if seqfeature.strand is None:
             left = -1
             right = -1
             parts = 0
-
-        elif isinstance(feature.location, FeatureLocation):
-            left = int(feature.location.start)
-            right = int(feature.location.end)
+        elif isinstance(seqfeature.location, FeatureLocation):
+            left = int(seqfeature.location.start)
+            right = int(seqfeature.location.end)
             parts = 1
+        elif isinstance(seqfeature.location, CompoundLocation):
+            parts = len(seqfeature.location.parts)
 
-        elif isinstance(feature.location, CompoundLocation):
-
-            parts = len(feature.location.parts)
-
-            # Skip this compound feature if it is comprised of more
-            # than two features (too tricky to parse).
+            # Skip this compound seqfeature if it is comprised of more
+            # than two features (tricky to parse).
             if parts == 2:
 
-                # Retrieve compound feature positions based on strand.
-                if feature.strand == 1:
-                    left = int(feature.location.parts[0].start)
-                    right = int(feature.location.parts[1].end)
-
-                elif feature.strand == -1:
-                    left = int(feature.location.parts[1].start)
-                    right = int(feature.location.parts[0].end)
-
+                # Retrieve compound seqfeature positions based on strand.
+                if seqfeature.strand == 1:
+                    left = int(seqfeature.location.parts[0].start)
+                    right = int(seqfeature.location.parts[1].end)
+                elif seqfeature.strand == -1:
+                    left = int(seqfeature.location.parts[1].start)
+                    right = int(seqfeature.location.parts[0].end)
                 else:
                     pass
             else:
                 left = -1
                 right = -1
-
+        else:
+            pass
     else:
         left = -1
         right = -1
         parts = 0
-
     return (left, right, parts)
 
 
-def parse_cds_feature(cds, feature):
-    """Parses a Biopython CDS SeqFeature.
-    """
-
-    cds.seqfeature = feature
+def parse_cds_seqfeature(seqfeature):
+    """Parse data from a Biopython CDS SeqFeature object into a Cds object."""
+    cds = Cds.Cds()
+    cds.seqfeature = seqfeature
 
     try:
-        cds.locus_tag = feature.qualifiers["locus_tag"][0]
+        cds.locus_tag = seqfeature.qualifiers["locus_tag"][0]
     except:
         cds.locus_tag = ""
 
-
-    # Orientation
-    cds.set_strand(feature.strand, "fr_short", case = True)
-
-    cds.left, \
-    cds.right, \
-    cds.compound_parts = parse_coordinates(feature)
-
+    cds.set_strand(seqfeature.strand, "fr_short", case = True)
+    cds.left, cds.right, cds.compound_parts = parse_coordinates(seqfeature)
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
     cds.coordinate_format = "0_half_open"
 
     try:
-        translation = feature.qualifiers["translation"][0]
+        translation = seqfeature.qualifiers["translation"][0]
     except:
         translation = ""
 
     translation = Seq(translation, Alphabet.IUPAC.protein)
     cds.set_translation(translation)
-
     cds.set_nucleotide_length()
 
-
     try:
-        translation_table = feature.qualifiers["transl_table"][0]
+        translation_table = seqfeature.qualifiers["transl_table"][0]
     except:
         translation_table = -1
+
     cds.set_translation_table(translation_table)
 
-
     try:
-        cds.product, \
-        cds.processed_product = \
-            basic.reformat_description(feature.qualifiers["product"][0])
-
+        cds.product, cds.processed_product = \
+            basic.reformat_description(seqfeature.qualifiers["product"][0])
     except:
         cds.product = ""
         cds.processed_product = ""
 
     try:
-        cds.function, \
-        cds.processed_function = \
-            basic.reformat_description(feature.qualifiers["function"][0])
-
+        cds.function, cds.processed_function = \
+            basic.reformat_description(seqfeature.qualifiers["function"][0])
     except:
         cds.function = ""
         cds.processed_function = ""
 
     try:
-        cds.note, \
-        cds.processed_note = \
-            basic.reformat_description(feature.qualifiers["note"][0])
-
+        cds.note, cds.processed_note = \
+            basic.reformat_description(seqfeature.qualifiers["note"][0])
     except:
         cds.note = ""
         cds.processed_note = ""
 
     try:
-        cds.gene_number = feature.qualifiers["gene"][0]
+        cds.gene_number = seqfeature.qualifiers["gene"][0]
     except:
         cds.gene_number = ""
+    return cds
 
 
-
-
-def create_cds_objects(biopython_feature_list):
+def create_cds_objects(seqfeature_list):
     """Convert all Biopython CDS SeqFeatures to Cds objects."""
-    cds_object_list = []
-
-    for feature in biopython_feature_list:
-        cds = Cds.Cds()
-        parse_cds_feature(cds, feature)
-        cds_object_list.append(cds)
-
-    return cds_object_list
+    cds_list = []
+    for seqfeature in seqfeature_list:
+        cds = parse_cds_seqfeature(seqfeature)
+        cds_list.append(cds)
+    return cds_list
 
 
-
-
-def parse_source_feature(source, feature):
-    """Parses a Biopython Source Feature.
-    """
-
+def parse_source_seqfeature(seqfeature):
+    """Parses a Biopython Source SeqFeature."""
+    source = Source.Source()
     try:
-        source.organism = str(feature.qualifiers["organism"][0])
+        source.organism = str(seqfeature.qualifiers["organism"][0])
     except:
         source.organism = ""
     try:
-        source.host = str(feature.qualifiers["host"][0])
+        source.host = str(seqfeature.qualifiers["host"][0])
     except:
         source.host = ""
     try:
-        source.lab_host = str(feature.qualifiers["lab_host"][0])
+        source.lab_host = str(seqfeature.qualifiers["lab_host"][0])
     except:
         source.lab_host = ""
+    return source
 
 
 
-
-def create_source_objects(biopython_feature_list):
-    """Convert all Biopython Source SeqFeatures to SourceFeature objects."""
-    source_object_list = []
-
-    for feature in biopython_feature_list:
-        source = Source.SourceFeature()
-        parse_source_feature(source, feature)
-        source_object_list.append(source)
-
-    return source_object_list
+def create_source_objects(seqfeature_list):
+    """Convert all Biopython Source SeqFeatures to Source objects."""
+    source_list = []
+    for seqfeature in seqfeature_list:
+        source = parse_source_seqfeature(seqfeature)
+        source_list.append(source)
+    return source_list
 
 
+def create_seqfeature_dictionary(seqfeature_list):
+    """Create a dictionary of Biopython SeqFeature objects based on their type.
 
-
-def create_feature_dictionary(feature_list):
-    """From a list of all Biopython SeqFeatures derived from a GenBank-formatted
+    From a list of all Biopython SeqFeatures derived from a GenBank-formatted
     flat file, create a dictionary of SeqFeatures based on their type.
-    Key = feature type (source, tRNA, CDS, other).
-    Value = list of features."""
+    Key = seqfeature type (source, tRNA, CDS, other).
+    Value = list of features.
+    """
 
-    feature_type_set = set()
-    feature_dict = {}
-
-    for feature in feature_list:
-        feature_type_set.add(feature.type)
-
-    for type in feature_type_set:
-        feature_sublist = []
-
+    seqfeature_type_set = set()
+    seqfeature_dict = {}
+    for seqfeature in seqfeature_list:
+        seqfeature_type_set.add(seqfeature.type)
+    for type in seqfeature_type_set:
+        sublist = []
         index = 0
-        while index < len(feature_list):
-
-            feature = feature_list[index]
-
-            if feature.type == type:
-                feature_sublist.append(feature)
+        while index < len(seqfeature_list):
+            seqfeature = seqfeature_list[index]
+            if seqfeature.type == type:
+                sublist.append(seqfeature)
             index += 1
-
-        feature_dict[type] = feature_sublist
-
-    return feature_dict
+        seqfeature_dict[type] = sublist
+    return seqfeature_dict
 
 
+def parse_genome_data(seqrecord, filepath="",
+        translation_table=11, phage_id_field="organism_name"):
+    """Parse a GenBank-formatted flat file into a Genome object.
 
-def parse_flat_file_data(
-        retrieved_record, \
-        filepath = "", \
-        translation_table = 11, \
-        phage_id_field = "organism_name"):
-
-    """Parses a GenBank-formatted flat file into a Genome object using
-    data that has already been parsed by Bio.SeqIO.
+    Data from the flat file has already been parsed y Biopython SeqIO
+    into a SeqRecord object, and data from this object is parsed
+    into a Genome object.
     """
 
     # Keep track of the file from which the record is derived.
-    genome_obj = Genome.Genome()
-    genome_obj.set_filename(filepath)
-
+    genome = Genome.Genome()
+    genome.set_filename(filepath)
+    genome.type = "flat_file"
 
     try:
-        genome_obj.name = retrieved_record.name
-
+        genome.name = seqrecord.name
         # It appears that if name is not present, Biopython auto-populates
         # this attribute as "<unknown name>"
-        if genome_obj.name == "<unknown name>":
-            genome_obj.name = ""
-
+        if genome.name == "<unknown name>":
+            genome.name = ""
     except:
-        genome_obj.name = ""
-
-
+        genome.name = ""
 
     try:
-        genome_obj.organism = retrieved_record.annotations['organism']
+        genome.organism = seqrecord.annotations['organism']
     except:
-        genome_obj.organism = ""
+        genome.organism = ""
 
     # Identifies host and phage name from organism field.
-    genome_obj.parse_organism()
-
+    genome.parse_organism()
 
     try:
-        genome_obj.id = retrieved_record.id
-
+        genome.id = seqrecord.id
         # It appears that if id is not present, Biopython auto-populates
         # this attribute as "<unknown id>"
-        if genome_obj.id == "<unknown id>":
-            genome_obj.id = ""
-
+        if genome.id == "<unknown id>":
+            genome.id = ""
     except:
-        genome_obj.id = ""
+        genome.id = ""
 
     try:
         # Since accessions are stored in a list, there may be more than
         # one accessions associated with this file.
         # The first accession in the list is assumed to be the most recent.
-        accession = retrieved_record.annotations['accessions'][0]
+        accession = seqrecord.annotations['accessions'][0]
     except:
         accession = ""
 
-    genome_obj.set_accession(accession)
-
+    genome.set_accession(accession)
 
     try:
-        genome_obj.description = retrieved_record.description
-
+        genome.description = seqrecord.description
         # It appears that if description is not present, Biopython
         # auto-populates this attribute as "<unknown description>"
-        if genome_obj.description == "<unknown description>":
-            genome_obj.description = ""
-
+        if genome.description == "<unknown description>":
+            genome.description = ""
     except:
-        genome_obj.description = ""
+        genome.description = ""
 
     # Identifies host and phage name from description field.
-    genome_obj.parse_description()
+    genome.parse_description()
 
     try:
-        genome_obj.source = retrieved_record.annotations['source']
+        genome.source = seqrecord.annotations['source']
     except:
-        genome_obj.source = ""
+        genome.source = ""
 
     # Identifies host and phage name from record source field.
-    genome_obj.parse_source()
-
-
+    genome.parse_source()
 
     try:
         # The retrieved authors can be stored in multiple Reference elements.
-        refs = retrieved_record.annotations['references']
+        refs = seqrecord.annotations['references']
         authors_list = []
         for ref in refs:
-
             # Note: Reference objects are instantiated with an empty
             # authors attribute. So if no authors are present in a Reference,
             # it will still concatenate an empty string, resulting in an
@@ -330,47 +277,35 @@ def parse_flat_file_data(
             # it is not an empty string.
             if ref.authors != "":
                 authors_list.append(ref.authors)
-
         authors_string = ';'.join(authors_list)
-        genome_obj.authors = authors_string
-
+        genome.authors = authors_string
     except:
-        genome_obj.authors = ""
-
-
+        genome.authors = ""
 
     # Biopython requires the parsed record contains a sequence, so
     # no need to test whether the seq attribute is present or not.
     # Nucleotide sequence, length, and % GC.
-    genome_obj.set_sequence(retrieved_record.seq)
-
-
+    genome.set_sequence(seqrecord.seq)
 
     try:
-        date = retrieved_record.annotations["date"]
-        genome_obj.date = datetime.strptime(date,'%d-%b-%Y')
+        date = seqrecord.annotations["date"]
+        genome.date = datetime.strptime(date,'%d-%b-%Y')
     except:
-        genome_obj.date = basic.convert_empty("", "empty_datetime_obj")
-        # TODO throw an error if no date?
-
+        genome.date = basic.convert_empty("", "empty_datetime_obj")
 
     # Now that record fields are parsed, set the phage_id.
-    genome_obj.set_id(attribute=phage_id_field)
-
-    genome_obj.type = "flat_file"
-
+    genome.set_id(attribute=phage_id_field)
 
     # Create lists of parsed features.
     # Note: Biopython instantiates the features attribute with
     # an empty list, so no need to test if features attribute is
     # present or not.
-    feature_dict = create_feature_dictionary(retrieved_record.features)
+    seqfeature_dict = create_seqfeature_dictionary(seqrecord.features)
 
-    if "CDS" in feature_dict.keys():
-        cds_object_list = create_cds_objects(feature_dict["CDS"])
+    if "CDS" in seqfeature_dict.keys():
+        cds_list = create_cds_objects(seqfeature_dict["CDS"])
     else:
-        cds_object_list = []
-
+        cds_list = []
 
     # TODO the genome_id can't be set until the genome id
     # is set. But the phage_id is not determined from within the
@@ -378,53 +313,43 @@ def parse_flat_file_data(
     # Once the ticket is used to set the id, the genome_id
     # atttributes can be set for all features.
     # for cds in cds_object_list:
-    #     cds.genome_id = genome_obj.id
+    #     cds.genome_id = genome.id
 
 
-    if "source" in feature_dict.keys():
-        source_object_list = create_source_objects(feature_dict["source"])
+    if "source" in seqfeature_dict.keys():
+        source_list = create_source_objects(seqfeature_dict["source"])
     else:
-        source_object_list = []
+        source_list = []
 
-    if "tRNA" in feature_dict.keys():
-        trna_object_list = create_trna_objects(feature_dict["tRNA"])
+    if "tRNA" in seqfeature_dict.keys():
+        trna_list = create_trna_objects(seqfeature_dict["tRNA"])
     else:
-        trna_object_list = []
+        trna_list = []
 
-    if "tmrna" in feature_dict.keys():
-        tmrna_object_list = create_tmrna_objects(feature_dict["tmrna"])
+    if "tmrna" in seqfeature_dict.keys():
+        tmrna_list = create_tmrna_objects(seqfeature_dict["tmrna"])
     else:
-        tmrna_object_list = []
+        tmrna_list = []
 
-    genome_obj.translation_table = translation_table
-    genome_obj.set_cds_features(cds_object_list)
-    genome_obj.set_source_features(source_object_list)
-    genome_obj.set_trna_features(trna_object_list)
-    # genome_obj.set_tmrna_features(tmrna_object_list)
+    genome.translation_table = translation_table
+    genome.set_cds_features(cds_list)
+    genome.set_source_features(source_list)
+    genome.set_trna_features(trna_list)
+    # genome.set_tmrna_features(tmrna_list)
 
-    return genome_obj
-
-
-def check_flat_file_type(filepath):
-    """Verify that the file contains a file extension common to
-    GenBank-formatted flat files."""
-    valid = False
-    filename = filepath.split("/")[-1]
-    if filename.split('.')[-1] in constants.ADMISSIBLE_FILE_TYPES:
-        valid = True
-    return valid
+    return genome
 
 
 
 
+def copy_data_to(bundle, type, flag="ticket"):
+    """Copy data to a 'flat_file' genome object.
 
-def copy_data_to_flat_file(bundle, type, flag = "ticket"):
-    """Copy data from an 'add' genome object to a 'flat_file' genome object.
-    The 'add' genome contains data not stored in the flat file.
     The 'flat_file' attributes that should be populated need
-    to be set to 'ticket'.
+    to be set to the value indicated by the 'flag' parameter.
     The 'type' parameter indicates the type of genome that can be used to
-    populate the 'flat_file' genome object."""
+    populate the 'flat_file' genome object.
+    """
 
     if "flat_file" in bundle.genome_dict.keys():
         genome1 = bundle.genome_dict["flat_file"]
@@ -458,63 +383,36 @@ def copy_data_to_flat_file(bundle, type, flag = "ticket"):
         genome1.check_value_flag()
 
 
+def parse_files(file_list, id_field="organism_name"):
+    """Parse data from a list of flat files.
 
-
-def create_parsed_flat_file(filename, id_field = "organism_name"):
-    """Create a list of genome objects containing data parsed from
-    flat files."""
-
-    valid = check_flat_file_type(filename)
-
-    if valid:
-
-        try:
-            records = list(SeqIO.parse(filename, "genbank"))
-        except:
-            records = []
-
-        if len(records) == 1:
-            genome = parse_flat_file_data(records[0], filename, id_field)
-        else:
-            genome = Genome.Genome()
-    else:
-        genome = Genome.Genome()
-
-    # TODO currently the parse_flat_file_data() sets filename and type,
-    # so this is redundant. But some attribute needs to be set
-    # even if there is a problem with parsing the record in the file.
-
-    # If there is no parseable record, a genome object is still
-    # created and populated with 'type and 'filename'.
-    genome.type = "flat_file"
-    genome.set_filename(filename)
-
-    return genome
-
-
-def create_parsed_flat_file_list(all_files, id_field = "organism_name"):
-    """Create a list of genome objects containing data parsed from
-    flat files."""
+    The functions returns:
+    1. a list of Genome objects with data parsed from each file.
+    2. a list of filenames that were successfully parsed.
+    3. a list of filenames that were not successfully parsed.
+    ."""
 
     failed_files = []
     valid_files = []
     genomes = []
+    for filename in file_list:
+        try:
+            seqrecords = list(SeqIO.parse(filename, "genbank"))
+        except:
+            seqrecords = []
 
-    for filename in all_files:
-
-        genome = create_parsed_flat_file(filename, id_field = id_field)
-        genomes.append(genome)
-
-        if genome.id == "":
-
-            # If the file was not parsed, the id will remain empty.
-            failed_files.append(filename)
-        else:
+        if len(seqrecords) == 1:
+            genome = parse_genome_data(seqrecords[0], filename, id_field)
+            genomes.append(genome)
             valid_files.append(filename)
-
+        else:
+            failed_files.append(filename)
+            # # If there is no parseable record, a genome object is still
+            # # created and populated with 'type and 'filename'.
+            # genome = Genome.Genome()
+            # genome.type = "flat_file"
+            # genome.set_filename(filename)
     return (genomes, valid_files, failed_files)
-
-
 
 
 
@@ -542,8 +440,8 @@ def create_parsed_flat_file_list(all_files, id_field = "organism_name"):
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def parse_trna_feature(trna, feature):
-    """Parses a Biopython tRNA Feature.
+def parse_trna_feature(trna, seqfeature):
+    """Parses a Biopython tRNA SeqFeature.
     """
 
     pass
@@ -551,22 +449,20 @@ def parse_trna_feature(trna, feature):
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def create_trna_objects(biopython_feature_list):
+def create_trna_objects(seqfeature_list):
     """Convert all Biopython tRNA SeqFeatures to tRNAFeature objects."""
-    trna_object_list = []
-
-    for feature in biopython_feature_list:
+    trna_list = []
+    for seqfeature in seqfeature_list:
         trna = ""
-        trna_object_list.append(trna)
-
-    return trna_object_list
+        trna_list.append(trna)
+    return trna_list
 
 
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def parse_tmrna_feature(tmrna, feature):
-    """Parses a Biopython tRNA Feature.
+def parse_tmrna_feature(tmrna, seqfeature):
+    """Parses a Biopython tRNA SeqFeature.
     """
 
     pass
@@ -574,15 +470,19 @@ def parse_tmrna_feature(tmrna, feature):
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def create_tmrna_objects(biopython_feature_list):
+def create_tmrna_objects(seqfeature_list):
     """Convert all Biopython tRNA SeqFeatures to tRNAFeature objects."""
-    tmrna_object_list = []
-
-    for feature in biopython_feature_list:
+    tmrna_list = []
+    for seqfeature in seqfeature_list:
         tmrna = ""
-        tmrna_object_list.append(tmrna)
+        tmrna_list.append(tmrna)
+    return tmrna_list
 
-    return tmrna_object_list
+
+
+
+
+
 
 
 
@@ -647,6 +547,93 @@ def create_tmrna_objects(biopython_feature_list):
 #
 #     return pass
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Functions that are no longer needed.
+
+
+
+# # TODO this is probably no longer needed. There is no need to impose
+# # restrictions on file extensions for flat files.
+# def check_extension(filepath):
+#     """Verify the file extension is common for GenBank-formatted flat files."""
+#     valid = False
+#     filename = filepath.split("/")[-1]
+#     if filename.split('.')[-1] in constants.ADMISSIBLE_FILE_TYPES:
+#         valid = True
+#     return valid
+
+# TODO the follow create_parsed_flat_file() and
+# create_parsed_flat_file_list() functions may no longer be needed.
+# def create_parsed_flat_file(filename, id_field="organism_name"):
+#     """Create a genome object parsed from flat files."""
+#
+#     valid = check_extension(filename)
+#     if valid:
+#         try:
+#             records = list(SeqIO.parse(filename, "genbank"))
+#         except:
+#             records = []
+#
+#         if len(records) == 1:
+#             genome = parse_genome_data(records[0], filename, id_field)
+#         else:
+#             genome = Genome.Genome()
+#     else:
+#         genome = Genome.Genome()
+#
+#     # TODO currently the parse_genome_data() sets filename and type,
+#     # so this is redundant. But some attribute needs to be set
+#     # even if there is a problem with parsing the record in the file.
+#
+#     # If there is no parseable record, a genome object is still
+#     # created and populated with 'type and 'filename'.
+#     genome.type = "flat_file"
+#     genome.set_filename(filename)
+#
+#     return genome
+#
+#
+# def create_parsed_flat_file_list(all_files, id_field="organism_name"):
+#     """Create a list of genome objects containing data parsed from
+#     flat files."""
+#
+#     failed_files = []
+#     valid_files = []
+#     genomes = []
+#     for filename in all_files:
+#         genome = create_parsed_flat_file(filename, id_field = id_field)
+#         genomes.append(genome)
+#         if genome.id == "":
+#             # If the file was not parsed, the id will remain empty.
+#             failed_files.append(filename)
+#         else:
+#             valid_files.append(filename)
+#     return (genomes, valid_files, failed_files)
+#
+#
+#
+#
 
 
 
