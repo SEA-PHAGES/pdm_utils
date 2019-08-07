@@ -254,7 +254,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -315,7 +315,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -379,7 +379,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -438,7 +438,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -497,7 +497,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -556,7 +556,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -615,7 +615,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -674,7 +674,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "1")
+            self.assertEqual(self.cds.gene, "1")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 
@@ -733,7 +733,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene_number, "")
+            self.assertEqual(self.cds.gene, "")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
 

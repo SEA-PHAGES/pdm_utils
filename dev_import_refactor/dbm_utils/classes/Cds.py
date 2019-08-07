@@ -22,7 +22,7 @@ class Cds:
 
         # TODO: eventually change how id is computed.
         self.id = "" # Gene ID comprised of PhageID and Gene name
-        self.name = ""
+        self.name = "" # Tends to be an integer for SEA-PHAGES.
         self.genome_id = "" # Genome from which CDS feature is derived.
         self.seqfeature = None # Biopython SeqFeature object.
         self.left = "" # Genomic position
@@ -46,7 +46,7 @@ class Cds:
         # The following attributes are common to
         # GenBank-formatted flat file records.
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
-        self.gene_number = ""
+        self.gene = "" # Tends to be an integer, but not guaranteed.
         self.product = ""
         self.function = ""
         self.note = ""
@@ -488,6 +488,33 @@ class Cds:
 
         definition = "Check if there is a discrepancy between description fields."
         eval = Eval.Eval("CDS0010", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_generic_data(self, attribute=None):
+        """Check if the indicated attribute contains generic data."""
+
+        if attribute == "product":
+            original = self.product
+            processed = self.processed_product
+        elif attribute == "function":
+            original = self.function
+            processed = self.processed_function
+        elif attribute == "note":
+            original = self.note
+            processed = self.processed_note
+        else:
+            original = ""
+            processed = ""
+
+        if original == processed:
+            result = "The '%s' field is correct." % attribute
+            status = "correct"
+        else:
+            result = "The '%s' field is not correct." % attribute
+            status = "error"
+        definition = "Check if the '%s' field contains generic data." % attribute
+        eval = Eval.Eval("CDS0011", definition, result, status)
         self.evaluations.append(eval)
 
 

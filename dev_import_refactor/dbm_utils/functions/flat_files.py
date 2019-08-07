@@ -127,9 +127,14 @@ def parse_cds_seqfeature(seqfeature):
         cds.processed_note = ""
 
     try:
-        cds.gene_number = seqfeature.qualifiers["gene"][0]
+        cds.gene = seqfeature.qualifiers["gene"][0]
     except:
-        cds.gene_number = ""
+        cds.gene = ""
+
+    # TODO implement this method.
+    #cds.set_id()
+    #cds.set_name()
+
     return cds
 
 

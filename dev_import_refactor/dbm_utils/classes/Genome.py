@@ -214,10 +214,10 @@ class Genome:
 
 
     def set_cds_ids(self):
-        """Create a list of CDS feature identifiers using the
-        start and end coordinates.
-        Create a list of CDS feature identifiers using the
-        end coordinate and strand information.
+        """Creates lists of CDS feature identifiers.
+
+        The first identifier is derived from the start and end coordinates.
+        The second identifier is derived from the end coordinate and strand.
         """
         start_end_id_list = []
         end_strand_id_list = []
@@ -373,30 +373,24 @@ class Genome:
                 self._cds_processed_notes_tally += 1
 
 
-    def identify_unique_cds_start_end_ids(self):
-        """Identify which CDS features contain unique start-end
-        coordinates."""
-
+    def set_unique_cds_start_end_ids(self):
+        """Identify CDS features contain unique start-end coordinates."""
         unique_id_tuples, duplicate_id_tuples = \
             basic.identify_unique_items(self._cds_start_end_ids)
-
         self._cds_unique_start_end_ids = set(unique_id_tuples)
         self._cds_duplicate_start_end_ids = set(duplicate_id_tuples)
 
 
-    def identify_unique_cds_end_strand_ids(self):
-        """Identify which CDS features contain unique end-strand
-        coordinates."""
-
+    def set_unique_cds_end_strand_ids(self):
+        """Identify CDS features contain unique end-strand coordinates."""
         unique_id_tuples, duplicate_id_tuples = \
             basic.identify_unique_items(self._cds_end_strand_ids)
-
         self._cds_unique_end_strand_ids = set(unique_id_tuples)
         self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
 
 
     def set_value_flag(self, value):
-        """Checks if any attributes contain a specified value."""
+        """Sets the flag if any attributes contain the specified 'value'."""
         if value in vars(self).values():
             self._value_flag = True
         else:
@@ -869,8 +863,10 @@ class Genome:
 
     def check_cds_start_end_ids(self):
         """Check if there are any duplicate start-end coordinates.
+
         Duplicated start-end coordinates may represent
-        unintentional duplicate CDS features."""
+        unintentional duplicate CDS features.
+        """
 
         if len(self._cds_duplicate_start_end_ids) > 0:
             result = "There are multiple CDS features with the same " + \
@@ -888,9 +884,11 @@ class Genome:
 
     def check_cds_end_strand_ids(self):
         """Check if there are any duplicate end-strand coordinates.
+
         Duplicated end-strand coordinates may represent
         unintentional duplicate CDS features with slightly
-        different start coordinates."""
+        different start coordinates.
+        """
 
         if len(self._cds_duplicate_end_strand_ids) > 0:
             result = "There are multiple CDS features with the same " + \

@@ -137,11 +137,11 @@ class TestGenomeClass(unittest.TestCase):
         end_strand_id_list = [(5, "forward"), (2, "reverse")]
 
         with self.subTest():
-            self.assertEqual(self.genome._cds_start_end_ids, \
-            start_end_id_list)
+            self.assertEqual(
+                self.genome._cds_start_end_ids, start_end_id_list)
         with self.subTest():
-            self.assertEqual(self.genome._cds_end_strand_ids, \
-            end_strand_id_list)
+            self.assertEqual(
+                self.genome._cds_end_strand_ids, end_strand_id_list)
 
 
 
@@ -1018,13 +1018,13 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_identify_unique_cds_start_end_ids_1(self):
+    def test_set_unique_cds_start_end_ids_1(self):
         """Verify that both sets are computed."""
         self.genome._cds_start_end_ids = \
             [(1, 5), (2, 10), (10, 2), (2, 10)]
         expected_unique_set = set([(1, 5), (10, 2)])
         expected_duplicate_set = set([(2, 10)])
-        self.genome.identify_unique_cds_start_end_ids()
+        self.genome.set_unique_cds_start_end_ids()
         with self.subTest():
             self.assertEqual(self.genome._cds_unique_start_end_ids, \
                 expected_unique_set)
@@ -1035,13 +1035,13 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_identify_unique_cds_end_strand_ids_1(self):
+    def test_set_unique_cds_end_strand_ids_1(self):
         """Verify that both sets are computed."""
         self.genome._cds_end_strand_ids = \
             [(1, "forward"), (2, "reverse"), (2, "forward"), (2, "reverse")]
         expected_unique_set = set([(1, "forward"), (2, "forward")])
         expected_duplicate_set = set([(2, "reverse")])
-        self.genome.identify_unique_cds_end_strand_ids()
+        self.genome.set_unique_cds_end_strand_ids()
         with self.subTest():
             self.assertEqual(self.genome._cds_unique_end_strand_ids, \
                 expected_unique_set)

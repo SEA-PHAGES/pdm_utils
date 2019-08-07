@@ -853,6 +853,47 @@ class TestCdsClass(unittest.TestCase):
 
 
 
+    def test_check_generic_data_1(self):
+        """Verify no error is produced if the product contains valid data."""
+        self.feature.product = "terminase"
+        self.feature.processed_product = "terminase"
+        self.feature.check_generic_data("product")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_generic_data_2(self):
+        """Verify no error is produced if the function contains valid data."""
+        self.feature.function = "terminase"
+        self.feature.processed_function = "terminase"
+        self.feature.check_generic_data("product")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_generic_data_3(self):
+        """Verify no error is produced if the note contains valid data."""
+        self.feature.note = "terminase"
+        self.feature.processed_note = "terminase"
+        self.feature.check_generic_data("product")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_generic_data_4(self):
+        """Verify an error is produced if the product contains invalid data."""
+        self.feature.product = "gp104"
+        self.feature.processed_product = ""
+        self.feature.check_generic_data("product")
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_generic_data_5(self):
+        """Verify no error is produced if no attribute is selected."""
+        self.feature.product = "gp104"
+        self.feature.processed_product = ""
+        self.feature.check_generic_data()
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+
+
+
+
+
+
 
 
 

@@ -34,7 +34,7 @@ class TrnaFeature:
 
         #Common to NCBI
         self.locus_tag = '' #Gene ID comprised of PhageID and Gene name
-        self.gene_number = ''
+        self.gene = ''
         self.product = ''
         self.processed_product = ''
 
