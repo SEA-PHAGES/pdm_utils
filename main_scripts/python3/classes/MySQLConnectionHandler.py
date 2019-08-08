@@ -30,7 +30,20 @@ class MySQLConnectionHandler:
                                               "Multiple connections are not "
                                               "presently supported through a "
                                               "single instance of "
-                                              "MySQLConnectionHandler."}
+                                              "MySQLConnectionHandler.",
+                         "no connection": "Cannot proceed without an open "
+                                          "connection.",
+                         "invalid syntax": "Invalid MySQL syntax for "
+                                           "issued command '{}'.",
+                         "validate login": "\nError: database validation can "
+                                           "only be performed after "
+                                           "validation of username and "
+                                           "password.",
+                         "database change": "\nError: database attribute "
+                                            "cannot be changed with a "
+                                            "connection open. Create a new "
+                                            "MySQLConnectionHandler object "
+                                            "to use database '{}'\n"}
 
         # Store pymysql connection object once it's created
         self.connection = None
@@ -104,13 +117,17 @@ class MySQLConnectionHandler:
     @database.setter
     def database(self, value):
         """
-        Sets self.database. Also resets self.database_status to False.
+        If self._database hasn't been set yet, sets it. Also resets
+        self._database_status to False.
         :param value: value to attach to self.database variable
         :return:
         """
         # Unit test passed
-        self._database = value
-        self._database_status = False
+        if self.connection is None:
+            self._database = value
+            self._database_status = False
+        else:
+            print(self.messages["database change"].format(value))
         
     def validate_database_access(self):
         """
@@ -128,6 +145,8 @@ class MySQLConnectionHandler:
                 self._database_status = True
             except pms.err.Error:
                 self._database_status = False
+        else:
+            print(self.messages["validate login"])
         return
 
     @property
@@ -327,8 +346,7 @@ class MySQLConnectionHandler:
                 except pms.err.Error as err:
                     print("Error {}: {}".format(err.args[0], err.args[1]))
             else:
-                print("Failed to open new connection. Cannot query without "
-                      "an open connection")
+                print(self.messages["no connection"])
 
     def execute_transaction(self, statement_list):
         """
@@ -350,7 +368,8 @@ class MySQLConnectionHandler:
                         print(statement)
                         cursor.execute(statement)
                     except pms.err.ProgrammingError:
-                        print("{} is not a valid command".format(statement))
+                        print(self.messages["invalid syntax"].format(
+                            statement))
                         cursor.execute("ROLLBACK")
                         cursor.close()
                         break
@@ -369,7 +388,8 @@ class MySQLConnectionHandler:
                             print(statement)
                             cursor.execute(statement)
                         except pms.err.ProgrammingError:
-                            print("{} is not a valid command".format(statement))
+                            print(self.messages["invalid syntax"].format(
+                                statement))
                             cursor.execute("ROLLBACK")
                             cursor.close()
                             break
@@ -378,8 +398,7 @@ class MySQLConnectionHandler:
                 except pms.err.Error as err:
                     print("Error {}: {}".format(err.args[0], err.args[1]))
             else:
-                print("Failed to open new connection. Cannot execute "
-                      "transaction without an open connection")
+                print(self.messages["no connection"])
 
     def close_connection(self):
         """
@@ -390,5 +409,3 @@ class MySQLConnectionHandler:
         if self.connection_status() is True:
             self.connection.close()
             self.connection = None
-
-
