@@ -23,177 +23,193 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.source = Source.Source()
         self.genome = Genome.Genome()
 
+
+
+
     def test_parse_coordinates_1(self):
         """Verify non-compound location is parsed correctly."""
 
-        seqfeature = SeqFeature(FeatureLocation( \
-            ExactPosition(2), ExactPosition(10)), \
+        seqfeature = SeqFeature(FeatureLocation(
+            ExactPosition(2), ExactPosition(10)),
             type = "CDS", \
             strand = 1)
-
-        # output_left, output_right, parts, output_eval = \
-        #     flat_files.parse_coordinates(seqfeature)
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
-
-        exp_left = 2
-        exp_right = 10
-        exp_parts = 1
-
         with self.subTest():
-            self.assertEqual(output_left, exp_left)
+            self.assertEqual(output_left, 2)
         with self.subTest():
-            self.assertEqual(output_right, exp_right)
+            self.assertEqual(output_right, 10)
         with self.subTest():
-            self.assertEqual(parts, exp_parts)
-        # with self.subTest():
-        #     self.assertIsNone(output_eval)
-
+            self.assertEqual(parts, 1)
 
     def test_parse_coordinates_2(self):
         """Verify 1 strand 2-part compound location is parsed correctly."""
 
-        seqfeature = SeqFeature(CompoundLocation( \
-            [FeatureLocation( \
-                ExactPosition(2), ExactPosition(10)), \
-            FeatureLocation( \
-                ExactPosition(8), ExactPosition(20))]), \
-            type = "CDS", \
-            strand = 1)
-
-        # output_left, output_right, parts, output_eval = \
-        #     flat_files.parse_coordinates(seqfeature)
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(2),
+                            ExactPosition(10),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(8),
+                            ExactPosition(20),
+                            strand=1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
-
-        exp_left = 2
-        exp_right = 20
-        exp_parts = 2
-
         with self.subTest():
-            self.assertEqual(output_left, exp_left)
+            self.assertEqual(output_left, 2)
         with self.subTest():
-            self.assertEqual(output_right, exp_right)
+            self.assertEqual(output_right, 20)
         with self.subTest():
-            self.assertEqual(parts, exp_parts)
-        # with self.subTest():
-        #     self.assertIsNone(output_eval)
-
+            self.assertEqual(parts, 2)
 
     def test_parse_coordinates_3(self):
         """Verify -1 strand 2-part compound location is parsed correctly."""
 
-        seqfeature = SeqFeature(CompoundLocation( \
-            [FeatureLocation( \
-                ExactPosition(2), ExactPosition(10)), \
-            FeatureLocation( \
-                ExactPosition(8), ExactPosition(20))]), \
-            type = "CDS", \
-            strand = -1)
-
-        # output_left, output_right, parts, output_eval = \
-        #     flat_files.parse_coordinates(seqfeature)
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(2),
+                            ExactPosition(10),
+                            strand=-1),
+                        FeatureLocation(
+                            ExactPosition(8),
+                            ExactPosition(20),
+                            strand=-1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
-
-        exp_left = 8
-        exp_right = 10
-        exp_parts = 2
-
         with self.subTest():
-            self.assertEqual(output_left, exp_left)
+            self.assertEqual(output_left, 8)
         with self.subTest():
-            self.assertEqual(output_right, exp_right)
+            self.assertEqual(output_right, 10)
         with self.subTest():
-            self.assertEqual(parts, exp_parts)
-        # with self.subTest():
-        #     self.assertIsNone(output_eval)
-
+            self.assertEqual(parts, 2)
 
     def test_parse_coordinates_4(self):
-        """Verify undefined strand 2-part compound location is not parsed."""
+        """Verify 1 strand 2-part compound location that wraps around
+        genome end is parsed correctly."""
 
-        seqfeature = SeqFeature(CompoundLocation( \
-            [FeatureLocation( \
-                ExactPosition(2), ExactPosition(10)), \
-            FeatureLocation( \
-                ExactPosition(8), ExactPosition(20))]), \
-            type = "CDS", \
-            strand = None)
-
-        # output_left, output_right, parts, output_eval = \
-        #     flat_files.parse_coordinates(seqfeature)
+        # Wrap-around feature, directly copied from
+        # Biopython-parsed ET08 flat file.
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(154873),
+                            ExactPosition(155445),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(0),
+                            ExactPosition(4),
+                            strand=1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
-
-        exp_left = -1
-        exp_right = -1
-        exp_parts = 0
-
         with self.subTest():
-            self.assertEqual(output_left, exp_left)
+            self.assertEqual(output_left, 154873)
         with self.subTest():
-            self.assertEqual(output_right, exp_right)
+            self.assertEqual(output_right, 4)
         with self.subTest():
-            self.assertEqual(parts, exp_parts)
-        # with self.subTest():
-        #     self.assertIsNotNone(output_eval)
-
+            self.assertEqual(parts, 2)
 
     def test_parse_coordinates_5(self):
-        """Verify 1 strand 3-part compound location is not parsed."""
+        """Verify -1 strand 2-part compound location that wraps around
+        genome end is parsed correctly."""
 
-        seqfeature = SeqFeature(CompoundLocation( \
-            [FeatureLocation( \
-                ExactPosition(2), ExactPosition(10)), \
-            FeatureLocation( \
-                ExactPosition(8), ExactPosition(20)), \
-            FeatureLocation( \
-                ExactPosition(30), ExactPosition(50))]), \
-            type = "CDS", \
-            strand = 1)
-
-        # output_left, output_right, parts, output_eval = \
-        #     flat_files.parse_coordinates(seqfeature)
+        # Wrap-around feature, directly copied from
+        # Biopython-parsed ET08 flat file modified in CLC so that the
+        # the wrap-around gene is on the bottom strand and then
+        # exported as a GenBank-formatted flat file.
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(0),
+                            ExactPosition(4),
+                            strand=-1),
+                        FeatureLocation(
+                            ExactPosition(154873),
+                            ExactPosition(155445),
+                            strand=-1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
-
-        exp_left = -1
-        exp_right = -1
-        exp_parts = 3
-
         with self.subTest():
-            self.assertEqual(output_left, exp_left)
+            self.assertEqual(output_left, 154873)
         with self.subTest():
-            self.assertEqual(output_right, exp_right)
+            self.assertEqual(output_right, 4)
         with self.subTest():
-            self.assertEqual(parts, exp_parts)
-        # with self.subTest():
-        #     self.assertIsNotNone(output_eval)
-
+            self.assertEqual(parts, 2)
 
     def test_parse_coordinates_6(self):
+        """Verify undefined strand 2-part compound location is not parsed."""
+
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(2),
+                            ExactPosition(10),
+                            strand=None),
+                        FeatureLocation(
+                            ExactPosition(8),
+                            ExactPosition(20),
+                            strand=None)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
+        output_left, output_right, parts = \
+            flat_files.parse_coordinates(seqfeature)
+        with self.subTest():
+            self.assertEqual(output_left, -1)
+        with self.subTest():
+            self.assertEqual(output_right, -1)
+        with self.subTest():
+            self.assertEqual(parts, 0)
+
+    def test_parse_coordinates_7(self):
+        """Verify 1 strand 3-part compound location is not parsed."""
+
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(2),
+                            ExactPosition(10),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(8),
+                            ExactPosition(20),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(30),
+                            ExactPosition(50),
+                            strand=1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
+        output_left, output_right, parts = \
+            flat_files.parse_coordinates(seqfeature)
+        with self.subTest():
+            self.assertEqual(output_left, -1)
+        with self.subTest():
+            self.assertEqual(output_right, -1)
+        with self.subTest():
+            self.assertEqual(parts, 3)
+
+    def test_parse_coordinates_8(self):
         """Verify location of invalid data type is not parsed."""
 
         seqfeature = SeqFeature(None, type = "CDS", strand = None)
-
-        # output_left, output_right, parts, output_eval = \
-        #     flat_files.parse_coordinates(seqfeature)
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
-
-        exp_left = -1
-        exp_right = -1
-        exp_parts = 0
-
         with self.subTest():
-            self.assertEqual(output_left, exp_left)
+            self.assertEqual(output_left, -1)
         with self.subTest():
-            self.assertEqual(output_right, exp_right)
+            self.assertEqual(output_right, -1)
         with self.subTest():
-            self.assertEqual(parts, exp_parts)
-        # with self.subTest():
-        #     self.assertIsNotNone(output_eval)
+            self.assertEqual(parts, 0)
 
 
 
@@ -330,19 +346,25 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             "note": [" gp5 "], \
                             "gene": ["1"]}
 
-        seqfeature = SeqFeature(CompoundLocation( \
-            [FeatureLocation( \
-                ExactPosition(2), ExactPosition(10)), \
-            FeatureLocation( \
-                ExactPosition(8), ExactPosition(20)), \
-            FeatureLocation( \
-                ExactPosition(30), ExactPosition(50))]), \
-            type = "CDS", \
-            strand = 1, \
-            qualifiers = qualifier_dict)
 
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(2),
+                            ExactPosition(10),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(8),
+                            ExactPosition(20),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(30),
+                            ExactPosition(50),
+                            strand=1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join',
+                        qualifiers = qualifier_dict)
         self.cds = flat_files.parse_cds_seqfeature(seqfeature)
-
         with self.subTest():
             self.assertEqual(self.cds.type, "")
         with self.subTest():
@@ -1075,21 +1097,43 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1)
 
         seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
+                    ExactPosition(5000), ExactPosition(6000)), \
                     type = "tRNA", \
                     strand = 1)
 
         seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
+                    ExactPosition(1), ExactPosition(11000)), \
                     type = "source", \
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
+        # Wrap-around feature, directly copied from
+        # Biopython-parsed ET08 flat file.
+        seqfeature4 = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            ExactPosition(154873),
+                            ExactPosition(155445),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(0),
+                            ExactPosition(4),
+                            strand=1)],
+                        'join'),
+                        type='CDS',
+                        location_operator='join')
+
+        seqfeature5 = SeqFeature(FeatureLocation( \
+                    ExactPosition(9), ExactPosition(50)), \
+                    type = "CDS", \
+                    strand = -1)
+
+        seqfeature6 = SeqFeature(FeatureLocation( \
+                    ExactPosition(9), ExactPosition(30)), \
                     type = "CDS", \
                     strand = 1)
 
-        feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
+
+        feature_list = [seqfeature1, seqfeature2, seqfeature3,
+                        seqfeature4, seqfeature5, seqfeature6]
 
 
         reference1 = Reference()
@@ -1164,13 +1208,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome.date, exp_date)
         with self.subTest():
-            self.assertEqual(len(genome.cds_features), 2)
+            self.assertEqual(len(genome.cds_features), 4)
         with self.subTest():
             self.assertEqual(len(genome.source_features), 1)
         with self.subTest():
             self.assertEqual(len(genome.trna_features), 1)
         with self.subTest():
-            self.assertEqual(genome._cds_features_tally, 2)
+            self.assertEqual(genome._cds_features_tally, 4)
         with self.subTest():
             self.assertEqual(genome._source_features_tally, 1)
         with self.subTest():
@@ -1181,6 +1225,38 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(genome.id,"KatherineG")
         with self.subTest():
             self.assertEqual(genome.type, "flat_file")
+        with self.subTest():
+            self.assertEqual(genome.cds_features[0].genome_id, "KatherineG")
+        with self.subTest():
+            self.assertEqual(genome.cds_features[0].id, "KatherineG_CDS_1")
+        with self.subTest():
+            self.assertEqual(genome.cds_features[1].id, "KatherineG_CDS_4")
+        with self.subTest():
+            self.assertEqual(genome.cds_features[2].id, "KatherineG_CDS_3")
+        with self.subTest():
+            self.assertEqual(genome.cds_features[3].id, "KatherineG_CDS_2")
+
+        with self.subTest():
+            self.assertEqual(genome.cds_features[0].left, 2)
+        with self.subTest():
+            self.assertEqual(genome.cds_features[0].right, 10)
+
+        with self.subTest():
+            self.assertEqual(genome.cds_features[1].left, 154873)
+        with self.subTest():
+            self.assertEqual(genome.cds_features[1].right, 4)
+
+        with self.subTest():
+            self.assertEqual(genome.cds_features[2].left, 9)
+        with self.subTest():
+            self.assertEqual(genome.cds_features[2].right, 50)
+
+        with self.subTest():
+            self.assertEqual(genome.cds_features[3].left, 9)
+        with self.subTest():
+            self.assertEqual(genome.cds_features[3].right, 30)
+
+
 
 
 

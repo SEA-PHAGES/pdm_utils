@@ -30,6 +30,10 @@ class Cds:
         self.coordinate_format = "" # Indexing format used for coordinates.
         self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
         self.compound_parts = 0 # Number of regions that define the feature
+
+        # TODO either implement the set_wrap() or get rid of this attribute.
+        self.wrap = False # Does the feature wrap around the end of the genome?
+
         self.translation_table = ""
         self.translation = "" # Biopython amino acid Seq object.
         self._translation_length = 0
@@ -151,6 +155,18 @@ class Cds:
     def set_strand(self, value, format, case=False):
         """Sets strand based on indicated format."""
         self.strand = basic.reformat_strand(value, format, case)
+
+
+    def set_wrap(self):
+        """Determines if the feature wraps around the end of the genome.
+
+        This method assumes that the left and right coordinates are set
+        and reflect feature boundaries irrespective of strand."""
+
+        if self.left > self.right:
+            self.wrap = True
+        else:
+            self.wrap = False
 
 
     def set_location_id(self):

@@ -29,7 +29,8 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.processed_note = ""
 
 
-
+        self.cds3 = Cds.Cds()
+        self.cds4 = Cds.Cds()
 
 
     def test_set_filename_1(self):
@@ -1096,6 +1097,34 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+
+    def test_set_cds_ids_1(self):
+        """Verify that features are sorted in correct order."""
+
+        # Wrap-around feature.
+        self.cds1.left = 400
+        self.cds1.right = 3
+
+        self.cds2.left = 18
+        self.cds2.right = 40
+
+        self.cds3.left = 18
+        self.cds3.right = 30
+
+        self.cds4.left = 5
+        self.cds4.right = 20
+
+        self.genome.id = "L5"
+        self.genome.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
+        self.genome.set_cds_ids()
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_CDS_4")
+        with self.subTest():
+            self.assertEqual(self.cds2.id, "L5_CDS_3")
+        with self.subTest():
+            self.assertEqual(self.cds3.id, "L5_CDS_2")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_CDS_1")
 
 
 

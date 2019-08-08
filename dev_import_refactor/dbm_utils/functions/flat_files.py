@@ -72,6 +72,59 @@ def parse_coordinates(seqfeature):
     return (left, right, parts)
 
 
+
+
+
+# def parse_coordinates(seqfeature):
+#     """Parse the boundary coordinates from a GenBank-formatted flat file.
+#
+#     The functions takes a Biopython SeqFeature object containing data
+#     that was parsed from the feature in the flat file.
+#     Parsing these coordinates can be tricky.
+#     There can be more than one set of coordinates if it is
+#     a compound location. Also, the boundaries may not be precise;
+#     instead they may be open or fuzzy.
+#     """
+#
+#     if (isinstance(seqfeature.location, FeatureLocation) or \
+#         isinstance(seqfeature.location, CompoundLocation)):
+#
+#         if seqfeature.strand is None:
+#             left = -1
+#             right = -1
+#             parts = 0
+#         elif isinstance(seqfeature.location, FeatureLocation):
+#             left = int(seqfeature.location.start)
+#             right = int(seqfeature.location.end)
+#             parts = 1
+#         elif isinstance(seqfeature.location, CompoundLocation):
+#             parts = len(seqfeature.location.parts)
+#
+#             # Skip this compound seqfeature if it is comprised of more
+#             # than two features (tricky to parse).
+#             if parts == 2:
+#
+#                 # Retrieve compound seqfeature positions based on strand.
+#                 if seqfeature.strand == 1:
+#                     left = int(seqfeature.location.parts[0].start)
+#                     right = int(seqfeature.location.parts[1].end)
+#                 elif seqfeature.strand == -1:
+#                     left = int(seqfeature.location.parts[1].start)
+#                     right = int(seqfeature.location.parts[0].end)
+#                 else:
+#                     pass
+#             else:
+#                 left = -1
+#                 right = -1
+#         else:
+#             pass
+#     else:
+#         left = -1
+#         right = -1
+#         parts = 0
+#     return (left, right, parts)
+
+
 def parse_cds_seqfeature(seqfeature):
     """Parse data from a Biopython CDS SeqFeature object into a Cds object."""
     cds = Cds.Cds()
@@ -84,6 +137,7 @@ def parse_cds_seqfeature(seqfeature):
 
     cds.set_strand(seqfeature.strand, "fr_short", case = True)
     cds.left, cds.right, cds.compound_parts = parse_coordinates(seqfeature)
+    cds.set_wrap() # TODO unit test this step.
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
@@ -132,7 +186,6 @@ def parse_cds_seqfeature(seqfeature):
         cds.gene = ""
 
     # TODO implement this method.
-    #cds.set_id()
     #cds.set_name()
 
     return cds
@@ -312,13 +365,9 @@ def parse_genome_data(seqrecord, filepath="",
     else:
         cds_list = []
 
-    # TODO the genome_id can't be set until the genome id
-    # is set. But the phage_id is not determined from within the
-    # flat file. It is inputted externally, such as from a ticket.
-    # Once the ticket is used to set the id, the genome_id
-    # atttributes can be set for all features.
-    # for cds in cds_object_list:
-    #     cds.genome_id = genome.id
+    # Cds.genome_id is determined from the Genome.id.
+    for cds in cds_list:
+        cds.genome_id = genome.id
 
 
     if "source" in seqfeature_dict.keys():
@@ -342,6 +391,8 @@ def parse_genome_data(seqrecord, filepath="",
     genome.set_trna_features(trna_list)
     # genome.set_tmrna_features(tmrna_list)
 
+    # The Cds.id is constructed from the Genome.id and the Cds order.
+    genome.set_cds_ids()
     return genome
 
 
