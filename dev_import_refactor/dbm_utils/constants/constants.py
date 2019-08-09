@@ -62,7 +62,7 @@ DESCRIPTION_FIELD_SET = set(["product", "note", "function"])
 HOST_IGNORE = ['enterobacteria','phage','bacteriophage','cyanophage']
 
 
-
+LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI", "PHIRE"])
 
 
 # List of names that represent authors that have control over

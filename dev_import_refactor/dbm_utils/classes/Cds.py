@@ -50,6 +50,7 @@ class Cds:
         # The following attributes are common to
         # GenBank-formatted flat file records.
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
+        self._locus_tag_num = ""
         self.gene = "" # Tends to be an integer, but not guaranteed.
         self.product = ""
         self.function = ""
@@ -66,6 +67,44 @@ class Cds:
         self._end_strand_id = ()
         self._start_end_id = ()
 
+
+
+
+    def set_locus_tag(self, tag=None, delimiter="_", check_value=None):
+        """Set locus tag and split tag information."""
+        self.locus_tag = tag
+        if check_value is None:
+            check_value = self.genome_id
+        pattern = re.compile(check_value.lower())
+        parts = tag.split(delimiter)
+
+        index = 0
+        found = False
+        while (index < len(parts) and not found):
+            search_result = pattern.search(parts[index].lower())
+            if search_result != None:
+                found = True
+            else:
+                index += 1
+        if found:
+            if index == len(parts) - 1:
+                value = parts[index][search_result.end():]
+            else:
+                value = parts[-1]
+        else:
+            value = parts[-1]
+        if value.isdigit():
+            self._locus_tag_num = value
+
+
+
+
+    # TODO implement.
+    # TODO unit test.
+    def set_name(self):
+        """Set the feature name."""
+
+        pass
 
 
     def set_description(self, value):
@@ -416,45 +455,97 @@ class Cds:
 
         if expect:
             if present:
-                result = "The locus_tag is present."
+                result = "The locus_tag qualifier is present."
                 status = "correct"
             else:
-                result = "The locus_tag is not present."
+                result = "The locus_tag qualifier is not present."
                 status = "error"
         else:
             if present:
-                result = "The locus_tag is present."
+                result = "The locus_tag qualifier is present."
                 status = "error"
             else:
-                result = "The locus_tag is not present."
+                result = "The locus_tag qualifier is not present."
                 status = "correct"
-        definition = "Check if the locus_tag status is expected."
+        definition = "Check if the locus_tag qualifier status is expected."
         eval = Eval.Eval("CDS0007", definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_locus_tag_typo(self, check_value):
-        """Check if the locus_tag contains potential typos."""
-        pattern = re.compile(check_value.lower())
-        search_result = pattern.search(self.locus_tag.lower())
+    def check_locus_tag_structure(self,
+                                  check_value=None,
+                                  only_typo=False,
+                                  prefix_set=constants.LOCUS_TAG_PREFIX_SET,
+                                  caps=True):
+        """Check if the locus_tag is structured correctly.
 
-        if search_result == None:
-            result = "The locus_tag has a typo."
-            status = "error"
+        The 'check_value' parameter provides the genome ID that is expected
+        to be present. If None, the 'genome_id' parameter is used by default.
+        With the 'only_typo' parameter set to True, a simpler
+        structure analysis only checks for whether the genome ID is
+        present.
+        If a prefix is expected, the 'prefix_set' parameter indicates
+        the set of possible prefixes that are expected.
+        The 'caps' parameters indicates whether the locus_tag is expected
+        to be completely capitalized or not.
+        """
+        if check_value is None:
+            check_value = self.genome_id
+
+        results = []
+        if only_typo:
+            pattern = re.compile(check_value.lower())
+            search_result = pattern.search(self.locus_tag.lower())
+            if search_result == None:
+                results.append("The genome ID is missing.")
         else:
-            result = "The locus_tag is correct."
+            # Expected structure: SEA_TRIXIE_20
+            parts = self.locus_tag.split("_")
+            if caps:
+                if self.locus_tag != self.locus_tag.upper():
+                    results.append("The capitalization is incorrect.")
+            if len(parts) == 3:
+                if prefix_set is not None:
+                    if parts[0].upper() not in prefix_set:
+                        results.append("The prefix is missing.")
+                if parts[1].upper() != check_value.upper():
+                    results.append("The genome ID is missing.")
+                if not parts[2].isdigit():
+                    results.append("The feature number is missing.")
+            else:
+                results.append("The locus_tag does not contain three parts.")
+        if len(results) == 0:
+            result = "The locus_tag qualifier is structured correctly."
             status = "correct"
-        definition = "Check if the locus_tag contains a typo."
-        eval = Eval.Eval("CDS0008", definition, result, status)
+        else:
+            result = "The locus_tag qualifier is not structured correctly." \
+                     + " ".join(results)
+            status = "error"
+        definition = "Check if the locus_tag qualifier is structured correctly."
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 
-    # TODO identical to check_locus_tag_typo().
-    # TODO unittest?
-    def check_id_typo(self, check_value):
+
+
+
+
+
+
+
+
+
+    # TODO is this needed?
+    # TODO implement.
+    # TODO unittest
+    def check_id_typo(self, check_value=None):
         """Check if the id contains potential typos."""
+
+        if check_value is None:
+            check_value = self.id
+
         pattern = re.compile(check_value.lower())
-        search_result = pattern.search(self.locus_tag.lower())
+        search_result = pattern.search(self.id.lower())
 
         if search_result == None:
             result = "The id has a typo."
@@ -464,6 +555,66 @@ class Cds:
             status = "correct"
         definition = "Check if the id contains a typo."
         eval = Eval.Eval("CDS0009", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_gene_present(self, expect=True):
+        """Check if the status of gene matches expectations."""
+
+        if self.gene != "":
+            present = True
+        else:
+            present = False
+
+        if expect:
+            if present:
+                result = "The gene qualifier is present."
+                status = "correct"
+            else:
+                result = "The gene qualifier is not present."
+                status = "error"
+        else:
+            if present:
+                result = "The gene qualifier is present."
+                status = "error"
+            else:
+                result = "The gene qualifier is not present."
+                status = "correct"
+        definition = "Check if the gene status is expected."
+        eval = Eval.Eval("CDS", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_gene_structure(self):
+        """Check if the gene qualifier contains an integer."""
+
+        try:
+            value = int(self.gene)
+        except:
+            value = self.gene
+
+        if isinstance(value, int):
+            result = "The gene qualifier contains an integer."
+            status = "correct"
+        else:
+            result = "The gene qualifier does not contain an integer."
+            status = "error"
+        definition = "Check if the gene qualifier contains an integer."
+        eval = Eval.Eval("CDS", definition, result, status)
+        self.evaluations.append(eval)
+
+
+    def check_compatible_gene_and_locus_tag(self):
+        """Check if the gene and locus_tag attributes contain the same
+        gene number."""
+        if self.gene == self._locus_tag_num:
+            result = "The gene and locus_tag numbers are consistent."
+            status = "correct"
+        else:
+            result = "The gene and locus_tag numbers are not consistent."
+            status = "error"
+        definition = "Check if the gene and locus_tag numbers are consistent."
+        eval = Eval.Eval("CDS", definition, result, status)
         self.evaluations.append(eval)
 
 

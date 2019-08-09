@@ -18,6 +18,78 @@ class TestCdsClass(unittest.TestCase):
 
 
 
+    def test_set_locus_tag_1(self):
+        """Verify that standard 3-part locus_tag is parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_20")
+        with self.subTest():
+            self.assertEqual(self.feature.locus_tag, "SEA_TRIXIE_20")
+        with self.subTest():
+            self.assertEqual(self.feature._locus_tag_num, "20")
+
+    def test_set_locus_tag_2(self):
+        """Verify that standard 3-part locus_tag is parsed correctly
+        when custom delimiter is provided."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA-TRIXIE-20", delimiter="-")
+        self.assertEqual(self.feature._locus_tag_num, "20")
+
+    def test_set_locus_tag_3(self):
+        """Verify that standard 3-part locus_tag is parsed correctly
+        when custom genome ID is provided."""
+        self.feature.genome_id = "L5"
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_20", check_value="Trixie")
+        self.assertEqual(self.feature._locus_tag_num, "20")
+
+    def test_set_locus_tag_4(self):
+        """Verify that non-standard 4-part locus_tag is
+        parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_DRAFT_20")
+        self.assertEqual(self.feature._locus_tag_num, "20")
+
+    def test_set_locus_tag_5(self):
+        """Verify that non-standard 4-part locus_tag
+        with no number is parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_DRAFT_ABCD")
+        self.assertEqual(self.feature._locus_tag_num, "")
+
+    def test_set_locus_tag_6(self):
+        """Verify that non-standard 2-part locus_tag
+        with correct genome ID merged with number
+        is partially parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXIE20")
+        self.assertEqual(self.feature._locus_tag_num, "20")
+
+    def test_set_locus_tag_7(self):
+        """Verify that non-standard 2-part locus_tag
+        with correct genome ID merged with no number
+        is partially parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXIEABCD")
+        self.assertEqual(self.feature._locus_tag_num, "")
+
+    def test_set_locus_tag_8(self):
+        """Verify that standard 3-part locus_tag
+        with incorrect genome ID
+        is partially parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXI_20")
+        self.assertEqual(self.feature._locus_tag_num, "20")
+
+    def test_set_locus_tag_9(self):
+        """Verify that standard 3-part locus_tag
+        with incorrect genome ID and no number
+        is partially parsed correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="SEA_TRIXI_AB20")
+        self.assertEqual(self.feature._locus_tag_num, "")
+
+
+
+
     def test_set_translation_table_1(self):
         """Verify translation_table is set correctly from valid integer."""
         self.feature.set_translation_table(11)
@@ -390,19 +462,6 @@ class TestCdsClass(unittest.TestCase):
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
-    #TODO: remove this unit test after I decide whether or not to keep
-    # the set_description function.
-    # de test_set_description_1(self):
-    #     """Test primary description."""
-    #     description1 = "ABCD"
-    #     description2 = "EFGH"
-    #     self.feature.set_description(description1, description2)
-    #     with self.subTest():
-    #         self.assertEqual(self.feature.description, "ABCD")
-    #     with self.subTest():
-    #         self.assertEqual(self.feature.processed_description, "EFGH")
-
-
 
 
     def test_check_locus_tag_present_1(self):
@@ -429,6 +488,73 @@ class TestCdsClass(unittest.TestCase):
         self.feature.check_locus_tag_present(False)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
+
+
+
+    def test_check_gene_present_1(self):
+        """Check if absent gene is expected to be absent."""
+        self.feature.gene = ""
+        self.feature.check_gene_present(False)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_gene_present_2(self):
+        """Check if absent gene is expected to be present."""
+        self.feature.gene = ""
+        self.feature.check_gene_present(True)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_gene_present_3(self):
+        """Check if present gene is expected to be present."""
+        self.feature.gene = "ABCD"
+        self.feature.check_gene_present(True)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_gene_present_4(self):
+        """Check if present gene is expected to be absent."""
+        self.feature.gene = "ABCD"
+        self.feature.check_gene_present(False)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+
+
+
+
+
+
+
+
+    def test_check_gene_structure_1(self):
+        """Verify no error is produced when gene is an integer."""
+        self.feature.gene = "1"
+        self.feature.check_gene_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_gene_structure_2(self):
+        """Verify an error is produced when gene is not integer."""
+        self.feature.gene = "abcd"
+        self.feature.check_gene_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+
+
+
+
+
+    def test_check_compatible_gene_and_locus_tag_1(self):
+        """Verify no error is produced when gene and locus_tag match."""
+        self.feature.gene = "1"
+        self.feature._locus_tag_num = "1"
+        self.feature.check_compatible_gene_and_locus_tag()
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+
+
+    def test_check_compatible_gene_and_locus_tag_2(self):
+        """Verify an error is produced when gene and locus_tag do not match."""
+        self.feature.gene = "1"
+        self.feature._locus_tag_num = "10"
+        self.feature.check_compatible_gene_and_locus_tag()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
 
@@ -499,17 +625,146 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_check_locus_tag_typo_1(self):
-        """The locus_tag does not contain a typo."""
-        self.feature.locus_tag = "ABC_TRIXIE_123"
-        self.feature.check_locus_tag_typo("Trixie")
+    def test_check_locus_tag_structure_1(self):
+        """Verify no error is produced when the locus_tag has a
+        correct structure."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEA_TRIXIE_123"
+        self.feature.check_locus_tag_structure()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_locus_tag_typo_2(self):
-        """The locus_tag contains a typo."""
-        self.feature.locus_tag = "ABC_TRIXE_123"
-        self.feature.check_locus_tag_typo("Trixie")
+    def test_check_locus_tag_structure_2(self):
+        """Verify no error is produced when the locus_tag has a
+        correct structure and the 'only_typo' parameter is chosen."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEATrixie123"
+        self.feature.check_locus_tag_structure(only_typo=True)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_locus_tag_structure_3(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect structure and the 'only_typo' parameter is chosen."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEATrixi123"
+        self.feature.check_locus_tag_structure(only_typo=True)
         self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_4(self):
+        """Verify an error is produced when the locus_tag is
+        not capitalized."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "sea_trixie_123"
+        self.feature.check_locus_tag_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_5(self):
+        """Verify no error is produced when the locus_tag is
+        not capitalized but the 'caps' parameter is set to False."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "sea_trixie_123"
+        self.feature.check_locus_tag_structure(caps=False)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_locus_tag_structure_6(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect number of parts."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "ABCTRIXIE_123"
+        self.feature.check_locus_tag_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_7(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect prefix."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "ABC_TRIXIE_123"
+        self.feature.check_locus_tag_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_8(self):
+        """Verify no error is produced when the locus_tag has an
+        incorrect prefix but 'prefix_set' parameters is set to None."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "ABC_TRIXIE_123"
+        self.feature.check_locus_tag_structure(prefix_set=None)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_locus_tag_structure_9(self):
+        """Verify no error is produced when the locus_tag has an
+        incorrect prefix but 'prefix_set' parameters is set to new set."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "ABC_TRIXIE_123"
+        self.feature.check_locus_tag_structure(prefix_set=set(["ABC"]))
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_locus_tag_structure_10(self):
+        """Verify an error is produced when the locus_tag has a
+        common prefix but 'prefix_set' parameters is set to new set."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEA_TRIXIE_123"
+        self.feature.check_locus_tag_structure(prefix_set=set(["ABC"]))
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_11(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect genome due to misspelling."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEA_TRIXIEX_123"
+        self.feature.check_locus_tag_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_12(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect number."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEA_TRIXIE_123x"
+        self.feature.check_locus_tag_structure()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_13(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect prefix, genome, and number."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "ABC_TRIXIEX_123X"
+        self.feature.check_locus_tag_structure()
+        results = self.feature.evaluations[0].result.split(".")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertTrue(results[1].strip().startswith("The prefix"))
+        with self.subTest():
+            self.assertTrue(results[2].strip().startswith("The genome"))
+        with self.subTest():
+            self.assertTrue(results[3].strip().startswith("The feature"))
+
+    def test_check_locus_tag_structure_14(self):
+        """Verify an error is produced when the locus_tag has an
+        incorrect genome when the 'check_value' parameter is used."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEA_TRIXIE_123"
+        self.feature.check_locus_tag_structure(check_value="L5")
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_locus_tag_structure_15(self):
+        """Verify no error is produced when the locus_tag has a
+        correct genome when the 'check_value' parameter is used."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEA_L5_123"
+        self.feature.check_locus_tag_structure(check_value="L5")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_locus_tag_structure_16(self):
+        """Verify no error is produced when the locus_tag has a correct
+        genome when 'only_typo' and 'check_value' parameters are used."""
+        self.feature.genome_id = "Trixie"
+        self.feature.locus_tag = "SEAL5123"
+        self.feature.check_locus_tag_structure(only_typo=True, check_value="L5")
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+
+
+
+
 
 
 

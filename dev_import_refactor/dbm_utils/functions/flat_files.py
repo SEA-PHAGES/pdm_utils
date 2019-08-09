@@ -185,6 +185,8 @@ def parse_cds_seqfeature(seqfeature):
     except:
         cds.gene = ""
 
+
+
     # TODO implement this method.
     #cds.set_name()
 
@@ -393,7 +395,9 @@ def parse_genome_data(seqrecord, filepath="",
 
     # The Cds.id is constructed from the Genome.id and the Cds order.
     genome.set_feature_ids(use_type=True, use_cds=True)
-    genome.set_feature_ids(use_type=True, use_trna=True)
+
+    # TODO set tRNA feature ids.
+    #genome.set_feature_ids(use_type=True, use_trna=True)
 
     return genome
 
