@@ -6,6 +6,7 @@ from classes import Genome
 from classes import Cds
 from datetime import datetime
 from Bio.Seq import Seq
+from classes import Trna
 
 
 class TestGenomeClass(unittest.TestCase):
@@ -32,6 +33,10 @@ class TestGenomeClass(unittest.TestCase):
         self.cds3 = Cds.Cds()
         self.cds4 = Cds.Cds()
 
+        self.trna1 = Trna.TrnaFeature()
+        self.trna2 = Trna.TrnaFeature()
+        self.trna3 = Trna.TrnaFeature()
+        self.trna4 = Trna.TrnaFeature()
 
     def test_set_filename_1(self):
         """Confirm file path is split appropriately."""
@@ -120,7 +125,7 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_cds_ids_1(self):
+    def test_set_cds_id_list_1(self):
         """Check that CDS feature identifier lists are set."""
         cds1 = Cds.Cds()
         cds1._start_end_id = (1, 5)
@@ -132,7 +137,7 @@ class TestGenomeClass(unittest.TestCase):
 
         features_list = [cds1, cds2]
         self.genome.set_cds_features(features_list)
-        self.genome.set_cds_ids()
+        self.genome.set_cds_id_list()
 
         start_end_id_list = [(1,5), (21,2)]
         end_strand_id_list = [(5, "forward"), (2, "reverse")]
@@ -1098,33 +1103,168 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_cds_ids_1(self):
-        """Verify that features are sorted in correct order."""
+    def test_set_feature_ids_1(self):
+        """Verify that CDS features are sorted in correct order."""
 
-        # Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
+        #1
+        self.trna3.left = 10
+        self.trna3.right = 15
 
-        self.cds2.left = 18
-        self.cds2.right = 40
+        #2
+        self.trna2.left = 10
+        self.trna2.right = 17
 
+        #3
+        self.cds4.left = 10
+        self.cds4.right = 20
+
+        #4
         self.cds3.left = 18
         self.cds3.right = 30
 
-        self.cds4.left = 5
-        self.cds4.right = 20
+        #5
+        self.cds2.left = 18
+        self.cds2.right = 40
+
+        #6
+        self.trna1.left = 100
+        self.trna1.right = 200
+
+        #7 Wrap-around feature.
+        self.cds1.left = 400
+        self.cds1.right = 3
 
         self.genome.id = "L5"
         self.genome.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.genome.set_cds_ids()
+        self.genome.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.genome.set_feature_ids(use_cds=True)
         with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_CDS_4")
+            self.assertEqual(self.cds1.id, "L5_4")
         with self.subTest():
-            self.assertEqual(self.cds2.id, "L5_CDS_3")
+            self.assertEqual(self.cds2.id, "L5_3")
         with self.subTest():
-            self.assertEqual(self.cds3.id, "L5_CDS_2")
+            self.assertEqual(self.cds3.id, "L5_2")
         with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_CDS_1")
+            self.assertEqual(self.cds4.id, "L5_1")
+
+
+    def test_set_feature_ids_2(self):
+        """Verify that tRNA features are sorted in correct order."""
+
+        #1
+        self.trna3.left = 10
+        self.trna3.right = 15
+
+        #2
+        self.trna2.left = 10
+        self.trna2.right = 17
+
+        #3
+        self.cds4.left = 10
+        self.cds4.right = 20
+
+        #4
+        self.cds3.left = 18
+        self.cds3.right = 30
+
+        #5
+        self.cds2.left = 18
+        self.cds2.right = 40
+
+        #6
+        self.trna1.left = 100
+        self.trna1.right = 200
+
+        #7 Wrap-around feature.
+        self.cds1.left = 400
+        self.cds1.right = 3
+
+        self.genome.id = "L5"
+        self.genome.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
+        self.genome.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.genome.set_feature_ids(use_trna=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.trna2.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_1")
+
+
+    def test_set_feature_ids_3(self):
+        """Verify that CDS and tRNA features are sorted in correct order."""
+
+        #1
+        self.trna3.left = 10
+        self.trna3.right = 15
+
+        #2
+        self.trna2.left = 10
+        self.trna2.right = 17
+
+        #3
+        self.cds4.left = 10
+        self.cds4.right = 20
+
+        #4
+        self.cds3.left = 18
+        self.cds3.right = 30
+
+        #5
+        self.cds2.left = 18
+        self.cds2.right = 40
+
+        #6
+        self.trna1.left = 100
+        self.trna1.right = 200
+
+        #7 Wrap-around feature.
+        self.cds1.left = 400
+        self.cds1.right = 3
+
+        self.genome.id = "L5"
+        self.genome.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
+        self.genome.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.genome.set_feature_ids(use_cds=True, use_trna=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_6")
+        with self.subTest():
+            self.assertEqual(self.trna2.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_1")
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_7")
+        with self.subTest():
+            self.assertEqual(self.cds2.id, "L5_5")
+        with self.subTest():
+            self.assertEqual(self.cds3.id, "L5_4")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_3")
+
+
+    def test_set_feature_ids_4(self):
+        """Verify that CDS and tRNA features are sorted in correct order
+        with type delimiter added."""
+
+        #1
+        self.trna3.left = 10
+        self.trna3.right = 15
+
+        #2
+        self.cds4.left = 10
+        self.cds4.right = 20
+
+        self.genome.id = "L5"
+        self.genome.cds_features = [self.cds4]
+        self.genome.trna_features = [self.trna3]
+        self.genome.set_feature_ids(use_type=True, use_cds=True, use_trna=True)
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_TRNA_1")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_CDS_2")
+
+
+
 
 
 

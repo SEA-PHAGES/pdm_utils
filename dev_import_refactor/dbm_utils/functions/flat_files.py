@@ -392,7 +392,9 @@ def parse_genome_data(seqrecord, filepath="",
     # genome.set_tmrna_features(tmrna_list)
 
     # The Cds.id is constructed from the Genome.id and the Cds order.
-    genome.set_cds_ids()
+    genome.set_feature_ids(use_type=True, use_cds=True)
+    genome.set_feature_ids(use_type=True, use_trna=True)
+
     return genome
 
 

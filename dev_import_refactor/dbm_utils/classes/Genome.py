@@ -10,6 +10,7 @@ from Bio.SeqUtils import GC
 from Bio.Seq import Seq
 import re
 from operator import attrgetter
+from classes import Cds, Trna
 
 
 class Genome:
@@ -214,7 +215,7 @@ class Genome:
         self._cds_features_tally = len(self.cds_features)
 
 
-    def set_cds_ids(self):
+    def set_cds_id_list(self):
         """Creates lists of CDS feature identifiers.
 
         The first identifier is derived from the start and end coordinates.
@@ -398,28 +399,8 @@ class Genome:
             self._value_flag = False
 
 
-    def set_cds_ids(self):
-        """Sets the id of each CDS feature.
-
-        This CDS attribute is processed within the Genome object because
-        it sorts all CDS features and generates systematic IDs based on
-        CDS feature order in the genome.
-        """
-
-        # Both coordinates are used to control the order of features
-        # that may share one, but not both, coordinates (e.g. tail
-        # assembly chaperone).
-        sorted_list = sorted(self.cds_features, key=attrgetter("left", "right"))
-        index = 0
-        while index < len(sorted_list):
-            sorted_list[index].id = self.id + "_CDS_" + str(index + 1)
-            index += 1
-
-
-    # TODO implement.
-    # TODO unit test.
-    def set_feature_ids(self, use_type=False, cds_list=False,
-                        trna_list=False, tmrna_list=False):
+    def set_feature_ids(self, use_type=False, use_cds=False,
+                        use_trna=False, use_tmrna=False):
         """Sets the id of each feature.
 
         Lists of features can be added to this method. The method assumes
@@ -434,34 +415,39 @@ class Genome:
         # that may share one, but not both, coordinates (e.g. tail
         # assembly chaperone).
         list_to_sort = []
-        if cds_list:
+        if use_cds:
             list_to_sort.extend(self.cds_features)
-        if trna_list:
+        if use_trna:
             list_to_sort.extend(self.trna_features)
 
         # TODO unit test after tmrna_features are implemented.
-        if tmrna_list:
+        if use_tmrna:
             list_to_sort.extend(self.tmrna_features)
 
         sorted_list = sorted(list_to_sort, key=attrgetter("left", "right"))
         index = 0
         while index < len(sorted_list):
             if use_type:
-                if isinstance(sorted_list[index], Cds.Cds)
+                if isinstance(sorted_list[index], Cds.Cds):
                     delimiter = "_CDS_"
 
                 # TODO unit test after tRNA class implemented.
-                elif isinstance(sorted_list[index], Trna.Trna)
+                elif isinstance(sorted_list[index], Trna.TrnaFeature):
                     delimiter = "_TRNA_"
 
                 # TODO unit test after tmRNA class implemented.
-                elif isinstance(sorted_list[index], Tmrna.Tmrna)
+                elif isinstance(sorted_list[index], Tmrna.Tmrna):
                     delimiter = "_TMRNA_"
                 else:
                     delimiter = "_"
             else:
-                sorted_list[index].id = self.id + delimiter + str(index + 1)
+                delimiter = "_"
+
+            sorted_list[index].id = self.id + delimiter + str(index + 1)
             index += 1
+
+
+
 
 
 
