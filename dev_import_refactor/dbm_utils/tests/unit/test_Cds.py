@@ -589,68 +589,68 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_check_description_1(self):
+    def test_check_description_field_1(self):
         """Verify no error is produced when a description is present in
         the processed_product as expected and the processed_function and
         the processed_note are empty."""
         self.feature.processed_product = "ABC"
-        self.feature.check_description()
+        self.feature.check_description_field()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_description_2(self):
+    def test_check_description_field_2(self):
         """Verify no error is produced when a description is present in
         the processed_function as expected and the processed_product and
         the processed_note are empty."""
         self.feature.processed_function = "ABC"
-        self.feature.check_description(description_field="function")
+        self.feature.check_description_field(attribute="function")
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_description_3(self):
+    def test_check_description_field_3(self):
         """Verify no error is produced when a description is present in
         the processed_note as expected and the processed_product and
         the processed_function are empty."""
         self.feature.processed_note = "ABC"
-        self.feature.check_description(description_field="note")
+        self.feature.check_description_field(attribute="note")
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_description_4(self):
+    def test_check_description_field_4(self):
         """Verify an error is produced when a description is not present in
         the processed_product but there is a description in
         the processed_function."""
         self.feature.processed_function = "ABC"
-        self.feature.check_description()
+        self.feature.check_description_field()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
-    def test_check_description_5(self):
+    def test_check_description_field_5(self):
         """Verify an error is produced when a description is not present in
         the processed_function but there is a description in
         the processed_product."""
         self.feature.processed_product = "ABC"
-        self.feature.check_description(description_field="function")
+        self.feature.check_description_field(attribute="function")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
-    def test_check_description_6(self):
+    def test_check_description_field_6(self):
         """Verify an error is produced when a description is not present in
         the processed_function but there is a description in
         the processed_product."""
         self.feature.processed_product = "ABC"
-        self.feature.check_description(description_field="note")
+        self.feature.check_description_field(attribute="note")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
-    def test_check_description_7(self):
+    def test_check_description_field_7(self):
         """Verify an error is produced when a description is not present due
         to an invalid input but there is a description in
         the processed_product."""
         self.feature.processed_product = "ABC"
-        self.feature.check_description(description_field="invalid")
+        self.feature.check_description_field(attribute="invalid")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
-    def test_check_description_8(self):
+    def test_check_description_field_8(self):
         """Verify no error is produced when a description is present in
         the processed_product as expected as well as the processed_function."""
         self.feature.processed_product = "ABC"
         self.feature.processed_function = "FGH"
-        self.feature.check_description()
+        self.feature.check_description_field()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
 

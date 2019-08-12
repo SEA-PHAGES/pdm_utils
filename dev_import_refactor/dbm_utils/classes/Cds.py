@@ -644,7 +644,7 @@ class Cds:
         self.evaluations.append(eval)
 
 
-    def check_description(self, description_field="product"):
+    def check_description_field(self, attribute="product"):
         """Check if there are CDS descriptions in unexpected fields.
 
         This method evaluates if the indicated field is empty or generic,
@@ -654,19 +654,19 @@ class Cds:
         description = ""
         description_set = set()
 
-        if description_field == "product":
+        if attribute == "product":
             description = self.processed_product
         else:
             if self.processed_product != "":
                 description_set.add(self.processed_product)
 
-        if description_field == "function":
+        if attribute == "function":
             description = self.processed_function
         else:
             if self.processed_function != "":
                 description_set.add(self.processed_function)
 
-        if description_field == "note":
+        if attribute == "note":
             description = self.processed_note
         else:
             if self.processed_note != "":
@@ -679,7 +679,8 @@ class Cds:
             result = "The description is in the expected field."
             status = "correct"
 
-        definition = "Check if there is a discrepancy between description fields."
+        definition = \
+            "Check if there is a discrepancy between description fields."
         eval = Eval.Eval("CDS0010", definition, result, status)
         self.evaluations.append(eval)
 
