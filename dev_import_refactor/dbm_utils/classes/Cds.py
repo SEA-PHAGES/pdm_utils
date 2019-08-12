@@ -42,7 +42,7 @@ class Cds:
 
 
         # The following attributes are common to PhameratorDB.
-        self.pham = ""
+        self.pham = "" # TODO build method to implement this.
         self.description = "" # Raw gene description
         self.processed_description = "" # Non-generic gene descriptions
 
@@ -70,7 +70,7 @@ class Cds:
 
 
 
-    def set_locus_tag(self, tag=None, delimiter="_", check_value=None):
+    def set_locus_tag(self, tag="", delimiter="_", check_value=None):
         """Set locus tag and split tag information."""
         self.locus_tag = tag
         if check_value is None:
@@ -98,35 +98,39 @@ class Cds:
 
 
 
+    def set_name(self, value=None):
+        """Set the feature name.
 
-    # TODO implement.
-    # TODO unit test.
-    def set_name(self):
-        """Set the feature name."""
+        Ideally, the name of the CDS will be an integer. This information
+        can be stored in multiple fields in the GenBank-formatted flat file.
+        The name is first derived from the 'gene' qualifier, then
+        the 'locus_tag' qualifier, and finally left empty.
+        The 'value' parameter can be used to directly set this attribute
+        regardless of the 'gene' and '_locus_tag_num' attributes."""
 
+        # 1. PECAAN Draft:
+        #    The 'gene' qualifier should be present and contain an integer.
+        # 2. New SEA-PHAGES Final:
+        #    The 'gene' qualifier should be present and contain an integer.
+        # 3. SEA-PHAGES Final in GenBank:
+        #    The 'gene' qualifier may or may not be present, and
+        #    it may or may not have an integer.
+        #    The 'locus_tag' qualifier may or may not be present,
+        #    and may or may not have an integer.
+        # 4. Non-SEA-PHAGES in GenBank:
+        #    The 'gene' qualifier may or may not be present, and
+        #    it may or may not have an integer.
+        #    The 'locus_tag' qualifier may or may not be present,
+        #    and may or may not have an integer.
 
-        try:
-            value = int(self.gene)
-        except:
-            value
-
-        
-
-
-        # PECAAN draft:
-        # 1. Take 'gene' qualifier (should be an integer).
-        #
-
-        # New final:
-        # 1. Take 'gene' qualifier.
-
-        # Auto-updated from GenBank or if misc. genome from GenBank.
-        # 1. Take 'gene' qualifier if present.
-        # 2. Take parsed number from 'locus_tag' qualifier.
-        # 3. Set to 'none'.
-
-
-        pass
+        if value is not None:
+            self.name = value
+        elif self.gene != "":
+            self.name = self.gene
+        elif self._locus_tag_num != "":
+            self.name = self._locus_tag_num
+        else:
+            self.name = ""
 
 
     def set_description(self, value):

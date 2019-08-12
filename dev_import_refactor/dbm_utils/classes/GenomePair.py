@@ -545,8 +545,8 @@ class GenomePair:
         self.evaluations.append(eval)
 
 
-    # TODO implement this method. Since authorship is not as straightforward
-    # as other fields, it is tricky.
+    # TODO implement this method.
+    # Authorship is not as straightforward as other fields.
     def compare_author(self):
         """Compare the authorship of each genome."""
         pass

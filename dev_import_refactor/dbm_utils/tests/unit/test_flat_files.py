@@ -224,7 +224,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             "product": [" unknown "], \
                             "function": [" hypothetical protein "], \
                             "note": [" gp5 "], \
-                            "gene": ["1"]}
+                            "gene": ["2"]}
 
         seqfeature = SeqFeature(FeatureLocation( \
                     ExactPosition(2), ExactPosition(10)), \
@@ -232,12 +232,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     strand = 1, \
                     qualifiers = qualifier_dict)
 
-        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature, genome_id="L5")
 
         with self.subTest():
             self.assertEqual(self.cds.type, "")
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "SEA_L5_1")
+        with self.subTest():
+            self.assertEqual(self.cds._locus_tag_num, "1")
         with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
@@ -270,10 +272,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene, "1")
+            self.assertEqual(self.cds.gene, "2")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
-
+        with self.subTest():
+            self.assertEqual(self.cds.genome_id, "L5")
+        with self.subTest():
+            self.assertEqual(self.cds.name, "2")
 
 
 
@@ -285,7 +290,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             "product": [" unknown "], \
                             "function": [" hypothetical protein "], \
                             "note": [" gp5 "], \
-                            "gene": ["1"]}
+                            "gene": ["2"]}
 
         seqfeature = SeqFeature(FeatureLocation( \
                     ExactPosition(2), ExactPosition(10)), \
@@ -300,6 +305,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.locus_tag, "")
         with self.subTest():
+            self.assertEqual(self.cds._locus_tag_num, "")
+        with self.subTest():
             self.assertEqual(self.cds.strand, "F")
         with self.subTest():
             self.assertEqual(self.cds.left, 2)
@@ -331,9 +338,11 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds.processed_note, "")
         with self.subTest():
-            self.assertEqual(self.cds.gene, "1")
+            self.assertEqual(self.cds.gene, "2")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
+        with self.subTest():
+            self.assertEqual(self.cds.name, "2")
 
 
     def test_parse_cds_seqfeature_3(self):
@@ -709,7 +718,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             "product": [" unknown "], \
                             "function": [" hypothetical protein "], \
                             "note": [" gp5 "], \
-                            "gene_x": ["1"]}
+                            "gene_x": ["2"]}
 
         seqfeature = SeqFeature(FeatureLocation( \
                     ExactPosition(2), ExactPosition(10)), \
@@ -758,6 +767,31 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(self.cds.gene, "")
         with self.subTest():
             self.assertTrue(isinstance(self.cds.seqfeature, SeqFeature))
+        with self.subTest():
+            self.assertEqual(self.cds.name, "1")
+
+    def test_parse_cds_seqfeature_10(self):
+        """Verify CDS features is parsed with no genome_id."""
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
+                            "translation": ["ABCDE"], \
+                            "transl_table": ["11"], \
+                            "product": [" unknown "], \
+                            "function": [" hypothetical protein "], \
+                            "note": [" gp5 "], \
+                            "gene_x": ["1"]}
+
+        seqfeature = SeqFeature(FeatureLocation( \
+                    ExactPosition(2), ExactPosition(10)), \
+                    type = "CDS", \
+                    strand = 1, \
+                    qualifiers = qualifier_dict)
+        self.cds = flat_files.parse_cds_seqfeature(seqfeature)
+        with self.subTest():
+            self.assertEqual(self.cds.type, "")
+        with self.subTest():
+            self.assertEqual(self.cds.genome_id, "")
+
+
 
 
 
@@ -825,58 +859,58 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-
-    def test_create_cds_objects_1(self):
-        """Verify cds objects list is constructed from empty Biopython
-        CDS feature list."""
-        biopython_feature_list = []
-        cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
-        with self.subTest():
-            self.assertEqual(len(cds_object_list), 0)
-
-    def test_create_cds_objects_2(self):
-        """Verify cds objects list is constructed from list of one Biopython
-        CDS features."""
-
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1)
-
-        biopython_feature_list = [seqfeature1]
-
-        cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
-        with self.subTest():
-            self.assertEqual(len(cds_object_list), 1)
-
-
-
-    def test_create_cds_objects_3(self):
-        """Verify cds objects list is constructed from list of three Biopython
-        CDS features."""
-
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1)
-
-
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(80)), \
-                    type = "CDS", \
-                    strand = -1)
-
-
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(5), ExactPosition(6)), \
-                    type = "CDS", \
-                    strand = 1)
-
-        biopython_feature_list = [seqfeature1, seqfeature2, seqfeature3]
-
-        cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
-        with self.subTest():
-            self.assertEqual(len(cds_object_list), 3)
+    # TODO create_cds_objects() is no longer used, so these can be deleted.
+    # def test_create_cds_objects_1(self):
+    #     """Verify cds objects list is constructed from empty Biopython
+    #     CDS feature list."""
+    #     biopython_feature_list = []
+    #     cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
+    #     with self.subTest():
+    #         self.assertEqual(len(cds_object_list), 0)
+    #
+    # def test_create_cds_objects_2(self):
+    #     """Verify cds objects list is constructed from list of one Biopython
+    #     CDS features."""
+    #
+    #     seqfeature1 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(2), ExactPosition(10)), \
+    #                 type = "CDS", \
+    #                 strand = 1)
+    #
+    #     biopython_feature_list = [seqfeature1]
+    #
+    #     cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
+    #     with self.subTest():
+    #         self.assertEqual(len(cds_object_list), 1)
+    #
+    #
+    #
+    # def test_create_cds_objects_3(self):
+    #     """Verify cds objects list is constructed from list of three Biopython
+    #     CDS features."""
+    #
+    #     seqfeature1 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(2), ExactPosition(10)), \
+    #                 type = "CDS", \
+    #                 strand = 1)
+    #
+    #
+    #     seqfeature2 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(50), ExactPosition(80)), \
+    #                 type = "CDS", \
+    #                 strand = -1)
+    #
+    #
+    #     seqfeature3 = SeqFeature(FeatureLocation( \
+    #                 ExactPosition(5), ExactPosition(6)), \
+    #                 type = "CDS", \
+    #                 strand = 1)
+    #
+    #     biopython_feature_list = [seqfeature1, seqfeature2, seqfeature3]
+    #
+    #     cds_object_list = flat_files.create_cds_objects(biopython_feature_list)
+    #     with self.subTest():
+    #         self.assertEqual(len(cds_object_list), 3)
 
 
 

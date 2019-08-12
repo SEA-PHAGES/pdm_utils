@@ -72,82 +72,33 @@ def parse_coordinates(seqfeature):
     return (left, right, parts)
 
 
-
-
-
-# def parse_coordinates(seqfeature):
-#     """Parse the boundary coordinates from a GenBank-formatted flat file.
-#
-#     The functions takes a Biopython SeqFeature object containing data
-#     that was parsed from the feature in the flat file.
-#     Parsing these coordinates can be tricky.
-#     There can be more than one set of coordinates if it is
-#     a compound location. Also, the boundaries may not be precise;
-#     instead they may be open or fuzzy.
-#     """
-#
-#     if (isinstance(seqfeature.location, FeatureLocation) or \
-#         isinstance(seqfeature.location, CompoundLocation)):
-#
-#         if seqfeature.strand is None:
-#             left = -1
-#             right = -1
-#             parts = 0
-#         elif isinstance(seqfeature.location, FeatureLocation):
-#             left = int(seqfeature.location.start)
-#             right = int(seqfeature.location.end)
-#             parts = 1
-#         elif isinstance(seqfeature.location, CompoundLocation):
-#             parts = len(seqfeature.location.parts)
-#
-#             # Skip this compound seqfeature if it is comprised of more
-#             # than two features (tricky to parse).
-#             if parts == 2:
-#
-#                 # Retrieve compound seqfeature positions based on strand.
-#                 if seqfeature.strand == 1:
-#                     left = int(seqfeature.location.parts[0].start)
-#                     right = int(seqfeature.location.parts[1].end)
-#                 elif seqfeature.strand == -1:
-#                     left = int(seqfeature.location.parts[1].start)
-#                     right = int(seqfeature.location.parts[0].end)
-#                 else:
-#                     pass
-#             else:
-#                 left = -1
-#                 right = -1
-#         else:
-#             pass
-#     else:
-#         left = -1
-#         right = -1
-#         parts = 0
-#     return (left, right, parts)
-
-
-def parse_cds_seqfeature(seqfeature):
+# TODO implement set_wrap()?
+def parse_cds_seqfeature(seqfeature, genome_id=""):
     """Parse data from a Biopython CDS SeqFeature object into a Cds object."""
     cds = Cds.Cds()
+    cds.genome_id = genome_id
     cds.seqfeature = seqfeature
 
     try:
-        cds.locus_tag = seqfeature.qualifiers["locus_tag"][0]
+        locus_tag = seqfeature.qualifiers["locus_tag"][0]
     except:
-        cds.locus_tag = ""
+        locus_tag = ""
+    cds.set_locus_tag(locus_tag)
 
     cds.set_strand(seqfeature.strand, "fr_short", case = True)
     cds.left, cds.right, cds.compound_parts = parse_coordinates(seqfeature)
-    cds.set_wrap() # TODO unit test this step.
+    #cds.set_wrap()
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
     cds.coordinate_format = "0_half_open"
 
+
+    # For translation, convert it to a Biopython Seq object.
     try:
         translation = seqfeature.qualifiers["translation"][0]
     except:
         translation = ""
-
     translation = Seq(translation, Alphabet.IUPAC.protein)
     cds.set_translation(translation)
     cds.set_nucleotide_length()
@@ -156,7 +107,6 @@ def parse_cds_seqfeature(seqfeature):
         translation_table = seqfeature.qualifiers["transl_table"][0]
     except:
         translation_table = -1
-
     cds.set_translation_table(translation_table)
 
     try:
@@ -185,21 +135,18 @@ def parse_cds_seqfeature(seqfeature):
     except:
         cds.gene = ""
 
-
-
-    # TODO implement this method.
-    #cds.set_name()
-
+    cds.set_name()
     return cds
 
 
-def create_cds_objects(seqfeature_list):
-    """Convert all Biopython CDS SeqFeatures to Cds objects."""
-    cds_list = []
-    for seqfeature in seqfeature_list:
-        cds = parse_cds_seqfeature(seqfeature)
-        cds_list.append(cds)
-    return cds_list
+# TODO remove this function. No longer needed.
+# def create_cds_objects(seqfeature_list):
+#     """Convert all Biopython CDS SeqFeatures to Cds objects."""
+#     cds_list = []
+#     for seqfeature in seqfeature_list:
+#         cds = parse_cds_seqfeature(seqfeature)
+#         cds_list.append(cds)
+#     return cds_list
 
 
 def parse_source_seqfeature(seqfeature):
@@ -362,14 +309,25 @@ def parse_genome_data(seqrecord, filepath="",
     # present or not.
     seqfeature_dict = create_seqfeature_dictionary(seqrecord.features)
 
-    if "CDS" in seqfeature_dict.keys():
-        cds_list = create_cds_objects(seqfeature_dict["CDS"])
-    else:
-        cds_list = []
 
-    # Cds.genome_id is determined from the Genome.id.
-    for cds in cds_list:
-        cds.genome_id = genome.id
+    #HERE
+    # TODO instead of passing list, pass one feature at a time, so
+    # that the genome_id can be passed as well.
+    cds_list = []
+    if "CDS" in seqfeature_dict.keys():
+        for seqfeature in seqfeature_dict["CDS"]:
+            cds = parse_cds_seqfeature(seqfeature, genome_id=genome.id)
+            cds_list.append(cds)
+
+
+    # if "CDS" in seqfeature_dict.keys():
+    #     cds_list = create_cds_objects(seqfeature_dict["CDS"])
+    # else:
+    #     cds_list = []
+
+    # # Cds.genome_id is determined from the Genome.id.
+    # for cds in cds_list:
+    #     cds.genome_id = genome.id
 
 
     if "source" in seqfeature_dict.keys():

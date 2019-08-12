@@ -90,6 +90,37 @@ class TestCdsClass(unittest.TestCase):
 
 
 
+    def test_set_name_1(self):
+        """Verify that name is set from the parameter."""
+        self.feature.gene = "1"
+        self.feature._locus_tag_num = "2"
+        self.feature.set_name(value="3")
+        self.assertEqual(self.feature.name, "3")
+
+    def test_set_name_2(self):
+        """Verify that name is set from 'gene' attribute."""
+        self.feature.gene = "1"
+        self.feature._locus_tag_num = "2"
+        self.feature.set_name()
+        self.assertEqual(self.feature.name, "1")
+
+    def test_set_name_3(self):
+        """Verify that name is set from '_locus_tag_num' attribute."""
+        self.feature.gene = ""
+        self.feature._locus_tag_num = "2"
+        self.feature.set_name()
+        self.assertEqual(self.feature.name, "2")
+
+    def test_set_name_4(self):
+        """Verify that name is set as empty."""
+        self.feature.gene = ""
+        self.feature._locus_tag_num = ""
+        self.feature.set_name()
+        self.assertEqual(self.feature.name, "")
+
+
+
+
     def test_set_translation_table_1(self):
         """Verify translation_table is set correctly from valid integer."""
         self.feature.set_translation_table(11)

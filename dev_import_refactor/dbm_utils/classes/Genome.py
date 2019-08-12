@@ -656,17 +656,6 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    # TODO implement.
-    # TODO unit test.
-    def check_date(self):
-        """Check that the date is valid."""
-
-        # definition = "Check that the date is valid."
-        # eval = Eval.Eval("GENOME", definition, result, status)
-        # self.evaluations.append(eval)
-        pass
-
-
     def check_authors(self, check_set=constants.AUTHOR_SET):
         """Check author name spelling.
 

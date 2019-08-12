@@ -527,7 +527,7 @@ def lower_case(value):
 def close_files(list_of_filehandles):
     """Closes all the files in a list of open file handles.
     The 'list_of_filehandles' parameter is a list of open file handles.
-    """"
+    """
     for handle in list_of_filehandles:
         handle.close()
     return
