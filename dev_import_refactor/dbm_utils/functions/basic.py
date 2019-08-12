@@ -1,17 +1,14 @@
 """Misc. base/simple functions. These should not require import of other
-k_phamerate modules to prevent circular imports."""
+modules in this package to prevent circular imports."""
 
 from constants import constants
 import os
 
 
-
-#Note: used to be 'find_name' function.
 def find_expression(expression, list_of_items):
     """Searches through a list of items and counts the number of items
-    that match the expression.
+    that match the regular expression.
     """
-
     search_tally = 0
     for element in list_of_items:
         search_result = expression.search(element)
@@ -20,11 +17,10 @@ def find_expression(expression, list_of_items):
     return search_tally
 
 
-
-
 def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
     """Adds or removes the indicated suffix to an input value.
-    The suffix is not added if the input value already has the suffix."""
+    The suffix is not added if the input value already has the suffix.
+    """
 
     if option.lower() == "add":
         if not value.lower().endswith(suffix.lower()):
@@ -37,12 +33,10 @@ def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
     return value
 
 
-
-#Old 'parse_strand' function and 'parse_strand_for_import' function combined.
-# Note: parse_strand_for_import used to convert numeric to long string format.
-# E.g. 1 == forward
 def reformat_strand(input_value, format, case=False):
-    """Converts common strand orientation formats, including:
+    """Converts common strand orientation formats.
+
+    The format types include:
     'fr_long' ('forward', 'reverse')
     'fr_short' ('f', 'r')
     'fr_abbrev1' ('for', 'rev')
@@ -65,50 +59,36 @@ def reformat_strand(input_value, format, case=False):
                     "wc_short":["w", "c"],
                     "operator":["+", "-"],
                     "numeric":[1, -1]}
-
     strand1_values = set()
     strand2_values = set()
     for values in format_dict.values():
-
         strand1_values.add(values[0])
         strand2_values.add(values[1])
-
-
     if format in format_dict.keys():
-
         if isinstance(input_value, str):
             new_value = input_value.lower()
         else:
             new_value = input_value
-
         if new_value in strand1_values:
             new_value = format_dict[format][0]
-
         elif new_value in strand2_values:
             new_value = format_dict[format][1]
-
         else:
             new_value = "NA"
-
     else:
         new_value = "NA"
-
-
     if isinstance(new_value, str):
         if case == True:
             new_value = new_value.capitalize()
-
     return new_value
 
 
-
-
-# TODO this function can probably be improved. Maybe it should return
-# an eval object?
 # TODO also, coordinates in Cds object can be stored as strings,
 # so this function needs to take that into account.
 def reformat_coordinates(left, right, current, new):
-    """Converts common coordinate formats, including:
+    """Converts common coordinate formats.
+
+    The type of coordinate formats include:
     '0_half_open' = 0-based half-open intervals that is the common format
                     for BAM files and UCSC Browser database. This format seems
                     to be more efficient when performing genomics
@@ -120,16 +100,11 @@ def reformat_coordinates(left, right, current, new):
                     intuitive and used for visualization.
     The function assumes coordinates reflect the left and right
     boundaries (where the left coordinates is smaller than the right
-    coordinate), instead of gene start and stop coordinates."""
-
-
+    coordinate), instead of gene start and stop coordinates.
+    """
     format_set = set(["0_half_open", "1_closed"])
-
-
     if (current in format_set and new in format_set):
-
         if current == "0_half_open":
-
             if new == "1_closed":
                 new_left = left + 1
                 new_right = right
@@ -139,9 +114,7 @@ def reformat_coordinates(left, right, current, new):
             else:
                 new_left = ""
                 new_right = ""
-
         elif current == "1_closed":
-
             if new == "1_closed":
                 new_left = left
                 new_right = right
@@ -151,30 +124,19 @@ def reformat_coordinates(left, right, current, new):
             else:
                 new_left = ""
                 new_right = ""
-
         else:
             new_left = ""
             new_right = ""
-
     else:
         new_left = ""
         new_right = ""
-
-
     return new_left, new_right
-
-
-
-
-
 
 
 def check_empty(value, lower=True):
     """Checks if the value represents a null value."""
-
     if (lower == True and isinstance(value, str)):
         value = value.lower()
-
     if value in constants.EMPTY_SET:
         result = True
     else:
@@ -183,7 +145,9 @@ def check_empty(value, lower=True):
 
 
 def convert_empty(input_value, format, upper=False):
-    """Converts common NULL value formats, including:
+    """Converts common NULL value formats.
+
+    The type of formats include:
     'empty_string' = ''
     'none_string' = 'none'
     'null_string' = 'null'
@@ -193,9 +157,8 @@ def convert_empty(input_value, format, upper=False):
     'n/a' = 'n/a'
     'zero_string' = '0'
     'zero_num' = 0
-    'empty_datetime_obj' = datetime object with arbitrary early date, '1/1/0001'
+    'empty_datetime_obj' = datetime object with arbitrary date, '1/1/0001'
     """
-
     format_dict = {"empty_string": "",
                     "none_string": "none",
                     "null_string": "null",
@@ -206,9 +169,7 @@ def convert_empty(input_value, format, upper=False):
                     "zero_string": "0",
                     "zero_num": 0,
                     "empty_datetime_obj": constants.EMPTY_DATE}
-
     output_values = set(format_dict.values())
-
     if format in format_dict.keys():
 
         # Convert input value to ensure it matches the formatting of
@@ -222,19 +183,14 @@ def convert_empty(input_value, format, upper=False):
         # output values, and convert.
         if new_value in output_values:
             new_value = format_dict[format]
-
         else:
             new_value = input_value
-
     else:
         new_value = input_value
-
     if isinstance(new_value, str):
         if upper == True:
             new_value = new_value.upper()
-
     return new_value
-
 
 
 def reformat_description(description):
@@ -243,14 +199,11 @@ def reformat_description(description):
     it if it is too generic (converting it to an empty value), then returning
     this second value.
     """
-
     if description is None:
         description = ""
-
     description = description.strip()
     processed_description = description.lower()
     split_description = processed_description.split(" ")
-
     if processed_description == "hypothetical protein":
         processed_description = ""
     elif processed_description == "phage protein":
@@ -265,9 +218,7 @@ def reformat_description(description):
         processed_description = ""
     elif processed_description.isdigit():
         processed_description = ""
-
     elif len(split_description) == 1:
-
         if split_description[0][:2] == "gp" and \
             split_description[0][2:].isdigit():
             processed_description = ""
@@ -276,9 +227,7 @@ def reformat_description(description):
             processed_description = ""
         else:
             processed_description = description
-
     elif len(split_description) == 2:
-
         if split_description[0] == "gp" and \
             split_description[1].isdigit():
             processed_description = ""
@@ -290,50 +239,35 @@ def reformat_description(description):
             processed_description = ""
         else:
             processed_description = description
-
     else:
         processed_description = description
-
     return (description, processed_description)
-
-
-
-
-
 
 
 def identify_unique_items(complete_list):
     """Iterate over a list of items and generate two lists.
+
     The first list contains items that are unique and non-duplicated
     in the original list.
     The second list contains items that are not unique in the original
-    list, although non-duplicated items are returned."""
-
+    list, although non-duplicated items are returned.
+    """
     unique_set = set() # Set of all non-duplicated unique items.
     duplicate_set = set() # Set of all duplicated items.
-
     for item in complete_list:
         if item not in unique_set:
             unique_set.add(item)
         else:
             duplicate_set.add(item)
-
     # Remove items from the unique list that eventually were duplicated.
     unique_set = unique_set - duplicate_set
-
     return (unique_set, duplicate_set)
 
 
-
-
 def trim_characters(string):
-    """Remove leading and trailing generic characters from a string.
-    """
-
-    generic_characters = set([".", ",", ";", "-"])
-
+    """Remove leading and trailing generic characters from a string."""
+    generic_characters = set([".", ",", ";", "-", "_"])
     if len(string) > 0:
-
         # Trim non-specific trailing characters.
         value1 = True
         while value1:
@@ -341,7 +275,6 @@ def trim_characters(string):
                 string = string[:-1]
             else:
                 value1 = False
-
         # Trim non-specific leading characters.
         value2 = True
         while value2:
@@ -349,9 +282,7 @@ def trim_characters(string):
                 string = string[1:]
             else:
                 value2 = False
-
     return string
-
 
 
 # TODO this can probably be improved.
@@ -359,16 +290,11 @@ def parse_names_from_record_field(description):
     """Parse string of text from GenBank-formatted flat file to
     identify the phage name and host_genus name.
     """
-
     generic_words = set(["complete", "genome", "phage", "unclassified"])
-
     host_genus = ""
     name = ""
-
-    # Remove trailing whitespace and split into a list.
     description = description.strip()
     split_description = description.split()
-
 
     # Trim leading and trailing generic characters.
     index = 0
@@ -376,14 +302,11 @@ def parse_names_from_record_field(description):
         split_description[index] = trim_characters(split_description[index])
         index += 1
 
-
     # Iterate through the list of processed words and attempt to
     # identify the host_genus name and phage name.
     index = 0
     while index < len(split_description):
-
         word = split_description[index]
-
         word_lower = word.lower()
 
         # Attempt to identify the host_genus.
@@ -393,28 +316,22 @@ def parse_names_from_record_field(description):
         if index > 0:
             if (word_lower == "phage" or word_lower == "virus"):
                 host_genus = split_description[index - 1]
-
         # Sometimes the host_genus name is merged with 'phage'.
         # e.g. 'Mycobacteriophage'.
         elif (len(word) > 5 and word_lower[-5:] == "phage"):
             host_genus = word[:-5]
-
         else:
             pass
-
 
         # Attempt to identify the phage.
 
         # If there is one non-generic word in the string, assign it as the
         # phage name.
         if len(split_description) == 1:
-
             if (len(word) > 5 and word_lower[-5:] == "phage"):
                 host_genus = word[:-5]
-
             elif word_lower not in generic_words:
                 name = word
-
             else:
                 pass
 
@@ -423,28 +340,22 @@ def parse_names_from_record_field(description):
         if index < (len(split_description) - 1):
             if (word_lower[-5:] == "phage" or \
                 word_lower[-5:] == "virus"):
-
                 name = split_description[index + 1]
-
         index += 1
-
-
     return (name, host_genus)
-
 
 
 def compare_sets(set1, set2):
     """Compute the intersection and differences between two sets."""
-
     set_intersection = set1 & set2
     set1_diff = set1 - set2
     set2_diff = set2 - set1
-
     return (set_intersection, set1_diff, set2_diff)
 
 
 def match_items(list1, list2):
     """Match values of two lists and return several results.
+
     First, return the set of matched unique values.
     Second, return the set of unmatched unique values from the first list.
     Third, return the set of unmatched unique values from the second list.
@@ -455,7 +366,6 @@ def match_items(list1, list2):
     # Determine the unique values in each list.
     set1_unique_items, set1_duplicate_items = \
         identify_unique_items(list1)
-
     set2_unique_items, set2_duplicate_items = \
         identify_unique_items(list2)
 
@@ -464,7 +374,6 @@ def match_items(list1, list2):
     set1_unmatched_unique_items, \
     set2_unmatched_unique_items = \
         compare_sets(set1_unique_items, set2_unique_items)
-
     return (matched_unique_items,
             set1_unmatched_unique_items,
             set2_unmatched_unique_items,
@@ -472,21 +381,20 @@ def match_items(list1, list2):
             set2_duplicate_items)
 
 
-
-
 def split_string(string):
-    """Iterates through a string, identifies the first position
+    """Split a string based on alphanumeric characters.
+
+    Iterates through a string, identifies the first position
     in which the character is a digit, and creates two strings at this
     position. The first string returned contains only alphabetic characters.
     The second string returned contains only numeric characters.
     If there are no numeric characters present,
     the second string will be empty.
     If there are no alphabetic characters present,
-    the first string will be empty."""
-
+    the first string will be empty.
+    """
     left = ""
     right = ""
-
     if string.isalpha():
         left = string
     elif string.isdigit():
@@ -497,26 +405,20 @@ def split_string(string):
         while (value == False and index < len(string)):
             if (string[:index].isalpha() and \
                 string[index:].isdigit()):
-
                 left = string[:index]
                 right = string[index:]
                 value = True
-
             index += 1
-
     return (left, right)
 
 
 def compare_cluster_subcluster(cluster, subcluster):
     """Check if a cluster designation is part of a subcluster designation."""
-
     result = True
-
     # If Singleton or Unknown Cluster, there should be no Subcluster
     if (cluster.lower() == "singleton" or
         cluster == "UNK" or
         cluster.lower() == "none"):
-
         if subcluster != "none":
             result = False
 
@@ -529,12 +431,11 @@ def compare_cluster_subcluster(cluster, subcluster):
             result = False
     else:
         pass
-
     return result
+
 
 def identify_one_list_duplicates(item_list):
     """Identify duplicate items within a list."""
-
     duplicate_items = set()
     item_set = set(item_list)
     for item1 in item_set:
@@ -544,22 +445,21 @@ def identify_one_list_duplicates(item_list):
                 count += 1
         if count > 1:
             duplicate_items.add(item1)
-
     return duplicate_items
+
 
 def identify_two_list_duplicates(item1_list, item2_list):
     """Identify duplicate items between two lists.
-    It does not identify duplicate items within each list."""
-
+    It does not identify duplicate items within each list.
+    """
     item1_set = set(item1_list)
     item2_set = set(item2_list)
     item3_set = item1_set & item2_set
-
     return item3_set
 
+
 def check_value_expected_in_set(value, set1, expected=True):
-    """Check if a value is present within a set and if it is expected.
-    """
+    """Check if a value is present within a set and if it is expected."""
 
     # Check if the value is present in the set.
     if value in set1:
@@ -574,27 +474,24 @@ def check_value_expected_in_set(value, set1, expected=True):
         result = True
     else:
         result = False
-
     return result
 
 
 def check_value_in_two_sets(value, set1, set2):
-    """Check if a value is present within two sets, and return whether
-    it is present within:
+    """Check if a value is present within two sets.
+
+    The functions returns whether it is present within:
     1. only the 'first' set
     2. only the 'second' set
     3. 'both' sets
     4. 'neither' set
     """
-
     present1 = False
     present2 = False
-
     if value in set1:
         present1 = True
     if value in set2:
         present2 = True
-
     if (present1 and present2):
         result = "both"
     elif (present1 and not present2):
@@ -603,14 +500,13 @@ def check_value_in_two_sets(value, set1, set2):
         result = "second"
     else:
         result = "neither"
-
     return result
 
 
 def convert_author(input_value):
     """Converts author string to author integer using the
-    author dictionary."""
-
+    author dictionary.
+    """
     input_value = input_value.lower()
     if input_value in constants.AUTHOR_DICTIONARY[1]:
         new_value = 1
@@ -621,9 +517,7 @@ def convert_author(input_value):
 
 def lower_case(value):
     """Return the value lowercased if it is within a specific set of values."""
-
     lower_set = set(["none", "retrieve", "retain"])
-
     if isinstance(value, str):
         if value.lower() in lower_set:
             value = value.lower()
@@ -631,19 +525,17 @@ def lower_case(value):
 
 
 def close_files(list_of_filehandles):
-    """
-    Closes all the files in a list of open file handles.
-    :param list_of_filehandles: A list of open file handles
-    :return:
-    """
+    """Closes all the files in a list of open file handles.
+    The 'list_of_filehandles' parameter is a list of open file handles.
+    """"
     for handle in list_of_filehandles:
         handle.close()
     return
 
 
 def ask_yes_no(prompt="", response_attempt=1):
-    """
-    Function to get the user's yes/no response to a question.
+    """Function to get the user's yes/no response to a question.
+
     Accepts variations of yes/y, true/t, no/n, false/f.
     :param prompt: the question to ask the user.
     :return Boolean: default is False (e.g. user hits Enter w/o typing
@@ -667,50 +559,43 @@ def ask_yes_no(prompt="", response_attempt=1):
         else:
             response = None
             print("Invalid response.")
-
     return response
 
 
 def get_input(prompt=""):
+    """Wrapper function to improve testing."""
     return input(prompt)
 
 
 def identify_files(path_to_folder):
     """Create a list of filenames from an indicated directory."""
-
     files_in_folder = []
     for item in os.listdir(path_to_folder):
         item_path = os.path.join(path_to_folder, item)
-
         if os.path.isfile(item_path):
             files_in_folder.append(item)
-
     return files_in_folder
 
 
 def expand_path(input_path):
-    """
-    Attempts to coerce input paths in any relative format into an
+    """Attempts to coerce input paths in any relative format into an
     absolute path.
     :param input_path: the path to be expanded
     :return expanded_path: the expanded path
     """
     # "~" needs to be expanded first
     home_dir = os.path.expanduser("~")
-
     if input_path[0] == "~":
         expanded_path = home_dir + input_path[1:]
     else:
         expanded_path = input_path
-
     # os.path.abspath will resolve ./ or ../ present in the path
     expanded_path = os.path.abspath(expanded_path)
     return expanded_path
 
 
 def verify_path(filepath, kind=None):
-    """
-    Verifies that a given filepath exists, and if a kind is given,
+    """Verifies that a given filepath exists, and if a kind is given,
     it verifies that it exists as the indicated kind.
     :param filepath: full path to the desired file/directory.
     :param kind: ("file", "dir"), corresponding with paths to be
@@ -733,7 +618,6 @@ def verify_path(filepath, kind=None):
         else:
             return False
     else:
-
         # TODO not sure if this should print a statement, or if it
         # should only return False.
         print("{} is not a valid kind for this function.".format(kind),

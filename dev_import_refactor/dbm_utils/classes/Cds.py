@@ -104,6 +104,28 @@ class Cds:
     def set_name(self):
         """Set the feature name."""
 
+
+        try:
+            value = int(self.gene)
+        except:
+            value
+
+        
+
+
+        # PECAAN draft:
+        # 1. Take 'gene' qualifier (should be an integer).
+        #
+
+        # New final:
+        # 1. Take 'gene' qualifier.
+
+        # Auto-updated from GenBank or if misc. genome from GenBank.
+        # 1. Take 'gene' qualifier if present.
+        # 2. Take parsed number from 'locus_tag' qualifier.
+        # 3. Set to 'none'.
+
+
         pass
 
 
