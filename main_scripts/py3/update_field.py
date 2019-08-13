@@ -4,8 +4,10 @@ import sys
 import csv
 
 # Import relevant k_phamerate objects
-from MySQLConnectionHandler import MySQLConnectionHandler
-from RandomFieldUpdateHandler import RandomFieldUpdateHandler
+from main_scripts.python3.classes.MySQLConnectionHandler import \
+	MySQLConnectionHandler
+from main_scripts.python3.classes.RandomFieldUpdateHandler import \
+	RandomFieldUpdateHandler
 
 # Set up argparse
 script_description = """
