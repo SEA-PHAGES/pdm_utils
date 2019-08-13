@@ -1,8 +1,8 @@
 .idea/
-main_scripts/python3/*.pyc
+main_scripts/py3/*.pyc
 main_scripts/__pycache__/
-main_scripts/python3/__pycache__/
-main_scripts/python3/classes/__pycache__/
-main_scripts/python3/tests/__pycache__/
-main_scripts/python3/tests/integration/__pycache__/
-main_scripts/python3/tests/unit/__pycache__/
+main_scripts/py3/__pycache__/
+main_scripts/py3/classes/__pycache__/
+main_scripts/py3/tests/__pycache__/
+main_scripts/py3/tests/integration/__pycache__/
+main_scripts/py3/tests/unit/__pycache__/
