@@ -6,7 +6,6 @@ from constants import constants
 
 
 
-
 #
 # def check_import_ticket_structure(
 #         ticket,
@@ -123,18 +122,18 @@ def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
 
 
 
-def check_phagesdb_genome(genome_obj, null_set):
+def check_phagesdb_genome(genome, null_set):
     """Check a Genome object for specific errors when it has been
     parsed from PhagesDB data in preparation for completing import tickets."""
 
-    genome_obj.check_id(null_set, False)
-    genome_obj.check_name(null_set, False)
-    genome_obj.check_host_genus(null_set, False)
-    genome_obj.check_cluster(null_set, False)
-    genome_obj.check_subcluster(null_set, False)
-    genome_obj.check_accession(null_set, False)
-    genome_obj.check_filename(null_set, False)
-    genome_obj.check_sequence(null_set, False)
+    genome.check_id(null_set, False)
+    genome.check_name(null_set, False)
+    genome.check_host_genus(null_set, False)
+    genome.check_cluster(null_set, False)
+    genome.check_subcluster(null_set, False)
+    genome.check_accession(null_set, False)
+    genome.check_filename(null_set, False)
+    genome.check_sequence(null_set, False)
 
 
 
@@ -142,9 +141,64 @@ def check_phagesdb_genome(genome_obj, null_set):
 
 
 
+def check_source_for_import(source, name_flag=True,genus_flag=True):
+    """Check a Source object for errors."""
+    if name_flag:
+        source.check_organism_name()
+    if genus_flag:
+        source.check_organism_host_genus()
+        source.check_host_host_genus()
+        source.check_lab_host_host_genus()
+
+
+def check_cds_for_import(cds, locus_flag=True,
+                         gene_flag=True, description_flag=True):
+    """Check a Cds object for errors."""
+    cds.check_amino_acids()
+    cds.check_translation()
+    cds.check_translation_length()
+    cds.check_translation_table()
+    cds.check_coordinates()
+    cds.check_strand()
+
+    # These evaluations vary by genome type, stage of import, etc.
+    if locus_flag:
+        cds.check_locus_tag_present()
+        cds.check_locus_tag_structure()
+    if gene_flag:
+        cds.check_gene_present()
+        cds.check_gene_structure()
+    if locus_flag and gene_flag:
+        cds.check_compatible_gene_and_locus_tag()
+    if description_flag:
+        cds.check_description_field()
+        cds.check_generic_data()
 
 
 
+def compare_genomes(genome_pair):
+    """Compare two genomes to identify discrepancies."""
+    genome_pair.compare_genome_sequence()
+    genome_pair.compare_genome_length()
+    genome_pair.compare_cluster()
+    genome_pair.compare_subcluster()
+    genome_pair.compare_accession()
+    genome_pair.compare_host_genus()
+    genome_pair.compare_author()
+
+
+
+    # TODO at this stage check the annotation_status of the genome. If it is a final,
+    # and there is no other paired genome, it should throw an error. This was
+    # moved from the ticket evaluation stage.
+    # if self.annotation_status == "final":
+    #     result6 = "The phage %s to be added is listed " + \
+    #             "as Final status, but no Draft (or other) genome " + \
+    #             " is listed to be removed."
+    #     status6 = "error"
+    # else:
+    #     result6 = ""
+    #     status6 = "correct"
 
 
 
@@ -235,22 +289,22 @@ def check_bundle_for_import(bundle):
 
 # TODO implement.
 # TODO unit test.
-def check_genome_to_import(genome_obj, type):
+def check_genome_to_import(genome, type):
     """Check a Genome object for errors."""
 
     if type == "add":
-        genome_obj.check_id(phage_id_set, False)
-        genome_obj.check_id(null_set, False)
-        genome_obj.check_name(phage_id_set, False) # TODO is this needed?
-        genome_obj.check_name(null_set, False) # TODO is this needed?
-        genome_obj.check_sequence(seq_set, False)
-        genome_obj.check_sequence(null_set, False)
+        genome.check_id(phage_id_set, False)
+        genome.check_id(null_set, False)
+        genome.check_name(phage_id_set, False) # TODO is this needed?
+        genome.check_name(null_set, False) # TODO is this needed?
+        genome.check_sequence(seq_set, False)
+        genome.check_sequence(null_set, False)
 
     # Certain checks if it is a 'replace' ticket.
     else:
-        genome_obj.check_id(phage_id_set, True)
-        genome_obj.check_name(phage_id_set, True) # TODO is this needed?
-        genome_obj.check_sequence(seq_set, True)
+        genome.check_id(phage_id_set, True)
+        genome.check_name(phage_id_set, True) # TODO is this needed?
+        genome.check_sequence(seq_set, True)
 
 
     # ticket = ticket.check_description_field(description_field_set)
@@ -258,71 +312,52 @@ def check_genome_to_import(genome_obj, type):
 
 
 
-    genome_obj.check_annotation_status(expect = True)
-    genome_obj.check_host_genus(host_set, True)
-    genome_obj.check_cluster(cluster_set, True)
-    genome_obj.check_subcluster(subcluster_set, True)
-    genome_obj.check_annotation_author()
-    genome_obj.check_annotation_qc()
-    genome_obj.check_retrieve_record()
-    genome_obj.check_filename() # TODO is this needed?
-    genome_obj.check_subcluster_structure()
-    genome_obj.check_cluster_structure()
-    genome_obj.check_compatible_cluster_and_subcluster()
-    # genome_obj.check_accession(accession_set, False) # TODO is this needed?
-    genome_obj.check_nucleotides(alphabet = alphabet) # TODO decide how to implement alphabet
-    genome_obj.check_compatible_status_and_accession()
-    genome_obj.check_compatible_status_and_descriptions()
-    genome_obj.check_description_name()
-    genome_obj.check_source_name()
-    genome_obj.check_organism_name()
-    genome_obj.check_description_host_genus()
-    genome_obj.check_source_host_genus()
-    genome_obj.check_organism_host_genus()
-    genome_obj.check_authors()
-    genome_obj.check_cds_feature_tally()
-    genome_obj.check_cds_start_end_ids() # TODO decide how to evaluate duplicate feature coordinates.
-    genome_obj.check_cds_end_strand_ids() # TODO decide how to evaluate duplicate feature coordinates.
-    genome_obj.check_value_flag()
+    genome.check_annotation_status(expect = True)
+    genome.check_host_genus(host_set, True)
+    genome.check_cluster(cluster_set, True)
+    genome.check_subcluster(subcluster_set, True)
+    genome.check_annotation_author()
+    genome.check_annotation_qc()
+    genome.check_retrieve_record()
+    genome.check_filename() # TODO is this needed?
+    genome.check_subcluster_structure()
+    genome.check_cluster_structure()
+    genome.check_compatible_cluster_and_subcluster()
+    # genome.check_accession(accession_set, False) # TODO is this needed?
+    genome.check_nucleotides(alphabet = alphabet) # TODO decide how to implement alphabet
+    genome.check_compatible_status_and_accession()
+    genome.check_compatible_status_and_descriptions()
+    genome.check_description_name()
+    genome.check_source_name()
+    genome.check_organism_name()
+    genome.check_description_host_genus()
+    genome.check_source_host_genus()
+    genome.check_organism_host_genus()
+    genome.check_authors()
+    genome.check_cds_feature_tally()
+    genome.check_cds_start_end_ids() # TODO decide how to evaluate duplicate feature coordinates.
+    genome.check_cds_end_strand_ids() # TODO decide how to evaluate duplicate feature coordinates.
+    genome.check_value_flag()
 
     # Check all CDS features
     index1 = 0
-    while index1 < len(genome_obj.cds_features):
-        check_cds_for_import(genome_obj.cds_features[index1])
+    while index1 < len(genome.cds_features):
+        check_cds_for_import(genome.cds_features[index1])
         index1 += 1
 
     # Check all tRNA features
     index2 = 0
-    while index2 < len(genome_obj.trna_features):
-        check_trna_for_import(genome_obj.trna_features[index2])
+    while index2 < len(genome.trna_features):
+        check_trna_for_import(genome.trna_features[index2])
         index2 += 1
 
 
     # Check all Source features
     index3 = 0
-    while index3 < len(genome_obj.source_features):
-        check_source_for_import(genome_obj.source_features[index3])
+    while index3 < len(genome.source_features):
+        check_source_for_import(genome.source_features[index3])
         index3 += 1
 
-
-
-
-
-# TODO implement.
-# TODO unit test.
-def check_cds_for_import(cds_obj):
-    """Check a Cds object for errors."""
-
-    # TODO decide how to implement alphabet
-    cds_obj.check_amino_acids(alphabet = alphabet)
-    cds_obj.check_translation_length()
-    cds_obj.check_strand()
-    cds_obj.check_coordinates()
-    cds_obj.check_locus_tag_present()
-    cds_obj.check_locus_tag_typo()
-    cds_obj.check_description()
-    cds_obj.check_translation_table()
-    cds_obj.check_translation()
 
 
 
@@ -339,46 +374,10 @@ def check_trna_for_import(trna_obj):
 
 
 
-# TODO implement.
-# TODO unit test.
-def check_source_for_import(src_obj):
-    """Check a Source object for errors."""
-
-    src_obj.check_organism_name()
-    src_obj.check_organism_host_genus()
-    src_obj.check_host_host_genus()
-    src_obj.check_lab_host_host_genus()
 
 
 
 
-
-# TODO implement.
-# TODO unit test.
-def compare_genomes(genome_pair_obj):
-    """Compare two genomes to identify discrepancies."""
-
-    genome_pair_obj.compare_genome_sequence()
-    genome_pair_obj.compare_genome_length()
-    genome_pair_obj.compare_cluster()
-    genome_pair_obj.compare_subcluster()
-    genome_pair_obj.compare_accession()
-    genome_pair_obj.compare_host_genus()
-    genome_pair_obj.compare_author()
-
-
-
-    # TODO at this stage check the annotation_status of the genome. If it is a final,
-    # and there is no other paired genome, it should throw an error. This was
-    # moved from the ticket evaluation stage.
-    # if self.annotation_status == "final":
-    #     result6 = "The phage %s to be added is listed " + \
-    #             "as Final status, but no Draft (or other) genome " + \
-    #             " is listed to be removed."
-    #     status6 = "error"
-    # else:
-    #     result6 = ""
-    #     status6 = "correct"
 
 
 

@@ -15,13 +15,15 @@ class Source:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
-        self.type = "source"
+        self.id = ""
+        self.name = ""
+        self.seqfeature = None
+        self.type = ""
         self.left = "" # TODO implement this.
         self.right = "" # TODO implement this.
         self.organism = ""
         self.host = ""
         self.lab_host = ""
-
 
         # Common to Phamerator.
         self.genome_id = ""

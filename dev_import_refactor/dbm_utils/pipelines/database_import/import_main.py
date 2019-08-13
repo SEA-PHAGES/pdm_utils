@@ -24,7 +24,7 @@ from constants import constants
 
 
 
-def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
+def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
     """The 'lists_of_ticket_data' parameter is a list, where each
     element is a list of ticket data.
     The 'files_in_folder' parameter is a list, where each
@@ -132,13 +132,13 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
             # TODO implement the main2 function.
             # Perform all evaluations based on the ticket type.
-            import_main.main2(bundle = bundle,
-                                sql_handle = sql_handle,
-                                phage_id_set = phamerator_phage_id_set,
-                                seq_set = phamerator_seq_set,
-                                host_genera_set = phagesdb_host_genera_set,
-                                cluster_set = phagesdb_cluster_set,
-                                subcluster_set = phagesdb_subcluster_set)
+            import_main.evaluate_flat_file(bundle = bundle,
+                                    sql_handle = sql_handle,
+                                    phage_id_set = phamerator_phage_id_set,
+                                    seq_set = phamerator_seq_set,
+                                    host_genera_set = phagesdb_host_genera_set,
+                                    cluster_set = phagesdb_cluster_set,
+                                    subcluster_set = phagesdb_subcluster_set)
 
 
 
@@ -213,8 +213,9 @@ def main1(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
 
 
-def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
-            seq_set = set(), cluster_set = set(), subcluster_set = set()):
+def evaluate_flat_file(bundle, sql_handle, host_genera_set = set(),
+                       phage_id_set = set(), seq_set = set(),
+                       cluster_set = set(), subcluster_set = set()):
     """Evaluate data within a single Bundle object."""
 
 
@@ -261,7 +262,7 @@ def main2(bundle, sql_handle, host_genera_set = set(), phage_id_set = set(),
 
     # If the ticket type is 'replace', retrieve data from phamerator.
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
-    if matched_ticket.type == "replace":
+    if bundle.ticket.type == "replace":
         phamerator_genome = \
             phamerator.create_phamerator_genome(sql_handle, genome.id)
 

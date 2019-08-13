@@ -2,6 +2,9 @@
 
 
 from classes import Genome
+from classes import Source
+from classes import Cds
+from classes import GenomePair
 from constants import constants
 from pipelines.database_import import evaluate
 from classes import Ticket
@@ -796,6 +799,83 @@ class TestEvaluateClass2(unittest.TestCase):
             if eval.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
+
+
+
+
+
+    def test_check_source_for_import_1(self):
+        """Verify correct number of evaluations are produced when
+        name_flag = True and genus_flag = True."""
+        source = Source.Source()
+        evaluate.check_source_for_import(source)
+        self.assertEqual(len(source.evaluations), 4)
+
+    def test_check_source_for_import_2(self):
+        """Verify correct number of evaluations are produced when
+        name_flag = False and genus_flag = True."""
+        source = Source.Source()
+        evaluate.check_source_for_import(source, name_flag=False)
+        self.assertEqual(len(source.evaluations), 3)
+
+    def test_check_source_for_import_3(self):
+        """Verify correct number of evaluations are produced when
+        name_flag = True and genus_flag = False."""
+        source = Source.Source()
+        evaluate.check_source_for_import(source, genus_flag=False)
+        self.assertEqual(len(source.evaluations), 1)
+
+
+
+
+
+
+
+
+
+    def test_check_cds_for_import_1(self):
+        """Verify correct number of evaluations are produced when
+        locus_flag = True, gene_flag = True, and description_flag = True."""
+        cds = Cds.Cds()
+        evaluate.check_cds_for_import(cds)
+        self.assertEqual(len(cds.evaluations), 13)
+
+    def test_check_cds_for_import_2(self):
+        """Verify correct number of evaluations are produced when
+        locus_flag = False, gene_flag = True, and description_flag = True."""
+        cds = Cds.Cds()
+        evaluate.check_cds_for_import(cds, locus_flag=False)
+        self.assertEqual(len(cds.evaluations), 10)
+
+    def test_check_cds_for_import_3(self):
+        """Verify correct number of evaluations are produced when
+        locus_flag = True, gene_flag = False, and description_flag = True."""
+        cds = Cds.Cds()
+        evaluate.check_cds_for_import(cds, gene_flag=False)
+        self.assertEqual(len(cds.evaluations), 10)
+
+    def test_check_cds_for_import_4(self):
+        """Verify correct number of evaluations are produced when
+        locus_flag = True, gene_flag = True, and description_flag = False."""
+        cds = Cds.Cds()
+        evaluate.check_cds_for_import(cds, description_flag=False)
+        self.assertEqual(len(cds.evaluations), 11)
+
+
+
+
+
+
+
+    def test_compare_genomes_1(self):
+        """Verify correct number of evaluations are produced when."""
+        genome1 = Genome.Genome()
+        genome2 = Genome.Genome()
+        genome_pair = GenomePair.GenomePair()
+        genome_pair.genome1 = genome1
+        genome_pair.genome2 = genome2
+        evaluate.compare_genomes(genome_pair)
+        self.assertEqual(len(genome_pair.evaluations), 7)
 
 
 

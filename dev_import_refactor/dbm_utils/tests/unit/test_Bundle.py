@@ -10,7 +10,7 @@ from classes import Eval
 import unittest
 
 
-class TestBundleClass(unittest.TestCase):
+class TestBundleClass1(unittest.TestCase):
 
 
     def setUp(self):
@@ -21,8 +21,6 @@ class TestBundleClass(unittest.TestCase):
         self.genome2 = Genome.Genome()
         self.genome2.type = "phamerator"
         self.ticket = Ticket.GenomeTicket()
-
-
 
 
 
@@ -136,7 +134,11 @@ class TestBundleClass2(unittest.TestCase):
 
         self.ticket1 = Ticket.GenomeTicket()
         self.cds1 = Cds.Cds()
+        self.cds1.id = "L5_1"
         self.cds2 = Cds.Cds()
+        self.cds2.id = "L5_2"
+        self.cds3 = Cds.Cds()
+        self.cds3.id = "L5_3"
         self.genome1 = Genome.Genome()
         self.genome1.type = "flat_file"
         self.genome1.cds_features.append(self.cds1)
@@ -159,7 +161,6 @@ class TestBundleClass2(unittest.TestCase):
 
     def test_check_for_errors_1(self):
         """Check that no error is counted."""
-
         self.bundle.check_for_errors()
         self.assertEqual(self.bundle._errors, 0)
 
@@ -177,9 +178,6 @@ class TestBundleClass2(unittest.TestCase):
         self.bundle.check_for_errors()
         self.assertEqual(self.bundle._errors, 1)
 
-
-
-
     def test_check_for_errors_4(self):
         """Check that a ticket 'correct' eval is not counted."""
         self.eval1.status = "correct"
@@ -193,9 +191,6 @@ class TestBundleClass2(unittest.TestCase):
         self.ticket1.evaluations.append(self.eval1)
         self.bundle.check_for_errors()
         self.assertEqual(self.bundle._errors, 1)
-
-
-
 
     def test_check_for_errors_6(self):
         """Check that a genome 'correct' eval is not counted."""
@@ -292,6 +287,62 @@ class TestBundleClass2(unittest.TestCase):
         self.genome_pair2.evaluations.append(self.eval2)
         self.bundle.check_for_errors()
         self.assertEqual(self.bundle._errors, 2)
+
+
+
+
+    def test_get_evaluations_1(self):
+        """Verify one eval is returned from Bundle eval list."""
+        self.bundle.evaluations.append(self.eval1)
+        eval_dict = self.bundle.get_evaluations()
+        self.assertEqual(len(eval_dict["bundle"]), 1)
+
+    def test_get_evaluations_2(self):
+        """Verify one eval is returned from Ticket eval list."""
+        self.ticket1.evaluations.append(self.eval1)
+        eval_dict = self.bundle.get_evaluations()
+        self.assertEqual(len(eval_dict["ticket"]), 1)
+
+    def test_get_evaluations_3(self):
+        """Verify one eval is returned from each genome eval list."""
+        self.genome1.evaluations.append(self.eval1)
+        self.genome1.evaluations.append(self.eval2)
+        self.genome2.evaluations.append(self.eval1)
+        eval_dict = self.bundle.get_evaluations()
+        with self.subTest():
+            self.assertEqual(len(eval_dict["genome_flat_file"]), 2)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["genome_phamerator"]), 1)
+
+    def test_get_evaluations_4(self):
+        """Verify one eval is returned from each Cds eval list in
+        each genome."""
+        self.cds1.evaluations.append(self.eval1)
+        self.cds1.evaluations.append(self.eval2)
+        self.cds2.evaluations.append(self.eval1)
+        self.cds3.evaluations.append(self.eval1)
+        self.genome1.cds_features = [self.cds1, self.cds2]
+        self.genome2.cds_features = [self.cds3]
+        eval_dict = self.bundle.get_evaluations()
+        with self.subTest():
+            self.assertEqual(len(eval_dict["cds_L5_1"]), 2)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["cds_L5_2"]), 1)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["cds_L5_3"]), 1)
+
+    def test_get_evaluations_5(self):
+        """Verify one eval is returned from each genome_pair eval list."""
+        self.genome_pair1.evaluations.append(self.eval1)
+        self.genome_pair1.evaluations.append(self.eval2)
+        self.genome_pair2.evaluations.append(self.eval1)
+        eval_dict = self.bundle.get_evaluations()
+        with self.subTest():
+            self.assertEqual(len(eval_dict["genome_pair_genome_pair1"]), 2)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["genome_pair_genome_pair2"]), 1)
+
+
 
 
 if __name__ == '__main__':

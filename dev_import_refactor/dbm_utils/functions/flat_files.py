@@ -149,9 +149,12 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
 #     return cds_list
 
 
-def parse_source_seqfeature(seqfeature):
+def parse_source_seqfeature(seqfeature, genome_id=""):
     """Parses a Biopython Source SeqFeature."""
     source = Source.Source()
+    source.genome_id = genome_id
+    source.seqfeature = seqfeature
+
     try:
         source.organism = str(seqfeature.qualifiers["organism"][0])
     except:
@@ -167,14 +170,14 @@ def parse_source_seqfeature(seqfeature):
     return source
 
 
-
-def create_source_objects(seqfeature_list):
-    """Convert all Biopython Source SeqFeatures to Source objects."""
-    source_list = []
-    for seqfeature in seqfeature_list:
-        source = parse_source_seqfeature(seqfeature)
-        source_list.append(source)
-    return source_list
+# TODO remove this function.
+# def create_source_objects(seqfeature_list):
+#     """Convert all Biopython Source SeqFeatures to Source objects."""
+#     source_list = []
+#     for seqfeature in seqfeature_list:
+#         source = parse_source_seqfeature(seqfeature)
+#         source_list.append(source)
+#     return source_list
 
 
 def create_seqfeature_dictionary(seqfeature_list):
@@ -309,45 +312,37 @@ def parse_genome_data(seqrecord, filepath="",
     # present or not.
     seqfeature_dict = create_seqfeature_dictionary(seqrecord.features)
 
-
-    #HERE
-    # TODO instead of passing list, pass one feature at a time, so
-    # that the genome_id can be passed as well.
     cds_list = []
     if "CDS" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["CDS"]:
             cds = parse_cds_seqfeature(seqfeature, genome_id=genome.id)
             cds_list.append(cds)
 
-
-    # if "CDS" in seqfeature_dict.keys():
-    #     cds_list = create_cds_objects(seqfeature_dict["CDS"])
-    # else:
-    #     cds_list = []
-
-    # # Cds.genome_id is determined from the Genome.id.
-    # for cds in cds_list:
-    #     cds.genome_id = genome.id
-
-
+    source_list = []
     if "source" in seqfeature_dict.keys():
-        source_list = create_source_objects(seqfeature_dict["source"])
-    else:
-        source_list = []
+        for seqfeature in seqfeature_dict["source"]:
+            source = parse_source_seqfeature(seqfeature, genome_id=genome.id)
+            source_list.append(source)
 
+    # TODO unit test after functions are constructed.
+    trna_list = []
     if "tRNA" in seqfeature_dict.keys():
-        trna_list = create_trna_objects(seqfeature_dict["tRNA"])
-    else:
-        trna_list = []
+        for seqfeature in seqfeature_dict["tRNA"]:
+            trna = parse_trna_seqfeature(seqfeature, genome_id=genome.id)
+            trna_list.append(trna)
 
+    # TODO unit test after functions are constructed.
+    tmrna_list = []
     if "tmrna" in seqfeature_dict.keys():
-        tmrna_list = create_tmrna_objects(seqfeature_dict["tmrna"])
-    else:
-        tmrna_list = []
+        for seqfeature in seqfeature_dict["tmrna"]:
+            tmrna = parse_tmrna_seqfeature(seqfeature, genome_id=genome.id)
+            tmrna_list.append(source)
 
     genome.translation_table = translation_table
     genome.set_cds_features(cds_list)
     genome.set_source_features(source_list)
+
+
     genome.set_trna_features(trna_list)
     # genome.set_tmrna_features(tmrna_list)
 
@@ -460,43 +455,21 @@ def parse_files(file_list, id_field="organism_name"):
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def parse_trna_feature(trna, seqfeature):
+def parse_trna_seqfeature(seqfeature, genome_id=""):
     """Parses a Biopython tRNA SeqFeature.
     """
-
-    pass
-
-
-# TODO need to implement. Christian is developing tRNA object.
-# TODO unit test.
-def create_trna_objects(seqfeature_list):
-    """Convert all Biopython tRNA SeqFeatures to tRNAFeature objects."""
-    trna_list = []
-    for seqfeature in seqfeature_list:
-        trna = ""
-        trna_list.append(trna)
-    return trna_list
+    trna = ""
+    return trna
 
 
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def parse_tmrna_feature(tmrna, seqfeature):
+def parse_tmrna_seqfeature(seqfeature, genome_id=""):
     """Parses a Biopython tRNA SeqFeature.
     """
-
-    pass
-
-
-# TODO need to implement. Christian is developing tRNA object.
-# TODO unit test.
-def create_tmrna_objects(seqfeature_list):
-    """Convert all Biopython tRNA SeqFeatures to tRNAFeature objects."""
-    tmrna_list = []
-    for seqfeature in seqfeature_list:
-        tmrna = ""
-        tmrna_list.append(tmrna)
-    return tmrna_list
+    tmrna = ""
+    return tmrna
 
 
 

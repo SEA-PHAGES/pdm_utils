@@ -549,7 +549,15 @@ class GenomePair:
     # Authorship is not as straightforward as other fields.
     def compare_author(self):
         """Compare the authorship of each genome."""
-        pass
+
+        result = ""
+        status = ""
+        definition = "Compare the authorship of both genomes."
+        eval = Eval.Eval(id = "GENOMEPAIR0007", \
+                        definition = definition, \
+                        result = result, \
+                        status = status)
+        self.evaluations.append(eval)
 
 
 

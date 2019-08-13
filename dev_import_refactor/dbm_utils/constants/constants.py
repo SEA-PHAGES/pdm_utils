@@ -187,65 +187,65 @@ PHAGE_NAME_TYPO_DICT = {
 #Definitions for different run mode types
 
 #Auto-annotations
-run_mode_pecaan_dict = {\
-	'use_basename':'no',\
-	'custom_gene_id':'no',\
-	'ignore_gene_id_typo':'no',\
-	'ignore_description_field_check':'no',\
-	'ignore_replace_warning':'no',\
-	'ignore_trna_check':'yes',\
-	'ignore_locus_tag_import':'yes',\
-	'ignore_phage_name_typos':'yes',\
-	'ignore_host_typos':'yes',\
-	'ignore_generic_author':'yes',\
-	'ignore_description_check':'yes'\
+run_mode_pecaan_dict = {
+	'use_basename':'no',
+	'custom_gene_id':'no',
+	'ignore_gene_id_typo':'no',
+	'ignore_description_field_check':'no',
+	'ignore_replace_warning':'no',
+	'ignore_trna_check':'yes',
+	'ignore_locus_tag_import':'yes',
+	'ignore_phage_name_typos':'yes',
+	'ignore_host_typos':'yes',
+	'ignore_generic_author':'yes',
+	'ignore_description_check':'yes'
 	}
 
 #Manual annotations
-run_mode_phagesdb_dict = {\
-	'use_basename':'no',\
-	'custom_gene_id':'no',\
-	'ignore_gene_id_typo':'no',\
-	'ignore_description_field_check':'no',\
-	'ignore_replace_warning':'no',\
-	'ignore_trna_check':'no',\
-	'ignore_locus_tag_import':'yes',\
-	'ignore_phage_name_typos':'no',\
-	'ignore_host_typos':'no',\
-	'ignore_generic_author':'no',\
-	'ignore_description_check':'no'\
+run_mode_phagesdb_dict = {
+	'use_basename':'no',
+	'custom_gene_id':'no',
+	'ignore_gene_id_typo':'no',
+	'ignore_description_field_check':'no',
+	'ignore_replace_warning':'no',
+	'ignore_trna_check':'no',
+	'ignore_locus_tag_import':'yes',
+	'ignore_phage_name_typos':'no',
+	'ignore_host_typos':'no',
+	'ignore_generic_author':'no',
+	'ignore_description_check':'no'
 	}
 
 
 #SEA-PHAGES NCBI records
-run_mode_ncbi_auto_dict = {\
-	'use_basename':'no',\
-	'custom_gene_id':'no',\
-	'ignore_gene_id_typo':'yes',\
-	'ignore_description_field_check':'yes',\
-	'ignore_replace_warning':'yes',\
-	'ignore_trna_check':'yes',\
-	'ignore_locus_tag_import':'no',\
-	'ignore_phage_name_typos':'yes',\
-	'ignore_host_typos':'no',\
-	'ignore_generic_author':'yes',\
-	'ignore_description_check':'yes'\
+run_mode_ncbi_auto_dict = {
+	'use_basename':'no',
+	'custom_gene_id':'no',
+	'ignore_gene_id_typo':'yes',
+	'ignore_description_field_check':'yes',
+	'ignore_replace_warning':'yes',
+	'ignore_trna_check':'yes',
+	'ignore_locus_tag_import':'no',
+	'ignore_phage_name_typos':'yes',
+	'ignore_host_typos':'no',
+	'ignore_generic_author':'yes',
+	'ignore_description_check':'yes'
 	}
 
 
 #Misc NCBI records
 run_mode_ncbi_misc_dict = {
-	'use_basename':'yes',\
-	'custom_gene_id':'yes',\
-	'ignore_gene_id_typo':'yes',\
-	'ignore_description_field_check':'no',\
-	'ignore_replace_warning':'yes',\
-	'ignore_trna_check':'yes',\
-	'ignore_locus_tag_import':'no',\
-	'ignore_phage_name_typos':'yes',\
-	'ignore_host_typos':'yes',\
-	'ignore_generic_author':'yes',\
-	'ignore_description_check':'yes'\
+	'use_basename':'yes',
+	'custom_gene_id':'yes',
+	'ignore_gene_id_typo':'yes',
+	'ignore_description_field_check':'no',
+	'ignore_replace_warning':'yes',
+	'ignore_trna_check':'yes',
+	'ignore_locus_tag_import':'no',
+	'ignore_phage_name_typos':'yes',
+	'ignore_host_typos':'yes',
+	'ignore_generic_author':'yes',
+	'ignore_description_check':'yes'
 	}
 
 
