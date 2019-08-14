@@ -20,6 +20,14 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         self.invalid_pass = "invalid"
         self.invalid_db = "invalid"
         self.attempts = 5
+        self.valid_query = "SELECT database()"
+        self.invalid_query = "INVALID"
+        self.valid_transaction = ["SELECT COUNT(PhageID) FROM phage",
+                                  "SELECT COUNT(GeneID) FROM gene",
+                                  "SELECT COUNT(name) FROM pham"]
+        self.invalid_transaction = ["SELECT COUNT(PhageID) FROM phage",
+                                    "SELECT COUNT(GeneID) FROM gene",
+                                    "SELECT COUNT(GeneID) FROM phage"]
 
     def test_validate_credentials_1(self):
         """Valid username and password should result in True
@@ -266,7 +274,7 @@ class TestMySQLConnectionHandler(unittest.TestCase):
 
     def test_open_connection_6(self):
         """Should succeed in opening a new connection if valid connection
-    was closed."""
+        was closed."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pass
         self.handler.database = self.valid_db
@@ -285,6 +293,208 @@ class TestMySQLConnectionHandler(unittest.TestCase):
             self.assertIsNotNone(self.handler.connection)
         with self.subTest():
             self.assertTrue(self.handler.connection_status())
+
+    def test_execute_query_1(self):
+        """With a valid connection and valid query, cursor should be made and
+        query should be executed"""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        self.handler.open_connection()
+        return_list = self.handler.execute_query(self.valid_query)
+        self.assertEqual(return_list[0]["database()"], self.valid_db)
+
+    def test_execute_query_2(self):
+        """With a valid connection and invalid query, cursor should be made
+        and query should fail to be executed. Error message should print"""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        self.handler.open_connection()
+        return_list = self.handler.execute_query(self.invalid_query)
+        self.assertIsNone(return_list)
+
+    def test_execute_query_3(self):
+        """With a valid query and credentials/db, but no connection, a
+        connection should be made, cursor should be made and query should be
+        executed."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_list = self.handler.execute_query(self.valid_query)
+        with self.subTest():
+            self.assertIsNotNone(self.handler.connection)
+        with self.subTest():
+            self.assertTrue(self.handler.connection_status())
+        with self.subTest():
+            self.assertEqual(return_list[0]["database()"], self.valid_db)
+
+    def test_execute_query_4(self):
+        """With valid credentials/db but no connection and invalid query,
+        a connection should be made, cursor should be made but query should
+        fail to be executed. Error message should print."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_list = self.handler.execute_query(self.invalid_query)
+        with self.subTest():
+            self.assertIsNotNone(self.handler.connection)
+        with self.subTest():
+            self.assertTrue(self.handler.connection_status())
+        with self.subTest():
+            self.assertIsNone(return_list)
+
+    def test_execute_query_5(self):
+        """With invalid credentials, valid db, no connection and valid query, a
+        connection should fail to be made - error message should print."""
+        self.handler.username = self.invalid_user
+        self.handler.password = self.invalid_pass
+        self.handler.database = self.valid_db
+        # Force connection attempt with bad credentials - otherwise
+        # credentials would be asked
+        self.handler.credential_status = True
+        self.handler._database_status = False
+        return_list = self.handler.execute_query(self.valid_query)
+        with self.subTest():
+            self.assertIsNone(self.handler.connection)
+        with self.subTest():
+            self.assertFalse(self.handler.connection_status())
+        with self.subTest():
+            self.assertIsNone(return_list)
+
+    def test_execute_query_6(self):
+        """With valid credentials, invalid db, no connection and a valid
+        query, a connection should fail to be made - error message should
+        print."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.invalid_db
+        self.handler.credential_status = True
+        # Force connection attempt with bad database
+        self.handler._database_status = False
+        return_list = self.handler.execute_query(self.valid_query)
+        with self.subTest():
+            self.assertIsNone(self.handler.connection)
+        with self.subTest():
+            self.assertFalse(self.handler.connection_status())
+        with self.subTest():
+            self.assertIsNone(return_list)
+
+    def test_execute_query_7(self):
+        """Valid everything but no query should be ok; error message will
+        print and nothing will return."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_list = self.handler.execute_query()
+        with self.subTest():
+            self.assertIsNotNone(self.handler.connection)
+        with self.subTest():
+            self.assertTrue(self.handler.connection_status())
+        with self.subTest():
+            self.assertIsNone(return_list)
+
+    def test_execute_transaction_1(self):
+        """Valid everything should result in creation of cursor and execution
+        of all statements in the transaction - return code 0."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        self.handler.open_connection()
+        return_code = self.handler.execute_transaction(self.valid_transaction)
+        self.assertEqual(return_code, 0)
+
+    def test_execute_transaction_2(self):
+        """Valid connection but invalid transaction should return code 1."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        self.handler.open_connection()
+        return_code = self.handler.execute_transaction(self.invalid_transaction)
+        self.assertEqual(return_code, 1)
+
+    def test_execute_transaction_3(self):
+        """No connection but valid credentials/db and valid transaction
+        should return code 0."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_code = self.handler.execute_transaction(self.valid_transaction)
+        self.assertEqual(return_code, 0)
+
+    def test_execute_transaction_4(self):
+        """No connection but valid credentials/db and invalid transaction
+        should return code 1."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_code = self.handler.execute_transaction(self.invalid_transaction)
+        with self.subTest():
+            self.assertIsNotNone(self.handler.connection)
+        with self.subTest():
+            self.assertTrue(self.handler.connection_status())
+        with self.subTest():
+            self.assertEqual(return_code, 1)
+
+    def test_execute_transaction_5(self):
+        """No connection and invalid credentials with valid db and
+        transaction should return code 1."""
+        self.handler.username = self.invalid_user
+        self.handler.password = self.invalid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_code = self.handler.execute_transaction(self.valid_transaction)
+        with self.subTest():
+            self.assertIsNone(self.handler.connection)
+        with self.subTest():
+            self.assertFalse(self.handler.connection_status())
+        with self.subTest():
+            self.assertEqual(return_code, 1)
+
+    def test_execute_transaction_6(self):
+        """No connection and invalid db with valid credentials and
+        transaction should return code 1."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.invalid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_code = self.handler.execute_transaction(self.valid_transaction)
+        with self.subTest():
+            self.assertIsNone(self.handler.connection)
+        with self.subTest():
+            self.assertFalse(self.handler.connection_status())
+        with self.subTest():
+            self.assertEqual(return_code, 1)
+
+    def test_execute_transaction_7(self):
+        """Everything ok but no transaction should return 0."""
+        self.handler.username = self.valid_user
+        self.handler.password = self.valid_pass
+        self.handler.database = self.valid_db
+        self.handler.credential_status = True
+        self.handler._database_status = True
+        return_code = self.handler.execute_transaction()
+        self.assertEqual(return_code, 0)
 
 
 if __name__ == "__main__":
