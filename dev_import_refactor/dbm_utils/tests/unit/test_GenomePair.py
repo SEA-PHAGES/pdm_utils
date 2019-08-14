@@ -546,5 +546,96 @@ class TestGenomePairClass(unittest.TestCase):
 
 
 
+    def test_compare_annotation_status_1(self):
+        """Verify no error is produced when both genomes have an
+        expected annotation_status."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "draft"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "final"
+        self.genome_pair.compare_annotation_status( \
+            "type", "phamerator", "flat_file", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+
+    def test_compare_annotation_status_2(self):
+        """Verify no test is performed when the attribute is invalid."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "draft"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "final"
+        self.genome_pair.compare_annotation_status( \
+            "type_x", "phamerator", "flat_file", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+
+    def test_compare_annotation_status_3(self):
+        """Verify no test is performed when the ref_name is invalid."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "draft"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "final"
+        self.genome_pair.compare_annotation_status( \
+            "type", "phamerator_x", "flat_file", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+
+    def test_compare_annotation_status_4(self):
+        """Verify no test is performed when the query_name is invalid."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "draft"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "final"
+        self.genome_pair.compare_annotation_status( \
+            "type", "phamerator", "flat_file_x", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+
+    def test_compare_annotation_status_5(self):
+        """Verify no test is performed when the query_name is invalid."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "draft"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "final"
+        self.genome_pair.compare_annotation_status( \
+            "type", "phamerator", "flat_file_x", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+
+    def test_compare_annotation_status_6(self):
+        """Verify no test is performed when the ref_name and query_name
+        are the same."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "draft"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "final"
+        self.genome_pair.compare_annotation_status( \
+            "type", "phamerator", "phamerator", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+
+    def test_compare_annotation_status_7(self):
+        """Verify no error is produced when both genomes have an
+        expected annotation_status with order reverse."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "final"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "draft"
+        self.genome_pair.compare_annotation_status( \
+            "type", "flat_file", "phamerator", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+
+    def test_compare_annotation_status_8(self):
+        """Verify an error is produced when genomes do not have the
+        expected annotation_status."""
+        self.genome1.type = "phamerator"
+        self.genome1.annotation_status = "final"
+        self.genome2.type = "flat_file"
+        self.genome2.annotation_status = "draft"
+        self.genome_pair.compare_annotation_status( \
+            "type", "phamerator", "flat_file", "draft", "final")
+        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

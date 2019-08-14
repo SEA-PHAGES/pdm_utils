@@ -432,7 +432,7 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the id of each genome."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval("GENOMEPAIR", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -449,10 +449,7 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the sequence of each genome."
-        eval = Eval.Eval(id = "GENOMEPAIR0001", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOMEPAIR0001", definition, result, status)
         self.evaluations.append(eval)
 
     def compare_genome_length(self):
@@ -466,10 +463,7 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the length of both sequences."
-        eval = Eval.Eval(id = "GENOMEPAIR0002", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOMEPAIR0002", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -484,10 +478,7 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the cluster of both genomes."
-        eval = Eval.Eval(id = "GENOMEPAIR0003", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOMEPAIR0003", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -502,10 +493,7 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the subcluster of both genomes."
-        eval = Eval.Eval(id = "GENOMEPAIR0004", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOMEPAIR0004", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -520,10 +508,7 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the accession of both genomes."
-        eval = Eval.Eval(id = "GENOMEPAIR0005", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOMEPAIR0005", definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -553,18 +538,56 @@ class GenomePair:
         result = ""
         status = ""
         definition = "Compare the authorship of both genomes."
-        eval = Eval.Eval(id = "GENOMEPAIR0007", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval("GENOMEPAIR0007", definition, result, status)
         self.evaluations.append(eval)
 
 
 
+    def compare_annotation_status(self, attribute,
+                                  ref_name, query_name,
+                                  ref_check_value, query_check_value):
+        """Compare the annotation_status of each genome.
 
-
-
-
+        The 'attribute' parameter provides the unique value of each
+        genome by which to assign the order of comparison.
+        The 'ref_name' parameter indicates the attribute value that
+        defines the reference genome.
+        The 'query_name' parameter indicates the attribute value that
+        defines the query genome.
+        The 'ref_check_value' parameters indicates the annotation_status
+        value that is expected in the reference genome.
+        The 'query_check_value' parameters indicates the annotation_status
+        value that is expected in the query genome.
+        """
+        try:
+            value1 = getattr(self.genome1, attribute)
+            value2 = getattr(self.genome2, attribute)
+        except:
+            value1 = None
+            value2 = None
+        if (value1 == ref_name and value2 == query_name):
+            ref_genome = self.genome1
+            query_genome = self.genome2
+        elif (value2 == ref_name and value1 == query_name):
+            ref_genome = self.genome2
+            query_genome = self.genome1
+        else:
+            ref_genome = None
+            query_genome = None
+        if (ref_genome is not None and query_genome is not None):
+            if (ref_genome.annotation_status == ref_check_value and \
+                    query_genome.annotation_status == query_check_value):
+                result = "The annotation_status of each genome is correct."
+                status = "correct"
+            else:
+                result = "The annotation_status of each genome is not correct."
+                status = "error"
+        else:
+            result = "The annotation_status was not evaluated."
+            status = "untested"
+        definition = "Compare the annotation_status of both genomes."
+        eval = Eval.Eval("GENOMEPAIR", definition, result, status)
+        self.evaluations.append(eval)
 
 
 

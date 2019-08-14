@@ -713,4 +713,15 @@ class Cds:
 
 
 
+
+
+    # TODO implement.
+    # TODO unittest.
+    def check_valid_description(self, check_set=None, attribute=None):
+        """Check if the CDS description in the indicated attribute is valid."""
+        pass
+
+
+
+
 ###

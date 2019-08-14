@@ -524,5 +524,43 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+
+    def test_check_compatible_type_and_annotation_status_1(self):
+        """Verify that no error is produced with "add" type and "draft"
+        annotation_status."""
+        self.ticket.type = "add"
+        self.ticket.annotation_status = "draft"
+        self.ticket.check_compatible_type_and_annotation_status()
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_compatible_type_and_annotation_status_2(self):
+        """Verify that an error is produced with "add" type and "final"
+        annotation_status."""
+        self.ticket.type = "add"
+        self.ticket.annotation_status = "final"
+        self.ticket.check_compatible_type_and_annotation_status()
+        self.assertEqual(self.ticket.evaluations[0].status, "error")
+
+    def test_check_compatible_type_and_annotation_status_3(self):
+        """Verify that no error is produced with "replace" type and "final"
+        annotation_status."""
+        self.ticket.type = "replace"
+        self.ticket.annotation_status = "final"
+        self.ticket.check_compatible_type_and_annotation_status()
+        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+
+    def test_check_compatible_type_and_annotation_status_4(self):
+        """Verify that no error is produced with "replace" type and "draft"
+        annotation_status."""
+        self.ticket.type = "replace"
+        self.ticket.annotation_status = "draft"
+        self.ticket.check_compatible_type_and_annotation_status()
+        self.assertEqual(self.ticket.evaluations[0].status, "error")
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

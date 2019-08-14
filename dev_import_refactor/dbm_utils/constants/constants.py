@@ -186,75 +186,87 @@ PHAGE_NAME_TYPO_DICT = {
 
 #Definitions for different run mode types
 
+# Description of different run mode options:
+
+
+# Options unrelated to flat file content:
+# 'check_replace': Should unexpected genome replacements be prevented?
+# 'import_locus_tag': Should locus_tags be imported?
+
+
+# Options relating how to evaluate a flat file:
+# 'filename': Should the filename be used to assign the Genome ID?
+# 'check_locus_tag': Should the structure of locus_tags be checked?
+# 'check_description_field': Does it matter if CDS descriptions are present in multiple fields?
+# 'check_description': Should unexpected CDS descriptions within the flat file be reported?
+# 'check_trna': Should tRNA features be evaluated?
+# 'check_id_typo': Should genome ID typos within the flat file be reported?
+# 'check_host_typo': Should host typos within the flat file be reported?
+# 'check_author': Should unexpected authors within the flat file be reported?
+
+
+RUN_MODE_BASE = {
+    "use_filename":True,
+    "check_locus_tag":False,
+    "check_description_field":True,
+    "check_replace":True,
+    "check_trna":True,
+    "import_locus_tag":True,
+    "check_id_typo":True,
+    "check_host_typo":True,
+    "check_author":True,
+    "check_description":True
+    }
+
 #Auto-annotations
-run_mode_pecaan_dict = {
-	'use_basename':'no',
-	'custom_gene_id':'no',
-	'ignore_gene_id_typo':'no',
-	'ignore_description_field_check':'no',
-	'ignore_replace_warning':'no',
-	'ignore_trna_check':'yes',
-	'ignore_locus_tag_import':'yes',
-	'ignore_phage_name_typos':'yes',
-	'ignore_host_typos':'yes',
-	'ignore_generic_author':'yes',
-	'ignore_description_check':'yes'
-	}
+def __get_run_mode_pecaan(dict=RUN_MODE_BASE):
+    new_dict = dict.copy()
+    new_dict["check_trna"] = False
+    new_dict["import_locus_tag"] = False
+    new_dict["check_id_typo"] = False
+    new_dict["check_host_typo"] = False
+    new_dict["check_author"] = False
+    new_dict["check_description"] = False
+    return new_dict
+RUN_MODE_PECAAN = __get_run_mode_pecaan()
 
 #Manual annotations
-run_mode_phagesdb_dict = {
-	'use_basename':'no',
-	'custom_gene_id':'no',
-	'ignore_gene_id_typo':'no',
-	'ignore_description_field_check':'no',
-	'ignore_replace_warning':'no',
-	'ignore_trna_check':'no',
-	'ignore_locus_tag_import':'yes',
-	'ignore_phage_name_typos':'no',
-	'ignore_host_typos':'no',
-	'ignore_generic_author':'no',
-	'ignore_description_check':'no'
-	}
+def __get_run_mode_phagesdb(dict=RUN_MODE_BASE):
+    new_dict = dict.copy()
+    new_dict["import_locus_tag"] = False
+RUN_MODE_PHAGESDB = __get_run_mode_phagesdb()
 
+#SEA-PHAGES GenBank records
+def __get_run_mode_sea_auto(dict=RUN_MODE_BASE):
+    new_dict = dict.copy()
+    new_dict["check_locus_tag"] = False
+    new_dict["check_description_field"] = False
+    new_dict["check_replace"] = False
+    new_dict["check_trna"] = False
+    new_dict["check_id_typo"] = False
+    new_dict["check_author"] = False
+    new_dict["check_description"] = False
+    return new_dict
+RUN_MODE_SEA_AUTO = __get_run_mode_sea_auto()
 
-#SEA-PHAGES NCBI records
-run_mode_ncbi_auto_dict = {
-	'use_basename':'no',
-	'custom_gene_id':'no',
-	'ignore_gene_id_typo':'yes',
-	'ignore_description_field_check':'yes',
-	'ignore_replace_warning':'yes',
-	'ignore_trna_check':'yes',
-	'ignore_locus_tag_import':'no',
-	'ignore_phage_name_typos':'yes',
-	'ignore_host_typos':'no',
-	'ignore_generic_author':'yes',
-	'ignore_description_check':'yes'
-	}
-
-
-#Misc NCBI records
-run_mode_ncbi_misc_dict = {
-	'use_basename':'yes',
-	'custom_gene_id':'yes',
-	'ignore_gene_id_typo':'yes',
-	'ignore_description_field_check':'no',
-	'ignore_replace_warning':'yes',
-	'ignore_trna_check':'yes',
-	'ignore_locus_tag_import':'no',
-	'ignore_phage_name_typos':'yes',
-	'ignore_host_typos':'yes',
-	'ignore_generic_author':'yes',
-	'ignore_description_check':'yes'
-	}
-
-
-
+#Non-SEA-PHAGES GenBank records
+def __get_run_mode_misc(dict=RUN_MODE_BASE):
+    new_dict = dict.copy()
+    new_dict["use_filename"] = False
+    new_dict["check_locus_tag"] = False
+    new_dict["check_replace"] = False
+    new_dict["check_trna"] = False
+    new_dict["check_id_typo"] = False
+    new_dict["check_host_typo"] = False
+    new_dict["check_author"] = False
+    new_dict["check_description"] = False
+    return new_dict
+RUN_MODE_MISC = __get_run_mode_misc()
 
 #Custom QC settings. User can select the settings, so it is initialized as
 #an empty dictionary that only gets filled if there is a ticket indicating
 #a custom set of parameters is needed.
-run_mode_custom_dict = {}
+RUN_MODE_CUSTOM = RUN_MODE_BASE.copy()
 
 
 #A dictionary that holds all the other dictionaries.
@@ -266,122 +278,10 @@ run_mode_custom_dict = {}
 #run mode, since that is the most stringest criteria.
 #'custom': reserved for when the user wants to specify a unique combination of options
 #that are not reflected in the other run modes.
-run_mode_options_dict = {\
-	'none':'',\
-	'pecaan':run_mode_pecaan_dict,\
-	'phagesdb':run_mode_phagesdb_dict,\
-	'ncbi_auto':run_mode_ncbi_auto_dict,\
-	'ncbi_misc':run_mode_ncbi_misc_dict,\
-	'other':run_mode_phagesdb_dict,\
-	'custom':run_mode_custom_dict}
-
-
-
-
-
-
-# # TODO move this to another module and construct this function.
-# def custom_runmode():
-#
-#     if run_mode_custom_total > 0:
-#
-#     	print "\n\nOne or more import tickets indicate custom QC parameters."
-#     	print "The following options will be applied to all tickets requiring a custom QC:"
-#
-#     	#1. Use the file's basename as the PhageID instead of the phage name in the file
-#     	print "\n\n\n\nNormally, the PhageID is determined from the Organism field in the record."
-#     	run_mode_custom_dict['use_basename'] = select_option(\
-#     		"\nInstead, do you want to use the file name as the PhageID? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#2. Create GeneIDs from locus tags or PhageID_GeneNumber concatenation
-#     	#Many times non-Hatfull authored genomes do not have consistent or specific locus tags, which complicates
-#     	#assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
-#     	#by joining PhageID and CDS number.
-#     	print "\n\n\n\nNormally, the GeneIDs are assigned by using the locus tags."
-#     	run_mode_custom_dict['custom_gene_id'] = select_option(\
-#     		"\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#3. Ensure GeneIDs have phage name spelled correctly?
-#     	#New SEA-PHAGES annotated genomes should be check for spelling, but maybe not
-#     	#for other types of genomes.
-#     	print "\n\n\n\nNormally, the GeneIDs are required to contain the phage name without typos."
-#     	run_mode_custom_dict['ignore_gene_id_typo'] = select_option(\
-#     		"\nInstead, do you want to allow missing or mispelled phage names in the GeneID? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#4. Gene descriptions are set to import table field regardless
-#     	#This should be run for new SEA-PHAGES annotated genomes, but may want to
-#     	#be skipped if importing many genomes from NCBI
-#     	print "\n\n\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
-#     	run_mode_custom_dict['ignore_description_field_check'] = select_option(\
-#     		"\nInstead, do you want to use the import table qualifier without verification? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#5. Replacing final with final warning
-#     	#Once a genome gets in NCBI, it is expected that a Final status genome is
-#     	#replaced with another Final status genome, so it could get annoying to
-#     	#keep getting the warning, so it can be turned off.
-#     	print "\n\n\n\nNormally, a warning is indicated if a Final status genome is being replaced."
-#     	run_mode_custom_dict['ignore_replace_warning'] = select_option(\
-#     		"\nInstead, do you want to silence the status warnings? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#6. tRNA QC
-#     	#Many genomes from NCBI, including SEA-PHAGES, may not have consistently
-#     	#annotated tRNAs. So the tRNA QC can be skipped.
-#     	print "\n\n\n\nNormally, tRNAs are checked only in new manually annotated genomes."
-#     	run_mode_custom_dict['ignore_trna_check'] = select_option(\
-#     		"\nInstead, do you want to ignore the tRNA quality checks? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#7. Retain locus tags
-#     	#The locus tag field in the database should only reflect 'official' locus tags from
-#     	#bona fide Genbank records, and not simply Genbank-formatted files.
-#     	#Locus tags from Pecaan auto-annotated and SMART team manually annotated
-#     	#genomes should not be retained.
-#     	print "\n\n\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
-#     	run_mode_custom_dict['ignore_locus_tag_import'] = select_option(\
-#     		"\nInstead, do you want to ignore all locus tags? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#8. Ignore phage name typos in the header
-#     	#The phage name can be found in several header fields. This should be
-#     	#checked for new manual annotations. Since NCBI doesn't like to change these
-#     	#types of typos, parsing NCBI records should skip this step.
-#     	print "\n\n\n\nNormally, the phage name is verified only in new manual annotations."
-#     	run_mode_custom_dict['ignore_phage_name_typos'] = select_option(\
-#     		"\nInstead, do you want to ignore any phage name typos in the header? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#9. Ignore host name typos in the header
-#     	#The host name can be found in several header fields. This should be
-#     	#checked for new manual annotations and in SEA-PHAGES NCBI records.
-#     	print "\n\n\n\nNormally, the host name is verified in new manual annotations or SEA-PHAGES NCBI records."
-#     	run_mode_custom_dict['ignore_host_typos'] = select_option(\
-#     		"\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#10. Ignore generic author in the author list
-#     	#Sometimes the generic author 'Lastname' or 'Firstname' gets added in DNA Master
-#     	#This should be checked for new manual annotations only.
-#     	print "\n\n\n\nNormally, the author list is checked to ensure the generic author Lastname,Firstname is absent in new manual annotations."
-#     	run_mode_custom_dict['ignore_generic_author'] = select_option(\
-#     		"\nDo you want to ignore any generic authors in the author list? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#     	#11. Ignore gene description checks
-#     	#The gene description may contain errors.
-#     	#This should be checked for new manual annotations only.
-#     	print "\n\n\n\nNormally, gene descriptions are checked in new manual annotations."
-#     	run_mode_custom_dict['ignore_description_check'] = select_option(\
-#     		"\nDo you want to ignore gene description checks? (yes or no) ", \
-#     		set(['yes','y','no','n']))
-#
-#
-#
-#
-#
-#     	#Now add the customized dictionary of options to the dictionary of all run modes
-#     	run_mode_options_dict['custom'] = run_mode_custom_dict
+RUN_MODES = {
+    "pecaan":RUN_MODE_PECAAN,
+    "phagesdb":RUN_MODE_PHAGESDB,
+    "sea_auto":RUN_MODE_SEA_AUTO,
+    "misc":RUN_MODE_MISC,
+    "custom":RUN_MODE_CUSTOM
+    }

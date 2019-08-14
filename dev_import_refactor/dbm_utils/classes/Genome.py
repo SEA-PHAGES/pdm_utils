@@ -656,43 +656,34 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_authors(self, check_set=constants.AUTHOR_SET):
-        """Check author name spelling.
+    def check_authors(self, check_set=set(), expect=True):
+        """Check author list.
 
-        When AnnotationAuthor is set to 1, it will expect to find at least
-        one of the authors stored in the object present in the supplied
-        author set.
-        When AnnotationAuthor is set to 0, it will expect to NOT find the
-        one of the authors present in the supplied author set.
+        The method will compare the list of authors provided in the
+        'check_set' parameter with the list of authors stored in the
+        'authors' attribute. It will then evaluate whether the presence
+        of at least one author matches what is expected, as indicated
+        by the 'expect' parameter.
         """
         authors_list = self.authors.lower().split(";")
         authors_list = [x.strip() for x in authors_list]
         authors_set = set(authors_list)
         mutual_authors_set = authors_set & check_set
-        if (self.annotation_author == 1 and len(mutual_authors_set) == 0):
-            result = "The expected authors are not listed."
-            status = "error"
-        elif (self.annotation_author == 0 and len(mutual_authors_set) > 0):
-            result = "The authors are not expected to be present."
-            status = "error"
+        if len(mutual_authors_set) == 0:
+            if expect:
+                result = "The expected authors are not listed."
+                status = "error"
+            else:
+                result = "The authorship is as expected."
+                status = "correct"
         else:
-            result = "The authorship is as expected."
-            status = "correct"
+            if expect:
+                result = "The authorship is as expected."
+                status = "correct"
+            else:
+                result = "The authors are not expected to be present."
+                status = "error"
         definition = "Check authorship."
-
-        # TODO this is probably no longer needed.
-        # pattern = re.compile(author.lower())
-        # search_result = pattern.search(authors)
-        # if (self.annotation_author == 1 and search_result == None):
-        #     result = "The expected author is not listed."
-        #     status = "error"
-        # elif (self.annotation_author == 0 and search_result != None):
-        #     result = "The author is not expected to be present."
-        #     status = "error"
-        # else:
-        #     result = "The authorship is as expected."
-        #     status = "correct"
-        # definition = "Check authorship."
         eval = Eval.Eval("GENOME0013", definition, result, status)
         self.evaluations.append(eval)
 

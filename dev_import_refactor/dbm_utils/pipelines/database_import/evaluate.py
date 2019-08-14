@@ -173,6 +173,7 @@ def check_cds_for_import(cds, locus_flag=True,
     if description_flag:
         cds.check_description_field()
         cds.check_generic_data()
+        cds.check_valid_description()
 
 
 
@@ -186,19 +187,10 @@ def compare_genomes(genome_pair):
     genome_pair.compare_host_genus()
     genome_pair.compare_author()
 
+    if status_flag:
+        genome_pair.compare_annotation_status("type","phamerator",
+            "flat_file","draft","final")
 
-
-    # TODO at this stage check the annotation_status of the genome. If it is a final,
-    # and there is no other paired genome, it should throw an error. This was
-    # moved from the ticket evaluation stage.
-    # if self.annotation_status == "final":
-    #     result6 = "The phage %s to be added is listed " + \
-    #             "as Final status, but no Draft (or other) genome " + \
-    #             " is listed to be removed."
-    #     status6 = "error"
-    # else:
-    #     result6 = ""
-    #     status6 = "correct"
 
 
 
@@ -243,11 +235,13 @@ def check_bundle_for_import(bundle):
         bundle.check_genome_dict("flat_file")
         bundle.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
 
-        ticket.set_value_flag("retrieve")
+        ticket.set_value_flag("retrieve") # TODO this method is not implemented.
         if ticket._value_flag:
             bundle.check_genome_dict("phagesdb")
             bundle.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
 
+    # TODO this may need to be moved elsewhere.
+    ticket.check_compatible_type_and_annotation_status()
 
     if ticket.type == "replace":
         bundle.check_genome_dict("remove")
@@ -267,7 +261,6 @@ def check_bundle_for_import(bundle):
     except:
         pass
 
-
     try:
         compare_genomes_for_replace(bundle.genome_pair_dict["flat_file_phamerator"])
     except:
@@ -285,20 +278,16 @@ def check_bundle_for_import(bundle):
 
 
 
-
-
 # TODO implement.
 # TODO unit test.
-def check_genome_to_import(genome, type):
+def check_genome_to_import(genome, type, null_set, phage_id_set,
+                           seq_set, host_set, cluster_set, subcluster_set):
     """Check a Genome object for errors."""
 
     if type == "add":
-        genome.check_id(phage_id_set, False)
-        genome.check_id(null_set, False)
-        genome.check_name(phage_id_set, False) # TODO is this needed?
-        genome.check_name(null_set, False) # TODO is this needed?
-        genome.check_sequence(seq_set, False)
-        genome.check_sequence(null_set, False)
+        genome.check_id(phage_id_set | null_set, False)
+        genome.check_name(phage_id_set | null_set, False) # TODO is this needed?
+        genome.check_sequence(seq_set | null_set, False)
 
     # Certain checks if it is a 'replace' ticket.
     else:
@@ -307,33 +296,67 @@ def check_genome_to_import(genome, type):
         genome.check_sequence(seq_set, True)
 
 
+    # TODO if these values are set at the command line, these checks
+    # may no longer be needed.
     # ticket = ticket.check_description_field(description_field_set)
     # ticket = ticket.check_run_mode(run_mode_set)
 
 
 
     genome.check_annotation_status(expect = True)
-    genome.check_host_genus(host_set, True)
-    genome.check_cluster(cluster_set, True)
-    genome.check_subcluster(subcluster_set, True)
+
+
+
+    # TODO This may no longer be needed, if cluster data not used
+    # during genome import.
+    # genome.check_cluster(cluster_set, True)
+    # genome.check_subcluster(subcluster_set, True)
+    # genome.check_subcluster_structure()
+    # genome.check_cluster_structure()
+    # genome.check_compatible_cluster_and_subcluster()
+
+    # TODO This may no longer be needed, if this database field is removed.
+    # genome.check_annotation_qc()
+
+    # TODO This may no longer be needed.
+    # genome.check_filename()
+
+    # TODO not sure if this is needed.
+    # genome.check_accession(accession_set, False)
+
+
     genome.check_annotation_author()
-    genome.check_annotation_qc()
     genome.check_retrieve_record()
-    genome.check_filename() # TODO is this needed?
-    genome.check_subcluster_structure()
-    genome.check_cluster_structure()
-    genome.check_compatible_cluster_and_subcluster()
-    # genome.check_accession(accession_set, False) # TODO is this needed?
-    genome.check_nucleotides(alphabet = alphabet) # TODO decide how to implement alphabet
+
+
+
+    if seq_flag:
+        genome.check_nucleotides()
     genome.check_compatible_status_and_accession()
     genome.check_compatible_status_and_descriptions()
-    genome.check_description_name()
-    genome.check_source_name()
-    genome.check_organism_name()
-    genome.check_description_host_genus()
-    genome.check_source_host_genus()
-    genome.check_organism_host_genus()
-    genome.check_authors()
+
+    if name_flag:
+        genome.check_description_name()
+        genome.check_source_name()
+        genome.check_organism_name()
+
+    if host_flag:
+        genome.check_host_genus(host_set, True)
+        genome.check_description_host_genus()
+        genome.check_source_host_genus()
+        genome.check_organism_host_genus()
+
+
+    if author_flag:
+        if genome.annotation_author == 1:
+            genome.check_authors(check_set=constants.AUTHOR_SET)
+            genome.check_authors(check_set=set(["lastname", "firstname"]),
+                                 expect=False)
+        else:
+            genome.check_authors(check_set=constants.AUTHOR_SET, expect=False)
+
+
+
     genome.check_cds_feature_tally()
     genome.check_cds_start_end_ids() # TODO decide how to evaluate duplicate feature coordinates.
     genome.check_cds_end_strand_ids() # TODO decide how to evaluate duplicate feature coordinates.

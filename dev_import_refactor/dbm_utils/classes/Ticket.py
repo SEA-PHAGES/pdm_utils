@@ -359,6 +359,34 @@ class GenomeTicket:
 
 
 
+    def check_compatible_type_and_annotation_status(self):
+        """Check if the ticket type and annotation_status are compatible.
+
+        If the ticket type is "add", then the annotation_status is not
+        expected to be "final".
+        If the ticket type is "replace", then the annotation_status is
+        not expected to be "draft".
+        """
+
+        if (self.type == "add" and self.annotation_status == "final"):
+            result = "The ticket type indicates that a genome" + \
+                     "with 'final' annotation_status will be added," + \
+                     "which is not expected."
+            status = "error"
+        elif (self.type == "replace" and self.annotation_status == "draft"):
+            result = "The ticket type indicates that a genome" + \
+                     "with 'draft' annotation_status will be replaced," + \
+                     "which is not expected."
+            status = "error"
+        else:
+            result = "The ticket type and annotation_status are expected."
+            status = "correct"
+        definition = "Check if the ticket type and annotation_status" \
+                     + " are compatible."
+        eval = Eval.Eval("TICKET", definition, result, status)
+        self.evaluations.append(eval)
+
+
 
 
 

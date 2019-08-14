@@ -86,7 +86,7 @@ class Bundle:
         eval = Eval.Eval("BUNDLE", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_genome_dictionary(self, key, expect = True):
+    def check_genome_dictionary(self, key, expect=True):
         """Check if a genome is present in the genome dictionary.
         The 'key' parameter indicates how the genome is expected to be
         stored in the dictionary.
@@ -110,7 +110,7 @@ class Bundle:
         eval = Eval.Eval("BUNDLE", definition, result, status)
         self.evaluations.append(eval)
 
-    def check_genome_pair_dictionary(self, key, expect = True):
+    def check_genome_pair_dictionary(self, key, expect=True):
         """Check if a genome_pair is present in the genome_pair dictionary.
         The 'key' parameter indicates how the genome_pair is expected to be
         stored in the dictionary.
