@@ -141,18 +141,19 @@ def check_phagesdb_genome(genome, null_set):
 
 
 
-def check_source_for_import(source, name_flag=True,genus_flag=True):
+def check_source_for_import(source, check_id_typo=True, check_host_typo=True):
     """Check a Source object for errors."""
-    if name_flag:
+    if check_id_typo:
         source.check_organism_name()
-    if genus_flag:
+    if check_host_typo:
         source.check_organism_host_genus()
         source.check_host_host_genus()
         source.check_lab_host_host_genus()
 
 
-def check_cds_for_import(cds, locus_flag=True,
-                         gene_flag=True, description_flag=True):
+def check_cds_for_import(cds, check_locus_tag=True,
+                         check_gene=True, check_description=True,
+                         check_description_field=True):
     """Check a Cds object for errors."""
     cds.check_amino_acids()
     cds.check_translation()
@@ -162,22 +163,23 @@ def check_cds_for_import(cds, locus_flag=True,
     cds.check_strand()
 
     # These evaluations vary by genome type, stage of import, etc.
-    if locus_flag:
+    if check_locus_tag:
         cds.check_locus_tag_present()
         cds.check_locus_tag_structure()
-    if gene_flag:
+    if check_gene:
         cds.check_gene_present()
         cds.check_gene_structure()
-    if locus_flag and gene_flag:
+    if check_locus_tag and check_gene:
         cds.check_compatible_gene_and_locus_tag()
-    if description_flag:
-        cds.check_description_field()
+    if check_description:
         cds.check_generic_data()
         cds.check_valid_description()
+    if check_description_field:
+        cds.check_description_field()
 
 
 
-def compare_genomes(genome_pair):
+def compare_genomes(genome_pair, check_replace=True):
     """Compare two genomes to identify discrepancies."""
     genome_pair.compare_genome_sequence()
     genome_pair.compare_genome_length()
@@ -187,7 +189,7 @@ def compare_genomes(genome_pair):
     genome_pair.compare_host_genus()
     genome_pair.compare_author()
 
-    if status_flag:
+    if check_replace:
         genome_pair.compare_annotation_status("type","phamerator",
             "flat_file","draft","final")
 
@@ -280,11 +282,11 @@ def check_bundle_for_import(bundle):
 
 # TODO implement.
 # TODO unit test.
-def check_genome_to_import(genome, type, null_set, phage_id_set,
+def check_genome_to_import(genome, ticket, null_set, phage_id_set,
                            seq_set, host_set, cluster_set, subcluster_set):
     """Check a Genome object for errors."""
 
-    if type == "add":
+    if ticket.type == "add":
         genome.check_id(phage_id_set | null_set, False)
         genome.check_name(phage_id_set | null_set, False) # TODO is this needed?
         genome.check_sequence(seq_set | null_set, False)
@@ -303,17 +305,17 @@ def check_genome_to_import(genome, type, null_set, phage_id_set,
 
 
 
-    genome.check_annotation_status(expect = True)
+    genome.check_annotation_status(expect=True)
 
 
 
     # TODO This may no longer be needed, if cluster data not used
     # during genome import.
-    # genome.check_cluster(cluster_set, True)
-    # genome.check_subcluster(subcluster_set, True)
-    # genome.check_subcluster_structure()
-    # genome.check_cluster_structure()
-    # genome.check_compatible_cluster_and_subcluster()
+    genome.check_cluster(cluster_set, True)
+    genome.check_subcluster(subcluster_set, True)
+    genome.check_subcluster_structure()
+    genome.check_cluster_structure()
+    genome.check_compatible_cluster_and_subcluster()
 
     # TODO This may no longer be needed, if this database field is removed.
     # genome.check_annotation_qc()
@@ -330,24 +332,24 @@ def check_genome_to_import(genome, type, null_set, phage_id_set,
 
 
 
-    if seq_flag:
+    if ticket.run_mode[check_seq]:
         genome.check_nucleotides()
     genome.check_compatible_status_and_accession()
     genome.check_compatible_status_and_descriptions()
 
-    if name_flag:
+    if ticket.run_mode[check_id_typo]:
         genome.check_description_name()
         genome.check_source_name()
         genome.check_organism_name()
 
-    if host_flag:
+    if ticket.run_mode[check_host_typo]:
         genome.check_host_genus(host_set, True)
         genome.check_description_host_genus()
         genome.check_source_host_genus()
         genome.check_organism_host_genus()
 
 
-    if author_flag:
+    if ticket.run_mode[check_author]:
         if genome.annotation_author == 1:
             genome.check_authors(check_set=constants.AUTHOR_SET)
             genome.check_authors(check_set=set(["lastname", "firstname"]),
@@ -369,10 +371,11 @@ def check_genome_to_import(genome, type, null_set, phage_id_set,
         index1 += 1
 
     # Check all tRNA features
-    index2 = 0
-    while index2 < len(genome.trna_features):
-        check_trna_for_import(genome.trna_features[index2])
-        index2 += 1
+    if ticket.run_mode[check_trna]:
+        index2 = 0
+        while index2 < len(genome.trna_features):
+            check_trna_for_import(genome.trna_features[index2])
+            index2 += 1
 
 
     # Check all Source features

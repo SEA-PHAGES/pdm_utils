@@ -526,20 +526,20 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-    def test_set_annotation_author_1(self):
-        """Check that annotation_author to set to 1 when author
-        is in author_set."""
-        input_author = "Hatfull"
-        self.genome.set_annotation_author(input_author)
-        self.assertEqual(self.genome.annotation_author, 1)
-
-    def test_set_annotation_author_2(self):
-        """Check that annotation_author to set to 0 when author
-        is not in author_set."""
-        input_author = "Unknown author"
-        self.genome.set_annotation_author(input_author)
-        self.assertEqual(self.genome.annotation_author, 0)
+    # TODO this is probably no longer needed.
+    # def test_set_annotation_author_1(self):
+    #     """Check that annotation_author to set to 1 when author
+    #     is in author_set."""
+    #     input_author = "Hatfull"
+    #     self.genome.set_annotation_author(input_author)
+    #     self.assertEqual(self.genome.annotation_author, 1)
+    #
+    # def test_set_annotation_author_2(self):
+    #     """Check that annotation_author to set to 0 when author
+    #     is not in author_set."""
+    #     input_author = "Unknown author"
+    #     self.genome.set_annotation_author(input_author)
+    #     self.assertEqual(self.genome.annotation_author, 0)
 
 
 

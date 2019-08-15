@@ -503,16 +503,18 @@ def check_value_in_two_sets(value, set1, set2):
     return result
 
 
-def convert_author(input_value):
-    """Converts author string to author integer using the
-    author dictionary.
-    """
-    input_value = input_value.lower()
-    if input_value in constants.AUTHOR_DICTIONARY[1]:
-        new_value = 1
-    else:
-        new_value = 0
-    return new_value
+
+# TODO this is probably no longer needed.
+# def convert_author(input_value):
+#     """Converts author string to author integer using the
+#     author dictionary.
+#     """
+#     input_value = input_value.lower()
+#     if input_value in constants.AUTHOR_DICTIONARY[1]:
+#         new_value = 1
+#     else:
+#         new_value = 0
+#     return new_value
 
 
 def lower_case(value):

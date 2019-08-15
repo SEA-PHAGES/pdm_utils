@@ -334,7 +334,8 @@ class Genome:
     # TODO this may no longer be needed.
     def set_annotation_author(self,value):
         """Convert author name listed in ticket to binary value if needed."""
-        self.annotation_author = basic.convert_author(value)
+        # self.annotation_author = basic.convert_author(value)
+        self.annotation_author = value
 
 
     # TODO implement.

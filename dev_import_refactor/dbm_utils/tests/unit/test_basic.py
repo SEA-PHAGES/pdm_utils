@@ -1342,18 +1342,18 @@ class TestBasicFunctions(unittest.TestCase):
 
 
 
-
-    def test_convert_author_1(self):
-        """Check that author in author_set is converted to 1."""
-        input_value = "Hatfull"
-        output_value = basic.convert_author(input_value)
-        self.assertEqual(output_value, 1)
-
-    def test_convert_author_2(self):
-        """Check that author not in author_set is converted to 0."""
-        input_value = "Unknown author"
-        output_value = basic.convert_author(input_value)
-        self.assertEqual(output_value, 0)
+    # TODO this is probably no longer needed.
+    # def test_convert_author_1(self):
+    #     """Check that author in author_set is converted to 1."""
+    #     input_value = "Hatfull"
+    #     output_value = basic.convert_author(input_value)
+    #     self.assertEqual(output_value, 1)
+    #
+    # def test_convert_author_2(self):
+    #     """Check that author not in author_set is converted to 0."""
+    #     input_value = "Unknown author"
+    #     output_value = basic.convert_author(input_value)
+    #     self.assertEqual(output_value, 0)
 
 
 

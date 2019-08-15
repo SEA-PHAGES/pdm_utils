@@ -640,7 +640,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.cluster = "A"
         self.add_ticket.subcluster = "A2"
         self.add_ticket.annotation_status = "final"
-        self.add_ticket.annotation_author = "hatfull"
+        self.add_ticket.annotation_author = 1
         self.add_ticket.annotation_qc = 1
         self.add_ticket.retrieve_record = 1
         self.add_ticket.accession = "ABC123.1"
@@ -657,7 +657,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.cluster = "A"
         self.remove_ticket.subcluster = "A2"
         self.remove_ticket.annotation_status = "final"
-        self.remove_ticket.annotation_author = "hatfull"
+        self.remove_ticket.annotation_author = 1
         self.remove_ticket.annotation_qc = 1
         self.remove_ticket.retrieve_record = 1
         self.remove_ticket.accession = "ABC123.1"
@@ -677,7 +677,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.cluster = "A"
         self.invalid_ticket.subcluster = "A2"
         self.invalid_ticket.annotation_status = "final"
-        self.invalid_ticket.annotation_author = "hatfull"
+        self.invalid_ticket.annotation_author = 1
         self.invalid_ticket.annotation_qc = 1
         self.invalid_ticket.retrieve_record = 1
         self.invalid_ticket.accession = "ABC123.1"

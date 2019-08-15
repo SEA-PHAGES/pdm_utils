@@ -18,8 +18,8 @@ class TestEvaluateClass(unittest.TestCase):
     def setUp(self):
 
         self.null_set = constants.EMPTY_SET
-        self.type_set = constants.TICKET_TYPE_SET
-        self.run_mode_set = constants.RUN_MODE_SET
+        self.type_set = constants.IMPORT_TICKET_TYPE_SET
+        self.run_mode_set = constants.RUN_MODES.keys()
 
         self.add_ticket1 = Ticket.GenomeTicket()
         self.add_ticket1.type = "add"
@@ -806,23 +806,23 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_check_source_for_import_1(self):
         """Verify correct number of evaluations are produced when
-        name_flag = True and genus_flag = True."""
+        check_id_typo = True and check_host_typo = True."""
         source = Source.Source()
         evaluate.check_source_for_import(source)
         self.assertEqual(len(source.evaluations), 4)
 
     def test_check_source_for_import_2(self):
         """Verify correct number of evaluations are produced when
-        name_flag = False and genus_flag = True."""
+        check_id_typo = False and check_host_typo = True."""
         source = Source.Source()
-        evaluate.check_source_for_import(source, name_flag=False)
+        evaluate.check_source_for_import(source, check_id_typo=False)
         self.assertEqual(len(source.evaluations), 3)
 
     def test_check_source_for_import_3(self):
         """Verify correct number of evaluations are produced when
-        name_flag = True and genus_flag = False."""
+        check_id_typo = True and check_host_typo = False."""
         source = Source.Source()
-        evaluate.check_source_for_import(source, genus_flag=False)
+        evaluate.check_source_for_import(source, check_host_typo=False)
         self.assertEqual(len(source.evaluations), 1)
 
 
@@ -835,34 +835,38 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_check_cds_for_import_1(self):
         """Verify correct number of evaluations are produced when
-        locus_flag = True, gene_flag = True, and description_flag = True."""
+        check_locus_tag = True, check_gene = True, and
+        check_description = True."""
         cds = Cds.Cds()
         evaluate.check_cds_for_import(cds)
         self.assertEqual(len(cds.evaluations), 13)
 
     def test_check_cds_for_import_2(self):
         """Verify correct number of evaluations are produced when
-        locus_flag = False, gene_flag = True, and description_flag = True."""
+        check_locus_tag = False, check_gene = True, and
+        check_description = True."""
         cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds, locus_flag=False)
+        evaluate.check_cds_for_import(cds, check_locus_tag=False)
         self.assertEqual(len(cds.evaluations), 10)
 
     def test_check_cds_for_import_3(self):
         """Verify correct number of evaluations are produced when
-        locus_flag = True, gene_flag = False, and description_flag = True."""
+        check_locus_tag = True, check_gene = False, and
+        check_description = True."""
         cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds, gene_flag=False)
+        evaluate.check_cds_for_import(cds, check_gene=False)
         self.assertEqual(len(cds.evaluations), 10)
 
     def test_check_cds_for_import_4(self):
         """Verify correct number of evaluations are produced when
-        locus_flag = True, gene_flag = True, and description_flag = False."""
+        check_locus_tag = True, check_gene = True, and
+        check_description = False."""
         cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds, description_flag=False)
-        self.assertEqual(len(cds.evaluations), 11)
+        evaluate.check_cds_for_import(cds, check_description=False)
+        self.assertEqual(len(cds.evaluations), 12)
 
 
-
+    # TODO test_check_cds_for_import_5 to test check_description_field parameter.
 
 
 
@@ -875,7 +879,7 @@ class TestEvaluateClass2(unittest.TestCase):
         genome_pair.genome1 = genome1
         genome_pair.genome2 = genome2
         evaluate.compare_genomes(genome_pair)
-        self.assertEqual(len(genome_pair.evaluations), 7)
+        self.assertEqual(len(genome_pair.evaluations), 8)
 
 
 
