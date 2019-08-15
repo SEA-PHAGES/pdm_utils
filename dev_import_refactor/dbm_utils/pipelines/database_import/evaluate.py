@@ -237,7 +237,7 @@ def check_bundle_for_import(bundle):
         bundle.check_genome_dict("flat_file")
         bundle.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
 
-        ticket.set_value_flag("retrieve") # TODO this method is not implemented.
+        ticket.set_value_flag("retrieve")
         if ticket._value_flag:
             bundle.check_genome_dict("phagesdb")
             bundle.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
@@ -249,27 +249,17 @@ def check_bundle_for_import(bundle):
         bundle.check_genome_dict("remove")
         bundle.check_genome_dict("phamerator")
         bundle.check_genome_pair_dict("flat_file_phamerator") # TODO Ordered correctly?
-        bundle.check_genome_pair_dict("remove_phamerator") # TODO Ordered correctly? Also - is this needed?
-
         ticket.set_value_flag("retain")
         if ticket._value_flag:
             bundle.check_genome_pair_dict("add_phamerator") # TODO Ordered correctly?
-
-
 
     # Second, evaluate each genome or pair of genomes as needed.
     try:
         check_genome_to_import(bundle.genome_dict["flat_file"], ticket.type)
     except:
         pass
-
     try:
         compare_genomes_for_replace(bundle.genome_pair_dict["flat_file_phamerator"])
-    except:
-        pass
-
-    try:
-        compare_genomes_for_remove(bundle.genome_pair_dict["remove_phamerator"])
     except:
         pass
 
@@ -288,13 +278,13 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
     if ticket.type == "add":
         genome.check_id(phage_id_set | null_set, False)
-        genome.check_name(phage_id_set | null_set, False) # TODO is this needed?
+        genome.check_name(phage_id_set | null_set, False)
         genome.check_sequence(seq_set | null_set, False)
 
-    # Certain checks if it is a 'replace' ticket.
+    # 'replace' ticket checks.
     else:
         genome.check_id(phage_id_set, True)
-        genome.check_name(phage_id_set, True) # TODO is this needed?
+        genome.check_name(phage_id_set, True)
         genome.check_sequence(seq_set, True)
 
 
@@ -303,9 +293,8 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
     # ticket = ticket.check_description_field(description_field_set)
     # ticket = ticket.check_run_mode(run_mode_set)
 
-
-
-    genome.check_annotation_status(expect=True)
+    genome.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
+                                   expect=True)
 
 
 
@@ -333,7 +322,7 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
 
     if ticket.run_mode[check_seq]:
-        genome.check_nucleotides()
+        genome.check_nucleotides(dna_alphabet_set=constants.DNA_ALPHABET)
     genome.check_compatible_status_and_accession()
     genome.check_compatible_status_and_descriptions()
 
@@ -360,8 +349,18 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
 
     genome.check_cds_feature_tally()
-    genome.check_cds_start_end_ids() # TODO decide how to evaluate duplicate feature coordinates.
-    genome.check_cds_end_strand_ids() # TODO decide how to evaluate duplicate feature coordinates.
+    genome.check_feature_ids(cds=True, trna=True, tmrna=True)
+
+
+    # TODO not sure if these are needed now that check_feature_ids()
+    # is implemented.
+    # genome.check_cds_start_end_ids()
+    # genome.check_cds_end_strand_ids()
+
+    # TODO confirm that these check_value_flag() are needed here.
+    genome.set_value_flag("retrieve")
+    genome.check_value_flag()
+    genome.set_value_flag("retain")
     genome.check_value_flag()
 
     # Check all CDS features
@@ -376,7 +375,6 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
         while index2 < len(genome.trna_features):
             check_trna_for_import(genome.trna_features[index2])
             index2 += 1
-
 
     # Check all Source features
     index3 = 0

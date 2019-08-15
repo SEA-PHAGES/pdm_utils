@@ -264,6 +264,25 @@ def identify_unique_items(complete_list):
     return (unique_set, duplicate_set)
 
 
+
+def identify_nested_items(complete_list):
+    """Iterate over a list of two-elemtn tuples and generate two lists.
+
+    The first list contains all tuples that are not nested in the
+    original list.
+    The second list contains all tuples that are nested in the original list.
+    """
+
+    not_nested_set = set()
+    nested_set = set()
+
+
+
+    return (not_nested_set, nested_set)
+
+
+
+
 def trim_characters(string):
     """Remove leading and trailing generic characters from a string."""
     generic_characters = set([".", ",", ";", "-", "_"])
@@ -626,12 +645,6 @@ def verify_path(filepath, kind=None):
               "Please try again",
               "use one of (None, dir, file).")
         return False
-
-
-
-
-
-
 
 
 

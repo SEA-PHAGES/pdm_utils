@@ -550,16 +550,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_2(self):
@@ -570,16 +570,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 1)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_3(self):
@@ -590,16 +590,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 1)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_4(self):
@@ -610,16 +610,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 1)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 0)
 
     def test_tally_descriptions_5(self):
@@ -630,16 +630,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 0)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 1)
 
     def test_tally_descriptions_6(self):
@@ -652,16 +652,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 1)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 1)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 1)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 1)
 
     def test_tally_descriptions_7(self):
@@ -681,16 +681,16 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.tally_descriptions()
 
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_descriptions_tally, 2)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_products_tally, 2)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_functions_tally, 2)
         with self.subTest():
-            self.assertEqual( \
+            self.assertEqual(
                 self.genome._cds_processed_notes_tally, 2)
 
 
@@ -1337,38 +1337,43 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the annotation_status
         is in the status_set and is expected to be in the set."""
         self.genome.annotation_status = "draft"
-        self.genome.check_annotation_status(expect = True)
+        self.genome.check_annotation_status(
+            check_set=constants.ANNOTATION_STATUS_SET, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_annotation_status_2(self):
         """Verify that an error is produced when the annotation_status
         is not in the status_set and is expected to be in the set."""
         self.genome.annotation_status = "invalid"
-        self.genome.check_annotation_status(expect = True)
+        self.genome.check_annotation_status(
+            check_set=constants.ANNOTATION_STATUS_SET, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_annotation_status_3(self):
         """Verify that no error is produced when the annotation_status
         is in a non-standard status_set and is expected to be in the set."""
-        value_set = set(["new_status", "final"])
+        check_set = set(["new_status", "final"])
         self.genome.annotation_status = "new_status"
-        self.genome.check_annotation_status(value_set, expect = True)
+        self.genome.check_annotation_status(
+            check_set=check_set, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_annotation_status_4(self):
         """Verify that an error is produced when the annotation_status
         is not a non-standard status_set and is expected to be in the set."""
-        value_set = set(["new_status", "final"])
+        check_set = set(["new_status", "final"])
         self.genome.annotation_status = "draft"
-        self.genome.check_annotation_status(value_set, expect = True)
+        self.genome.check_annotation_status(
+            check_set=check_set, expect = True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_annotation_status_5(self):
         """Verify that an error is produced when the annotation_status
         is in the set, and is not expected to be in the set."""
-        value_set = set(["new_status", "final"])
+        check_set = set(["new_status", "final"])
         self.genome.annotation_status = "new_status"
-        self.genome.check_annotation_status(value_set, expect = False)
+        self.genome.check_annotation_status(
+            check_set=check_set, expect = False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1581,21 +1586,24 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the annotation_author
         is valid."""
         self.genome.annotation_author = 0
-        self.genome.check_annotation_author()
+        self.genome.check_annotation_author(
+            check_set=constants.ANNOTATION_AUTHOR_SET)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_annotation_author_2(self):
         """Verify that no error is produced when the annotation_author
         is valid."""
         self.genome.annotation_author = 1
-        self.genome.check_annotation_author()
+        self.genome.check_annotation_author(
+            check_set=constants.ANNOTATION_AUTHOR_SET)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_annotation_author_3(self):
         """Verify that an error is produced when the annotation_author
         is not valid."""
         self.genome.annotation_author = "1"
-        self.genome.check_annotation_author()
+        self.genome.check_annotation_author(
+            check_set=constants.ANNOTATION_AUTHOR_SET)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_annotation_author_4(self):
@@ -1621,21 +1629,21 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the annotation_qc
         is valid."""
         self.genome.annotation_qc = 0
-        self.genome.check_annotation_qc()
+        self.genome.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_annotation_qc_2(self):
         """Verify that no error is produced when the annotation_qc
         is valid."""
         self.genome.annotation_qc = 1
-        self.genome.check_annotation_qc()
+        self.genome.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_annotation_qc_3(self):
         """Verify that an error is produced when the annotation_qc
         is not valid."""
         self.genome.annotation_qc = "1"
-        self.genome.check_annotation_qc()
+        self.genome.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_annotation_qc_4(self):
@@ -1661,21 +1669,24 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the retrieve_record
         is valid."""
         self.genome.retrieve_record = 0
-        self.genome.check_retrieve_record()
+        self.genome.check_retrieve_record(
+            check_set=constants.RETRIEVE_RECORD_SET)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_retrieve_record_2(self):
         """Verify that no error is produced when the retrieve_record
         is valid."""
         self.genome.retrieve_record = 1
-        self.genome.check_retrieve_record()
+        self.genome.check_retrieve_record(
+            check_set=constants.RETRIEVE_RECORD_SET)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_retrieve_record_3(self):
         """Verify that an error is produced when the retrieve_record
         is not valid."""
         self.genome.retrieve_record = "1"
-        self.genome.check_retrieve_record()
+        self.genome.check_retrieve_record(
+            check_set=constants.RETRIEVE_RECORD_SET)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_retrieve_record_4(self):
@@ -1683,7 +1694,7 @@ class TestGenomeClass(unittest.TestCase):
         is valid based on a supplied set."""
         check_set = set(["1", "2"])
         self.genome.retrieve_record = "1"
-        self.genome.check_retrieve_record(check_set)
+        self.genome.check_retrieve_record(check_set=check_set)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_retrieve_record_5(self):
@@ -1691,7 +1702,7 @@ class TestGenomeClass(unittest.TestCase):
         is valid based on a supplied set."""
         check_set = set(["1", "2"])
         self.genome.retrieve_record = 1
-        self.genome.check_retrieve_record(check_set)
+        self.genome.check_retrieve_record(check_set=check_set)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
 
@@ -1982,6 +1993,187 @@ class TestGenomeClass(unittest.TestCase):
         self.genome._value_flag = True
         self.genome.check_value_flag(False)
         self.assertEqual(self.genome.evaluations[0].status, "error")
+
+
+
+
+    def test_check_feature_ids_1(self):
+        """Verify no error is produced by two CDS features on same strand."""
+        self.cds1.strand = "F"
+        self.cds1.left = 5
+        self.cds1.right = 50
+        self.cds2.strand = "F"
+        self.cds2.left = 20
+        self.cds2.right = 70
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_feature_ids_2(self):
+        """Verify an error is produced by two CDS features on same strand
+        with identical left and right coordinates."""
+        self.cds1.strand = "F"
+        self.cds1.left = 5
+        self.cds1.right = 50
+        self.cds2.strand = "F"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_3(self):
+        """Verify an error is produced by two CDS features on different strand
+        with identical left and right coordinates."""
+        self.cds1.strand = "R"
+        self.cds1.left = 5
+        self.cds1.right = 50
+        self.cds2.strand = "F"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_4(self):
+        """Verify no error is produced by two CDS features on different strand
+        with identical left and right coordinates when strand is True."""
+        self.cds1.strand = "R"
+        self.cds1.left = 5
+        self.cds1.right = 50
+        self.cds2.strand = "F"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True, strand=True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_feature_ids_5(self):
+        """Verify an error is produced by two CDS features on same strand
+        when they have nested coordinates."""
+        self.cds1.strand = "F"
+        self.cds1.left = 10
+        self.cds1.right = 20
+        self.cds2.strand = "F"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_6(self):
+        """Verify no error is produced by two CDS features on "F" strand
+        when they have the same left (start) coordinates."""
+        self.cds1.strand = "F"
+        self.cds1.left = 10
+        self.cds1.right = 20
+        self.cds2.strand = "F"
+        self.cds2.left = 10
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_feature_ids_7(self):
+        """Verify an error is produced by two CDS features on "F" strand
+        when they have the same right (stop) coordinates."""
+        self.cds1.strand = "F"
+        self.cds1.left = 10
+        self.cds1.right = 50
+        self.cds2.strand = "F"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_8(self):
+        """Verify no error is produced by two CDS features on "R" strand
+        when they have the same right (start) coordinates."""
+        self.cds1.strand = "R"
+        self.cds1.left = 10
+        self.cds1.right = 50
+        self.cds2.strand = "R"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_feature_ids_9(self):
+        """Verify no error is produced by two CDS features on "R" strand
+        when they have the same left (stop) coordinates."""
+        self.cds1.strand = "R"
+        self.cds1.left = 5
+        self.cds1.right = 20
+        self.cds2.strand = "R"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_10(self):
+        """Verify an error is produced by a CDS and tRNA feature
+        when they have the same coordinates."""
+        self.cds1.strand = "F"
+        self.cds1.left = 5
+        self.cds1.right = 20
+        self.cds2.strand = "F"
+        self.cds2.left = 100
+        self.cds2.right = 200
+        self.trna1.left = 5
+        self.trna1.right = 20
+        self.trna1.strand = "F"
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.trna_features = [self.trna1]
+        self.genome.check_feature_ids(cds=True, trna=True)
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_11(self):
+        """Verify no error is produced by a CDS and tRNA feature
+        when they have the same coordinates when CDS is false."""
+        self.cds1.strand = "F"
+        self.cds1.left = 5
+        self.cds1.right = 20
+        self.cds2.strand = "F"
+        self.cds2.left = 100
+        self.cds2.right = 200
+        self.trna1.left = 5
+        self.trna1.right = 20
+        self.trna1.strand = "F"
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.trna_features = [self.trna1]
+        self.genome.check_feature_ids(trna=True)
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+    def test_check_feature_ids_12(self):
+        """Verify an error is produced by a CDS feature stored in the
+        CDS features list and a CDS feature stored in a supplementary list
+        when they have the same coordinates."""
+        self.cds1.strand = "F"
+        self.cds1.left = 5
+        self.cds1.right = 20
+        self.cds2.strand = "F"
+        self.cds2.left = 100
+        self.cds2.right = 200
+        self.cds3.strand = "F"
+        self.cds3.left = 5
+        self.cds3.right = 20
+        self.genome.cds_features = [self.cds1, self.cds2]
+        self.genome.check_feature_ids(cds=True, other=[self.cds3])
+        self.assertEqual(self.genome.evaluations[0].status, "error")
+
+    def test_check_feature_ids_13(self):
+        """Verify no error is produced when empty lists are passed through."""
+        self.genome.check_feature_ids(cds=True, trna=True, tmrna=True, other=[])
+        self.assertEqual(self.genome.evaluations[0].status, "correct")
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

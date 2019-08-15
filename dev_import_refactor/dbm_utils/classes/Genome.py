@@ -2,7 +2,6 @@
 maintain and update SEA-PHAGES phage genomics data.
 """
 
-from constants import constants
 from functions import basic
 from classes import Eval
 from datetime import datetime
@@ -71,6 +70,8 @@ class Genome:
         self._cds_duplicate_end_strand_ids = set() # TODO still in development.
         self.trna_features = []
         self._trna_features_tally = 0
+        self.tmrna_features = []
+        self._tmrna_features_tally = 0
         self.source_features = []
         self._source_features_tally = 0
 
@@ -392,6 +393,8 @@ class Genome:
         self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
 
 
+
+
     def set_value_flag(self, value):
         """Sets the flag if any attributes contain the specified 'value'."""
         if value in vars(self).values():
@@ -485,8 +488,7 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_annotation_status(self,
-            check_set=constants.ANNOTATION_STATUS_SET, expect=False):
+    def check_annotation_status(self, check_set=set(), expect=False):
         """Check that the annotation_status is valid."""
         value = basic.check_value_expected_in_set(self.annotation_status,
                 check_set, expect)
@@ -613,7 +615,7 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_nucleotides(self, dna_alphabet_set=constants.DNA_ALPHABET):
+    def check_nucleotides(self, dna_alphabet_set=set()):
         """Check if all nucleotides in the sequence are expected."""
         # When Biopython SeqIO parses the GenBank record, it automatically
         # determines that it is a DNA sequence. It assigns the Seq object
@@ -689,8 +691,7 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_annotation_author(self,
-            check_set=constants.ANNOTATION_AUTHOR_SET):
+    def check_annotation_author(self, check_set=set()):
         """Check that the annotation_author is valid."""
         if self.annotation_author in check_set:
             result = "The annotation_author is valid."
@@ -703,8 +704,7 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_annotation_qc(self,
-            check_set=constants.ANNOTATION_QC_SET):
+    def check_annotation_qc(self, check_set=set()):
         """Check that the annotation_qc is valid."""
         if self.annotation_qc in check_set:
             result = "The annotation_qc is valid."
@@ -717,8 +717,7 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_retrieve_record(self,
-            check_set=constants.RETRIEVE_RECORD_SET):
+    def check_retrieve_record(self, check_set=set()):
         """Check that the retrieve_record is valid."""
         if self.retrieve_record in check_set:
             result = "The retrieve_record is valid."
@@ -956,6 +955,78 @@ class Genome:
         definition = "Check if there are any attributes that are set to %s."
         eval = Eval.Eval("GENOME0029", definition, result, status)
         self.evaluations.append(eval)
+
+
+    def check_feature_ids(self, cds=False, trna=False, tmrna=False,
+                          other=None, strand=False):
+        """Identify overlapping, duplicated, or partially-duplicated
+        features."""
+        unsorted_feature_lists = []
+        unsorted_features = []
+        if cds:
+            unsorted_features.extend(self.cds_features)
+        if trna:
+            unsorted_features.extend(self.trna_features)
+        if tmrna:
+            unsorted_features.extend(self.tmrna_features)
+        if other is not None:
+            unsorted_features.extend(other)
+        if strand:
+            unsorted_f_features = [] # Forward strand
+            unsorted_r_features = [] # Reverse strand
+            index = 0
+            while index < len(unsorted_features):
+                feature = unsorted_features[index]
+                strand = basic.reformat_strand(feature.strand,
+                                               format="fr_short")
+                if strand == "f":
+                    unsorted_f_features.append(feature)
+                else:
+                    unsorted_r_features.append(feature)
+                index += 1
+            unsorted_feature_lists.append(unsorted_f_features)
+            unsorted_feature_lists.append(unsorted_r_features)
+        else:
+            unsorted_feature_lists.append(unsorted_features)
+        msgs = ["There are one or more errors with the feature coordinates."]
+        for unsorted_features in unsorted_feature_lists:
+            sorted_features = sorted(unsorted_features,
+                                     key=attrgetter("left", "right"))
+            index = 0
+            while index < len(sorted_features) - 1:
+                current = sorted_features[index]
+                next = sorted_features[index + 1]
+                if (current.left == next.left and current.right == next.right):
+                    msgs.append("Features contain identical left and " \
+                                + "right coordinates.")
+                elif (current.left < next.left and current.right > next.right):
+                    msgs.append("Features are nested.")
+                elif (current.left == next.left and \
+                        basic.reformat_strand(current.strand,
+                            format="fr_short") == "r" and \
+                        basic.reformat_strand(next.strand,
+                            format="fr_short") == "r"):
+                    msgs.append("Features contain the same stop coordinate.")
+                elif (current.right == next.right and \
+                        basic.reformat_strand(current.strand,
+                            format="fr_short") == "f" and \
+                        basic.reformat_strand(next.strand,
+                            format="fr_short") == "f"):
+                    msgs.append("Features contain the same stop coordinate.")
+                else:
+                    pass
+                index += 1
+        if len(msgs) > 1:
+            result = " ".join(msgs)
+            status = "error"
+        else:
+            result = "The feature coordinates are correct."
+            status = "correct"
+        definition = "Check if there are any errors with the " \
+                     + "genome's feature coordinates."
+        eval = Eval.Eval("GENOME", definition, result, status)
+        self.evaluations.append(eval)
+
 
 
 

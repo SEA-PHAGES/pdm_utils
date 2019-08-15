@@ -260,6 +260,30 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+    def test_set_value_flag_1(self):
+        """Verify that the 'retain' setting is set to True."""
+        self.ticket._value_flag = False
+        self.ticket.cluster = "retain"
+        self.ticket.set_value_flag("retain")
+        self.assertTrue(self.ticket._value_flag)
+
+    def test_set_value_flag_2(self):
+        """Verify that the 'retain' setting is set to False."""
+        self.ticket._value_flag = True
+        self.ticket.cluster = "A"
+        self.ticket.set_value_flag("retain")
+        self.assertFalse(self.ticket._value_flag)
+
+
+
+
+
+
+
+
+
+
+
     def test_check_parsed_fields_1(self):
         """Check that no error is produced if the
         correct number of fields were parsed."""

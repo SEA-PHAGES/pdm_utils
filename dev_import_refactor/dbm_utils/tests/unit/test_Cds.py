@@ -291,14 +291,14 @@ class TestCdsClass(unittest.TestCase):
         """Verify no error is produced if all amino acids
         are in the protein alphabet."""
         self.feature.translation = "ADE"
-        self.feature.check_amino_acids()
+        self.feature.check_amino_acids(check_set=constants.PROTEIN_ALPHABET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_amino_acids_2(self):
         """Verify an error is produced if some amino acids
         are not in the protein alphabet."""
         self.feature.translation = "ABDE"
-        self.feature.check_amino_acids()
+        self.feature.check_amino_acids(check_set=constants.PROTEIN_ALPHABET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_amino_acids_3(self):
@@ -306,7 +306,7 @@ class TestCdsClass(unittest.TestCase):
         are in a custom protein alphabet."""
         alphabet = set(["A","B","C", "D", "E", "F"])
         self.feature.translation = "ABDE"
-        self.feature.check_amino_acids(alphabet)
+        self.feature.check_amino_acids(check_set=alphabet)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_amino_acids_4(self):
@@ -314,7 +314,7 @@ class TestCdsClass(unittest.TestCase):
         are not in a custom protein alphabet."""
         alphabet = set(["A","B","C", "D", "E", "F"])
         self.feature.translation = "ABDEG"
-        self.feature.check_amino_acids(alphabet)
+        self.feature.check_amino_acids(check_set=alphabet)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
@@ -661,7 +661,8 @@ class TestCdsClass(unittest.TestCase):
         correct structure."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEA_TRIXIE_123"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_structure_2(self):
@@ -669,7 +670,8 @@ class TestCdsClass(unittest.TestCase):
         correct structure and the 'only_typo' parameter is chosen."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEATrixie123"
-        self.feature.check_locus_tag_structure(only_typo=True)
+        self.feature.check_locus_tag_structure(only_typo=True,
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_structure_3(self):
@@ -677,7 +679,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect structure and the 'only_typo' parameter is chosen."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEATrixi123"
-        self.feature.check_locus_tag_structure(only_typo=True)
+        self.feature.check_locus_tag_structure(only_typo=True,
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_4(self):
@@ -685,7 +688,8 @@ class TestCdsClass(unittest.TestCase):
         not capitalized."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "sea_trixie_123"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_5(self):
@@ -693,7 +697,8 @@ class TestCdsClass(unittest.TestCase):
         not capitalized but the 'caps' parameter is set to False."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "sea_trixie_123"
-        self.feature.check_locus_tag_structure(caps=False)
+        self.feature.check_locus_tag_structure(caps=False,
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_structure_6(self):
@@ -701,7 +706,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect number of parts."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "ABCTRIXIE_123"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_7(self):
@@ -709,7 +715,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect prefix."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "ABC_TRIXIE_123"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_8(self):
@@ -741,7 +748,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect genome due to misspelling."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEA_TRIXIEX_123"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_12(self):
@@ -749,7 +757,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect number."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEA_TRIXIE_123x"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_13(self):
@@ -757,7 +766,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect prefix, genome, and number."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "ABC_TRIXIEX_123X"
-        self.feature.check_locus_tag_structure()
+        self.feature.check_locus_tag_structure(
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         results = self.feature.evaluations[0].result.split(".")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "error")
@@ -773,7 +783,8 @@ class TestCdsClass(unittest.TestCase):
         incorrect genome when the 'check_value' parameter is used."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEA_TRIXIE_123"
-        self.feature.check_locus_tag_structure(check_value="L5")
+        self.feature.check_locus_tag_structure(check_value="L5",
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_locus_tag_structure_15(self):
@@ -781,7 +792,8 @@ class TestCdsClass(unittest.TestCase):
         correct genome when the 'check_value' parameter is used."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEA_L5_123"
-        self.feature.check_locus_tag_structure(check_value="L5")
+        self.feature.check_locus_tag_structure(check_value="L5",
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_locus_tag_structure_16(self):
@@ -789,7 +801,8 @@ class TestCdsClass(unittest.TestCase):
         genome when 'only_typo' and 'check_value' parameters are used."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEAL5123"
-        self.feature.check_locus_tag_structure(only_typo=True, check_value="L5")
+        self.feature.check_locus_tag_structure(only_typo=True,
+            check_value="L5", prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
 

@@ -411,7 +411,7 @@ class Cds:
         self.evaluations.append(eval)
 
 
-    def check_amino_acids(self, check_set=constants.PROTEIN_ALPHABET):
+    def check_amino_acids(self, check_set=set()):
         """Check whether all amino acids in the translation are valid."""
         amino_acid_set = set(self.translation)
         amino_acid_error_set = amino_acid_set - check_set
@@ -498,11 +498,8 @@ class Cds:
         self.evaluations.append(eval)
 
 
-    def check_locus_tag_structure(self,
-                                  check_value=None,
-                                  only_typo=False,
-                                  prefix_set=constants.LOCUS_TAG_PREFIX_SET,
-                                  caps=True):
+    def check_locus_tag_structure(self, check_value=None, only_typo=False,
+                                  prefix_set=set(), caps=True):
         """Check if the locus_tag is structured correctly.
 
         The 'check_value' parameter provides the genome ID that is expected

@@ -40,7 +40,7 @@ class GenomeTicket:
 
         self.evaluations = []
         self._parsed_fields = 0
-
+        self._value_flag = False
 
 
         # TODO this attribute may no longer be needed.
@@ -106,6 +106,14 @@ class GenomeTicket:
 
 
 
+
+    # TODO unittest.
+    def set_value_flag(self, value):
+        """Sets the flag if any attributes contain the specified 'value'."""
+        if value in vars(self).values():
+            self._value_flag = True
+        else:
+            self._value_flag = False
 
 
 
