@@ -235,33 +235,46 @@ def check_bundle_for_import(bundle):
 
         bundle.check_genome_dict("add")
         bundle.check_genome_dict("flat_file")
-        bundle.check_genome_pair_dict("flat_file_add") # TODO Ordered correctly?
+        bundle.check_genome_pair_dict("flat_file_add")
 
+        # There may or may not be data retrieved from PhagesDB.
         ticket.set_value_flag("retrieve")
         if ticket._value_flag:
             bundle.check_genome_dict("phagesdb")
-            bundle.check_genome_pair_dict("add_phagesdb") # TODO Ordered correctly?
+            try:
+                check_phagesdb_genome(bundle.genome_dict["phagesdb"])
+            except:
+                pass
+            try:
+                bundle.check_genome_pair_dict("flat_file_phagesdb")
+            except:
+                pass
 
     # TODO this may need to be moved elsewhere.
     ticket.check_compatible_type_and_annotation_status()
 
     if ticket.type == "replace":
-        bundle.check_genome_dict("remove")
+
+        # There should be a "phamerator" genome.
         bundle.check_genome_dict("phamerator")
-        bundle.check_genome_pair_dict("flat_file_phamerator") # TODO Ordered correctly?
+
+        # There may or may not be a genome_pair to retain some data.
         ticket.set_value_flag("retain")
         if ticket._value_flag:
-            bundle.check_genome_pair_dict("add_phamerator") # TODO Ordered correctly?
+            bundle.check_genome_pair_dict("add_phamerator")
+
+        # There should be a genome_pair between the current phamerator
+        # genome and the new flat_file genome.
+        bundle.check_genome_pair_dict("flat_file_phamerator")
+        try:
+            compare_genomes_for_replace(
+                bundle.genome_pair_dict["flat_file_phamerator"])
+        except:
+            pass
+
 
     # Second, evaluate each genome or pair of genomes as needed.
-    try:
-        check_genome_to_import(bundle.genome_dict["flat_file"], ticket.type)
-    except:
-        pass
-    try:
-        compare_genomes_for_replace(bundle.genome_pair_dict["flat_file_phamerator"])
-    except:
-        pass
+    check_genome_to_import(bundle.genome_dict["flat_file"], ticket.type)
 
 
 

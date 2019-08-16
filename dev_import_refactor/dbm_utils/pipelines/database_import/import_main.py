@@ -213,9 +213,9 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
 
 
-def evaluate_flat_file(bundle, sql_handle, host_genera_set = set(),
-                       phage_id_set = set(), seq_set = set(),
-                       cluster_set = set(), subcluster_set = set()):
+def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
+                       phage_id_set=set(), seq_set=set(),
+                       cluster_set=set(), subcluster_set=set()):
     """Evaluate data within a single Bundle object."""
 
 
