@@ -32,7 +32,7 @@ The NCBI Conserved Domain Database locally installed
 # All python code in the repo can be executed using the following Conda 
 # environment 'phamerator'.
 # First install Anaconda locally. Then execute the following commands:
-conda create --name phamerator mysql python pip biopython pymysql paramiko
+conda create --name phamerator mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme
 source activate phamerator
 
 
@@ -53,3 +53,12 @@ source activate phamerator
 CREATE USER 'tester'@'localhost' IDENTIFIED BY 'tester';
 GRANT ALL PRIVILEGES ON test_db.* TO 'tester'@'localhost';
 FLUSH PRIVILEGES;
+
+
+
+
+# Sphinx
+
+sphinx-apidoc -o ./source/ ../dbm_utils/
+sphinx-build -b html ./source ./build
+(or make build?)

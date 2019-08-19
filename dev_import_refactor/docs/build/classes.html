@@ -1,0 +1,1485 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>classes package &mdash; dbm_utils 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> dbm_utils
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">classes package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Bundle">classes.Bundle module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Cds">The <code class="docutils literal notranslate"><span class="pre">Cds</span></code> class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.CdsPair">classes.CdsPair module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Eval">classes.Eval module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Genome">The <code class="docutils literal notranslate"><span class="pre">Genome</span></code> class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.GenomePair">classes.GenomePair module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.MySQLConnectionHandler">classes.MySQLConnectionHandler module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Source">classes.Source module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Ticket">classes.Ticket module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes.Trna">classes.Trna module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">dbm_utils</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>classes package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/classes.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="classes-package">
+<h1>classes package<a class="headerlink" href="#classes-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-classes.Bundle">
+<span id="classes-bundle-module"></span><h2>classes.Bundle module<a class="headerlink" href="#module-classes.Bundle" title="Permalink to this headline">¶</a></h2>
+<p>Represents a structure to directly compare data between two or more genomes.</p>
+<dl class="class">
+<dt id="classes.Bundle.Bundle">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Bundle.</code><code class="sig-name descname">Bundle</code><a class="headerlink" href="#classes.Bundle.Bundle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="classes.Bundle.Bundle.check_for_errors">
+<code class="sig-name descname">check_for_errors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.check_for_errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check evaluation lists of all objects contained in the Bundle
+and determine how many errors there are.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Bundle.Bundle.check_genome_dictionary">
+<code class="sig-name descname">check_genome_dictionary</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">expect=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.check_genome_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a genome is present in the genome dictionary.
+The ‘key’ parameter indicates how the genome is expected to be
+stored in the dictionary.
+The ‘expect’ parameter indicates whether the genome is expected
+to be present or not.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Bundle.Bundle.check_genome_pair_dictionary">
+<code class="sig-name descname">check_genome_pair_dictionary</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">expect=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.check_genome_pair_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a genome_pair is present in the genome_pair dictionary.
+The ‘key’ parameter indicates how the genome_pair is expected to be
+stored in the dictionary.
+The ‘expect’ parameter indicates whether the genome_pair is expected
+to be present or not.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Bundle.Bundle.check_matched_genome">
+<code class="sig-name descname">check_matched_genome</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.check_matched_genome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for whether a certain type of genome has been added to the
+genome dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Bundle.Bundle.create_sql_statements">
+<code class="sig-name descname">create_sql_statements</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.create_sql_statements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of MySQL statements based on the ticket type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Bundle.Bundle.get_evaluations">
+<code class="sig-name descname">get_evaluations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.get_evaluations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through the various objects stored in the Bundle
+object and return a dictionary of evaluation lists.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Bundle.Bundle.set_genome_pair">
+<code class="sig-name descname">set_genome_pair</code><span class="sig-paren">(</span><em class="sig-param">genome_pair</em>, <em class="sig-param">key1</em>, <em class="sig-param">key2</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Bundle.Bundle.set_genome_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pair two genomes and add to the paired genome dictionary.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.Cds">
+<span id="the-cds-class"></span><h2>The <code class="docutils literal notranslate"><span class="pre">Cds</span></code> class<a class="headerlink" href="#module-classes.Cds" title="Permalink to this headline">¶</a></h2>
+<p>Represents a collection of data about a CDS features that are commonly used
+to maintain and update SEA-PHAGES phage genomics data.</p>
+<dl class="class">
+<dt id="classes.Cds.Cds">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Cds.</code><code class="sig-name descname">Cds</code><a class="headerlink" href="#classes.Cds.Cds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold data about a CDS feature.</p>
+<dl class="method">
+<dt id="classes.Cds.Cds.check_amino_acids">
+<code class="sig-name descname">check_amino_acids</code><span class="sig-paren">(</span><em class="sig-param">check_set={}</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_amino_acids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether all amino acids in the translation are valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_compatible_gene_and_locus_tag">
+<code class="sig-name descname">check_compatible_gene_and_locus_tag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_compatible_gene_and_locus_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the gene and locus_tag attributes contain the same
+gene number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_coordinates">
+<code class="sig-name descname">check_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if coordinates are exact.</p>
+<p>This method assumes that if the coordinates are not exact, they
+have been set to -1 or are not integers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_description_field">
+<code class="sig-name descname">check_description_field</code><span class="sig-paren">(</span><em class="sig-param">attribute='product'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_description_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if there are CDS descriptions in unexpected fields.</p>
+<p>This method evaluates if the indicated field is empty or generic,
+and other fields contain non-generic data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_gene_present">
+<code class="sig-name descname">check_gene_present</code><span class="sig-paren">(</span><em class="sig-param">expect=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_gene_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the status of gene matches expectations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_gene_structure">
+<code class="sig-name descname">check_gene_structure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_gene_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the gene qualifier contains an integer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_generic_data">
+<code class="sig-name descname">check_generic_data</code><span class="sig-paren">(</span><em class="sig-param">attribute=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_generic_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the indicated attribute contains generic data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_id_typo">
+<code class="sig-name descname">check_id_typo</code><span class="sig-paren">(</span><em class="sig-param">check_value=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_id_typo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the id contains potential typos.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_locus_tag_present">
+<code class="sig-name descname">check_locus_tag_present</code><span class="sig-paren">(</span><em class="sig-param">expect=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_locus_tag_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if status of locus tag matches expectations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_locus_tag_structure">
+<code class="sig-name descname">check_locus_tag_structure</code><span class="sig-paren">(</span><em class="sig-param">check_value=None</em>, <em class="sig-param">only_typo=False</em>, <em class="sig-param">prefix_set={}</em>, <em class="sig-param">caps=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_locus_tag_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the locus_tag is structured correctly.</p>
+<p>The ‘check_value’ parameter provides the genome ID that is expected
+to be present. If None, the ‘genome_id’ parameter is used by default.
+With the ‘only_typo’ parameter set to True, a simpler
+structure analysis only checks for whether the genome ID is
+present.
+If a prefix is expected, the ‘prefix_set’ parameter indicates
+the set of possible prefixes that are expected.
+The ‘caps’ parameters indicates whether the locus_tag is expected
+to be completely capitalized or not.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_strand">
+<code class="sig-name descname">check_strand</code><span class="sig-paren">(</span><em class="sig-param">format='fr_short'</em>, <em class="sig-param">case=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_strand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if strand is set appropriately.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_translation">
+<code class="sig-name descname">check_translation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the current and expected translations match.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_translation_length">
+<code class="sig-name descname">check_translation_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_translation_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Confirm that a translation is present.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_translation_table">
+<code class="sig-name descname">check_translation_table</code><span class="sig-paren">(</span><em class="sig-param">check_table=11</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_translation_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the translation table is correct.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.check_valid_description">
+<code class="sig-name descname">check_valid_description</code><span class="sig-paren">(</span><em class="sig-param">check_set=None</em>, <em class="sig-param">attribute=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.check_valid_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the CDS description in the indicated attribute is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.get_start_end">
+<code class="sig-name descname">get_start_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.get_start_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coordinates in start-end format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.reformat_left_and_right">
+<code class="sig-name descname">reformat_left_and_right</code><span class="sig-paren">(</span><em class="sig-param">new_format</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.reformat_left_and_right" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert left and right coordinates to new coordinate format.
+This also updates the coordinate format attribute to reflect
+change. However, it does not update start and end attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_description">
+<code class="sig-name descname">set_description</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the description and processed_description attributes from the
+selected attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_location_id">
+<code class="sig-name descname">set_location_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_location_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a tuple of feature location data.</p>
+<p>For left and right coordinates of the feature, it doesn’t matter
+whether the feature is complex with a translational frameshift or not.
+Retrieving the “left” and “right” boundary attributes return the very
+beginning and end of the feature, disregarding the
+inner “join” coordinates.
+If only the feature “end” coordinate is used, strand information is
+required.
+If “start” and “end” coordinates are used instead of “left” and “right”
+coordinates, no strand information is required.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_locus_tag">
+<code class="sig-name descname">set_locus_tag</code><span class="sig-paren">(</span><em class="sig-param">tag=''</em>, <em class="sig-param">delimiter='_'</em>, <em class="sig-param">check_value=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_locus_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set locus tag and split tag information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_name">
+<code class="sig-name descname">set_name</code><span class="sig-paren">(</span><em class="sig-param">value=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the feature name.</p>
+<p>Ideally, the name of the CDS will be an integer. This information
+can be stored in multiple fields in the GenBank-formatted flat file.
+The name is first derived from the ‘gene’ qualifier, then
+the ‘locus_tag’ qualifier, and finally left empty.
+The ‘value’ parameter can be used to directly set this attribute
+regardless of the ‘gene’ and ‘_locus_tag_num’ attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_nucleotide_length">
+<code class="sig-name descname">set_nucleotide_length</code><span class="sig-paren">(</span><em class="sig-param">seq=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_nucleotide_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the length of the nucleotide sequence.</p>
+<p>Nucleotide length can be computed multiple ways.
+If the ‘option’ parameter is False, the ‘left’ and ‘right’
+coordinates are used to determine the length (and take into
+account the ‘coordinate_format’ attribute. However, for
+compound features, this value may not be accurate. If the
+‘option’ parameter is True, the nucleotide sequence is used
+to determine the length. When the sequence reflects the
+entire feature (including compound features), the length
+will be accurate.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_nucleotide_sequence">
+<code class="sig-name descname">set_nucleotide_sequence</code><span class="sig-paren">(</span><em class="sig-param">value=None</em>, <em class="sig-param">parent_genome_seq=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_nucleotide_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the nucleotide sequence of the feature.</p>
+<p>This method can directly set the attribute from a supplied ‘value’,
+or it can retrieve the sequence from the parent genome using
+Biopython. In this latter case, it relies on a Biopython SeqFeature
+object for the sequence extraction method and coordinates.
+If this object was generated from a Biopython-parsed
+GenBank-formatted flat file, the coordinates are by default
+‘0-based half-open’, the object contains coordinates for every
+part of the feature (e.g. if it is a compound feature) and
+fuzzy locations. As a result, the retrieved sequence may not
+exactly match the length indicated from the ‘left’ and ‘right’
+coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_seqfeature">
+<code class="sig-name descname">set_seqfeature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_seqfeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the ‘seqfeature’ attribute.</p>
+<p>The ‘seqfeature’ attribute stores a Biopython SeqFeature object,
+which contains methods valuable to extracting sequence data
+relevant to the feature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_strand">
+<code class="sig-name descname">set_strand</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">format</em>, <em class="sig-param">case=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_strand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets strand based on indicated format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_translation">
+<code class="sig-name descname">set_translation</code><span class="sig-paren">(</span><em class="sig-param">value=None</em>, <em class="sig-param">translate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set translation and its length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_translation_table">
+<code class="sig-name descname">set_translation_table</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_translation_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set translation table integer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.set_wrap">
+<code class="sig-name descname">set_wrap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.set_wrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines if the feature wraps around the end of the genome.</p>
+<p>This method assumes that the left and right coordinates are set
+and reflect feature boundaries irrespective of strand.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Cds.Cds.translate_seq">
+<code class="sig-name descname">translate_seq</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Cds.Cds.translate_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate the CDS nucleotide sequence.</p>
+<p>Use Biopython to translate the nucleotide sequece.
+The method expects the nucleotide sequence to be a valid CDS
+sequence in which:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>it begins with a valid start codon,</p></li>
+<li><p>it ends with a stop codon,</p></li>
+<li><p>it contains only one stop codon,</p></li>
+<li><p>its length is divisible by 3,</p></li>
+<li><p>it translates non-standard start codons to methionine.</p></li>
+</ol>
+</div></blockquote>
+<p>If these criteria are not met, an empty Seq object is returned.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.CdsPair">
+<span id="classes-cdspair-module"></span><h2>classes.CdsPair module<a class="headerlink" href="#module-classes.CdsPair" title="Permalink to this headline">¶</a></h2>
+<p>Represents a structure to directly compare data between two or more CDS
+features.</p>
+<dl class="class">
+<dt id="classes.CdsPair.CdsPair">
+<em class="property">class </em><code class="sig-prename descclassname">classes.CdsPair.</code><code class="sig-name descname">CdsPair</code><a class="headerlink" href="#classes.CdsPair.CdsPair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="classes.CdsPair.MatchedCdsFeatures">
+<em class="property">class </em><code class="sig-prename descclassname">classes.CdsPair.</code><code class="sig-name descname">MatchedCdsFeatures</code><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.compare_phamerator_ncbi_cds_features">
+<code class="sig-name descname">compare_phamerator_ncbi_cds_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.compare_phamerator_ncbi_cds_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.get_ncbi_feature">
+<code class="sig-name descname">get_ncbi_feature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.get_ncbi_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.get_phamerator_feature">
+<code class="sig-name descname">get_phamerator_feature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.get_phamerator_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.get_phamerator_ncbi_different_descriptions">
+<code class="sig-name descname">get_phamerator_ncbi_different_descriptions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.get_phamerator_ncbi_different_descriptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.get_phamerator_ncbi_different_start_sites">
+<code class="sig-name descname">get_phamerator_ncbi_different_start_sites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.get_phamerator_ncbi_different_start_sites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.get_phamerator_ncbi_different_translations">
+<code class="sig-name descname">get_phamerator_ncbi_different_translations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.get_phamerator_ncbi_different_translations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.get_total_errors">
+<code class="sig-name descname">get_total_errors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.get_total_errors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.set_ncbi_feature">
+<code class="sig-name descname">set_ncbi_feature</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.set_ncbi_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="classes.CdsPair.MatchedCdsFeatures.set_phamerator_feature">
+<code class="sig-name descname">set_phamerator_feature</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.CdsPair.MatchedCdsFeatures.set_phamerator_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.Eval">
+<span id="classes-eval-module"></span><h2>classes.Eval module<a class="headerlink" href="#module-classes.Eval" title="Permalink to this headline">¶</a></h2>
+<p>Represents a structure to contain results of an evaluation.</p>
+<dl class="class">
+<dt id="classes.Eval.Eval">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Eval.</code><code class="sig-name descname">Eval</code><span class="sig-paren">(</span><em class="sig-param">id=''</em>, <em class="sig-param">definition=''</em>, <em class="sig-param">result=''</em>, <em class="sig-param">status=''</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Eval.Eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.Genome">
+<span id="the-genome-class"></span><h2>The <code class="docutils literal notranslate"><span class="pre">Genome</span></code> class<a class="headerlink" href="#module-classes.Genome" title="Permalink to this headline">¶</a></h2>
+<p>Represents a collection of data about a genome that are commonly used to
+maintain and update SEA-PHAGES phage genomics data.</p>
+<dl class="class">
+<dt id="classes.Genome.Genome">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Genome.</code><code class="sig-name descname">Genome</code><a class="headerlink" href="#classes.Genome.Genome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold data about a phage genome.</p>
+<dl class="method">
+<dt id="classes.Genome.Genome.check_accession">
+<code class="sig-name descname">check_accession</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the accession is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_annotation_author">
+<code class="sig-name descname">check_annotation_author</code><span class="sig-paren">(</span><em class="sig-param">check_set={}</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_annotation_author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the annotation_author is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_annotation_qc">
+<code class="sig-name descname">check_annotation_qc</code><span class="sig-paren">(</span><em class="sig-param">check_set={}</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_annotation_qc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the annotation_qc is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_annotation_status">
+<code class="sig-name descname">check_annotation_status</code><span class="sig-paren">(</span><em class="sig-param">check_set={}</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_annotation_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the annotation_status is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_authors">
+<code class="sig-name descname">check_authors</code><span class="sig-paren">(</span><em class="sig-param">check_set={}</em>, <em class="sig-param">expect=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_authors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check author list.</p>
+<p>The method will compare the list of authors provided in the
+‘check_set’ parameter with the list of authors stored in the
+‘authors’ attribute. It will then evaluate whether the presence
+of at least one author matches what is expected, as indicated
+by the ‘expect’ parameter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_cds_end_strand_ids">
+<code class="sig-name descname">check_cds_end_strand_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_cds_end_strand_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if there are any duplicate end-strand coordinates.</p>
+<p>Duplicated end-strand coordinates may represent
+unintentional duplicate CDS features with slightly
+different start coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_cds_feature_tally">
+<code class="sig-name descname">check_cds_feature_tally</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_cds_feature_tally" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check to confirm that CDS features have been parsed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_cds_start_end_ids">
+<code class="sig-name descname">check_cds_start_end_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_cds_start_end_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if there are any duplicate start-end coordinates.</p>
+<p>Duplicated start-end coordinates may represent
+unintentional duplicate CDS features.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_cluster">
+<code class="sig-name descname">check_cluster</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the cluster is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_cluster_structure">
+<code class="sig-name descname">check_cluster_structure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_cluster_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the cluster attribute is structured appropriately.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_compatible_cluster_and_subcluster">
+<code class="sig-name descname">check_compatible_cluster_and_subcluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_compatible_cluster_and_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check compatibility of cluster and subcluster attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_compatible_status_and_accession">
+<code class="sig-name descname">check_compatible_status_and_accession</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_compatible_status_and_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare genome annotation_status and accession.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_compatible_status_and_descriptions">
+<code class="sig-name descname">check_compatible_status_and_descriptions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_compatible_status_and_descriptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare annotation_status and description tally.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_description_host_genus">
+<code class="sig-name descname">check_description_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_description_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check host_genus spelling in the description attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_description_name">
+<code class="sig-name descname">check_description_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_description_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check genome id spelling in the description attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_feature_ids">
+<code class="sig-name descname">check_feature_ids</code><span class="sig-paren">(</span><em class="sig-param">cds=False</em>, <em class="sig-param">trna=False</em>, <em class="sig-param">tmrna=False</em>, <em class="sig-param">other=None</em>, <em class="sig-param">strand=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_feature_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify overlapping, duplicated, or partially-duplicated
+features.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_filename">
+<code class="sig-name descname">check_filename</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the filename is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_host_genus">
+<code class="sig-name descname">check_host_genus</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the host_genus is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_id">
+<code class="sig-name descname">check_id</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the id is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_name">
+<code class="sig-name descname">check_name</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the name is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_nucleotides">
+<code class="sig-name descname">check_nucleotides</code><span class="sig-paren">(</span><em class="sig-param">dna_alphabet_set={}</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_nucleotides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if all nucleotides in the sequence are expected.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_organism_host_genus">
+<code class="sig-name descname">check_organism_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_organism_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check host_genus spelling in the organism attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_organism_name">
+<code class="sig-name descname">check_organism_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_organism_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check genome id in the organism attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_retrieve_record">
+<code class="sig-name descname">check_retrieve_record</code><span class="sig-paren">(</span><em class="sig-param">check_set={}</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_retrieve_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the retrieve_record is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_sequence">
+<code class="sig-name descname">check_sequence</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the sequence is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_source_host_genus">
+<code class="sig-name descname">check_source_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_source_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check host_genus spelling in the source attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_source_name">
+<code class="sig-name descname">check_source_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_source_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check genome id spelling in the source attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_subcluster">
+<code class="sig-name descname">check_subcluster</code><span class="sig-paren">(</span><em class="sig-param">check_set</em>, <em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the subcluster is valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_subcluster_structure">
+<code class="sig-name descname">check_subcluster_structure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_subcluster_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the subcluster attribute is structured appropriately.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.check_value_flag">
+<code class="sig-name descname">check_value_flag</code><span class="sig-paren">(</span><em class="sig-param">expect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.check_value_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if there are any attributes that are not populated as expected.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.parse_description">
+<code class="sig-name descname">parse_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.parse_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the name and host_genus from the ‘description’ attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.parse_organism">
+<code class="sig-name descname">parse_organism</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.parse_organism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the name and host_genus from the ‘organism’ attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.parse_source">
+<code class="sig-name descname">parse_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.parse_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the name and host_genus from the ‘source’ attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_accession">
+<code class="sig-name descname">set_accession</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">format='empty_string'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the accession.</p>
+<p>The Accession field in Phamerator defaults to “”.
+Some flat file accessions have the version number suffix, so discard
+the version number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_annotation_author">
+<code class="sig-name descname">set_annotation_author</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_annotation_author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert author name listed in ticket to binary value if needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_annotation_qc">
+<code class="sig-name descname">set_annotation_qc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_annotation_qc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set annotation_qc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_cds_features">
+<code class="sig-name descname">set_cds_features</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_cds_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set and tally the CDS features.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_cds_id_list">
+<code class="sig-name descname">set_cds_id_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_cds_id_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates lists of CDS feature identifiers.</p>
+<p>The first identifier is derived from the start and end coordinates.
+The second identifier is derived from the end coordinate and strand.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_cluster">
+<code class="sig-name descname">set_cluster</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the cluster and modify singleton if needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_cluster_subcluster">
+<code class="sig-name descname">set_cluster_subcluster</code><span class="sig-paren">(</span><em class="sig-param">value='internal'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_cluster_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the combined Cluster-Subcluster attribute.</p>
+<p>If the value is set to ‘internal’, it is determined from the Cluster
+and Subcluster designations. Otherwise, the value is directly
+used to populate this attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_date">
+<code class="sig-name descname">set_date</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">format='empty_datetime_obj'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the date attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_feature_ids">
+<code class="sig-name descname">set_feature_ids</code><span class="sig-paren">(</span><em class="sig-param">use_type=False</em>, <em class="sig-param">use_cds=False</em>, <em class="sig-param">use_trna=False</em>, <em class="sig-param">use_tmrna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_feature_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the id of each feature.</p>
+<p>Lists of features can be added to this method. The method assumes
+that all elements in all lists contain ‘id’, ‘left’, and ‘right’
+attributes. This feature attribute is processed within
+the Genome object because and not within the feature itself since
+the method sorts all features and generates systematic IDs based on
+feature order in the genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_filename">
+<code class="sig-name descname">set_filename</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the filename. Discard the path and file extension.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_host_genus">
+<code class="sig-name descname">set_host_genus</code><span class="sig-paren">(</span><em class="sig-param">value=None</em>, <em class="sig-param">attribute=None</em>, <em class="sig-param">format='empty_string'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the host_genus from a value parsed from the indicated attribute.</p>
+<p>The input data is split into multiple parts, and the first word is
+used to set host_genus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>str</em>) – the host genus of the phage genome</p></li>
+<li><p><strong>attribute</strong> (<em>str</em>) – the name of the genome attribute from which the
+host_genus attribute will be set</p></li>
+<li><p><strong>format</strong> (<em>str</em>) – the default format if the input is an empty/null value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_id">
+<code class="sig-name descname">set_id</code><span class="sig-paren">(</span><em class="sig-param">value=None</em>, <em class="sig-param">attribute=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the id from either an input value or an indicated attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_retrieve_record">
+<code class="sig-name descname">set_retrieve_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_retrieve_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set retrieve_record.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_sequence">
+<code class="sig-name descname">set_sequence</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the nucleotide sequence and compute the length.</p>
+<p>This method coerces sequences into a Biopython Seq object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_source_features">
+<code class="sig-name descname">set_source_features</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_source_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set and tally the source features.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_subcluster">
+<code class="sig-name descname">set_subcluster</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">format='empty_string'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the subcluster.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_trna_features">
+<code class="sig-name descname">set_trna_features</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_trna_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set and tally the tRNA features.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_unique_cds_end_strand_ids">
+<code class="sig-name descname">set_unique_cds_end_strand_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_unique_cds_end_strand_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify CDS features contain unique end-strand coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_unique_cds_start_end_ids">
+<code class="sig-name descname">set_unique_cds_start_end_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_unique_cds_start_end_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify CDS features contain unique start-end coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.set_value_flag">
+<code class="sig-name descname">set_value_flag</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.set_value_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the flag if any attributes contain the specified ‘value’.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.split_cluster_subcluster">
+<code class="sig-name descname">split_cluster_subcluster</code><span class="sig-paren">(</span><em class="sig-param">format='none_string'</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.split_cluster_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the combined cluster_subcluster data.</p>
+<p>Sets the ‘cluster’ and ‘subcluster’ attributes from the
+‘cluster_subcluster’ attribute. If the combined ‘cluster_subcluster’
+attribute is None, “none”, or “”, no changes are implemented
+to the current cluster and subcluster attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Genome.Genome.tally_descriptions">
+<code class="sig-name descname">tally_descriptions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Genome.Genome.tally_descriptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tally the non-generic CDS descriptions.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.GenomePair">
+<span id="classes-genomepair-module"></span><h2>classes.GenomePair module<a class="headerlink" href="#module-classes.GenomePair" title="Permalink to this headline">¶</a></h2>
+<p>Represents a structure to pair two Genome objects and
+perform comparisons between them to identify inconsistencies.</p>
+<dl class="class">
+<dt id="classes.GenomePair.GenomePair">
+<em class="property">class </em><code class="sig-prename descclassname">classes.GenomePair.</code><code class="sig-name descname">GenomePair</code><a class="headerlink" href="#classes.GenomePair.GenomePair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_accession">
+<code class="sig-name descname">compare_accession</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the accession of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_annotation_status">
+<code class="sig-name descname">compare_annotation_status</code><span class="sig-paren">(</span><em class="sig-param">attribute</em>, <em class="sig-param">ref_name</em>, <em class="sig-param">query_name</em>, <em class="sig-param">ref_check_value</em>, <em class="sig-param">query_check_value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_annotation_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the annotation_status of each genome.</p>
+<p>The ‘attribute’ parameter provides the unique value of each
+genome by which to assign the order of comparison.
+The ‘ref_name’ parameter indicates the attribute value that
+defines the reference genome.
+The ‘query_name’ parameter indicates the attribute value that
+defines the query genome.
+The ‘ref_check_value’ parameters indicates the annotation_status
+value that is expected in the reference genome.
+The ‘query_check_value’ parameters indicates the annotation_status
+value that is expected in the query genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_author">
+<code class="sig-name descname">compare_author</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the authorship of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_cluster">
+<code class="sig-name descname">compare_cluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the cluster of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_genome_length">
+<code class="sig-name descname">compare_genome_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_genome_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the sequence length of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_genome_sequence">
+<code class="sig-name descname">compare_genome_sequence</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_genome_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the sequence of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_host_genus">
+<code class="sig-name descname">compare_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the host_genus of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_id">
+<code class="sig-name descname">compare_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the id of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.compare_subcluster">
+<code class="sig-name descname">compare_subcluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.compare_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the subcluster of each genome.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.copy_data">
+<code class="sig-name descname">copy_data</code><span class="sig-paren">(</span><em class="sig-param">attr</em>, <em class="sig-param">first</em>, <em class="sig-param">second</em>, <em class="sig-param">keyword=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.copy_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy data between paired genomes. The ‘attr’ parameter
+indicates the Genome object attribute used to identify direction
+of copy. The ‘first’ and ‘second’ parameters indicate the
+values of the attribute in each Genome to identiy
+which Genome will provide the data and which Genome
+will receive the data. The ‘keyword’ parameter is used as a filter
+to decide which Genome attribute data will be copied.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.match_cds_features">
+<code class="sig-name descname">match_cds_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.match_cds_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match annotated features in each genome with the same stop
+coordinates and same strand but different start coordinates
+(imperfect match).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.match_cds_start_stop_ids">
+<code class="sig-name descname">match_cds_start_stop_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.match_cds_start_stop_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match annotated features in each genome with the same start and
+stop coordinates and the same strand (perfect match).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.GenomePair.GenomePair.match_cds_stop_ids">
+<code class="sig-name descname">match_cds_stop_ids</code><span class="sig-paren">(</span><em class="sig-param">list1</em>, <em class="sig-param">list2</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.GenomePair.GenomePair.match_cds_stop_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match annotated features in each genome with the same stop
+coordinates and same strand but different start coordinates
+(imperfect match).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.MySQLConnectionHandler">
+<span id="classes-mysqlconnectionhandler-module"></span><h2>classes.MySQLConnectionHandler module<a class="headerlink" href="#module-classes.MySQLConnectionHandler" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler">
+<em class="property">class </em><code class="sig-prename descclassname">classes.MySQLConnectionHandler.</code><code class="sig-name descname">MySQLConnectionHandler</code><span class="sig-paren">(</span><em class="sig-param">username=None</em>, <em class="sig-param">password=None</em>, <em class="sig-param">database=None</em>, <em class="sig-param">attempts=3</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.ask_username_and_password">
+<code class="sig-name descname">ask_username_and_password</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.ask_username_and_password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse increments (decrements? don’t think that’s a word…)
+the number of attempts remaining, then prompts the user for a
+MySQL _username and _password.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.close_connection">
+<code class="sig-name descname">close_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.close_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls close method on pymysql connection object
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.connection_status">
+<code class="sig-name descname">connection_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.connection_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the connection is open. False if the connection
+has been closed.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.credential_status">
+<em class="property">property </em><code class="sig-name descname">credential_status</code><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.credential_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns self.credential_status
+:return: self.credential_status</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.database">
+<em class="property">property </em><code class="sig-name descname">database</code><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns self.database
+:return: self.database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.execute_query">
+<code class="sig-name descname">execute_query</code><span class="sig-paren">(</span><em class="sig-param">query</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.execute_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>If connection exists and is open, attempts to attach a DictCursor
+to the connection and execute the input query. If connection doesn’t
+exist or has been closed, tries to open a new one before creating
+DictCursor and executing query.
+:param query:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.execute_transaction">
+<code class="sig-name descname">execute_transaction</code><span class="sig-paren">(</span><em class="sig-param">statement_list</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.execute_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>If connection exists and is open, attempts to attach a cursor to
+the connection and execute the commands in the input list. If
+connection doesn’t exist or has been closed, tries to open a new one
+before creating DictCursor and executing query.
+:param statement_list: a list of any number of MySQL statements with
+no expectation that anything will return
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.get_credentials">
+<code class="sig-name descname">get_credentials</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.get_credentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives user x attempts to input correct _username and _password,
+assuming valid credentials aren’t already had.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.login_attempts">
+<em class="property">property </em><code class="sig-name descname">login_attempts</code><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.login_attempts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns self.attempts_remaining
+:return: self.attempts_remaining</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.open_connection">
+<code class="sig-name descname">open_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.open_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>If connection status is False, open a new connection.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.password">
+<em class="property">property </em><code class="sig-name descname">password</code><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns self.password
+:return: self.password</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.username">
+<em class="property">property </em><code class="sig-name descname">username</code><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.username" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns self.username
+:return: self.username</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.validate_credentials">
+<code class="sig-name descname">validate_credentials</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.validate_credentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to connect to MySQL localhost using the verified _username
+and _password. Successful connection triggers setting successful
+login flag to True. Otherwise, flag persists at False.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.MySQLConnectionHandler.MySQLConnectionHandler.validate_database_access">
+<code class="sig-name descname">validate_database_access</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.MySQLConnectionHandler.MySQLConnectionHandler.validate_database_access" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to connect to the specified database using the verified
+username and password. If _username and _password haven’t been
+verified yet it returns without doing anything.
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.Source">
+<span id="classes-source-module"></span><h2>classes.Source module<a class="headerlink" href="#module-classes.Source" title="Permalink to this headline">¶</a></h2>
+<p>Represents a collection of data about a Source feature that is commonly used
+to maintain and update SEA-PHAGES phage genomics data.</p>
+<dl class="class">
+<dt id="classes.Source.Source">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Source.</code><code class="sig-name descname">Source</code><a class="headerlink" href="#classes.Source.Source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="classes.Source.Source.check_host_host_genus">
+<code class="sig-name descname">check_host_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.check_host_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check host_genus name spelling in the host field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Source.Source.check_lab_host_host_genus">
+<code class="sig-name descname">check_lab_host_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.check_lab_host_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check host_genus name spelling in the lab_host field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Source.Source.check_organism_host_genus">
+<code class="sig-name descname">check_organism_host_genus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.check_organism_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check host_genus name spelling in the organism field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Source.Source.check_organism_name">
+<code class="sig-name descname">check_organism_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.check_organism_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check phage name spelling in the organism field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Source.Source.parse_host">
+<code class="sig-name descname">parse_host</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.parse_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the host_genus name from the ‘host’ field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Source.Source.parse_lab_host">
+<code class="sig-name descname">parse_lab_host</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.parse_lab_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the host_genus name from the ‘lab_host’ field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Source.Source.parse_organism">
+<code class="sig-name descname">parse_organism</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Source.Source.parse_organism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the phage name and host_genus name from the ‘organism’ field.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.Ticket">
+<span id="classes-ticket-module"></span><h2>classes.Ticket module<a class="headerlink" href="#module-classes.Ticket" title="Permalink to this headline">¶</a></h2>
+<p>Represents a structure to contain directions for how to parse and import
+genomes into Phamerator.</p>
+<dl class="class">
+<dt id="classes.Ticket.GenomeTicket">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Ticket.</code><code class="sig-name descname">GenomeTicket</code><a class="headerlink" href="#classes.Ticket.GenomeTicket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_accession">
+<code class="sig-name descname">check_accession</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the accession is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_annotation_author">
+<code class="sig-name descname">check_annotation_author</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_annotation_author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the annotation_author is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_annotation_status">
+<code class="sig-name descname">check_annotation_status</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_annotation_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the annotation_status is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_cluster">
+<code class="sig-name descname">check_cluster</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the cluster is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_compatible_type_and_annotation_status">
+<code class="sig-name descname">check_compatible_type_and_annotation_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_compatible_type_and_annotation_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the ticket type and annotation_status are compatible.</p>
+<p>If the ticket type is “add”, then the annotation_status is not
+expected to be “final”.
+If the ticket type is “replace”, then the annotation_status is
+not expected to be “draft”.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_description_field">
+<code class="sig-name descname">check_description_field</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_description_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the description_field is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_duplicate_accession">
+<code class="sig-name descname">check_duplicate_accession</code><span class="sig-paren">(</span><em class="sig-param">set_of_duplicates</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_duplicate_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the accession is unique to this ticket by
+checking if it is found within a list of previously
+determined duplicate accessions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_duplicate_phage_id">
+<code class="sig-name descname">check_duplicate_phage_id</code><span class="sig-paren">(</span><em class="sig-param">set_of_duplicates</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_duplicate_phage_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the phage_id is unique to this ticket by
+checking if it is found within a list of previously
+determined duplicate phage_ids.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_host_genus">
+<code class="sig-name descname">check_host_genus</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_host_genus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the host_genus is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_parsed_fields">
+<code class="sig-name descname">check_parsed_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_parsed_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the import table contained the correct amount of data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_phage_id">
+<code class="sig-name descname">check_phage_id</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_phage_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the phage_id is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_run_mode">
+<code class="sig-name descname">check_run_mode</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_run_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the run_mode is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_subcluster">
+<code class="sig-name descname">check_subcluster</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the subcluster is populated with an empty value.
+The provided set contains a list of possible empty values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.check_type">
+<code class="sig-name descname">check_type</code><span class="sig-paren">(</span><em class="sig-param">value_set</em>, <em class="sig-param">expected=True</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.check_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the type is populated with a value from
+a specific set of possible values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_accession">
+<code class="sig-name descname">set_accession</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_accession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the accession.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_annotation_author">
+<code class="sig-name descname">set_annotation_author</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_annotation_author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the annotation_author.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_annotation_qc">
+<code class="sig-name descname">set_annotation_qc</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_annotation_qc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the set_annotation_qc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_annotation_status">
+<code class="sig-name descname">set_annotation_status</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_annotation_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the annotation_status.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_cluster">
+<code class="sig-name descname">set_cluster</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the cluster.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_description_field">
+<code class="sig-name descname">set_description_field</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_description_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the description_field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_host">
+<code class="sig-name descname">set_host</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the host_genus.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_phage_id">
+<code class="sig-name descname">set_phage_id</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_phage_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the phage_id.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_retrieve_record">
+<code class="sig-name descname">set_retrieve_record</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_retrieve_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the set_retrieve_record.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_run_mode">
+<code class="sig-name descname">set_run_mode</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_run_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the run_mode.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_subcluster">
+<code class="sig-name descname">set_subcluster</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_subcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the subcluster.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_type">
+<code class="sig-name descname">set_type</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the ticket type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Ticket.GenomeTicket.set_value_flag">
+<code class="sig-name descname">set_value_flag</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Ticket.GenomeTicket.set_value_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the flag if any attributes contain the specified ‘value’.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes.Trna">
+<span id="classes-trna-module"></span><h2>classes.Trna module<a class="headerlink" href="#module-classes.Trna" title="Permalink to this headline">¶</a></h2>
+<p>Represents a collection of data about a tRNA feature that are commonly used
+to maintain and update SEA-PHAGES phage genomics data.</p>
+<dl class="class">
+<dt id="classes.Trna.TrnaFeature">
+<em class="property">class </em><code class="sig-prename descclassname">classes.Trna.</code><code class="sig-name descname">TrnaFeature</code><a class="headerlink" href="#classes.Trna.TrnaFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-classes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="intro.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Travis Mavrich
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

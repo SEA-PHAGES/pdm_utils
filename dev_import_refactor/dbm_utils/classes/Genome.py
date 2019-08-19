@@ -120,7 +120,19 @@ class Genome:
 
 
     def set_host_genus(self, value=None, attribute=None, format="empty_string"):
-        """Set the host_genus from a value parsed from the indicated attribute."""
+        """Set the host_genus from a value parsed from the indicated attribute.
+
+        The input data is split into multiple parts, and the first word is
+        used to set host_genus.
+        
+        :param value: the host genus of the phage genome
+        :type value: str
+        :param attribute: the name of the genome attribute from which the
+            host_genus attribute will be set
+        :type attribute: str
+        :param format: the default format if the input is an empty/null value.
+        :type format: str
+        """
 
         if value is None:
             if attribute == "name":
