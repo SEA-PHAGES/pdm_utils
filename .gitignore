@@ -1,1 +1,16 @@
+.DS_Store
 dev_import_refactor/.DS_Store
+dev_import_refactor/__pycache__/
+dev_import_refactor/dbm_utils/.DS_Store
+dev_import_refactor/dbm_utils/__pycache__/
+dev_import_refactor/dbm_utils/classes/.DS_Store
+dev_import_refactor/dbm_utils/classes/__pycache__/
+dev_import_refactor/dbm_utils/constants/__pycache__/
+dev_import_refactor/dbm_utils/functions/__pycache__/
+dev_import_refactor/dbm_utils/pipelines/__pycache__/
+dev_import_refactor/dbm_utils/pipelines/database_import/__pycache__/
+dev_import_refactor/dbm_utils/tests/integration/__pycache__/
+dev_import_refactor/dbm_utils/tests/unit/.DS_Store
+dev_import_refactor/dbm_utils/tests/unit/__pycache__/
+dev_import_refactor/docs/.DS_Store
+dev_import_refactor/docs/source/.DS_Store
