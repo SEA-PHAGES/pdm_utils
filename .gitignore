@@ -14,3 +14,4 @@ dev_import_refactor/dbm_utils/tests/unit/.DS_Store
 dev_import_refactor/dbm_utils/tests/unit/__pycache__/
 dev_import_refactor/docs/.DS_Store
 dev_import_refactor/docs/source/.DS_Store
+dev_import_refactor/docs/build/

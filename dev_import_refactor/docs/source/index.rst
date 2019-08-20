@@ -11,7 +11,12 @@ Welcome to dbm_utils's documentation!
    :caption: Contents:
 
    intro
+   database
+   seaphages_import
+   customization
+   additionaltools
    classes
+
 
 
 
