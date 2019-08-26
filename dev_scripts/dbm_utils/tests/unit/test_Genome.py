@@ -696,30 +696,25 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
     def test_check_subcluster_structure_1(self):
         """Check that no error is produced if the
         non-empty subcluster is structured correctly."""
         self.genome.subcluster = "A1"
-        self.genome.check_subcluster_structure()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_subcluster_structure("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_subcluster_structure_2(self):
         """Check that an error is produced if the
         non-empty subcluster is not structured correctly."""
         self.genome.subcluster = "A"
         self.genome.check_subcluster_structure()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_subcluster_structure_3(self):
         """Check that no error is produced if the
@@ -735,15 +730,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no error is produced if the
         non-empty cluster is structured correctly."""
         self.genome.cluster = "A"
-        self.genome.check_cluster_structure()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_cluster_structure("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_cluster_structure_2(self):
         """Check that an error is produced if the
         non-empty cluster is not structured correctly."""
         self.genome.cluster = "A1"
         self.genome.check_cluster_structure()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_cluster_structure_3(self):
         """Check that no error is produced if the
@@ -760,8 +761,11 @@ class TestGenomeClass(unittest.TestCase):
         do not produce an error."""
         self.genome.cluster = "A"
         self.genome.subcluster = "A1"
-        self.genome.check_compatible_cluster_and_subcluster()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_compatible_cluster_and_subcluster("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_compatible_cluster_and_subcluster_2(self):
         """Check that incompatible Cluster and subcluster
@@ -769,7 +773,10 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.cluster = "A"
         self.genome.subcluster = "B1"
         self.genome.check_compatible_cluster_and_subcluster()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -778,15 +785,21 @@ class TestGenomeClass(unittest.TestCase):
         """All nucleotides are in the alphabet."""
         alphabet = set(["A","B","C"])
         self.genome.seq = "AB"
-        self.genome.check_nucleotides(alphabet)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_nucleotides(alphabet, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_nucleotides_2(self):
         """Some nucleotides are not in the alphabet."""
         alphabet = set(["A","B","C"])
         self.genome.seq = "AD"
         self.genome.check_nucleotides(alphabet)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -795,15 +808,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check final annotation_status with accession."""
         self.genome.annotation_status = "final"
         self.genome.accession = "ABC123"
-        self.genome.check_compatible_status_and_accession()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_compatible_status_and_accession("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_compatible_status_and_accession_2(self):
         """Check final annotation_status with no accession."""
         self.genome.annotation_status = "final"
         self.genome.accession = ""
         self.genome.check_compatible_status_and_accession()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_compatible_status_and_accession_3(self):
         """Check draft annotation_status with no accession."""
@@ -821,15 +840,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that draft genome with no descriptions does not produce
         an error."""
         self.genome.annotation_status = "draft"
-        self.genome.check_compatible_status_and_descriptions()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_compatible_status_and_descriptions("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_compatible_status_and_descriptions_2(self):
         """Check that draft genome with a description produces an error."""
         self.genome.annotation_status = "draft"
         self.genome._cds_processed_descriptions_tally = 1
         self.genome.check_compatible_status_and_descriptions()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_compatible_status_and_descriptions_3(self):
         """Check that final genome with a description does not produce
@@ -875,15 +900,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
         self.genome._description_name = "Trixie"
-        self.genome.check_description_name()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_description_name("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_description_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
         self.genome._description_name = "Trixie"
         self.genome.check_description_name()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -892,15 +923,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
         self.genome._source_name = "Trixie"
-        self.genome.check_source_name()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_source_name("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_source_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
         self.genome._source_name = "Trixie"
         self.genome.check_source_name()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -909,15 +946,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.genome.id = "Trixie"
         self.genome._organism_name = "Trixie"
-        self.genome.check_organism_name()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_organism_name("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_organism_name_2(self):
         """Check that a warning is produced."""
         self.genome.id = "L5"
         self.genome._organism_name = "Trixie"
         self.genome.check_organism_name()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -926,15 +969,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.genome.host_genus = "Mycobacterium"
         self.genome._description_host_genus = "Mycobacterium"
-        self.genome.check_description_host_genus()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_description_host_genus("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_description_host_genus_2(self):
         """Check that a warning is produced."""
         self.genome.host_genus = "Gordonia"
         self.genome._description_host_genus = "Mycobacterium"
         self.genome.check_description_host_genus()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -943,15 +992,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.genome.host_genus = "Mycobacterium"
         self.genome._source_host_genus = "Mycobacterium"
-        self.genome.check_source_host_genus()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_source_host_genus("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_source_host_genus_2(self):
         """Check that a warning is produced."""
         self.genome.host_genus = "Gordonia"
         self.genome._source_host_genus = "Mycobacterium"
         self.genome.check_source_host_genus()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -960,15 +1015,21 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.genome.host_genus = "Mycobacterium"
         self.genome._organism_host_genus = "Mycobacterium"
-        self.genome.check_organism_host_genus()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_organism_host_genus("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_organism_host_genus_2(self):
         """Check that a warning is produced."""
         self.genome.host_genus = "Gordonia"
         self.genome._organism_host_genus = "Mycobacterium"
         self.genome.check_organism_host_genus()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -978,8 +1039,11 @@ class TestGenomeClass(unittest.TestCase):
         and present."""
         check_set = set(["hatfull"])
         self.genome.authors = "abcd; efgh; HATFULL; xyz"
-        self.genome.check_authors(check_set=check_set)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_authors(check_set=check_set, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_authors_2(self):
         """Check that no warning is produced when author is not expected
@@ -987,7 +1051,10 @@ class TestGenomeClass(unittest.TestCase):
         check_set = set(["hatfull"])
         self.genome.authors = "abcd; efgh; xyz"
         self.genome.check_authors(check_set=check_set, expect=False)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_authors_3(self):
         """Check that a warning is produced when author is expected
@@ -1053,28 +1120,40 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_check_cds_start_end_ids_1(self):
         """Verify that no warning is produced."""
-        self.genome.check_cds_start_end_ids()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_cds_start_end_ids("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_cds_start_end_ids_2(self):
         """Verify that a warning is produced."""
         self.genome._cds_duplicate_start_end_ids = set([(2, 10)])
         self.genome.check_cds_start_end_ids()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
 
     def test_check_cds_end_strand_ids_1(self):
         """Verify that no warning is produced."""
-        self.genome.check_cds_end_strand_ids()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_cds_end_strand_ids("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_cds_end_strand_ids_2(self):
         """Verify that a warning is produced."""
         self.genome._cds_duplicate_end_strand_ids = set([(2, "forward")])
         self.genome.check_cds_end_strand_ids()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -1267,8 +1346,12 @@ class TestGenomeClass(unittest.TestCase):
         is in the id_set and is expected to be in the set."""
         value_set = set(["Trixie", "L5"])
         self.genome.id = "Trixie"
-        self.genome.check_id(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_id(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
+
 
     def test_check_id_2(self):
         """Verify that an error is produced when the id
@@ -1276,7 +1359,12 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["Trixie", "L5"])
         self.genome.id = "D29"
         self.genome.check_id(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
+
+
 
     def test_check_id_3(self):
         """Verify that no error is produced when the id
@@ -1303,8 +1391,11 @@ class TestGenomeClass(unittest.TestCase):
         is in the name_set and is expected to be in the set."""
         value_set = set(["Trixie", "L5"])
         self.genome.name = "Trixie"
-        self.genome.check_name(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_name(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_name_2(self):
         """Verify that an error is produced when the name
@@ -1312,7 +1403,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["Trixie", "L5"])
         self.genome.name = "D29"
         self.genome.check_name(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_name_3(self):
         """Verify that no error is produced when the name
@@ -1338,16 +1432,23 @@ class TestGenomeClass(unittest.TestCase):
         is in the status_set and is expected to be in the set."""
         self.genome.annotation_status = "draft"
         self.genome.check_annotation_status(
-            check_set=constants.ANNOTATION_STATUS_SET, expect = True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+            check_set=constants.ANNOTATION_STATUS_SET,
+            expect=True, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_annotation_status_2(self):
         """Verify that an error is produced when the annotation_status
         is not in the status_set and is expected to be in the set."""
         self.genome.annotation_status = "invalid"
         self.genome.check_annotation_status(
-            check_set=constants.ANNOTATION_STATUS_SET, expect = True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+            check_set=constants.ANNOTATION_STATUS_SET, expect=True)
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_annotation_status_3(self):
         """Verify that no error is produced when the annotation_status
@@ -1384,8 +1485,11 @@ class TestGenomeClass(unittest.TestCase):
         is in the host_set and is expected to be in the set."""
         value_set = set(["Mycobacterium", "Gordonia"])
         self.genome.host_genus = "Mycobacterium"
-        self.genome.check_host_genus(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_host_genus(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_host_genus_2(self):
         """Verify that an error is produced when the host_genus
@@ -1393,7 +1497,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["Mycobacterium", "Gordonia"])
         self.genome.host_genus = "invalid"
         self.genome.check_host_genus(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_host_genus_3(self):
         """Verify that no error is produced when the host_genus
@@ -1414,25 +1521,16 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     def test_check_cluster_1(self):
         """Verify that no error is produced when the cluster
         is in the cluster_set and is expected to be in the set."""
         value_set = set(["A", "B"])
         self.genome.cluster = "A"
-        self.genome.check_cluster(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_cluster(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_cluster_2(self):
         """Verify that an error is produced when the cluster
@@ -1440,7 +1538,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["A", "B"])
         self.genome.cluster = "C"
         self.genome.check_cluster(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_cluster_3(self):
         """Verify that no error is produced when the cluster
@@ -1461,22 +1562,16 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
     def test_check_subcluster_1(self):
         """Verify that no error is produced when the subcluster
         is in the subcluster_set and is expected to be in the set."""
         value_set = set(["A1", "B1"])
         self.genome.subcluster = "A1"
-        self.genome.check_subcluster(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_subcluster(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_subcluster_2(self):
         """Verify that an error is produced when the subcluster
@@ -1484,7 +1579,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["A1", "B1"])
         self.genome.subcluster = "C1"
         self.genome.check_subcluster(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_subcluster_3(self):
         """Verify that no error is produced when the subcluster
@@ -1505,20 +1603,16 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
     def test_check_sequence_1(self):
         """Verify that no error is produced when the sequence
         is in the seq_set and is expected to be in the set."""
         value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
         self.genome.seq = Seq("ATCG")
-        self.genome.check_sequence(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_sequence(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_sequence_2(self):
         """Verify that an error is produced when the sequence
@@ -1526,7 +1620,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
         self.genome.seq = Seq("TTTTT")
         self.genome.check_sequence(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_sequence_3(self):
         """Verify that no error is produced when the sequence
@@ -1552,8 +1649,11 @@ class TestGenomeClass(unittest.TestCase):
         is in the accession_set and is expected to be in the set."""
         value_set = set(["ABC123", "XYZ456"])
         self.genome.accession = "ABC123"
-        self.genome.check_accession(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_accession(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_accession_2(self):
         """Verify that an error is produced when the accession
@@ -1561,7 +1661,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["ABC123", "XYZ456"])
         self.genome.accession = "EFG789"
         self.genome.check_accession(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_accession_3(self):
         """Verify that no error is produced when the accession
@@ -1587,8 +1690,11 @@ class TestGenomeClass(unittest.TestCase):
         is valid."""
         self.genome.annotation_author = 0
         self.genome.check_annotation_author(
-            check_set=constants.ANNOTATION_AUTHOR_SET)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+            check_set=constants.ANNOTATION_AUTHOR_SET, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_annotation_author_2(self):
         """Verify that no error is produced when the annotation_author
@@ -1596,7 +1702,10 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.annotation_author = 1
         self.genome.check_annotation_author(
             check_set=constants.ANNOTATION_AUTHOR_SET)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_annotation_author_3(self):
         """Verify that an error is produced when the annotation_author
@@ -1629,15 +1738,22 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the annotation_qc
         is valid."""
         self.genome.annotation_qc = 0
-        self.genome.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_annotation_qc(
+            check_set=constants.ANNOTATION_QC_SET, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_annotation_qc_2(self):
         """Verify that no error is produced when the annotation_qc
         is valid."""
         self.genome.annotation_qc = 1
         self.genome.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_annotation_qc_3(self):
         """Verify that an error is produced when the annotation_qc
@@ -1670,8 +1786,11 @@ class TestGenomeClass(unittest.TestCase):
         is valid."""
         self.genome.retrieve_record = 0
         self.genome.check_retrieve_record(
-            check_set=constants.RETRIEVE_RECORD_SET)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+            check_set=constants.RETRIEVE_RECORD_SET, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_retrieve_record_2(self):
         """Verify that no error is produced when the retrieve_record
@@ -1679,7 +1798,10 @@ class TestGenomeClass(unittest.TestCase):
         self.genome.retrieve_record = 1
         self.genome.check_retrieve_record(
             check_set=constants.RETRIEVE_RECORD_SET)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_retrieve_record_3(self):
         """Verify that an error is produced when the retrieve_record
@@ -1713,8 +1835,11 @@ class TestGenomeClass(unittest.TestCase):
         is in the filename_set and is expected to be in the set."""
         value_set = set(["Trixie"])
         self.genome.filename = "Trixie"
-        self.genome.check_filename(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_filename(value_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_filename_2(self):
         """Verify that an error is produced when the filename
@@ -1722,7 +1847,10 @@ class TestGenomeClass(unittest.TestCase):
         value_set = set(["Trixie"])
         self.genome.filename = "L5"
         self.genome.check_filename(value_set, True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_filename_3(self):
         """Verify that no error is produced when the filename
@@ -1954,14 +2082,20 @@ class TestGenomeClass(unittest.TestCase):
     def test_check_cds_feature_tally_1(self):
         """Verify no error is encountered when there is one CDS feature."""
         self.genome._cds_features_tally = 1
-        self.genome.check_cds_feature_tally()
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_cds_feature_tally("eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_cds_feature_tally_2(self):
         """Verify error is encountered when there is no CDS feature."""
         self.genome._cds_features_tally = 0
         self.genome.check_cds_feature_tally()
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
 
 
@@ -1970,15 +2104,21 @@ class TestGenomeClass(unittest.TestCase):
         """Verify that no error is produced when the _value_flag
         field is True and is expected to be True."""
         self.genome._value_flag = True
-        self.genome.check_value_flag(True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_value_flag(True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_value_flag_2(self):
         """Verify that an error is produced when the _value_flag
         field is False and is expected to be True."""
         self.genome._value_flag = False
         self.genome.check_value_flag(True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_value_flag_3(self):
         """Verify that no error is produced when the _value_flag
@@ -2006,8 +2146,11 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 20
         self.cds2.right = 70
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
-        self.assertEqual(self.genome.evaluations[0].status, "correct")
+        self.genome.check_feature_ids(cds=True,eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].id, "eval_id")
 
     def test_check_feature_ids_2(self):
         """Verify an error is produced by two CDS features on same strand
@@ -2020,7 +2163,10 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.check_feature_ids(cds=True)
-        self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome.evaluations[0].id)
 
     def test_check_feature_ids_3(self):
         """Verify an error is produced by two CDS features on different strand
