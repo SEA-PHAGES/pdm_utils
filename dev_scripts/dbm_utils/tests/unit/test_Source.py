@@ -85,15 +85,21 @@ class TestSourceClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.feature.genome_id = "Trixie"
         self.feature._organism_name = "Trixie"
-        self.feature.check_organism_name()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_organism_name(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_organism_name_2(self):
         """Check that a warning is produced."""
         self.feature.genome_id = "L5"
         self.feature._organism_name = "Trixie"
         self.feature.check_organism_name()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
@@ -102,15 +108,21 @@ class TestSourceClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.feature.parent_host_genus = "Mycobacterium"
         self.feature._organism_host_genus = "Mycobacterium"
-        self.feature.check_organism_host_genus()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_organism_host_genus(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_organism_host_genus_2(self):
         """Check that a warning is produced."""
         self.feature.parent_host_genus = "Gordonia"
         self.feature._organism_host_genus = "Mycobacterium"
         self.feature.check_organism_host_genus()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
@@ -119,15 +131,21 @@ class TestSourceClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.feature.parent_host_genus = "Mycobacterium"
         self.feature._host_host_genus = "Mycobacterium"
-        self.feature.check_host_host_genus()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_host_host_genus(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_host_host_genus_2(self):
         """Check that a warning is produced."""
         self.feature.parent_host_genus = "Gordonia"
         self.feature._host_host_genus = "Mycobacterium"
         self.feature.check_host_host_genus()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
@@ -136,15 +154,21 @@ class TestSourceClass(unittest.TestCase):
         """Check that no warning is produced."""
         self.feature.parent_host_genus = "Mycobacterium"
         self.feature._lab_host_host_genus = "Mycobacterium"
-        self.feature.check_lab_host_host_genus()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_lab_host_host_genus(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_lab_host_host_genus_2(self):
         """Check that a warning is produced."""
         self.feature.parent_host_genus = "Gordonia"
         self.feature._lab_host_host_genus = "Mycobacterium"
         self.feature.check_lab_host_host_genus()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
 
 

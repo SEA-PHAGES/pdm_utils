@@ -36,24 +36,10 @@ class Source:
         self._host_host_genus = ""
         self._lab_host_host_genus = ""
 
-
-
         self.evaluations = [] # List of warnings and errors about source feature
 
 
 
-    # TODO this is probably no longer needed.
-    # def set_evaluation(self, type, message1 = None, message2 = None):
-    #     """Creates an EvalResult object and adds it to the list of all
-    #     evaluations."""
-    #
-    #     if type == "warning":
-    #         eval_object = Eval.construct_warning(message1, message2)
-    #     elif type == "error":
-    #         eval_object = Eval.construct_error(message1)
-    #     else:
-    #         eval_object = Eval.EvalResult()
-    #     self.evaluations.append(eval_object)
 
     def parse_organism(self):
         """Retrieve the phage name and host_genus name from the 'organism' field."""
@@ -85,7 +71,8 @@ class Source:
 
     # Evalutions
 
-    def check_organism_name(self):
+
+    def check_organism_name(self, eval_id=None):
         """Check phage name spelling in the organism field."""
 
         if self.genome_id != self._organism_name:
@@ -98,15 +85,11 @@ class Source:
             status = "correct"
 
         definition = "Check phage name spelling in the organism field."
-        eval = Eval.Eval(id = "SRC0001", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-
-    def check_organism_host_genus(self):
+    def check_organism_host_genus(self, eval_id=None):
         """Check host_genus name spelling in the organism field."""
 
         if self.parent_host_genus != self._organism_host_genus:
@@ -119,13 +102,11 @@ class Source:
             status = "correct"
 
         definition = "Check host_genus name spelling in the organism field."
-        eval = Eval.Eval(id = "SRC0002", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
-    def check_host_host_genus(self):
+
+    def check_host_host_genus(self, eval_id=None):
         """Check host_genus name spelling in the host field."""
 
         if self.parent_host_genus != self._host_host_genus:
@@ -138,13 +119,11 @@ class Source:
             status = "correct"
 
         definition = "Check host_genus name spelling in the host field."
-        eval = Eval.Eval(id = "SRC0003", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
-    def check_lab_host_host_genus(self):
+
+    def check_lab_host_host_genus(self, eval_id=None):
         """Check host_genus name spelling in the lab_host field."""
 
         if self.parent_host_genus != self._lab_host_host_genus:
@@ -157,10 +136,7 @@ class Source:
             status = "correct"
 
         definition = "Check host_genus name spelling in the lab_host field."
-        eval = Eval.Eval(id = "SRC0004", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
