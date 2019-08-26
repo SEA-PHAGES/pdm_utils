@@ -71,7 +71,7 @@ class Bundle:
 
     # Evaluations.
 
-    def check_matched_genome(self, key):
+    def check_matched_genome(self, key, eval_id=None):
         """Check for whether a certain type of genome has been added to the
         genome dictionary."""
         if key in self.genome_dict.keys():
@@ -83,10 +83,10 @@ class Bundle:
 
         definition = "Check if a %s genome type has been " % key + \
                         "matched to the ticket."
-        eval = Eval.Eval("BUNDLE", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
-    def check_genome_dictionary(self, key, expect=True):
+    def check_genome_dictionary(self, key, expect=True, eval_id=None):
         """Check if a genome is present in the genome dictionary.
         The 'key' parameter indicates how the genome is expected to be
         stored in the dictionary.
@@ -107,10 +107,10 @@ class Bundle:
                 status = "error"
 
         definition = "Check if the %s genome is present." % key
-        eval = Eval.Eval("BUNDLE", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
-    def check_genome_pair_dictionary(self, key, expect=True):
+    def check_genome_pair_dictionary(self, key, expect=True, eval_id=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
         The 'key' parameter indicates how the genome_pair is expected to be
         stored in the dictionary.
@@ -131,7 +131,7 @@ class Bundle:
                 status = "error"
 
         definition = "Check if the %s genome_pair is present." % key
-        eval = Eval.Eval("BUNDLE", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
     def check_for_errors(self):
