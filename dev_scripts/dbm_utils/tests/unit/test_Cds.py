@@ -291,15 +291,22 @@ class TestCdsClass(unittest.TestCase):
         """Verify no error is produced if all amino acids
         are in the protein alphabet."""
         self.feature.translation = "ADE"
-        self.feature.check_amino_acids(check_set=constants.PROTEIN_ALPHABET)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_amino_acids(
+            check_set=constants.PROTEIN_ALPHABET, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_amino_acids_2(self):
         """Verify an error is produced if some amino acids
         are not in the protein alphabet."""
         self.feature.translation = "ABDE"
         self.feature.check_amino_acids(check_set=constants.PROTEIN_ALPHABET)
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_amino_acids_3(self):
         """Verify no error is produced if all amino acids
@@ -444,15 +451,21 @@ class TestCdsClass(unittest.TestCase):
         """Verify no error is produced when the strand is
         formatted correctly using default settings."""
         self.feature.strand = "F"
-        self.feature.check_strand()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_strand(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_strand_2(self):
         """Verify an error is produced when the strand is
         formatted incorrectly using default settings."""
         self.feature.strand = 1
         self.feature.check_strand()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_strand_3(self):
         """Verify no error is produced when the strand is
@@ -475,15 +488,21 @@ class TestCdsClass(unittest.TestCase):
         """Test correct boundaries."""
         self.feature.left = 5
         self.feature.right = 10
-        self.feature.check_coordinates()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_coordinates(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_coordinates_2(self):
         """Test incorrect left boundary."""
         self.feature.left = "a"
         self.feature.right = 10
         self.feature.check_coordinates()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_coordinates_3(self):
         """Test incorrect right boundary."""
@@ -498,14 +517,20 @@ class TestCdsClass(unittest.TestCase):
     def test_check_locus_tag_present_1(self):
         """Check if absent locus tag is expected to be absent."""
         self.feature.locus_tag = ""
-        self.feature.check_locus_tag_present(False)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_locus_tag_present(False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_locus_tag_present_2(self):
         """Check if absent locus tag is expected to be present."""
         self.feature.locus_tag = ""
         self.feature.check_locus_tag_present(True)
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_locus_tag_present_3(self):
         """Check if present locus tag is expected to be present."""
@@ -525,14 +550,20 @@ class TestCdsClass(unittest.TestCase):
     def test_check_gene_present_1(self):
         """Check if absent gene is expected to be absent."""
         self.feature.gene = ""
-        self.feature.check_gene_present(False)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_gene_present(False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_gene_present_2(self):
         """Check if absent gene is expected to be present."""
         self.feature.gene = ""
         self.feature.check_gene_present(True)
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_gene_present_3(self):
         """Check if present gene is expected to be present."""
@@ -549,24 +580,23 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-
-
-
-
-
     def test_check_gene_structure_1(self):
         """Verify no error is produced when gene is an integer."""
         self.feature.gene = "1"
-        self.feature.check_gene_structure()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_gene_structure(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_gene_structure_2(self):
         """Verify an error is produced when gene is not integer."""
         self.feature.gene = "abcd"
         self.feature.check_gene_structure()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
@@ -575,17 +605,21 @@ class TestCdsClass(unittest.TestCase):
         """Verify no error is produced when gene and locus_tag match."""
         self.feature.gene = "1"
         self.feature._locus_tag_num = "1"
-        self.feature.check_compatible_gene_and_locus_tag()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
-
-
+        self.feature.check_compatible_gene_and_locus_tag(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_compatible_gene_and_locus_tag_2(self):
         """Verify an error is produced when gene and locus_tag do not match."""
         self.feature.gene = "1"
         self.feature._locus_tag_num = "10"
         self.feature.check_compatible_gene_and_locus_tag()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
@@ -594,8 +628,11 @@ class TestCdsClass(unittest.TestCase):
         the processed_product as expected and the processed_function and
         the processed_note are empty."""
         self.feature.processed_product = "ABC"
-        self.feature.check_description_field()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_description_field(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_description_field_2(self):
         """Verify no error is produced when a description is present in
@@ -603,7 +640,10 @@ class TestCdsClass(unittest.TestCase):
         the processed_note are empty."""
         self.feature.processed_function = "ABC"
         self.feature.check_description_field(attribute="function")
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_description_field_3(self):
         """Verify no error is produced when a description is present in
@@ -662,8 +702,11 @@ class TestCdsClass(unittest.TestCase):
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "SEA_TRIXIE_123"
         self.feature.check_locus_tag_structure(
-            prefix_set=constants.LOCUS_TAG_PREFIX_SET)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_locus_tag_structure_2(self):
         """Verify no error is produced when the locus_tag has a
@@ -672,7 +715,10 @@ class TestCdsClass(unittest.TestCase):
         self.feature.locus_tag = "SEATrixie123"
         self.feature.check_locus_tag_structure(only_typo=True,
             prefix_set=constants.LOCUS_TAG_PREFIX_SET)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_locus_tag_structure_3(self):
         """Verify an error is produced when the locus_tag has an
@@ -1019,43 +1065,29 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def test_check_translation_length_1(self):
         """Verify a present translation does not produce an error."""
         self.feature._translation_length = 1
-        self.feature.check_translation_length()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_translation_length(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_translation_length_2(self):
         """Verify a present translation does not produce an error."""
         self.feature._translation_length = 100
         self.feature.check_translation_length()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_translation_length_3(self):
         """Verify that no translation produces an error."""
         self.feature._translation_length = 0
         self.feature.check_translation_length()
         self.assertEqual(self.feature.evaluations[0].status, "error")
-
-
-
-
 
 
 
@@ -1106,14 +1138,20 @@ class TestCdsClass(unittest.TestCase):
     def test_check_translation_table_1(self):
         """Verify no error is produced."""
         self.feature.translation_table = 11
-        self.feature.check_translation_table()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_translation_table(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_translation_table_2(self):
         """Verify an error is produced."""
         self.feature.translation_table = "11"
         self.feature.check_translation_table()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_translation_table_3(self):
         """Verify no error is produced when a modified translation
@@ -1131,8 +1169,11 @@ class TestCdsClass(unittest.TestCase):
         self.feature._translation_length = 2
         self.feature.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
-        self.feature.check_translation()
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_translation(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_translation_2(self):
         """Verify an error is produced by a translation with an internal
@@ -1142,7 +1183,10 @@ class TestCdsClass(unittest.TestCase):
         self.feature.seq = Seq("ATGTTTTGATGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
         self.feature.check_translation()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_translation_3(self):
         """Verify an error is produced by a translation shorter than
@@ -1181,15 +1225,21 @@ class TestCdsClass(unittest.TestCase):
         """Verify no error is produced if the product contains valid data."""
         self.feature.product = "terminase"
         self.feature.processed_product = "terminase"
-        self.feature.check_generic_data("product")
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        self.feature.check_generic_data("product", eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_generic_data_2(self):
         """Verify no error is produced if the function contains valid data."""
         self.feature.function = "terminase"
         self.feature.processed_function = "terminase"
         self.feature.check_generic_data("product")
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_generic_data_3(self):
         """Verify no error is produced if the note contains valid data."""

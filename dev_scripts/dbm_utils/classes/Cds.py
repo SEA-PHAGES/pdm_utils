@@ -362,7 +362,7 @@ class Cds:
 
     # Evaluations.
 
-    def check_translation_table(self, check_table=11):
+    def check_translation_table(self, check_table=11, eval_id=None):
         """Check that the translation table is correct."""
 
         if self.translation_table == check_table:
@@ -372,11 +372,11 @@ class Cds:
             result = "The translation table is not correct."
             status = "error"
         definition = "Check that the translation table is correct."
-        eval = Eval.Eval("CDS0001", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_translation_length(self):
+    def check_translation_length(self, eval_id=None):
         """Confirm that a translation is present."""
         if self._translation_length < 1:
             result = "A translation is not present."
@@ -386,11 +386,11 @@ class Cds:
             status = "correct"
 
         definition = "Check that there is a translation present."
-        eval = Eval.Eval("CDS0002", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_translation(self):
+    def check_translation(self, eval_id=None):
         """Check that the current and expected translations match."""
 
         translation = self.translate_seq()
@@ -407,11 +407,11 @@ class Cds:
             result = "The translation is correct."
             status = "correct"
         definition = "Check that the feature contains the expected translation."
-        eval = Eval.Eval("CDS0003", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_amino_acids(self, check_set=set()):
+    def check_amino_acids(self, check_set=set(), eval_id=None):
         """Check whether all amino acids in the translation are valid."""
         amino_acid_set = set(self.translation)
         amino_acid_error_set = amino_acid_set - check_set
@@ -425,11 +425,11 @@ class Cds:
             status = "correct"
 
         definition = "Check validity of amino acid residues."
-        eval = Eval.Eval("CDS0004", definition, result, status = status)
+        eval = Eval.Eval(eval_id, definition, result, status = status)
         self.evaluations.append(eval)
 
 
-    def check_strand(self, format="fr_short", case=True):
+    def check_strand(self, format="fr_short", case=True, eval_id=None):
         """Check if strand is set appropriately."""
         expected_strand = basic.reformat_strand(self.strand,
                                                 format=format,
@@ -441,11 +441,11 @@ class Cds:
             result = "The feature strand is not correct."
             status = "error"
         definition = "Check if the strand is set appropriately."
-        eval = Eval.Eval("CDS0005", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_coordinates(self):
+    def check_coordinates(self, eval_id=None):
         """Check if coordinates are exact.
 
         This method assumes that if the coordinates are not exact, they
@@ -467,11 +467,11 @@ class Cds:
 
         definition = "Check if the left and right boundary coordinates " + \
                         "are exact or fuzzy."
-        eval = Eval.Eval("CDS0006", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_locus_tag_present(self, expect=True):
+    def check_locus_tag_present(self, expect=True, eval_id=None):
         """Check if status of locus tag matches expectations."""
 
         if self.locus_tag != "":
@@ -494,12 +494,12 @@ class Cds:
                 result = "The locus_tag qualifier is not present."
                 status = "correct"
         definition = "Check if the locus_tag qualifier status is expected."
-        eval = Eval.Eval("CDS0007", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
-                                  prefix_set=set(), caps=True):
+                                  prefix_set=set(), caps=True, eval_id=None):
         """Check if the locus_tag is structured correctly.
 
         The 'check_value' parameter provides the genome ID that is expected
@@ -545,7 +545,7 @@ class Cds:
                      + " ".join(results)
             status = "error"
         definition = "Check if the locus_tag qualifier is structured correctly."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -561,7 +561,7 @@ class Cds:
     # TODO is this needed?
     # TODO implement.
     # TODO unittest
-    def check_id_typo(self, check_value=None):
+    def check_id_typo(self, check_value=None, eval_id=None):
         """Check if the id contains potential typos."""
 
         if check_value is None:
@@ -577,11 +577,11 @@ class Cds:
             result = "The id is correct."
             status = "correct"
         definition = "Check if the id contains a typo."
-        eval = Eval.Eval("CDS0009", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_gene_present(self, expect=True):
+    def check_gene_present(self, expect=True, eval_id=None):
         """Check if the status of gene matches expectations."""
 
         if self.gene != "":
@@ -604,11 +604,11 @@ class Cds:
                 result = "The gene qualifier is not present."
                 status = "correct"
         definition = "Check if the gene status is expected."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_gene_structure(self):
+    def check_gene_structure(self, eval_id=None):
         """Check if the gene qualifier contains an integer."""
 
         try:
@@ -623,11 +623,11 @@ class Cds:
             result = "The gene qualifier does not contain an integer."
             status = "error"
         definition = "Check if the gene qualifier contains an integer."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_compatible_gene_and_locus_tag(self):
+    def check_compatible_gene_and_locus_tag(self, eval_id=None):
         """Check if the gene and locus_tag attributes contain the same
         gene number."""
         if self.gene == self._locus_tag_num:
@@ -637,11 +637,11 @@ class Cds:
             result = "The gene and locus_tag numbers are not consistent."
             status = "error"
         definition = "Check if the gene and locus_tag numbers are consistent."
-        eval = Eval.Eval("CDS", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_description_field(self, attribute="product"):
+    def check_description_field(self, attribute="product", eval_id=None):
         """Check if there are CDS descriptions in unexpected fields.
 
         This method evaluates if the indicated field is empty or generic,
@@ -678,11 +678,11 @@ class Cds:
 
         definition = \
             "Check if there is a discrepancy between description fields."
-        eval = Eval.Eval("CDS0010", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_generic_data(self, attribute=None):
+    def check_generic_data(self, attribute=None, eval_id=None):
         """Check if the indicated attribute contains generic data."""
 
         if attribute == "product":
@@ -705,7 +705,7 @@ class Cds:
             result = "The '%s' field is not correct." % attribute
             status = "error"
         definition = "Check if the '%s' field contains generic data." % attribute
-        eval = Eval.Eval("CDS0011", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
@@ -714,7 +714,8 @@ class Cds:
 
     # TODO implement.
     # TODO unittest.
-    def check_valid_description(self, check_set=None, attribute=None):
+    def check_valid_description(self, check_set=None, attribute=None,
+                                eval_id=None):
         """Check if the CDS description in the indicated attribute is valid."""
         pass
 
