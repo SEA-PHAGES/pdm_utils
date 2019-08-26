@@ -104,10 +104,6 @@ class GenomeTicket:
         """Set the set_retrieve_record."""
         self.retrieve_record = basic.lower_case(value)
 
-
-
-
-    # TODO unittest.
     def set_value_flag(self, value):
         """Sets the flag if any attributes contain the specified 'value'."""
         if value in vars(self).values():
@@ -120,8 +116,7 @@ class GenomeTicket:
 
     # Evaluations
 
-
-    def check_parsed_fields(self):
+    def check_parsed_fields(self, eval_id=None):
         """Check if the import table contained the correct amount of data."""
 
         if self._parsed_fields == 11:
@@ -132,11 +127,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if import table contains the correct amount of data."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_type(self, value_set, expected = True):
+    def check_type(self, value_set, expected=True, eval_id=None):
         """Check if the type is populated with a value from
         a specific set of possible values."""
 
@@ -151,11 +146,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if ticket type field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_phage_id(self, value_set, expected = True):
+    def check_phage_id(self, value_set, expected=True, eval_id=None):
         """Check if the phage_id is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -170,13 +165,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if phage_id field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-
-
-    def check_host_genus(self, value_set, expected = True):
+    def check_host_genus(self, value_set, expected=True, eval_id=None):
         """Check if the host_genus is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -191,11 +184,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if host_genus field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_subcluster(self, value_set, expected = True):
+    def check_subcluster(self, value_set, expected=True, eval_id=None):
         """Check if the subcluster is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -210,11 +203,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if subcluster field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_cluster(self, value_set, expected = True):
+    def check_cluster(self, value_set, expected=True, eval_id=None):
         """Check if the cluster is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -229,11 +222,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if cluster field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_annotation_status(self, value_set, expected = True):
+    def check_annotation_status(self, value_set, expected=True, eval_id=None):
         """Check if the annotation_status is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -248,11 +241,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if annotation_status field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_description_field(self, value_set, expected = True):
+    def check_description_field(self, value_set, expected=True, eval_id=None):
         """Check if the description_field is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -267,11 +260,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if description_field field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_accession(self, value_set, expected = True):
+    def check_accession(self, value_set, expected=True, eval_id=None):
         """Check if the accession is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -286,11 +279,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if accession field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_annotation_author(self, value_set, expected = True):
+    def check_annotation_author(self, value_set, expected=True, eval_id=None):
         """Check if the annotation_author is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -305,11 +298,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if annotation_author field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_run_mode(self, value_set, expected = True):
+    def check_run_mode(self, value_set, expected=True, eval_id=None):
         """Check if the run_mode is populated with an empty value.
         The provided set contains a list of possible empty values."""
 
@@ -324,11 +317,11 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if run_mode field is correctly populated."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def check_duplicate_phage_id(self, set_of_duplicates):
+    def check_duplicate_phage_id(self, set_of_duplicates, eval_id=None):
         """Check if the phage_id is unique to this ticket by
         checking if it is found within a list of previously
         determined duplicate phage_ids."""
@@ -341,13 +334,11 @@ class GenomeTicket:
             status = "correct"
 
         definition = "Check if the phage_id is unique to this ticket."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-
-
-    def check_duplicate_accession(self, set_of_duplicates):
+    def check_duplicate_accession(self, set_of_duplicates, eval_id=None):
         """Check if the accession is unique to this ticket by
         checking if it is found within a list of previously
         determined duplicate accessions."""
@@ -360,14 +351,11 @@ class GenomeTicket:
             status = "correct"
 
         definition = "Check if the accession is unique to this ticket."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-
-
-
-    def check_compatible_type_and_annotation_status(self):
+    def check_compatible_type_and_annotation_status(self, eval_id=None):
         """Check if the ticket type and annotation_status are compatible.
 
         If the ticket type is "add", then the annotation_status is not
@@ -391,7 +379,7 @@ class GenomeTicket:
             status = "correct"
         definition = "Check if the ticket type and annotation_status" \
                      + " are compatible."
-        eval = Eval.Eval("TICKET", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 

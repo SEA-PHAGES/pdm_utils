@@ -277,26 +277,25 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
     def test_check_parsed_fields_1(self):
         """Check that no error is produced if the
         correct number of fields were parsed."""
         self.ticket._parsed_fields = 11
-        self.ticket.check_parsed_fields()
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_parsed_fields(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_parsed_fields_2(self):
         """Check that an error is produced if the
         incorrect number of fields were parsed."""
         self.ticket._parsed_fields = 10
         self.ticket.check_parsed_fields()
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -306,8 +305,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         type is present in the set and expected to be in the set."""
         set1 = set(["add", "remove"])
         self.ticket.type = "add"
-        self.ticket.check_type(set1, True)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_type(set1, True, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_type_2(self):
         """Check that an error is produced if the
@@ -315,7 +317,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["add", "remove"])
         self.ticket.type = "none"
         self.ticket.check_type(set1)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -326,8 +331,13 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.phage_id = "Trixie"
-        self.ticket.check_phage_id(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_phage_id(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
+
+
 
     def test_check_phage_id_2(self):
         """Check that an error is produced if the
@@ -335,7 +345,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.phage_id = "none"
         self.ticket.check_phage_id(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -346,8 +359,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.host_genus = "Mycobacterium"
-        self.ticket.check_host_genus(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_host_genus(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_host_genus_2(self):
         """Check that an error is produced if the
@@ -356,7 +372,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.host_genus = "none"
         self.ticket.check_host_genus(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -367,8 +386,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.subcluster = "Mycobacterium"
-        self.ticket.check_subcluster(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_subcluster(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_subcluster_2(self):
         """Check that an error is produced if the
@@ -377,7 +399,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.subcluster = "none"
         self.ticket.check_subcluster(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -388,8 +413,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.cluster = "Mycobacterium"
-        self.ticket.check_cluster(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_cluster(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_cluster_2(self):
         """Check that an error is produced if the
@@ -398,7 +426,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.cluster = "none"
         self.ticket.check_cluster(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -409,8 +440,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.annotation_status = "Mycobacterium"
-        self.ticket.check_annotation_status(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_annotation_status(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_annotation_status_2(self):
         """Check that an error is produced if the
@@ -419,7 +453,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.annotation_status = "none"
         self.ticket.check_annotation_status(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -430,8 +467,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.description_field = "Mycobacterium"
-        self.ticket.check_description_field(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_description_field(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_description_field_2(self):
         """Check that an error is produced if the
@@ -440,7 +480,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.description_field = "none"
         self.ticket.check_description_field(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -451,8 +494,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.accession = "Mycobacterium"
-        self.ticket.check_accession(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_accession(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_accession_2(self):
         """Check that an error is produced if the
@@ -461,7 +507,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.accession = "none"
         self.ticket.check_accession(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -472,8 +521,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.annotation_author = "Mycobacterium"
-        self.ticket.check_annotation_author(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_annotation_author(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_annotation_author_2(self):
         """Check that an error is produced if the
@@ -482,7 +534,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.annotation_author = "none"
         self.ticket.check_annotation_author(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -493,8 +548,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         and not expected to be in the set."""
         set1 = set(["none"])
         self.ticket.run_mode = "Mycobacterium"
-        self.ticket.check_run_mode(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_run_mode(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_run_mode_2(self):
         """Check that an error is produced if the
@@ -503,7 +561,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.ticket.run_mode = "none"
         self.ticket.check_run_mode(set1, False)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -513,8 +574,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         phage_id is not present in the set of duplicated values."""
         dupe_set = set(["Trixie", "L5"])
         self.ticket.phage_id = "D29"
-        self.ticket.check_duplicate_phage_id(dupe_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_duplicate_phage_id(dupe_set, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_duplicate_phage_id_2(self):
         """Check that an error is produced if the
@@ -522,10 +586,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         dupe_set = set(["Trixie", "L5"])
         self.ticket.phage_id = "Trixie"
         self.ticket.check_duplicate_phage_id(dupe_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
-
-
-
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -535,8 +599,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         accession is not present in the set of duplicated values."""
         dupe_set = set(["ABC123", "EFG456"])
         self.ticket.accession = "XYZ789"
-        self.ticket.check_duplicate_accession(dupe_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_duplicate_accession(dupe_set, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_duplicate_accession_2(self):
         """Check that an error is produced if the
@@ -544,7 +611,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         dupe_set = set(["ABC123", "EFG456"])
         self.ticket.accession = "ABC123"
         self.ticket.check_duplicate_accession(dupe_set)
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
 
 
@@ -554,8 +624,12 @@ class TestGenomeTicketClass(unittest.TestCase):
         annotation_status."""
         self.ticket.type = "add"
         self.ticket.annotation_status = "draft"
-        self.ticket.check_compatible_type_and_annotation_status()
-        self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        self.ticket.check_compatible_type_and_annotation_status(
+            eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].id, "eval_id")
 
     def test_check_compatible_type_and_annotation_status_2(self):
         """Verify that an error is produced with "add" type and "final"
@@ -563,7 +637,10 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.ticket.type = "add"
         self.ticket.annotation_status = "final"
         self.ticket.check_compatible_type_and_annotation_status()
-        self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.ticket.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.ticket.evaluations[0].id)
 
     def test_check_compatible_type_and_annotation_status_3(self):
         """Verify that no error is produced with "replace" type and "final"
