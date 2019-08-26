@@ -430,8 +430,11 @@ class TestGenomePairClass(unittest.TestCase):
         id is not the same."""
         self.genome1.id = "Trixie"
         self.genome2.id = "L5"
-        self.genome_pair.compare_id()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        self.genome_pair.compare_id(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_id_2(self):
         """Check that no error is produced if the
@@ -439,7 +442,10 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = "Trixie"
         self.genome2.id = "Trixie"
         self.genome_pair.compare_id()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -448,15 +454,21 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that identical sequences produce no warning."""
         self.genome1.seq = "ABCD"
         self.genome2.seq = "ABCD"
-        self.genome_pair.compare_genome_sequence()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        self.genome_pair.compare_genome_sequence(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_genome_sequence_2(self):
         """Check that different sequences produce a warning."""
         self.genome1.seq = "ABCD"
         self.genome2.seq = "ABCDE"
         self.genome_pair.compare_genome_sequence()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -465,15 +477,21 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that identical sequence lengths produce no warning."""
         self.genome1._length = 5
         self.genome2._length = 5
-        self.genome_pair.compare_genome_length()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        self.genome_pair.compare_genome_length(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_genome_length_2(self):
         """Check that different sequence lengths produce a warning."""
         self.genome1._length = 5
         self.genome2._length = 6
         self.genome_pair.compare_genome_length()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -482,15 +500,21 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that identical clusters produce no warning."""
         self.genome1.cluster = "A"
         self.genome2.cluster = "A"
-        self.genome_pair.compare_cluster()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        self.genome_pair.compare_cluster(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_cluster_2(self):
         """Check that different clusters produce a warning."""
         self.genome1.cluster = "A"
         self.genome2.cluster = "B"
         self.genome_pair.compare_cluster()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -499,15 +523,21 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that identical subclusters produce no warning."""
         self.genome1.subcluster = "A1"
         self.genome2.subcluster = "A1"
-        self.genome_pair.compare_subcluster()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        self.genome_pair.compare_subcluster(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_subcluster_2(self):
         """Check that different subclusters produce a warning."""
         self.genome1.subcluster = "A1"
         self.genome2.subcluster = "A2"
         self.genome_pair.compare_subcluster()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -516,15 +546,21 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that identical accessions produce no warning."""
         self.genome1.accession = "ABC123"
         self.genome2.accession = "ABC123"
-        self.genome_pair.compare_accession()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        self.genome_pair.compare_accession(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_accession_2(self):
         """Check that different accessions produce a warning."""
         self.genome1.accession = "ABC1234"
         self.genome2.accession = "ABC123"
         self.genome_pair.compare_accession()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -533,15 +569,21 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that identical hosts produce no warning."""
         self.genome1.host_genus = "Mycobacterium"
         self.genome2.host_genus = "Mycobacterium"
-        self.genome_pair.compare_host_genus()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        self.genome_pair.compare_host_genus(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_host_genus_2(self):
         """Check that different hosts produce a warning."""
         self.genome1.host_genus = "Mycobacterium"
         self.genome2.host_genus = "Mycobacteriums"
         self.genome_pair.compare_host_genus()
-        self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
 
 
@@ -554,8 +596,11 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status( \
-            "type", "phamerator", "flat_file", "draft", "final")
-        self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+            "type", "phamerator", "flat_file", "draft", "final", "eval_id")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].id, "eval_id")
 
     def test_compare_annotation_status_2(self):
         """Verify no test is performed when the attribute is invalid."""
@@ -565,7 +610,10 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status( \
             "type_x", "phamerator", "flat_file", "draft", "final")
-        self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+        with self.subTest():
+            self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
+        with self.subTest():
+            self.assertIsNone(self.genome_pair.evaluations[0].id)
 
     def test_compare_annotation_status_3(self):
         """Verify no test is performed when the ref_name is invalid."""

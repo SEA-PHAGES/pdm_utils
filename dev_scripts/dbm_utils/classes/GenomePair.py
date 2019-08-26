@@ -420,8 +420,7 @@ class GenomePair:
     # Evaluations
 
 
-
-    def compare_id(self):
+    def compare_id(self, eval_id=None):
         """Compare the id of each genome."""
 
         if self.genome1.id != self.genome2.id:
@@ -432,12 +431,11 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the id of each genome."
-        eval = Eval.Eval("GENOMEPAIR", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-
-    def compare_genome_sequence(self):
+    def compare_genome_sequence(self, eval_id=None):
         """Compare the sequence of each genome."""
 
         if self.genome1.seq != self.genome2.seq:
@@ -449,10 +447,11 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the sequence of each genome."
-        eval = Eval.Eval("GENOMEPAIR0001", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
-    def compare_genome_length(self):
+
+    def compare_genome_length(self, eval_id=None):
         """Compare the sequence length of each genome."""
 
         if self.genome1._length != self.genome2._length:
@@ -463,11 +462,11 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the length of both sequences."
-        eval = Eval.Eval("GENOMEPAIR0002", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def compare_cluster(self):
+    def compare_cluster(self, eval_id=None):
         """Compare the cluster of each genome."""
 
         if self.genome1.cluster != self.genome2.cluster:
@@ -478,11 +477,11 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the cluster of both genomes."
-        eval = Eval.Eval("GENOMEPAIR0003", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def compare_subcluster(self):
+    def compare_subcluster(self, eval_id=None):
         """Compare the subcluster of each genome."""
 
         if self.genome1.subcluster != self.genome2.subcluster:
@@ -493,11 +492,11 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the subcluster of both genomes."
-        eval = Eval.Eval("GENOMEPAIR0004", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def compare_accession(self):
+    def compare_accession(self, eval_id=None):
         """Compare the accession of each genome."""
 
         if self.genome1.accession != self.genome2.accession:
@@ -508,11 +507,11 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the accession of both genomes."
-        eval = Eval.Eval("GENOMEPAIR0005", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
-    def compare_host_genus(self):
+    def compare_host_genus(self, eval_id=None):
         """Compare the host_genus of each genome."""
 
         if self.genome1.host_genus != self.genome2.host_genus:
@@ -523,29 +522,25 @@ class GenomePair:
             status = "correct"
 
         definition = "Compare the host_genus of both genomes."
-        eval = Eval.Eval(id = "GENOMEPAIR0006", \
-                        definition = definition, \
-                        result = result, \
-                        status = status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
     # TODO implement this method.
     # Authorship is not as straightforward as other fields.
-    def compare_author(self):
+    def compare_author(self, eval_id=None):
         """Compare the authorship of each genome."""
 
         result = ""
         status = ""
         definition = "Compare the authorship of both genomes."
-        eval = Eval.Eval("GENOMEPAIR0007", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
-
 
 
     def compare_annotation_status(self, attribute,
                                   ref_name, query_name,
-                                  ref_check_value, query_check_value):
+                                  ref_check_value, query_check_value, eval_id=None):
         """Compare the annotation_status of each genome.
 
         The 'attribute' parameter provides the unique value of each
@@ -586,7 +581,7 @@ class GenomePair:
             result = "The annotation_status was not evaluated."
             status = "untested"
         definition = "Compare the annotation_status of both genomes."
-        eval = Eval.Eval("GENOMEPAIR", definition, result, status)
+        eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
 
 
