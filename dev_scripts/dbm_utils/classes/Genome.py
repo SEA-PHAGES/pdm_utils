@@ -85,7 +85,11 @@ class Genome:
 
 
     def set_filename(self, value):
-        """Set the filename. Discard the path and file extension."""
+        """Set the filename. Discard the path and file extension.
+
+        :param value: name of the file reference.
+        :type value: str
+        """
         split_filepath = value.split('/')
         filename = split_filepath[-1]
         filename = filename.split('.')[0]
@@ -93,30 +97,37 @@ class Genome:
 
 
     def set_id(self, value=None, attribute=None):
-        """Set the id from either an input value or an indicated attribute."""
+        """Set the id from either an input value or an indicated attribute.
+
+        :param value: unique identifier for the genome.
+        :type value: str
+        :param attribute: name of a genome object attribute that stores
+        a unique identifier for the genome.
+        :type attribute: str
+        """
+
         if value is None:
             if attribute == "name":
-                self.id = basic.edit_suffix(self.name, "remove")
+                value = self.name
             elif attribute == "accession":
-                self.id = basic.edit_suffix(self.accession, "remove")
+                value = self.accession
             elif attribute == "description":
-                self.id = basic.edit_suffix(self.description, "remove")
+                value = self.description
             elif attribute == "source":
-                self.id = basic.edit_suffix(self.source, "remove")
+                value = self.source
             elif attribute == "organism":
-                self.id = basic.edit_suffix(self.organism, "remove")
+                value = self.organism
             elif attribute == "filename":
-                self.id = basic.edit_suffix(self.filename, "remove")
+                value = self.filename
             elif attribute == "description_name":
-                self.id = basic.edit_suffix(self._description_name, "remove")
+                value = self._description_name
             elif attribute == "source_name":
-                self.id = basic.edit_suffix(self._source_name, "remove")
+                value = self._source_name
             elif attribute == "organism_name":
-                self.id = basic.edit_suffix(self._organism_name, "remove")
+                value = self._organism_name
             else:
-                self.id = basic.edit_suffix("", "remove")
-        else:
-            self.id = basic.edit_suffix(value, "remove")
+                value = ""
+        self.id = basic.edit_suffix(value, "remove")
 
 
     def set_host_genus(self, value=None, attribute=None, format="empty_string"):
@@ -197,6 +208,8 @@ class Genome:
         """Set the nucleotide sequence and compute the length.
 
         This method coerces sequences into a Biopython Seq object.
+        :param value: the genome's nucleotide sequence.
+        :type value: str or Seq
         """
         if not isinstance(value, Seq):
             self.seq = Seq(value).upper()
@@ -215,6 +228,11 @@ class Genome:
         The Accession field in Phamerator defaults to "".
         Some flat file accessions have the version number suffix, so discard
         the version number.
+        :param value: GenBank accession number.
+        :type value: str
+        :param format: indicates the format of the data if it is not a
+        valid accession. Default is ''.
+        :type format: misc.
         """
         if isinstance(value, str):
             value = value.strip()
@@ -223,7 +241,11 @@ class Genome:
 
 
     def set_cds_features(self, value):
-        """Set and tally the CDS features."""
+        """Set and tally the CDS features.
+
+        :param value: list of Cds objects.
+        :type value: list
+        """
         self.cds_features = value # Should be a list.
         self._cds_features_tally = len(self.cds_features)
 
@@ -244,19 +266,31 @@ class Genome:
 
 
     def set_trna_features(self, value):
-        """Set and tally the tRNA features."""
+        """Set and tally the tRNA features.
+
+        :param value: list of Trna objects.
+        :type value: list
+        """
         self.trna_features = value # Should be a list
         self._trna_features_tally = len(self.trna_features)
 
 
     def set_source_features(self, value):
-        """Set and tally the source features."""
+        """Set and tally the source features.
+
+        :param value: list of Source objects.
+        :type value: list
+        """
         self.source_features = value # Should be a list
         self._source_features_tally = len(self.source_features)
 
 
     def set_cluster(self, value):
-        """Set the cluster and modify singleton if needed."""
+        """Set the cluster and modify singleton if needed.
+
+        :param value: Cluster designation of the genome.
+        :type value: str
+        """
         if isinstance(value, str):
             value = value.strip()
             if value.lower() == "singleton":
@@ -268,7 +302,14 @@ class Genome:
 
 
     def set_subcluster(self, value, format="empty_string"):
-        """Set the subcluster."""
+        """Set the subcluster.
+
+        :param value: Subcluster designation of the genome.
+        :type value: str
+        :param format: indicates the format of the data if there is no
+        subcluster data. Default is ''.
+        :type format: misc
+        """
         if isinstance(value, str):
             value = value.strip()
         self.subcluster = basic.convert_empty(value, format)
@@ -277,9 +318,12 @@ class Genome:
     def set_cluster_subcluster(self, value="internal"):
         """Set the combined Cluster-Subcluster attribute.
 
+
+        :param value: Cluster or Subcluster designation of the genome.
         If the value is set to 'internal', it is determined from the Cluster
         and Subcluster designations. Otherwise, the value is directly
         used to populate this attribute.
+        :type value: misc
         """
         if value is "internal":
             if (self.subcluster is None or \
@@ -302,10 +346,11 @@ class Genome:
     def split_cluster_subcluster(self, format="none_string"):
         """Split the combined cluster_subcluster data.
 
-        Sets the 'cluster' and 'subcluster' attributes from the
+        :param format: Sets the 'cluster' and 'subcluster' attributes from the
         'cluster_subcluster' attribute. If the combined 'cluster_subcluster'
         attribute is None, "none", or "", no changes are implemented
         to the current cluster and subcluster attributes.
+        :type format: misc
         """
 
         if (self.cluster_subcluster is None or \
