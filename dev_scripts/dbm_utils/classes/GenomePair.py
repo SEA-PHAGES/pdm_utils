@@ -33,14 +33,26 @@ class GenomePair:
 
 
 
-    def copy_data(self, attr, first, second, keyword = None):
-        """Copy data between paired genomes. The 'attr' parameter
-        indicates the Genome object attribute used to identify direction
-        of copy. The 'first' and 'second' parameters indicate the
-        values of the attribute in each Genome to identiy
-        which Genome will provide the data and which Genome
-        will receive the data. The 'keyword' parameter is used as a filter
-        to decide which Genome attribute data will be copied."""
+    def copy_data(self, attr, first, second, keyword=None):
+        """Copy data between paired genomes.
+
+        :param attr:
+            Indicates the Genome object attribute used to identify direction
+            of copy.
+        :type attr: str
+        :param first:
+            Indicates the value of the indicated attribute to identify
+            the Genome object from which data will be copied.
+        :type first: str
+        :param second:
+            Indicates the value of the indicated attribute to identify
+            the Genome object to which data will be copied.
+        :type second: str
+        :param keyword:
+            Indicates the Genome attribute from which data should be copied.
+            If None, all attributes are copied.
+        :type keyword: str
+        """
 
 
 
@@ -60,18 +72,12 @@ class GenomePair:
                 # If unable to identify direction of copy, set to False.
                 direction = False
         elif attr == "id":
-            if (self.genome1.id == first and \
-                self.genome2.id == second):
-
+            if (self.genome1.id == first and self.genome2.id == second):
                 first = self.genome1
                 second = self.genome2
-
-            elif (self.genome1.id == second and \
-                self.genome2.id == first):
-
+            elif (self.genome1.id == second and self.genome2.id == first):
                 first = self.genome2
                 second = self.genome1
-
             else:
                 # If unable to identify direction of copy, set to False.
                 direction = False
@@ -143,11 +149,9 @@ class GenomePair:
             if (second._cds_end_strand_ids == keyword or keyword is None):
                 second._cds_end_strand_ids = first._cds_end_strand_ids
             if (second._cds_processed_descriptions_tally == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_processed_descriptions_tally = \
                     first._cds_processed_descriptions_tally
-
             if (second.trna_features == keyword or keyword is None):
                 second.trna_features = first.trna_features
             if (second._trna_features_tally == keyword or keyword is None):
@@ -156,82 +160,46 @@ class GenomePair:
                 second.source_features = first.source_features
             if (second._source_features_tally == keyword or keyword is None):
                 second._source_features_tally = first._source_features_tally
-            if (second._description_name == keyword \
-                or keyword is None):
-
-                second._description_name = \
-                    first._description_name
-
-            if (second._source_name == keyword \
-                or keyword is None):
-
-                second._source_name = \
-                    first._source_name
-
-            if (second._organism_name == keyword \
-                or keyword is None):
-
-                second._organism_name = \
-                    first._organism_name
-
-            if (second._description_host_genus == keyword \
-                or keyword is None):
-
-                second._description_host_genus = \
-                    first._description_host_genus
-
+            if (second._description_name == keyword or keyword is None):
+                second._description_name = first._description_name
+            if (second._source_name == keyword or keyword is None):
+                second._source_name = first._source_name
+            if (second._organism_name == keyword or keyword is None):
+                second._organism_name = first._organism_name
+            if (second._description_host_genus == keyword or keyword is None):
+                second._description_host_genus = first._description_host_genus
             if (second._source_host_genus == keyword or keyword is None):
-                second._source_host_genus = \
-                    first._source_host_genus
-            if (second._organism_host_genus == keyword \
-                or keyword is None):
-
-                second._organism_host_genus = \
-                    first._organism_host_genus
-
+                second._source_host_genus = first._source_host_genus
+            if (second._organism_host_genus == keyword or keyword is None):
+                second._organism_host_genus = first._organism_host_genus
             if (second._cds_processed_products_tally == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_processed_products_tally = \
                     first._cds_processed_products_tally
-
             if (second._cds_processed_functions_tally == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_processed_functions_tally = \
                     first._cds_processed_functions_tally
-
             if (second._cds_processed_notes_tally == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_processed_notes_tally = \
                     first._cds_processed_notes_tally
-
             if (second._cds_unique_start_end_ids == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_unique_start_end_ids = \
                     first._cds_unique_start_end_ids
-
             if (second._cds_duplicate_start_end_ids == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_duplicate_start_end_ids = \
                     first._cds_duplicate_start_end_ids
-
-            if (second._cds_unique_end_strand_ids == keyword \
-                or keyword is None):
-
+            if (second._cds_unique_end_strand_ids == keyword
+                    or keyword is None):
                 second._cds_unique_end_strand_ids = \
                     first._cds_unique_end_strand_ids
-
             if (second._cds_duplicate_end_strand_ids == keyword \
-                or keyword is None):
-
+                    or keyword is None):
                 second._cds_duplicate_end_strand_ids = \
                     first._cds_duplicate_end_strand_ids
-
-
 
 
     # TODO finish revamping code for matching features.
@@ -421,7 +389,11 @@ class GenomePair:
 
 
     def compare_id(self, eval_id=None):
-        """Compare the id of each genome."""
+        """Compare the id of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1.id != self.genome2.id:
             result = "The two genomes have different ids."
@@ -436,7 +408,11 @@ class GenomePair:
 
 
     def compare_genome_sequence(self, eval_id=None):
-        """Compare the sequence of each genome."""
+        """Compare the sequence of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1.seq != self.genome2.seq:
             result = "The two genomes have different sequences."
@@ -452,7 +428,11 @@ class GenomePair:
 
 
     def compare_genome_length(self, eval_id=None):
-        """Compare the sequence length of each genome."""
+        """Compare the sequence length of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1._length != self.genome2._length:
             result = "The two genomes have different sequence lengths."
@@ -467,7 +447,11 @@ class GenomePair:
 
 
     def compare_cluster(self, eval_id=None):
-        """Compare the cluster of each genome."""
+        """Compare the cluster of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1.cluster != self.genome2.cluster:
             result = "The two genomes are assigned to different clusters."
@@ -482,7 +466,11 @@ class GenomePair:
 
 
     def compare_subcluster(self, eval_id=None):
-        """Compare the subcluster of each genome."""
+        """Compare the subcluster of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1.subcluster != self.genome2.subcluster:
             result = "The two genomes are assigned to different subclusters."
@@ -497,7 +485,11 @@ class GenomePair:
 
 
     def compare_accession(self, eval_id=None):
-        """Compare the accession of each genome."""
+        """Compare the accession of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1.accession != self.genome2.accession:
             result = "The two genomes have different accessions."
@@ -512,7 +504,11 @@ class GenomePair:
 
 
     def compare_host_genus(self, eval_id=None):
-        """Compare the host_genus of each genome."""
+        """Compare the host_genus of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.genome1.host_genus != self.genome2.host_genus:
             result = "The two genomes have different hosts."
@@ -529,7 +525,11 @@ class GenomePair:
     # TODO implement this method.
     # Authorship is not as straightforward as other fields.
     def compare_author(self, eval_id=None):
-        """Compare the authorship of each genome."""
+        """Compare the authorship of each genome.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         result = ""
         status = ""
@@ -538,21 +538,31 @@ class GenomePair:
         self.evaluations.append(eval)
 
 
-    def compare_annotation_status(self, attribute,
-                                  ref_name, query_name,
-                                  ref_check_value, query_check_value, eval_id=None):
+    def compare_annotation_status(self, attribute, ref_name, query_name,
+                                  ref_check_value, query_check_value,
+                                  eval_id=None):
         """Compare the annotation_status of each genome.
 
-        The 'attribute' parameter provides the unique value of each
-        genome by which to assign the order of comparison.
-        The 'ref_name' parameter indicates the attribute value that
-        defines the reference genome.
-        The 'query_name' parameter indicates the attribute value that
-        defines the query genome.
-        The 'ref_check_value' parameters indicates the annotation_status
-        value that is expected in the reference genome.
-        The 'query_check_value' parameters indicates the annotation_status
-        value that is expected in the query genome.
+        :param attribute:
+            Indicates the unique value of each
+            genome by which to assign the order of comparison.
+        :type attribute: str
+        :param ref_name:
+            Indicates the attribute value that defines the reference genome.
+        :type ref_name: str
+        :param query_name:
+            Indicates the attribute value that defines the query genome.
+        :type query_name: str
+        :param ref_check_value:
+            Indicates the annotation_status value that is
+            expected in the reference genome.
+        :type ref_check_value: misc.
+        :param query_check_value:
+            Indicates the annotation_status value that is
+            expected in the query genome.
+        :type query_check_value: misc.
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
         """
         try:
             value1 = getattr(self.genome1, attribute)

@@ -740,10 +740,10 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_locus_tag_structure_5(self):
         """Verify no error is produced when the locus_tag is
-        not capitalized but the 'caps' parameter is set to False."""
+        not capitalized but the 'case' parameter is set to False."""
         self.feature.genome_id = "Trixie"
         self.feature.locus_tag = "sea_trixie_123"
-        self.feature.check_locus_tag_structure(caps=False,
+        self.feature.check_locus_tag_structure(case=False,
             prefix_set=constants.LOCUS_TAG_PREFIX_SET)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
