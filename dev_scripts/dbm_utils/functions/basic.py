@@ -6,8 +6,16 @@ import os
 
 
 def find_expression(expression, list_of_items):
-    """Searches through a list of items and counts the number of items
-    that match the regular expression.
+    """Counts the number of items with matches to a regular expression.
+
+    :param expression: Regular expression object
+    :type expression: re
+    :param list_of_items:
+        List of items that will be searched with the regular expression.
+    :type list_of_items: list
+    :returns:
+        Number of times the regular expression was identified in the list.
+    :rtype: int
     """
     search_tally = 0
     for element in list_of_items:
@@ -19,7 +27,18 @@ def find_expression(expression, list_of_items):
 
 def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
     """Adds or removes the indicated suffix to an input value.
-    The suffix is not added if the input value already has the suffix.
+
+    :param value: Value that will be edited.
+    :type value: str
+    :param option:
+        Indicates what to do with the value and suffix ('add', 'remove').
+    :type option: str
+    :param suffix: The suffix that will be added or removed.
+    :type suffix: str
+    :returns:
+        The edited value. The suffix is not added if the input
+        value already has the suffix.
+    :rtype: str
     """
 
     if option.lower() == "add":
@@ -36,17 +55,28 @@ def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
 def reformat_strand(input_value, format, case=False):
     """Converts common strand orientation formats.
 
-    The format types include:
-    'fr_long' ('forward', 'reverse')
-    'fr_short' ('f', 'r')
-    'fr_abbrev1' ('for', 'rev')
-    'fr_abbrev2' ('fwd', 'rev')
-    'tb_long' ('top', 'bottom')
-    'tb_short' ('t', 'b')
-    'wc_long' ('watson', 'crick')
-    'wc_short' ('w','c')
-    'operator' ('+', '-')
-    'numeric' (1, -1).
+
+    :param input_value: Value that will be edited.
+    :type input_value: str, int
+    :param format:
+        Indicates how the value should be edited.
+        Valid format types include:
+        'fr_long' ('forward', 'reverse')
+        'fr_short' ('f', 'r')
+        'fr_abbrev1' ('for', 'rev')
+        'fr_abbrev2' ('fwd', 'rev')
+        'tb_long' ('top', 'bottom')
+        'tb_short' ('t', 'b')
+        'wc_long' ('watson', 'crick')
+        'wc_short' ('w','c')
+        'operator' ('+', '-')
+        'numeric' (1, -1).
+    :type format: str
+    :param case:
+        Indicates whether the output value should be capitalized.
+    :type case: bool
+    :returns: The re-formatted value as indicated by 'format'.
+    :rtype: str, int
     """
 
     format_dict = {"fr_long":["forward", "reverse"],
@@ -101,6 +131,17 @@ def reformat_coordinates(left, right, current, new):
     The function assumes coordinates reflect the left and right
     boundaries (where the left coordinates is smaller than the right
     coordinate), instead of gene start and stop coordinates.
+
+    :param left: Left coordinate
+    :type left: int
+    :param right: Left coordinate
+    :type right: int
+    :param current: Indicates the indexing format of the input coordinates.
+    :type current: str
+    :param new: Indicates the indexing format of the output coordinates.
+    :type new: str
+    :returns: The re-formatted left and right coordinates.
+    :rtype: int
     """
     format_set = set(["0_half_open", "1_closed"])
     if (current in format_set and new in format_set):
@@ -134,7 +175,17 @@ def reformat_coordinates(left, right, current, new):
 
 
 def check_empty(value, lower=True):
-    """Checks if the value represents a null value."""
+    """Checks if the value represents a null value.
+
+    :param value: Value to be checked against the empty set.
+    :type value: misc.
+    :param lower:
+        Indicates whether the input value should be lowercased
+        prior to checking.
+    :type lower: bool
+    :returns: Indicates whether the value is present in the empty set.
+    :rtype: bool
+    """
     if (lower == True and isinstance(value, str)):
         value = value.lower()
     if value in constants.EMPTY_SET:
@@ -145,19 +196,30 @@ def check_empty(value, lower=True):
 
 
 def convert_empty(input_value, format, upper=False):
-    """Converts common NULL value formats.
+    """Converts common null value formats.
 
-    The type of formats include:
-    'empty_string' = ''
-    'none_string' = 'none'
-    'null_string' = 'null'
-    'none_object' = None
-    'na_long' = 'not applicable'
-    'na_short' = 'na'
-    'n/a' = 'n/a'
-    'zero_string' = '0'
-    'zero_num' = 0
-    'empty_datetime_obj' = datetime object with arbitrary date, '1/1/0001'
+
+    :param input_value: Value to be re-formatted.
+    :type input_value: str, int, datetime
+    :param format:
+        Indicates how the value should be edited.
+        Valid format types include:
+        'empty_string' = ''
+        'none_string' = 'none'
+        'null_string' = 'null'
+        'none_object' = None
+        'na_long' = 'not applicable'
+        'na_short' = 'na'
+        'n/a' = 'n/a'
+        'zero_string' = '0'
+        'zero_num' = 0
+        'empty_datetime_obj' = datetime object with arbitrary date, '1/1/0001'
+    :type format: str
+    :param upper:
+        Indicates whether the output value should be uppercased.
+    :type upper: bool
+    :returns: The re-formatted value as indicated by 'format'.
+    :rtype: str, int, datetime
     """
     format_dict = {"empty_string": "",
                     "none_string": "none",
@@ -194,10 +256,18 @@ def convert_empty(input_value, format, upper=False):
 
 
 def reformat_description(description):
-    """Removes leading and trailing whitespace from text and returns this value.
-    Then it assesses whether the description is informative or not, processes
-    it if it is too generic (converting it to an empty value), then returning
-    this second value.
+    """Reformat a gene description.
+
+    :param description: Input value to be reformatted.
+    :type description: str
+    :returns:
+        tuple (description, processed_description)
+        WHERE
+        description(str) is the original value stripped of leading
+        and trailing whitespace.
+        processed_description(str) is the reformatted value, in which
+        non-informative/generic data is removed.
+    :rtype: tuple
     """
     if description is None:
         description = ""
@@ -245,12 +315,17 @@ def reformat_description(description):
 
 
 def identify_unique_items(complete_list):
-    """Iterate over a list of items and generate two lists.
+    """Identify unique and non-unique items in a list.
 
-    The first list contains items that are unique and non-duplicated
-    in the original list.
-    The second list contains items that are not unique in the original
-    list, although non-duplicated items are returned.
+    :param complete_list: List of items that will be evaluated.
+    :type complete_list: list
+    :returns:
+        tuple (unique_set, duplicate_set)
+        WHERE
+        unique_set(set) is a set of all unique/non-duplicated items.
+        duplicate_set(set) is a set of non-unique/duplicated items.
+        non-informative/generic data is removed.
+    :rtype: tuple
     """
     unique_set = set() # Set of all non-duplicated unique items.
     duplicate_set = set() # Set of all duplicated items.
@@ -264,27 +339,36 @@ def identify_unique_items(complete_list):
     return (unique_set, duplicate_set)
 
 
-
+# TODO implement? this may no longer be needed.
 def identify_nested_items(complete_list):
-    """Iterate over a list of two-elemtn tuples and generate two lists.
+    """Identify nested and non-nested two-element tuples in a list.
 
-    The first list contains all tuples that are not nested in the
-    original list.
-    The second list contains all tuples that are nested in the original list.
+    :param complete_list: List of tuples that will be evaluated.
+    :type complete_list: list
+    :returns:
+        tuple (not_nested_set, nested_set)
+        WHERE
+        not_nested_set(set) is a set of non-nested tuples.
+        nested_set(set) is a set of nested tuples.
+    :rtype: tuple
     """
-
     not_nested_set = set()
     nested_set = set()
-
-
-
     return (not_nested_set, nested_set)
 
 
 
 
 def trim_characters(string):
-    """Remove leading and trailing generic characters from a string."""
+    """Remove leading and trailing generic characters from a string.
+
+    :param string:
+        Value that will be trimmed.
+        Characters that will be removed include: '.', ',', ';', '-', '_'.
+    :type string: str
+    :returns: Edited value.
+    :rtype: str
+    """
     generic_characters = set([".", ",", ";", "-", "_"])
     if len(string) > 0:
         # Trim non-specific trailing characters.
@@ -306,8 +390,16 @@ def trim_characters(string):
 
 # TODO this can probably be improved.
 def parse_names_from_record_field(description):
-    """Parse string of text from GenBank-formatted flat file to
-    identify the phage name and host_genus name.
+    """Parse string of text to identify the phage name and host genus.
+
+    :param description: Input value to be parsed.
+    :type description: str
+    :returns:
+        tuple (name, host_genus)
+        WHERE
+        name(str) is the parsed phage name.
+        host_genus(str) is the parsed host_genus.
+    :rtype: tuple
     """
     generic_words = set(["complete", "genome", "phage", "unclassified"])
     host_genus = ""
@@ -365,7 +457,20 @@ def parse_names_from_record_field(description):
 
 
 def compare_sets(set1, set2):
-    """Compute the intersection and differences between two sets."""
+    """Compute the intersection and differences between two sets.
+
+    :param set1: The first input set.
+    :type set1: set
+    :param set2: The second input set.
+    :type set2: set
+    :returns:
+        tuple (set_intersection, set1_diff, set2_diff)
+        WHERE
+        set_intersection(set) is the set of shared values.
+        set1_diff(set) is the set of values unique to the first set.
+        set2_diff(set) is the set of values unique to the second set.
+    :rtype: tuple
+    """
     set_intersection = set1 & set2
     set1_diff = set1 - set2
     set2_diff = set2 - set1
@@ -375,11 +480,25 @@ def compare_sets(set1, set2):
 def match_items(list1, list2):
     """Match values of two lists and return several results.
 
-    First, return the set of matched unique values.
-    Second, return the set of unmatched unique values from the first list.
-    Third, return the set of unmatched unique values from the second list.
-    Fourth, return the set of duplicate values from the first list.
-    Fifth, return the set of unmatched unique values from the second list.
+    :param list1: The first input list.
+    :type list1: list
+    :param list2: The second input list.
+    :type list2: list
+    :returns:
+        tuple (matched_unique_items, set1_unmatched_unique_items,
+        set2_unmatched_unique_items, set1_duplicate_items,
+        set2_duplicate_items)
+        WHERE
+        matched_unique_items(set) is the set of matched unique values.
+        set1_unmatched_unique_items(set) is the set of
+        unmatched unique values from the first list.
+        set2_unmatched_unique_items(set) is the set of
+        unmatched unique values from the second list.
+        set1_duplicate_items(set) is the the set of
+        duplicate values from the first list.
+        set2_duplicate_items(set) is the set of
+        unmatched unique values from the second list.
+    :rtype: tuple
     """
 
     # Determine the unique values in each list.
@@ -405,12 +524,20 @@ def split_string(string):
 
     Iterates through a string, identifies the first position
     in which the character is a digit, and creates two strings at this
-    position. The first string returned contains only alphabetic characters.
-    The second string returned contains only numeric characters.
-    If there are no numeric characters present,
-    the second string will be empty.
-    If there are no alphabetic characters present,
-    the first string will be empty.
+    position.
+
+    :param string: The value to be split.
+    :type string: str
+    :returns:
+        tuple (left, right)
+        WHERE
+        left(str) is the left portion of the input value prior to the
+        first numeric character and only contains alphabetic characters
+        (or will be '').
+        right(str) is the right portion of the input value after the
+        first numeric character and only contains numeric characters
+        (or will be '').
+    :rtype: tuple
     """
     left = ""
     right = ""
@@ -432,7 +559,19 @@ def split_string(string):
 
 
 def compare_cluster_subcluster(cluster, subcluster):
-    """Check if a cluster designation is part of a subcluster designation."""
+    """Check if a cluster and subcluster designation are compatible.
+
+    :param cluster:
+        The cluster value to be compared.
+        'Singleton' and 'UNK' are lowercased.
+    :type cluster: str
+    :param subcluster: The subcluster value to be compared.
+    :type subcluster: str
+    :returns:
+        The result of the evaluation, indicating whether the two
+        values are compatible.
+    :rtype: bool
+    """
     result = True
     # If Singleton or Unknown Cluster, there should be no Subcluster
     if (cluster.lower() == "singleton" or
@@ -454,7 +593,13 @@ def compare_cluster_subcluster(cluster, subcluster):
 
 
 def identify_one_list_duplicates(item_list):
-    """Identify duplicate items within a list."""
+    """Identify duplicate items within a list.
+
+    :param item_list: The input list to be checked.
+    :type item_list: list
+    :returns: The set of non-unique/duplicated items.
+    :rtype: set
+    """
     duplicate_items = set()
     item_set = set(item_list)
     for item1 in item_set:
@@ -469,7 +614,15 @@ def identify_one_list_duplicates(item_list):
 
 def identify_two_list_duplicates(item1_list, item2_list):
     """Identify duplicate items between two lists.
-    It does not identify duplicate items within each list.
+
+    :param item1_list: The first input list to be checked.
+    :type item1_list: list
+    :param item2_list: The second input list to be checked.
+    :type item2_list: list
+    :returns:
+        The set of non-unique/duplicated items between the two lists
+        (but not duplicate items within each list).
+    :rtype: set
     """
     item1_set = set(item1_list)
     item2_set = set(item2_list)
@@ -477,19 +630,27 @@ def identify_two_list_duplicates(item1_list, item2_list):
     return item3_set
 
 
-def check_value_expected_in_set(value, set1, expected=True):
-    """Check if a value is present within a set and if it is expected."""
+def check_value_expected_in_set(value, set1, expect=True):
+    """Check if a value is present within a set and if it is expected.
 
+    :param value: The value to be checked.
+    :type value: misc.
+    :param set1: The reference set of values.
+    :type set1: set
+    :param expect: Indicates if 'value' is expected to be present in 'set1'.
+    :type expect: bool
+    :returns: The result of the evaluation.
+    :rtype: bool
+    """
     # Check if the value is present in the set.
     if value in set1:
         present = True
     else:
         present = False
-
     # Compare the presence/absence with what was expected.
-    if (expected and present):
+    if (expect and present):
         result = True
-    elif (not expected and not present):
+    elif (not expect and not present):
         result = True
     else:
         result = False
@@ -499,11 +660,20 @@ def check_value_expected_in_set(value, set1, expected=True):
 def check_value_in_two_sets(value, set1, set2):
     """Check if a value is present within two sets.
 
-    The functions returns whether it is present within:
-    1. only the 'first' set
-    2. only the 'second' set
-    3. 'both' sets
-    4. 'neither' set
+    :param value: The value to be checked.
+    :type value: misc.
+    :param set1: The first reference set of values.
+    :type set1: set
+    :param set2: The second reference set of values.
+    :type set2: set
+    :returns:
+        The result of the evaluation, indicating whether the
+        value is present within:
+            1. only the 'first' set
+            2. only the 'second' set
+            3. 'both' sets
+            4. 'neither' set
+    :rtype: str
     """
     present1 = False
     present2 = False
@@ -537,7 +707,15 @@ def check_value_in_two_sets(value, set1, set2):
 
 
 def lower_case(value):
-    """Return the value lowercased if it is within a specific set of values."""
+    """Return the value lowercased if it is within a specific set of values.
+
+    :param value: The value to be checked.
+    :type value: str
+    :returns:
+        The lowercased value if it is equivalent to
+        'none', 'retrieve', or 'retain'.
+    :rtype: str
+    """
     lower_set = set(["none", "retrieve", "retain"])
     if isinstance(value, str):
         if value.lower() in lower_set:
@@ -547,11 +725,12 @@ def lower_case(value):
 
 def close_files(list_of_filehandles):
     """Closes all the files in a list of open file handles.
-    The 'list_of_filehandles' parameter is a list of open file handles.
+
+    :param list_of_filehandles: A list of open file handles.
+    :type list_of_filehandles: list
     """
     for handle in list_of_filehandles:
         handle.close()
-    return
 
 
 def ask_yes_no(prompt="", response_attempt=1):
@@ -559,12 +738,16 @@ def ask_yes_no(prompt="", response_attempt=1):
 
     Accepts variations of yes/y, true/t, no/n, false/f.
     :param prompt: the question to ask the user.
-    :return Boolean: default is False (e.g. user hits Enter w/o typing
-    anything else), but variations of yes or true responses will return
-    True instead.
-    The response attempt parameter indicates the number of attempts
-    allowed before the function exits. This prevents the script from getting
-    stuck in a loop.
+    :type prompt: str
+    :param response_attempt:
+        The number of the number of attempts allowed before the
+        function exits. This prevents the script from getting stuck in a loop.
+    :type response_attempt: int
+    :returns:
+        default is False (e.g. user hits Enter w/o typing
+        anything else), but variations of yes or true responses will return
+        True instead.
+    :rtype: bool, None
     """
     response = None
     response_valid = False
@@ -583,13 +766,26 @@ def ask_yes_no(prompt="", response_attempt=1):
     return response
 
 
+# TODO the associated tests can probably be re-factored to not rely on this.
 def get_input(prompt=""):
-    """Wrapper function to improve testing."""
+    """Wrapper function to improve testing.
+
+    :param prompt: the question to ask the user.
+    :type prompt: str
+    :returns: The response from the user.
+    :rtype: misc.
+    """
     return input(prompt)
 
 
 def identify_files(path_to_folder):
-    """Create a list of filenames from an indicated directory."""
+    """Create a list of filenames from an indicated directory.
+
+    :param path_to_folder: A valid directory path.
+    :type path_to_folder: str
+    :returns: List of valid files in the directory.
+    :rtype: list
+    """
     files_in_folder = []
     for item in os.listdir(path_to_folder):
         item_path = os.path.join(path_to_folder, item)
@@ -599,10 +795,12 @@ def identify_files(path_to_folder):
 
 
 def expand_path(input_path):
-    """Attempts to coerce input paths in any relative format into an
-    absolute path.
-    :param input_path: the path to be expanded
-    :return expanded_path: the expanded path
+    """Convert a non-absolute path into an absolute path.
+
+    :param input_path: The path to be expanded.
+    :type input_path: str
+    :returns: The expanded path.
+    :rtype: str
     """
     # "~" needs to be expanded first
     home_dir = os.path.expanduser("~")
@@ -618,6 +816,7 @@ def expand_path(input_path):
 def verify_path(filepath, kind=None):
     """Verifies that a given filepath exists, and if a kind is given,
     it verifies that it exists as the indicated kind.
+
     :param filepath: full path to the desired file/directory.
     :param kind: ("file", "dir"), corresponding with paths to be
     checked as either files or directories.
