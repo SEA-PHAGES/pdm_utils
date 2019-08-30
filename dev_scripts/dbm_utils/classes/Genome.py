@@ -99,10 +99,12 @@ class Genome:
     def set_id(self, value=None, attribute=None):
         """Set the id from either an input value or an indicated attribute.
 
-        :param value: unique identifier for the genome.
+        :param value:
+            unique identifier for the genome.
         :type value: str
-        :param attribute: name of a genome object attribute that stores
-        a unique identifier for the genome.
+        :param attribute:
+            name of a genome object attribute that stores
+            a unique identifier for the genome.
         :type attribute: str
         """
 
@@ -136,12 +138,15 @@ class Genome:
         The input data is split into multiple parts, and the first word is
         used to set host_genus.
 
-        :param value: the host genus of the phage genome
+        :param value:
+            the host genus of the phage genome
         :type value: str
-        :param attribute: the name of the genome attribute from which the
+        :param attribute:
+            the name of the genome attribute from which the
             host_genus attribute will be set
         :type attribute: str
-        :param format: the default format if the input is an empty/null value.
+        :param format:
+            the default format if the input is an empty/null value.
         :type format: str
         """
 
@@ -208,6 +213,7 @@ class Genome:
         """Set the nucleotide sequence and compute the length.
 
         This method coerces sequences into a Biopython Seq object.
+
         :param value: the genome's nucleotide sequence.
         :type value: str or Seq
         """
@@ -225,13 +231,16 @@ class Genome:
     def set_accession(self, value, format="empty_string"):
         """Set the accession.
 
-        The Accession field in Phamerator defaults to "".
+        The Accession field in Phamerator defaults to ''.
         Some flat file accessions have the version number suffix, so discard
         the version number.
-        :param value: GenBank accession number.
+
+        :param value:
+            GenBank accession number.
         :type value: str
-        :param format: indicates the format of the data if it is not a
-        valid accession. Default is ''.
+        :param format:
+            indicates the format of the data if it is not a
+            valid accession. Default is ''.
         :type format: misc.
         """
         if isinstance(value, str):
@@ -304,10 +313,12 @@ class Genome:
     def set_subcluster(self, value, format="empty_string"):
         """Set the subcluster.
 
-        :param value: Subcluster designation of the genome.
+        :param value:
+            Subcluster designation of the genome.
         :type value: str
-        :param format: indicates the format of the data if there is no
-        subcluster data. Default is ''.
+        :param format:
+            indicates the format of the data if there is no
+            subcluster data. Default is ''.
         :type format: misc
         """
         if isinstance(value, str):
@@ -319,10 +330,11 @@ class Genome:
         """Set the combined Cluster-Subcluster attribute.
 
 
-        :param value: Cluster or Subcluster designation of the genome.
-        If the value is set to 'internal', it is determined from the Cluster
-        and Subcluster designations. Otherwise, the value is directly
-        used to populate this attribute.
+        :param value:
+            Cluster or Subcluster designation of the genome.
+            If the value is set to 'internal', it is determined from
+            the Cluster and Subcluster designations.
+            Otherwise, the value is directly used to populate this attribute.
         :type value: misc
         """
         if value is "internal":
@@ -346,10 +358,12 @@ class Genome:
     def split_cluster_subcluster(self, format="none_string"):
         """Split the combined cluster_subcluster data.
 
-        :param format: Sets the 'cluster' and 'subcluster' attributes from the
-        'cluster_subcluster' attribute. If the combined 'cluster_subcluster'
-        attribute is None, "none", or "", no changes are implemented
-        to the current cluster and subcluster attributes.
+        :param format:
+            Sets the 'cluster' and 'subcluster' attributes from the
+            'cluster_subcluster' attribute.
+            If the combined 'cluster_subcluster'
+            attribute is None, "none", or "", no changes are implemented
+            to the current cluster and subcluster attributes.
         :type format: misc
         """
 
@@ -384,7 +398,13 @@ class Genome:
 
 
     def set_date(self, value, format="empty_datetime_obj"):
-        """Set the date attribute."""
+        """Set the date attribute.
+
+        :param value: Date
+        :type value: misc
+        :param format: Indicates the format if the value is empty.
+        :type format: str
+        """
         self.date = basic.convert_empty(value, format)
 
 
@@ -453,7 +473,13 @@ class Genome:
 
 
     def set_value_flag(self, value):
-        """Sets the flag if any attributes contain the specified 'value'."""
+        """Sets the flag if any attributes contain a specified value.
+
+        :param value:
+            Indicates the value that should be searched within
+            the attributes.
+        :type value: str
+        """
         if value in vars(self).values():
             self._value_flag = True
         else:
@@ -470,6 +496,24 @@ class Genome:
         the Genome object because and not within the feature itself since
         the method sorts all features and generates systematic IDs based on
         feature order in the genome.
+
+
+        :param use_type:
+            Indicates whether the type of object should be
+            added to the feature id.
+        :type use_type: bool
+        :param use_cds:
+            Indicates whether ids for CDS features should be
+            generated.
+        :type use_cds: bool
+        :param use_trna:
+            Indicates whether ids for tRNA features should be
+            generated.
+        :type use_trna: bool
+        :param use_tmrna:
+            Indicates whether ids for tmRNA features should be
+            generated.
+        :type use_tmrna: bool
         """
 
         # Both coordinates are used to control the order of features
@@ -515,7 +559,19 @@ class Genome:
     # Evaluations.
 
     def check_id(self, check_set, expect=False, eval_id=None):
-        """Check that the id is valid."""
+        """Check that the id is valid.
+
+        :param check_set:
+            Set of reference ids.
+        :type check_set: set
+        :param expect:
+            Indicates whether the id is expected to be present
+            in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.id,
                 check_set, expect)
         if value:
@@ -530,7 +586,19 @@ class Genome:
 
 
     def check_name(self, check_set, expect=False, eval_id=None):
-        """Check that the name is valid."""
+        """Check that the name is valid.
+
+        :param check_set:
+            Set of reference names.
+        :type check_set: set
+        :param expect:
+            Indicates whether the name is expected to be present
+            in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.name,
                 check_set, expect)
         if value:
@@ -546,7 +614,19 @@ class Genome:
 
     def check_annotation_status(
             self, check_set=set(), expect=False, eval_id=None):
-        """Check that the annotation_status is valid."""
+        """Check that the annotation_status is valid.
+
+        :param check_set:
+            Set of reference annotation_status values.
+        :type check_set: set
+        :param expect:
+            Indicates whether the annotation_status is
+            expected to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.annotation_status,
                 check_set, expect)
         if value:
@@ -561,7 +641,19 @@ class Genome:
 
 
     def check_host_genus(self, check_set, expect=False, eval_id=None):
-        """Check that the host_genus is valid."""
+        """Check that the host_genus is valid.
+
+        :param check_set:
+            Set of reference host_genus values.
+        :type check_set: set
+        :param expect:
+            Indicates whether the host_genus is
+            expected to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.host_genus,
                 check_set, expect)
         if value:
@@ -576,7 +668,19 @@ class Genome:
 
 
     def check_cluster(self, check_set, expect=False, eval_id=None):
-        """Check that the cluster is valid."""
+        """Check that the cluster is valid.
+
+        :param check_set:
+            Set of reference clusters.
+        :type check_set: set
+        :param expect:
+            Indicates whether the cluster is expected
+            to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.cluster,
                 check_set, expect)
         if value:
@@ -591,7 +695,11 @@ class Genome:
 
 
     def check_cluster_structure(self, eval_id=None):
-        """Check whether the cluster attribute is structured appropriately."""
+        """Check whether the cluster attribute is structured appropriately.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.cluster != "none":
             left, right = basic.split_string(self.cluster)
 
@@ -610,7 +718,19 @@ class Genome:
 
 
     def check_subcluster(self, check_set, expect=False, eval_id=None):
-        """Check that the subcluster is valid."""
+        """Check that the subcluster is valid.
+
+        :param check_set:
+            Set of reference subclusters.
+        :type check_set: set
+        :param expect:
+            Indicates whether the subcluster is expected
+            to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.subcluster,
                 check_set, expect)
         if value:
@@ -625,7 +745,11 @@ class Genome:
 
 
     def check_subcluster_structure(self, eval_id=None):
-        """Check whether the subcluster attribute is structured appropriately."""
+        """Check whether the subcluster attribute is structured appropriately.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.subcluster != "none":
             left, right = basic.split_string(self.subcluster)
             if (left.isalpha() == False or right.isdigit() == False):
@@ -643,7 +767,11 @@ class Genome:
 
 
     def check_compatible_cluster_and_subcluster(self, eval_id=None):
-        """Check compatibility of cluster and subcluster attributes."""
+        """Check compatibility of cluster and subcluster attributes.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         output = basic.compare_cluster_subcluster(self.cluster, self.subcluster)
         if not output:
             result = "Cluster and Subcluster designations are not compatible."
@@ -657,7 +785,19 @@ class Genome:
 
 
     def check_sequence(self, check_set, expect=False, eval_id=None):
-        """Check that the sequence is valid."""
+        """Check that the sequence is valid.
+
+        :param check_set:
+            Set of reference sequences.
+        :type check_set: set
+        :param expect:
+            Indicates whether the sequence is expected
+            to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.seq,
                 check_set, expect)
         if value:
@@ -672,8 +812,20 @@ class Genome:
         self.evaluations.append(eval)
 
 
-    def check_nucleotides(self, dna_alphabet_set=set(), eval_id=None):
-        """Check if all nucleotides in the sequence are expected."""
+    def check_nucleotides(self, check_set=set(), eval_id=None):
+        """Check if all nucleotides in the sequence are expected.
+
+        :param check_set:
+            Set of reference nucleotides.
+        :type check_set: set
+        :param expect:
+            Indicates whether all nucleotides in the sequence
+            are expected to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         # When Biopython SeqIO parses the GenBank record, it automatically
         # determines that it is a DNA sequence. It assigns the Seq object
         # alphabet as IUPACAmbiguousDNA. The alphabet could be coerced
@@ -684,7 +836,7 @@ class Genome:
         # to the check_nucleotides method.
 
         nucleotide_set = set(self.seq)
-        nucleotide_error_set = nucleotide_set - dna_alphabet_set
+        nucleotide_error_set = nucleotide_set - check_set
 
         if len(nucleotide_error_set) > 0:
             result = \
@@ -702,7 +854,19 @@ class Genome:
 
 
     def check_accession(self, check_set, expect=False, eval_id=None):
-        """Check that the accession is valid."""
+        """Check that the accession is valid.
+
+        :param check_set:
+            Set of reference accessions.
+        :type check_set: set
+        :param expect:
+            Indicates whether the accession is expected
+            to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.accession,
                 check_set, expect)
         if value:
@@ -719,11 +883,19 @@ class Genome:
     def check_authors(self, check_set=set(), expect=True, eval_id=None):
         """Check author list.
 
-        The method will compare the list of authors provided in the
-        'check_set' parameter with the list of authors stored in the
-        'authors' attribute. It will then evaluate whether the presence
-        of at least one author matches what is expected, as indicated
-        by the 'expect' parameter.
+        Evaluates whether at least one author in the in the list of
+        authors is present in a set of reference authors.
+
+        :param check_set:
+            Set of reference authors.
+        :type check_set: set
+        :param expect:
+            Indicates whether at least one author in the
+            list of authors is expected to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
         """
         authors_list = self.authors.lower().split(";")
         authors_list = [x.strip() for x in authors_list]
@@ -749,7 +921,13 @@ class Genome:
 
 
     def check_annotation_author(self, check_set=set(), eval_id=None):
-        """Check that the annotation_author is valid."""
+        """Check that the annotation_author is valid.
+
+        :param check_set: Set of reference annotation_author values.
+        :type check_set: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.annotation_author in check_set:
             result = "The annotation_author is valid."
             status = "correct"
@@ -762,7 +940,13 @@ class Genome:
 
 
     def check_annotation_qc(self, check_set=set(), eval_id=None):
-        """Check that the annotation_qc is valid."""
+        """Check that the annotation_qc is valid.
+
+        :param check_set: Set of reference annotation_qc values.
+        :type check_set: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.annotation_qc in check_set:
             result = "The annotation_qc is valid."
             status = "correct"
@@ -775,7 +959,13 @@ class Genome:
 
 
     def check_retrieve_record(self, check_set=set(), eval_id=None):
-        """Check that the retrieve_record is valid."""
+        """Check that the retrieve_record is valid.
+
+        :param check_set: Set of reference retrieve_record values.
+        :type check_set: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.retrieve_record in check_set:
             result = "The retrieve_record is valid."
             status = "correct"
@@ -788,7 +978,19 @@ class Genome:
 
 
     def check_filename(self, check_set, expect=False, eval_id=None):
-        """Check that the filename is valid."""
+        """Check that the filename is valid.
+
+        :param check_set:
+            Set of reference filenames.
+        :type check_set: set
+        :param expect:
+            Indicates whether the filename is expected
+            to be present in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         value = basic.check_value_expected_in_set(self.filename,
                 check_set, expect)
         if value:
@@ -803,7 +1005,11 @@ class Genome:
 
 
     def check_compatible_status_and_accession(self, eval_id=None):
-        """Compare genome annotation_status and accession."""
+        """Compare genome annotation_status and accession.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         # Now that the AnnotationAuthor attribute contains authorship data, the
         # 'gbk' annotation status now reflects an 'unknown' annotation (in
         # regards to if it was auto-annotated or manually annotated).
@@ -825,7 +1031,11 @@ class Genome:
 
 
     def check_compatible_status_and_descriptions(self, eval_id=None):
-        """Compare annotation_status and description tally."""
+        """Compare annotation_status and description tally.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         # Depending on the annotation_status of the genome,
         # CDS features are expected to contain or not contain descriptions.
@@ -853,7 +1063,11 @@ class Genome:
 
 
     def check_description_name(self, eval_id=None):
-        """Check genome id spelling in the description attribute."""
+        """Check genome id spelling in the description attribute.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.id != self._description_name:
             result = "The name in the description attribute " + \
                      "does not match the genome's id."
@@ -868,7 +1082,11 @@ class Genome:
 
 
     def check_source_name(self, eval_id=None):
-        """Check genome id spelling in the source attribute."""
+        """Check genome id spelling in the source attribute.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.id != self._source_name:
             result = "The name in the source attribute " + \
                      "does not match the genome's id."
@@ -882,7 +1100,11 @@ class Genome:
 
 
     def check_organism_name(self, eval_id=None):
-        """Check genome id in the organism attribute."""
+        """Check genome id in the organism attribute.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.id != self._organism_name:
             result = "The name in the organism attribute " + \
                      "does not match the genome's id."
@@ -896,7 +1118,11 @@ class Genome:
 
 
     def check_description_host_genus(self, eval_id=None):
-        """Check host_genus spelling in the description attribute."""
+        """Check host_genus spelling in the description attribute.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.host_genus != self._description_host_genus:
             result = "The host_genus in the description attribute " + \
                      "does not match the genome's host_genus."
@@ -910,7 +1136,11 @@ class Genome:
 
 
     def check_source_host_genus(self, eval_id=None):
-        """Check host_genus spelling in the source attribute."""
+        """Check host_genus spelling in the source attribute.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.host_genus != self._source_host_genus:
             result = "The host_genus name in the source attribute " + \
                      "does not match the genome's host_genus."
@@ -924,7 +1154,11 @@ class Genome:
 
 
     def check_organism_host_genus(self, eval_id=None):
-        """Check host_genus spelling in the organism attribute."""
+        """Check host_genus spelling in the organism attribute.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.host_genus != self._organism_host_genus:
             result = "The host_genus in the organism attribute " + \
                      "does not match the genome's host_genus."
@@ -938,7 +1172,11 @@ class Genome:
 
 
     def check_cds_feature_tally(self, eval_id=None):
-        """Check to confirm that CDS features have been parsed."""
+        """Check to confirm that CDS features have been parsed.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self._cds_features_tally == 0:
             result = "There are no CDS features for this genome."
             status = "error"
@@ -955,6 +1193,9 @@ class Genome:
 
         Duplicated start-end coordinates may represent
         unintentional duplicate CDS features.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
         """
 
         if len(self._cds_duplicate_start_end_ids) > 0:
@@ -977,6 +1218,9 @@ class Genome:
         Duplicated end-strand coordinates may represent
         unintentional duplicate CDS features with slightly
         different start coordinates.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
         """
 
         if len(self._cds_duplicate_end_strand_ids) > 0:
@@ -994,7 +1238,13 @@ class Genome:
 
 
     def check_value_flag(self, expect=False, eval_id=None):
-        """Check if there are any attributes that are not populated as expected."""
+        """Check if there all attributes are populated as expected.
+
+        :param expect: Indicates the expected status of the value flag.
+        :type expect: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self._value_flag:
             if expect:
                 result = "All attributes are populated."
@@ -1017,7 +1267,21 @@ class Genome:
     def check_feature_ids(self, cds=False, trna=False, tmrna=False,
                           other=None, strand=False, eval_id=None):
         """Identify overlapping, duplicated, or partially-duplicated
-        features."""
+        features.
+
+        :param cds: Indicates whether ids of CDS features should be included.
+        :type cds: bool
+        :param trna: Indicates whether ids of tRNA features should be included.
+        :type trna: bool
+        :param trna: Indicates whether ids of tmRNA features should be included.
+        :type tmrna: bool
+        :param other: List of features that should be included.
+        :type other: list
+        :param strand: Indicates if feature orientation should be included.
+        :type strand: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         unsorted_feature_lists = []
         unsorted_features = []
         if cds:
