@@ -27,8 +27,22 @@ class Bundle:
 
 
 
+    # TODO should this be changed to generate the GenomePair object directly?
     def set_genome_pair(self, genome_pair, key1, key2):
-        """Pair two genomes and add to the paired genome dictionary."""
+        """Pair two genomes and add to the paired genome dictionary.
+
+        :param genome_pair:
+            An empty GenomePair object to stored paried genomes.
+        :type genome_pair: GenomePair
+        :param key1:
+            A valid key in the Bundle object's 'genome_dict'
+            that indicates the first genome to be paired.
+        :type key1: str
+        :param key2:
+            A valid key in the Bundle object's 'genome_dict'
+            that indicates the second genome to be paired.
+        :type key2: str
+        """
 
         try:
             genome_pair.genome1 = self.genome_dict[key1]
@@ -71,9 +85,20 @@ class Bundle:
 
     # Evaluations.
 
+
+    # TODO is this needed? Seems to have been replaced by
+    # check_genome_dictionary.
     def check_matched_genome(self, key, eval_id=None):
         """Check for whether a certain type of genome has been added to the
-        genome dictionary."""
+        genome dictionary.
+
+        :param key:
+            The value to be evaluated if it is a valid key
+            in the Bundle object's 'genome_dict'.
+        :type key: str
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if key in self.genome_dict.keys():
             result = "The %s genome has been matched." % key
             status = "correct"
@@ -88,10 +113,18 @@ class Bundle:
 
     def check_genome_dictionary(self, key, expect=True, eval_id=None):
         """Check if a genome is present in the genome dictionary.
-        The 'key' parameter indicates how the genome is expected to be
-        stored in the dictionary.
-        The 'expect' parameter indicates whether the genome is expected
-        to be present or not."""
+
+        :param key:
+            The value to be evaluated if it is a valid key
+            in the genome dictionary.
+        :type key: str
+        :param expect:
+            Indicates whether the key is expected
+            to be a valid key in the genome dictionary.
+        :type expect: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if key in self.genome_dict.keys():
             result = "The %s genome is present." % key
@@ -112,10 +145,18 @@ class Bundle:
 
     def check_genome_pair_dictionary(self, key, expect=True, eval_id=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
-        The 'key' parameter indicates how the genome_pair is expected to be
-        stored in the dictionary.
-        The 'expect' parameter indicates whether the genome_pair is expected
-        to be present or not."""
+
+        :param key:
+            The value to be evaluated if it is a valid key
+            in the genome_pair dictionary.
+        :type key: str
+        :param expect:
+            Indicates whether the key is expected
+            to be a valid key in the genome_pair dictionary.
+        :type expect: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if key in self.genome_pair_dict.keys():
             result = "The %s genome_pair is present." % key
