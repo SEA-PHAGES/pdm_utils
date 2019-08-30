@@ -71,7 +71,20 @@ class Cds:
 
 
     def set_locus_tag(self, tag="", delimiter="_", check_value=None):
-        """Set locus tag and split tag information."""
+        """Set locus tag and parse the locus_tag feature number.
+
+        :param tag:
+            Input locus_tag data.
+        :type tag: str
+        :param delimiter:
+            Value used to split locus_tag data.
+        :type delimiter: str
+        :param check_value:
+            Indicates genome name or other value that will be used to parse
+            the locus_tag to identify the feature number. If no check_value
+            is provided, the genome_id attribute is used.
+        :type check_value: str
+        """
         self.locus_tag = tag
         if check_value is None:
             check_value = self.genome_id
@@ -105,8 +118,13 @@ class Cds:
         can be stored in multiple fields in the GenBank-formatted flat file.
         The name is first derived from the 'gene' qualifier, then
         the 'locus_tag' qualifier, and finally left empty.
-        The 'value' parameter can be used to directly set this attribute
-        regardless of the 'gene' and '_locus_tag_num' attributes."""
+
+        :param value:
+            Indicates a value that should be used to directly set
+            the name regardless of the 'gene' and '_locus_tag_num'
+            attributes.
+        :type value: str
+        """
 
         # 1. PECAAN Draft:
         #    The 'gene' qualifier should be present and contain an integer.
@@ -134,8 +152,12 @@ class Cds:
 
 
     def set_description(self, value):
-        """Set the description and processed_description attributes from the
-        selected attribute.
+        """Set the description and processed_description attributes.
+
+        :param value:
+            Indicates which reference attributes are used
+            to set the attributes ('product', 'function', 'note').
+        :type value: str
         """
 
         if value == "product":
@@ -181,6 +203,9 @@ class Cds:
           4. its length is divisible by 3,
           5. it translates non-standard start codons to methionine.
         If these criteria are not met, an empty Seq object is returned.
+
+        :returns: Amino acid sequence
+        :rtype: Seq
         """
 
         try:
@@ -192,7 +217,21 @@ class Cds:
 
 
     def set_translation(self, value=None, translate=False):
-        """Set translation and its length."""
+        """Set translation and its length.
+
+        The translation is coerced into a Biopython Seq object.
+        If no input translation value is provided, the translation is
+        generated from the parent genome nucleotide sequence.
+        If an input translation value is provided, the 'translate'
+        parameter has no impact.
+
+        :param value: Amino acid sequence
+        :type value: str or Seq
+        :param translate:
+            Indicates whether the translation should be generated
+            from the parent genome nucleotide sequence.
+        :type translate: bool
+        """
 
         if isinstance(value, Seq):
             self.translation = value.upper()
@@ -209,7 +248,12 @@ class Cds:
 
 
     def set_translation_table(self, value):
-        """Set translation table integer."""
+        """Set translation table integer.
+
+        :param value:
+            Translation table that should be used to generate the translation.
+        :type value: int
+        """
 
         try:
             self.translation_table = int(value)
@@ -218,10 +262,21 @@ class Cds:
 
 
     def set_strand(self, value, format, case=False):
-        """Sets strand based on indicated format."""
+        """Sets strand based on indicated format.
+
+        Relies on the  `reformat_strand` function to manage strand data.
+
+        :param value: Input strand value.
+        :type value: misc.
+        :param format: Indicates how the strand data should be formatted.
+        :type format: str
+        :param case: Indicates whether the output strand data should be cased.
+        :type case: bool
+        """
         self.strand = basic.reformat_strand(value, format, case)
 
 
+    # TODO this method may no longer be needed.
     def set_wrap(self):
         """Determines if the feature wraps around the end of the genome.
 
@@ -257,7 +312,12 @@ class Cds:
     def reformat_left_and_right(self, new_format):
         """Convert left and right coordinates to new coordinate format.
         This also updates the coordinate format attribute to reflect
-        change. However, it does not update start and end attributes.
+        change.
+
+        Relies on the `reformat_coordinates` function.
+
+        :param new_format: Indicates how coordinates should be formatted.
+        :type new_format: str
         """
 
         new_left, new_right = \
@@ -275,15 +335,17 @@ class Cds:
     def set_nucleotide_length(self, seq=False):
         """Set the length of the nucleotide sequence.
 
-        Nucleotide length can be computed multiple ways.
-        If the 'option' parameter is False, the 'left' and 'right'
-        coordinates are used to determine the length (and take into
-        account the 'coordinate_format' attribute. However, for
-        compound features, this value may not be accurate. If the
-        'option' parameter is True, the nucleotide sequence is used
-        to determine the length. When the sequence reflects the
-        entire feature (including compound features), the length
-        will be accurate.
+        :param seq:
+            Nucleotide length can be computed multiple ways.
+            If the 'seq' parameter is False, the 'left' and 'right'
+            coordinates are used to determine the length (and take into
+            account the 'coordinate_format' attribute. However, for
+            compound features, this value may not be accurate.
+            If the 'seq' parameter is True, the nucleotide sequence is used
+            to determine the length. When the sequence reflects the
+            entire feature (including compound features), the length
+            will be accurate.
+        :type seq: bool
         """
 
         if seq:
@@ -311,9 +373,16 @@ class Cds:
         GenBank-formatted flat file, the coordinates are by default
         '0-based half-open', the object contains coordinates for every
         part of the feature (e.g. if it is a compound feature) and
-        fuzzy locations. As a result, the retrieved sequence may not
-        exactly match the length indicated from the 'left' and 'right'
+        fuzzy locations. As a result, the length of the retrieved sequence
+        may not exactly match the length indicated from the 'left' and 'right'
         coordinates.
+        If the nucleotide sequence 'value' is provided, the
+        'parent_genome_seq' does not impact the result.
+
+        :param value: Input nucleotide sequence
+        :type value: str of Seq
+        :param parent_genome_seq: Input parent genome nucleotide sequence.
+        :type parent_genome_seq: Seq
         """
 
         if isinstance(value, Seq):
@@ -363,7 +432,13 @@ class Cds:
     # Evaluations.
 
     def check_translation_table(self, check_table=11, eval_id=None):
-        """Check that the translation table is correct."""
+        """Check that the translation table is correct.
+
+        :param check_table: Translation table used to check the translation.
+        :type check_table: int
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.translation_table == check_table:
             result = "The translation table is correct."
@@ -377,7 +452,11 @@ class Cds:
 
 
     def check_translation_length(self, eval_id=None):
-        """Confirm that a translation is present."""
+        """Confirm that a translation is present.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self._translation_length < 1:
             result = "A translation is not present."
             status = "error"
@@ -391,7 +470,11 @@ class Cds:
 
 
     def check_translation(self, eval_id=None):
-        """Check that the current and expected translations match."""
+        """Check that the current and expected translations match.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         translation = self.translate_seq()
         if self._translation_length < len(translation):
@@ -412,7 +495,13 @@ class Cds:
 
 
     def check_amino_acids(self, check_set=set(), eval_id=None):
-        """Check whether all amino acids in the translation are valid."""
+        """Check whether all amino acids in the translation are valid.
+
+        :param check_set: Set of valid amino acids.
+        :type check_set: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         amino_acid_set = set(self.translation)
         amino_acid_error_set = amino_acid_set - check_set
 
@@ -430,7 +519,17 @@ class Cds:
 
 
     def check_strand(self, format="fr_short", case=True, eval_id=None):
-        """Check if strand is set appropriately."""
+        """Check if strand is set appropriately.
+
+        Relies on the `reformat_strand` function to manage strand data.
+
+        :param format: Indicates how coordinates should be formatted.
+        :type format: str
+        :param case: Indicates whether the strand data should be cased.
+        :type case: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         expected_strand = basic.reformat_strand(self.strand,
                                                 format=format,
                                                 case=case)
@@ -450,6 +549,9 @@ class Cds:
 
         This method assumes that if the coordinates are not exact, they
         have been set to -1 or are not integers.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
         """
 
         if not (str(self.left).isdigit() and str(self.right).isdigit()):
@@ -472,7 +574,14 @@ class Cds:
 
 
     def check_locus_tag_present(self, expect=True, eval_id=None):
-        """Check if status of locus tag matches expectations."""
+        """Check if status of locus tag matches expectations.
+
+        :param expect:
+            Indicates whether the locus_tag is expected to be present.
+        :type expect: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.locus_tag != "":
             present = True
@@ -499,18 +608,24 @@ class Cds:
 
 
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
-                                  prefix_set=set(), caps=True, eval_id=None):
+                                  prefix_set=set(), case=True, eval_id=None):
         """Check if the locus_tag is structured correctly.
 
-        The 'check_value' parameter provides the genome ID that is expected
-        to be present. If None, the 'genome_id' parameter is used by default.
-        With the 'only_typo' parameter set to True, a simpler
-        structure analysis only checks for whether the genome ID is
-        present.
-        If a prefix is expected, the 'prefix_set' parameter indicates
-        the set of possible prefixes that are expected.
-        The 'caps' parameters indicates whether the locus_tag is expected
-        to be completely capitalized or not.
+        :param check_value:
+            Indicates the genome id that is expected to be present.
+            If None, the 'genome_id' parameter is used.
+        :type check_value: str
+        :param only_typo:
+            Indicates if only the genome id spelling should be evaluated.
+        :type only_typo: bool
+        :param prefix_set:
+            Indicates valid common prefixes, if a prefix is expected.
+        :type prefix_set: set
+        :param case:
+            Indicates whether the locus_tag is expected to be capitalized.
+        :type case: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
         """
         if check_value is None:
             check_value = self.genome_id
@@ -524,7 +639,7 @@ class Cds:
         else:
             # Expected structure: SEA_TRIXIE_20
             parts = self.locus_tag.split("_")
-            if caps:
+            if case:
                 if self.locus_tag != self.locus_tag.upper():
                     results.append("The capitalization is incorrect.")
             if len(parts) == 3:
@@ -547,15 +662,6 @@ class Cds:
         definition = "Check if the locus_tag qualifier is structured correctly."
         eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
-
-
-
-
-
-
-
-
-
 
 
     # TODO is this needed?
@@ -582,7 +688,15 @@ class Cds:
 
 
     def check_gene_present(self, expect=True, eval_id=None):
-        """Check if the status of gene matches expectations."""
+        """Check if the status of gene matches expectations.
+
+        :param expect:
+            Indicates whether the gene qualifier is expected to be present.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if self.gene != "":
             present = True
@@ -609,7 +723,11 @@ class Cds:
 
 
     def check_gene_structure(self, eval_id=None):
-        """Check if the gene qualifier contains an integer."""
+        """Check if the gene qualifier contains an integer.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         try:
             value = int(self.gene)
@@ -629,7 +747,11 @@ class Cds:
 
     def check_compatible_gene_and_locus_tag(self, eval_id=None):
         """Check if the gene and locus_tag attributes contain the same
-        gene number."""
+        gene number.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
         if self.gene == self._locus_tag_num:
             result = "The gene and locus_tag numbers are consistent."
             status = "correct"
@@ -644,8 +766,16 @@ class Cds:
     def check_description_field(self, attribute="product", eval_id=None):
         """Check if there are CDS descriptions in unexpected fields.
 
-        This method evaluates if the indicated field is empty or generic,
+        Evaluates whether the indicated attribute is empty or generic,
         and other fields contain non-generic data.
+
+        :param attribute:
+            Indicates the reference attribute for the evaluation
+            ('product', 'function', 'note').
+        :type attribute: str
+        :param eval_id:
+            Unique identifier for the evaluation.
+        :type eval_id: str
         """
 
         description = ""
@@ -683,7 +813,15 @@ class Cds:
 
 
     def check_generic_data(self, attribute=None, eval_id=None):
-        """Check if the indicated attribute contains generic data."""
+        """Check if the indicated attribute contains generic data.
+
+        :param attribute:
+            Indicates the attribute for the evaluation
+            ('product', 'function', 'note').
+        :type attribute: str
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
 
         if attribute == "product":
             original = self.product
@@ -707,8 +845,6 @@ class Cds:
         definition = "Check if the '%s' field contains generic data." % attribute
         eval = Eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(eval)
-
-
 
 
 
