@@ -26,11 +26,26 @@ def parse_coordinates(seqfeature):
     """Parse the boundary coordinates from a GenBank-formatted flat file.
 
     The functions takes a Biopython SeqFeature object containing data
-    that was parsed from the feature in the flat file.
-    Parsing these coordinates can be tricky.
+    that was parsed from the feature in the flat file. Parsing these
+    coordinates can be tricky.
     There can be more than one set of coordinates if it is
-    a compound location. Also, the boundaries may not be precise;
-    instead they may be open or fuzzy.
+    a compound location. Only features with 1 or 2 open reading frames
+    (parts) are correctly parsed. Also, the boundaries may not be precise;
+    instead they may be open or fuzzy. Non-precise coordinates are
+    converted to '-1'. If the strand is undefined, the coordinates
+    are converted to '-1' and parts is set to '0'. If an incorrect
+    data type is provided, coorindates are set to '-1' and parts is
+    set to '0'.
+
+    :param seqfeature: Biopython SeqFeature
+    :type seqfeature: SeqFeature
+    :returns:
+        tuple (left, right, parts)
+        WHERE
+        left(int) is the first coordinate, regardless of strand.
+        right(int) is the second coordinate, regardless of strand.
+        parts(int) is the number of open reading frames that define
+        the feature.
     """
 
     if (isinstance(seqfeature.location, FeatureLocation) or \
@@ -74,7 +89,16 @@ def parse_coordinates(seqfeature):
 
 # TODO implement set_wrap()?
 def parse_cds_seqfeature(seqfeature, genome_id=""):
-    """Parse data from a Biopython CDS SeqFeature object into a Cds object."""
+    """Parse data from a Biopython CDS SeqFeature object into a Cds object.
+
+    :param seqfeature: Biopython SeqFeature
+    :type seqfeature: SeqFeature
+    :param genome_id: An identifier for the genome in which the seqfeature
+    is defined.
+    :type genome_id: str
+    :returns: A  pdm_utils Cds object
+    :rtype: Cds
+    """
     cds = Cds.Cds()
     cds.genome_id = genome_id
     cds.seqfeature = seqfeature
@@ -150,7 +174,16 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
 
 
 def parse_source_seqfeature(seqfeature, genome_id=""):
-    """Parses a Biopython Source SeqFeature."""
+    """Parses a Biopython Source SeqFeature.
+
+    :param seqfeature: Biopython SeqFeature
+    :type seqfeature: SeqFeature
+    :param genome_id: An identifier for the genome in which the seqfeature
+    is defined.
+    :type genome_id: str
+    :returns: A pdm_utils Source object
+    :rtype: Source
+    """
     source = Source.Source()
     source.genome_id = genome_id
     source.seqfeature = seqfeature
@@ -184,9 +217,19 @@ def create_seqfeature_dictionary(seqfeature_list):
     """Create a dictionary of Biopython SeqFeature objects based on their type.
 
     From a list of all Biopython SeqFeatures derived from a GenBank-formatted
-    flat file, create a dictionary of SeqFeatures based on their type.
-    Key = seqfeature type (source, tRNA, CDS, other).
-    Value = list of features.
+    flat file, create a dictionary of SeqFeatures based on their 'type'
+    attribute.
+
+    :param seqfeature_list: List of Biopython SeqFeatures
+    :type seqfeature_list: list
+    :param genome_id: An identifier for the genome in which the seqfeature
+    is defined.
+    :type genome_id: str
+    :returns:
+        A dictionary of Biopython SeqFeatures:
+        Key: SeqFeature type (source, tRNA, CDS, other)
+        Value: the SeqFeature
+    :rtype: dict
     """
 
     seqfeature_type_set = set()
@@ -207,11 +250,24 @@ def create_seqfeature_dictionary(seqfeature_list):
 
 def parse_genome_data(seqrecord, filepath="",
         translation_table=11, phage_id_field="organism_name"):
-    """Parse a GenBank-formatted flat file into a Genome object.
+    """Parse data from a Biopython SeqRecord object into a Genome object.
 
-    Data from the flat file has already been parsed y Biopython SeqIO
-    into a SeqRecord object, and data from this object is parsed
-    into a Genome object.
+    All Source, CDS, tRNA, and tmRNA features are parsed into their
+    associates Source, Cds, Trna, and Tmrna objects.
+
+    :param seqrecord: A Biopython SeqRecord object.
+    :type seqrecord: SeqRecord
+    :param filepath: A filename associated with the returned Genome object.
+    :type filepath: str
+    :param translation_table:
+        The applicable translation table for the genome's CDS features.
+    :type translation_table: int
+    :param phage_id_field:
+        The SeqRecord attribute from which the unique genome
+        identifier/name is stored.
+    :type phage_id_field: str
+    :returns: A pdm_utils Genome object.
+    :rtype: Genome
     """
 
     # Keep track of the file from which the record is derived.
@@ -358,12 +414,34 @@ def parse_genome_data(seqrecord, filepath="",
 
 
 def copy_data_to(bundle, type, flag="ticket"):
-    """Copy data to a 'flat_file' genome object.
+    """Copy data to a genome object derived from a 'flat_file'.
 
-    The 'flat_file' attributes that should be populated need
-    to be set to the value indicated by the 'flag' parameter.
-    The 'type' parameter indicates the type of genome that can be used to
-    populate the 'flat_file' genome object.
+    The Bundle object is expected to contain at least two Genome objects
+    in its 'genome_dict' dictionary. The first 'donor' genome is expected to be
+    stored in the dictionary with its key equivalent to its 'type'.
+    The second 'receiver' genome is expected to be derived
+    from a GenBank-formatted flat file and stored in the Bundle
+    object's 'genome_dict' dictionary with a 'flat_file' key.
+    A GenomePair is created using these two genomes,
+    and the data is copied from the donor genome to the
+    'flat_file' genome.
+
+    :param bundle:
+        A Bundle object containing both Genome objects stored
+        in the 'genome_dict' attribute.
+    :type bundle: Bundle
+    :param type:
+        The value of the donor genome's 'type' attribute, which is
+        used as the its key in the Bundle's 'genome_dict' dictionary.
+    :type type: str
+    :param flag:
+        The value used to indicate which 'flat_file'
+        attributes should be populated from the donor genome.
+        Several 'flat_file' genome attributes are set to this value.
+        Using a GenomePair method, the 'flat_file' attributes
+        with this flag are re-populated from data of the corresponding
+        attributed in the donor genome.
+    :type flag: str
     """
 
     if "flat_file" in bundle.genome_dict.keys():
@@ -401,12 +479,26 @@ def copy_data_to(bundle, type, flag="ticket"):
 def parse_files(file_list, id_field="organism_name"):
     """Parse data from a list of flat files.
 
-    The functions returns:
-    1. a list of Genome objects with data parsed from each file.
-    2. a list of filenames that were successfully parsed.
-    3. a list of filenames that were not successfully parsed.
-    ."""
+    All GenBank-formatted flat files present in the list of files
+    are first parsed into Biopython SeqRecord objects, and
+    then parsed into pdm_utils Genome objects.
 
+    :param file_list: A list of filenames.
+    :type file_list: list
+    :param id_field:
+        The name of the attribute in the SeqRecord object
+        from which the unique genome identifier/name is stored.
+    :type id_field: str
+    :returns:
+        tuple (genomes, valid_files, failed_files)
+        WHERE
+        genomes(list) is a list of pdm_utils Genome objects parsed
+        from the files.
+        valid_files(list) is a list of filenames from which a
+        Biopython SeqRecord object was successfully parsed.
+        failed_files(list) is a list of filenames from which a
+        Biopython SeqRecord object was not successfully parsed.
+    """
     failed_files = []
     valid_files = []
     genomes = []
