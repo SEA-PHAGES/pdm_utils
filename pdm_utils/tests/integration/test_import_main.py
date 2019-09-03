@@ -3,7 +3,7 @@
 
 
 import unittest
-from pipelines.database_import import import_main
+from pipelines.db_import import import_main
 from constants import constants
 from classes import Bundle, Genome, Cds, Eval, GenomePair, Ticket, Source
 from classes import MySQLConnectionHandler

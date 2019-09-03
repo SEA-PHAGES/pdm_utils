@@ -1,7 +1,7 @@
 """Functions to interact with PhagesDB"""
 
 
-from pipelines.database_import import evaluate
+from pipelines.db_import import evaluate
 from classes import Genome
 from classes import GenomePair
 from functions import basic

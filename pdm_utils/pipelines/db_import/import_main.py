@@ -8,7 +8,7 @@ from functions import flat_files
 from functions import phagesdb
 from functions import phamerator
 from classes import Bundle
-from pipelines.database_import import evaluate
+from pipelines.db_import import evaluate
 from constants import constants
 
 

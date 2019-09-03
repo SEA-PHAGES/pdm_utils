@@ -6,7 +6,7 @@ from classes import Source
 from classes import Cds
 from classes import GenomePair
 from constants import constants
-from pipelines.database_import import evaluate
+from pipelines.db_import import evaluate
 from classes import Ticket
 import unittest
 
