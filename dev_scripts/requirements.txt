@@ -1,0 +1,6 @@
+biopython
+pymysql
+paramiko
+subprocess
+os
+getpass

@@ -1,0 +1,64 @@
+# The repo depends on the following software and python packages.
+
+Built-in python packages:
+subprocess
+os
+getpass
+
+Third-party python packages:
+biopython
+pymysql
+paramiko
+
+
+Software:
+mysql 5.7
+mmseqs and/or kclust
+ncbi blast+
+
+
+Other:
+The NCBI Conserved Domain Database locally installed
+
+
+
+
+
+
+
+
+
+
+# All python code in the repo can be executed using the following Conda 
+# environment 'phamerator'.
+# First install Anaconda locally. Then execute the following commands:
+conda create --name phamerator mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme
+source activate phamerator
+
+
+# Current versions:
+# conda 4.5.11
+# mysql  Ver 14.14 Distrib 5.7.24, for osx10.9 (x86_64) using  EditLine wrapper
+# Python 3.7.3
+
+
+
+
+
+
+
+# For Phamerator integration tests, it is expected that MySQL user 'tester'
+# exists with password 'tester' that has all privileges for 'test_db' database.
+# Log in to MySQL as the 'root' user and execute the following commands:
+CREATE USER 'tester'@'localhost' IDENTIFIED BY 'tester';
+GRANT ALL PRIVILEGES ON test_db.* TO 'tester'@'localhost';
+FLUSH PRIVILEGES;
+
+
+
+
+# Sphinx
+
+sphinx-apidoc -o ./source/ ../dbm_utils/
+sphinx-build -b html ./source ./build
+(or make build?)
