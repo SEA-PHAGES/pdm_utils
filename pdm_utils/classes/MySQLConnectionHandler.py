@@ -315,16 +315,16 @@ class MySQLConnectionHandler:
             print(self.messages["already connected"])
         return
 
-    def execute_query(self, query):
+    def execute_query(self, query=""):
         """
         If connection exists and is open, attempts to attach a DictCursor
         to the connection and execute the input query. If connection doesn't
         exist or has been closed, tries to open a new one before creating
         DictCursor and executing query.
         :param query:
-        :return:
+        :return: results list if available, None otherwise
         """
-        # TODO: integration tests
+        # Integration tests passed
         if self.connection_status() is True:
             try:
                 cursor = self.connection.cursor(pms.cursors.DictCursor)
@@ -334,6 +334,7 @@ class MySQLConnectionHandler:
                 return results
             except pms.err.Error as err:
                 print("Error {}: {}".format(err.args[0], err.args[1]))
+                return
         else:
             self.open_connection()
             if self.connection_status() is True:
@@ -345,10 +346,12 @@ class MySQLConnectionHandler:
                     return results
                 except pms.err.Error as err:
                     print("Error {}: {}".format(err.args[0], err.args[1]))
+                    return
             else:
                 print(self.messages["no connection"])
+                return
 
-    def execute_transaction(self, statement_list):
+    def execute_transaction(self, statement_list=[]):
         """
         If connection exists and is open, attempts to attach a cursor to
         the connection and execute the commands in the input list. If
@@ -356,7 +359,7 @@ class MySQLConnectionHandler:
         before creating DictCursor and executing query.
         :param statement_list: a list of any number of MySQL statements with
         no expectation that anything will return
-        :return:
+        :return: 0 or 1 status code. 0 means no problems, 1 means problems
         """
         # TODO: integration tests
         if self.connection_status() is True:
@@ -372,11 +375,13 @@ class MySQLConnectionHandler:
                             statement))
                         cursor.execute("ROLLBACK")
                         cursor.close()
-                        break
+                        return 1
                 cursor.execute("COMMIT")
                 cursor.close()
+                return 0
             except pms.err.Error as err:
                 print("Error {}: {}".format(err.args[0], err.args[1]))
+                return 1
         else:
             self.open_connection()
             if self.connection_status() is True:
@@ -392,13 +397,16 @@ class MySQLConnectionHandler:
                                 statement))
                             cursor.execute("ROLLBACK")
                             cursor.close()
-                            break
+                            return 1
                     cursor.execute("COMMIT")
                     cursor.close()
+                    return 0
                 except pms.err.Error as err:
                     print("Error {}: {}".format(err.args[0], err.args[1]))
+                    return 1
             else:
                 print(self.messages["no connection"])
+                return 1
 
     def close_connection(self):
         """
