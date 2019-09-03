@@ -5,11 +5,11 @@ import datetime
 
 # Import third-party python modules.
 try:
-	import pymysql as pms
+    import pymysql as pms
 except ImportError:
-	print("Failed to import module. Please make sure pymysql is installed, "
-		  "and try again")
-	sys.exit(1)
+    print("Failed to import module. Please make sure pymysql is installed, "
+          "and try again")
+    sys.exit(1)
 
 # Import functions from other k_phamerate scripts.
 from classes.MySQLConnectionHandler import MySQLConnectionHandler
@@ -17,13 +17,13 @@ from classes.MMseqsPhameratorHandler import MMseqsPhameratorHandler
 
 # Set up argparse to interact with users at the command line interface.
 script_description = """
-This is a script intended to quickly, sensitively, and accurately sort all 
-proteins in a Phamerator database into phams using MMseqs2. (Steinegger & 
-Soding, 2017) 
+This is a script intended to quickly, sensitively, and accurately sort all
+proteins in a Phamerator database into phams using MMseqs2. (Steinegger &
+Soding, 2017)
 """
 parser = argparse.ArgumentParser(description=script_description)
 parser.add_argument("database_name", metavar="db", type=str, nargs=1,
-					help="name of the Phamerator database to be phamerated")
+                    help="name of the Phamerator database to be phamerated")
 
 # Parse command line arguments.
 args = parser.parse_args()
@@ -36,9 +36,9 @@ mysql_handler.open_connection()
 
 # Script will only continue if connection was successfully established
 if mysql_handler.connection_status() is True:
-	pass
+    pass
 else:
-	sys.exit(1)
+    sys.exit(1)
 
 # Record pham analysis start time.
 start = datetime.datetime.now()
