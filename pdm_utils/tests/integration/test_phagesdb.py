@@ -1,6 +1,6 @@
 """Integration tests for misc. functions that interact with PhagesDB."""
 
-from classes import Bundle
+from classes import bundle
 from functions import phagesdb
 from classes import Genome
 from constants import constants
@@ -590,7 +590,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.cluster = "B"
         self.genome1._value_flag = True
 
-        self.bundle1 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
 
 
 

@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
-from classes import Bundle
+from classes import bundle
 
 class TestFlatFileFunctions1(unittest.TestCase):
 
@@ -3001,7 +3001,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.genome1._value_flag = False
         self.genome1.translation_table = "empty"
 
-        self.bundle1 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
 
 
         self.genome2 = Genome.Genome()

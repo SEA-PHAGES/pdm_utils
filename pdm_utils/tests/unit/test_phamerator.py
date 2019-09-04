@@ -6,7 +6,7 @@ from functions import phamerator
 from classes import Genome
 from classes import Cds
 from datetime import datetime
-from classes import Bundle
+from classes import bundle
 from constants import constants
 from classes import MySQLConnectionHandler
 from Bio.Seq import Seq
@@ -787,7 +787,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome1.cluster = "B"
         self.genome1._value_flag = True
 
-        self.bundle1 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
 
 
         self.genome2 = Genome.Genome()

@@ -5,13 +5,13 @@
 import unittest
 from pipelines.db_import import import_main
 from constants import constants
-from classes import Bundle, Genome, Cds, GenomePair, Ticket, Source
+from classes import bundle, Genome, Cds, GenomePair, Ticket, Source
 from classes import MySQLConnectionHandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
-from classes import Bundle
+
 
 
 # The following integration tests user the 'tester' MySQL user.
@@ -53,9 +53,9 @@ class TestImportMain(unittest.TestCase):
         genome1.id = "Trixie"
         genome1.seq = Seq("ATGC")
 
-        bundle = Bundle.Bundle()
-        bundle.ticket = ticket1
-        bundle.genome_dict[genome1.type] = genome1
+        bndl = bundle.Bundle()
+        bndl.ticket = ticket1
+        bndl.genome_dict[genome1.type] = genome1
 
         sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
         sql_handle.username = user

@@ -7,7 +7,7 @@ from functions import tickets
 from functions import flat_files
 from functions import phagesdb
 from functions import phamerator
-from classes import Bundle
+from classes import bundle
 from pipelines.db_import import evaluate
 from constants import constants
 
@@ -112,13 +112,13 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
 
             genome = flat_files.create_parsed_flat_file(filename)
-            bundle = Bundle.Bundle()
-            bundle.id = bundle_count
-            bundle.genome_dict[genome.type] = genome
+            bndl = bundle.Bundle()
+            bndl.id = bundle_count
+            bndl.genome_dict[genome.type] = genome
 
             # Match ticket (if available) to flat file.
             matched_ticket = ticket_dict.pop(genome.id, None)
-            bundle.ticket = matched_ticket
+            bndl.ticket = matched_ticket
 
 
 
@@ -132,7 +132,7 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
             # TODO implement the main2 function.
             # Perform all evaluations based on the ticket type.
-            import_main.evaluate_flat_file(bundle = bundle,
+            import_main.evaluate_flat_file(bndl = bndl,
                                     sql_handle = sql_handle,
                                     phage_id_set = phamerator_phage_id_set,
                                     seq_set = phamerator_seq_set,
@@ -151,35 +151,35 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
             # TODO construct a basic.get_empty_ticket() function?
             empty_ticket = [None] * 12
             ticket_data =  tickets.parse_import_ticket_data(\
-                                bundle.ticket, empty_ticket,\
+                                bndl.ticket, empty_ticket,\
                                 direction = "ticket_to_list")
 
-            bundle.check_for_errors()
+            bndl.check_for_errors()
             if errors == 0:
 
                 # Now import the data into the database if there are no errors and
                 # if there is MySQL connection data provided.
                 if sql_handle is not None:
-                    bundle.create_sql_statements()
+                    bndl.create_sql_statements()
 
                     # TODO confirm the handler method name and that it can
                     # handle a list of queries.
-                    sql_handle.execute(bundle.sql_queries)
+                    sql_handle.execute(bndl.sql_queries)
                     sql_handle.commit()
 
                     # If successful, keep track of query data.
-                    query_dict[bundle.ticket.phage_id] = bundle.sql_queries
+                    query_dict[bndl.ticket.phage_id] = bndl.sql_queries
                 else:
                     pass
                 success_ticket_list.append(ticket_data)
-                success_filename_list.append(bundle.genome_dict["add"].filename)
+                success_filename_list.append(bndl.genome_dict["add"].filename)
 
             else:
                 failed_ticket_list.append(ticket_data)
-                failed_filename_list.append(bundle.genome_dict["add"].filename)
+                failed_filename_list.append(bndl.genome_dict["add"].filename)
 
             # TODO implement the get_evaluations() method.
-            evaluation_dict[bundle.id] = bundle.get_evaluations()
+            evaluation_dict[bndl.id] = bndl.get_evaluations()
             bundle_count += 1
 
 
@@ -188,14 +188,14 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
     key_list = ticket_dict.keys()
     for key in key_list:
         unmatched_ticket = ticket_dict.pop(key)
-        bundle = Bundle.Bundle()
-        bundle.id = bundle_count
-        bundle.ticket = unmatched_ticket
+        bndl = bundle.Bundle()
+        bndl.id = bundle_count
+        bndl.ticket = unmatched_ticket
 
         # TODO run a list of evaluations based on ticket type.
         # TODO determine which evaluate function is best.
         evaluate.tickets(unmatched_ticket)
-        evaluation_dict[bundle.id] = {"ticket":unmatched_ticket.evaluations}
+        evaluation_dict[bndl.id] = {"ticket":unmatched_ticket.evaluations}
         bundle_count += 1
 
         empty_ticket = [None] * 12
@@ -213,7 +213,7 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
 
 
-def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
+def evaluate_flat_file(bndl, sql_handle, host_genera_set=set(),
                        phage_id_set=set(), seq_set=set(),
                        cluster_set=set(), subcluster_set=set()):
     """Evaluate data within a single Bundle object."""
@@ -224,14 +224,14 @@ def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
 
 
     # Using each ticket, construct and populate genome objects as needed.
-    tickets.copy_ticket_to_genome(bundle)
+    tickets.copy_ticket_to_genome(bndl)
 
 
 
     # Now that the flat file to be imported is parsed and matched to a ticket,
     # use the ticket to populate specific genome-level fields such as
     # host, cluster, subcluster, etc.
-    flat_files.copy_data_to(bundle, "add")
+    flat_files.copy_data_to(bndl, "add")
 
 
 
@@ -240,7 +240,7 @@ def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
 
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
-    phagesdb.copy_data_from(bundle, "flat_file")
+    phagesdb.copy_data_from(bndl, "flat_file")
 
 
 
@@ -262,14 +262,14 @@ def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
 
     # If the ticket type is 'replace', retrieve data from phamerator.
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
-    if bundle.ticket.type == "replace":
+    if bndl.ticket.type == "replace":
         phamerator_genome = \
             phamerator.create_phamerator_genome(sql_handle, genome.id)
 
 
         # If any attributes in flat_file are set to 'retain', copy data
         # from the phamerator genome.
-        phamerator.copy_data_from(bundle, "flat_file")
+        phamerator.copy_data_from(bndl, "flat_file")
 
 
 
@@ -278,8 +278,8 @@ def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
     # TODO confirm that evaluation checks that fields like
     # annotation_qc are structured properly - int and not str.
 
-    evaluate.check_bundle_for_import(bundle)
-    bundle.check_for_errors()
+    evaluate.check_bundle_for_import(bndl)
+    bndl.check_for_errors()
 
 
 
@@ -287,7 +287,7 @@ def evaluate_flat_file(bundle, sql_handle, host_genera_set=set(),
 
 
 
-def import_into_database(bundle, sql_handle):
+def import_into_database(bndl, sql_handle):
     """Construct collection of SQL statements for evaluated data and
     execute statements to add the data into the database."""
 
@@ -296,9 +296,9 @@ def import_into_database(bundle, sql_handle):
     # Create all SQL statements.
     index11 = 0
     while index11 < len(list_of_bundles):
-            bundle = list_of_bundles[index11]
-            if bundle.errors == 0:
-                bundle.create_sql_statements()
+            bndl = list_of_bundles[index11]
+            if bndl.errors == 0:
+                bndl.create_sql_statements()
 
 
 

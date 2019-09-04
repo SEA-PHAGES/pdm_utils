@@ -445,7 +445,7 @@ def create_genome_insert_statements(genome):
     return statements
 
 
-def copy_data_from(bundle, type, flag="retain"):
+def copy_data_from(bndl, type, flag="retain"):
     """Copy data from a 'phamerator' genome object.
 
     If a genome object stored in the Bundle object has
@@ -454,16 +454,16 @@ def copy_data_from(bundle, type, flag="retain"):
     The 'type' parameter indicates the type of genome that may need
     to be populated from Phamerator."""
 
-    if type in bundle.genome_dict.keys():
+    if type in bndl.genome_dict.keys():
 
-        genome1 = bundle.genome_dict[type]
+        genome1 = bndl.genome_dict[type]
         genome1.set_value_flag(flag)
 
         if genome1._value_flag:
 
-            if "phamerator" in bundle.genome_dict.keys():
+            if "phamerator" in bndl.genome_dict.keys():
 
-                genome2 = bundle.genome_dict["phamerator"]
+                genome2 = bndl.genome_dict["phamerator"]
 
                 # Copy all data that is set to be copied and
                 # add to Bundle object.
@@ -471,7 +471,7 @@ def copy_data_from(bundle, type, flag="retain"):
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-                bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
+                bndl.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
         # Now record an error if there are still fields
         # that need to be retained.

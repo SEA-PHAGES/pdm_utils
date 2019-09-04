@@ -219,10 +219,10 @@ def compare_genomes(genome_pair, check_replace=True):
 
 # TODO implement.
 # TODO unit test.
-def check_bundle_for_import(bundle):
+def check_bundle_for_import(bndl):
     """Check a Bundle for errors."""
 
-    ticket = bundle.ticket
+    ticket = bndl.ticket
 
 
     # First, evaluate whether all genomes have been successfully grouped,
@@ -233,20 +233,20 @@ def check_bundle_for_import(bundle):
     if ticket.type == "add" or ticket.type == "replace":
 
 
-        bundle.check_genome_dict("add")
-        bundle.check_genome_dict("flat_file")
-        bundle.check_genome_pair_dict("flat_file_add")
+        bndl.check_genome_dict("add")
+        bndl.check_genome_dict("flat_file")
+        bndl.check_genome_pair_dict("flat_file_add")
 
         # There may or may not be data retrieved from PhagesDB.
         ticket.set_value_flag("retrieve")
         if ticket._value_flag:
-            bundle.check_genome_dict("phagesdb")
+            bndl.check_genome_dict("phagesdb")
             try:
-                check_phagesdb_genome(bundle.genome_dict["phagesdb"])
+                check_phagesdb_genome(bndl.genome_dict["phagesdb"])
             except:
                 pass
             try:
-                bundle.check_genome_pair_dict("flat_file_phagesdb")
+                bndl.check_genome_pair_dict("flat_file_phagesdb")
             except:
                 pass
 
@@ -256,25 +256,25 @@ def check_bundle_for_import(bundle):
     if ticket.type == "replace":
 
         # There should be a "phamerator" genome.
-        bundle.check_genome_dict("phamerator")
+        bndl.check_genome_dict("phamerator")
 
         # There may or may not be a genome_pair to retain some data.
         ticket.set_value_flag("retain")
         if ticket._value_flag:
-            bundle.check_genome_pair_dict("add_phamerator")
+            bndl.check_genome_pair_dict("add_phamerator")
 
         # There should be a genome_pair between the current phamerator
         # genome and the new flat_file genome.
-        bundle.check_genome_pair_dict("flat_file_phamerator")
+        bndl.check_genome_pair_dict("flat_file_phamerator")
         try:
             compare_genomes_for_replace(
-                bundle.genome_pair_dict["flat_file_phamerator"])
+                bndl.genome_pair_dict["flat_file_phamerator"])
         except:
             pass
 
 
     # Second, evaluate each genome or pair of genomes as needed.
-    check_genome_to_import(bundle.genome_dict["flat_file"], ticket.type)
+    check_genome_to_import(bndl.genome_dict["flat_file"], ticket.type)
 
 
 
@@ -420,10 +420,10 @@ def check_trna_for_import(trna_obj):
 
 
 
-def check_replace_tickets(bundle):
+def check_replace_tickets(bndl):
     """Check several aspects about a genome only if it is being replaced."""
 
-    if len(bundle.genome_pair_dict.keys()) == 0:
+    if len(bndl.genome_pair_dict.keys()) == 0:
 
         # TODO throw an error - there should be a matched genome_pair object
         # since this is a check_replace function.
@@ -441,8 +441,8 @@ def check_replace_tickets(bundle):
 
         pass
     else:
-        for key in bundle.genome_pair_dict.keys():
-            compare_genomes(bundle.genome_pair_dict[key])
+        for key in bndl.genome_pair_dict.keys():
+            compare_genomes(bndl.genome_pair_dict[key])
 
 
     pass
@@ -469,15 +469,15 @@ def check_update_tickets(list_of_update_objects):
     # index = 0
     # while index < len(list_of_update_objects):
     #
-    #     bundle = list_of_update_objects[index]
+    #     bndl = list_of_update_objects[index]
     #
-    #     if len(bundle.genome_pairs_dict.keys()) == 0:
+    #     if len(bndl.genome_pairs_dict.keys()) == 0:
     #         # TODO throw an error if there is no matched Phamerator genome?
     #         pass
     #
-    #     for key in bundle.genome_pairs_dict.keys():
+    #     for key in bndl.genome_pairs_dict.keys():
     #
-    #         genome_pair = bundle.genome_pairs_dict[key]
+    #         genome_pair = bndl.genome_pairs_dict[key]
     #
     #         # TODO check for conflicting hosts. It is not common to
     #         # change hosts.
@@ -514,10 +514,10 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
     # index = 0
     # while index < len(list_of_remove_objects):
     #
-    #     bundle = list_of_update_objects[index]
+    #     bndl = list_of_update_objects[index]
     #
     #     try:
-    #         genome = bundle.genomes_dict[genome_type]
+    #         genome = bndl.genomes_dict[genome_type]
     #     except:
     #         # TODO throw an error if there is no matched Phamerator genome?
     #         continue

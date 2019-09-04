@@ -413,7 +413,7 @@ def parse_genome_data(seqrecord, filepath="",
 
 
 
-def copy_data_to(bundle, type, flag="ticket"):
+def copy_data_to(bndl, type, flag="ticket"):
     """Copy data to a genome object derived from a 'flat_file'.
 
     The Bundle object is expected to contain at least two Genome objects
@@ -426,10 +426,10 @@ def copy_data_to(bundle, type, flag="ticket"):
     and the data is copied from the donor genome to the
     'flat_file' genome.
 
-    :param bundle:
+    :param bndl:
         A Bundle object containing both Genome objects stored
         in the 'genome_dict' attribute.
-    :type bundle: Bundle
+    :type bndl: Bundle
     :param type:
         The value of the donor genome's 'type' attribute, which is
         used as the its key in the Bundle's 'genome_dict' dictionary.
@@ -444,8 +444,8 @@ def copy_data_to(bundle, type, flag="ticket"):
     :type flag: str
     """
 
-    if "flat_file" in bundle.genome_dict.keys():
-        genome1 = bundle.genome_dict["flat_file"]
+    if "flat_file" in bndl.genome_dict.keys():
+        genome1 = bndl.genome_dict["flat_file"]
         genome1.cluster = flag
         genome1.subcluster = flag
         genome1.name = flag # TODO should this attribute be copied?
@@ -458,9 +458,9 @@ def copy_data_to(bundle, type, flag="ticket"):
         genome1.retrieve_record = flag
         genome1.set_value_flag(flag)
 
-        if type in bundle.genome_dict.keys():
+        if type in bndl.genome_dict.keys():
 
-            genome2 = bundle.genome_dict[type]
+            genome2 = bndl.genome_dict[type]
 
             # Copy all data that is set to 'ticket' and
             # add to Bundle object.
@@ -468,7 +468,7 @@ def copy_data_to(bundle, type, flag="ticket"):
             genome_pair.genome1 = genome1
             genome_pair.genome2 = genome2
             genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-            bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
+            bndl.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
         # Now record an error if there are still fields
         # that need to be copied.

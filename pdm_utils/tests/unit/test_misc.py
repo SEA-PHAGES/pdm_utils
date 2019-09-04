@@ -1,6 +1,6 @@
 """ Unit tests for misc. functions."""
 
-from classes import Bundle
+from classes import bundle
 from classes import Genome
 from functions import misc
 import unittest
@@ -35,8 +35,8 @@ class TestMiscFunctions(unittest.TestCase):
         self.genome4.name = "Genome4"
         self.genome4.type = "flat_file"
 
-        self.bundle1 = Bundle.Bundle()
-        self.bundle2 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
+        self.bundle2 = bundle.Bundle()
 
 
 

@@ -214,13 +214,13 @@ def compare_tickets(list_of_tickets):
 
 
 
-def copy_ticket_to_genome(bundle):
+def copy_ticket_to_genome(bndl):
     """Construct genome objects and populate them appropriately using data
     from import ticket. This function operates on a Bundle object
     instead of a Genome object because some tickets (such as 'replace')
     need to instantiate more than one Genome object."""
 
-    ticket = bundle.ticket
+    ticket = bndl.ticket
 
     if (ticket.type == "add" or ticket.type == "replace"):
         genome1 = Genome.Genome()
@@ -237,7 +237,7 @@ def copy_ticket_to_genome(bundle):
         genome1.annotation_qc = ticket.annotation_qc
         genome1.retrieve_record = ticket.retrieve_record
 
-        bundle.genome_dict[genome1.type] = genome1
+        bndl.genome_dict[genome1.type] = genome1
 
 
         # TODO probably no need to create a second genome.
@@ -246,7 +246,7 @@ def copy_ticket_to_genome(bundle):
         #     genome2 = Genome.Genome()
         #     genome2.type = "remove"
         #
-        #     bundle.genome_dict[genome2.type] = genome2
+        #     bndl.genome_dict[genome2.type] = genome2
 
     # TODO 'update' ticket option will eventually be deleted.
     elif ticket.type == "update":
@@ -261,7 +261,7 @@ def copy_ticket_to_genome(bundle):
         # genome.set_cluster(ticket.cluster)
         # genome.set_subcluster(ticket.subcluster)
         # genome.set_cluster_subcluster()
-        # bundle.genome_dict[genome.type] = genome
+        # bndl.genome_dict[genome.type] = genome
         pass
 
     # TODO 'remove' ticket option will eventually be deleted.
@@ -271,7 +271,7 @@ def copy_ticket_to_genome(bundle):
         # genome = Genome.Genome()
         # genome.type = "remove"
         # genome.set_id(ticket.phage_id)
-        # bundle.genome_dict[genome.type] = genome
+        # bndl.genome_dict[genome.type] = genome
         pass
 
     else:
@@ -287,17 +287,17 @@ def create_bundle_dict(list_of_bundle_objects):
     Value = list of Bundle objects."""
 
     type_set = set()
-    for bundle in list_of_bundle_objects:
-        type_set.add(bundle.ticket.type)
+    for bndl in list_of_bundle_objects:
+        type_set.add(bndl.ticket.type)
 
     ticket_type_dict = {}
     for type in type_set:
         bundle_object_list = []
         index = 0
         while index < len(list_of_bundle_objects):
-            bundle = list_of_bundle_objects[index]
-            if bundle.ticket.type == type:
-                bundle_object_list.append(bundle)
+            bndl = list_of_bundle_objects[index]
+            if bndl.ticket.type == type:
+                bundle_object_list.append(bndl)
             index += 1
         ticket_type_dict[type] = bundle_object_list
 

@@ -1,6 +1,6 @@
 """ Unit tests for misc. ticket functions"""
 
-from classes import Bundle
+from classes import bundle
 from classes import Genome
 from classes import Ticket
 from classes import eval
@@ -498,8 +498,8 @@ class TestTicketFunctions2(unittest.TestCase):
         self.ticket1.phage_id = "Trixie"
         self.ticket2.phage_id = "L5"
 
-        self.bundle1 = Bundle.Bundle()
-        self.bundle2 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
+        self.bundle2 = bundle.Bundle()
 
         self.bundle1.ticket = self.ticket1
         self.bundle2.ticket = self.ticket2
@@ -546,10 +546,10 @@ class TestTicketFunctions3(unittest.TestCase):
         self.ticket3 = Ticket.GenomeTicket()
         self.ticket4 = Ticket.GenomeTicket()
 
-        self.bundle1 = Bundle.Bundle()
-        self.bundle2 = Bundle.Bundle()
-        self.bundle3 = Bundle.Bundle()
-        self.bundle4 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
+        self.bundle2 = bundle.Bundle()
+        self.bundle3 = bundle.Bundle()
+        self.bundle4 = bundle.Bundle()
 
         self.bundle1.ticket = self.ticket1
         self.bundle2.ticket = self.ticket2
@@ -644,7 +644,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.annotation_qc = 1
         self.add_ticket.retrieve_record = 1
         self.add_ticket.accession = "ABC123.1"
-        self.bundle1 = Bundle.Bundle()
+        self.bundle1 = bundle.Bundle()
         self.bundle1.ticket = self.add_ticket
 
         # Remove ticket.
@@ -661,7 +661,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.annotation_qc = 1
         self.remove_ticket.retrieve_record = 1
         self.remove_ticket.accession = "ABC123.1"
-        self.bundle2 = Bundle.Bundle()
+        self.bundle2 = bundle.Bundle()
         self.bundle2.ticket = self.remove_ticket
 
 
@@ -681,7 +681,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.annotation_qc = 1
         self.invalid_ticket.retrieve_record = 1
         self.invalid_ticket.accession = "ABC123.1"
-        self.bundle3 = Bundle.Bundle()
+        self.bundle3 = bundle.Bundle()
         self.bundle3.ticket = self.invalid_ticket
 
 
@@ -763,10 +763,10 @@ class TestTicketFunctions4(unittest.TestCase):
 #         self.ticket3 = Ticket.GenomeTicket()
 #         self.ticket4 = Ticket.GenomeTicket()
 #
-#         self.bundle1 = Bundle.Bundle()
-#         self.bundle2 = Bundle.Bundle()
-#         self.bundle3 = Bundle.Bundle()
-#         self.bundle4 = Bundle.Bundle()
+#         self.bundle1 = bundle.Bundle()
+#         self.bundle2 = bundle.Bundle()
+#         self.bundle3 = bundle.Bundle()
+#         self.bundle4 = bundle.Bundle()
 #
 #         self.bundle1.ticket = self.ticket1
 #         self.bundle2.ticket = self.ticket2

@@ -198,7 +198,7 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from(bundle, type, flag="retrieve"):
+def copy_data_from(bndl, type, flag="retrieve"):
     """Copy data from a 'phagesdb' genome object.
 
     If a genome object stored in the Bundle object has
@@ -208,8 +208,8 @@ def copy_data_from(bundle, type, flag="retrieve"):
     to be populated from PhagesDB.
     """
 
-    if type in bundle.genome_dict.keys():
-        genome1 = bundle.genome_dict[type]
+    if type in bndl.genome_dict.keys():
+        genome1 = bndl.genome_dict[type]
         genome1.set_value_flag(flag)
 
         if genome1._value_flag:
@@ -220,14 +220,14 @@ def copy_data_from(bundle, type, flag="retrieve"):
             # an empty dictionary is returned.
             if len(data_dict.keys()) != 0:
                 genome2 = parse_genome_data(data_dict)
-                bundle.genome_dict[genome2.type] = genome2
+                bndl.genome_dict[genome2.type] = genome2
 
                 # Copy all retrieved data and add to Bundle object.
                 genome_pair = GenomePair.GenomePair()
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-                bundle.set_genome_pair(genome_pair, genome1.type, genome2.type)
+                bndl.set_genome_pair(genome_pair, genome1.type, genome2.type)
 
         # Now record an error if there are still fields
         # that need to be retrieved.
