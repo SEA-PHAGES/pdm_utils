@@ -2,7 +2,7 @@
 
 
 from pipelines.db_import import evaluate
-from classes import Genome
+from classes import genome
 from classes import genomepair
 from functions import basic
 from constants import constants
@@ -135,50 +135,50 @@ def parse_genome_data(data_dict):
     Genome object.
     """
 
-    genome = Genome.Genome()
-    genome.type = "phagesdb"
+    gnm = genome.Genome()
+    gnm.type = "phagesdb"
 
     # Phage Name, PhageID
     phage_name = parse_phage_name(data_dict)
-    genome.name = phage_name
-    genome.set_id(value=phage_name)
+    gnm.name = phage_name
+    gnm.set_id(value=phage_name)
 
     # Host
     host_genus = parse_host_genus(data_dict)
-    genome.set_host_genus(host_genus, "empty_string")
+    gnm.set_host_genus(host_genus, "empty_string")
 
     # Accession
     accession = parse_accession(data_dict)
-    genome.set_accession(accession, "empty_string")
+    gnm.set_accession(accession, "empty_string")
 
     # Cluster
     cluster = parse_cluster(data_dict)
-    genome.set_cluster(cluster)
+    gnm.set_cluster(cluster)
 
     #Subcluster
     subcluster = parse_subcluster(data_dict)
-    genome.set_subcluster(subcluster, "empty_string")
+    gnm.set_subcluster(subcluster, "empty_string")
 
     # Fasta file URL
     fastafile_url = parse_fasta_filename(data_dict)
-    genome.filename = fastafile_url
+    gnm.filename = fastafile_url
 
     # Fasta file record
-    if genome.filename != "":
-        fasta_file = retrieve_fasta_data(genome.filename)
+    if gnm.filename != "":
+        fasta_file = retrieve_fasta_data(gnm.filename)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
         # Genome sequence and parsed record
         if fasta_file != "":
             header, seq = parse_fasta_data(fasta_file)
-            genome.set_sequence(seq)
-            genome.description = header
-            genome.parse_description()
+            gnm.set_sequence(seq)
+            gnm.description = header
+            gnm.parse_description()
 
     # TODO not sure if these evaluations should be in this function or not.
-    evaluate.check_phagesdb_genome(genome, set([""]))
-    return genome
+    evaluate.check_phagesdb_genome(gnm, set([""]))
+    return gnm
 
 
 def retrieve_genome_data(phage_url):

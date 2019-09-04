@@ -4,7 +4,7 @@ GenBank-formatted flat files."""
 
 import unittest
 from functions import flat_files
-from classes import Genome
+from classes import genome
 import os
 
 class TestFlatFileFunctions(unittest.TestCase):
@@ -31,24 +31,24 @@ class TestFlatFileFunctions(unittest.TestCase):
     #     """Verify file with one GenBank-formatted flat file
     #     record is correctly parsed."""
     #
-    #     genome = flat_files.create_parsed_flat_file(self.test_filepath1)
-    #     self.assertEqual(genome.id, "L5")
+    #     gnm = flat_files.create_parsed_flat_file(self.test_filepath1)
+    #     self.assertEqual(gnm.id, "L5")
     #
     #
     # def test_create_parsed_flat_file_2(self):
     #     """Verify file with no GenBank-formatted flat file
     #     record is correctly parsed."""
     #
-    #     genome = flat_files.create_parsed_flat_file(self.test_filepath2)
-    #     self.assertEqual(genome.id, "")
+    #     gnm = flat_files.create_parsed_flat_file(self.test_filepath2)
+    #     self.assertEqual(gnm.id, "")
     #
     #
     # def test_create_parsed_flat_file_3(self):
     #     """Verify file with GenBank-formatted record but incorrect
     #     file extension is correctly parsed."""
     #
-    #     genome = flat_files.create_parsed_flat_file(self.test_filepath3)
-    #     self.assertEqual(genome.id, "")
+    #     gnm = flat_files.create_parsed_flat_file(self.test_filepath3)
+    #     self.assertEqual(gnm.id, "")
     #
     #
     #

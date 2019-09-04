@@ -2,7 +2,7 @@
 
 
 from classes import genomepair
-from classes import Genome
+from classes import genome
 from classes import ticket
 from classes import eval
 import unittest
@@ -12,8 +12,8 @@ class TestGenomePairClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.genome1 = Genome.Genome()
-        self.genome2 = Genome.Genome()
+        self.genome1 = genome.Genome()
+        self.genome2 = genome.Genome()
         self.tkt = ticket.GenomeTicket()
         self.genome_pair = genomepair.GenomePair()
         self.genome_pair.genome1 = self.genome1

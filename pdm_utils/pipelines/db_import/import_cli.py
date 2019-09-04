@@ -27,7 +27,7 @@ from functions import flat_files
 from functions import tickets
 from functions import basic
 from classes import mysqlconnectionhandler
-from classes import Genome
+from classes import genome
 from constants import constants
 
 #

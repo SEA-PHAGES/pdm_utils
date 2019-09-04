@@ -2,7 +2,7 @@
 
 
 from classes import bundle
-from classes import Genome
+from classes import genome
 from classes import genomepair
 from classes import cds
 from classes import ticket
@@ -16,9 +16,9 @@ class TestBundleClass1(unittest.TestCase):
     def setUp(self):
 
         self.bndl = bundle.Bundle()
-        self.genome1 = Genome.Genome()
+        self.genome1 = genome.Genome()
         self.genome1.type = "flat_file"
-        self.genome2 = Genome.Genome()
+        self.genome2 = genome.Genome()
         self.genome2.type = "phamerator"
         self.tkt = ticket.GenomeTicket()
 
@@ -158,11 +158,11 @@ class TestBundleClass2(unittest.TestCase):
         self.cds2.id = "L5_2"
         self.cds3 = cds.Cds()
         self.cds3.id = "L5_3"
-        self.genome1 = Genome.Genome()
+        self.genome1 = genome.Genome()
         self.genome1.type = "flat_file"
         self.genome1.cds_features.append(self.cds1)
         self.genome1.cds_features.append(self.cds2)
-        self.genome2 = Genome.Genome()
+        self.genome2 = genome.Genome()
         self.genome2.type = "phamerator"
         self.genome_pair1 = genomepair.GenomePair()
         self.genome_pair2 = genomepair.GenomePair()

@@ -1,7 +1,7 @@
 """Functions to interact with PhameratorDB."""
 
 
-from classes import Genome
+from classes import genome
 from classes import genomepair
 from classes import cds
 from functions import basic
@@ -11,93 +11,93 @@ import pymysql
 def parse_phage_table_data(data_dict, trans_table=11):
     """Parse a Phamerator database dictionary to create a Genome object."""
 
-    genome = Genome.Genome()
+    gnm = genome.Genome()
     try:
-        genome.id = data_dict["PhageID"]
+        gnm.id = data_dict["PhageID"]
     except:
         pass
 
     try:
-        genome.accession = data_dict["Accession"]
+        gnm.accession = data_dict["Accession"]
     except:
         pass
 
     try:
-        genome.name = data_dict["Name"]
+        gnm.name = data_dict["Name"]
     except:
         pass
 
     try:
-        genome.host_genus = data_dict["HostStrain"]
+        gnm.host_genus = data_dict["HostStrain"]
     except:
         pass
 
     try:
         # Sequence data is stored as MEDIUMBLOB, so decode to string.
-        genome.set_sequence(data_dict["Sequence"].decode("utf-8"))
+        gnm.set_sequence(data_dict["Sequence"].decode("utf-8"))
     except:
         pass
 
     try:
-        genome._length = data_dict["SequenceLength"]
+        gnm._length = data_dict["SequenceLength"]
     except:
         pass
 
     try:
-        genome.date = data_dict["DateLastModified"]
+        gnm.date = data_dict["DateLastModified"]
     except:
         pass
 
     try:
-        genome.description = data_dict["Notes"].decode("utf-8")
+        gnm.description = data_dict["Notes"].decode("utf-8")
     except:
         pass
 
     try:
-        genome._gc = data_dict["GC"]
+        gnm._gc = data_dict["GC"]
     except:
         pass
 
     try:
-        genome.set_cluster_subcluster(data_dict["Cluster"])
+        gnm.set_cluster_subcluster(data_dict["Cluster"])
     except:
         pass
 
     try:
         # Singletons are stored in PhameratorDB as NULL, which gets
         # returned as None.
-        genome.set_cluster(data_dict["Cluster2"])
+        gnm.set_cluster(data_dict["Cluster2"])
     except:
         pass
 
     try:
-        genome.set_subcluster(data_dict["Subcluster2"])
+        gnm.set_subcluster(data_dict["Subcluster2"])
     except:
         pass
 
     try:
-        genome.annotation_status = data_dict["status"]
+        gnm.annotation_status = data_dict["status"]
     except:
         pass
 
     try:
-        genome.retrieve_record = data_dict["RetrieveRecord"]
+        gnm.retrieve_record = data_dict["RetrieveRecord"]
     except:
         pass
 
     try:
-        genome.annotation_qc = data_dict["AnnotationQC"]
+        gnm.annotation_qc = data_dict["AnnotationQC"]
     except:
         pass
 
     try:
-        genome.annotation_author = data_dict["AnnotationAuthor"]
+        gnm.annotation_author = data_dict["AnnotationAuthor"]
     except:
         pass
 
-    genome.translation_table = trans_table
-    genome.type = "phamerator"
-    return genome
+    gnm.translation_table = trans_table
+    gnm.type = "phamerator"
+    return gnm
 
 
 def parse_gene_table_data(data_dict, trans_table=11):
@@ -233,16 +233,16 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
                                              phage_id_list=phage_id_list,
                                              query=phage_query)
     for data_dict in result_list1:
-        genome = parse_phage_table_data(data_dict)
+        gnm = parse_phage_table_data(data_dict)
         if gene_query is not None:
             cds_list = parse_cds_data(sql_handle, column="PhageID",
-                                      phage_id_list=[genome.id],
+                                      phage_id_list=[gnm.id],
                                       query=gene_query)
-            genome.cds_features = cds_list
+            gnm.cds_features = cds_list
         if trna_query is not None:
             # TODO develop this step once tRNA table and objects are built.
             pass
-        genome_list.append(genome)
+        genome_list.append(gnm)
     return genome_list
 
 
@@ -324,28 +324,28 @@ def create_update_statement(table, field1, value1, field2, value2):
 
 
 
-def create_genome_update_statements(genome):
+def create_genome_update_statements(gnm):
     """Create a collection of genome-level UPDATE statements using data
     in a Genome object."""
 
     table = "phage"
     field1 = "PhageID"
-    value1 = genome.id
+    value1 = gnm.id
     statements = []
     statements.append(create_update_statement( \
-        table, field1, value1, "HostStrain", genome.host_genus))
+        table, field1, value1, "HostStrain", gnm.host_genus))
     statements.append(create_update_statement( \
-        table, field1, value1, "status", genome.annotation_status))
+        table, field1, value1, "status", gnm.annotation_status))
     statements.append(create_update_statement( \
-        table, field1, value1, "Accession", genome.accession))
+        table, field1, value1, "Accession", gnm.accession))
     statements.append(create_update_statement( \
-        table, field1, value1, "AnnotationAuthor", genome.author))
+        table, field1, value1, "AnnotationAuthor", gnm.author))
     statements.append(create_update_statement( \
-        table, field1, value1, "Cluster", genome.cluster_subcluster))
+        table, field1, value1, "Cluster", gnm.cluster_subcluster))
     statements.append(create_update_statement( \
-        table, field1, value1, "Cluster2", genome.cluster))
+        table, field1, value1, "Cluster2", gnm.cluster))
     statements.append(create_update_statement( \
-        table, field1, value1, "Subcluster2", genome.subcluster))
+        table, field1, value1, "Subcluster2", gnm.subcluster))
     return statements
 
 
@@ -356,13 +356,13 @@ def create_delete_statement(table, field1, data1):
 
 
 # TODO this may no longer be needed.
-def create_genome_delete_statement(genome):
+def create_genome_delete_statement(gnm):
     """Create a genome-level DELETE statements using data
     in a Genome object."""
 
     table = "phage"
     field1 = "PhageID"
-    value1 = genome.id
+    value1 = gnm.id
     statements = []
     statements.append(create_delete_statement(table, field1, value1))
     return statements
@@ -401,7 +401,7 @@ def create_cds_insert_statements(list_of_features):
     return statements
 
 
-def create_genome_insert_statement(genome):
+def create_genome_insert_statement(gnm):
     """Create a genome-level INSERT statements using data
     in a Genome object."""
 
@@ -412,36 +412,36 @@ def create_genome_insert_statement(genome):
         "AnnotationAuthor) " + \
         "VALUES (" + \
         "'%s', '%s', '%s', '%s', '%s', %s, %s, '%s', '%s', '%s', '%s', '%s');" \
-        % (genome.id, \
-        genome.accession, \
-        genome.name, \
-        genome.host_genus, \
-        genome.seq, \
-        genome._length, \
-        genome._gc, \
-        genome.annotation_status, \
-        genome.date, \
-        genome.retrieve_record, \
-        genome.annotation_qc, \
-        genome.annotation_author)
+        % (gnm.id, \
+        gnm.accession, \
+        gnm.name, \
+        gnm.host_genus, \
+        gnm.seq, \
+        gnm._length, \
+        gnm._gc, \
+        gnm.annotation_status, \
+        gnm.date, \
+        gnm.retrieve_record, \
+        gnm.annotation_qc, \
+        gnm.annotation_author)
     return statement
 
 
-def create_genome_insert_statements(genome):
+def create_genome_insert_statements(gnm):
     """Create a collection of genome-level INSERT statements using data
     in a Genome object."""
 
     table = "phage"
     field1 = "PhageID"
-    value1 = genome.id
+    value1 = gnm.id
     statements = []
-    statements.append(create_genome_insert_statement(genome))
+    statements.append(create_genome_insert_statement(gnm))
     statements.append(create_update_statement( \
-        table, field1, value1, "Cluster", genome.cluster_subcluster))
+        table, field1, value1, "Cluster", gnm.cluster_subcluster))
     statements.append(create_update_statement( \
-        table, field1, value1, "Cluster2", genome.cluster))
+        table, field1, value1, "Cluster2", gnm.cluster))
     statements.append(create_update_statement( \
-        table, field1, value1, "Subcluster2", genome.subcluster))
+        table, field1, value1, "Subcluster2", gnm.subcluster))
     return statements
 
 
@@ -662,7 +662,7 @@ def implement_remove_statements():
 
 # # TODO this may no longer be needed now that
 # # parse_phage_table_data() is available.
-# def parse_phamerator_data(genome, data_tuple):
+# def parse_phamerator_data(gnm, data_tuple):
 #     """Parses tuple of data derived from a Phamerator database
 #     and populates a genome object.
 #     Expected data structure:
@@ -680,19 +680,19 @@ def implement_remove_statements():
 #     11 = RetrieveRecord
 #     """
 #
-#     genome.set_id(data_tuple[0])
-#     genome.name = data_tuple[1]
-#     genome.set_host_genus(data_tuple[2])
-#     genome.set_sequence(data_tuple[3])
-#     genome.annotation_status = data_tuple[4]
-#     genome.set_cluster(data_tuple[5])
-#     genome.set_subcluster(data_tuple[8])
-#     genome.set_date(data_tuple[6])
-#     genome.set_accession(data_tuple[7])
-#     genome.annotation_author = str(data_tuple[9])
-#     genome.annotation_qc = str(data_tuple[10])
-#     genome.retrieve_record = str(data_tuple[11])
-#     genome.type = "phamerator"
+#     gnm.set_id(data_tuple[0])
+#     gnm.name = data_tuple[1]
+#     gnm.set_host_genus(data_tuple[2])
+#     gnm.set_sequence(data_tuple[3])
+#     gnm.annotation_status = data_tuple[4]
+#     gnm.set_cluster(data_tuple[5])
+#     gnm.set_subcluster(data_tuple[8])
+#     gnm.set_date(data_tuple[6])
+#     gnm.set_accession(data_tuple[7])
+#     gnm.annotation_author = str(data_tuple[9])
+#     gnm.annotation_qc = str(data_tuple[10])
+#     gnm.retrieve_record = str(data_tuple[11])
+#     gnm.type = "phamerator"
 
 
 
@@ -709,9 +709,9 @@ def implement_remove_statements():
 #
 #     genome_dict = {}
 #     for genome_tuple in phamerator_data_tuples:
-#         genome = Genome.Genome()
-#         parse_phamerator_data(genome,genome_tuple)
-#         genome_dict[genome.id] = genome
+#         gnm = genome.Genome()
+#         parse_phamerator_data(gnm,genome_tuple)
+#         genome_dict[gnm.id] = gnm
 #
 #     return genome_dict
 
@@ -730,23 +730,23 @@ def implement_remove_statements():
 #
 #     for genome_id in genome_dict.keys():
 #
-#         genome = genome_dict[genome_id]
-#         phage_id_set.add(genome.id)
-#         host_genus_set.add(genome.host_genus)
-#         status_set.add(genome.annotation_status)
-#         cluster_set.add(genome.cluster)
+#         gnm = genome_dict[genome_id]
+#         phage_id_set.add(gnm.id)
+#         host_genus_set.add(gnm.host_genus)
+#         status_set.add(gnm.annotation_status)
+#         cluster_set.add(gnm.cluster)
 #
 #         # TODO this was not implemented in original import script,
 #         # so maybe the subcluster 'empty check' is not needed.
 #         # Only add to the accession set if there was an accession,
 #         # and not if it was empty.
-#         if basic.check_empty(genome.subcluster) == False:
-#             subcluster_set.add(genome.subcluster)
+#         if basic.check_empty(gnm.subcluster) == False:
+#             subcluster_set.add(gnm.subcluster)
 #
 #         # Only add to the accession set if there was an accession,
 #         # and not if it was empty.
-#         if basic.check_empty(genome.accession) == False:
-#             accession_set.add(genome.accession)
+#         if basic.check_empty(gnm.accession) == False:
+#             accession_set.add(gnm.accession)
 #
 #     dictionary_of_sets = {}
 #     dictionary_of_sets["phage_id"] = phage_id_set

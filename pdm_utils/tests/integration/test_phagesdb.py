@@ -2,7 +2,7 @@
 
 from classes import bundle
 from functions import phagesdb
-from classes import Genome
+from classes import genome
 from constants import constants
 import unittest
 from Bio.SeqRecord import SeqRecord
@@ -19,7 +19,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
         self.API_PREFIX = constants.API_PREFIX
         self.API_SUFFIX = constants.API_SUFFIX
 
-        self.genome = Genome.Genome()
+        self.gnm = genome.Genome()
 
 
 
@@ -53,39 +53,39 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
 
         description = "Mycobacterium phage L5"
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, "Trixie")
+            self.assertEqual(self.gnm.name, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome.id, "Trixie")
+            self.assertEqual(self.gnm.id, "Trixie")
         with self.subTest():
-            self.assertEqual(self.genome.cluster, "A")
+            self.assertEqual(self.gnm.cluster, "A")
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, "A2")
+            self.assertEqual(self.gnm.subcluster, "A2")
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, "Mycobacterium")
+            self.assertEqual(self.gnm.host_genus, "Mycobacterium")
         with self.subTest():
-            self.assertEqual(self.genome.accession, "ABC123")
+            self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(self.genome.filename, url)
+            self.assertEqual(self.gnm.filename, url)
         with self.subTest():
-            self.assertEqual(self.genome.seq[:8], "GGTCGGTT")
+            self.assertEqual(self.gnm.seq[:8], "GGTCGGTT")
         with self.subTest():
-            self.assertEqual(self.genome.seq[-8:], "GTCGGTTA")
+            self.assertEqual(self.gnm.seq[-8:], "GTCGGTTA")
         with self.subTest():
-            self.assertIsInstance(self.genome.seq, Seq)
+            self.assertIsInstance(self.gnm.seq, Seq)
         with self.subTest():
-            self.assertEqual(self.genome.description, description)
+            self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.genome.type, "phagesdb")
+            self.assertEqual(self.gnm.type, "phagesdb")
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -100,7 +100,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
@@ -114,30 +114,30 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq[:8], expected_seq_start)
+            self.assertEqual(self.gnm.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
+            self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 2)
 
@@ -152,7 +152,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -166,30 +166,30 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq[:8], expected_seq_start)
+            self.assertEqual(self.gnm.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
+            self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -204,7 +204,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -218,30 +218,30 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq[:8], expected_seq_start)
+            self.assertEqual(self.gnm.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
+            self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -256,7 +256,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -270,30 +270,30 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq[:8], expected_seq_start)
+            self.assertEqual(self.gnm.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
+            self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -308,7 +308,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -322,31 +322,31 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq[:8], expected_seq_start)
+            self.assertEqual(self.gnm.seq[:8], expected_seq_start)
         with self.subTest():
-            self.assertEqual(self.genome.seq[-8:], expected_seq_end)
+            self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -361,7 +361,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file_x": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -374,28 +374,28 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq, expected_seq)
+            self.assertEqual(self.gnm.seq, expected_seq)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 2)
 
@@ -410,7 +410,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = "Trixie"
         expected_phage_id = "Trixie"
@@ -423,28 +423,28 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq, expected_seq)
+            self.assertEqual(self.gnm.seq, expected_seq)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -459,7 +459,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file_x": url}
-        self.genome = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict)
 
         expected_phage_name = ""
         expected_phage_id = ""
@@ -472,28 +472,28 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
 
         with self.subTest():
-            self.assertEqual(self.genome.name, expected_phage_name)
+            self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
-            self.assertEqual(self.genome.id, expected_phage_id)
+            self.assertEqual(self.gnm.id, expected_phage_id)
         with self.subTest():
-            self.assertEqual(self.genome.cluster, expected_cluster)
+            self.assertEqual(self.gnm.cluster, expected_cluster)
         with self.subTest():
-            self.assertEqual(self.genome.subcluster, expected_subcluster)
+            self.assertEqual(self.gnm.subcluster, expected_subcluster)
         with self.subTest():
-            self.assertEqual(self.genome.host_genus, expected_host)
+            self.assertEqual(self.gnm.host_genus, expected_host)
         with self.subTest():
-            self.assertEqual(self.genome.accession, expected_accession)
+            self.assertEqual(self.gnm.accession, expected_accession)
         with self.subTest():
-            self.assertEqual(self.genome.filename, expected_filename)
+            self.assertEqual(self.gnm.filename, expected_filename)
         with self.subTest():
-            self.assertEqual(self.genome.seq, expected_seq)
+            self.assertEqual(self.gnm.seq, expected_seq)
         with self.subTest():
-            self.assertEqual(self.genome.type, expected_type)
+            self.assertEqual(self.gnm.type, expected_type)
         with self.subTest():
             self.assertEqual(errors, 8)
 
@@ -583,7 +583,7 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.API_SUFFIX = constants.API_SUFFIX
 
 
-        self.genome1 = Genome.Genome()
+        self.genome1 = genome.Genome()
         self.genome1.id = "L5"
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"

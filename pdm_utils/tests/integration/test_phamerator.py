@@ -3,7 +3,7 @@
 
 import unittest
 from functions import phamerator
-from classes import Genome
+from classes import genome
 from classes import cds
 from constants import constants
 from classes import mysqlconnectionhandler
@@ -786,8 +786,8 @@ class TestPhameratorFunctions(unittest.TestCase):
                         gene_query=gene_query)
 
         genome_dict = {}
-        for genome in genome_list:
-            genome_dict[genome.id] = genome
+        for gnm in genome_list:
+            genome_dict[gnm.id] = gnm
 
         with self.subTest():
             self.assertEqual(len(genome_list), 3)

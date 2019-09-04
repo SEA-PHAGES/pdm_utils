@@ -1,7 +1,7 @@
 """ Unit tests for evaluate functions."""
 
 
-from classes import Genome
+from classes import genome
 from classes import source
 from classes import cds
 from classes import genomepair
@@ -668,15 +668,15 @@ class TestEvaluateClass2(unittest.TestCase):
 
 
     def setUp(self):
-        self.genome = Genome.Genome()
-        self.genome.id = "Trixie"
-        self.genome.name = "Trixie_Draft"
-        self.genome.host_genus = "Mycobacterium"
-        self.genome.cluster = "A"
-        self.genome.subcluster = "A2"
-        self.genome.accession = "ABC123"
-        self.genome.filename = "Trixie.gb"
-        self.genome.seq = "ATCG"
+        self.gnm = genome.Genome()
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie_Draft"
+        self.gnm.host_genus = "Mycobacterium"
+        self.gnm.cluster = "A"
+        self.gnm.subcluster = "A2"
+        self.gnm.accession = "ABC123"
+        self.gnm.filename = "Trixie.gb"
+        self.gnm.seq = "ATCG"
 
         self.null_set = set([""])
 
@@ -687,13 +687,13 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify no error is produced with a correctly structured
         PhagesDB genome."""
 
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(self.genome.evaluations), 8)
+            self.assertEqual(len(self.gnm.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -701,10 +701,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no id."""
 
-        self.genome.id = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.id = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -714,10 +714,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no name."""
 
-        self.genome.name = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.name = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -727,10 +727,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no host_genus."""
 
-        self.genome.host_genus = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.host_genus = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -740,10 +740,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no cluster."""
 
-        self.genome.cluster = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.cluster = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -753,10 +753,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no subcluster."""
 
-        self.genome.subcluster = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.subcluster = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -766,10 +766,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no accession."""
 
-        self.genome.accession = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.accession = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -779,10 +779,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no filename."""
 
-        self.genome.filename = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.filename = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -792,10 +792,10 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify an error is produced with a PhagesDB genome with
         no sequence."""
 
-        self.genome.seq = ""
-        evaluate.check_phagesdb_genome(self.genome, self.null_set)
+        self.gnm.seq = ""
+        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
         errors = 0
-        for evl in self.genome.evaluations:
+        for evl in self.gnm.evaluations:
             if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
@@ -873,8 +873,8 @@ class TestEvaluateClass2(unittest.TestCase):
 
     def test_compare_genomes_1(self):
         """Verify correct number of evaluations are produced when."""
-        genome1 = Genome.Genome()
-        genome2 = Genome.Genome()
+        genome1 = genome.Genome()
+        genome2 = genome.Genome()
         genome_pair = genomepair.GenomePair()
         genome_pair.genome1 = genome1
         genome_pair.genome2 = genome2

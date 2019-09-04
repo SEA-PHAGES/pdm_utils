@@ -6,7 +6,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Seq import Seq
-from classes import Genome, cds, trna, source
+from classes import genome, cds, trna, source
 from functions import basic
 from constants import constants
 from datetime import datetime
@@ -271,35 +271,35 @@ def parse_genome_data(seqrecord, filepath="",
     """
 
     # Keep track of the file from which the record is derived.
-    genome = Genome.Genome()
-    genome.set_filename(filepath)
-    genome.type = "flat_file"
+    gnm = genome.Genome()
+    gnm.set_filename(filepath)
+    gnm.type = "flat_file"
 
     try:
-        genome.name = seqrecord.name
+        gnm.name = seqrecord.name
         # It appears that if name is not present, Biopython auto-populates
         # this attribute as "<unknown name>"
-        if genome.name == "<unknown name>":
-            genome.name = ""
+        if gnm.name == "<unknown name>":
+            gnm.name = ""
     except:
-        genome.name = ""
+        gnm.name = ""
 
     try:
-        genome.organism = seqrecord.annotations['organism']
+        gnm.organism = seqrecord.annotations['organism']
     except:
-        genome.organism = ""
+        gnm.organism = ""
 
     # Identifies host and phage name from organism field.
-    genome.parse_organism()
+    gnm.parse_organism()
 
     try:
-        genome.id = seqrecord.id
+        gnm.id = seqrecord.id
         # It appears that if id is not present, Biopython auto-populates
         # this attribute as "<unknown id>"
-        if genome.id == "<unknown id>":
-            genome.id = ""
+        if gnm.id == "<unknown id>":
+            gnm.id = ""
     except:
-        genome.id = ""
+        gnm.id = ""
 
     try:
         # Since accessions are stored in a list, there may be more than
@@ -309,27 +309,27 @@ def parse_genome_data(seqrecord, filepath="",
     except:
         accession = ""
 
-    genome.set_accession(accession)
+    gnm.set_accession(accession)
 
     try:
-        genome.description = seqrecord.description
+        gnm.description = seqrecord.description
         # It appears that if description is not present, Biopython
         # auto-populates this attribute as "<unknown description>"
-        if genome.description == "<unknown description>":
-            genome.description = ""
+        if gnm.description == "<unknown description>":
+            gnm.description = ""
     except:
-        genome.description = ""
+        gnm.description = ""
 
     # Identifies host and phage name from description field.
-    genome.parse_description()
+    gnm.parse_description()
 
     try:
-        genome.source = seqrecord.annotations['source']
+        gnm.source = seqrecord.annotations['source']
     except:
-        genome.source = ""
+        gnm.source = ""
 
     # Identifies host and phage name from record source field.
-    genome.parse_source()
+    gnm.parse_source()
 
     try:
         # The retrieved authors can be stored in multiple Reference elements.
@@ -344,23 +344,23 @@ def parse_genome_data(seqrecord, filepath="",
             if ref.authors != "":
                 authors_list.append(ref.authors)
         authors_string = ';'.join(authors_list)
-        genome.authors = authors_string
+        gnm.authors = authors_string
     except:
-        genome.authors = ""
+        gnm.authors = ""
 
     # Biopython requires the parsed record contains a sequence, so
     # no need to test whether the seq attribute is present or not.
     # Nucleotide sequence, length, and % GC.
-    genome.set_sequence(seqrecord.seq)
+    gnm.set_sequence(seqrecord.seq)
 
     try:
         date = seqrecord.annotations["date"]
-        genome.date = datetime.strptime(date,'%d-%b-%Y')
+        gnm.date = datetime.strptime(date,'%d-%b-%Y')
     except:
-        genome.date = basic.convert_empty("", "empty_datetime_obj")
+        gnm.date = basic.convert_empty("", "empty_datetime_obj")
 
     # Now that record fields are parsed, set the phage_id.
-    genome.set_id(attribute=phage_id_field)
+    gnm.set_id(attribute=phage_id_field)
 
     # Create lists of parsed features.
     # Note: Biopython instantiates the features attribute with
@@ -371,44 +371,44 @@ def parse_genome_data(seqrecord, filepath="",
     cds_list = []
     if "CDS" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["CDS"]:
-            cds_ftr = parse_cds_seqfeature(seqfeature, genome_id=genome.id)
+            cds_ftr = parse_cds_seqfeature(seqfeature, genome_id=gnm.id)
             cds_list.append(cds_ftr)
 
     source_list = []
     if "source" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["source"]:
-            src_ftr = parse_source_seqfeature(seqfeature, genome_id=genome.id)
+            src_ftr = parse_source_seqfeature(seqfeature, genome_id=gnm.id)
             source_list.append(src_ftr)
 
     # TODO unit test after functions are constructed.
     trna_list = []
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
-            trna_ftr = parse_trna_seqfeature(seqfeature, genome_id=genome.id)
+            trna_ftr = parse_trna_seqfeature(seqfeature, genome_id=gnm.id)
             trna_list.append(trna_ftr)
 
     # TODO unit test after functions are constructed.
     tmrna_list = []
     if "tmrna" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tmrna"]:
-            tmrna = parse_tmrna_seqfeature(seqfeature, genome_id=genome.id)
+            tmrna = parse_tmrna_seqfeature(seqfeature, genome_id=gnm.id)
             tmrna_list.append(tmrna)
 
-    genome.translation_table = translation_table
-    genome.set_cds_features(cds_list)
-    genome.set_source_features(source_list)
+    gnm.translation_table = translation_table
+    gnm.set_cds_features(cds_list)
+    gnm.set_source_features(source_list)
 
 
-    genome.set_trna_features(trna_list)
-    # genome.set_tmrna_features(tmrna_list)
+    gnm.set_trna_features(trna_list)
+    # gnm.set_tmrna_features(tmrna_list)
 
     # The Cds.id is constructed from the Genome.id and the Cds order.
-    genome.set_feature_ids(use_type=True, use_cds=True)
+    gnm.set_feature_ids(use_type=True, use_cds=True)
 
     # TODO set tRNA feature ids.
-    #genome.set_feature_ids(use_type=True, use_trna=True)
+    #gnm.set_feature_ids(use_type=True, use_trna=True)
 
-    return genome
+    return gnm
 
 
 
@@ -509,16 +509,16 @@ def parse_files(file_list, id_field="organism_name"):
             seqrecords = []
 
         if len(seqrecords) == 1:
-            genome = parse_genome_data(seqrecords[0], filename, id_field)
-            genomes.append(genome)
+            gnm = parse_genome_data(seqrecords[0], filename, id_field)
+            genomes.append(gnm)
             valid_files.append(filename)
         else:
             failed_files.append(filename)
             # # If there is no parseable record, a genome object is still
             # # created and populated with 'type and 'filename'.
-            # genome = Genome.Genome()
-            # genome.type = "flat_file"
-            # genome.set_filename(filename)
+            # gnm = genome.Genome()
+            # gnm.type = "flat_file"
+            # gnm.set_filename(filename)
     return (genomes, valid_files, failed_files)
 
 
@@ -681,11 +681,11 @@ def parse_tmrna_seqfeature(seqfeature, genome_id=""):
 #             records = []
 #
 #         if len(records) == 1:
-#             genome = parse_genome_data(records[0], filename, id_field)
+#             gnm = parse_genome_data(records[0], filename, id_field)
 #         else:
-#             genome = Genome.Genome()
+#             gnm = genome.Genome()
 #     else:
-#         genome = Genome.Genome()
+#         gnm = genome.Genome()
 #
 #     # TODO currently the parse_genome_data() sets filename and type,
 #     # so this is redundant. But some attribute needs to be set
@@ -693,10 +693,10 @@ def parse_tmrna_seqfeature(seqfeature, genome_id=""):
 #
 #     # If there is no parseable record, a genome object is still
 #     # created and populated with 'type and 'filename'.
-#     genome.type = "flat_file"
-#     genome.set_filename(filename)
+#     gnm.type = "flat_file"
+#     gnm.set_filename(filename)
 #
-#     return genome
+#     return gnm
 #
 #
 # def create_parsed_flat_file_list(all_files, id_field="organism_name"):
@@ -707,9 +707,9 @@ def parse_tmrna_seqfeature(seqfeature, genome_id=""):
 #     valid_files = []
 #     genomes = []
 #     for filename in all_files:
-#         genome = create_parsed_flat_file(filename, id_field = id_field)
-#         genomes.append(genome)
-#         if genome.id == "":
+#         gnm = create_parsed_flat_file(filename, id_field = id_field)
+#         genomes.append(gnm)
+#         if gnm.id == "":
 #             # If the file was not parsed, the id will remain empty.
 #             failed_files.append(filename)
 #         else:

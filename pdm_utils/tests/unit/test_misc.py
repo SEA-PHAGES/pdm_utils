@@ -1,7 +1,7 @@
 """ Unit tests for misc. functions."""
 
 from classes import bundle
-from classes import Genome
+from classes import genome
 from functions import misc
 import unittest
 from Bio.Seq import Seq
@@ -14,23 +14,23 @@ class TestMiscFunctions(unittest.TestCase):
     def setUp(self):
         pass
 
-        self.genome1 = Genome.Genome()
+        self.genome1 = genome.Genome()
         self.genome1.id = "Trixie"
         self.genome1.name = "Genome1"
         self.genome1.type = "phamerator"
 
-        self.genome2 = Genome.Genome()
+        self.genome2 = genome.Genome()
         self.genome2.id = "Trixie"
         self.genome2.name = "Genome2"
         self.genome2.type = "flat_file"
 
 
-        self.genome3 = Genome.Genome()
+        self.genome3 = genome.Genome()
         self.genome3.id = "L5"
         self.genome3.name = "Genome3"
         self.genome3.type = "phamerator"
 
-        self.genome4 = Genome.Genome()
+        self.genome4 = genome.Genome()
         self.genome4.id = "L5"
         self.genome4.name = "Genome4"
         self.genome4.type = "flat_file"

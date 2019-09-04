@@ -1,7 +1,7 @@
 """ Unit tests for misc. ticket functions"""
 
 from classes import bundle
-from classes import Genome
+from classes import genome
 from classes import ticket
 from classes import eval
 from functions import tickets
@@ -753,10 +753,10 @@ class TestTicketFunctions4(unittest.TestCase):
 #
 #     def setUp(self):
 #
-#         self.genome1 = Genome.Genome()
-#         self.genome2 = Genome.Genome()
-#         self.genome3 = Genome.Genome()
-#         self.genome4 = Genome.Genome()
+#         self.genome1 = genome.Genome()
+#         self.genome2 = genome.Genome()
+#         self.genome3 = genome.Genome()
+#         self.genome4 = genome.Genome()
 #
 #         self.ticket1 = ticket.GenomeTicket()
 #         self.ticket2 = ticket.GenomeTicket()

@@ -62,16 +62,16 @@ class Bundle:
         """Create list of MySQL statements based on the ticket type."""
 
         if self.ticket.type == "replace" or self.ticket.type == "remove":
-            genome = self.genome_dict["remove"]
-            statement = phamerator.create_genome_delete_statement(genome)
+            gnm = self.genome_dict["remove"]
+            statement = phamerator.create_genome_delete_statement(gnm)
             self.sql_queries.append(statement)
 
         if self.ticket.type == "replace" or self.ticket.type == "add":
-            genome = self.genome_dict["add"]
-            statement = phamerator.create_genome_insert_statement(genome)
+            gnm = self.genome_dict["add"]
+            statement = phamerator.create_genome_insert_statement(gnm)
             self.sql_queries.append(statement)
 
-            for cds_ftr in genome.cds_features:
+            for cds_ftr in gnm.cds_features:
                 statement = create_cds_insert_statement(cds_ftr)
                 self.sql_queries.append(statement)
 
@@ -188,18 +188,18 @@ class Bundle:
                 self._errors += 1
 
         for key in self.genome_dict.keys():
-            genome = self.genome_dict[key]
-            for evl in genome.evaluations:
+            gnm = self.genome_dict[key]
+            for evl in gnm.evaluations:
                 if evl.status == "error":
                     self._errors += 1
 
-            for cds_ftr in genome.cds_features:
+            for cds_ftr in gnm.cds_features:
                 for evl in cds_ftr.evaluations:
                     if evl.status == "error":
                         self._errors += 1
 
             # TODO need to implement this once this class is implemented.
-            # for trna_ftr in genome.trna_features:
+            # for trna_ftr in gnm.trna_features:
             #     for evl in trna_ftr.evaluations:
             #         if evl.status == "error":
             #             self._errors += 1
@@ -229,11 +229,11 @@ class Bundle:
             if len(self.ticket.evaluations) > 0:
                 eval_dict["ticket"] = self.ticket.evaluations
         for key in self.genome_dict.keys():
-            genome = self.genome_dict[key]
+            gnm = self.genome_dict[key]
             genome_key = "genome_" + key
-            if len(genome.evaluations) > 0:
-                eval_dict[genome_key] = genome.evaluations
-            for cds_ftr in genome.cds_features:
+            if len(gnm.evaluations) > 0:
+                eval_dict[genome_key] = gnm.evaluations
+            for cds_ftr in gnm.cds_features:
                 cds_key = "cds_" + cds_ftr.id
                 if len(cds_ftr.evaluations) > 0:
                     eval_dict[cds_key] = cds_ftr.evaluations

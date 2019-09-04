@@ -5,7 +5,7 @@
 import unittest
 from pipelines.db_import import import_main
 from constants import constants
-from classes import bundle, Genome, ticket
+from classes import bundle, genome, ticket
 from classes import mysqlconnectionhandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -48,7 +48,7 @@ class TestImportMain(unittest.TestCase):
         ticket1.run_mode = "phagesdb"
         ticket1.accession = "ABC123"
 
-        genome1 = Genome.Genome()
+        genome1 = genome.Genome()
         genome1.type = "flat_file"
         genome1.id = "Trixie"
         genome1.seq = Seq("ATGC")

@@ -122,18 +122,18 @@ def check_ticket_structure(tkt,type_set,null_set, run_mode_set):
 
 
 
-def check_phagesdb_genome(genome, null_set):
+def check_phagesdb_genome(gnm, null_set):
     """Check a Genome object for specific errors when it has been
     parsed from PhagesDB data in preparation for completing import tickets."""
 
-    genome.check_id(null_set, False)
-    genome.check_name(null_set, False)
-    genome.check_host_genus(null_set, False)
-    genome.check_cluster(null_set, False)
-    genome.check_subcluster(null_set, False)
-    genome.check_accession(null_set, False)
-    genome.check_filename(null_set, False)
-    genome.check_sequence(null_set, False)
+    gnm.check_id(null_set, False)
+    gnm.check_name(null_set, False)
+    gnm.check_host_genus(null_set, False)
+    gnm.check_cluster(null_set, False)
+    gnm.check_subcluster(null_set, False)
+    gnm.check_accession(null_set, False)
+    gnm.check_filename(null_set, False)
+    gnm.check_sequence(null_set, False)
 
 
 
@@ -285,20 +285,20 @@ def check_bundle_for_import(bndl):
 
 # TODO implement.
 # TODO unit test.
-def check_genome_to_import(genome, tkt, null_set, phage_id_set,
+def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
                            seq_set, host_set, cluster_set, subcluster_set):
     """Check a Genome object for errors."""
 
     if tkt.type == "add":
-        genome.check_id(phage_id_set | null_set, False)
-        genome.check_name(phage_id_set | null_set, False)
-        genome.check_sequence(seq_set | null_set, False)
+        gnm.check_id(phage_id_set | null_set, False)
+        gnm.check_name(phage_id_set | null_set, False)
+        gnm.check_sequence(seq_set | null_set, False)
 
     # 'replace' ticket checks.
     else:
-        genome.check_id(phage_id_set, True)
-        genome.check_name(phage_id_set, True)
-        genome.check_sequence(seq_set, True)
+        gnm.check_id(phage_id_set, True)
+        gnm.check_name(phage_id_set, True)
+        gnm.check_sequence(seq_set, True)
 
 
     # TODO if these values are set at the command line, these checks
@@ -306,93 +306,93 @@ def check_genome_to_import(genome, tkt, null_set, phage_id_set,
     # tkt = tkt.check_description_field(description_field_set)
     # tkt = tkt.check_run_mode(run_mode_set)
 
-    genome.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
+    gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
                                    expect=True)
 
 
 
     # TODO This may no longer be needed, if cluster data not used
     # during genome import.
-    genome.check_cluster(cluster_set, True)
-    genome.check_subcluster(subcluster_set, True)
-    genome.check_subcluster_structure()
-    genome.check_cluster_structure()
-    genome.check_compatible_cluster_and_subcluster()
+    gnm.check_cluster(cluster_set, True)
+    gnm.check_subcluster(subcluster_set, True)
+    gnm.check_subcluster_structure()
+    gnm.check_cluster_structure()
+    gnm.check_compatible_cluster_and_subcluster()
 
     # TODO This may no longer be needed, if this database field is removed.
-    # genome.check_annotation_qc()
+    # gnm.check_annotation_qc()
 
     # TODO This may no longer be needed.
-    # genome.check_filename()
+    # gnm.check_filename()
 
     # TODO not sure if this is needed.
-    # genome.check_accession(accession_set, False)
+    # gnm.check_accession(accession_set, False)
 
 
-    genome.check_annotation_author()
-    genome.check_retrieve_record()
+    gnm.check_annotation_author()
+    gnm.check_retrieve_record()
 
 
 
     if tkt.run_mode[check_seq]:
-        genome.check_nucleotides(dna_alphabet_set=constants.DNA_ALPHABET)
-    genome.check_compatible_status_and_accession()
-    genome.check_compatible_status_and_descriptions()
+        gnm.check_nucleotides(dna_alphabet_set=constants.DNA_ALPHABET)
+    gnm.check_compatible_status_and_accession()
+    gnm.check_compatible_status_and_descriptions()
 
     if tkt.run_mode[check_id_typo]:
-        genome.check_description_name()
-        genome.check_source_name()
-        genome.check_organism_name()
+        gnm.check_description_name()
+        gnm.check_source_name()
+        gnm.check_organism_name()
 
     if tkt.run_mode[check_host_typo]:
-        genome.check_host_genus(host_set, True)
-        genome.check_description_host_genus()
-        genome.check_source_host_genus()
-        genome.check_organism_host_genus()
+        gnm.check_host_genus(host_set, True)
+        gnm.check_description_host_genus()
+        gnm.check_source_host_genus()
+        gnm.check_organism_host_genus()
 
 
     if tkt.run_mode[check_author]:
-        if genome.annotation_author == 1:
-            genome.check_authors(check_set=constants.AUTHOR_SET)
-            genome.check_authors(check_set=set(["lastname", "firstname"]),
+        if gnm.annotation_author == 1:
+            gnm.check_authors(check_set=constants.AUTHOR_SET)
+            gnm.check_authors(check_set=set(["lastname", "firstname"]),
                                  expect=False)
         else:
-            genome.check_authors(check_set=constants.AUTHOR_SET, expect=False)
+            gnm.check_authors(check_set=constants.AUTHOR_SET, expect=False)
 
 
 
-    genome.check_cds_feature_tally()
-    genome.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True)
+    gnm.check_cds_feature_tally()
+    gnm.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True)
 
 
     # TODO not sure if these are needed now that check_feature_ids()
     # is implemented.
-    # genome.check_cds_start_end_ids()
-    # genome.check_cds_end_strand_ids()
+    # gnm.check_cds_start_end_ids()
+    # gnm.check_cds_end_strand_ids()
 
     # TODO confirm that these check_value_flag() are needed here.
-    genome.set_value_flag("retrieve")
-    genome.check_value_flag()
-    genome.set_value_flag("retain")
-    genome.check_value_flag()
+    gnm.set_value_flag("retrieve")
+    gnm.check_value_flag()
+    gnm.set_value_flag("retain")
+    gnm.check_value_flag()
 
     # Check all CDS features
     index1 = 0
-    while index1 < len(genome.cds_features):
-        check_cds_for_import(genome.cds_features[index1])
+    while index1 < len(gnm.cds_features):
+        check_cds_for_import(gnm.cds_features[index1])
         index1 += 1
 
     # Check all tRNA features
     if tkt.run_mode[check_trna]:
         index2 = 0
-        while index2 < len(genome.trna_features):
-            check_trna_for_import(genome.trna_features[index2])
+        while index2 < len(gnm.trna_features):
+            check_trna_for_import(gnm.trna_features[index2])
             index2 += 1
 
     # Check all Source features
     index3 = 0
-    while index3 < len(genome.source_features):
-        check_source_for_import(genome.source_features[index3])
+    while index3 < len(gnm.source_features):
+        check_source_for_import(gnm.source_features[index3])
         index3 += 1
 
 
@@ -517,7 +517,7 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
     #     bndl = list_of_update_objects[index]
     #
     #     try:
-    #         genome = bndl.genomes_dict[genome_type]
+    #         gnm = bndl.genomes_dict[genome_type]
     #     except:
     #         # TODO throw an error if there is no matched Phamerator genome?
     #         continue

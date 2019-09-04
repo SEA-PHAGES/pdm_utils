@@ -4,7 +4,7 @@ from constants import constants
 from functions import basic
 from functions import phagesdb
 from classes import ticket
-from classes import Genome
+from classes import genome
 
 
 
@@ -223,7 +223,7 @@ def copy_ticket_to_genome(bndl):
     tkt = bndl.ticket
 
     if (tkt.type == "add" or tkt.type == "replace"):
-        genome1 = Genome.Genome()
+        genome1 = genome.Genome()
         genome1.type = "add"
         genome1.set_id(value=tkt.phage_id)
         genome1.name = tkt.phage_id
@@ -243,7 +243,7 @@ def copy_ticket_to_genome(bndl):
         # TODO probably no need to create a second genome.
         # if tkt.type == "replace":
         #
-        #     genome2 = Genome.Genome()
+        #     genome2 = genome.Genome()
         #     genome2.type = "remove"
         #
         #     bndl.genome_dict[genome2.type] = genome2
@@ -252,26 +252,26 @@ def copy_ticket_to_genome(bndl):
     elif tkt.type == "update":
 
         # TODO unit test.
-        # genome = Genome.Genome()
-        # genome.type = "update"
-        # genome.set_id(tkt.phage_id)
-        # genome.set_host_genus(tkt.host_genus)
-        # genome.set_accession(tkt.accession)
-        # genome.annotation_status = tkt.annotation_status
-        # genome.set_cluster(tkt.cluster)
-        # genome.set_subcluster(tkt.subcluster)
-        # genome.set_cluster_subcluster()
-        # bndl.genome_dict[genome.type] = genome
+        # gnm = genome.Genome()
+        # gnm.type = "update"
+        # gnm.set_id(tkt.phage_id)
+        # gnm.set_host_genus(tkt.host_genus)
+        # gnm.set_accession(tkt.accession)
+        # gnm.annotation_status = tkt.annotation_status
+        # gnm.set_cluster(tkt.cluster)
+        # gnm.set_subcluster(tkt.subcluster)
+        # gnm.set_cluster_subcluster()
+        # bndl.genome_dict[gnm.type] = gnm
         pass
 
     # TODO 'remove' ticket option will eventually be deleted.
     elif tkt.type == "remove":
 
         # TODO unit test.
-        # genome = Genome.Genome()
-        # genome.type = "remove"
-        # genome.set_id(tkt.phage_id)
-        # bndl.genome_dict[genome.type] = genome
+        # gnm = genome.Genome()
+        # gnm.type = "remove"
+        # gnm.set_id(tkt.phage_id)
+        # bndl.genome_dict[gnm.type] = gnm
         pass
 
     else:

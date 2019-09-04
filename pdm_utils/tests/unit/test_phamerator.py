@@ -3,7 +3,7 @@
 
 import unittest
 from functions import phamerator
-from classes import Genome
+from classes import genome
 from classes import cds
 from datetime import datetime
 from classes import bundle
@@ -16,9 +16,9 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
     def setUp(self):
-        self.genome1 = Genome.Genome()
-        self.genome2 = Genome.Genome()
-        self.genome3 = Genome.Genome()
+        self.genome1 = genome.Genome()
+        self.genome2 = genome.Genome()
+        self.genome3 = genome.Genome()
 
         self.data_tuple1 = ("L5",
                             "L5",
@@ -779,7 +779,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
     def setUp(self):
 
 
-        self.genome1 = Genome.Genome()
+        self.genome1 = genome.Genome()
         self.genome1.id = "L5"
         self.genome1.type = "add"
         self.genome1.host_genus = "Gordonia"
@@ -789,7 +789,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.bundle1 = bundle.Bundle()
 
 
-        self.genome2 = Genome.Genome()
+        self.genome2 = genome.Genome()
         self.genome2.id = "L5"
         self.genome2.type = "phamerator"
         self.genome2.host_genus = "Mycobacterium"

@@ -111,13 +111,13 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
         for filename in files_in_folder:
 
 
-            genome = flat_files.create_parsed_flat_file(filename)
+            gnm = flat_files.create_parsed_flat_file(filename)
             bndl = bundle.Bundle()
             bndl.id = bundle_count
-            bndl.genome_dict[genome.type] = genome
+            bndl.genome_dict[gnm.type] = gnm
 
             # Match ticket (if available) to flat file.
-            matched_ticket = ticket_dict.pop(genome.id, None)
+            matched_ticket = ticket_dict.pop(gnm.id, None)
             bndl.ticket = matched_ticket
 
 
@@ -264,7 +264,7 @@ def evaluate_flat_file(bndl, sql_handle, host_genera_set=set(),
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
     if bndl.ticket.type == "replace":
         phamerator_genome = \
-            phamerator.create_phamerator_genome(sql_handle, genome.id)
+            phamerator.create_phamerator_genome(sql_handle, gnm.id)
 
 
         # If any attributes in flat_file are set to 'retain', copy data
