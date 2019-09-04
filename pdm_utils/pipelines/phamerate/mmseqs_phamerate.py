@@ -13,7 +13,7 @@ except ImportError:
 
 # Import functions from other k_phamerate scripts.
 from classes.MySQLConnectionHandler import MySQLConnectionHandler
-from classes.MMseqsPhameratorHandler import MMseqsPhameratorHandler
+from classes.mmseqsphameratorhandler import MMseqsPhameratorHandler
 
 # Set up argparse to interact with users at the command line interface.
 script_description = """
