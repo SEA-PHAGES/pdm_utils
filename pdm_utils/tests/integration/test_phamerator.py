@@ -6,7 +6,7 @@ from functions import phamerator
 from classes import Genome
 from classes import cds
 from constants import constants
-from classes import MySQLConnectionHandler
+from classes import mysqlconnectionhandler
 import subprocess, os
 import pymysql
 # import getpass
@@ -40,7 +40,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.schema_file = "test_schema4.sql"
 
 
-        self.sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        self.sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         self.sql_handle.username = user
         self.sql_handle.password = pwd
         self.sql_handle.database = self.db
@@ -108,7 +108,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -150,7 +150,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -195,7 +195,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                 + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -239,7 +239,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                 + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -281,7 +281,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                 + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -323,7 +323,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                 + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -366,7 +366,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                 + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -418,7 +418,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " TypeID, translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -473,7 +473,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " TypeID, translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -532,7 +532,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " TypeID, translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -593,7 +593,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                       + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                       + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -644,7 +644,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                       + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
                       + " FROM phage"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -706,7 +706,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                      + " TypeID, translation, Orientation, Notes, LocusTag" \
                      + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -777,7 +777,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                      + " TypeID, translation, Orientation, Notes, LocusTag" \
                      + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -844,7 +844,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " TypeID, translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -899,7 +899,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " TypeID, translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
@@ -951,7 +951,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                 + " TypeID, translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db

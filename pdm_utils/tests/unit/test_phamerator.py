@@ -8,7 +8,6 @@ from classes import cds
 from datetime import datetime
 from classes import bundle
 from constants import constants
-from classes import MySQLConnectionHandler
 from Bio.Seq import Seq
 
 

@@ -6,7 +6,7 @@ select granted on all tables of all databases.
 """
 
 import unittest
-from classes.MySQLConnectionHandler import MySQLConnectionHandler
+from classes.mysqlconnectionhandler import MySQLConnectionHandler
 
 
 class TestMySQLConnectionHandler(unittest.TestCase):

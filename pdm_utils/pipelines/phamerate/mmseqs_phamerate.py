@@ -12,7 +12,7 @@ except ImportError:
     sys.exit(1)
 
 # Import functions from other k_phamerate scripts.
-from classes.MySQLConnectionHandler import MySQLConnectionHandler
+from classes.mysqlconnectionhandler import MySQLConnectionHandler
 from classes.mmseqsphameratorhandler import MMseqsPhameratorHandler
 
 # Set up argparse to interact with users at the command line interface.

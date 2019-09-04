@@ -8,7 +8,7 @@ import csv
 #     MySQLConnectionHandler
 # from main_scripts.python3.classes.RandomFieldUpdateHandler import \
 #     RandomFieldUpdateHandler
-from classes.MySQLConnectionHandler import MySQLConnectionHandler
+from classes.mysqlconnectionhandler import MySQLConnectionHandler
 from classes.randomfieldupdatehandler import RandomFieldUpdateHandler
 
 # Set up argparse

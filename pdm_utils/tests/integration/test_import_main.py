@@ -6,7 +6,7 @@ import unittest
 from pipelines.db_import import import_main
 from constants import constants
 from classes import bundle, Genome, GenomePair, ticket
-from classes import MySQLConnectionHandler
+from classes import mysqlconnectionhandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
@@ -57,7 +57,7 @@ class TestImportMain(unittest.TestCase):
         bndl.ticket = ticket1
         bndl.genome_dict[genome1.type] = genome1
 
-        sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db

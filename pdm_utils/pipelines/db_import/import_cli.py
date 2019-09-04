@@ -26,7 +26,7 @@ from functions import phamerator
 from functions import flat_files
 from functions import tickets
 from functions import basic
-from classes import MySQLConnectionHandler
+from classes import mysqlconnectionhandler
 from classes import Genome
 from constants import constants
 
@@ -107,7 +107,7 @@ if not success_folder_valid:
 
 # TODO add sql connection option to script arguments?
 if args.database is not False:
-    sql_handle = MySQLConnectionHandler.MySQLConnectionHandler()
+    sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
     sql_handle.username = getpass.getpass(prompt="Provide the MySQL username: ")
     sql_handle.password = getpass.getpass(prompt="Provide the MySQL password: ")
     sql_handle.database = args.database
