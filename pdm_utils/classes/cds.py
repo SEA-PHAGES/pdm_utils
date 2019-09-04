@@ -197,11 +197,13 @@ class Cds:
         Use Biopython to translate the nucleotide sequece.
         The method expects the nucleotide sequence to be a valid CDS
         sequence in which:
-          1. it begins with a valid start codon,
-          2. it ends with a stop codon,
-          3. it contains only one stop codon,
-          4. its length is divisible by 3,
-          5. it translates non-standard start codons to methionine.
+        
+            1. it begins with a valid start codon,
+            2. it ends with a stop codon,
+            3. it contains only one stop codon,
+            4. its length is divisible by 3,
+            5. it translates non-standard start codons to methionine.
+
         If these criteria are not met, an empty Seq object is returned.
 
         :returns: Amino acid sequence

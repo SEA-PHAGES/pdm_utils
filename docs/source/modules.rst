@@ -1,4 +1,4 @@
-dbm_utils
+pdm_utils
 =========
 
 .. toctree::
@@ -7,3 +7,4 @@ dbm_utils
    classes
    constants
    functions
+   pipelines

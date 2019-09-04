@@ -12,12 +12,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../dbm_utils/'))
+sys.path.insert(0, os.path.abspath('../../pdm_utils/'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'dbm_utils'
+project = 'pdm_utils'
 copyright = '2019, Travis Mavrich'
 author = 'Travis Mavrich'
 

@@ -4,82 +4,82 @@ classes package
 Submodules
 ----------
 
-classes.Bundle module
+classes.bundle module
 ---------------------
 
-.. automodule:: classes.Bundle
+.. automodule:: classes.bundle
    :members:
    :undoc-members:
    :show-inheritance:
 
-The ``Cds`` class
+The ``cds`` class
 ------------------
 
-.. automodule:: classes.Cds
+.. automodule:: classes.cds
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.CdsPair module
+classes.cdspair module
 ----------------------
 
-.. automodule:: classes.CdsPair
+.. automodule:: classes.cdspair
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.Eval module
+classes.eval module
 -------------------
 
-.. automodule:: classes.Eval
+.. automodule:: classes.eval
    :members:
    :undoc-members:
    :show-inheritance:
 
-The ``Genome`` class
+The ``genome`` class
 ---------------------
 
-.. automodule:: classes.Genome
+.. automodule:: classes.genome
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.GenomePair module
+classes.genomepair module
 -------------------------
 
-.. automodule:: classes.GenomePair
+.. automodule:: classes.genomepair
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.MySQLConnectionHandler module
+classes.mysqlconnectionhandler module
 -------------------------------------
 
-.. automodule:: classes.MySQLConnectionHandler
+.. automodule:: classes.mysqlconnectionhandler
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.Source module
+classes.source module
 ---------------------
 
-.. automodule:: classes.Source
+.. automodule:: classes.source
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.Ticket module
+classes.ticket module
 ---------------------
 
-.. automodule:: classes.Ticket
+.. automodule:: classes.ticket
    :members:
    :undoc-members:
    :show-inheritance:
 
-classes.Trna module
+classes.trna module
 -------------------
 
-.. automodule:: classes.Trna
+.. automodule:: classes.trna
    :members:
    :undoc-members:
    :show-inheritance:
