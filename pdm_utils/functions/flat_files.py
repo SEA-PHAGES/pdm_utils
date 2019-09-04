@@ -10,7 +10,7 @@ from classes import Genome, cds, trna, source
 from functions import basic
 from constants import constants
 from datetime import datetime
-from classes import GenomePair
+from classes import genomepair
 
 
 
@@ -464,7 +464,7 @@ def copy_data_to(bndl, type, flag="ticket"):
 
             # Copy all data that is set to 'ticket' and
             # add to Bundle object.
-            genome_pair = GenomePair.GenomePair()
+            genome_pair = genomepair.GenomePair()
             genome_pair.genome1 = genome1
             genome_pair.genome2 = genome2
             genome_pair.copy_data("type", genome2.type, genome1.type, flag)

@@ -3,7 +3,7 @@
 
 from classes import bundle
 from classes import Genome
-from classes import GenomePair
+from classes import genomepair
 from classes import cds
 from classes import ticket
 from classes import eval
@@ -31,7 +31,7 @@ class TestBundleClass1(unittest.TestCase):
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
-        genome_pair = GenomePair.GenomePair()
+        genome_pair = genomepair.GenomePair()
         self.bndl.set_genome_pair(genome_pair, "phamerator", "flat_file")
         self.assertEqual(list(self.bndl.genome_pair_dict.keys())[0],
                             "phamerator_flat_file")
@@ -42,7 +42,7 @@ class TestBundleClass1(unittest.TestCase):
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
-        genome_pair = GenomePair.GenomePair()
+        genome_pair = genomepair.GenomePair()
         self.bndl.set_genome_pair(genome_pair, "invalid", "flat_file")
         self.assertEqual(len(self.bndl.genome_pair_dict.keys()), 0)
 
@@ -164,8 +164,8 @@ class TestBundleClass2(unittest.TestCase):
         self.genome1.cds_features.append(self.cds2)
         self.genome2 = Genome.Genome()
         self.genome2.type = "phamerator"
-        self.genome_pair1 = GenomePair.GenomePair()
-        self.genome_pair2 = GenomePair.GenomePair()
+        self.genome_pair1 = genomepair.GenomePair()
+        self.genome_pair2 = genomepair.GenomePair()
         self.bndl = bundle.Bundle()
         self.bndl.ticket = self.ticket1
         self.bndl.genome_dict[self.genome1.type] = self.genome1

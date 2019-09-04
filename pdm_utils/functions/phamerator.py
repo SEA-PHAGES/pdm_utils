@@ -2,7 +2,7 @@
 
 
 from classes import Genome
-from classes import GenomePair
+from classes import genomepair
 from classes import cds
 from functions import basic
 import pymysql
@@ -467,7 +467,7 @@ def copy_data_from(bndl, type, flag="retain"):
 
                 # Copy all data that is set to be copied and
                 # add to Bundle object.
-                genome_pair = GenomePair.GenomePair()
+                genome_pair = genomepair.GenomePair()
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)

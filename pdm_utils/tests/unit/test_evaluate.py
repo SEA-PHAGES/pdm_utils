@@ -4,7 +4,7 @@
 from classes import Genome
 from classes import source
 from classes import cds
-from classes import GenomePair
+from classes import genomepair
 from constants import constants
 from pipelines.db_import import evaluate
 from classes import ticket
@@ -875,7 +875,7 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced when."""
         genome1 = Genome.Genome()
         genome2 = Genome.Genome()
-        genome_pair = GenomePair.GenomePair()
+        genome_pair = genomepair.GenomePair()
         genome_pair.genome1 = genome1
         genome_pair.genome2 = genome2
         evaluate.compare_genomes(genome_pair)

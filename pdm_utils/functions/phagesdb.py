@@ -3,7 +3,7 @@
 
 from pipelines.db_import import evaluate
 from classes import Genome
-from classes import GenomePair
+from classes import genomepair
 from functions import basic
 from constants import constants
 import urllib.request
@@ -223,7 +223,7 @@ def copy_data_from(bndl, type, flag="retrieve"):
                 bndl.genome_dict[genome2.type] = genome2
 
                 # Copy all retrieved data and add to Bundle object.
-                genome_pair = GenomePair.GenomePair()
+                genome_pair = genomepair.GenomePair()
                 genome_pair.genome1 = genome1
                 genome_pair.genome2 = genome2
                 genome_pair.copy_data("type", genome2.type, genome1.type, flag)
