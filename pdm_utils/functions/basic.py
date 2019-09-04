@@ -171,7 +171,7 @@ def reformat_coordinates(left, right, current, new):
     else:
         new_left = ""
         new_right = ""
-    return new_left, new_right
+    return (new_left, new_right)
 
 
 def check_empty(value, lower=True):

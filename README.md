@@ -2,8 +2,7 @@
 
 ### What is this repository for? ###
 
-* This repository provides a collection of tools and utilities to
-* create, update, and maintain MySQL databases for the SEA-PHAGES program.
+* This repository provides a collection of tools and utilities to create, update, and maintain MySQL databases for the SEA-PHAGES program.
 
 ### Contribution guidelines ###
 
@@ -11,5 +10,4 @@
 
 ### Who do I talk to? ###
 
-* Contact Travis Mavrich (trm53@pitt.edu) or
-* Christian Gauthier (christian.gautheir@pitt.edu).
+* Contact Travis Mavrich (trm53@pitt.edu) or Christian Gauthier (christian.gautheir@pitt.edu).
