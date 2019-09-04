@@ -3,7 +3,7 @@
 from classes import Bundle
 from classes import Genome
 from classes import Ticket
-from classes import Eval
+from classes import eval
 from functions import tickets
 import unittest
 
@@ -338,13 +338,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tickets.compare_tickets(list_of_tickets)
 
         ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
+        for evl in ticket1.evaluations:
+            if evl.status == "error":
                 ticket1_errors += 1
 
         ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
+        for evl in ticket2.evaluations:
+            if evl.status == "error":
                 ticket2_errors += 1
 
         with self.subTest():
@@ -373,13 +373,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tickets.compare_tickets(list_of_tickets)
 
         ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
+        for evl in ticket1.evaluations:
+            if evl.status == "error":
                 ticket1_errors += 1
 
         ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
+        for evl in ticket2.evaluations:
+            if evl.status == "error":
                 ticket2_errors += 1
 
         with self.subTest():
@@ -405,13 +405,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tickets.compare_tickets(list_of_tickets)
 
         ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
+        for evl in ticket1.evaluations:
+            if evl.status == "error":
                 ticket1_errors += 1
 
         ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
+        for evl in ticket2.evaluations:
+            if evl.status == "error":
                 ticket2_errors += 1
 
         with self.subTest():
@@ -438,13 +438,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tickets.compare_tickets(list_of_tickets)
 
         ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
+        for evl in ticket1.evaluations:
+            if evl.status == "error":
                 ticket1_errors += 1
 
         ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
+        for evl in ticket2.evaluations:
+            if evl.status == "error":
                 ticket2_errors += 1
 
         with self.subTest():
@@ -470,13 +470,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tickets.compare_tickets(list_of_tickets)
 
         ticket1_errors = 0
-        for eval in ticket1.evaluations:
-            if eval.status == "error":
+        for evl in ticket1.evaluations:
+            if evl.status == "error":
                 ticket1_errors += 1
 
         ticket2_errors = 0
-        for eval in ticket2.evaluations:
-            if eval.status == "error":
+        for evl in ticket2.evaluations:
+            if evl.status == "error":
                 ticket2_errors += 1
 
         with self.subTest():

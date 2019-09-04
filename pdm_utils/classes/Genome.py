@@ -3,7 +3,7 @@ maintain and update SEA-PHAGES phage genomics data.
 """
 
 from functions import basic
-from classes import Eval
+from classes import eval
 from datetime import datetime
 from Bio.SeqUtils import GC
 from Bio.Seq import Seq
@@ -581,8 +581,8 @@ class Genome:
             result = "The id is not valid."
             status = "error"
         definition = "Check that the id is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_name(self, check_set, expect=False, eval_id=None):
@@ -608,8 +608,8 @@ class Genome:
             result = "The name is not valid."
             status = "error"
         definition = "Check that the name is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_annotation_status(
@@ -636,8 +636,8 @@ class Genome:
             result = "The annotation status is not valid."
             status = "error"
         definition = "Check that the annotation status is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_host_genus(self, check_set, expect=False, eval_id=None):
@@ -663,8 +663,8 @@ class Genome:
             result = "The host_genus is not valid."
             status = "error"
         definition = "Check that the host_genus is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_cluster(self, check_set, expect=False, eval_id=None):
@@ -690,8 +690,8 @@ class Genome:
             result = "The cluster is not valid."
             status = "error"
         definition = "Check that the cluster is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_cluster_structure(self, eval_id=None):
@@ -713,8 +713,8 @@ class Genome:
             result = "Cluster is empty."
             status = "not_evaluated"
         definition = "Check if cluster attribute is structured correctly."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_subcluster(self, check_set, expect=False, eval_id=None):
@@ -740,8 +740,8 @@ class Genome:
             result = "The subcluster is not valid."
             status = "error"
         definition = "Check that the subcluster is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_subcluster_structure(self, eval_id=None):
@@ -762,8 +762,8 @@ class Genome:
             result = "Subcluster is empty."
             status = "not_evaluated"
         definition = "Check if subcluster attribute is structured correctly."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_compatible_cluster_and_subcluster(self, eval_id=None):
@@ -780,8 +780,8 @@ class Genome:
             result = "Cluster and Subcluster designations are compatible."
             status = "correct"
         definition = "Check for compatibility between Cluster and Subcluster."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_sequence(self, check_set, expect=False, eval_id=None):
@@ -808,8 +808,8 @@ class Genome:
             status = "error"
 
         definition = "Check that the sequence is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_nucleotides(self, check_set=set(), eval_id=None):
@@ -849,8 +849,8 @@ class Genome:
             status = "correct"
 
         definition = "Check if all nucleotides in the sequence are expected."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_accession(self, check_set, expect=False, eval_id=None):
@@ -876,8 +876,8 @@ class Genome:
             result = "The accession is not valid."
             status = "error"
         definition = "Check that the accession is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_authors(self, check_set=set(), expect=True, eval_id=None):
@@ -916,8 +916,8 @@ class Genome:
                 result = "The authors are not expected to be present."
                 status = "error"
         definition = "Check authorship."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_annotation_author(self, check_set=set(), eval_id=None):
@@ -935,8 +935,8 @@ class Genome:
             result = "The annotation_author is not valid."
             status = "error"
         definition = "Check that the annotation_author is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_annotation_qc(self, check_set=set(), eval_id=None):
@@ -954,8 +954,8 @@ class Genome:
             result = "The annotation_qc is not valid."
             status = "error"
         definition = "Check that the annotation_qc is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_retrieve_record(self, check_set=set(), eval_id=None):
@@ -973,8 +973,8 @@ class Genome:
             result = "The retrieve_record is not valid."
             status = "error"
         definition = "Check that the retrieve_record is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_filename(self, check_set, expect=False, eval_id=None):
@@ -1000,8 +1000,8 @@ class Genome:
             result = "The filename is not valid."
             status = "error"
         definition = "Check that the filename is valid."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_compatible_status_and_accession(self, eval_id=None):
@@ -1026,8 +1026,8 @@ class Genome:
             result = "No conflict between annotation_status and accession."
             status = "correct"
         definition = "Compare the annotation_status and accession."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_compatible_status_and_descriptions(self, eval_id=None):
@@ -1058,8 +1058,8 @@ class Genome:
                      "CDS descriptions."
             status = "correct"
         definition = "Compare the status and presence of CDS descriptions."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_description_name(self, eval_id=None):
@@ -1077,8 +1077,8 @@ class Genome:
             status = "correct"
         definition = "Check genome id spelling in the " + \
                      "description attribute."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_source_name(self, eval_id=None):
@@ -1095,8 +1095,8 @@ class Genome:
             result = "The source attribute contains the genome id."
             status = "correct"
         definition = "Check genome id spelling in the source attribute."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_organism_name(self, eval_id=None):
@@ -1113,8 +1113,8 @@ class Genome:
             result = "The organism attribute contains the genome id."
             status = "correct"
         definition = "Check genome id spelling in the organism attribute."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_description_host_genus(self, eval_id=None):
@@ -1131,8 +1131,8 @@ class Genome:
             result = "The description attribute contains the host_genus."
             status = "correct"
         definition = "Check host_genus spelling in the description attribute."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_source_host_genus(self, eval_id=None):
@@ -1149,8 +1149,8 @@ class Genome:
             result = "The source attribute contains the host_genus."
             status = "correct"
         definition = "Check host_genus spelling in the source attribute."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_organism_host_genus(self, eval_id=None):
@@ -1167,8 +1167,8 @@ class Genome:
             result = "The organism attribute contains the host_genus."
             status = "correct"
         definition = "Check host_genus spelling in the organism attribute."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_cds_feature_tally(self, eval_id=None):
@@ -1184,8 +1184,8 @@ class Genome:
             result = "CDS features were annotated."
             status = "correct"
         definition = "Check if CDS features are annotated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_cds_start_end_ids(self, eval_id=None):
@@ -1208,8 +1208,8 @@ class Genome:
             status = "correct"
         definition = "Check whether CDS features can be uniquely " + \
                         "identified by their start and end coordinates."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_cds_end_strand_ids(self, eval_id=None):
@@ -1233,8 +1233,8 @@ class Genome:
             status = "correct"
         definition = "Check whether CDS features can be uniquely " + \
                             "identified by their strand and end coordinate."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_value_flag(self, expect=False, eval_id=None):
@@ -1260,8 +1260,8 @@ class Genome:
                 result = "Some attributes are not populated."
                 status = "error"
         definition = "Check if there are any attributes that are set to %s."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_feature_ids(self, cds=False, trna=False, tmrna=False,
@@ -1345,8 +1345,8 @@ class Genome:
             status = "correct"
         definition = "Check if there are any errors with the " \
                      + "genome's feature coordinates."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 

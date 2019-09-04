@@ -58,8 +58,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
         description = "Mycobacterium phage L5"
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -114,8 +114,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -166,8 +166,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -218,8 +218,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -270,8 +270,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -322,8 +322,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
 
@@ -374,8 +374,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -423,8 +423,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():
@@ -472,8 +472,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_type = "phagesdb"
 
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
 
         with self.subTest():

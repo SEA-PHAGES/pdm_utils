@@ -1,6 +1,6 @@
 """Represents a structure to directly compare data between two or more genomes."""
 
-from classes import Eval
+from classes import eval
 from functions import phamerator
 from classes import Ticket
 
@@ -108,8 +108,8 @@ class Bundle:
 
         definition = "Check if a %s genome type has been " % key + \
                         "matched to the ticket."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
     def check_genome_dictionary(self, key, expect=True, eval_id=None):
         """Check if a genome is present in the genome dictionary.
@@ -140,8 +140,8 @@ class Bundle:
                 status = "error"
 
         definition = "Check if the %s genome is present." % key
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
     def check_genome_pair_dictionary(self, key, expect=True, eval_id=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
@@ -172,49 +172,49 @@ class Bundle:
                 status = "error"
 
         definition = "Check if the %s genome_pair is present." % key
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle
         and determine how many errors there are."""
 
-        for eval in self.evaluations:
-            if eval.status == "error":
+        for evl in self.evaluations:
+            if evl.status == "error":
                 self._errors += 1
 
-        for eval in self.ticket.evaluations:
-            if eval.status == "error":
+        for evl in self.ticket.evaluations:
+            if evl.status == "error":
                 self._errors += 1
 
         for key in self.genome_dict.keys():
             genome = self.genome_dict[key]
-            for eval in genome.evaluations:
-                if eval.status == "error":
+            for evl in genome.evaluations:
+                if evl.status == "error":
                     self._errors += 1
 
             for cds in genome.cds_features:
-                for eval in cds.evaluations:
-                    if eval.status == "error":
+                for evl in cds.evaluations:
+                    if evl.status == "error":
                         self._errors += 1
 
             # TODO need to implement this once this class is implemented.
             # for trna in genome.trna_features:
-            #     for eval in trna.evaluations:
-            #         if eval.status == "error":
+            #     for evl in trna.evaluations:
+            #         if evl.status == "error":
             #             self._errors += 1
 
         for key in self.genome_pair_dict.keys():
             genome_pair = self.genome_pair_dict[key]
-            for eval in genome_pair.evaluations:
-                if eval.status == "error":
+            for evl in genome_pair.evaluations:
+                if evl.status == "error":
                     self._errors += 1
 
 
             # TODO need to implement this once this class is implemented.
             # for cds_pair in genome_pair.matched_cds_list:
-            #     for eval in cds_pair.evaluations:
-            #         if eval.status == "error":
+            #     for evl in cds_pair.evaluations:
+            #         if evl.status == "error":
             #             self._errors += 1
 
 

@@ -6,7 +6,7 @@ from classes import Genome
 from classes import GenomePair
 from classes import Cds
 from classes import Ticket
-from classes import Eval
+from classes import eval
 import unittest
 
 
@@ -172,8 +172,8 @@ class TestBundleClass2(unittest.TestCase):
         self.bundle.genome_dict[self.genome2.type] = self.genome2
         self.bundle.genome_pair_dict["genome_pair1"] = self.genome_pair1
         self.bundle.genome_pair_dict["genome_pair2"] = self.genome_pair2
-        self.eval1 = Eval.Eval()
-        self.eval2 = Eval.Eval()
+        self.eval1 = eval.Eval()
+        self.eval2 = eval.Eval()
 
 
 

@@ -4,7 +4,7 @@
 from classes import GenomePair
 from classes import Genome
 from classes import Ticket
-from classes import Eval
+from classes import eval
 import unittest
 
 

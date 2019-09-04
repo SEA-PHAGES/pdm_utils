@@ -2,7 +2,7 @@
 
 
 
-from classes import Eval
+from classes import eval
 import unittest
 
 
@@ -12,7 +12,7 @@ class TestEvalClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.eval_result = Eval.Eval()
+        self.eval_result = eval.Eval()
 
 
 

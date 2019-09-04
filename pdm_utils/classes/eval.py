@@ -24,30 +24,30 @@ class Eval:
 #
 # def construct_warning(message_warning, message):
 #
-#     eval = EvalResult()
-#     eval.status = "warning"
-#     eval.result = message
+#     evl = EvalResult()
+#     evl.status = "warning"
+#     evl.result = message
 #
-#     return eval
+#     return evl
 #
 #
 # def construct_error(message_error):
 #
-#     eval = EvalResult()
-#     eval.status = "error"
-#     eval.messages["error"] = message_error
+#     evl = EvalResult()
+#     evl.status = "error"
+#     evl.messages["error"] = message_error
 #
-#     return eval
+#     return evl
 #
 #
 #
 # def construct_other(status_other, message_other):
 #
-#     eval = EvalResult()
-#     eval.status = status_other
-#     eval.messages[status_other] = message_other
+#     evl = EvalResult()
+#     evl.status = status_other
+#     evl.messages[status_other] = message_other
 #
-#     return eval
+#     return evl
 #
 
 

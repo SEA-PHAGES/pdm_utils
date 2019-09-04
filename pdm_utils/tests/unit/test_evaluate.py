@@ -43,8 +43,8 @@ class TestEvaluateClass(unittest.TestCase):
             self.add_ticket1, self.type_set, self.null_set, self.run_mode_set)
 
         errors = 0
-        for eval in self.add_ticket1.evaluations:
-            if eval.status == "error":
+        for evl in self.add_ticket1.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(self.add_ticket1.evaluations), 8)
@@ -61,8 +61,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 1)
@@ -79,8 +79,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -97,8 +97,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -115,8 +115,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -133,8 +133,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -151,8 +151,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -169,8 +169,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -187,8 +187,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -207,8 +207,8 @@ class TestEvaluateClass(unittest.TestCase):
         evaluate.check_ticket_structure(
             ticket, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(ticket.evaluations), 8)
@@ -227,8 +227,8 @@ class TestEvaluateClass(unittest.TestCase):
     #     evaluate.check_ticket_structure(
     #         ticket, self.type_set, self.null_set, self.run_mode_set)
     #     errors = 0
-    #     for eval in ticket.evaluations:
-    #         if eval.status == "error":
+    #     for evl in ticket.evaluations:
+    #         if evl.status == "error":
     #             errors += 1
     #     with self.subTest():
     #         self.assertEqual(len(ticket.evaluations), 9)
@@ -689,8 +689,8 @@ class TestEvaluateClass2(unittest.TestCase):
 
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         with self.subTest():
             self.assertEqual(len(self.genome.evaluations), 8)
@@ -704,8 +704,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.id = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -717,8 +717,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.name = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -730,8 +730,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.host_genus = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -743,8 +743,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.cluster = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -756,8 +756,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.subcluster = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -769,8 +769,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.accession = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -782,8 +782,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.filename = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 
@@ -795,8 +795,8 @@ class TestEvaluateClass2(unittest.TestCase):
         self.genome.seq = ""
         evaluate.check_phagesdb_genome(self.genome, self.null_set)
         errors = 0
-        for eval in self.genome.evaluations:
-            if eval.status == "error":
+        for evl in self.genome.evaluations:
+            if evl.status == "error":
                 errors += 1
         self.assertEqual(errors, 1)
 

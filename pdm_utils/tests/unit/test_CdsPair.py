@@ -2,7 +2,7 @@
 
 
 from classes import CdsPair
-from classes import Eval
+from classes import eval
 import unittest
 
 

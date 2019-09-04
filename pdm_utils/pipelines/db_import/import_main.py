@@ -81,8 +81,8 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
     ticket_errors = 0
     for key in ticket_dict.keys():
         ticket = ticket_dict[key]
-        for eval in ticket.evaluations:
-            if eval.status == "error":
+        for evl in ticket.evaluations:
+            if evl.status == "error":
                 ticket_errors += 1
 
 

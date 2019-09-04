@@ -380,9 +380,9 @@ def prepare_tickets(ticket_filename):
 #         status = "correct"
 #
 #     definition = "Assign matching strategy."
-#     eval = Eval.Eval("TICKET", definition, result, status)
+#     evl = eval.Eval("TICKET", definition, result, status)
 #
-#     return strategy, eval
+#     return strategy, evl
 
 
 
@@ -458,30 +458,30 @@ def prepare_tickets(ticket_filename):
 #                 "since there are multiple tickets with the same identifier."
 #         status = "error"
 #         definition = "Match tickets to genome."
-#         eval = Eval.Eval("TICKET", definition, result, status)
-#         eval_results.append(eval)
+#         evl = eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(evl)
 #
 #     if len(genome_duplicate_ids) > 0:
 #         result = "Unable to match genomes to tickets " + \
 #                 "since there are multiple genomes with the same identifier."
 #         status = "error"
 #         definition = "Match tickets to genome."
-#         eval = Eval.Eval("TICKET", definition, result, status)
-#         eval_results.append(eval)
+#         evl = eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(evl)
 #
 #     if len(ticket_unmatched_unique_ids) > 0:
 #         result = "There is no matching genome for one or more tickets."
 #         status = "error"
 #         definition = "Match tickets to genome."
-#         eval = Eval.Eval("TICKET", definition, result, status)
-#         eval_results.append(eval)
+#         evl = eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(evl)
 #
 #     if len(genome_unmatched_unique_ids) > 0:
 #         result = "There is no matching ticket for one or more genomes."
 #         status = "error"
 #         definition = "Match tickets to genome."
-#         eval = Eval.Eval("TICKET", definition, result, status)
-#         eval_results.append(eval)
+#         evl = eval.Eval("TICKET", definition, result, status)
+#         eval_results.append(evl)
 #
 #     return eval_results
 
@@ -616,7 +616,7 @@ def prepare_tickets(ticket_filename):
 #         status1 = "correct"
 #
 #     definition1 = "Check if there are multiple tickets with the same Primary PhageID."
-#     eval1 = Eval.Eval(id = "TICKET", \
+#     eval1 = eval.Eval(id = "TICKET", \
 #                     definition = definition1, \
 #                     result = result1, \
 #                     status = status1)
@@ -632,7 +632,7 @@ def prepare_tickets(ticket_filename):
 #         status2 = "correct"
 #
 #     definition2 = "Check if there are multiple tickets with the same Secondary PhageID."
-#     eval2 = Eval.Eval(id = "TICKET", \
+#     eval2 = eval.Eval(id = "TICKET", \
 #                     definition = definition2, \
 #                     result = result2, \
 #                     status = status2)
@@ -648,7 +648,7 @@ def prepare_tickets(ticket_filename):
 #         status3 = "correct"
 #
 #     definition3 = "Check if there are multiple tickets with the same Accession."
-#     eval3 = Eval.Eval(id = "TICKET", \
+#     eval3 = eval.Eval(id = "TICKET", \
 #                     definition = definition3, \
 #                     result = result3, \
 #                     status = status3)
@@ -673,7 +673,7 @@ def prepare_tickets(ticket_filename):
 #
 #     definition4 = "Check if an update/add Primary PhageID is used " + \
 #                     "as a remove/replace Secondary PhageID."
-#     eval4 = Eval.Eval(id = "TICKET", \
+#     eval4 = eval.Eval(id = "TICKET", \
 #                     definition = definition4, \
 #                     result = result4, \
 #                     status = status4)
@@ -694,7 +694,7 @@ def prepare_tickets(ticket_filename):
 #
 #     definition5 = "Check if a replace Primary PhageID is used " + \
 #                     "as a remove Secondary PhageID."
-#     eval5 = Eval.Eval(id = "TICKET", \
+#     eval5 = eval.Eval(id = "TICKET", \
 #                     definition = definition5, \
 #                     result = result5, \
 #                     status = status5)
@@ -704,9 +704,9 @@ def prepare_tickets(ticket_filename):
 #
 #     # Only return results that are Eval objects.
 #     # list_of_evals = []
-#     # for eval in result_list:
-#     #     if eval is not None:
-#     #         list_of_evals.append(eval)
+#     # for evl in result_list:
+#     #     if evl is not None:
+#     #         list_of_evals.append(evl)
 #
 #     # TODO this used to return only error evals, but now it returns all
 #     # evals, so this will need to be corrected in the unit tests.

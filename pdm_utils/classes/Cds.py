@@ -4,7 +4,7 @@ to maintain and update SEA-PHAGES phage genomics data.
 
 from functions import basic
 from constants import constants
-from classes import Eval
+from classes import eval
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature, FeatureLocation
@@ -447,8 +447,8 @@ class Cds:
             result = "The translation table is not correct."
             status = "error"
         definition = "Check that the translation table is correct."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_translation_length(self, eval_id=None):
@@ -465,8 +465,8 @@ class Cds:
             status = "correct"
 
         definition = "Check that there is a translation present."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_translation(self, eval_id=None):
@@ -490,8 +490,8 @@ class Cds:
             result = "The translation is correct."
             status = "correct"
         definition = "Check that the feature contains the expected translation."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_amino_acids(self, check_set=set(), eval_id=None):
@@ -514,8 +514,8 @@ class Cds:
             status = "correct"
 
         definition = "Check validity of amino acid residues."
-        eval = Eval.Eval(eval_id, definition, result, status = status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status = status)
+        self.evaluations.append(evl)
 
 
     def check_strand(self, format="fr_short", case=True, eval_id=None):
@@ -540,8 +540,8 @@ class Cds:
             result = "The feature strand is not correct."
             status = "error"
         definition = "Check if the strand is set appropriately."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_coordinates(self, eval_id=None):
@@ -569,8 +569,8 @@ class Cds:
 
         definition = "Check if the left and right boundary coordinates " + \
                         "are exact or fuzzy."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_locus_tag_present(self, expect=True, eval_id=None):
@@ -603,8 +603,8 @@ class Cds:
                 result = "The locus_tag qualifier is not present."
                 status = "correct"
         definition = "Check if the locus_tag qualifier status is expected."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
@@ -660,8 +660,8 @@ class Cds:
                      + " ".join(results)
             status = "error"
         definition = "Check if the locus_tag qualifier is structured correctly."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     # TODO is this needed?
@@ -683,8 +683,8 @@ class Cds:
             result = "The id is correct."
             status = "correct"
         definition = "Check if the id contains a typo."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_gene_present(self, expect=True, eval_id=None):
@@ -718,8 +718,8 @@ class Cds:
                 result = "The gene qualifier is not present."
                 status = "correct"
         definition = "Check if the gene status is expected."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_gene_structure(self, eval_id=None):
@@ -741,8 +741,8 @@ class Cds:
             result = "The gene qualifier does not contain an integer."
             status = "error"
         definition = "Check if the gene qualifier contains an integer."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_compatible_gene_and_locus_tag(self, eval_id=None):
@@ -759,8 +759,8 @@ class Cds:
             result = "The gene and locus_tag numbers are not consistent."
             status = "error"
         definition = "Check if the gene and locus_tag numbers are consistent."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_description_field(self, attribute="product", eval_id=None):
@@ -808,8 +808,8 @@ class Cds:
 
         definition = \
             "Check if there is a discrepancy between description fields."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_generic_data(self, attribute=None, eval_id=None):
@@ -843,8 +843,8 @@ class Cds:
             result = "The '%s' field is not correct." % attribute
             status = "error"
         definition = "Check if the '%s' field contains generic data." % attribute
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 

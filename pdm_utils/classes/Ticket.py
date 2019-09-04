@@ -1,7 +1,7 @@
 """Represents a structure to contain directions for how to parse and import
 genomes into Phamerator."""
 
-from classes import Eval
+from classes import eval
 from functions import basic
 
 
@@ -184,8 +184,8 @@ class GenomeTicket:
             status = "error"
 
         definition = "Check if import table contains the correct amount of data."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_type(self, check_set, expect=True, eval_id=None):
@@ -209,8 +209,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if ticket type field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_phage_id(self, check_set, expect=True, eval_id=None):
@@ -234,8 +234,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if phage_id field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_host_genus(self, check_set, expect=True, eval_id=None):
@@ -259,8 +259,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if host_genus field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_subcluster(self, check_set, expect=True, eval_id=None):
@@ -284,8 +284,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if subcluster field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_cluster(self, check_set, expect=True, eval_id=None):
@@ -309,8 +309,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if cluster field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_annotation_status(self, check_set, expect=True, eval_id=None):
@@ -334,8 +334,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if annotation_status field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_description_field(self, check_set, expect=True, eval_id=None):
@@ -359,8 +359,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if description_field field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_accession(self, check_set, expect=True, eval_id=None):
@@ -384,8 +384,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if accession field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_annotation_author(self, check_set, expect=True, eval_id=None):
@@ -409,8 +409,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if annotation_author field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_run_mode(self, check_set, expect=True, eval_id=None):
@@ -434,8 +434,8 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if run_mode field is correctly populated."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_duplicate_phage_id(self, set_of_duplicates, eval_id=None):
@@ -455,8 +455,8 @@ class GenomeTicket:
             result = "The phage_id is unique to this ticket"
             status = "correct"
         definition = "Check if the phage_id is unique to this ticket."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_duplicate_accession(self, set_of_duplicates, eval_id=None):
@@ -476,8 +476,8 @@ class GenomeTicket:
             result = "The accession is unique to this ticket"
             status = "correct"
         definition = "Check if the accession is unique to this ticket."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_compatible_type_and_annotation_status(self, eval_id=None):
@@ -506,8 +506,8 @@ class GenomeTicket:
             status = "correct"
         definition = "Check if the ticket type and annotation_status" \
                      + " are compatible."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 

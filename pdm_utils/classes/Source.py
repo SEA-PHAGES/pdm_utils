@@ -3,7 +3,7 @@ to maintain and update SEA-PHAGES phage genomics data.
 """
 
 from functions import basic
-from classes import Eval
+from classes import eval
 import re
 
 
@@ -89,8 +89,8 @@ class Source:
             status = "correct"
 
         definition = "Check phage name spelling in the organism field."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_organism_host_genus(self, eval_id=None):
@@ -110,8 +110,8 @@ class Source:
             status = "correct"
 
         definition = "Check host_genus name spelling in the organism field."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_host_host_genus(self, eval_id=None):
@@ -131,8 +131,8 @@ class Source:
             status = "correct"
 
         definition = "Check host_genus name spelling in the host field."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
     def check_lab_host_host_genus(self, eval_id=None):
@@ -152,8 +152,8 @@ class Source:
             status = "correct"
 
         definition = "Check host_genus name spelling in the lab_host field."
-        eval = Eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(eval)
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 
