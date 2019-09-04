@@ -9,7 +9,7 @@ import csv
 # from main_scripts.python3.classes.RandomFieldUpdateHandler import \
 #     RandomFieldUpdateHandler
 from classes.MySQLConnectionHandler import MySQLConnectionHandler
-from classes.RandomFieldUpdateHandler import RandomFieldUpdateHandler
+from classes.randomfieldupdatehandler import RandomFieldUpdateHandler
 
 # Set up argparse
 script_description = """
