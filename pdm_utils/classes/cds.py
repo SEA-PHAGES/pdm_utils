@@ -197,7 +197,7 @@ class Cds:
         Use Biopython to translate the nucleotide sequece.
         The method expects the nucleotide sequence to be a valid CDS
         sequence in which:
-        
+
             1. it begins with a valid start codon,
             2. it ends with a stop codon,
             3. it contains only one stop codon,
@@ -423,7 +423,7 @@ class Cds:
         new_strand = basic.reformat_strand(self.strand, "numeric")
 
         self.seqfeature = SeqFeature(FeatureLocation(new_left, new_right),
-                                     strand=new_strand)
+                                     strand=new_strand, type="CDS")
 
 
 
