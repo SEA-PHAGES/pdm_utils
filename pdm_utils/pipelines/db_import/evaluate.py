@@ -141,14 +141,14 @@ def check_phagesdb_genome(genome, null_set):
 
 
 
-def check_source_for_import(source, check_id_typo=True, check_host_typo=True):
+def check_source_for_import(src_ftr, check_id_typo=True, check_host_typo=True):
     """Check a Source object for errors."""
     if check_id_typo:
-        source.check_organism_name()
+        src_ftr.check_organism_name()
     if check_host_typo:
-        source.check_organism_host_genus()
-        source.check_host_host_genus()
-        source.check_lab_host_host_genus()
+        src_ftr.check_organism_host_genus()
+        src_ftr.check_host_host_genus()
+        src_ftr.check_lab_host_host_genus()
 
 
 def check_cds_for_import(cds_ftr, check_locus_tag=True,

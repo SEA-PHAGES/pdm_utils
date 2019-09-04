@@ -6,7 +6,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Seq import Seq
-from classes import Genome, cds, Trna, Source
+from classes import Genome, cds, Trna, source
 from functions import basic
 from constants import constants
 from datetime import datetime
@@ -184,23 +184,23 @@ def parse_source_seqfeature(seqfeature, genome_id=""):
     :returns: A pdm_utils Source object
     :rtype: Source
     """
-    source = Source.Source()
-    source.genome_id = genome_id
-    source.seqfeature = seqfeature
+    src_ftr = source.Source()
+    src_ftr.genome_id = genome_id
+    src_ftr.seqfeature = seqfeature
 
     try:
-        source.organism = str(seqfeature.qualifiers["organism"][0])
+        src_ftr.organism = str(seqfeature.qualifiers["organism"][0])
     except:
-        source.organism = ""
+        src_ftr.organism = ""
     try:
-        source.host = str(seqfeature.qualifiers["host"][0])
+        src_ftr.host = str(seqfeature.qualifiers["host"][0])
     except:
-        source.host = ""
+        src_ftr.host = ""
     try:
-        source.lab_host = str(seqfeature.qualifiers["lab_host"][0])
+        src_ftr.lab_host = str(seqfeature.qualifiers["lab_host"][0])
     except:
-        source.lab_host = ""
-    return source
+        src_ftr.lab_host = ""
+    return src_ftr
 
 
 # TODO remove this function.
@@ -208,8 +208,8 @@ def parse_source_seqfeature(seqfeature, genome_id=""):
 #     """Convert all Biopython Source SeqFeatures to Source objects."""
 #     source_list = []
 #     for seqfeature in seqfeature_list:
-#         source = parse_source_seqfeature(seqfeature)
-#         source_list.append(source)
+#         src_ftr = parse_source_seqfeature(seqfeature)
+#         source_list.append(src_ftr)
 #     return source_list
 
 
@@ -377,8 +377,8 @@ def parse_genome_data(seqrecord, filepath="",
     source_list = []
     if "source" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["source"]:
-            source = parse_source_seqfeature(seqfeature, genome_id=genome.id)
-            source_list.append(source)
+            src_ftr = parse_source_seqfeature(seqfeature, genome_id=genome.id)
+            source_list.append(src_ftr)
 
     # TODO unit test after functions are constructed.
     trna_list = []
@@ -392,7 +392,7 @@ def parse_genome_data(seqrecord, filepath="",
     if "tmrna" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tmrna"]:
             tmrna = parse_tmrna_seqfeature(seqfeature, genome_id=genome.id)
-            tmrna_list.append(source)
+            tmrna_list.append(tmrna)
 
     genome.translation_table = translation_table
     genome.set_cds_features(cds_list)

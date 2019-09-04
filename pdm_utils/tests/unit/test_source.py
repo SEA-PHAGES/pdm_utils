@@ -1,6 +1,6 @@
 """ Unit tests for the CDS class."""
 
-from classes import Source
+from classes import source
 import unittest
 
 
@@ -9,7 +9,7 @@ class TestSourceClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.feature = Source.Source()
+        self.feature = source.Source()
 
 
 

@@ -7,7 +7,7 @@ from datetime import datetime
 from functions import basic
 from functions import flat_files
 from classes import cds
-from classes import Source
+from classes import source
 from classes import Genome
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -20,7 +20,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def setUp(self):
         self.cds_ftr = cds.Cds()
-        self.source = Source.Source()
+        self.src_ftr = source.Source()
         self.genome = Genome.Genome()
 
 
@@ -972,19 +972,19 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        self.source = flat_files.parse_source_seqfeature( \
+        self.src_ftr = flat_files.parse_source_seqfeature( \
                             seqfeature, genome_id="Trixie")
 
         with self.subTest():
-            self.assertEqual(self.source.organism, string1)
+            self.assertEqual(self.src_ftr.organism, string1)
         with self.subTest():
-            self.assertEqual(self.source.host, string2)
+            self.assertEqual(self.src_ftr.host, string2)
         with self.subTest():
-            self.assertEqual(self.source.lab_host, string3)
+            self.assertEqual(self.src_ftr.lab_host, string3)
         with self.subTest():
-            self.assertEqual(self.source.genome_id, "Trixie")
+            self.assertEqual(self.src_ftr.genome_id, "Trixie")
         with self.subTest():
-            self.assertIsInstance(self.source.seqfeature, SeqFeature)
+            self.assertIsInstance(self.src_ftr.seqfeature, SeqFeature)
 
 
     def test_parse_source_seqfeature_2(self):
@@ -1003,14 +1003,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        self.source = flat_files.parse_source_seqfeature(seqfeature)
+        self.src_ftr = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.source.organism, "")
+            self.assertEqual(self.src_ftr.organism, "")
         with self.subTest():
-            self.assertEqual(self.source.host, string2)
+            self.assertEqual(self.src_ftr.host, string2)
         with self.subTest():
-            self.assertEqual(self.source.lab_host, string3)
+            self.assertEqual(self.src_ftr.lab_host, string3)
 
 
     def test_parse_source_seqfeature_3(self):
@@ -1029,14 +1029,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        self.source = flat_files.parse_source_seqfeature(seqfeature)
+        self.src_ftr = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.source.organism, string1)
+            self.assertEqual(self.src_ftr.organism, string1)
         with self.subTest():
-            self.assertEqual(self.source.host, "")
+            self.assertEqual(self.src_ftr.host, "")
         with self.subTest():
-            self.assertEqual(self.source.lab_host, string3)
+            self.assertEqual(self.src_ftr.lab_host, string3)
 
 
     def test_parse_source_seqfeature_4(self):
@@ -1055,14 +1055,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
                     type = "source", \
                     qualifiers = qualifier_dict)
 
-        self.source = flat_files.parse_source_seqfeature(seqfeature)
+        self.src_ftr = flat_files.parse_source_seqfeature(seqfeature)
 
         with self.subTest():
-            self.assertEqual(self.source.organism, string1)
+            self.assertEqual(self.src_ftr.organism, string1)
         with self.subTest():
-            self.assertEqual(self.source.host, string2)
+            self.assertEqual(self.src_ftr.host, string2)
         with self.subTest():
-            self.assertEqual(self.source.lab_host, "")
+            self.assertEqual(self.src_ftr.lab_host, "")
 
 
 

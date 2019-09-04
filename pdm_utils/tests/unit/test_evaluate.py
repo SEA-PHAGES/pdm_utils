@@ -2,7 +2,7 @@
 
 
 from classes import Genome
-from classes import Source
+from classes import source
 from classes import cds
 from classes import GenomePair
 from constants import constants
@@ -807,23 +807,23 @@ class TestEvaluateClass2(unittest.TestCase):
     def test_check_source_for_import_1(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = True and check_host_typo = True."""
-        source = Source.Source()
-        evaluate.check_source_for_import(source)
-        self.assertEqual(len(source.evaluations), 4)
+        src_ftr = source.Source()
+        evaluate.check_source_for_import(src_ftr)
+        self.assertEqual(len(src_ftr.evaluations), 4)
 
     def test_check_source_for_import_2(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = False and check_host_typo = True."""
-        source = Source.Source()
-        evaluate.check_source_for_import(source, check_id_typo=False)
-        self.assertEqual(len(source.evaluations), 3)
+        src_ftr = source.Source()
+        evaluate.check_source_for_import(src_ftr, check_id_typo=False)
+        self.assertEqual(len(src_ftr.evaluations), 3)
 
     def test_check_source_for_import_3(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = True and check_host_typo = False."""
-        source = Source.Source()
-        evaluate.check_source_for_import(source, check_host_typo=False)
-        self.assertEqual(len(source.evaluations), 1)
+        src_ftr = source.Source()
+        evaluate.check_source_for_import(src_ftr, check_host_typo=False)
+        self.assertEqual(len(src_ftr.evaluations), 1)
 
 
 
