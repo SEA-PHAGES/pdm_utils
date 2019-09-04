@@ -4,7 +4,7 @@
 from classes import bundle
 from classes import Genome
 from classes import GenomePair
-from classes import Cds
+from classes import cds
 from classes import Ticket
 from classes import eval
 import unittest
@@ -152,11 +152,11 @@ class TestBundleClass2(unittest.TestCase):
     def setUp(self):
 
         self.ticket1 = Ticket.GenomeTicket()
-        self.cds1 = Cds.Cds()
+        self.cds1 = cds.Cds()
         self.cds1.id = "L5_1"
-        self.cds2 = Cds.Cds()
+        self.cds2 = cds.Cds()
         self.cds2.id = "L5_2"
-        self.cds3 = Cds.Cds()
+        self.cds3 = cds.Cds()
         self.cds3.id = "L5_3"
         self.genome1 = Genome.Genome()
         self.genome1.type = "flat_file"

@@ -1,6 +1,6 @@
 """ Unit tests for the CDS class."""
 
-from classes import Cds
+from classes import cds
 from constants import constants
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
@@ -13,7 +13,7 @@ class TestCdsClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.feature = Cds.Cds()
+        self.feature = cds.Cds()
 
 
 

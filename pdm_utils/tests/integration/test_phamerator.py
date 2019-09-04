@@ -4,7 +4,7 @@
 import unittest
 from functions import phamerator
 from classes import Genome
-from classes import Cds
+from classes import cds
 from constants import constants
 from classes import MySQLConnectionHandler
 import subprocess, os

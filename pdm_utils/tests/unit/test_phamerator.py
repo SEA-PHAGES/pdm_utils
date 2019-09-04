@@ -4,7 +4,7 @@
 import unittest
 from functions import phamerator
 from classes import Genome
-from classes import Cds
+from classes import cds
 from datetime import datetime
 from classes import bundle
 from constants import constants
@@ -73,9 +73,9 @@ class TestPhameratorFunctions(unittest.TestCase):
                             "0",
                             "0")
 
-        self.cds1 = Cds.Cds()
-        self.cds2 = Cds.Cds()
-        self.cds3 = Cds.Cds()
+        self.cds1 = cds.Cds()
+        self.cds2 = cds.Cds()
+        self.cds3 = cds.Cds()
 
 
 

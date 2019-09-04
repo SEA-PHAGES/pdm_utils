@@ -151,31 +151,31 @@ def check_source_for_import(source, check_id_typo=True, check_host_typo=True):
         source.check_lab_host_host_genus()
 
 
-def check_cds_for_import(cds, check_locus_tag=True,
+def check_cds_for_import(cds_ftr, check_locus_tag=True,
                          check_gene=True, check_description=True,
                          check_description_field=True):
     """Check a Cds object for errors."""
-    cds.check_amino_acids()
-    cds.check_translation()
-    cds.check_translation_length()
-    cds.check_translation_table()
-    cds.check_coordinates()
-    cds.check_strand()
+    cds_ftr.check_amino_acids()
+    cds_ftr.check_translation()
+    cds_ftr.check_translation_length()
+    cds_ftr.check_translation_table()
+    cds_ftr.check_coordinates()
+    cds_ftr.check_strand()
 
     # These evaluations vary by genome type, stage of import, etc.
     if check_locus_tag:
-        cds.check_locus_tag_present()
-        cds.check_locus_tag_structure()
+        cds_ftr.check_locus_tag_present()
+        cds_ftr.check_locus_tag_structure()
     if check_gene:
-        cds.check_gene_present()
-        cds.check_gene_structure()
+        cds_ftr.check_gene_present()
+        cds_ftr.check_gene_structure()
     if check_locus_tag and check_gene:
-        cds.check_compatible_gene_and_locus_tag()
+        cds_ftr.check_compatible_gene_and_locus_tag()
     if check_description:
-        cds.check_generic_data()
-        cds.check_valid_description()
+        cds_ftr.check_generic_data()
+        cds_ftr.check_valid_description()
     if check_description_field:
-        cds.check_description_field()
+        cds_ftr.check_description_field()
 
 
 
@@ -362,7 +362,7 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
 
     genome.check_cds_feature_tally()
-    genome.check_feature_ids(cds=True, trna=True, tmrna=True)
+    genome.check_feature_ids(cds_ftr=True, trna=True, tmrna=True)
 
 
     # TODO not sure if these are needed now that check_feature_ids()

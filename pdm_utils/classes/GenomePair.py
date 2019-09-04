@@ -276,13 +276,13 @@ class GenomePair:
         g1_unmatched_cds_list = []
 
 
-        for cds in g1_feature_list:
-            if cds._start_stop_id in matched_start_stop_set:
-                g1_matched_cds_start_stop_dict[cds._start_stop_id] = cds
-            elif cds._stop_id in matched_stop_set:
-                g1_matched_cds_stop_dict[cds._stop_id] = cds
+        for cds_ftr in g1_feature_list:
+            if cds_ftr._start_stop_id in matched_start_stop_set:
+                g1_matched_cds_start_stop_dict[cds_ftr._start_stop_id] = cds_ftr
+            elif cds_ftr._stop_id in matched_stop_set:
+                g1_matched_cds_stop_dict[cds_ftr._stop_id] = cds_ftr
             else:
-                g1_unmatched_cds_list.append(cds)
+                g1_unmatched_cds_list.append(cds_ftr)
 
 
         g2_matched_cds_start_stop_dict = {}
@@ -290,13 +290,13 @@ class GenomePair:
         g2_unmatched_cds_list = []
 
 
-        for cds in g2_feature_list:
-            if cds._start_stop_id in matched_start_stop_set:
-                g2_matched_cds_start_stop_dict[cds._start_stop_id] = cds
-            elif cds._stop_id in matched_stop_set:
-                g2_matched_cds_stop_dict[cds._stop_id] = cds
+        for cds_ftr in g2_feature_list:
+            if cds_ftr._start_stop_id in matched_start_stop_set:
+                g2_matched_cds_start_stop_dict[cds_ftr._start_stop_id] = cds_ftr
+            elif cds_ftr._stop_id in matched_stop_set:
+                g2_matched_cds_stop_dict[cds_ftr._stop_id] = cds_ftr
             else:
-                g2_unmatched_cds_list.append(cds)
+                g2_unmatched_cds_list.append(cds_ftr)
 
 
         # Create MatchedCdsFeatures objects
@@ -327,16 +327,16 @@ class GenomePair:
 
         # Compute unmatched error and gene total errors for
         # all unmatched features.
-        for cds in g1_unmatched_cds_list:
-            cds.set_unmatched_error()
-            cds.compute_total_cds_errors()
-            if cds.get_total_errors() > 0:
+        for cds_ftr in g1_unmatched_cds_list:
+            cds_ftr.set_unmatched_error()
+            cds_ftr.compute_total_cds_errors()
+            if cds_ftr.get_total_errors() > 0:
                 self.__total_number_genes_with_errors += 1
 
-        for cds in ncbi_unmatched_cds_list:
-            cds.set_unmatched_error()
-            cds.compute_total_cds_errors()
-            if cds.get_total_errors() > 0:
+        for cds_ftr in ncbi_unmatched_cds_list:
+            cds_ftr.set_unmatched_error()
+            cds_ftr.compute_total_cds_errors()
+            if cds_ftr.get_total_errors() > 0:
                 self.__total_number_genes_with_errors += 1
 
 

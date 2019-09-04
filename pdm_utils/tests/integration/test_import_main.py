@@ -5,7 +5,7 @@
 import unittest
 from pipelines.db_import import import_main
 from constants import constants
-from classes import bundle, Genome, Cds, GenomePair, Ticket, Source
+from classes import bundle, Genome, GenomePair, Ticket, Source
 from classes import MySQLConnectionHandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq

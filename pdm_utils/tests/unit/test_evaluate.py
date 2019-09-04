@@ -3,7 +3,7 @@
 
 from classes import Genome
 from classes import Source
-from classes import Cds
+from classes import cds
 from classes import GenomePair
 from constants import constants
 from pipelines.db_import import evaluate
@@ -837,33 +837,33 @@ class TestEvaluateClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced when
         check_locus_tag = True, check_gene = True, and
         check_description = True."""
-        cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds)
-        self.assertEqual(len(cds.evaluations), 13)
+        cds_ftr = cds.Cds()
+        evaluate.check_cds_for_import(cds_ftr)
+        self.assertEqual(len(cds_ftr.evaluations), 13)
 
     def test_check_cds_for_import_2(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = False, check_gene = True, and
         check_description = True."""
-        cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds, check_locus_tag=False)
-        self.assertEqual(len(cds.evaluations), 10)
+        cds_ftr = cds.Cds()
+        evaluate.check_cds_for_import(cds_ftr, check_locus_tag=False)
+        self.assertEqual(len(cds_ftr.evaluations), 10)
 
     def test_check_cds_for_import_3(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = True, check_gene = False, and
         check_description = True."""
-        cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds, check_gene=False)
-        self.assertEqual(len(cds.evaluations), 10)
+        cds_ftr = cds.Cds()
+        evaluate.check_cds_for_import(cds_ftr, check_gene=False)
+        self.assertEqual(len(cds_ftr.evaluations), 10)
 
     def test_check_cds_for_import_4(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = True, check_gene = True, and
         check_description = False."""
-        cds = Cds.Cds()
-        evaluate.check_cds_for_import(cds, check_description=False)
-        self.assertEqual(len(cds.evaluations), 12)
+        cds_ftr = cds.Cds()
+        evaluate.check_cds_for_import(cds_ftr, check_description=False)
+        self.assertEqual(len(cds_ftr.evaluations), 12)
 
 
     # TODO test_check_cds_for_import_5 to test check_description_field parameter.

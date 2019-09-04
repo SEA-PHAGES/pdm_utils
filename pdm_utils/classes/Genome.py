@@ -9,7 +9,7 @@ from Bio.SeqUtils import GC
 from Bio.Seq import Seq
 import re
 from operator import attrgetter
-from classes import Cds, Trna
+from classes import cds, Trna
 
 
 class Genome:
@@ -267,9 +267,9 @@ class Genome:
         """
         start_end_id_list = []
         end_strand_id_list = []
-        for cds in self.cds_features:
-            start_end_id_list.append(cds._start_end_id)
-            end_strand_id_list.append(cds._end_strand_id)
+        for cds_ftr in self.cds_features:
+            start_end_id_list.append(cds_ftr._start_end_id)
+            end_strand_id_list.append(cds_ftr._end_strand_id)
         self._cds_start_end_ids = start_end_id_list
         self._cds_end_strand_ids = end_strand_id_list
 
@@ -443,14 +443,14 @@ class Genome:
 
     def tally_descriptions(self):
         """Tally the non-generic CDS descriptions."""
-        for cds in self.cds_features:
-            if cds.processed_description != "":
+        for cds_ftr in self.cds_features:
+            if cds_ftr.processed_description != "":
                 self._cds_processed_descriptions_tally += 1
-            if cds.processed_product != "":
+            if cds_ftr.processed_product != "":
                 self._cds_processed_products_tally += 1
-            if cds.processed_function != "":
+            if cds_ftr.processed_function != "":
                 self._cds_processed_functions_tally += 1
-            if cds.processed_note != "":
+            if cds_ftr.processed_note != "":
                 self._cds_processed_notes_tally += 1
 
 
@@ -533,7 +533,7 @@ class Genome:
         index = 0
         while index < len(sorted_list):
             if use_type:
-                if isinstance(sorted_list[index], Cds.Cds):
+                if isinstance(sorted_list[index], cds.Cds):
                     delimiter = "_CDS_"
 
                 # TODO unit test after tRNA class implemented.
@@ -1264,13 +1264,13 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_feature_ids(self, cds=False, trna=False, tmrna=False,
+    def check_feature_ids(self, cds_ftr=False, trna=False, tmrna=False,
                           other=None, strand=False, eval_id=None):
         """Identify overlapping, duplicated, or partially-duplicated
         features.
 
-        :param cds: Indicates whether ids of CDS features should be included.
-        :type cds: bool
+        :param cds_ftr: Indicates whether ids of CDS features should be included.
+        :type cds_ftr: bool
         :param trna: Indicates whether ids of tRNA features should be included.
         :type trna: bool
         :param trna: Indicates whether ids of tmRNA features should be included.
@@ -1284,7 +1284,7 @@ class Genome:
         """
         unsorted_feature_lists = []
         unsorted_features = []
-        if cds:
+        if cds_ftr:
             unsorted_features.extend(self.cds_features)
         if trna:
             unsorted_features.extend(self.trna_features)

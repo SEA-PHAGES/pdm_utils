@@ -71,8 +71,8 @@ class Bundle:
             statement = phamerator.create_genome_insert_statement(genome)
             self.sql_queries.append(statement)
 
-            for cds in genome.cds_features:
-                statement = create_cds_insert_statement(cds)
+            for cds_ftr in genome.cds_features:
+                statement = create_cds_insert_statement(cds_ftr)
                 self.sql_queries.append(statement)
 
 
@@ -193,8 +193,8 @@ class Bundle:
                 if evl.status == "error":
                     self._errors += 1
 
-            for cds in genome.cds_features:
-                for evl in cds.evaluations:
+            for cds_ftr in genome.cds_features:
+                for evl in cds_ftr.evaluations:
                     if evl.status == "error":
                         self._errors += 1
 
@@ -233,10 +233,10 @@ class Bundle:
             genome_key = "genome_" + key
             if len(genome.evaluations) > 0:
                 eval_dict[genome_key] = genome.evaluations
-            for cds in genome.cds_features:
-                cds_key = "cds_" + cds.id
-                if len(cds.evaluations) > 0:
-                    eval_dict[cds_key] = cds.evaluations
+            for cds_ftr in genome.cds_features:
+                cds_key = "cds_" + cds_ftr.id
+                if len(cds_ftr.evaluations) > 0:
+                    eval_dict[cds_key] = cds_ftr.evaluations
         for key in self.genome_pair_dict.keys():
             genome_pair = self.genome_pair_dict[key]
             genome_pair_key = "genome_pair_" + key

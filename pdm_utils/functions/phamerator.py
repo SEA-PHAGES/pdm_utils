@@ -3,7 +3,7 @@
 
 from classes import Genome
 from classes import GenomePair
-from classes import Cds
+from classes import cds
 from functions import basic
 import pymysql
 
@@ -103,67 +103,67 @@ def parse_phage_table_data(data_dict, trans_table=11):
 def parse_gene_table_data(data_dict, trans_table=11):
     """Parse a Phamerator database dictionary to create a Cds object."""
 
-    cds = Cds.Cds()
+    cds_ftr = cds.Cds()
     try:
-        cds.id = data_dict["GeneID"]
+        cds_ftr.id = data_dict["GeneID"]
     except:
         pass
 
     try:
-        cds.genome_id = data_dict["PhageID"]
+        cds_ftr.genome_id = data_dict["PhageID"]
     except:
         pass
 
     try:
-        cds.left = data_dict["Start"]
+        cds_ftr.left = data_dict["Start"]
     except:
         pass
 
     try:
-        cds.right = data_dict["Stop"]
+        cds_ftr.right = data_dict["Stop"]
     except:
         pass
 
     try:
-        cds._length = data_dict["Length"]
+        cds_ftr._length = data_dict["Length"]
     except:
         pass
 
     try:
-        cds.name = data_dict["Name"]
+        cds_ftr.name = data_dict["Name"]
     except:
         pass
 
     try:
-        cds.type = data_dict["TypeID"]
+        cds_ftr.type = data_dict["TypeID"]
     except:
         pass
 
     try:
-        cds.set_translation(data_dict["translation"])
+        cds_ftr.set_translation(data_dict["translation"])
     except:
         pass
 
     try:
-        cds.strand = data_dict["Orientation"]
+        cds_ftr.strand = data_dict["Orientation"]
     except:
         pass
 
     try:
-        cds.description = data_dict["Notes"].decode("utf-8")
+        cds_ftr.description = data_dict["Notes"].decode("utf-8")
     except:
         pass
 
     try:
-        cds.locus_tag = data_dict["LocusTag"]
+        cds_ftr.locus_tag = data_dict["LocusTag"]
     except:
         pass
 
     try:
-        cds.translation_table = trans_table
+        cds_ftr.translation_table = trans_table
     except:
         pass
-    return cds
+    return cds_ftr
 
 
 # TODO revamp so that sql handler makes the query instead of
@@ -207,8 +207,8 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
                     sql_handle, column=column, query=query,
                     phage_id_list=phage_id_list)
     for data_dict in result_list:
-        cds = parse_gene_table_data(result_list[0])
-        cds_list.append(cds)
+        cds_ftr = parse_gene_table_data(result_list[0])
+        cds_list.append(cds_ftr)
     return cds_list
 
 

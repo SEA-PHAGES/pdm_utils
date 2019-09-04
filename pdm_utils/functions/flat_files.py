@@ -6,7 +6,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Seq import Seq
-from classes import Genome, Cds, Trna, Source
+from classes import Genome, cds, Trna, Source
 from functions import basic
 from constants import constants
 from datetime import datetime
@@ -99,23 +99,23 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
     :returns: A  pdm_utils Cds object
     :rtype: Cds
     """
-    cds = Cds.Cds()
-    cds.genome_id = genome_id
-    cds.seqfeature = seqfeature
+    cds_ftr = cds.Cds()
+    cds_ftr.genome_id = genome_id
+    cds_ftr.seqfeature = seqfeature
 
     try:
         locus_tag = seqfeature.qualifiers["locus_tag"][0]
     except:
         locus_tag = ""
-    cds.set_locus_tag(locus_tag)
+    cds_ftr.set_locus_tag(locus_tag)
 
-    cds.set_strand(seqfeature.strand, "fr_short", case = True)
-    cds.left, cds.right, cds.compound_parts = parse_coordinates(seqfeature)
-    #cds.set_wrap()
+    cds_ftr.set_strand(seqfeature.strand, "fr_short", case = True)
+    cds_ftr.left, cds_ftr.right, cds_ftr.compound_parts = parse_coordinates(seqfeature)
+    #cds_ftr.set_wrap()
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
-    cds.coordinate_format = "0_half_open"
+    cds_ftr.coordinate_format = "0_half_open"
 
 
     # For translation, convert it to a Biopython Seq object.
@@ -124,43 +124,43 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
     except:
         translation = ""
     translation = Seq(translation, Alphabet.IUPAC.protein)
-    cds.set_translation(translation)
-    cds.set_nucleotide_length()
+    cds_ftr.set_translation(translation)
+    cds_ftr.set_nucleotide_length()
 
     try:
         translation_table = seqfeature.qualifiers["transl_table"][0]
     except:
         translation_table = -1
-    cds.set_translation_table(translation_table)
+    cds_ftr.set_translation_table(translation_table)
 
     try:
-        cds.product, cds.processed_product = \
+        cds_ftr.product, cds_ftr.processed_product = \
             basic.reformat_description(seqfeature.qualifiers["product"][0])
     except:
-        cds.product = ""
-        cds.processed_product = ""
+        cds_ftr.product = ""
+        cds_ftr.processed_product = ""
 
     try:
-        cds.function, cds.processed_function = \
+        cds_ftr.function, cds_ftr.processed_function = \
             basic.reformat_description(seqfeature.qualifiers["function"][0])
     except:
-        cds.function = ""
-        cds.processed_function = ""
+        cds_ftr.function = ""
+        cds_ftr.processed_function = ""
 
     try:
-        cds.note, cds.processed_note = \
+        cds_ftr.note, cds_ftr.processed_note = \
             basic.reformat_description(seqfeature.qualifiers["note"][0])
     except:
-        cds.note = ""
-        cds.processed_note = ""
+        cds_ftr.note = ""
+        cds_ftr.processed_note = ""
 
     try:
-        cds.gene = seqfeature.qualifiers["gene"][0]
+        cds_ftr.gene = seqfeature.qualifiers["gene"][0]
     except:
-        cds.gene = ""
+        cds_ftr.gene = ""
 
-    cds.set_name()
-    return cds
+    cds_ftr.set_name()
+    return cds_ftr
 
 
 # TODO remove this function. No longer needed.
@@ -168,8 +168,8 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
 #     """Convert all Biopython CDS SeqFeatures to Cds objects."""
 #     cds_list = []
 #     for seqfeature in seqfeature_list:
-#         cds = parse_cds_seqfeature(seqfeature)
-#         cds_list.append(cds)
+#         cds_ftr = parse_cds_seqfeature(seqfeature)
+#         cds_list.append(cds_ftr)
 #     return cds_list
 
 
@@ -371,8 +371,8 @@ def parse_genome_data(seqrecord, filepath="",
     cds_list = []
     if "CDS" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["CDS"]:
-            cds = parse_cds_seqfeature(seqfeature, genome_id=genome.id)
-            cds_list.append(cds)
+            cds_ftr = parse_cds_seqfeature(seqfeature, genome_id=genome.id)
+            cds_list.append(cds_ftr)
 
     source_list = []
     if "source" in seqfeature_dict.keys():

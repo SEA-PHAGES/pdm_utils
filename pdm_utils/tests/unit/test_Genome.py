@@ -4,7 +4,7 @@
 import unittest
 from constants import constants
 from classes import Genome
-from classes import Cds
+from classes import cds
 from datetime import datetime
 from Bio.Seq import Seq
 from classes import Trna
@@ -18,21 +18,21 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-        self.cds1 = Cds.Cds()
+        self.cds1 = cds.Cds()
         self.cds1.processed_description = ""
         self.cds1.processed_product = ""
         self.cds1.processed_function = ""
         self.cds1.processed_note = ""
 
-        self.cds2 = Cds.Cds()
+        self.cds2 = cds.Cds()
         self.cds2.processed_description = ""
         self.cds2.processed_product = ""
         self.cds2.processed_function = ""
         self.cds2.processed_note = ""
 
 
-        self.cds3 = Cds.Cds()
-        self.cds4 = Cds.Cds()
+        self.cds3 = cds.Cds()
+        self.cds4 = cds.Cds()
 
         self.trna1 = Trna.TrnaFeature()
         self.trna2 = Trna.TrnaFeature()
@@ -128,11 +128,11 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_cds_id_list_1(self):
         """Check that CDS feature identifier lists are set."""
-        cds1 = Cds.Cds()
+        cds1 = cds.Cds()
         cds1._start_end_id = (1, 5)
         cds1._end_strand_id = (5, "forward")
 
-        cds2 = Cds.Cds()
+        cds2 = cds.Cds()
         cds2._start_end_id = (21, 2)
         cds2._end_strand_id = (2, "reverse")
 
@@ -2146,7 +2146,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 20
         self.cds2.right = 70
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True,eval_id="eval_id")
+        self.genome.check_feature_ids(cds_ftr=True,eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.genome.evaluations[0].status, "correct")
         with self.subTest():
@@ -2162,7 +2162,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         with self.subTest():
             self.assertEqual(self.genome.evaluations[0].status, "error")
         with self.subTest():
@@ -2178,7 +2178,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_4(self):
@@ -2191,7 +2191,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True, strand=True)
+        self.genome.check_feature_ids(cds_ftr=True, strand=True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_feature_ids_5(self):
@@ -2204,7 +2204,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_6(self):
@@ -2217,7 +2217,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 10
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_feature_ids_7(self):
@@ -2230,7 +2230,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_8(self):
@@ -2243,7 +2243,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_feature_ids_9(self):
@@ -2256,7 +2256,7 @@ class TestGenomeClass(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True)
+        self.genome.check_feature_ids(cds_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_10(self):
@@ -2273,7 +2273,7 @@ class TestGenomeClass(unittest.TestCase):
         self.trna1.strand = "F"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.trna_features = [self.trna1]
-        self.genome.check_feature_ids(cds=True, trna=True)
+        self.genome.check_feature_ids(cds_ftr=True, trna=True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_11(self):
@@ -2307,12 +2307,12 @@ class TestGenomeClass(unittest.TestCase):
         self.cds3.left = 5
         self.cds3.right = 20
         self.genome.cds_features = [self.cds1, self.cds2]
-        self.genome.check_feature_ids(cds=True, other=[self.cds3])
+        self.genome.check_feature_ids(cds_ftr=True, other=[self.cds3])
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_13(self):
         """Verify no error is produced when empty lists are passed through."""
-        self.genome.check_feature_ids(cds=True, trna=True, tmrna=True, other=[])
+        self.genome.check_feature_ids(cds_ftr=True, trna=True, tmrna=True, other=[])
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 
