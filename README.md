@@ -10,4 +10,4 @@
 
 ### Who do I talk to? ###
 
-* Contact Travis Mavrich (trm53@pitt.edu) or Christian Gauthier (christian.gautheir@pitt.edu).
+* Contact Travis Mavrich (trm53@pitt.edu) or Christian Gauthier (christian.gauthier@pitt.edu).
