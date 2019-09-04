@@ -362,7 +362,7 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
 
     genome.check_cds_feature_tally()
-    genome.check_feature_ids(cds_ftr=True, trna=True, tmrna=True)
+    genome.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True)
 
 
     # TODO not sure if these are needed now that check_feature_ids()

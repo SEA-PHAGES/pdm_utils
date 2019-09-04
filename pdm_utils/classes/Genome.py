@@ -9,7 +9,7 @@ from Bio.SeqUtils import GC
 from Bio.Seq import Seq
 import re
 from operator import attrgetter
-from classes import cds, Trna
+from classes import cds, trna
 
 
 class Genome:
@@ -537,7 +537,7 @@ class Genome:
                     delimiter = "_CDS_"
 
                 # TODO unit test after tRNA class implemented.
-                elif isinstance(sorted_list[index], Trna.TrnaFeature):
+                elif isinstance(sorted_list[index], trna.TrnaFeature):
                     delimiter = "_TRNA_"
 
                 # TODO unit test after tmRNA class implemented.
@@ -1264,16 +1264,16 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_feature_ids(self, cds_ftr=False, trna=False, tmrna=False,
+    def check_feature_ids(self, cds_ftr=False, trna_ftr=False, tmrna=False,
                           other=None, strand=False, eval_id=None):
         """Identify overlapping, duplicated, or partially-duplicated
         features.
 
         :param cds_ftr: Indicates whether ids of CDS features should be included.
         :type cds_ftr: bool
-        :param trna: Indicates whether ids of tRNA features should be included.
-        :type trna: bool
-        :param trna: Indicates whether ids of tmRNA features should be included.
+        :param trna_ftr: Indicates whether ids of tRNA features should be included.
+        :type trna_ftr: bool
+        :param tmrna: Indicates whether ids of tmRNA features should be included.
         :type tmrna: bool
         :param other: List of features that should be included.
         :type other: list
@@ -1286,7 +1286,7 @@ class Genome:
         unsorted_features = []
         if cds_ftr:
             unsorted_features.extend(self.cds_features)
-        if trna:
+        if trna_ftr:
             unsorted_features.extend(self.trna_features)
         if tmrna:
             unsorted_features.extend(self.tmrna_features)

@@ -6,7 +6,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Seq import Seq
-from classes import Genome, cds, Trna, source
+from classes import Genome, cds, trna, source
 from functions import basic
 from constants import constants
 from datetime import datetime
@@ -384,8 +384,8 @@ def parse_genome_data(seqrecord, filepath="",
     trna_list = []
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
-            trna = parse_trna_seqfeature(seqfeature, genome_id=genome.id)
-            trna_list.append(trna)
+            trna_ftr = parse_trna_seqfeature(seqfeature, genome_id=genome.id)
+            trna_list.append(trna_ftr)
 
     # TODO unit test after functions are constructed.
     tmrna_list = []
@@ -550,8 +550,8 @@ def parse_files(file_list, id_field="organism_name"):
 def parse_trna_seqfeature(seqfeature, genome_id=""):
     """Parses a Biopython tRNA SeqFeature.
     """
-    trna = ""
-    return trna
+    trna_ftr = ""
+    return trna_ftr
 
 
 

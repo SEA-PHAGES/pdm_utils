@@ -7,7 +7,7 @@ from classes import Genome
 from classes import cds
 from datetime import datetime
 from Bio.Seq import Seq
-from classes import Trna
+from classes import trna
 
 
 class TestGenomeClass(unittest.TestCase):
@@ -34,10 +34,10 @@ class TestGenomeClass(unittest.TestCase):
         self.cds3 = cds.Cds()
         self.cds4 = cds.Cds()
 
-        self.trna1 = Trna.TrnaFeature()
-        self.trna2 = Trna.TrnaFeature()
-        self.trna3 = Trna.TrnaFeature()
-        self.trna4 = Trna.TrnaFeature()
+        self.trna1 = trna.TrnaFeature()
+        self.trna2 = trna.TrnaFeature()
+        self.trna3 = trna.TrnaFeature()
+        self.trna4 = trna.TrnaFeature()
 
     def test_set_filename_1(self):
         """Confirm file path is split appropriately."""
@@ -2273,7 +2273,7 @@ class TestGenomeClass(unittest.TestCase):
         self.trna1.strand = "F"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.trna_features = [self.trna1]
-        self.genome.check_feature_ids(cds_ftr=True, trna=True)
+        self.genome.check_feature_ids(cds_ftr=True, trna_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "error")
 
     def test_check_feature_ids_11(self):
@@ -2290,7 +2290,7 @@ class TestGenomeClass(unittest.TestCase):
         self.trna1.strand = "F"
         self.genome.cds_features = [self.cds1, self.cds2]
         self.genome.trna_features = [self.trna1]
-        self.genome.check_feature_ids(trna=True)
+        self.genome.check_feature_ids(trna_ftr=True)
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
     def test_check_feature_ids_12(self):
@@ -2312,7 +2312,7 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_check_feature_ids_13(self):
         """Verify no error is produced when empty lists are passed through."""
-        self.genome.check_feature_ids(cds_ftr=True, trna=True, tmrna=True, other=[])
+        self.genome.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True, other=[])
         self.assertEqual(self.genome.evaluations[0].status, "correct")
 
 

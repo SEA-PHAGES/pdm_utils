@@ -199,8 +199,8 @@ class Bundle:
                         self._errors += 1
 
             # TODO need to implement this once this class is implemented.
-            # for trna in genome.trna_features:
-            #     for evl in trna.evaluations:
+            # for trna_ftr in genome.trna_features:
+            #     for evl in trna_ftr.evaluations:
             #         if evl.status == "error":
             #             self._errors += 1
 
