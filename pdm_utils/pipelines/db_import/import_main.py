@@ -80,8 +80,8 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
     # Check for ticket errors.
     ticket_errors = 0
     for key in ticket_dict.keys():
-        ticket = ticket_dict[key]
-        for evl in ticket.evaluations:
+        tkt = ticket_dict[key]
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 ticket_errors += 1
 

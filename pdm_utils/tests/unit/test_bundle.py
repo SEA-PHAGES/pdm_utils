@@ -5,7 +5,7 @@ from classes import bundle
 from classes import Genome
 from classes import GenomePair
 from classes import cds
-from classes import Ticket
+from classes import ticket
 from classes import eval
 import unittest
 
@@ -20,7 +20,7 @@ class TestBundleClass1(unittest.TestCase):
         self.genome1.type = "flat_file"
         self.genome2 = Genome.Genome()
         self.genome2.type = "phamerator"
-        self.ticket = Ticket.GenomeTicket()
+        self.tkt = ticket.GenomeTicket()
 
 
 
@@ -28,7 +28,7 @@ class TestBundleClass1(unittest.TestCase):
     def test_set_genome_pair_1(self):
         """Check that a genome pair is set if both keys are present."""
 
-        self.bndl.ticket = self.ticket
+        self.bndl.ticket = self.tkt
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
         genome_pair = GenomePair.GenomePair()
@@ -39,7 +39,7 @@ class TestBundleClass1(unittest.TestCase):
     def test_set_genome_pair_2(self):
         """Check that a genome pair is not set if one key is not present."""
 
-        self.bndl.ticket = self.ticket
+        self.bndl.ticket = self.tkt
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
         genome_pair = GenomePair.GenomePair()
@@ -51,7 +51,7 @@ class TestBundleClass1(unittest.TestCase):
 
     def test_check_matched_genome_1(self):
         """Check that no error is produced when the genome type is present."""
-        self.bndl.ticket = self.ticket
+        self.bndl.ticket = self.tkt
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
         self.bndl.check_matched_genome("phamerator", "eval_id")
@@ -62,7 +62,7 @@ class TestBundleClass1(unittest.TestCase):
 
     def test_check_matched_genome_2(self):
         """Check that an error is produced when the genome type is present."""
-        self.bndl.ticket = self.ticket
+        self.bndl.ticket = self.tkt
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
         self.bndl.check_matched_genome("invalid")
@@ -151,7 +151,7 @@ class TestBundleClass2(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = Ticket.GenomeTicket()
+        self.ticket1 = ticket.GenomeTicket()
         self.cds1 = cds.Cds()
         self.cds1.id = "L5_1"
         self.cds2 = cds.Cds()

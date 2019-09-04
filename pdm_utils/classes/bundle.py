@@ -2,7 +2,7 @@
 
 from classes import eval
 from functions import phamerator
-from classes import Ticket
+from classes import ticket
 
 class Bundle:
 
@@ -225,7 +225,7 @@ class Bundle:
         eval_dict = {}
         if len(self.evaluations) > 0:
             eval_dict["bundle"] = self.evaluations
-        if isinstance(self.ticket, Ticket.GenomeTicket):
+        if isinstance(self.ticket, ticket.GenomeTicket):
             if len(self.ticket.evaluations) > 0:
                 eval_dict["ticket"] = self.ticket.evaluations
         for key in self.genome_dict.keys():

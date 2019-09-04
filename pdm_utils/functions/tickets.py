@@ -3,7 +3,7 @@
 from constants import constants
 from functions import basic
 from functions import phagesdb
-from classes import Ticket
+from classes import ticket
 from classes import Genome
 
 
@@ -12,11 +12,11 @@ from classes import Genome
 
 
 
-def parse_import_ticket_data(ticket, data_list,
+def parse_import_ticket_data(tkt, data_list,
                              expected_size = constants.IMPORT_TABLE_SIZE,
                              id = "", direction="list_to_ticket"):
     """Converts import ticket data between a list and Ticket object formats.
-    'ticket' is a Ticket object.
+    'tkt' is a Ticket object.
     'data_list' is a list.
     'expected_size' indicates how many elements should be in the data_list.
     'direction' indicates whether data in the list should populate a
@@ -44,30 +44,30 @@ def parse_import_ticket_data(ticket, data_list,
     if len(data_list) == expected_size:
 
         if direction == "list_to_ticket":
-            ticket._parsed_fields = len(data_list)
-            ticket.id = id
+            tkt._parsed_fields = len(data_list)
+            tkt.id = id
 
 
         if direction == "list_to_ticket":
-            ticket.set_type(data_list[0])
+            tkt.set_type(data_list[0])
         elif direction == "ticket_to_list":
-            data_list[0] = ticket.type
+            data_list[0] = tkt.type
         else:
             pass
 
 
         if direction == "list_to_ticket":
-            ticket.set_description_field(data_list[7])
+            tkt.set_description_field(data_list[7])
         elif direction == "ticket_to_list":
-            data_list[7] = ticket.description_field
+            data_list[7] = tkt.description_field
         else:
             pass
 
 
         if direction == "list_to_ticket":
-            ticket.set_run_mode(data_list[11])
+            tkt.set_run_mode(data_list[11])
         elif direction == "ticket_to_list":
-            data_list[11] = ticket.run_mode
+            data_list[11] = tkt.run_mode
         else:
             pass
 
@@ -75,37 +75,37 @@ def parse_import_ticket_data(ticket, data_list,
         # This data will eventually populate a Genome object.
 
         if direction == "list_to_ticket":
-            ticket.set_phage_id(data_list[1])
+            tkt.set_phage_id(data_list[1])
         elif direction == "ticket_to_list":
-            data_list[1] = ticket.phage_id
+            data_list[1] = tkt.phage_id
         else:
             pass
 
         if direction == "list_to_ticket":
-            ticket.set_host(data_list[2])
+            tkt.set_host(data_list[2])
         elif direction == "ticket_to_list":
-            data_list[2] = ticket.host_genus
+            data_list[2] = tkt.host_genus
         else:
             pass
 
         if direction == "list_to_ticket":
-            ticket.set_cluster(data_list[3])
+            tkt.set_cluster(data_list[3])
         elif direction == "ticket_to_list":
-            data_list[3] = ticket.cluster
+            data_list[3] = tkt.cluster
         else:
             pass
 
         if direction == "list_to_ticket":
-            ticket.set_subcluster(data_list[4])
+            tkt.set_subcluster(data_list[4])
         elif direction == "ticket_to_list":
-            data_list[4] = ticket.subcluster
+            data_list[4] = tkt.subcluster
         else:
             pass
 
         if direction == "list_to_ticket":
-            ticket.set_annotation_status(data_list[5])
+            tkt.set_annotation_status(data_list[5])
         elif direction == "ticket_to_list":
-            data_list[5] = str(ticket.annotation_status)
+            data_list[5] = str(tkt.annotation_status)
         else:
             pass
 
@@ -115,18 +115,18 @@ def parse_import_ticket_data(ticket, data_list,
                 data_list[6] = int(data_list[6])
             except:
                 pass
-            ticket.set_annotation_author(data_list[6])
+            tkt.set_annotation_author(data_list[6])
 
         elif direction == "ticket_to_list":
             # Convert to string.
-            data_list[6] = str(ticket.annotation_author)
+            data_list[6] = str(tkt.annotation_author)
         else:
             pass
 
         if direction == "list_to_ticket":
-            ticket.set_accession(data_list[8])
+            tkt.set_accession(data_list[8])
         elif direction == "ticket_to_list":
-            data_list[8] = ticket.accession
+            data_list[8] = tkt.accession
         else:
             pass
 
@@ -136,10 +136,10 @@ def parse_import_ticket_data(ticket, data_list,
                 data_list[9] = int(data_list[9])
             except:
                 pass
-            ticket.set_annotation_qc(data_list[9])
+            tkt.set_annotation_qc(data_list[9])
         elif direction == "ticket_to_list":
             # Convert to string.
-            data_list[9] = str(ticket.annotation_qc)
+            data_list[9] = str(tkt.annotation_qc)
         else:
             pass
 
@@ -149,10 +149,10 @@ def parse_import_ticket_data(ticket, data_list,
                 data_list[10] = int(data_list[10])
             except:
                 pass
-            ticket.set_retrieve_record(data_list[10])
+            tkt.set_retrieve_record(data_list[10])
         elif direction == "ticket_to_list":
             # Convert to string.
-            data_list[10] = str(ticket.retrieve_record)
+            data_list[10] = str(tkt.retrieve_record)
         else:
             pass
 
@@ -172,9 +172,9 @@ def parse_import_tickets(list_of_lists):
     counter = 1
     list_of_tickets = []
     for list_of_data in list_of_lists:
-        ticket = Ticket.GenomeTicket()
-        parse_import_ticket_data(ticket, list_of_data, id = counter)
-        list_of_tickets.append(ticket)
+        tkt = ticket.GenomeTicket()
+        parse_import_ticket_data(tkt, list_of_data, id = counter)
+        list_of_tickets.append(tkt)
         counter += 1
     return list_of_tickets
 
@@ -195,22 +195,22 @@ def compare_tickets(list_of_tickets):
 
     # Create separate lists to check each field for duplications.
     # Skip "none" values since they are expected to be duplicated.
-    for ticket in list_of_tickets:
+    for tkt in list_of_tickets:
 
-        if ticket.phage_id != "none":
-            phage_id_list.append(ticket.phage_id)
+        if tkt.phage_id != "none":
+            phage_id_list.append(tkt.phage_id)
 
-        if ticket.accession != "none":
-            accession_list.append(ticket.accession)
+        if tkt.accession != "none":
+            accession_list.append(tkt.accession)
 
     # Identify duplicate values in the group of tickets.
     phage_id_dupe_set = basic.identify_one_list_duplicates(phage_id_list)
     accession_dupe_set = basic.identify_one_list_duplicates(accession_list)
 
-    for ticket in list_of_tickets:
+    for tkt in list_of_tickets:
 
-        ticket.check_duplicate_phage_id(phage_id_dupe_set)
-        ticket.check_duplicate_accession(accession_dupe_set)
+        tkt.check_duplicate_phage_id(phage_id_dupe_set)
+        tkt.check_duplicate_accession(accession_dupe_set)
 
 
 
@@ -220,28 +220,28 @@ def copy_ticket_to_genome(bndl):
     instead of a Genome object because some tickets (such as 'replace')
     need to instantiate more than one Genome object."""
 
-    ticket = bndl.ticket
+    tkt = bndl.ticket
 
-    if (ticket.type == "add" or ticket.type == "replace"):
+    if (tkt.type == "add" or tkt.type == "replace"):
         genome1 = Genome.Genome()
         genome1.type = "add"
-        genome1.set_id(value=ticket.phage_id)
-        genome1.name = ticket.phage_id
-        genome1.set_host_genus(ticket.host_genus)
-        genome1.set_accession(ticket.accession)
-        genome1.annotation_status = ticket.annotation_status
-        genome1.set_cluster(ticket.cluster)
-        genome1.set_subcluster(ticket.subcluster)
+        genome1.set_id(value=tkt.phage_id)
+        genome1.name = tkt.phage_id
+        genome1.set_host_genus(tkt.host_genus)
+        genome1.set_accession(tkt.accession)
+        genome1.annotation_status = tkt.annotation_status
+        genome1.set_cluster(tkt.cluster)
+        genome1.set_subcluster(tkt.subcluster)
         genome1.set_cluster_subcluster()
-        genome1.set_annotation_author(ticket.annotation_author)
-        genome1.annotation_qc = ticket.annotation_qc
-        genome1.retrieve_record = ticket.retrieve_record
+        genome1.set_annotation_author(tkt.annotation_author)
+        genome1.annotation_qc = tkt.annotation_qc
+        genome1.retrieve_record = tkt.retrieve_record
 
         bndl.genome_dict[genome1.type] = genome1
 
 
         # TODO probably no need to create a second genome.
-        # if ticket.type == "replace":
+        # if tkt.type == "replace":
         #
         #     genome2 = Genome.Genome()
         #     genome2.type = "remove"
@@ -249,28 +249,28 @@ def copy_ticket_to_genome(bndl):
         #     bndl.genome_dict[genome2.type] = genome2
 
     # TODO 'update' ticket option will eventually be deleted.
-    elif ticket.type == "update":
+    elif tkt.type == "update":
 
         # TODO unit test.
         # genome = Genome.Genome()
         # genome.type = "update"
-        # genome.set_id(ticket.phage_id)
-        # genome.set_host_genus(ticket.host_genus)
-        # genome.set_accession(ticket.accession)
-        # genome.annotation_status = ticket.annotation_status
-        # genome.set_cluster(ticket.cluster)
-        # genome.set_subcluster(ticket.subcluster)
+        # genome.set_id(tkt.phage_id)
+        # genome.set_host_genus(tkt.host_genus)
+        # genome.set_accession(tkt.accession)
+        # genome.annotation_status = tkt.annotation_status
+        # genome.set_cluster(tkt.cluster)
+        # genome.set_subcluster(tkt.subcluster)
         # genome.set_cluster_subcluster()
         # bndl.genome_dict[genome.type] = genome
         pass
 
     # TODO 'remove' ticket option will eventually be deleted.
-    elif ticket.type == "remove":
+    elif tkt.type == "remove":
 
         # TODO unit test.
         # genome = Genome.Genome()
         # genome.type = "remove"
-        # genome.set_id(ticket.phage_id)
+        # genome.set_id(tkt.phage_id)
         # bndl.genome_dict[genome.type] = genome
         pass
 
@@ -500,7 +500,7 @@ def prepare_tickets(ticket_filename):
 # TODO probably no longer needed now that parse_import_ticket_data is
 # reversible.
 # def parse_import_ticket(
-#                         ticket,
+#                         tkt,
 #                         data_list,
 #                         expected_size = constants.IMPORT_TABLE_SIZE,
 #                         id = ""):
@@ -521,30 +521,30 @@ def prepare_tickets(ticket_filename):
 #         12. Secondary PhageID
 #     """
 #
-#     ticket._parsed_fields = len(data_list)
+#     tkt._parsed_fields = len(data_list)
 #
 #     # Verify the row of information has the correct number of fields to parse.
 #     if len(data_list) == expected_size:
 #
-#         ticket.id = id
-#         ticket.set_type(data_list[0])
-#         ticket.set_description_field(data_list[7])
-#         ticket.set_run_mode(data_list[11])
+#         tkt.id = id
+#         tkt.set_type(data_list[0])
+#         tkt.set_description_field(data_list[7])
+#         tkt.set_run_mode(data_list[11])
 #
 #
 #         # This data will eventually populate a Genome object.
-#         ticket.set_phage_id(data_list[1])
-#         ticket.set_host(data_list[2])
-#         ticket.set_cluster(data_list[3])
-#         ticket.set_subcluster(data_list[4])
-#         ticket.set_annotation_status(data_list[5])
-#         ticket.set_annotation_author(data_list[6])
-#         ticket.set_accession(data_list[8])
-#         ticket.set_annotation_qc(data_list[9])
-#         ticket.set_retrieve_record(data_list[10])
+#         tkt.set_phage_id(data_list[1])
+#         tkt.set_host(data_list[2])
+#         tkt.set_cluster(data_list[3])
+#         tkt.set_subcluster(data_list[4])
+#         tkt.set_annotation_status(data_list[5])
+#         tkt.set_annotation_author(data_list[6])
+#         tkt.set_accession(data_list[8])
+#         tkt.set_annotation_qc(data_list[9])
+#         tkt.set_retrieve_record(data_list[10])
 #
 #
-#     return ticket
+#     return tkt
 
 
 
@@ -570,28 +570,28 @@ def prepare_tickets(ticket_filename):
 #
 #     # Create separate lists to check each field for duplications.
 #     # Skip "none" values since they are expected to be duplicated.
-#     for ticket in list_of_tickets:
+#     for tkt in list_of_tickets:
 #
-#         if ticket.phage_id != "none":
-#             if ticket.type == "update":
-#                 update_primary_id_list.append(ticket.phage_id)
-#             elif ticket.type == "add":
-#                 add_primary_id_list.append(ticket.phage_id)
-#             elif ticket.type == "replace":
-#                 replace_primary_id_list.append(ticket.phage_id)
+#         if tkt.phage_id != "none":
+#             if tkt.type == "update":
+#                 update_primary_id_list.append(tkt.phage_id)
+#             elif tkt.type == "add":
+#                 add_primary_id_list.append(tkt.phage_id)
+#             elif tkt.type == "replace":
+#                 replace_primary_id_list.append(tkt.phage_id)
 #             else:
 #                 pass
 #
-#         if ticket.secondary_phage_id != "none":
-#             if ticket.type == "replace":
-#                 replace_secondary_id_list.append(ticket.secondary_phage_id)
-#             elif ticket.type == "remove":
-#                 remove_secondary_id_list.append(ticket.secondary_phage_id)
+#         if tkt.secondary_phage_id != "none":
+#             if tkt.type == "replace":
+#                 replace_secondary_id_list.append(tkt.secondary_phage_id)
+#             elif tkt.type == "remove":
+#                 remove_secondary_id_list.append(tkt.secondary_phage_id)
 #             else:
 #                 pass
 #
-#         if ticket.accession != "none":
-#             accession_list.append(ticket.accession)
+#         if tkt.accession != "none":
+#             accession_list.append(tkt.accession)
 #
 #
 #     update_add_primary_id_list = update_primary_id_list + \

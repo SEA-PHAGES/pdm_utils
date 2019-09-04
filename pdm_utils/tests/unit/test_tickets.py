@@ -2,7 +2,7 @@
 
 from classes import bundle
 from classes import Genome
-from classes import Ticket
+from classes import ticket
 from classes import eval
 from functions import tickets
 import unittest
@@ -15,7 +15,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.ticket = Ticket.GenomeTicket()
+        self.tkt = ticket.GenomeTicket()
 
         self.normal_ticket_list = ["add",
                                 "Trixie",
@@ -69,7 +69,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
         self.empty_ticket_list = [None] * 12
 
-        self.filled_ticket = Ticket.GenomeTicket()
+        self.filled_ticket = ticket.GenomeTicket()
         self.filled_ticket.type = "add"
         self.filled_ticket.phage_id = "Trixie"
         self.filled_ticket.host_genus = "Mycobacterium"
@@ -88,49 +88,49 @@ class TestTicketFunctions1(unittest.TestCase):
 
     # def test_parse_import_ticket_1(self):
     #     """Verify properly structured data is parsed correctly."""
-    #     tickets.parse_import_ticket(self.ticket, self.normal_ticket_list)
+    #     tickets.parse_import_ticket(self.tkt, self.normal_ticket_list)
     #
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.type, "add")
+    #         self.assertEqual(self.tkt.type, "add")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.phage_id, "Trixie")
+    #         self.assertEqual(self.tkt.phage_id, "Trixie")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.host_genus, "Mycobacterium")
+    #         self.assertEqual(self.tkt.host_genus, "Mycobacterium")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.cluster, "A")
+    #         self.assertEqual(self.tkt.cluster, "A")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.subcluster, "A2")
+    #         self.assertEqual(self.tkt.subcluster, "A2")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.annotation_status, "final")
+    #         self.assertEqual(self.tkt.annotation_status, "final")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.annotation_author, "hatfull")
+    #         self.assertEqual(self.tkt.annotation_author, "hatfull")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.annotation_qc, 1)
+    #         self.assertEqual(self.tkt.annotation_qc, 1)
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.retrieve_record, 1)
+    #         self.assertEqual(self.tkt.retrieve_record, 1)
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.description_field, "product")
+    #         self.assertEqual(self.tkt.description_field, "product")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.accession, "ABC123")
+    #         self.assertEqual(self.tkt.accession, "ABC123")
     #     with self.subTest():
-    #         self.assertEqual(self.ticket.run_mode, "phagesdb")
+    #         self.assertEqual(self.tkt.run_mode, "phagesdb")
     #
     # def test_parse_import_ticket_2(self):
     #     """Verify id is set appropriately."""
-    #     tickets.parse_import_ticket(self.ticket,
+    #     tickets.parse_import_ticket(self.tkt,
     #                                 self.normal_ticket_list,
     #                                 id = "TicketXYZ")
-    #     self.assertEqual(self.ticket.id, "TicketXYZ")
+    #     self.assertEqual(self.tkt.id, "TicketXYZ")
     #
     # def test_parse_import_ticket_3(self):
     #     """Verify improperly structured data is not parsed."""
-    #     tickets.parse_import_ticket(self.ticket, self.short_ticket_list)
-    #     self.assertEqual(self.ticket.type, "")
+    #     tickets.parse_import_ticket(self.tkt, self.short_ticket_list)
+    #     self.assertEqual(self.tkt.type, "")
     #
     # def test_parse_import_ticket_4(self):
     #     """Verify improperly structured data is not parsed."""
-    #     tickets.parse_import_ticket(self.ticket, self.long_ticket_list)
-    #     self.assertEqual(self.ticket.type, "")
+    #     tickets.parse_import_ticket(self.tkt, self.long_ticket_list)
+    #     self.assertEqual(self.tkt.type, "")
 
 
 
@@ -213,49 +213,49 @@ class TestTicketFunctions1(unittest.TestCase):
 
     def test_parse_import_ticket_data_1(self):
         """Verify properly structured data is parsed correctly."""
-        tickets.parse_import_ticket_data(self.ticket, self.normal_ticket_list)
+        tickets.parse_import_ticket_data(self.tkt, self.normal_ticket_list)
 
         with self.subTest():
-            self.assertEqual(self.ticket.type, "add")
+            self.assertEqual(self.tkt.type, "add")
         with self.subTest():
-            self.assertEqual(self.ticket.phage_id, "Trixie")
+            self.assertEqual(self.tkt.phage_id, "Trixie")
         with self.subTest():
-            self.assertEqual(self.ticket.host_genus, "Mycobacterium")
+            self.assertEqual(self.tkt.host_genus, "Mycobacterium")
         with self.subTest():
-            self.assertEqual(self.ticket.cluster, "A")
+            self.assertEqual(self.tkt.cluster, "A")
         with self.subTest():
-            self.assertEqual(self.ticket.subcluster, "A2")
+            self.assertEqual(self.tkt.subcluster, "A2")
         with self.subTest():
-            self.assertEqual(self.ticket.annotation_status, "final")
+            self.assertEqual(self.tkt.annotation_status, "final")
         with self.subTest():
-            self.assertEqual(self.ticket.annotation_author, "hatfull")
+            self.assertEqual(self.tkt.annotation_author, "hatfull")
         with self.subTest():
-            self.assertEqual(self.ticket.annotation_qc, 1)
+            self.assertEqual(self.tkt.annotation_qc, 1)
         with self.subTest():
-            self.assertEqual(self.ticket.retrieve_record, 1)
+            self.assertEqual(self.tkt.retrieve_record, 1)
         with self.subTest():
-            self.assertEqual(self.ticket.description_field, "product")
+            self.assertEqual(self.tkt.description_field, "product")
         with self.subTest():
-            self.assertEqual(self.ticket.accession, "ABC123")
+            self.assertEqual(self.tkt.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(self.ticket.run_mode, "phagesdb")
+            self.assertEqual(self.tkt.run_mode, "phagesdb")
 
     def test_parse_import_ticket_data_2(self):
         """Verify id is set appropriately."""
-        tickets.parse_import_ticket_data(self.ticket,
+        tickets.parse_import_ticket_data(self.tkt,
                                     self.normal_ticket_list,
                                     id = "TicketXYZ")
-        self.assertEqual(self.ticket.id, "TicketXYZ")
+        self.assertEqual(self.tkt.id, "TicketXYZ")
 
     def test_parse_import_ticket_data_3(self):
         """Verify improperly structured data is not parsed."""
-        tickets.parse_import_ticket_data(self.ticket, self.short_ticket_list)
-        self.assertEqual(self.ticket.type, "")
+        tickets.parse_import_ticket_data(self.tkt, self.short_ticket_list)
+        self.assertEqual(self.tkt.type, "")
 
     def test_parse_import_ticket_data_4(self):
         """Verify improperly structured data is not parsed."""
-        tickets.parse_import_ticket_data(self.ticket, self.long_ticket_list)
-        self.assertEqual(self.ticket.type, "")
+        tickets.parse_import_ticket_data(self.tkt, self.long_ticket_list)
+        self.assertEqual(self.tkt.type, "")
 
 
 
@@ -324,12 +324,12 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_compare_tickets_1(self):
         """Verify two tickets with no duplicates do not generate an error."""
 
-        ticket1 = Ticket.GenomeTicket()
+        ticket1 = ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.GenomeTicket()
+        ticket2 = ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.phage_id = "L5"
         ticket2.accession = "EFG456"
@@ -359,12 +359,12 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_compare_tickets_2(self):
         """Verify two tickets with 'none' duplicates do not generate an error."""
 
-        ticket1 = Ticket.GenomeTicket()
+        ticket1 = ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.phage_id = "none"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.GenomeTicket()
+        ticket2 = ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.phage_id = "none"
         ticket2.accession = "none"
@@ -391,12 +391,12 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify two tickets with Primary Phage ID duplicates
         do generate an error."""
 
-        ticket1 = Ticket.GenomeTicket()
+        ticket1 = ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
         ticket1.accession = "none"
 
-        ticket2 = Ticket.GenomeTicket()
+        ticket2 = ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
         ticket2.accession = "none"
@@ -424,12 +424,12 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_compare_tickets_5(self):
         """Verify two tickets with Accession duplicates do generate an error."""
 
-        ticket1 = Ticket.GenomeTicket()
+        ticket1 = ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.phage_id = "none"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.GenomeTicket()
+        ticket2 = ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.phage_id = "none"
         ticket2.accession = "ABC123"
@@ -456,12 +456,12 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify two tickets with multiple duplicates
         do generate multiple errors."""
 
-        ticket1 = Ticket.GenomeTicket()
+        ticket1 = ticket.GenomeTicket()
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
-        ticket2 = Ticket.GenomeTicket()
+        ticket2 = ticket.GenomeTicket()
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
         ticket2.accession = "ABC123"
@@ -492,8 +492,8 @@ class TestTicketFunctions2(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = Ticket.GenomeTicket()
-        self.ticket2 = Ticket.GenomeTicket()
+        self.ticket1 = ticket.GenomeTicket()
+        self.ticket2 = ticket.GenomeTicket()
 
         self.ticket1.phage_id = "Trixie"
         self.ticket2.phage_id = "L5"
@@ -541,10 +541,10 @@ class TestTicketFunctions3(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = Ticket.GenomeTicket()
-        self.ticket2 = Ticket.GenomeTicket()
-        self.ticket3 = Ticket.GenomeTicket()
-        self.ticket4 = Ticket.GenomeTicket()
+        self.ticket1 = ticket.GenomeTicket()
+        self.ticket2 = ticket.GenomeTicket()
+        self.ticket3 = ticket.GenomeTicket()
+        self.ticket4 = ticket.GenomeTicket()
 
         self.bundle1 = bundle.Bundle()
         self.bundle2 = bundle.Bundle()
@@ -631,7 +631,7 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
         # Add ticket.
-        self.add_ticket = Ticket.GenomeTicket()
+        self.add_ticket = ticket.GenomeTicket()
         self.add_ticket.type = "add"
         self.add_ticket.phage_id = "Trixie_Draft"
         self.add_ticket.run_mode = "phagesdb"
@@ -648,7 +648,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.bundle1.ticket = self.add_ticket
 
         # Remove ticket.
-        self.remove_ticket = Ticket.GenomeTicket()
+        self.remove_ticket = ticket.GenomeTicket()
         self.remove_ticket.type = "replace"
         self.remove_ticket.phage_id = "Trixie_Draft"
         self.remove_ticket.run_mode = "phagesdb"
@@ -668,7 +668,7 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
         # Invalid ticket.
-        self.invalid_ticket = Ticket.GenomeTicket()
+        self.invalid_ticket = ticket.GenomeTicket()
         self.invalid_ticket.type = "invalid"
         self.invalid_ticket.phage_id = "Trixie_Draft"
         self.invalid_ticket.run_mode = "phagesdb"
@@ -758,10 +758,10 @@ class TestTicketFunctions4(unittest.TestCase):
 #         self.genome3 = Genome.Genome()
 #         self.genome4 = Genome.Genome()
 #
-#         self.ticket1 = Ticket.GenomeTicket()
-#         self.ticket2 = Ticket.GenomeTicket()
-#         self.ticket3 = Ticket.GenomeTicket()
-#         self.ticket4 = Ticket.GenomeTicket()
+#         self.ticket1 = ticket.GenomeTicket()
+#         self.ticket2 = ticket.GenomeTicket()
+#         self.ticket3 = ticket.GenomeTicket()
+#         self.ticket4 = ticket.GenomeTicket()
 #
 #         self.bundle1 = bundle.Bundle()
 #         self.bundle2 = bundle.Bundle()

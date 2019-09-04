@@ -8,7 +8,7 @@ from constants import constants
 
 #
 # def check_import_ticket_structure(
-#         ticket,
+#         tkt,
 #         type_set=constants.IMPORT_TICKET_TYPE_SET,
 #         annotation_status_set=constants.ANNOTATION_STATUS_SET,
 #         description_field_set=constants.DESCRIPTION_FIELD_SET,
@@ -30,14 +30,14 @@ from constants import constants
 #     #null_set = set(["none"])
 #
 #     # This is the only evaluation that is not dependent on the ticket type.
-#     ticket.check_type(type_set, True)
-#     ticket.check_phage_id(null_set, False)
-#     ticket.check_host_genus(null_set, False)
-#     ticket.check_cluster(null_set, False)
-#     ticket.check_annotation_status(annotation_status_set)
-#     ticket.check_description_field(description_field_set)
-#     ticket.check_annotation_author(annotation_author_set)
-#     ticket.check_run_mode(run_mode_set)
+#     tkt.check_type(type_set, True)
+#     tkt.check_phage_id(null_set, False)
+#     tkt.check_host_genus(null_set, False)
+#     tkt.check_cluster(null_set, False)
+#     tkt.check_annotation_status(annotation_status_set)
+#     tkt.check_description_field(description_field_set)
+#     tkt.check_annotation_author(annotation_author_set)
+#     tkt.check_run_mode(run_mode_set)
 #
 #     # No need to evaluate the Accession and Subcluster fields
 #     # since they may or may not be populated.
@@ -46,7 +46,7 @@ from constants import constants
 
 
 # TODO this may no longer be needed.
-def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
+def check_ticket_structure(tkt,type_set,null_set, run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket."""
@@ -62,38 +62,38 @@ def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
     #null_set = set(["none"])
 
     # This is the only evaluation that is not dependent on the ticket type.
-    ticket.check_type(type_set, True)
+    tkt.check_type(type_set, True)
 
-    if (ticket.type == "add" or ticket.type == "replace"):
-        ticket.check_phage_id(null_set, False)
-        ticket.check_host_genus(null_set, False)
-        ticket.check_cluster(null_set, False)
-        ticket.check_annotation_status(null_set, False)
-        ticket.check_description_field(null_set, False)
-        ticket.check_annotation_author(null_set, False)
-        ticket.check_run_mode(run_mode_set, True)
+    if (tkt.type == "add" or tkt.type == "replace"):
+        tkt.check_phage_id(null_set, False)
+        tkt.check_host_genus(null_set, False)
+        tkt.check_cluster(null_set, False)
+        tkt.check_annotation_status(null_set, False)
+        tkt.check_description_field(null_set, False)
+        tkt.check_annotation_author(null_set, False)
+        tkt.check_run_mode(run_mode_set, True)
 
         # No need to evaluate the Accession and Subcluster fields
         # since they may or may not be populated.
 
         # TODO no more secondary_phage_id attribute, so this may need
         # to evaluate something else.
-        # if ticket.type == "replace":
-        #     ticket.check_secondary_phage_id(null_set, False)
+        # if tkt.type == "replace":
+        #     tkt.check_secondary_phage_id(null_set, False)
         # else:
-        #     ticket.check_secondary_phage_id(null_set, True)
+        #     tkt.check_secondary_phage_id(null_set, True)
 
 
     # TODO this may be deleted.
     # TODO unit test.
-    elif ticket.type == "update":
-        ticket.check_phage_id(null_set, False)
-        ticket.check_host_genus(null_set, False)
-        ticket.check_cluster(null_set, False)
-        ticket.check_annotation_status(null_set, False)
-        ticket.check_description_field(null_set, False)
-        ticket.check_annotation_author(null_set, False)
-        ticket.check_run_mode(null_set, True)
+    elif tkt.type == "update":
+        tkt.check_phage_id(null_set, False)
+        tkt.check_host_genus(null_set, False)
+        tkt.check_cluster(null_set, False)
+        tkt.check_annotation_status(null_set, False)
+        tkt.check_description_field(null_set, False)
+        tkt.check_annotation_author(null_set, False)
+        tkt.check_run_mode(null_set, True)
 
         # No need to evaluate the Accession and Subcluster fields
         # since they may or may not be populated.
@@ -101,18 +101,18 @@ def check_ticket_structure(ticket,type_set,null_set, run_mode_set):
 
     # TODO this may be deleted.
     # TODO unit test.
-    elif ticket.type == "remove":
+    elif tkt.type == "remove":
 
         # Everything except the primary phage_id field should be 'none'
-        ticket.check_phage_id(null_set, False)
-        ticket.check_host_genus(null_set, True)
-        ticket.check_subcluster(null_set, True)
-        ticket.check_cluster(null_set, True)
-        ticket.check_annotation_status(null_set, True)
-        ticket.check_description_field(null_set, True)
-        ticket.check_accession(null_set, True)
-        ticket.check_annotation_author(null_set, True)
-        ticket.check_run_mode(null_set, True)
+        tkt.check_phage_id(null_set, False)
+        tkt.check_host_genus(null_set, True)
+        tkt.check_subcluster(null_set, True)
+        tkt.check_cluster(null_set, True)
+        tkt.check_annotation_status(null_set, True)
+        tkt.check_description_field(null_set, True)
+        tkt.check_accession(null_set, True)
+        tkt.check_annotation_author(null_set, True)
+        tkt.check_run_mode(null_set, True)
 
     else:
         pass
@@ -222,7 +222,7 @@ def compare_genomes(genome_pair, check_replace=True):
 def check_bundle_for_import(bndl):
     """Check a Bundle for errors."""
 
-    ticket = bndl.ticket
+    tkt = bndl.ticket
 
 
     # First, evaluate whether all genomes have been successfully grouped,
@@ -230,7 +230,7 @@ def check_bundle_for_import(bndl):
     # Based on the ticket type, there are expected to be certain
     # types of genomes and pairs of genomes in the bundle.
 
-    if ticket.type == "add" or ticket.type == "replace":
+    if tkt.type == "add" or tkt.type == "replace":
 
 
         bndl.check_genome_dict("add")
@@ -238,8 +238,8 @@ def check_bundle_for_import(bndl):
         bndl.check_genome_pair_dict("flat_file_add")
 
         # There may or may not be data retrieved from PhagesDB.
-        ticket.set_value_flag("retrieve")
-        if ticket._value_flag:
+        tkt.set_value_flag("retrieve")
+        if tkt._value_flag:
             bndl.check_genome_dict("phagesdb")
             try:
                 check_phagesdb_genome(bndl.genome_dict["phagesdb"])
@@ -251,16 +251,16 @@ def check_bundle_for_import(bndl):
                 pass
 
     # TODO this may need to be moved elsewhere.
-    ticket.check_compatible_type_and_annotation_status()
+    tkt.check_compatible_type_and_annotation_status()
 
-    if ticket.type == "replace":
+    if tkt.type == "replace":
 
         # There should be a "phamerator" genome.
         bndl.check_genome_dict("phamerator")
 
         # There may or may not be a genome_pair to retain some data.
-        ticket.set_value_flag("retain")
-        if ticket._value_flag:
+        tkt.set_value_flag("retain")
+        if tkt._value_flag:
             bndl.check_genome_pair_dict("add_phamerator")
 
         # There should be a genome_pair between the current phamerator
@@ -274,7 +274,7 @@ def check_bundle_for_import(bndl):
 
 
     # Second, evaluate each genome or pair of genomes as needed.
-    check_genome_to_import(bndl.genome_dict["flat_file"], ticket.type)
+    check_genome_to_import(bndl.genome_dict["flat_file"], tkt.type)
 
 
 
@@ -285,11 +285,11 @@ def check_bundle_for_import(bndl):
 
 # TODO implement.
 # TODO unit test.
-def check_genome_to_import(genome, ticket, null_set, phage_id_set,
+def check_genome_to_import(genome, tkt, null_set, phage_id_set,
                            seq_set, host_set, cluster_set, subcluster_set):
     """Check a Genome object for errors."""
 
-    if ticket.type == "add":
+    if tkt.type == "add":
         genome.check_id(phage_id_set | null_set, False)
         genome.check_name(phage_id_set | null_set, False)
         genome.check_sequence(seq_set | null_set, False)
@@ -303,8 +303,8 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
     # TODO if these values are set at the command line, these checks
     # may no longer be needed.
-    # ticket = ticket.check_description_field(description_field_set)
-    # ticket = ticket.check_run_mode(run_mode_set)
+    # tkt = tkt.check_description_field(description_field_set)
+    # tkt = tkt.check_run_mode(run_mode_set)
 
     genome.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
                                    expect=True)
@@ -334,24 +334,24 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
 
 
 
-    if ticket.run_mode[check_seq]:
+    if tkt.run_mode[check_seq]:
         genome.check_nucleotides(dna_alphabet_set=constants.DNA_ALPHABET)
     genome.check_compatible_status_and_accession()
     genome.check_compatible_status_and_descriptions()
 
-    if ticket.run_mode[check_id_typo]:
+    if tkt.run_mode[check_id_typo]:
         genome.check_description_name()
         genome.check_source_name()
         genome.check_organism_name()
 
-    if ticket.run_mode[check_host_typo]:
+    if tkt.run_mode[check_host_typo]:
         genome.check_host_genus(host_set, True)
         genome.check_description_host_genus()
         genome.check_source_host_genus()
         genome.check_organism_host_genus()
 
 
-    if ticket.run_mode[check_author]:
+    if tkt.run_mode[check_author]:
         if genome.annotation_author == 1:
             genome.check_authors(check_set=constants.AUTHOR_SET)
             genome.check_authors(check_set=set(["lastname", "firstname"]),
@@ -383,7 +383,7 @@ def check_genome_to_import(genome, ticket, null_set, phage_id_set,
         index1 += 1
 
     # Check all tRNA features
-    if ticket.run_mode[check_trna]:
+    if tkt.run_mode[check_trna]:
         index2 = 0
         while index2 < len(genome.trna_features):
             check_trna_for_import(genome.trna_features[index2])
@@ -433,7 +433,7 @@ def check_replace_tickets(bndl):
         # # If the genome to be added is not spelled the same as the genome
         # # to be removed, the new genome needs to have a unique name.
         # if self.phage_id != self.secondary_phage_id:
-        #     ticket.check_phage_id(phage_id_set, False)
+        #     tkt.check_phage_id(phage_id_set, False)
         #
         # # No need to evaluate the following fields:
         # # Accession = it will either be an accession or it will be "none"

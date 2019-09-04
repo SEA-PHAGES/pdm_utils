@@ -5,7 +5,7 @@
 import unittest
 from pipelines.db_import import import_main
 from constants import constants
-from classes import bundle, Genome, GenomePair, Ticket
+from classes import bundle, Genome, GenomePair, ticket
 from classes import MySQLConnectionHandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -33,7 +33,7 @@ class TestImportMain(unittest.TestCase):
     def test_evaluate_flat_file_1(self):
         """."""
 
-        ticket1 = Ticket.GenomeTicket()
+        ticket1 = ticket.GenomeTicket()
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"

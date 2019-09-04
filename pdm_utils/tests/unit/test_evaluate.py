@@ -7,7 +7,7 @@ from classes import cds
 from classes import GenomePair
 from constants import constants
 from pipelines.db_import import evaluate
-from classes import Ticket
+from classes import ticket
 import unittest
 
 
@@ -21,7 +21,7 @@ class TestEvaluateClass(unittest.TestCase):
         self.type_set = constants.IMPORT_TICKET_TYPE_SET
         self.run_mode_set = constants.RUN_MODES.keys()
 
-        self.add_ticket1 = Ticket.GenomeTicket()
+        self.add_ticket1 = ticket.GenomeTicket()
         self.add_ticket1.type = "add"
         self.add_ticket1.phage_id = "Trixie_Draft"
         self.add_ticket1.run_mode = "phagesdb"
@@ -56,16 +56,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'invalid' ticket 'type' field."""
 
-        ticket = self.add_ticket1
-        ticket.type = "invalid"
+        tkt = self.add_ticket1
+        tkt.type = "invalid"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 1)
+            self.assertEqual(len(tkt.evaluations), 1)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -74,16 +74,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'phage_id' field."""
 
-        ticket = self.add_ticket1
-        ticket.phage_id = "none"
+        tkt = self.add_ticket1
+        tkt.phage_id = "none"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -92,16 +92,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'host_genus' field."""
 
-        ticket = self.add_ticket1
-        ticket.host_genus = "none"
+        tkt = self.add_ticket1
+        tkt.host_genus = "none"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -110,16 +110,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'cluster' field."""
 
-        ticket = self.add_ticket1
-        ticket.cluster = "none"
+        tkt = self.add_ticket1
+        tkt.cluster = "none"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -128,16 +128,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'annotation_status' field."""
 
-        ticket = self.add_ticket1
-        ticket.annotation_status = "none"
+        tkt = self.add_ticket1
+        tkt.annotation_status = "none"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -146,16 +146,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'description_field' field."""
 
-        ticket = self.add_ticket1
-        ticket.description_field = "none"
+        tkt = self.add_ticket1
+        tkt.description_field = "none"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -164,16 +164,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'annotation_author' field."""
 
-        ticket = self.add_ticket1
-        ticket.annotation_author = "none"
+        tkt = self.add_ticket1
+        tkt.annotation_author = "none"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -182,16 +182,16 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify an error is produced with an incorrectly structured
         'add' ticket 'run_mode' field."""
 
-        ticket = self.add_ticket1
-        ticket.run_mode = "invalid"
+        tkt = self.add_ticket1
+        tkt.run_mode = "invalid"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -201,17 +201,17 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify no error is produced with a correctly structured
         'replace' ticket."""
 
-        ticket = self.add_ticket1
-        ticket.type = "replace"
-        # ticket.secondary_phage_id = "L5"
+        tkt = self.add_ticket1
+        tkt.type = "replace"
+        # tkt.secondary_phage_id = "L5"
         evaluate.check_ticket_structure(
-            ticket, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.null_set, self.run_mode_set)
         errors = 0
-        for evl in ticket.evaluations:
+        for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(ticket.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -221,17 +221,17 @@ class TestEvaluateClass(unittest.TestCase):
     #     """Verify an error is produced with an incorrectly structured
     #     'replace' ticket 'secondary_phage_id' field."""
     #
-    #     ticket = self.add_ticket1
-    #     ticket.type = "replace"
-    #     ticket.secondary_phage_id = "none"
+    #     tkt = self.add_ticket1
+    #     tkt.type = "replace"
+    #     tkt.secondary_phage_id = "none"
     #     evaluate.check_ticket_structure(
-    #         ticket, self.type_set, self.null_set, self.run_mode_set)
+    #         tkt, self.type_set, self.null_set, self.run_mode_set)
     #     errors = 0
-    #     for evl in ticket.evaluations:
+    #     for evl in tkt.evaluations:
     #         if evl.status == "error":
     #             errors += 1
     #     with self.subTest():
-    #         self.assertEqual(len(ticket.evaluations), 9)
+    #         self.assertEqual(len(tkt.evaluations), 9)
     #     with self.subTest():
     #         self.assertEqual(errors, 1)
 
