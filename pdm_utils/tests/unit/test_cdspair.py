@@ -1,7 +1,7 @@
 """ Unit tests for the CdsPair Class."""
 
 
-from classes import cds, CdsPair
+from classes import cds, cdspair
 from classes import eval
 import unittest
 
@@ -10,7 +10,7 @@ class TestCdsPairClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.cds_pair = CdsPair.CdsPair()
+        self.cds_pair = cdspair.CdsPair()
         self.cds1 = cds.Cds()
         self.cds2 = cds.Cds()
 
