@@ -1,10 +1,8 @@
-functions package
-=================
+functions
+=========
 
-Submodules
-----------
 
-functions.basic module
+``basic`` module
 ----------------------
 
 .. automodule:: functions.basic
@@ -12,7 +10,7 @@ functions.basic module
    :undoc-members:
    :show-inheritance:
 
-functions.flat\_files module
+``flat\_files`` module
 ----------------------------
 
 .. automodule:: functions.flat_files
@@ -20,7 +18,7 @@ functions.flat\_files module
    :undoc-members:
    :show-inheritance:
 
-functions.misc module
+``misc`` module
 ---------------------
 
 .. automodule:: functions.misc
@@ -28,7 +26,7 @@ functions.misc module
    :undoc-members:
    :show-inheritance:
 
-functions.phagesdb module
+``phagesdb`` module
 -------------------------
 
 .. automodule:: functions.phagesdb
@@ -36,7 +34,7 @@ functions.phagesdb module
    :undoc-members:
    :show-inheritance:
 
-functions.phamerator module
+``phamerator`` module
 ---------------------------
 
 .. automodule:: functions.phamerator
@@ -44,19 +42,10 @@ functions.phamerator module
    :undoc-members:
    :show-inheritance:
 
-functions.tickets module
+``tickets`` module
 ------------------------
 
 .. automodule:: functions.tickets
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: functions
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,10 +1,12 @@
-classes package
-===============
+classes
+=======
 
-Submodules
-----------
+Each submodule contains a specific class.
 
-classes.bundle module
+.. Submodules
+.. ----------
+
+``bundle`` module
 ---------------------
 
 .. automodule:: classes.bundle
@@ -12,7 +14,7 @@ classes.bundle module
    :undoc-members:
    :show-inheritance:
 
-The ``cds`` class
+``cds`` module
 ------------------
 
 .. automodule:: classes.cds
@@ -20,7 +22,7 @@ The ``cds`` class
    :undoc-members:
    :show-inheritance:
 
-classes.cdspair module
+``cdspair`` module
 ----------------------
 
 .. automodule:: classes.cdspair
@@ -28,7 +30,7 @@ classes.cdspair module
    :undoc-members:
    :show-inheritance:
 
-classes.eval module
+``eval`` module
 -------------------
 
 .. automodule:: classes.eval
@@ -36,7 +38,7 @@ classes.eval module
    :undoc-members:
    :show-inheritance:
 
-The ``genome`` class
+``genome`` class
 ---------------------
 
 .. automodule:: classes.genome
@@ -44,7 +46,7 @@ The ``genome`` class
    :undoc-members:
    :show-inheritance:
 
-classes.genomepair module
+``genomepair`` module
 -------------------------
 
 .. automodule:: classes.genomepair
@@ -52,7 +54,7 @@ classes.genomepair module
    :undoc-members:
    :show-inheritance:
 
-classes.mysqlconnectionhandler module
+``mysqlconnectionhandler`` module
 -------------------------------------
 
 .. automodule:: classes.mysqlconnectionhandler
@@ -60,7 +62,7 @@ classes.mysqlconnectionhandler module
    :undoc-members:
    :show-inheritance:
 
-classes.source module
+``source`` module
 ---------------------
 
 .. automodule:: classes.source
@@ -68,7 +70,7 @@ classes.source module
    :undoc-members:
    :show-inheritance:
 
-classes.ticket module
+``ticket`` module
 ---------------------
 
 .. automodule:: classes.ticket
@@ -76,19 +78,10 @@ classes.ticket module
    :undoc-members:
    :show-inheritance:
 
-classes.trna module
+``trna`` module
 -------------------
 
 .. automodule:: classes.trna
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: classes
    :members:
    :undoc-members:
    :show-inheritance:

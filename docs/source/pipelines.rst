@@ -1,5 +1,5 @@
-pipelines package
-=================
+pipelines
+=========
 
 Subpackages
 -----------
@@ -11,11 +11,3 @@ Subpackages
    pipelines.db_export
    pipelines.db_import
    pipelines.db_update
-
-Module contents
----------------
-
-.. automodule:: pipelines
-   :members:
-   :undoc-members:
-   :show-inheritance:
