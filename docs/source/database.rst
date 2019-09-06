@@ -1,3 +1,5 @@
+.. _dbstructure:
+
 Phamerator database structure
 =============================
 

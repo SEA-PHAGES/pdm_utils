@@ -15,7 +15,6 @@
    Installation <installation>
    Database structure <database>
    Data processing pipeline <seaphages_import>
-   Create custom databases <customization>
    Additional tools <additionaltools>
    pdm_utils modules <modules>
    pdm_utils user guide <package_user_guide>

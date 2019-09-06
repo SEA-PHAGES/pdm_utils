@@ -60,5 +60,7 @@ FLUSH PRIVILEGES;
 # Sphinx
 
 sphinx-apidoc -o ./source/ ../pdm_utils/
+
+make clean
 sphinx-build -b html ./source ./build
 (or make build?)

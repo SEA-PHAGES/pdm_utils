@@ -16,7 +16,7 @@ Managing PhameratorDB often requires quick reference to data in the Phage and Ge
 Step 3: Upload database to the server
 _____________________________________
 
-Once the database and version files are created, they can be uploaded to the `Hatfull lab’s public server <http://phamerator.webfactional.com/databases_Hatfull>`_. The script uploads the two files associated with the database that is indicated in the first script argument from the current directory that is indicated in the second script argument.
+Once the database and version files are created, they can be uploaded to the :hatfullserver:`Hatfull lab’s public server <>`. The script uploads the two files associated with the database that is indicated in the first script argument from the current directory that is indicated in the second script argument.
 
 Each step in this script is independent of the others. For instance, data can be queried from a particular database without exporting it or incrementing the version number, and a database file that has been previously exported can be uploaded to the server without having to export it a second time.
 

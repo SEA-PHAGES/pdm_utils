@@ -4,11 +4,19 @@ Below is a description of how the ``pdm_utils`` package is used to update,
 maintain, and manipulate data within the Actinobacteriophage Phamerator
 database instances.
 
-.. image:: /images/data_pipeline.jpg
 
 
-.. image:: /images/flatfile_parsing.jpg
+.. _figpipeline:
 
+.. figure:: /images/data_pipeline.jpg
+
+    Overview of the pipeline to maintain and update Actino_Draft
+
+.. _figflatfile:
+
+.. figure:: /images/flatfile_parsing.jpg
+
+    Summary of how a GenBank-formatted flat file is parsed
 
 
 .. toctree::

@@ -21,23 +21,23 @@ Built-in python packages:
 
 Third-party python packages:
 
-    - `Biopython <https://biopython.org/>`_
-    - `pymysql <https://pymysql.readthedocs.io/en/latest/>`_
-    - `paramiko <http://www.paramiko.org/>`_
+    - :biopython:`Biopython <>`
+    - :pymysql:`pymysql <>`
+    - :paramiko:`paramiko <>`
 
 
 Third-party binaries installed locally:
 
-    - `MySQL 5.7 <https://www.mysql.com/>`_
-    - `MMSeqs <https://www.ncbi.nlm.nih.gov/pubmed/26743509>`_
-    - `NCBI blast+ <https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download>`_
-    - `NCBI Conserved Domain Database <https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml>`_
+    - :mysql:`MySQL 5.7 <>`
+    - :mmseqs:`MMSeqs <>`
+    - :blastplus:`NCBI blast+ <>`
+    - :cdd:`NCBI Conserved Domain Database <>`
 
 
 
 
-In order to install and manage all python dependencies, the Conda environment manage can be used, which is available through the `Anaconda <https://www.anaconda.com/>`_.
+In order to install and manage all python dependencies, the Conda environment manage can be used, which is available through the :anaconda:`Anaconda <>` package.
 
-After installing Conda, create an environment for phamerator:
+After installing Conda, create an environment for phamerator::
 
-conda create --name phamerator mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme
+    conda create --name phamerator mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme
