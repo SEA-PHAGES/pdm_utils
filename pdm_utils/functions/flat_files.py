@@ -6,11 +6,11 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Seq import Seq
-from classes import genome, cds, trna, source
-from functions import basic
-from constants import constants
+from pdm_utils.classes import genome, cds, trna, source
+from pdm_utils.functions import basic
+from pdm_utils.constants import constants
 from datetime import datetime
-from classes import genomepair
+from pdm_utils.classes import genomepair
 
 
 

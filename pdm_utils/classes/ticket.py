@@ -1,8 +1,8 @@
 """Represents a structure to contain directions for how to parse and import
 genomes into Phamerator."""
 
-from classes import eval
-from functions import basic
+from pdm_utils.classes import eval
+from pdm_utils.functions import basic
 
 
 

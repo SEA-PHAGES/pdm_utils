@@ -1,10 +1,10 @@
 """ Unit tests for the GenomePair Class."""
 
 
-from classes import genomepair
-from classes import genome
-from classes import ticket
-from classes import eval
+from pdm_utils.classes import genomepair
+from pdm_utils.classes import genome
+from pdm_utils.classes import ticket
+from pdm_utils.classes import eval
 import unittest
 
 

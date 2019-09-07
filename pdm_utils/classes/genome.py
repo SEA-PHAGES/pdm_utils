@@ -2,14 +2,14 @@
 maintain and update SEA-PHAGES phage genomics data.
 """
 
-from functions import basic
-from classes import eval
+from pdm_utils.functions import basic
+from pdm_utils.classes import eval
 from datetime import datetime
 from Bio.SeqUtils import GC
 from Bio.Seq import Seq
 import re
 from operator import attrgetter
-from classes import cds, trna
+from pdm_utils.classes import cds, trna
 
 
 class Genome:
@@ -541,8 +541,8 @@ class Genome:
                     delimiter = "_TRNA_"
 
                 # TODO unit test after tmRNA class implemented.
-                elif isinstance(sorted_list[index], Tmrna.Tmrna):
-                    delimiter = "_TMRNA_"
+                # elif isinstance(sorted_list[index], tmrna.Tmrna):
+                #     delimiter = "_TMRNA_"
                 else:
                     delimiter = "_"
             else:

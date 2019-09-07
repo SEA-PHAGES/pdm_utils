@@ -4,16 +4,16 @@ GenBank-formatted flat files."""
 
 import unittest
 from datetime import datetime
-from functions import basic
-from functions import flat_files
-from classes import cds
-from classes import source
-from classes import genome
+from pdm_utils.functions import basic
+from pdm_utils.functions import flat_files
+from pdm_utils.classes import cds
+from pdm_utils.classes import source
+from pdm_utils.classes import genome
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
-from classes import bundle
+from pdm_utils.classes import bundle
 
 class TestFlatFileFunctions1(unittest.TestCase):
 

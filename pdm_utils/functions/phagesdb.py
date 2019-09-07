@@ -1,14 +1,14 @@
 """Functions to interact with PhagesDB"""
 
 
-from pipelines.db_import import evaluate
-from classes import genome
-from classes import genomepair
-from functions import basic
-from constants import constants
+from pdm_utils.pipelines.db_import import evaluate
+from pdm_utils.classes import genome
+from pdm_utils.classes import genomepair
+from pdm_utils.functions import basic
+from pdm_utils.constants import constants
 import urllib.request
 import json
-from functions import misc
+from pdm_utils.functions import misc
 
 
 def parse_phage_name(data_dict):

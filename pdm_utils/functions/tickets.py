@@ -1,10 +1,10 @@
 """Misc. functions to manipulate tickets."""
 
-from constants import constants
-from functions import basic
-from functions import phagesdb
-from classes import ticket
-from classes import genome
+from pdm_utils.constants import constants
+from pdm_utils.functions import basic
+from pdm_utils.functions import phagesdb
+from pdm_utils.classes import ticket
+from pdm_utils.classes import genome
 
 
 

@@ -32,8 +32,11 @@ The NCBI Conserved Domain Database locally installed
 # All python code in the repo can be executed using the following Conda 
 # environment 'phamerator'.
 # First install Anaconda locally. Then execute the following commands:
-conda create --name phamerator mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme
-source activate phamerator
+conda create --name pdm_utils-dev mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine
+source activate pdm_utils-dev
+
+conda create --name pdm_utils-user mysql python pip biopython pymysql paramiko
+source activate pdm_utils-user
 
 
 # Current versions:
@@ -53,6 +56,29 @@ source activate phamerator
 CREATE USER 'tester'@'localhost' IDENTIFIED BY 'tester';
 GRANT ALL PRIVILEGES ON test_db.* TO 'tester'@'localhost';
 FLUSH PRIVILEGES;
+
+
+
+
+
+# To create a PyPI package
+
+# Increment the version in setup.py
+
+# Working directory = outside of top-level pdm_utils
+python3 setup.py sdist bdist_wheel
+
+
+# To test with TestPyPI
+python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps pdm_utils
+
+
+
+# Upload to PyPI
+twine upload dist/*
+pip install pdm_utils
+
 
 
 

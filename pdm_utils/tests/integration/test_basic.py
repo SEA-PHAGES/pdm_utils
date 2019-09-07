@@ -1,7 +1,7 @@
 """Integration tests for general functions."""
 
 
-from functions import basic
+from pdm_utils.functions import basic
 from datetime import datetime
 import unittest
 from unittest.mock import patch

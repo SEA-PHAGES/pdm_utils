@@ -3,8 +3,8 @@ GenBank-formatted flat files."""
 
 
 import unittest
-from functions import flat_files
-from classes import genome
+from pdm_utils.functions import flat_files
+from pdm_utils.classes import genome
 import os
 
 class TestFlatFileFunctions(unittest.TestCase):

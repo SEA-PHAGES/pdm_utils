@@ -1,7 +1,7 @@
 """Groups of evaluation/check functions."""
 
 
-from constants import constants
+from pdm_utils.constants import constants
 
 
 

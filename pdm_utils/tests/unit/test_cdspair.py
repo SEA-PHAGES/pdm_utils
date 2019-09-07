@@ -1,8 +1,8 @@
 """ Unit tests for the CdsPair Class."""
 
 
-from classes import cds, cdspair
-from classes import eval
+from pdm_utils.classes import cds, cdspair
+from pdm_utils.classes import eval
 import unittest
 
 

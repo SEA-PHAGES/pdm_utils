@@ -1,6 +1,6 @@
 """ Unit tests for the CDS class."""
 
-from classes import source
+from pdm_utils.classes import source
 import unittest
 
 

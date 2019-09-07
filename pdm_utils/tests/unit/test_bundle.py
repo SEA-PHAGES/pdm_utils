@@ -1,12 +1,12 @@
 """ Unit tests for the Bundle Class."""
 
 
-from classes import bundle
-from classes import genome
-from classes import genomepair
-from classes import cds
-from classes import ticket
-from classes import eval
+from pdm_utils.classes import bundle
+from pdm_utils.classes import genome
+from pdm_utils.classes import genomepair
+from pdm_utils.classes import cds
+from pdm_utils.classes import ticket
+from pdm_utils.classes import eval
 import unittest
 
 

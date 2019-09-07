@@ -1,10 +1,10 @@
 """ Unit tests for misc. ticket functions"""
 
-from classes import bundle
-from classes import genome
-from classes import ticket
-from classes import eval
-from functions import tickets
+from pdm_utils.classes import bundle
+from pdm_utils.classes import genome
+from pdm_utils.classes import ticket
+from pdm_utils.classes import eval
+from pdm_utils.functions import tickets
 import unittest
 
 

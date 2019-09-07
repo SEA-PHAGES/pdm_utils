@@ -1,7 +1,7 @@
 """Unit tests for misc. functions that interact with PhagesDB."""
 
-from functions import phagesdb
-from constants import constants
+from pdm_utils.functions import phagesdb
+from pdm_utils.constants import constants
 import unittest
 
 

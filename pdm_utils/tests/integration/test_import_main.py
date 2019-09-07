@@ -3,10 +3,10 @@
 
 
 import unittest
-from pipelines.db_import import import_main
-from constants import constants
-from classes import bundle, genome, ticket
-from classes import mysqlconnectionhandler
+from pdm_utils.pipelines.db_import import import_main
+from pdm_utils.constants import constants
+from pdm_utils.classes import bundle, genome, ticket
+from pdm_utils.classes import mysqlconnectionhandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation

@@ -1,7 +1,7 @@
 """ Unit tests for the CDS class."""
 
-from classes import cds
-from constants import constants
+from pdm_utils.classes import cds
+from pdm_utils.constants import constants
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC

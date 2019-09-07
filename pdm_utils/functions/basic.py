@@ -1,7 +1,7 @@
 """Misc. base/simple functions. These should not require import of other
 modules in this package to prevent circular imports."""
 
-from constants import constants
+from pdm_utils.constants import constants
 import os
 
 

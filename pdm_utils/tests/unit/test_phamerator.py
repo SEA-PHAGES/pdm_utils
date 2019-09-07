@@ -2,12 +2,12 @@
 
 
 import unittest
-from functions import phamerator
-from classes import genome
-from classes import cds
+from pdm_utils.functions import phamerator
+from pdm_utils.classes import genome
+from pdm_utils.classes import cds
 from datetime import datetime
-from classes import bundle
-from constants import constants
+from pdm_utils.classes import bundle
+from pdm_utils.constants import constants
 from Bio.Seq import Seq
 
 

@@ -2,9 +2,9 @@
 to maintain and update SEA-PHAGES phage genomics data.
 """
 
-from functions import basic
-from constants import constants
-from classes import eval
+from pdm_utils.functions import basic
+from pdm_utils.constants import constants
+from pdm_utils.classes import eval
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature, FeatureLocation

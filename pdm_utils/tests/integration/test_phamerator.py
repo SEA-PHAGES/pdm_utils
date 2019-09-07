@@ -2,11 +2,11 @@
 
 
 import unittest
-from functions import phamerator
-from classes import genome
-from classes import cds
-from constants import constants
-from classes import mysqlconnectionhandler
+from pdm_utils.functions import phamerator
+from pdm_utils.classes import genome
+from pdm_utils.classes import cds
+from pdm_utils.constants import constants
+from pdm_utils.classes import mysqlconnectionhandler
 import subprocess, os
 import pymysql
 # import getpass

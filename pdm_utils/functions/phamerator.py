@@ -1,10 +1,10 @@
 """Functions to interact with PhameratorDB."""
 
 
-from classes import genome
-from classes import genomepair
-from classes import cds
-from functions import basic
+from pdm_utils.classes import genome
+from pdm_utils.classes import genomepair
+from pdm_utils.classes import cds
+from pdm_utils.functions import basic
 import pymysql
 
 

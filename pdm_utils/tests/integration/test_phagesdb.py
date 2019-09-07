@@ -1,9 +1,9 @@
 """Integration tests for misc. functions that interact with PhagesDB."""
 
-from classes import bundle
-from functions import phagesdb
-from classes import genome
-from constants import constants
+from pdm_utils.classes import bundle
+from pdm_utils.functions import phagesdb
+from pdm_utils.classes import genome
+from pdm_utils.constants import constants
 import unittest
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq

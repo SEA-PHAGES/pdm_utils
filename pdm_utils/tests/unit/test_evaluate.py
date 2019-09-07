@@ -1,13 +1,13 @@
 """ Unit tests for evaluate functions."""
 
 
-from classes import genome
-from classes import source
-from classes import cds
-from classes import genomepair
-from constants import constants
-from pipelines.db_import import evaluate
-from classes import ticket
+from pdm_utils.classes import genome
+from pdm_utils.classes import source
+from pdm_utils.classes import cds
+from pdm_utils.classes import genomepair
+from pdm_utils.constants import constants
+from pdm_utils.pipelines.db_import import evaluate
+from pdm_utils.classes import ticket
 import unittest
 
 

@@ -22,13 +22,13 @@ except ModuleNotFoundError as err:
     sys.exit(1)
 
 # Package modules
-from functions import phamerator
-from functions import flat_files
-from functions import tickets
-from functions import basic
-from classes import mysqlconnectionhandler
-from classes import genome
-from constants import constants
+from pdm_utils.functions import phamerator
+from pdm_utils.functions import flat_files
+from pdm_utils.functions import tickets
+from pdm_utils.functions import basic
+from pdm_utils.classes import mysqlconnectionhandler
+from pdm_utils.classes import genome
+from pdm_utils.constants import constants
 
 #
 # script_description = """

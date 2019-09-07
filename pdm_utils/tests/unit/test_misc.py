@@ -1,8 +1,8 @@
 """ Unit tests for misc. functions."""
 
-from classes import bundle
-from classes import genome
-from functions import misc
+from pdm_utils.classes import bundle
+from pdm_utils.classes import genome
+from pdm_utils.functions import misc
 import unittest
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
