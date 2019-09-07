@@ -1,8 +1,8 @@
 """Represents a structure to directly compare data between two or more genomes."""
 
-from classes import eval
-from functions import phamerator
-from classes import ticket
+from pdm_utils.classes import eval
+from pdm_utils.functions import phamerator
+from pdm_utils.classes import ticket
 
 class Bundle:
 
