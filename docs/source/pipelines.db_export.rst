@@ -4,7 +4,7 @@ pipelines.db\_export package
 Module contents
 ---------------
 
-.. automodule:: pipelines.db_export
+.. automodule:: pdm_utils.pipelines.db_export
    :members:
    :undoc-members:
    :show-inheritance:
