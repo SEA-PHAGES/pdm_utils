@@ -55,6 +55,9 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = []
 
 
+# Explicitly define the master file to improve readthedoc builds.
+master_doc = "index"
+
 
 # External link library
 extlinks = {
