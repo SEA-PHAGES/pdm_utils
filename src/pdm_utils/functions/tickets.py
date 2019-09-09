@@ -23,6 +23,7 @@ def parse_import_ticket_data(tkt, data_list,
     Ticket object ('list_to_ticket') or data in a Ticket object should
     populate a list ('ticket_to_list').
     The expected data structure of the data list:
+    
         0. Import action
         1. Primary PhageID
         2. Host

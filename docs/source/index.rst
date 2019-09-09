@@ -18,6 +18,7 @@
    Additional tools <additionaltools>
    pdm_utils modules <modules>
    pdm_utils user guide <package_user_guide>
+   References <bibliography>
 
 
 

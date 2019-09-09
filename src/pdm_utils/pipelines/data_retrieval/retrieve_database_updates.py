@@ -19,7 +19,7 @@ except ModuleNotFoundError as err:
     sys.exit(1)
 
 # from misc_functions import ask_yes_no, close_files
-from functions.basic import ask_yes_no, close_files
+from pdm_utils.functions.basic import ask_yes_no, close_files
 
 # set up argparse to interact with users at the command line interface.
 script_description = "Retrieve Phamerator database updates from phagesdb, " \

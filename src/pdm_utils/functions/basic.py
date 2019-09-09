@@ -119,15 +119,22 @@ def reformat_coordinates(left, right, current, new):
     """Converts common coordinate formats.
 
     The type of coordinate formats include:
-    '0_half_open' = 0-based half-open intervals that is the common format
-                    for BAM files and UCSC Browser database. This format seems
-                    to be more efficient when performing genomics
-                    computations.
-    '1_closed' = 1-based closed intervals that is the common format
-                    for the Phamerator Database, UCSC Browser,
-                    the Ensembl genomics database,
-                    VCF files, GFF files. This format seems to be more
-                    intuitive and used for visualization.
+
+    '0_half_open':
+
+        0-based half-open intervals that is the common format
+        for BAM files and UCSC Browser database. This format seems
+        to be more efficient when performing genomics
+        computations.
+
+    '1_closed':
+
+        1-based closed intervals that is the common format
+        for the Phamerator Database, UCSC Browser,
+        the Ensembl genomics database,
+        VCF files, GFF files. This format seems to be more
+        intuitive and used for visualization.
+
     The function assumes coordinates reflect the left and right
     boundaries (where the left coordinates is smaller than the right
     coordinate), instead of gene start and stop coordinates.
@@ -667,12 +674,15 @@ def check_value_in_two_sets(value, set1, set2):
     :param set2: The second reference set of values.
     :type set2: set
     :returns:
+
         The result of the evaluation, indicating whether the
         value is present within:
+
             1. only the 'first' set
             2. only the 'second' set
             3. 'both' sets
             4. 'neither' set
+
     :rtype: str
     """
     present1 = False
@@ -737,16 +747,21 @@ def ask_yes_no(prompt="", response_attempt=1):
     """Function to get the user's yes/no response to a question.
 
     Accepts variations of yes/y, true/t, no/n, false/f.
+
     :param prompt: the question to ask the user.
     :type prompt: str
     :param response_attempt:
+
         The number of the number of attempts allowed before the
         function exits. This prevents the script from getting stuck in a loop.
+
     :type response_attempt: int
     :returns:
+
         default is False (e.g. user hits Enter w/o typing
         anything else), but variations of yes or true responses will return
         True instead.
+
     :rtype: bool, None
     """
     response = None
@@ -814,13 +829,17 @@ def expand_path(input_path):
 
 
 def verify_path(filepath, kind=None):
-    """Verifies that a given filepath exists, and if a kind is given,
-    it verifies that it exists as the indicated kind.
+    """Verifies that a given path exists.
 
     :param filepath: full path to the desired file/directory.
-    :param kind: ("file", "dir"), corresponding with paths to be
-    checked as either files or directories.
-    :return Boolean: True if filepath is verified, False otherwise.
+    :type filepath: str
+    :param kind:
+
+        ("file", "dir"), corresponding with paths to be
+        checked as either files or directories.
+
+    :type kind: str
+    :return Boolean: True if path is verified, False otherwise.
     """
     if kind == "file":
         if os.path.isfile(filepath) is True:

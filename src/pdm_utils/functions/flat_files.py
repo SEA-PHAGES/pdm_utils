@@ -93,8 +93,11 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
 
     :param seqfeature: Biopython SeqFeature
     :type seqfeature: SeqFeature
-    :param genome_id: An identifier for the genome in which the seqfeature
-    is defined.
+    :param genome_id:
+
+        An identifier for the genome in which the seqfeature
+        is defined.
+
     :type genome_id: str
     :returns: A  pdm_utils Cds object
     :rtype: Cds
@@ -178,8 +181,11 @@ def parse_source_seqfeature(seqfeature, genome_id=""):
 
     :param seqfeature: Biopython SeqFeature
     :type seqfeature: SeqFeature
-    :param genome_id: An identifier for the genome in which the seqfeature
-    is defined.
+    :param genome_id:
+
+        An identifier for the genome in which the seqfeature
+        is defined.
+
     :type genome_id: str
     :returns: A pdm_utils Source object
     :rtype: Source
@@ -222,13 +228,18 @@ def create_seqfeature_dictionary(seqfeature_list):
 
     :param seqfeature_list: List of Biopython SeqFeatures
     :type seqfeature_list: list
-    :param genome_id: An identifier for the genome in which the seqfeature
-    is defined.
+    :param genome_id:
+
+        An identifier for the genome in which the seqfeature
+        is defined.
+
     :type genome_id: str
     :returns:
+
         A dictionary of Biopython SeqFeatures:
         Key: SeqFeature type (source, tRNA, CDS, other)
-        Value: the SeqFeature
+        Value: SeqFeature
+
     :rtype: dict
     """
 
