@@ -3,3 +3,6 @@ __pycache__
 docs/build/
 .DS_Store
 *.pyc
+build/
+dist/
+pdm_utils.egg-info/

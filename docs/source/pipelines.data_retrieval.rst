@@ -7,7 +7,7 @@ Submodules
 pipelines.data\_retrieval.retrieve\_database\_updates module
 ------------------------------------------------------------
 
-.. automodule:: pipelines.data_retrieval.retrieve_database_updates
+.. automodule:: pdm_utils.pipelines.data_retrieval.retrieve_database_updates
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ pipelines.data\_retrieval.retrieve\_database\_updates module
 Module contents
 ---------------
 
-.. automodule:: pipelines.data_retrieval
+.. automodule:: pdm_utils.pipelines.data_retrieval
    :members:
    :undoc-members:
    :show-inheritance:

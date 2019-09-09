@@ -29,11 +29,14 @@ The NCBI Conserved Domain Database locally installed
 
 
 
-# All python code in the repo can be executed using the following Conda 
+# All python code in the repo can be executed using the following Conda
 # environment 'phamerator'.
 # First install Anaconda locally. Then execute the following commands:
-conda create --name phamerator mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme
-source activate phamerator
+conda create --name pdm_utils-dev mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine
+source activate pdm_utils-dev
+
+conda create --name pdm_utils-user mysql python pip biopython pymysql paramiko
+source activate pdm_utils-user
 
 
 # Current versions:
@@ -44,6 +47,18 @@ source activate phamerator
 
 
 
+
+
+# The directory of integration and unit tests can be stored completely
+# separately from the actual package directory. However, in order for
+# unittest to be able to import the module that needs to be tested,
+# unittest needs to be run in the directory immediately above the module.
+# Then, point unittest to the path of tests associated with the
+# module that needs to be tested.
+# e.g. root/dir1/pdm_utils/
+# e.g. root/tests/
+# In root/dir1, run:
+python3 -m unittest discover ../tests
 
 
 
@@ -57,10 +72,57 @@ FLUSH PRIVILEGES;
 
 
 
+
+
+
+
 # Sphinx
+# For Sphinx to find the entire package for autodoc, and to
+# NOT autodoc any other python files in the repo (such as tests),
+# the package directory needs to be stored within a directory
+# that contains no other files. So the primary 'pdm_utils' package
+# directory is stored within 'src', and the sphinx 'config.py' file
+# records that 'src' is where to start autodoc.
+
 
 sphinx-apidoc -o ./source/ ../pdm_utils/
 
 make clean
 sphinx-build -b html ./source ./build
 (or make build?)
+
+
+
+
+
+
+
+
+
+
+
+# To create a PyPI package
+
+# Increment the version in setup.py
+
+# Working directory = default is outside of top-level pdm_utils,
+# but in setup.py the location can be specified using the
+# 'package_dir' and 'packages' parameters.
+python3 setup.py sdist bdist_wheel
+
+
+# To test with TestPyPI:
+# In a terminal, using a 'dev' conda environment:
+python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+# In a separate terminal, using a 'user' conda environment:
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps pdm_utils
+# OR install from local folder without using TestPYPI:
+pip install /path/to/folder/pdm_utils_XXXX.tar.gz
+
+
+
+
+# Upload to PyPI
+twine upload dist/*
+pip install pdm_utils

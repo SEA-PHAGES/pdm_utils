@@ -7,7 +7,7 @@ Submodules
 pipelines.db\_update.update\_field module
 -----------------------------------------
 
-.. automodule:: pipelines.db_update.update_field
+.. automodule:: pdm_utils.pipelines.db_update.update_field
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ pipelines.db\_update.update\_field module
 Module contents
 ---------------
 
-.. automodule:: pipelines.db_update
+.. automodule:: pdm_utils.pipelines.db_update
    :members:
    :undoc-members:
    :show-inheritance:
