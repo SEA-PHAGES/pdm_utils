@@ -12,7 +12,13 @@ from pdm_utils.functions import misc
 
 
 def parse_phage_name(data_dict):
-    """Retrieve Phage Name from PhagesDB."""
+    """Retrieve Phage Name from PhagesDB.
+
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: Name of the phage.
+    :rtype: str
+    """
     try:
         phage_name = data_dict['phage_name']
     except:
@@ -31,8 +37,12 @@ def parse_cluster(data_dict):
     In Phamerator NULL means Singleton, and the long form
     "Unclustered" is invalid due to its character length,
     so this value is converted to 'UNK' ('Unknown').
-    """
 
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: Cluster of the phage.
+    :rtype: str
+    """
     try:
         if data_dict["pcluster"] is None:
             cluster = 'UNK'
@@ -53,8 +63,12 @@ def parse_subcluster(data_dict):
     If the phage is clustered but not subclustered, 'psubcluster' is None.
     If the phage is clustered and subclustered, 'psubcluster'
     is a dictionary, and one key is the Subcluster data.
-    """
 
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: Subcluster of the phage.
+    :rtype: str
+    """
     try:
         if data_dict["psubcluster"] is None:
             subcluster = "none"
@@ -66,7 +80,13 @@ def parse_subcluster(data_dict):
 
 
 def parse_host_genus(data_dict):
-    """Retrieve host_genus from PhagesDB."""
+    """Retrieve host_genus from PhagesDB.
+
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: Host genus of the phage.
+    :rtype: str
+    """
     try:
         host_genus = data_dict["isolation_host"]["genus"]
     except:
@@ -75,7 +95,13 @@ def parse_host_genus(data_dict):
 
 
 def parse_accession(data_dict):
-    """Retrieve Accession from PhagesDB."""
+    """Retrieve Accession from PhagesDB.
+
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: Accession of the phage.
+    :rtype: str
+    """
     try:
         accession = data_dict["genbank_accession"]
     except:
@@ -84,8 +110,13 @@ def parse_accession(data_dict):
 
 
 def parse_fasta_filename(data_dict):
-    """Retrieve fasta filename from PhagesDB."""
+    """Retrieve fasta filename from PhagesDB.
 
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: Name of the fasta file for the phage.
+    :rtype: str
+    """
     try:
         fastafile_url = data_dict["fasta_file"]
     except:
@@ -94,8 +125,13 @@ def parse_fasta_filename(data_dict):
 
 
 def retrieve_fasta_data(fastafile_url):
-    """Retrieve fasta file from PhagesDB."""
+    """Retrieve fasta file from PhagesDB.
 
+    :param fastafile_url: URL for a fasta file.
+    :type fastafile_url: str
+    :returns: Data from the fasta file.
+    :rtype: str
+    """
     try:
         request = urllib.request.Request(fastafile_url)
         with urllib.request.urlopen(request) as response:
@@ -106,35 +142,46 @@ def retrieve_fasta_data(fastafile_url):
     return fasta_data
 
 
-def parse_fasta_data(fasta_string):
-    """Parses data returned from a fasta-formatted file."""
+def parse_fasta_data(fasta_data):
+    """Parses data returned from a fasta-formatted file.
+
+    :param fasta_data: Data from a fasta file.
+    :type fasta_data: str
+    :returns:
+        tuple (header, sequence)
+        WHERE
+        header(str) is the first line parsed from the parsed file.
+        sequence(str) is the nucleotide sequence parsed from the file.
+    :rtype: tuple
+    """
     # All sequence rows in the fasta file may not have equal widths,
     # so some processing of the data is required. If you split by newline,
     # the header is retained in the first list element.
-    split_fasta_data = fasta_string.split('\n')
+    split_fasta_data = fasta_data.split('\n')
     header = ""
     sequence = ""
-
     if len(split_fasta_data) > 1:
         header = split_fasta_data[0]
         if header[0] == ">":
             header = header[1:] # Remove '>' symbol.
-
         header = header.strip() # Remove any whitespace
         index = 1
         while index < len(split_fasta_data):
             # Strip off potential whitespace before appending, such as '\r'.
             sequence = sequence + split_fasta_data[index].strip()
             index += 1
-    result = (header, sequence)
-    return result
+    return (header, sequence)
 
 
 def parse_genome_data(data_dict):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
     Genome object.
-    """
 
+    :param data_dict: Dictionary of data retrieved from PhagesDB.
+    :type data_dict: dict
+    :returns: A pdm_utils genome object with the parsed data.
+    :rtype: genome
+    """
     gnm = genome.Genome()
     gnm.type = "phagesdb"
 
@@ -182,8 +229,13 @@ def parse_genome_data(data_dict):
 
 
 def retrieve_genome_data(phage_url):
-    """Retrieve all data from PhagesDB for a specific phage."""
+    """Retrieve all data from PhagesDB for a specific phage.
 
+    :param phage_url: URL for data pertaining to a specific phage.
+    :type phage_url: str
+    :returns: Dictionary of data parsed from the URL.
+    :rtype: dict
+    """
     try:
         data_json = urllib.request.urlopen(phage_url)
         data_dict = json.loads(data_json.read())
@@ -193,7 +245,13 @@ def retrieve_genome_data(phage_url):
 
 
 def construct_phage_url(phage_name):
-    """Create URL to retrieve phage-specific data from PhagesDB."""
+    """Create URL to retrieve phage-specific data from PhagesDB.
+
+    :param phage_name: Name of the phage of interest.
+    :type phage_name: str
+    :returns: URL pertaining to the phage.
+    :rtype: str
+    """
     phage_url = constants.API_PREFIX + phage_name + constants.API_SUFFIX
     return phage_url
 
@@ -201,17 +259,21 @@ def construct_phage_url(phage_name):
 def copy_data_from(bndl, type, flag="retrieve"):
     """Copy data from a 'phagesdb' genome object.
 
-    If a genome object stored in the Bundle object has
+    If a genome object stored in a bundle object has
     attributes that are set to be 'retrieved' and auto-filled,
     retrieve the data from PhagesDB to complete the genome.
-    The 'type' parameter indicates the type of genome that may need
-    to be populated from PhagesDB.
+    :param bndl:
+        A pdm_utils bundle object containing at least two genome
+        objects.
+    :type bndl: bundle
+    :param type:
+        Indicates the type of genome that may need
+        to be populated from PhagesDB.
+    :type type: str
     """
-
     if type in bndl.genome_dict.keys():
         genome1 = bndl.genome_dict[type]
         genome1.set_value_flag(flag)
-
         if genome1._value_flag:
             phage_url = construct_phage_url(genome1.id)
             data_dict = retrieve_genome_data(phage_url)
@@ -236,7 +298,13 @@ def copy_data_from(bndl, type, flag="retrieve"):
 
 
 def retrieve_data_list(url):
-    """Retrieve list of data from PhagesDB."""
+    """Retrieve list of data from PhagesDB.
+
+    :param url: A URL from which to retrieve data.
+    :type url: str
+    :returns: A list of data retrieved from the URL.
+    :rtype: list
+    """
     try:
         data_json = urllib.request.urlopen(url)
         data_list = json.loads(data_json.read())
@@ -248,10 +316,11 @@ def retrieve_data_list(url):
 def create_host_genus_set(url=constants.API_HOST_GENERA):
     """Create a set of host genera currently in PhagesDB.
 
-    The parameter is a list, and each element is a dictionary of data
-    pertaining to a different host genus.
+    :param url: A URL from which to retrieve host genus data.
+    :type url: str
+    :returns: All unique host genera listed on PhagesDB.
+    :rtype: set
     """
-
     try:
         output = retrieve_data_list(url)
     except:
@@ -268,15 +337,19 @@ def create_host_genus_set(url=constants.API_HOST_GENERA):
 def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
     """Create sets of clusters and subclusters currently in PhagesDB.
 
-    The parameter is a list, and each element is a dictionary of data
-    pertaining to a different cluster.
+    :param url: A URL from which to retrieve cluster and subcluster data.
+    :type url: str
+    :returns:
+        tuple (cluster_set, subcluster_set)
+        WHERE
+        cluster_set(set) is a set of all unique clusters on PhagesDB.
+        subcluster_set(set) is a set of all unique subclusters on PhagesDB.
+    :rtype: tuple
     """
-
     try:
         output = retrieve_data_list(url)
     except:
         output = []
-
     cluster_set = set()
     subcluster_set = set()
     for data in output:
@@ -290,21 +363,6 @@ def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
         except:
             pass
     return (cluster_set, subcluster_set)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ###
