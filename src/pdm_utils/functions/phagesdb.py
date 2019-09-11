@@ -262,6 +262,7 @@ def copy_data_from(bndl, type, flag="retrieve"):
     If a genome object stored in a bundle object has
     attributes that are set to be 'retrieved' and auto-filled,
     retrieve the data from PhagesDB to complete the genome.
+
     :param bndl:
         A pdm_utils bundle object containing at least two genome
         objects.
