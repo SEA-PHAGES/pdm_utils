@@ -6,38 +6,44 @@ from pdm_utils.functions import phagesdb
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
-
-
-
-
-
-
 def parse_import_ticket_data(tkt, data_list,
                              expected_size = constants.IMPORT_TABLE_SIZE,
                              id = "", direction="list_to_ticket"):
     """Converts import ticket data between a list and Ticket object formats.
-    'tkt' is a Ticket object.
-    'data_list' is a list.
-    'expected_size' indicates how many elements should be in the data_list.
-    'direction' indicates whether data in the list should populate a
-    Ticket object ('list_to_ticket') or data in a Ticket object should
-    populate a list ('ticket_to_list').
-    The expected data structure of the data list:
-    
-        0. Import action
-        1. Primary PhageID
-        2. Host
-        3. Cluster
-        4. Subcluster
-        5. Status
-        6. Annotation Author
-        7. Feature field
-        8. Accession
-        9. Annotation QC
-        10. Retrieve Record
-        11. Run mode
+
+    :param tkt: A pdm_utils Ticket object.
+    :type tkt: Ticket
+    :param data_list:
+        A list of data with the following structure:
+
+            0. Import action
+            1. Primary PhageID
+            2. Host
+            3. Cluster
+            4. Subcluster
+            5. Status
+            6. Annotation Author
+            7. Feature field
+            8. Accession
+            9. Annotation QC
+            10. Retrieve Record
+            11. Run mode
+
+    :type data_list: list
+    :param expected_size:
+        Indicates how many elements should be in 'data_list'.
+    :type expected_size: int
+    :param direction:
+        Indicates whether data in the list should populate a
+        Ticket object ('list_to_ticket') or data in a Ticket object should
+        populate a list ('ticket_to_list').
+    :type direction: str
+    :param id:
+        A value used to populate the ticket's 'id' attribute, if data is
+        copied to a ticket.
+    :type id: str, int
     """
-    # Note: by providing the ability to transfer data from both
+    # By providing the ability to transfer data from both
     # a list-to-ticket and a ticket-to-list, it helps ensure that
     # conversion between the two formats is consistent.
 
@@ -48,14 +54,12 @@ def parse_import_ticket_data(tkt, data_list,
             tkt._parsed_fields = len(data_list)
             tkt.id = id
 
-
         if direction == "list_to_ticket":
             tkt.set_type(data_list[0])
         elif direction == "ticket_to_list":
             data_list[0] = tkt.type
         else:
             pass
-
 
         if direction == "list_to_ticket":
             tkt.set_description_field(data_list[7])
@@ -64,7 +68,6 @@ def parse_import_ticket_data(tkt, data_list,
         else:
             pass
 
-
         if direction == "list_to_ticket":
             tkt.set_run_mode(data_list[11])
         elif direction == "ticket_to_list":
@@ -72,9 +75,7 @@ def parse_import_ticket_data(tkt, data_list,
         else:
             pass
 
-
         # This data will eventually populate a Genome object.
-
         if direction == "list_to_ticket":
             tkt.set_phage_id(data_list[1])
         elif direction == "ticket_to_list":
@@ -158,16 +159,14 @@ def parse_import_ticket_data(tkt, data_list,
             pass
 
 
-
-
-
-
-
-
 def parse_import_tickets(list_of_lists):
-    """Parses lists of lists of data from csv file and converts to
-    group of parsed tickets. It also returns a lost of errors for tickets
-    that failed to be parsed.
+    """Parses list of lists of data to a list of Tickets.
+
+    :param list_of_lists:
+        A list of items, where each item is a list of data.
+    :type list_of_lists: list
+    :returns: A list of pdm_utils Ticket objects.
+    :rtype: list
     """
 
     counter = 1
@@ -188,41 +187,48 @@ def parse_import_tickets(list_of_lists):
 # it does not try to keep track of the types of tickets from which the
 # conflict arises.
 def compare_tickets(list_of_tickets):
-    """Compare all tickets to each other to determine if
-    there are any ticket conflicts."""
+    """Compare all tickets to each other to identify ticket conflicts.
 
+    Identifies if the same PhageID or the same Accession
+    is present for multiple tickets, and runs Ticket 'check' functions.
+
+    :param list_of_tickets:
+        A list of pdm_utils Ticket objects.
+    :type list_of_tickets: list
+    """
     accession_list = []
     phage_id_list = []
 
     # Create separate lists to check each field for duplications.
     # Skip "none" values since they are expected to be duplicated.
     for tkt in list_of_tickets:
-
         if tkt.phage_id != "none":
             phage_id_list.append(tkt.phage_id)
-
         if tkt.accession != "none":
             accession_list.append(tkt.accession)
 
     # Identify duplicate values in the group of tickets.
     phage_id_dupe_set = basic.identify_one_list_duplicates(phage_id_list)
     accession_dupe_set = basic.identify_one_list_duplicates(accession_list)
-
     for tkt in list_of_tickets:
-
         tkt.check_duplicate_phage_id(phage_id_dupe_set)
         tkt.check_duplicate_accession(accession_dupe_set)
 
 
-
+# TODO re-evaluate the structure of this function. Replace tickets
+# may not instantiate more than one Genome object.
 def copy_ticket_to_genome(bndl):
-    """Construct genome objects and populate them appropriately using data
-    from import ticket. This function operates on a Bundle object
+    """Construct genome objects from tickets.
+
+    This function operates on a Bundle object
     instead of a Genome object because some tickets (such as 'replace')
-    need to instantiate more than one Genome object."""
+    need to instantiate more than one Genome object.
+
+    :param bndl: A pdm_utils Bundle object.
+    :type bndl: Bundle
+    """
 
     tkt = bndl.ticket
-
     if (tkt.type == "add" or tkt.type == "replace"):
         genome1 = genome.Genome()
         genome1.type = "add"
@@ -281,27 +287,33 @@ def copy_ticket_to_genome(bndl):
 
 
 
-
-def create_bundle_dict(list_of_bundle_objects):
+# TODO re-evaluate if needed, since updates and add/replaces are
+# run in different scripts now.
+def create_bundle_dict(bndl_list):
     """Create a dictionary of Bundle objects based on their ticket type.
-    Key = ticket type (e.g. update, add, etc.).
-    Value = list of Bundle objects."""
 
+    :param bndl_list: A list of pdm_utils Bundle objects.
+    :type bndl_list: list
+    :returns:
+        A dictionary
+        WHERE
+        key = ticket type (e.g. 'update', 'add', etc.).
+        value = list of Bundle objects.
+    :rtype: dict
+    """
     type_set = set()
-    for bndl in list_of_bundle_objects:
+    for bndl in bndl_list:
         type_set.add(bndl.ticket.type)
-
     ticket_type_dict = {}
     for type in type_set:
         bundle_object_list = []
         index = 0
-        while index < len(list_of_bundle_objects):
-            bndl = list_of_bundle_objects[index]
+        while index < len(bndl_list):
+            bndl = bndl_list[index]
             if bndl.ticket.type == type:
                 bundle_object_list.append(bndl)
             index += 1
         ticket_type_dict[type] = bundle_object_list
-
     return ticket_type_dict
 
 
