@@ -94,10 +94,15 @@ source activate pdm_utils-user
 # unittest needs to be run in the directory immediately above the module.
 # Then, point unittest to the path of tests associated with the
 # module that needs to be tested.
-# e.g. root/dir1/pdm_utils/
+# e.g. root/src/pdm_utils/
 # e.g. root/tests/
-# In root/dir1, run:
+# In root/src, run:
 python3 -m unittest discover ../tests
+
+# With this directory structure, in order to run unittest
+# on a specific module of tests, execute a command like this from the
+# root/src directory:
+python3 -m unittest discover ../tests/integration/ -p test_phamerator.py
 
 
 
