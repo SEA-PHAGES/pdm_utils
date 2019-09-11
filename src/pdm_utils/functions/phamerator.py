@@ -9,7 +9,17 @@ import pymysql
 
 
 def parse_phage_table_data(data_dict, trans_table=11):
-    """Parse a Phamerator database dictionary to create a Genome object."""
+    """Parse a Phamerator database dictionary to create a Genome object.
+
+    :param data_dict:
+        Dictionary of data retrieved from the phage table of PhameratorDB.
+    :type data_dict: dict
+    :param trans_table:
+        The translation table that can be used to translate CDS features.
+    :type trans_table: int
+    :returns: A pdm_utils genome object.
+    :rtype: genome
+    """
 
     gnm = genome.Genome()
     try:
@@ -101,7 +111,17 @@ def parse_phage_table_data(data_dict, trans_table=11):
 
 
 def parse_gene_table_data(data_dict, trans_table=11):
-    """Parse a Phamerator database dictionary to create a Cds object."""
+    """Parse a Phamerator database dictionary to create a Cds object.
+
+    :param data_dict:
+        Dictionary of data retrieved from the gene table of PhameratorDB.
+    :type data_dict: dict
+    :param trans_table:
+        The translation table that can be used to translate CDS features.
+    :type trans_table: int
+    :returns: A pdm_utils cds object.
+    :rtype: cds
+    """
 
     cds_ftr = cds.Cds()
     try:
@@ -171,11 +191,30 @@ def parse_gene_table_data(data_dict, trans_table=11):
 def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
     """Retrieve genome data from Phamerator for a single genome.
 
-    The function expects a query that selects valid, specific columns
-    from the Phage table but does not condition on a PhageID.
-    (e.g. 'SELECT PhageID,Cluster FROM phage')
-    """
+    The query is modified to include one or more PhageIDs
 
+    :param sql_handle:
+        A pdm_utils MySQLConnectionHandler object containing
+        information on which database to connect to.
+    :type sql_handle: MySQLConnectionHandler
+    :param query:
+        A MySQL query that selects valid, specific columns
+        from the a valid table without conditioning on a PhageID
+        (e.g. 'SELECT PhageID, Cluster FROM phage').
+    :type query: str
+    :param column:
+        A valid column in the table upon which the query can be conditioned.
+    :type column: str
+    :param phage_id_list:
+        A list of valid PhageIDs upon which the query can be conditioned.
+        In conjunction with the 'column' parameter, the 'query' is
+        modified (e.g. "WHERE PhageID IN ('L5', 'Trixie')").
+    :type phage_id_list: list
+    :returns:
+        A list of items, where each item is a dictionary of
+        SQL data for each PhageID.
+    :rtype: list
+    """
     if (phage_id_list is not None and len(phage_id_list) > 0):
         query = query \
                 + " WHERE %s IN ('" % column \
@@ -200,8 +239,23 @@ def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
 
 def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
     """Returns Cds objects containing data parsed from a
-    Phamerator database."""
+    Phamerator database.
 
+    :param sql_handle:
+        This parameter is passed directly to the 'retrieve_data' function.
+    :type sql_handle: MySQLConnectionHandler
+    :param query:
+        This parameter is passed directly to the 'retrieve_data' function.
+    :type query: str
+    :param column:
+        This parameter is passed directly to the 'retrieve_data' function.
+    :type column: str
+    :param phage_id_list:
+        This parameter is passed directly to the 'retrieve_data' function.
+    :type phage_id_list: list
+    :returns: A list of pdm_utils Cds objects.
+    :rtype: list
+    """
     cds_list = []
     result_list = retrieve_data(
                     sql_handle, column=column, query=query,
@@ -217,16 +271,36 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
     """Returns a list of Genome objects containing data parsed from MySQL
     Phamerator database.
 
-    If the 'phage_id' parameter contains a list of at least
-    one valid PhageID, a Genome object will be constructed
-    only for that phage. If the 'phage_id' parameter is None,
-    Genome objects for all phages in the database will be constructed.
-    If the 'gene_query' parameter is not None, Cds objects for all of
-    the phage's CDS features in the gene table will be constructed
-    and added to the Genome object using the provided query.
-    If the 'trna_query' parameter is True, Trna objects for all of
-    the phage's tRNA features in the tRNA table will be constructed
-    add added to the Genome object using the provided query.
+    :param sql_handle:
+        This parameter is passed directly to the 'retrieve_data' function.
+    :type sql_handle: MySQLConnectionHandler
+    :param phage_query:
+        This parameter is passed directly to the 'retrieve_data' function
+        to retrieve data from the phage table.
+    :type phage_query: str
+    :param gene_query:
+        This parameter is passed directly to the 'parse_cds_data' function
+        to retrieve data from the gene table.
+        If not None, pdm_utils Cds objects for all of the phage's
+        CDS features in the gene table will be constructed
+        and added to the Genome object.
+    :type gene_query: str
+    :param trna_query:
+        This parameter is passed directly to the '' function
+        to retrieve data from the tRNA table. Note: not yet implemented.
+        If not None, pdm_utils Trna objects for all of the phage's
+        CDS features in the gene table will be constructed
+        and added to the Genome object.
+    :type trna_query: str
+    :param phage_id_list:
+        This parameter is passed directly to the 'retrieve_data' function.
+        If there is at at least one valid PhageID, a pdm_utils genome
+        object will be constructed only for that phage. If None, or an
+        empty list,  genome objects for all phages in the
+        database will be constructed.
+    :type phage_id_list: list
+    :returns: A list of pdm_utils Genome objects.
+    :rtype: list
     """
     genome_list = []
     result_list1 = retrieve_data(sql_handle, column="PhageID",
@@ -249,7 +323,15 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
 # TODO revamp so that sql handler makes the query instead of
 # simply passing data to pymysql.
 def create_phage_id_set(sql_handle):
-    """Create set of phage_ids currently in PhameratorDB."""
+    """Create set of phage_ids currently in PhameratorDB.
+
+    :param sql_handle:
+        A pdm_utils MySQLConnectionHandler object containing
+        information on which database to connect to.
+    :type sql_handle: MySQLConnectionHandler
+    :returns: A set of PhageIDs.
+    :rtype: set
+    """
 
     # Create the connection.
     connection = pymysql.connect(host = "localhost",
@@ -273,7 +355,15 @@ def create_phage_id_set(sql_handle):
 # TODO revamp so that sql handler makes the query instead of
 # simply passing data to pymysql.
 def create_seq_set(sql_handle):
-    """Create set of genome sequences currently in PhameratorDB."""
+    """Create set of genome sequences currently in PhameratorDB.
+
+    :param sql_handle:
+        A pdm_utils MySQLConnectionHandler object containing
+        information on which database to connect to.
+    :type sql_handle: MySQLConnectionHandler
+    :returns: A set of genome sequences.
+    :rtype: set
+    """
 
 
     # Create the connection.
@@ -298,35 +388,45 @@ def create_seq_set(sql_handle):
 
 
 def create_update_statement(table, field1, value1, field2, value2):
-    """Create MySQL UPDATE statement. When:
-    The new value to be added is 'singleton' (e.g. for Cluster and
-    Cluster2 fields), or
-    The new value to be added is an empty value (e.g. None, "none", etc.),
-    the new value is set to NULL."""
+    """Create MySQL UPDATE statement.
 
+    When the new value to be added is 'singleton' (e.g. for Cluster and
+    Cluster2 fields), or an empty value (e.g. None, "none", etc.),
+    the new value is set to NULL.
 
+    :param table: The database table to insert information.
+    :type table: str
+    :param field1: The column upon which the statement is conditioned.
+    :type field1: str
+    :param value1:
+        The value of 'field1' upon which the statement is conditioned.
+    :type value1: str
+    :param field2: The column that will be updated.
+    :type field2: str
+    :param value2:
+        The value that will be inserted into 'field2'.
+    :type value2: str
+    :returns: A MySQL query.
+    :rtype: set
+    """
     part1 = "UPDATE %s SET %s = " % (table, field2)
     part3 = " WHERE %s = '%s';" % (field1, value1)
-
     part2a = "NULL"
     part2b = "'%s'" % value2
-
     if (basic.check_empty(value2) == True or \
         value2.lower() == "singleton"):
-
         part2 = part2a
     else:
         part2 = part2b
-
     statement = part1 + part2 + part3
-
     return statement
 
 
 
 def create_genome_update_statements(gnm):
     """Create a collection of genome-level UPDATE statements using data
-    in a Genome object."""
+    in a Genome object.
+    """
 
     table = "phage"
     field1 = "PhageID"
@@ -450,19 +550,25 @@ def copy_data_from(bndl, type, flag="retain"):
 
     If a genome object stored in the Bundle object has
     attributes that are set to be 'retained' from Phamerator,
-    copy any necessary data from the Phamerator genome to the new genome.
-    The 'type' parameter indicates the type of genome that may need
-    to be populated from Phamerator."""
+    copy any necessary data from the genome with 'type' attribute
+    set to 'phamerator' to the new genome.
 
+    :param bndl: A pdm_utils Bundle object.
+    :type bndl: Bundle
+    :param type:
+        Indicates the value of the target genome's 'type',
+        indicating the genome to which data will be copied.
+    :type type: str
+    :param flag:
+        Indicates the value that attributes of the target genome object
+        must have in order be updated from the 'phamerator' genome object.
+    :type flag: str
+    """
     if type in bndl.genome_dict.keys():
-
         genome1 = bndl.genome_dict[type]
         genome1.set_value_flag(flag)
-
         if genome1._value_flag:
-
             if "phamerator" in bndl.genome_dict.keys():
-
                 genome2 = bndl.genome_dict["phamerator"]
 
                 # Copy all data that is set to be copied and
