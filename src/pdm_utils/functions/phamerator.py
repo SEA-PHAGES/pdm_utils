@@ -5,7 +5,6 @@ from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import cds
 from pdm_utils.functions import basic
-import pymysql
 
 
 def parse_phage_table_data(data_dict, trans_table=11):
@@ -186,8 +185,6 @@ def parse_gene_table_data(data_dict, trans_table=11):
     return cds_ftr
 
 
-# TODO revamp so that sql handler makes the query instead of
-# simply passing data to pymysql.
 def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
     """Retrieve genome data from Phamerator for a single genome.
 
@@ -221,19 +218,8 @@ def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
                 + "','".join(phage_id_list) \
                 + "')"
     query = query + ";"
-    # Create the connection.
-    connection = pymysql.connect(host = "localhost",
-                                    user = sql_handle.username,
-                                    password = sql_handle.password,
-                                    database = sql_handle.database,
-                                    cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    cur.execute(query)
-
-    # Data is returned as a list of items, where each item is a
-    # dictionary of SQL data for each PhageID.
-    result_list = cur.fetchall()
-    connection.close()
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
     return result_list
 
 
@@ -320,8 +306,9 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
     return genome_list
 
 
-# TODO revamp so that sql handler makes the query instead of
-# simply passing data to pymysql.
+# TODO this can be improved if the MCH.execute_query() method
+# is able to switch to a standard cursor instead of only using
+# dictcursor.
 def create_phage_id_set(sql_handle):
     """Create set of phage_ids currently in PhameratorDB.
 
@@ -332,28 +319,18 @@ def create_phage_id_set(sql_handle):
     :returns: A set of PhageIDs.
     :rtype: set
     """
-
-    # Create the connection.
-    connection = pymysql.connect(host = "localhost",
-                                    user = sql_handle.username,
-                                    password = sql_handle.password,
-                                    database = sql_handle.database)
-    cur = connection.cursor()
-    cur.execute("SELECT PhageID FROM phage")
-
-    # Data is returned as a tuple of tuples: (("L5",), ("Trixie",), etc.)
-    result_tuple = cur.fetchall()
-    connection.close()
-
+    query = "SELECT PhageID FROM phage"
+    # Returns a list of items, where each item is a dictionary of
+    # SQL data for each PhageID.
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
     # Convert to a set of PhageIDs.
     result_set = set([])
-    for tup in result_tuple:
-        result_set.add(tup[0])
+    for dict in result_list:
+        result_set.add(dict["PhageID"])
     return result_set
 
 
-# TODO revamp so that sql handler makes the query instead of
-# simply passing data to pymysql.
 def create_seq_set(sql_handle):
     """Create set of genome sequences currently in PhameratorDB.
 
@@ -364,26 +341,17 @@ def create_seq_set(sql_handle):
     :returns: A set of genome sequences.
     :rtype: set
     """
-
-
-    # Create the connection.
-    connection = pymysql.connect(host = "localhost",
-                                    user = sql_handle.username,
-                                    password = sql_handle.password,
-                                    database = sql_handle.database)
-    cur = connection.cursor()
-    cur.execute("SELECT Sequence FROM phage")
-
-    # Data is returned as a tuple of tuples
-    result_tuple = cur.fetchall()
-    connection.close()
-
+    query = "SELECT Sequence FROM phage"
+    # Returns a list of items, where each item is a dictionary of
+    # SQL data for each PhageID.
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
     # Convert to a set of sequences.
     # Sequence data is stored as MEDIUMBLOB, so data is returned as bytes
-    # (("b'AATT",), ("b'TTCC",), etc.)
+    # "b'AATT", "b'TTCC", etc.
     result_set = set([])
-    for tup in result_tuple:
-        result_set.add(tup[0].decode("utf-8"))
+    for dict in result_list:
+        result_set.add(dict["Sequence"].decode("utf-8"))
     return result_set
 
 
