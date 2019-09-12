@@ -865,24 +865,41 @@ def verify_path(filepath, kind=None):
         return False
 
 
-# TODO unittest.
 def make_new_dir(output_dir, new_dir, attempt=1):
+    """Make a new directory.
+
+    Checks to verify the new directory name is valid and does not
+    already exist. If it already exists, it attempts to extend
+    the name with an integer suffix.
+
+    :param output_dir:
+        Full path to the directory where the new directory will be created.
+    :type output_dir: str
+    :param new_dir: Name of the new directory to be created.
+    :type new_dir: str
+    :param attempt: Number of attempts to create the directory.
+    :type attempt: int
+    :returns:
+        If successful, the name of the created directory.
+        If unsuccessful, empty string "".
+    :rtype: str
+    """
     valid = False
     count = 0
     while (not valid and count < attempt):
         if count > 0:
-            new_dir_extended = new_dir + "_" + str(count)
+            new_dir_mod = new_dir + "_" + str(count)
         else:
-            new_dir_extended = new_dir
-        new_path = os.path.join(output_dir, new_dir_extended)
+            new_dir_mod = new_dir
+        new_path = os.path.join(output_dir, new_dir_mod)
         if not verify_path(new_path, "dir"):
             valid = True
             os.mkdir(new_path)
         count += 1
     if not valid:
-        return False
+        return ""
     else:
-        return True
+        return new_dir_mod
 
 
 

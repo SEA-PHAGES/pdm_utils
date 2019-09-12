@@ -177,32 +177,36 @@ class TestBasicFunctions2(unittest.TestCase):
     def test_make_new_dir_1(self):
         """Verify new directory is created."""
         new_dir = "test_dir"
-        result = basic.make_new_dir(self.base_dir, new_dir)
-        exp_path = os.path.join(self.base_dir, "test_dir")
+        output_dir = basic.make_new_dir(self.base_dir, new_dir)
+        exp_dir = "test_dir"
+        exp_path = os.path.join(self.base_dir, exp_dir)
         with self.subTest():
             self.assertTrue(os.path.isdir(exp_path))
         with self.subTest():
-            self.assertTrue(result)
+            self.assertEqual(exp_dir, output_dir)
 
     def test_make_new_dir_2(self):
         """Verify no new directory is created when a directory already
         exists and attempt = 1."""
         new_dir = "test_dir"
         os.mkdir(os.path.join(self.base_dir, new_dir))
-        result = basic.make_new_dir(self.base_dir, new_dir)
-        self.assertFalse(result)
+        output_dir = basic.make_new_dir(self.base_dir, new_dir)
+        self.assertEqual(output_dir, "")
+
+
 
     def test_make_new_dir_3(self):
         """Verify new directory is created when a directory already
         exists and attempt = 2."""
         new_dir = "test_dir"
         os.mkdir(os.path.join(self.base_dir, new_dir))
-        result = basic.make_new_dir(self.base_dir, new_dir, attempt=2)
-        exp_path = os.path.join(self.base_dir, "test_dir_1")
+        output_dir = basic.make_new_dir(self.base_dir, new_dir, attempt=2)
+        exp_dir = "test_dir_1"
+        exp_path = os.path.join(self.base_dir, exp_dir)
         with self.subTest():
             self.assertTrue(os.path.isdir(exp_path))
         with self.subTest():
-            self.assertTrue(result)
+            self.assertEqual(output_dir, exp_dir)
 
     def test_make_new_dir_3(self):
         """Verify new directory is created when two directories already
@@ -210,12 +214,13 @@ class TestBasicFunctions2(unittest.TestCase):
         new_dir = "test_dir"
         os.mkdir(os.path.join(self.base_dir, new_dir))
         os.mkdir(os.path.join(self.base_dir, new_dir + "_1"))
-        result = basic.make_new_dir(self.base_dir, new_dir, attempt=3)
-        exp_path = os.path.join(self.base_dir, "test_dir_2")
+        output_dir = basic.make_new_dir(self.base_dir, new_dir, attempt=3)
+        exp_dir = "test_dir_2"
+        exp_path = os.path.join(self.base_dir, exp_dir)
         with self.subTest():
             self.assertTrue(os.path.isdir(exp_path))
         with self.subTest():
-            self.assertTrue(result)
+            self.assertEqual(output_dir, exp_dir)
 
 
 
