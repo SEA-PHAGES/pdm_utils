@@ -2,7 +2,11 @@
 into PhameratorDB."""
 
 
+import time
+from datetime import datetime
+import csv
 
+from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
@@ -10,6 +14,73 @@ from pdm_utils.functions import phamerator
 from pdm_utils.classes import bundle
 from pdm_utils.pipelines.db_import import evaluate
 from pdm_utils.constants import constants
+
+def main1(sql_handle, genome_folder, import_table, filename_flag, testrun):
+    """Set up output directories, log files, etc. for import."""
+    # Create output directories
+    date = time.strftime("%Y%m%d")
+    attempts = 3
+    failed_folder = "%s_failed_upload_files" % date
+    success_folder = "%s_successful_upload_files" % date
+    new_failed_folder = basic.make_new_dir(genome_folder,failed_folder)
+    if new_failed_folder != failed_folder:
+        print("\nUnable to create failed_folder")
+        sys.exit(1)
+    new_success_folder = basic.make_new_dir(genome_folder,success_folder)
+    if new_success_folder != success_folder:
+        print("\nUnable to create success_folder")
+        sys.exit(1)
+
+    # Identify valid files in folder for evaluation.
+    files_in_folder = basic.identify_files(genome_folder)
+
+
+    # TODO match record to ticket in bundle object.
+
+
+    # TODO parsing from import table:
+    # 1. parse ticket data from table. = prepare_tickets()
+    # 2. set case for all fields. = prepare_tickets()
+    # 3. confirm all tickets have a valid type. = check_ticket_structure()
+    # 4. populate Genome objects as necessary.
+    # 5. retrieve data if needed.
+    # 6. check for PhageID conflicts.
+    # 7. confirm correct fields are populated based on ticket type.
+
+
+    # Retrieve import ticket data.
+    lists_of_ticket_data = []
+    with open(import_table,'r') as file:
+        file_reader = csv.reader(file)
+        for row in file_reader:
+            lists_of_ticket_data.append(row)
+
+
+
+
+    # TODO not sure how many elements (or what types) are returned.
+    results = main1(lists_of_ticket_data, files_in_folder, sql_handle)
+
+
+
+
+    # TODO after evaluations, if sql argument option is True,
+    # update the database as needed...
+
+
+
+
+    # Now that all flat files and tickets have been evaluated,
+    # provide summary of results...
+
+
+
+
+
+
+
+
+
 
 
 
@@ -24,7 +95,7 @@ from pdm_utils.constants import constants
 
 
 
-def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
+def main2(lists_of_ticket_data, files_in_folder, sql_handle = None):
     """The 'lists_of_ticket_data' parameter is a list, where each
     element is a list of ticket data.
     The 'files_in_folder' parameter is a list, where each
@@ -130,15 +201,15 @@ def main(lists_of_ticket_data, files_in_folder, sql_handle = None):
             phamerator_seq_set = phamerator.create_seq_set(sql_handle)
 
 
-            # TODO implement the main2 function.
+            # TODO implement function.
             # Perform all evaluations based on the ticket type.
-            import_main.evaluate_flat_file(bndl = bndl,
-                                    sql_handle = sql_handle,
-                                    phage_id_set = phamerator_phage_id_set,
-                                    seq_set = phamerator_seq_set,
-                                    host_genera_set = phagesdb_host_genera_set,
-                                    cluster_set = phagesdb_cluster_set,
-                                    subcluster_set = phagesdb_subcluster_set)
+            evaluate_flat_file(bndl = bndl,
+                               sql_handle = sql_handle,
+                               phage_id_set = phamerator_phage_id_set,
+                               seq_set = phamerator_seq_set,
+                               host_genera_set = phagesdb_host_genera_set,
+                               cluster_set = phagesdb_cluster_set,
+                               subcluster_set = phagesdb_subcluster_set)
 
 
 
