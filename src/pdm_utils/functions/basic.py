@@ -865,9 +865,24 @@ def verify_path(filepath, kind=None):
         return False
 
 
-
-
-
+# TODO unittest.
+def make_new_dir(output_dir, new_dir, attempt=1):
+    valid = False
+    count = 0
+    while (not valid and count < attempt):
+        if count > 0:
+            new_dir_extended = new_dir + "_" + str(count)
+        else:
+            new_dir_extended = new_dir
+        new_path = os.path.join(output_dir, new_dir_extended)
+        if not verify_path(new_path, "dir"):
+            valid = True
+            os.mkdir(new_path)
+        count += 1
+    if not valid:
+        return False
+    else:
+        return True
 
 
 

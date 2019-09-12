@@ -6,11 +6,12 @@ from datetime import datetime
 import unittest
 from unittest.mock import patch
 import os
+import shutil
 
 
 
 
-class TestBasicFunctions(unittest.TestCase):
+class TestBasicFunctions1(unittest.TestCase):
 
     def setUp(self):
         self.test_filepath1 = \
@@ -162,8 +163,65 @@ class TestBasicFunctions(unittest.TestCase):
 
 
 
+class TestBasicFunctions2(unittest.TestCase):
+
+    def setUp(self):
+        self.base_dir = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/test_make_new_dir")
+        os.mkdir(self.base_dir)
 
 
+
+
+    def test_make_new_dir_1(self):
+        """Verify new directory is created."""
+        new_dir = "test_dir"
+        result = basic.make_new_dir(self.base_dir, new_dir)
+        exp_path = os.path.join(self.base_dir, "test_dir")
+        with self.subTest():
+            self.assertTrue(os.path.isdir(exp_path))
+        with self.subTest():
+            self.assertTrue(result)
+
+    def test_make_new_dir_2(self):
+        """Verify no new directory is created when a directory already
+        exists and attempt = 1."""
+        new_dir = "test_dir"
+        os.mkdir(os.path.join(self.base_dir, new_dir))
+        result = basic.make_new_dir(self.base_dir, new_dir)
+        self.assertFalse(result)
+
+    def test_make_new_dir_3(self):
+        """Verify new directory is created when a directory already
+        exists and attempt = 2."""
+        new_dir = "test_dir"
+        os.mkdir(os.path.join(self.base_dir, new_dir))
+        result = basic.make_new_dir(self.base_dir, new_dir, attempt=2)
+        exp_path = os.path.join(self.base_dir, "test_dir_1")
+        with self.subTest():
+            self.assertTrue(os.path.isdir(exp_path))
+        with self.subTest():
+            self.assertTrue(result)
+
+    def test_make_new_dir_3(self):
+        """Verify new directory is created when two directories already
+        exists and attempt = 3."""
+        new_dir = "test_dir"
+        os.mkdir(os.path.join(self.base_dir, new_dir))
+        os.mkdir(os.path.join(self.base_dir, new_dir + "_1"))
+        result = basic.make_new_dir(self.base_dir, new_dir, attempt=3)
+        exp_path = os.path.join(self.base_dir, "test_dir_2")
+        with self.subTest():
+            self.assertTrue(os.path.isdir(exp_path))
+        with self.subTest():
+            self.assertTrue(result)
+
+
+
+
+    def tearDown(self):
+        shutil.rmtree(self.base_dir)
 
 
 
