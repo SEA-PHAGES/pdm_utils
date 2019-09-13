@@ -22,7 +22,7 @@ class GenomeTicket:
         # Attribute used to evaluate all 'add' and 'replace' ticket types.
         self.run_mode = ""
         self.description_field = ""
-
+        self.eval_flags = {} # Dictionary of evaluation flags.
 
         # Attributes used to populate Genome objects for
         # 'update', 'add', and 'replace' ticket types.

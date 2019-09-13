@@ -136,13 +136,10 @@ HOST_GENUS_DICT = {
 # Define run modes:
 
 # TODO implement the 'import_locus_tag' option.
-# TODO 'use_filename' should really become a command line argument, since
-# this information is needed to match flat files to tickets.
 
 # Options that impact how data is processed but are not utilized
 # for evaluation of specific parts of a flat file:
 
-# 'use_filename':            Should the filename be used as the Genome ID?
 # 'check_replace':           Should unexpected genome replacements be reported?
 # 'import_locus_tag':        Should locus_tags be imported?
 
@@ -161,8 +158,7 @@ HOST_GENUS_DICT = {
 # 'check_seq':               Should the nucleotide sequence be evaluated?
 
 RUN_MODE_BASE = {
-    "use_filename":True,
-    "check_locus_tag":False,
+    "check_locus_tag":True,
     "check_description_field":True,
     "check_replace":True,
     "check_trna":True,
@@ -177,6 +173,7 @@ RUN_MODE_BASE = {
 # Auto-annotations.
 def _get_run_mode_pecaan(dict=RUN_MODE_BASE):
     new_dict = dict.copy()
+    new_dict["check_locus_tag"] = False
     new_dict["check_trna"] = False
     new_dict["import_locus_tag"] = False
     new_dict["check_id_typo"] = False
@@ -209,7 +206,6 @@ RUN_MODE_SEA_AUTO = _get_run_mode_sea_auto()
 # Non-SEA-PHAGES GenBank records.
 def _get_run_mode_misc(dict=RUN_MODE_BASE):
     new_dict = dict.copy()
-    new_dict["use_filename"] = False
     new_dict["check_locus_tag"] = False
     new_dict["check_replace"] = False
     new_dict["check_trna"] = False

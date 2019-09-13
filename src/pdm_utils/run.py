@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 from classes import mysqlconnectionhandler
+from constants import constants
 from functions import basic
 from pipelines.db_import import import_main
 
@@ -14,24 +15,39 @@ def main():
     """Verify a valid pipeline is selected and arguments provided are valid."""
     parser = argparse.ArgumentParser(
         description="Top level command line script to call pdm_utils pipelines.")
-    parser.add_argument("-p", "--pipeline", type=str, default=False, required=True,
+
+    # Required for all pipelines.
+    parser.add_argument("-p", "--pipeline", type=str, default=False,
+        required=True,
         help=("Name of the pdm_utils pipeline to run:",
               " (retrieve_data, import, cdd, phamerate, export"))
+
+    # Commonly used args.
+    parser.add_argument("-db", "--database", type=str,
+        help="Name of the MySQL database to import the genomes.")
+
+    # Specific to import pipeline:
     parser.add_argument("-g", "--genome_folder", type=os.path.abspath,
         help=("Path to the folder containing GenBank-formatted "
               "flat files to be processed."))
     parser.add_argument("-t", "--table", type=os.path.abspath,
-        help="Path to the CSV-formatted 12-field table containing instructions "
+        help="Path to the CSV-formatted table containing instructions "
              "to process each genome.")
-    parser.add_argument("-db", "--database", type=str,
-        help="Name of the MySQL database to import the genomes.")
     parser.add_argument("-f", "--filename", action="store_true", default=False,
-        help="Indicates whether the filename should be used to identify the genome.")
+        help=("Indicates whether the filename should be used "
+              "to identify the genome."))
     parser.add_argument("-tr", "--testrun", action="store_false", default=True,
-        help=("Indicates whether the import run is for",
-              " test or production purposes."
-              " A production run will implement all changes in the"
-              " indicated database. A test run will not implement any changes"))
+        help=("Indicates whether the import run is for ",
+              "test or production purposes. "
+              "A production run will implement all changes in the "
+              "indicated database. A test run will not implement any changes"))
+    parser.add_argument("-rm", "--run_mode", type=str,
+        help="Indicates the evaluation configuration for importing genomes.")
+    parser.add_argument("-df", "--description_field", default="product",
+        choices=list(constants.DESCRIPTION_FIELD_SET),
+        help=("Indicates the field in CDS features that is expected "
+              "to store the gene description."))
+
     args = parser.parse_args()
 
 
@@ -59,15 +75,20 @@ def main():
     # --database: Confirm MySQL creds.
     if args.database is not False:
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.get_credentials()
-        # sql_handle.username = getpass.getpass(prompt="Provide the MySQL username: ")
-        # sql_handle.password = getpass.getpass(prompt="Provide the MySQL password: ")
         sql_handle.database = args.database
-        sql_handle.validate_credentials()
-        sql_handle.validate_database_access()
+        sql_handle.open_connection()
         if (not sql_handle.credential_status or not sql_handle._database_status):
             print("\nUnable to connect to the database")
             sys.exit(1)
+
+
+    # --run_mode: Confirm valid. This can be a filename or
+    # one of several preset options.
+    if args.run_mode is not None:
+        if args.run_mode.lower() not in constants.RUN_MODES.keys():
+            if not basic.verify_path(args.run_mode, "file"):
+                print("\n\nInvalid input for run_mode file.\n\n")
+                sys.exit(1)
 
 
 
@@ -115,10 +136,18 @@ def run_import(args, sql_handle):
         print("Use the -db option to indicate the database.")
         sys.exit(1)
 
+    # TODO build functionality to check run_mode option, and allow custom
+    # run mode file to be used.
+    if args.run_mode is None:
+        print("Use the -rm option to indicate the run_mode.")
+        sys.exit(1)
+
+
     # If everything checks out, pass args to the main import pipeline:
     pipelines.db_import.import_main.main(sql_handle=sql_handle,
         genome_folder=args.genome_folder, import_table=args.table,
-        filename_flag=args.filename, testrun=args.testrun)
+        filename_flag=args.filename, test_run=args.testrun,
+        description_field=args.description_field, run_mode=args.run_mode)
 
 
 

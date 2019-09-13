@@ -45,8 +45,7 @@ from pdm_utils.constants import constants
 
 
 
-# TODO this may no longer be needed.
-def check_ticket_structure(tkt,type_set,null_set, run_mode_set):
+def check_ticket_structure(tkt, type_set, null_set, run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket."""
@@ -195,7 +194,113 @@ def compare_genomes(genome_pair, check_replace=True):
 
 
 
+def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
+                           seq_set, host_set, cluster_set, subcluster_set):
+    """Check a Genome object for errors."""
 
+    if tkt.type == "add":
+        gnm.check_id(phage_id_set | null_set, False)
+        gnm.check_name(phage_id_set | null_set, False)
+        gnm.check_sequence(seq_set | null_set, False)
+
+    # 'replace' ticket checks.
+    else:
+        gnm.check_id(phage_id_set, True)
+        gnm.check_name(phage_id_set, True)
+        gnm.check_sequence(seq_set, True)
+
+        #genome_pair
+    # TODO if these values are set at the command line, these checks
+    # may no longer be needed.
+    # tkt = tkt.check_description_field(description_field_set)
+    # tkt = tkt.check_run_mode(run_mode_set)
+
+    gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
+                                expect=True)
+
+    gnm.check_cluster(cluster_set, True)
+    gnm.check_subcluster(subcluster_set, True)
+    gnm.check_subcluster_structure()
+    gnm.check_cluster_structure()
+    gnm.check_compatible_cluster_and_subcluster()
+
+
+
+    # TODO not sure if this is needed.
+    # gnm.check_accession(accession_set, False)
+
+
+    gnm.check_annotation_author()
+    gnm.check_retrieve_record()
+
+
+
+    if tkt.eval_flags["check_seq"]:
+        gnm.check_nucleotides(check_set=constants.DNA_ALPHABET)
+    gnm.check_compatible_status_and_accession()
+    gnm.check_compatible_status_and_descriptions()
+
+    if tkt.eval_flags["check_id_typo"]:
+        gnm.check_description_name()
+        gnm.check_source_name()
+        gnm.check_organism_name()
+
+    if tkt.eval_flags["check_host_typo"]:
+        gnm.check_host_genus(host_set, True)
+        gnm.check_description_host_genus()
+        gnm.check_source_host_genus()
+        gnm.check_organism_host_genus()
+
+
+    if tkt.eval_flags["check_author"]:
+        if gnm.annotation_author == 1:
+            gnm.check_authors(check_set=constants.AUTHOR_SET)
+            gnm.check_authors(check_set=set(["lastname", "firstname"]),
+                                 expect=False)
+        else:
+            gnm.check_authors(check_set=constants.AUTHOR_SET, expect=False)
+
+
+
+    gnm.check_cds_feature_tally()
+    gnm.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True)
+
+
+    # TODO not sure if these are needed now that check_feature_ids()
+    # is implemented.
+    # gnm.check_cds_start_end_ids()
+    # gnm.check_cds_end_strand_ids()
+
+    # TODO confirm that these check_value_flag() are needed here.
+    gnm.set_value_flag("retrieve")
+    gnm.check_value_flag()
+    gnm.set_value_flag("retain")
+    gnm.check_value_flag()
+
+    # Check CDS features
+    index1 = 0
+    while index1 < len(gnm.cds_features):
+        check_cds_for_import(gnm.cds_features[index1],
+            check_locus_tag=tkt.eval_flags["check_locus_tag"],
+            check_gene=tkt.eval_flags["check_gene"],
+            check_description=tkt.eval_flags["check_description"],
+            check_description_field=tkt.eval_flags["check_description_field"])
+        index1 += 1
+
+    # Check tRNA features
+    if tkt.eval_flags["check_trna"]:
+        index2 = 0
+        while index2 < len(gnm.trna_features):
+            check_trna_for_import(gnm.trna_features[index2])
+            index2 += 1
+
+    # Check Source features
+    index3 = 0
+    while index3 < len(gnm.source_features):
+        check_source_for_import(gnm.source_features[index3],
+            check_id_typo=tkt.eval_flags["check_id_typo"],
+            check_host_typo=tkt.eval_flags["check_host_typo"],)
+        index3 += 1
 
 
 
@@ -267,133 +372,20 @@ def check_bundle_for_import(bndl):
         # genome and the new flat_file genome.
         bndl.check_genome_pair_dict("flat_file_phamerator")
         try:
-            compare_genomes_for_replace(
-                bndl.genome_pair_dict["flat_file_phamerator"])
+            compare_genomes(bndl.genome_pair_dict["flat_file_phamerator"],
+                check_replace=tkt.eval_flags["check_replace"])
         except:
             pass
 
 
-    # Second, evaluate each genome or pair of genomes as needed.
-    check_genome_to_import(bndl.genome_dict["flat_file"], tkt.type)
+    # Second, evaluate each genome.
+    check_genome_to_import(bndl.genome_dict["flat_file"], tkt=tkt, null_set, phage_id_set,
+                           seq_set, host_set, cluster_set, subcluster_set)
 
 
 
 
 
-
-
-
-# TODO implement.
-# TODO unit test.
-def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
-                           seq_set, host_set, cluster_set, subcluster_set):
-    """Check a Genome object for errors."""
-
-    if tkt.type == "add":
-        gnm.check_id(phage_id_set | null_set, False)
-        gnm.check_name(phage_id_set | null_set, False)
-        gnm.check_sequence(seq_set | null_set, False)
-
-    # 'replace' ticket checks.
-    else:
-        gnm.check_id(phage_id_set, True)
-        gnm.check_name(phage_id_set, True)
-        gnm.check_sequence(seq_set, True)
-
-
-    # TODO if these values are set at the command line, these checks
-    # may no longer be needed.
-    # tkt = tkt.check_description_field(description_field_set)
-    # tkt = tkt.check_run_mode(run_mode_set)
-
-    gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
-                                   expect=True)
-
-
-
-    # TODO This may no longer be needed, if cluster data not used
-    # during genome import.
-    gnm.check_cluster(cluster_set, True)
-    gnm.check_subcluster(subcluster_set, True)
-    gnm.check_subcluster_structure()
-    gnm.check_cluster_structure()
-    gnm.check_compatible_cluster_and_subcluster()
-
-    # TODO This may no longer be needed, if this database field is removed.
-    # gnm.check_annotation_qc()
-
-    # TODO This may no longer be needed.
-    # gnm.check_filename()
-
-    # TODO not sure if this is needed.
-    # gnm.check_accession(accession_set, False)
-
-
-    gnm.check_annotation_author()
-    gnm.check_retrieve_record()
-
-
-
-    if tkt.run_mode[check_seq]:
-        gnm.check_nucleotides(dna_alphabet_set=constants.DNA_ALPHABET)
-    gnm.check_compatible_status_and_accession()
-    gnm.check_compatible_status_and_descriptions()
-
-    if tkt.run_mode[check_id_typo]:
-        gnm.check_description_name()
-        gnm.check_source_name()
-        gnm.check_organism_name()
-
-    if tkt.run_mode[check_host_typo]:
-        gnm.check_host_genus(host_set, True)
-        gnm.check_description_host_genus()
-        gnm.check_source_host_genus()
-        gnm.check_organism_host_genus()
-
-
-    if tkt.run_mode[check_author]:
-        if gnm.annotation_author == 1:
-            gnm.check_authors(check_set=constants.AUTHOR_SET)
-            gnm.check_authors(check_set=set(["lastname", "firstname"]),
-                                 expect=False)
-        else:
-            gnm.check_authors(check_set=constants.AUTHOR_SET, expect=False)
-
-
-
-    gnm.check_cds_feature_tally()
-    gnm.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True)
-
-
-    # TODO not sure if these are needed now that check_feature_ids()
-    # is implemented.
-    # gnm.check_cds_start_end_ids()
-    # gnm.check_cds_end_strand_ids()
-
-    # TODO confirm that these check_value_flag() are needed here.
-    gnm.set_value_flag("retrieve")
-    gnm.check_value_flag()
-    gnm.set_value_flag("retain")
-    gnm.check_value_flag()
-
-    # Check all CDS features
-    index1 = 0
-    while index1 < len(gnm.cds_features):
-        check_cds_for_import(gnm.cds_features[index1])
-        index1 += 1
-
-    # Check all tRNA features
-    if tkt.run_mode[check_trna]:
-        index2 = 0
-        while index2 < len(gnm.trna_features):
-            check_trna_for_import(gnm.trna_features[index2])
-            index2 += 1
-
-    # Check all Source features
-    index3 = 0
-    while index3 < len(gnm.source_features):
-        check_source_for_import(gnm.source_features[index3])
-        index3 += 1
 
 
 

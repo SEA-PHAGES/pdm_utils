@@ -15,7 +15,8 @@ from pdm_utils.classes import bundle
 from pdm_utils.pipelines.db_import import evaluate
 from pdm_utils.constants import constants
 
-def main1(sql_handle, genome_folder, import_table, filename_flag, testrun):
+def main1(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
+          description_field, run_mode):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
@@ -34,32 +35,23 @@ def main1(sql_handle, genome_folder, import_table, filename_flag, testrun):
     # Identify valid files in folder for evaluation.
     files_in_folder = basic.identify_files(genome_folder)
 
+    try:
+        eval_flags = constants.RUN_MODES[run_mode.lower()]
+    except:
+        run_mode = basic.expand_path(run_mode)
+        # TODO parse run_mode file and conver to a dictionary
+        # parallel to run_mode dictionaries in constants.
+        eval_flags = {}
 
-    # TODO match record to ticket in bundle object.
+    ticket_dict = prepare_tickets(import_table_file, eval_flags,
+                                  description_field)
 
+    # Proceed if there is at least one file to process.
+    if len(files_in_folder) > 0:
 
-    # TODO parsing from import table:
-    # 1. parse ticket data from table. = prepare_tickets()
-    # 2. set case for all fields. = prepare_tickets()
-    # 3. confirm all tickets have a valid type. = check_ticket_structure()
-    # 4. populate Genome objects as necessary.
-    # 5. retrieve data if needed.
-    # 6. check for PhageID conflicts.
-    # 7. confirm correct fields are populated based on ticket type.
-
-
-    # Retrieve import ticket data.
-    lists_of_ticket_data = []
-    with open(import_table,'r') as file:
-        file_reader = csv.reader(file)
-        for row in file_reader:
-            lists_of_ticket_data.append(row)
-
-
-
-
-    # TODO not sure how many elements (or what types) are returned.
-    results = main1(lists_of_ticket_data, files_in_folder, sql_handle)
+        # TODO not sure how many elements (or what types) are returned.
+        results = main2(ticket_dict, files_in_folder,
+                        sql_handle, eval_flags, description_field)
 
 
 
@@ -95,28 +87,39 @@ def main1(sql_handle, genome_folder, import_table, filename_flag, testrun):
 
 
 
-def main2(lists_of_ticket_data, files_in_folder, sql_handle = None):
-    """The 'lists_of_ticket_data' parameter is a list, where each
-    element is a list of ticket data.
-    The 'files_in_folder' parameter is a list, where each
-    element is a filename to be parsed.
-    The 'sql_handle' parameter handles MySQL connections."""
 
 
-    # Will hold all results data. These can be used by various types of
-    # user interfaces to present the summary of import.
-    success_ticket_list = []
-    failed_ticket_list = []
-    success_filename_list = []
-    failed_filename_list = []
-    evaluation_dict = {}
-    query_dict = {}
+
+
+###
+def prepare_tickets(import_table_file, eval_flags, description_field):
+    """."""
+
+    # TODO parsing from import table:
+    # 1. parse ticket data from table. = prepare_tickets()
+    # 2. set case for all fields. = prepare_tickets()
+    # 3. confirm all tickets have a valid type. = check_ticket_structure()
+    # 4. populate Genome objects as necessary.
+    # 5. retrieve data if needed.
+    # 6. check for PhageID conflicts.
+    # 7. confirm correct fields are populated based on ticket type.
+
+    # Retrieve import ticket data.
+    lists_of_ticket_data = []
+    with open(import_table_file,'r') as file:
+        file_reader = csv.reader(file)
+        for row in file_reader:
+            lists_of_ticket_data.append(row)
 
     # Convert ticket data to Ticket objects.
     # Data is returned as a list of ticket objects.
     ticket_list = tickets.parse_import_tickets(lists_of_ticket_data)
     # print("Tickets parsed")
 
+    # Add the eval_flag dictionary and description_field to each ticket.
+    for tkt in ticket_list:
+        tkt.eval_flags = eval_flags
+        tkt.description_field = description_field
 
     # Evaluate the tickets to ensure they are structured properly.
     # At this point, the quality of the ticket data is not evaluated,
@@ -135,7 +138,6 @@ def main2(lists_of_ticket_data, files_in_folder, sql_handle = None):
     # validate the entire group of tickets.
     tickets.compare_tickets(ticket_list)
     # print("Tickets compared")
-
 
     # Create a dictionary of tickets based on the phage_id.
     ticket_dict = {}
@@ -156,102 +158,146 @@ def main2(lists_of_ticket_data, files_in_folder, sql_handle = None):
             if evl.status == "error":
                 ticket_errors += 1
 
+    # TODO handle ticket errors better.
+    if ticket_errors > 0:
+        print("Error generating tickets from import table.")
+        sys.exit(1)
+    else:
+        return ticket_dict
+###
 
-    # If there are no ticket errors, proceed with evaluating flat files.
-    if ticket_errors == 0:
 
-        # If there is at least one file to process, retrieve data from
-        # phagesdb to create sets of valid host genera, clusters,
-        # and subclusters.
-        if (len(files_in_folder) > 0 and ticket_errors == 0):
-            phagesdb_host_genera_set = phagesdb.create_host_genus_set()
+def main2(ticket_dict, files_in_folder, sql_handle=None):
+    """The 'ticket_dict' parameter is a dictionary, where each
+    element is a Ticket.
+    The 'files_in_folder' parameter is a list, where each
+    element is a filename to be parsed.
+    The 'sql_handle' parameter handles MySQL connections."""
 
-            phagesdb_cluster_set, \
-            phagesdb_subcluster_set = phagesdb.create_cluster_subcluster_sets()
+
+    # Will hold all results data. These can be used by various types of
+    # user interfaces to present the summary of import.
+    success_ticket_list = []
+    failed_ticket_list = []
+    success_filename_list = []
+    failed_filename_list = []
+    evaluation_dict = {}
+    query_dict = {}
+
+
+    # Retrieve data from phagesdb to create sets of
+    # valid host genera, clusters, and subclusters.
+    phagesdb_host_genera_set = phagesdb.create_host_genus_set()
+    phagesdb_cluster_set, \
+    phagesdb_subcluster_set = phagesdb.create_cluster_subcluster_sets()
+    # print("PhagesDB sets retrieved")
+
+
+    # To minimize memory usage, each flat_file is evaluated one by one.
+    bundle_count = 1
+    for filename in files_in_folder:
+
+        bndl = prepare_bundle(filename, ticket_dict)
+
+        # Create sets of unique values for different data fields.
+        # Since data from each parsed flat file is imported into the
+        # database one file at a time, these sets are not static.
+        # So these sets should be recomputed for every flat file evaluated.
+        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
+        phamerator_seq_set = phamerator.create_seq_set(sql_handle)
+
+
+        # TODO implement function.
+        # Perform all evaluations based on the ticket type.
+
+
+        ### TODO in progress below. re-structuring how evaluations are called.
+
+        evaluate_flat_file(bndl=bndl,
+                           sql_handle=sql_handle,
+                           phage_id_set=phamerator_phage_id_set,
+                           seq_set=phamerator_seq_set,
+                           host_genera_set=phagesdb_host_genera_set,
+                           cluster_set=phagesdb_cluster_set,
+                           subcluster_set=phagesdb_subcluster_set)
+
+
+        evaluate.check_bundle_for_import(bndl)
+        eval_gnm = bndl.genome_dict["flat_file"]
+        evaluate.check_genome_for_import(eval_gnm)
+        x = 0
+        while x < len(eval_gnm.cds_features):
+            evaluate.check_cds_for_import(eval_gnm.cds_features[x])
+            x += 1
+
+        y = 0
+        while y < len(eval_gnm.trna_features):
+            evaluate.check_cds_for_import(eval_gnm.trna_features[y])
+            y += 1
+
+        z = 0
+        while z < len(eval_gnm.source_features):
+            evaluate.check_cds_for_import(eval_gnm.source_features[z])
+            z += 1
+
+
+        if bndl.tkt.type == "replace":
+            genome_pair = bndl.genome_pair_dict["flat_file_phamerator"]
+            evaluate.compare_genomes(genome_pair,
+                check_replace=bndl.tkt.eval_flags["check_replace"])
+
+        # TODO confirm that evaluation checks that fields like
+        # annotation_qc are structured properly - int and not str.
+
+
+        # Now that all evaluations have been performed,
+        # determine if there are any errors.
+        bndl.check_for_errors()
+
+
+        ### TODO in progress above. re-structuring how evaluations are called.
+
+
+
+
+
+
+
+
+
+        # TODO construct a basic.get_empty_ticket() function?
+        empty_ticket = [None] * 12
+        ticket_data =  tickets.parse_import_ticket_data(\
+                            bndl.ticket, empty_ticket,\
+                            direction = "ticket_to_list")
+
+        bndl.check_for_errors()
+        if errors == 0:
+
+            # Now import the data into the database if there are no errors and
+            # if there is MySQL connection data provided.
+            if sql_handle is not None:
+                bndl.create_sql_statements()
+
+                # TODO confirm the handler method name and that it can
+                # handle a list of queries.
+                sql_handle.execute(bndl.sql_queries)
+                sql_handle.commit()
+
+                # If successful, keep track of query data.
+                query_dict[bndl.ticket.phage_id] = bndl.sql_queries
+            else:
+                pass
+            success_ticket_list.append(ticket_data)
+            success_filename_list.append(bndl.genome_dict["add"].filename)
 
         else:
-            phagesdb_host_genera_set = set()
-            phagesdb_cluster_set = set()
-            phagesdb_subcluster_set = set()
+            failed_ticket_list.append(ticket_data)
+            failed_filename_list.append(bndl.genome_dict["add"].filename)
 
-        # print("PhagesDB sets retrieved")
-
-
-        # To minimize memory usage, each flat_file is evaluated one by one.
-        bundle_count = 1
-        for filename in files_in_folder:
-
-
-            gnm = flat_files.create_parsed_flat_file(filename)
-            bndl = bundle.Bundle()
-            bndl.id = bundle_count
-            bndl.genome_dict[gnm.type] = gnm
-
-            # Match ticket (if available) to flat file.
-            matched_ticket = ticket_dict.pop(gnm.id, None)
-            bndl.ticket = matched_ticket
-
-
-
-            # Create sets of unique values for different data fields.
-            # Since data from each parsed flat file is imported into the
-            # database one file at a time, these sets are not static.
-            # So these sets should be recomputed for every flat file evaluated.
-            phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
-            phamerator_seq_set = phamerator.create_seq_set(sql_handle)
-
-
-            # TODO implement function.
-            # Perform all evaluations based on the ticket type.
-            evaluate_flat_file(bndl = bndl,
-                               sql_handle = sql_handle,
-                               phage_id_set = phamerator_phage_id_set,
-                               seq_set = phamerator_seq_set,
-                               host_genera_set = phagesdb_host_genera_set,
-                               cluster_set = phagesdb_cluster_set,
-                               subcluster_set = phagesdb_subcluster_set)
-
-
-
-            # Now that all evaluations have been performed,
-            # determine if there are any errors.
-
-
-
-
-            # TODO construct a basic.get_empty_ticket() function?
-            empty_ticket = [None] * 12
-            ticket_data =  tickets.parse_import_ticket_data(\
-                                bndl.ticket, empty_ticket,\
-                                direction = "ticket_to_list")
-
-            bndl.check_for_errors()
-            if errors == 0:
-
-                # Now import the data into the database if there are no errors and
-                # if there is MySQL connection data provided.
-                if sql_handle is not None:
-                    bndl.create_sql_statements()
-
-                    # TODO confirm the handler method name and that it can
-                    # handle a list of queries.
-                    sql_handle.execute(bndl.sql_queries)
-                    sql_handle.commit()
-
-                    # If successful, keep track of query data.
-                    query_dict[bndl.ticket.phage_id] = bndl.sql_queries
-                else:
-                    pass
-                success_ticket_list.append(ticket_data)
-                success_filename_list.append(bndl.genome_dict["add"].filename)
-
-            else:
-                failed_ticket_list.append(ticket_data)
-                failed_filename_list.append(bndl.genome_dict["add"].filename)
-
-            # TODO implement the get_evaluations() method.
-            evaluation_dict[bndl.id] = bndl.get_evaluations()
-            bundle_count += 1
+        # TODO implement the get_evaluations() method.
+        evaluation_dict[bndl.id] = bndl.get_evaluations()
+        bundle_count += 1
 
 
     # Tickets were popped off the ticket dictionary as they were matched
@@ -283,12 +329,17 @@ def main2(lists_of_ticket_data, files_in_folder, sql_handle = None):
 
 
 
+def prepare_bundle(filename, ticket_dict):
+    """."""
 
-def evaluate_flat_file(bndl, sql_handle, host_genera_set=set(),
-                       phage_id_set=set(), seq_set=set(),
-                       cluster_set=set(), subcluster_set=set()):
-    """Evaluate data within a single Bundle object."""
+    gnm = flat_files.create_parsed_flat_file(filename)
+    bndl = bundle.Bundle()
+    bndl.id = bundle_count
+    bndl.genome_dict[gnm.type] = gnm
 
+    # Match ticket (if available) to flat file.
+    matched_ticket = ticket_dict.pop(gnm.id, None)
+    bndl.ticket = matched_ticket
 
     # TODO will need to have an evaluation check to see if a ticket object
     # has been assigned or not.
@@ -323,7 +374,7 @@ def evaluate_flat_file(bndl, sql_handle, host_genera_set=set(),
 
     # TODO at some point annotation_qc and retrieve_record attributes
     # will need to be set. These are dependent on the ticket type.
-    # If genomes are being replace, these fields may be carried over from
+    # If genomes are being replaced, these fields may be carried over from
     # the previous genome, combined with their annotation status.
 
 
@@ -334,23 +385,17 @@ def evaluate_flat_file(bndl, sql_handle, host_genera_set=set(),
     # If the ticket type is 'replace', retrieve data from phamerator.
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
     if bndl.ticket.type == "replace":
-        phamerator_genome = \
-            phamerator.create_phamerator_genome(sql_handle, gnm.id)
-
+        query = "SELECT * FROM phage"
+        phamerator_genomes = \
+            phamerator.parse_genome_data(sql_handle, phage_id_list=[gnm.id],
+                phage_query=query)
+        bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
 
         # If any attributes in flat_file are set to 'retain', copy data
         # from the phamerator genome.
         phamerator.copy_data_from(bndl, "flat_file")
 
-
-
-
-
-    # TODO confirm that evaluation checks that fields like
-    # annotation_qc are structured properly - int and not str.
-
-    evaluate.check_bundle_for_import(bndl)
-    bndl.check_for_errors()
+    return bndl
 
 
 
