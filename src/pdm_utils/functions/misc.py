@@ -2,7 +2,8 @@
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
-
+import csv
+from pdm_utils.constants import constants
 
 def match_genome_by_id(bndl, genome_dict, key1, key2=None):
     """Match genome object to another genome object using id.
@@ -79,10 +80,6 @@ def create_fasta_seqrecord(header, sequence_string):
     seq = Seq(sequence_string, alphabet = IUPAC.unambiguous_dna)
     seqrecord = SeqRecord(seq, description = header)
     return seqrecord
-
-
-
-
 
 
 

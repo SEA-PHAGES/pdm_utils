@@ -163,6 +163,29 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
+    def test_parse_flag_file_1(self):
+        """Verify that all three rows are parsed correctly."""
+        flag_file = os.path.join(os.path.dirname(__file__),
+                                 "test_files/test_flag_file_1.csv")
+        flag_dict = basic.parse_flag_file(flag_file)
+        with self.subTest():
+            self.assertEqual(len(flag_dict.keys()), 3)
+        with self.subTest():
+            self.assertTrue(flag_dict["check_a"])
+        with self.subTest():
+            self.assertFalse(flag_dict["check_b"])
+        with self.subTest():
+            self.assertFalse(flag_dict["check_c"])
+
+    def test_parse_flag_file_2(self):
+        """Verify that only one row is parsed correctly."""
+        flag_file = os.path.join(os.path.dirname(__file__),
+                                 "test_files/test_flag_file_2.csv")
+        flag_dict = basic.parse_flag_file(flag_file)
+        self.assertEqual(len(flag_dict.keys()), 1)
+
+
+
 class TestBasicFunctions2(unittest.TestCase):
 
     def setUp(self):

@@ -3,6 +3,7 @@ modules in this package to prevent circular imports."""
 
 from pdm_utils.constants import constants
 import os
+import csv
 
 
 def find_expression(expression, list_of_items):
@@ -902,14 +903,36 @@ def make_new_dir(output_dir, new_dir, attempt=1):
         return new_dir_mod
 
 
+def parse_flag_file(flag_file):
+    """Parse a file to an evaluation flag dictionary.
 
-
-
-
-
-
-
-
+    :param flag_file:
+        A two-column csv-formatted file
+        WHERE
+        1. evaluation flag
+        2. 'True' or 'False'
+    :type flag_file: str
+    :returns:
+        A dictionary
+        WHERE
+        keys (str) are evaluation flags
+        values (bool) indicate the flag setting
+        Only flags that contain boolean values are returned.
+    :rtype: dict
+    """
+    eval_flags = {}
+    with open(flag_file,'r') as file:
+        file_reader = csv.reader(file)
+        for row in file_reader:
+            if row[1].lower() == "true":
+                row[1] = True
+                eval_flags[row[0].lower()] = row[1]
+            elif row[1].lower() == "false":
+                row[1] = False
+                eval_flags[row[0].lower()] = row[1]
+            else:
+                pass
+    return eval_flags
 
 
 

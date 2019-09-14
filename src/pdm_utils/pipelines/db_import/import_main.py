@@ -39,7 +39,14 @@ def main1(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
         eval_flags = constants.RUN_MODES[run_mode.lower()]
     except:
         run_mode = basic.expand_path(run_mode)
-        # TODO parse run_mode file and conver to a dictionary
+        eval_flags = basic.parse_flag_file(run_mode)
+        symm_set = eval_flags.keys() ^ constants.RUN_MODE_BASE.keys()
+        if len(symm_set) > 0:
+            print("Error with the eval_flag_file")
+            sys.exit(1)
+
+
+        # TODO parse run_mode file and convert to a dictionary
         # parallel to run_mode dictionaries in constants.
         eval_flags = {}
 
