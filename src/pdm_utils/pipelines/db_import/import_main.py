@@ -45,11 +45,6 @@ def main1(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
             print("Error with the eval_flag_file")
             sys.exit(1)
 
-
-        # TODO parse run_mode file and convert to a dictionary
-        # parallel to run_mode dictionaries in constants.
-        eval_flags = {}
-
     ticket_dict = prepare_tickets(import_table_file, eval_flags,
                                   description_field)
 
