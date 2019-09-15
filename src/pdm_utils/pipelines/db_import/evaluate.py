@@ -379,8 +379,8 @@ def check_bundle_for_import(bndl):
 
 
     # Second, evaluate each genome.
-    check_genome_to_import(bndl.genome_dict["flat_file"], tkt=tkt, null_set, phage_id_set,
-                           seq_set, host_set, cluster_set, subcluster_set)
+    # check_genome_to_import(bndl.genome_dict["flat_file"], tkt=tkt, null_set, phage_id_set,
+    #                        seq_set, host_set, cluster_set, subcluster_set)
 
 
 

@@ -6,15 +6,16 @@ from pdm_utils.functions import phagesdb
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
-def parse_import_ticket_data(tkt, data_list,
-                             expected_size = constants.IMPORT_TABLE_SIZE,
-                             id = "", direction="list_to_ticket"):
+
+
+def parse_import_ticket_data(tkt=None, data_dict=None,
+                              direction="dict_to_ticket"):
     """Converts import ticket data between a list and Ticket object formats.
 
     :param tkt: A pdm_utils Ticket object.
     :type tkt: Ticket
-    :param data_list:
-        A list of data with the following structure:
+    :param data_dict:
+        A dictionary of data with the following keys:
 
             0. Import action
             1. Primary PhageID
@@ -22,161 +23,257 @@ def parse_import_ticket_data(tkt, data_list,
             3. Cluster
             4. Subcluster
             5. Status
-            6. Annotation Author
+            6. Annotation Author (int)
             7. Feature field
             8. Accession
-            9. Annotation QC
-            10. Retrieve Record
-            11. Run mode
+            9. Retrieve Record (int)
+            10. Run mode
 
-    :type data_list: list
-    :param expected_size:
-        Indicates how many elements should be in 'data_list'.
-    :type expected_size: int
+    :type data_dict: dict
     :param direction:
-        Indicates whether data in the list should populate a
-        Ticket object ('list_to_ticket') or data in a Ticket object should
-        populate a list ('ticket_to_list').
+        Indicates whether data in the dictionary should populate a
+        Ticket object ('dict_to_ticket') or data in a Ticket object should
+        populate a dictionary ('ticket_to_dict').
     :type direction: str
-    :param id:
-        A value used to populate the ticket's 'id' attribute, if data is
-        copied to a ticket.
-    :type id: str, int
+    :returns:
+        If successful, a Ticket or dict object is returned.
+        If copying from a dictionary to Ticket, and the keys are not correct,
+        None object is returned.
+        If an invalid 'direction' is selected, None object is returned.
+    :rtype: Ticket, dict, or None
     """
     # By providing the ability to transfer data from both
-    # a list-to-ticket and a ticket-to-list, it helps ensure that
+    # a dictionary-to-ticket and a ticket-to-dictionary, it helps ensure that
     # conversion between the two formats is consistent.
+    if direction == "dict_to_ticket":
+        key_check = data_dict.keys() ^ constants.IMPORT_TABLE_DICT.keys()
 
-    # Verify the row of information has the correct number of fields to parse.
-    if len(data_list) == expected_size:
-
-        if direction == "list_to_ticket":
-            tkt._parsed_fields = len(data_list)
-            tkt.id = id
-
-        if direction == "list_to_ticket":
-            tkt.set_type(data_list[0])
-        elif direction == "ticket_to_list":
-            data_list[0] = tkt.type
+        # If row in import table has more fields than headers, they are
+        # assigned None by csv.DictReader.
+        # If row in import table contains fields with no data, they are
+        # assigned "" by csv.DictReader.
+        value_check = set(["", None]) - set(data_dict.values())
+        if (len(key_check) == 0 and len(value_check) == 2):
+            tkt = ticket.GenomeTicket()
+            tkt.id = data_dict["id"]
+            tkt.set_type(data_dict["type"])
+            tkt.set_description_field(data_dict["description_field"])
+            tkt.set_run_mode(data_dict["run_mode"])
+            tkt.set_phage_id(data_dict["phage_id"])
+            tkt.set_host(data_dict["host_genus"])
+            tkt.set_cluster(data_dict["cluster"])
+            tkt.set_subcluster(data_dict["subcluster"])
+            tkt.set_annotation_status(data_dict["annotation_status"])
+            tkt.annotation_author = int(data_dict["annotation_author"])
+            tkt.set_accession(data_dict["accession"])
+            tkt.set_retrieve_record(int(data_dict["retrieve_record"]))
+            return tkt
         else:
-            pass
+            return None
 
-        if direction == "list_to_ticket":
-            tkt.set_description_field(data_list[7])
-        elif direction == "ticket_to_list":
-            data_list[7] = tkt.description_field
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            tkt.set_run_mode(data_list[11])
-        elif direction == "ticket_to_list":
-            data_list[11] = tkt.run_mode
-        else:
-            pass
-
-        # This data will eventually populate a Genome object.
-        if direction == "list_to_ticket":
-            tkt.set_phage_id(data_list[1])
-        elif direction == "ticket_to_list":
-            data_list[1] = tkt.phage_id
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            tkt.set_host(data_list[2])
-        elif direction == "ticket_to_list":
-            data_list[2] = tkt.host_genus
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            tkt.set_cluster(data_list[3])
-        elif direction == "ticket_to_list":
-            data_list[3] = tkt.cluster
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            tkt.set_subcluster(data_list[4])
-        elif direction == "ticket_to_list":
-            data_list[4] = tkt.subcluster
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            tkt.set_annotation_status(data_list[5])
-        elif direction == "ticket_to_list":
-            data_list[5] = str(tkt.annotation_status)
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            # Convert to integer if possible.
-            try:
-                data_list[6] = int(data_list[6])
-            except:
-                pass
-            tkt.set_annotation_author(data_list[6])
-
-        elif direction == "ticket_to_list":
-            # Convert to string.
-            data_list[6] = str(tkt.annotation_author)
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            tkt.set_accession(data_list[8])
-        elif direction == "ticket_to_list":
-            data_list[8] = tkt.accession
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            # Convert to integer if possible.
-            try:
-                data_list[9] = int(data_list[9])
-            except:
-                pass
-            tkt.set_annotation_qc(data_list[9])
-        elif direction == "ticket_to_list":
-            # Convert to string.
-            data_list[9] = str(tkt.annotation_qc)
-        else:
-            pass
-
-        if direction == "list_to_ticket":
-            # Convert to integer if possible.
-            try:
-                data_list[10] = int(data_list[10])
-            except:
-                pass
-            tkt.set_retrieve_record(data_list[10])
-        elif direction == "ticket_to_list":
-            # Convert to string.
-            data_list[10] = str(tkt.retrieve_record)
-        else:
-            pass
+    elif direction == "ticket_to_dict":
+        data_dict = {}
+        data_dict["id"] = tkt.id
+        data_dict["type"] = tkt.type
+        data_dict["description_field"] = tkt.description_field
+        data_dict["run_mode"] = tkt.run_mode
+        data_dict["phage_id"] = tkt.phage_id
+        data_dict["host_genus"] = tkt.host_genus
+        data_dict["cluster"] = tkt.cluster
+        data_dict["subcluster"] = tkt.subcluster
+        data_dict["annotation_status"] = tkt.annotation_status
+        data_dict["annotation_author"] = tkt.annotation_author
+        data_dict["accession"] = tkt.accession
+        data_dict["retrieve_record"] = tkt.retrieve_record
+        return data_dict
+    else:
+        return None
 
 
-def parse_import_tickets(list_of_lists):
-    """Parses list of lists of data to a list of Tickets.
 
-    :param list_of_lists:
-        A list of items, where each item is a list of data.
-    :type list_of_lists: list
-    :returns: A list of pdm_utils Ticket objects.
-    :rtype: list
-    """
 
-    counter = 1
-    list_of_tickets = []
-    for list_of_data in list_of_lists:
-        tkt = ticket.GenomeTicket()
-        parse_import_ticket_data(tkt, list_of_data, id = counter)
-        list_of_tickets.append(tkt)
-        counter += 1
-    return list_of_tickets
+
+
+
+
+
+
+
+
+
+
+# TODO this may no longer be needed
+# def parse_import_ticket_data_list(tkt, data_list,
+#                                   expected_size = constants.IMPORT_TABLE_SIZE,
+#                                   id = "", direction="list_to_ticket"):
+#     """Converts import ticket data between a list and Ticket object formats.
+#
+#     :param tkt: A pdm_utils Ticket object.
+#     :type tkt: Ticket
+#     :param data_list:
+#         A list of data with the following structure:
+#
+#             0. Import action
+#             1. Primary PhageID
+#             2. Host
+#             3. Cluster
+#             4. Subcluster
+#             5. Status
+#             6. Annotation Author
+#             7. Feature field
+#             8. Accession
+#             9. Annotation QC
+#             10. Retrieve Record
+#             11. Run mode
+#
+#     :type data_list: list
+#     :param expected_size:
+#         Indicates how many elements should be in 'data_list'.
+#     :type expected_size: int
+#     :param direction:
+#         Indicates whether data in the list should populate a
+#         Ticket object ('list_to_ticket') or data in a Ticket object should
+#         populate a list ('ticket_to_list').
+#     :type direction: str
+#     :param id:
+#         A value used to populate the ticket's 'id' attribute, if data is
+#         copied to a ticket.
+#     :type id: str, int
+#     """
+#     # By providing the ability to transfer data from both
+#     # a list-to-ticket and a ticket-to-list, it helps ensure that
+#     # conversion between the two formats is consistent.
+#
+#     # Verify the row of information has the correct number of fields to parse.
+#     if len(data_list) == expected_size:
+#
+#         if direction == "list_to_ticket":
+#             tkt._parsed_fields = len(data_list)
+#             tkt.id = id
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_type(data_list[0])
+#         elif direction == "ticket_to_list":
+#             data_list[0] = tkt.type
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_description_field(data_list[7])
+#         elif direction == "ticket_to_list":
+#             data_list[7] = tkt.description_field
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_run_mode(data_list[11])
+#         elif direction == "ticket_to_list":
+#             data_list[11] = tkt.run_mode
+#         else:
+#             pass
+#
+#         # This data will eventually populate a Genome object.
+#         if direction == "list_to_ticket":
+#             tkt.set_phage_id(data_list[1])
+#         elif direction == "ticket_to_list":
+#             data_list[1] = tkt.phage_id
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_host(data_list[2])
+#         elif direction == "ticket_to_list":
+#             data_list[2] = tkt.host_genus
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_cluster(data_list[3])
+#         elif direction == "ticket_to_list":
+#             data_list[3] = tkt.cluster
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_subcluster(data_list[4])
+#         elif direction == "ticket_to_list":
+#             data_list[4] = tkt.subcluster
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_annotation_status(data_list[5])
+#         elif direction == "ticket_to_list":
+#             data_list[5] = str(tkt.annotation_status)
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             # Convert to integer if possible.
+#             try:
+#                 data_list[6] = int(data_list[6])
+#             except:
+#                 pass
+#             tkt.set_annotation_author(data_list[6])
+#
+#         elif direction == "ticket_to_list":
+#             # Convert to string.
+#             data_list[6] = str(tkt.annotation_author)
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             tkt.set_accession(data_list[8])
+#         elif direction == "ticket_to_list":
+#             data_list[8] = tkt.accession
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             # Convert to integer if possible.
+#             try:
+#                 data_list[9] = int(data_list[9])
+#             except:
+#                 pass
+#             tkt.set_annotation_qc(data_list[9])
+#         elif direction == "ticket_to_list":
+#             # Convert to string.
+#             data_list[9] = str(tkt.annotation_qc)
+#         else:
+#             pass
+#
+#         if direction == "list_to_ticket":
+#             # Convert to integer if possible.
+#             try:
+#                 data_list[10] = int(data_list[10])
+#             except:
+#                 pass
+#             tkt.set_retrieve_record(data_list[10])
+#         elif direction == "ticket_to_list":
+#             # Convert to string.
+#             data_list[10] = str(tkt.retrieve_record)
+#         else:
+#             pass
+
+# TODO this may no longer be needed.
+# def parse_import_tickets(list_of_lists):
+#     """Parses list of lists of data to a list of Tickets.
+#
+#     :param list_of_lists:
+#         A list of items, where each item is a list of data.
+#     :type list_of_lists: list
+#     :returns: A list of pdm_utils Ticket objects.
+#     :rtype: list
+#     """
+#
+#     counter = 1
+#     list_of_tickets = []
+#     for list_of_data in list_of_lists:
+#         tkt = ticket.GenomeTicket()
+#         parse_import_ticket_data_list(tkt, list_of_data, id = counter)
+#         list_of_tickets.append(tkt)
+#         counter += 1
+#     return list_of_tickets
 
 
 
@@ -505,59 +602,6 @@ def prepare_tickets(ticket_filename):
 
 
 
-
-
-
-
-
-# TODO probably no longer needed now that parse_import_ticket_data is
-# reversible.
-# def parse_import_ticket(
-#                         tkt,
-#                         data_list,
-#                         expected_size = constants.IMPORT_TABLE_SIZE,
-#                         id = ""):
-#     """Parses list of data and creates an import ticket.
-#         Expected data structure:
-#         0. Import action
-#         1. Primary PhageID
-#         2. Host
-#         3. Cluster
-#         4. Subcluster
-#         5. Status
-#         6. Annotation Author
-#         7. Feature field
-#         8. Accession
-#         9. Annotation QC
-#         10. Retrieve Record
-#         11. Run mode
-#         12. Secondary PhageID
-#     """
-#
-#     tkt._parsed_fields = len(data_list)
-#
-#     # Verify the row of information has the correct number of fields to parse.
-#     if len(data_list) == expected_size:
-#
-#         tkt.id = id
-#         tkt.set_type(data_list[0])
-#         tkt.set_description_field(data_list[7])
-#         tkt.set_run_mode(data_list[11])
-#
-#
-#         # This data will eventually populate a Genome object.
-#         tkt.set_phage_id(data_list[1])
-#         tkt.set_host(data_list[2])
-#         tkt.set_cluster(data_list[3])
-#         tkt.set_subcluster(data_list[4])
-#         tkt.set_annotation_status(data_list[5])
-#         tkt.set_annotation_author(data_list[6])
-#         tkt.set_accession(data_list[8])
-#         tkt.set_annotation_qc(data_list[9])
-#         tkt.set_retrieve_record(data_list[10])
-#
-#
-#     return tkt
 
 
 

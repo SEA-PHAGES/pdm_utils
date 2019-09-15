@@ -5,6 +5,22 @@ from Bio.Alphabet import IUPAC
 from datetime import datetime
 
 IMPORT_TABLE_SIZE = 12
+IMPORT_TABLE_DICT = {
+    "id":"",
+    "type":"",
+    "description_field":"",
+    "run_mode":"",
+    "phage_id":"",
+    "host_genus":"",
+    "cluster":"",
+    "subcluster":"",
+    "annotation_status":"",
+    "annotation_author":"",
+    "accession":"",
+    "retrieve_record":""
+    }
+
+
 NAME_SUFFIX = "_Draft"
 ANNOTATION_STATUS_SET = set(["draft", "final", "gbk"])
 ANNOTATION_AUTHOR_SET = set([0,1])

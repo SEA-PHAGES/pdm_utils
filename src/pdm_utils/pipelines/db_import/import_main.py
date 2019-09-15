@@ -109,13 +109,29 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
     # Retrieve import ticket data.
     lists_of_ticket_data = []
     with open(import_table_file,'r') as file:
-        file_reader = csv.reader(file)
-        for row in file_reader:
-            lists_of_ticket_data.append(row)
+        file_reader = csv.DictReader(file)
+        for dict in file_reader:
+            lists_of_ticket_data.append(dict)
+    ticket_list = []
+    for dict in lists_of_ticket_data:
+        tkt = parse_import_ticket_data(data_dict=dict)
+        if tkt is not None:
+            ticket_list.append(tkt)
+        else:
+            # TODO record as error.
+            pass
 
+
+
+
+    # TODO unneeded if table is parsed using a dictionary reader.
+    # with open(import_table_file,'r') as file:
+    #     file_reader = csv.reader(file)
+    #     for row in file_reader:
+    #         lists_of_ticket_data.append(row)
     # Convert ticket data to Ticket objects.
     # Data is returned as a list of ticket objects.
-    ticket_list = tickets.parse_import_tickets(lists_of_ticket_data)
+    # ticket_list = tickets.parse_import_tickets(lists_of_ticket_data)
     # print("Tickets parsed")
 
     # Add the eval_flag dictionary and description_field to each ticket.
