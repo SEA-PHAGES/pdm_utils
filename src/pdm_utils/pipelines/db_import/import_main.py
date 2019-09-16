@@ -15,12 +15,11 @@ from pdm_utils.classes import bundle
 from pdm_utils.pipelines.db_import import evaluate
 from pdm_utils.constants import constants
 
-def main1(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
+def import_io(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
           description_field, run_mode):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
-    attempts = 3
     failed_folder = "%s_failed_upload_files" % date
     success_folder = "%s_successful_upload_files" % date
     new_failed_folder = basic.make_new_dir(genome_folder,failed_folder)
@@ -52,14 +51,12 @@ def main1(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
     if len(files_in_folder) > 0:
 
         # TODO not sure how many elements (or what types) are returned.
-        results = main2(ticket_dict, files_in_folder,
+        results = main(ticket_dict, files_in_folder,
                         sql_handle, eval_flags, description_field)
 
 
 
 
-    # TODO after evaluations, if sql argument option is True,
-    # update the database as needed...
 
 
 
@@ -95,7 +92,7 @@ def main1(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
 
 ###
 def prepare_tickets(import_table_file, eval_flags, description_field):
-    """."""
+    """Prepare dictionary of pdm_utils Tickets."""
 
     # TODO parsing from import table:
     # 1. parse ticket data from table. = prepare_tickets()
@@ -107,13 +104,13 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
     # 7. confirm correct fields are populated based on ticket type.
 
     # Retrieve import ticket data.
-    lists_of_ticket_data = []
+    list_of_ticket_data = []
     with open(import_table_file,'r') as file:
         file_reader = csv.DictReader(file)
         for dict in file_reader:
-            lists_of_ticket_data.append(dict)
+            list_of_ticket_data.append(dict)
     ticket_list = []
-    for dict in lists_of_ticket_data:
+    for dict in list_of_ticket_data:
         tkt = parse_import_ticket_data(data_dict=dict)
         if tkt is not None:
             ticket_list.append(tkt)
@@ -128,15 +125,20 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
     # with open(import_table_file,'r') as file:
     #     file_reader = csv.reader(file)
     #     for row in file_reader:
-    #         lists_of_ticket_data.append(row)
+    #         list_of_ticket_data.append(row)
     # Convert ticket data to Ticket objects.
     # Data is returned as a list of ticket objects.
-    # ticket_list = tickets.parse_import_tickets(lists_of_ticket_data)
+    # ticket_list = tickets.parse_import_tickets(list_of_ticket_data)
     # print("Tickets parsed")
 
     # Add the eval_flag dictionary and description_field to each ticket.
     for tkt in ticket_list:
-        tkt.eval_flags = eval_flags
+
+        # TODO once pipeline is set up, verify copying is needed.
+        # Copy eval_flags dictionary. Each ticket may alter some of the flags
+        # based on ticket type, so copy dictionary to instantiate a
+        # distinct dictionary.
+        tkt.eval_flags = eval_flags.copy()
         tkt.description_field = description_field
 
     # Evaluate the tickets to ensure they are structured properly.
@@ -152,6 +154,8 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
     # print("Ticket structure checked")
 
 
+    # TODO move tickets.compare_tickets() to evalute module since
+    # it calls ticket check functions?
     # Now that individual tickets have been validated,
     # validate the entire group of tickets.
     tickets.compare_tickets(ticket_list)
@@ -185,7 +189,7 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
 ###
 
 
-def main2(ticket_dict, files_in_folder, sql_handle=None):
+def main(ticket_dict, files_in_folder, sql_handle=None):
     """The 'ticket_dict' parameter is a dictionary, where each
     element is a Ticket.
     The 'files_in_folder' parameter is a list, where each
@@ -208,6 +212,10 @@ def main2(ticket_dict, files_in_folder, sql_handle=None):
     phagesdb_host_genera_set = phagesdb.create_host_genus_set()
     phagesdb_cluster_set, \
     phagesdb_subcluster_set = phagesdb.create_cluster_subcluster_sets()
+
+    # TODO add special cluster and subcluster null values to sets,
+    # including "UNK".
+
     # print("PhagesDB sets retrieved")
 
 
@@ -225,44 +233,52 @@ def main2(ticket_dict, files_in_folder, sql_handle=None):
         phamerator_seq_set = phamerator.create_seq_set(sql_handle)
 
 
-        # TODO implement function.
         # Perform all evaluations based on the ticket type.
-
-
-        ### TODO in progress below. re-structuring how evaluations are called.
-
-        evaluate_flat_file(bndl=bndl,
-                           sql_handle=sql_handle,
-                           phage_id_set=phamerator_phage_id_set,
-                           seq_set=phamerator_seq_set,
-                           host_genera_set=phagesdb_host_genera_set,
-                           cluster_set=phagesdb_cluster_set,
-                           subcluster_set=phagesdb_subcluster_set)
-
-
         evaluate.check_bundle_for_import(bndl)
-        eval_gnm = bndl.genome_dict["flat_file"]
-        evaluate.check_genome_for_import(eval_gnm)
-        x = 0
-        while x < len(eval_gnm.cds_features):
-            evaluate.check_cds_for_import(eval_gnm.cds_features[x])
-            x += 1
-
-        y = 0
-        while y < len(eval_gnm.trna_features):
-            evaluate.check_cds_for_import(eval_gnm.trna_features[y])
-            y += 1
-
-        z = 0
-        while z < len(eval_gnm.source_features):
-            evaluate.check_cds_for_import(eval_gnm.source_features[z])
-            z += 1
-
 
         if bndl.tkt.type == "replace":
             genome_pair = bndl.genome_pair_dict["flat_file_phamerator"]
             evaluate.compare_genomes(genome_pair,
                 check_replace=bndl.tkt.eval_flags["check_replace"])
+
+        # TODO is there a function to retrieve Phamerator accession set?
+        eval_gnm = bndl.genome_dict["flat_file"]
+        evaluate.check_genome_for_import(
+            eval_gnm,
+            bndl.tkt,
+            null_set=null_set,
+            accession_set=phamerator_accession_set,
+            phage_id_set=phamerator_phage_id_set,
+            seq_set=phamerator_seq_set,
+            host_genera_set=phagesdb_host_genera_set,
+            cluster_set=phagesdb_cluster_set,
+            subcluster_set=phagesdb_subcluster_set)
+
+        # Check CDS features.
+        x = 0
+        while x < len(eval_gnm.cds_features):
+            check_cds_for_import(eval_gnm.cds_features[x],
+                check_locus_tag=tkt.eval_flags["check_locus_tag"],
+                check_gene=tkt.eval_flags["check_gene"],
+                check_description=tkt.eval_flags["check_description"],
+                check_description_field=tkt.eval_flags["check_description_field"])
+            x += 1
+
+        # Check tRNA features.
+        if tkt.eval_flags["check_trna"]:
+            y = 0
+            while y < len(gnm.trna_features):
+                check_trna_for_import(gnm.trna_features[y])
+                y += 1
+
+        # Check Source features.
+        z = 0
+        while z < len(gnm.source_features):
+            check_source_for_import(gnm.source_features[z],
+                check_id_typo=tkt.eval_flags["check_id_typo"],
+                check_host_typo=tkt.eval_flags["check_host_typo"],)
+            z += 1
+
 
         # TODO confirm that evaluation checks that fields like
         # annotation_qc are structured properly - int and not str.
@@ -273,21 +289,18 @@ def main2(ticket_dict, files_in_folder, sql_handle=None):
         bndl.check_for_errors()
 
 
-        ### TODO in progress above. re-structuring how evaluations are called.
-
-
-
-
-
-
-
 
 
         # TODO construct a basic.get_empty_ticket() function?
-        empty_ticket = [None] * 12
-        ticket_data =  tickets.parse_import_ticket_data(\
-                            bndl.ticket, empty_ticket,\
-                            direction = "ticket_to_list")
+        ticket_data_dict =  tickets.parse_import_ticket_data(
+                            tkt=bndl.ticket,
+                            direction="ticket_to_dict")
+
+
+
+
+        # TODO after evaluations, if sql argument option is True,
+        # update the database as needed...
 
         bndl.check_for_errors()
         if errors == 0:
@@ -296,21 +309,17 @@ def main2(ticket_dict, files_in_folder, sql_handle=None):
             # if there is MySQL connection data provided.
             if sql_handle is not None:
                 bndl.create_sql_statements()
-
-                # TODO confirm the handler method name and that it can
-                # handle a list of queries.
-                sql_handle.execute(bndl.sql_queries)
-                sql_handle.commit()
+                sql_handle.execute_transaction(bndl.sql_queries)
 
                 # If successful, keep track of query data.
                 query_dict[bndl.ticket.phage_id] = bndl.sql_queries
             else:
                 pass
-            success_ticket_list.append(ticket_data)
+            success_ticket_list.append(ticket_data_dict)
             success_filename_list.append(bndl.genome_dict["add"].filename)
 
         else:
-            failed_ticket_list.append(ticket_data)
+            failed_ticket_list.append(ticket_data_dict)
             failed_filename_list.append(bndl.genome_dict["add"].filename)
 
         # TODO implement the get_evaluations() method.
@@ -329,15 +338,14 @@ def main2(ticket_dict, files_in_folder, sql_handle=None):
 
         # TODO run a list of evaluations based on ticket type.
         # TODO determine which evaluate function is best.
-        evaluate.tickets(unmatched_ticket)
-        evaluation_dict[bndl.id] = {"ticket":unmatched_ticket.evaluations}
+        evaluate.check_ticket_structure(unmatched_ticket)
+        evaluation_dict[bndl.id] = \
+            {unmatched_ticket.id:unmatched_ticket.evaluations}
         bundle_count += 1
-
-        empty_ticket = [None] * 12
-        ticket_data =  tickets.parse_import_ticket_data(\
-                            unmatched_ticket, empty_ticket,\
-                            direction = "ticket_to_list")
-        failed_ticket_list.append(ticket_data)
+        ticket_data_dict =  tickets.parse_import_ticket_data(
+                            unmatched_ticket,
+                            direction="ticket_to_dict")
+        failed_ticket_list.append(ticket_data_dict)
 
 
 
@@ -347,10 +355,21 @@ def main2(ticket_dict, files_in_folder, sql_handle=None):
 
 
 
-def prepare_bundle(filename, ticket_dict):
-    """."""
+def prepare_bundle(filename, ticket_dict, bundle_count):
+    """Gather all genomic data needed to evaluate the flat file."""
 
-    gnm = flat_files.create_parsed_flat_file(filename)
+    try:
+        seqrecords = list(SeqIO.parse(filename, "genbank"))
+    except:
+        seqrecords = []
+
+    if len(seqrecords) == 1:
+        gnm = parse_genome_data(seqrecords[0], filepath=filename)
+
+    else:
+        # TODO throw an error of some sort.
+        pass
+
     bndl = bundle.Bundle()
     bndl.id = bundle_count
     bndl.genome_dict[gnm.type] = gnm
@@ -359,34 +378,24 @@ def prepare_bundle(filename, ticket_dict):
     matched_ticket = ticket_dict.pop(gnm.id, None)
     bndl.ticket = matched_ticket
 
-    # TODO will need to have an evaluation check to see if a ticket object
-    # has been assigned or not.
+    if bndl.ticket is not None:
 
-
-    # Using each ticket, construct and populate genome objects as needed.
-    tickets.copy_ticket_to_genome(bndl)
-
-
-
-    # Now that the flat file to be imported is parsed and matched to a ticket,
-    # use the ticket to populate specific genome-level fields such as
-    # host, cluster, subcluster, etc.
-    flat_files.copy_data_to(bndl, "add")
-
+        # Now that the flat file to be imported is parsed and matched
+        # to a ticket, use the ticket to populate specific
+        # genome-level fields such as host, cluster, subcluster, etc.
+        tickets.copy_ticket_to_genome(bndl)
+        flat_files.copy_data_to(bndl, "add")
 
 
     # Now check to see if there is any missing data for each genome, and
     # retrieve it from phagesdb.
-
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
     phagesdb.copy_data_from(bndl, "flat_file")
 
 
-
-
-
-    # Each flat_file genome should now contain all requisite data from PhagesDB.
+    # Each flat_file genome should now contain all requisite
+    # data from PhagesDB.
     # Validate each genome by checking that each field is populated correctly.
 
 
@@ -397,9 +406,6 @@ def prepare_bundle(filename, ticket_dict):
 
 
 
-    # TODO After parsing flat file, prepare gene_id and gene_name appropriately
-
-
     # If the ticket type is 'replace', retrieve data from phamerator.
     # TODO will need to account for whether the phage_id exists in Phamerator or not.
     if bndl.ticket.type == "replace":
@@ -407,8 +413,12 @@ def prepare_bundle(filename, ticket_dict):
         phamerator_genomes = \
             phamerator.parse_genome_data(sql_handle, phage_id_list=[gnm.id],
                 phage_query=query)
-        bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
 
+        if len(phamerator_genomes) ==1:
+            bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
+        else:
+            # TODO throw an error of some sort if there is no matching genome in Phamerator.
+            pass
         # If any attributes in flat_file are set to 'retain', copy data
         # from the phamerator genome.
         phamerator.copy_data_from(bndl, "flat_file")
@@ -421,27 +431,6 @@ def prepare_bundle(filename, ticket_dict):
 
 
 
-def import_into_database(bndl, sql_handle):
-    """Construct collection of SQL statements for evaluated data and
-    execute statements to add the data into the database."""
-
-
-
-    # Create all SQL statements.
-    index11 = 0
-    while index11 < len(list_of_bundles):
-            bndl = list_of_bundles[index11]
-            if bndl.errors == 0:
-                bndl.create_sql_statements()
-
-
-
-
-    # TODO import all scrubbed add_replace data into Phamerator.
-
-
-
-    pass
 
 
 

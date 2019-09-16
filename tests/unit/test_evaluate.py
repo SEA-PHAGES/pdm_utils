@@ -910,59 +910,59 @@ class TestEvaluateClass2(unittest.TestCase):
 
 
 
-    def test_check_genome_to_import_1(self):
+    def test_check_genome_for_import_1(self):
         """Verify correct number of evaluations are produced using
         'add' ticket and all eval_flags 'True'."""
-        evaluate.check_genome_to_import(self.gnm, self.tkt, self.null_set,
+        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 27)
 
-    def test_check_genome_to_import_2(self):
+    def test_check_genome_for_import_2(self):
         """Verify correct number of evaluations are produced using
         'replace' ticket."""
         self.tkt.type = "replace"
-        evaluate.check_genome_to_import(self.gnm, self.tkt, self.null_set,
+        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 27)
 
 
-    def test_check_genome_to_import_3(self):
+    def test_check_genome_for_import_3(self):
         """Verify correct number of evaluations are produced using
         'check_seq' as False."""
         self.tkt.eval_flags["check_seq"] = False
-        evaluate.check_genome_to_import(self.gnm, self.tkt, self.null_set,
+        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 26)
 
 
-    def test_check_genome_to_import_3(self):
+    def test_check_genome_for_import_3(self):
         """Verify correct number of evaluations are produced using
         'check_id_typo' as False."""
         self.tkt.eval_flags["check_id_typo"] = False
-        evaluate.check_genome_to_import(self.gnm, self.tkt, self.null_set,
+        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 24)
 
 
-    def test_check_genome_to_import_4(self):
+    def test_check_genome_for_import_4(self):
         """Verify correct number of evaluations are produced using
         'check_host_typo' as False."""
         self.tkt.eval_flags["check_host_typo"] = False
-        evaluate.check_genome_to_import(self.gnm, self.tkt, self.null_set,
+        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 23)
 
 
-    def test_check_genome_to_import_5(self):
+    def test_check_genome_for_import_5(self):
         """Verify correct number of evaluations are produced using
         'check_author' as False."""
         self.tkt.eval_flags["check_author"] = False
-        evaluate.check_genome_to_import(self.gnm, self.tkt, self.null_set,
+        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 25)

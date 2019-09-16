@@ -344,40 +344,6 @@ def copy_ticket_to_genome(bndl):
         bndl.genome_dict[genome1.type] = genome1
 
 
-        # TODO probably no need to create a second genome.
-        # if tkt.type == "replace":
-        #
-        #     genome2 = genome.Genome()
-        #     genome2.type = "remove"
-        #
-        #     bndl.genome_dict[genome2.type] = genome2
-
-    # TODO 'update' ticket option will eventually be deleted.
-    elif tkt.type == "update":
-
-        # TODO unit test.
-        # gnm = genome.Genome()
-        # gnm.type = "update"
-        # gnm.set_id(tkt.phage_id)
-        # gnm.set_host_genus(tkt.host_genus)
-        # gnm.set_accession(tkt.accession)
-        # gnm.annotation_status = tkt.annotation_status
-        # gnm.set_cluster(tkt.cluster)
-        # gnm.set_subcluster(tkt.subcluster)
-        # gnm.set_cluster_subcluster()
-        # bndl.genome_dict[gnm.type] = gnm
-        pass
-
-    # TODO 'remove' ticket option will eventually be deleted.
-    elif tkt.type == "remove":
-
-        # TODO unit test.
-        # gnm = genome.Genome()
-        # gnm.type = "remove"
-        # gnm.set_id(tkt.phage_id)
-        # bndl.genome_dict[gnm.type] = gnm
-        pass
-
     else:
         pass
 

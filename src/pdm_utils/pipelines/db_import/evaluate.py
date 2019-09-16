@@ -45,7 +45,8 @@ from pdm_utils.constants import constants
 
 
 
-def check_ticket_structure(tkt, type_set, null_set, run_mode_set):
+def check_ticket_structure(tkt, type_set, description_field_set,
+                           null_set, run_mode_set):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket."""
@@ -60,61 +61,40 @@ def check_ticket_structure(tkt, type_set, null_set, run_mode_set):
 
     #null_set = set(["none"])
 
-    # This is the only evaluation that is not dependent on the ticket type.
+    # Check these fields for specific values.
     tkt.check_type(type_set, True)
+    tkt.check_description_field(description_field_set, True)
+    tkt.check_run_mode(run_mode_set, True)
 
-    if (tkt.type == "add" or tkt.type == "replace"):
-        tkt.check_phage_id(null_set, False)
-        tkt.check_host_genus(null_set, False)
-        tkt.check_cluster(null_set, False)
-        tkt.check_annotation_status(null_set, False)
-        tkt.check_description_field(null_set, False)
-        tkt.check_annotation_author(null_set, False)
-        tkt.check_run_mode(run_mode_set, True)
+    # For these fields, simply check that they are not empty.
+    tkt.check_phage_id(null_set, False)
+    tkt.check_host_genus(null_set, False)
+    tkt.check_cluster(null_set, False)
+    tkt.check_annotation_status(null_set, False)
+    tkt.check_annotation_author(null_set, False)
 
-        # No need to evaluate the Accession and Subcluster fields
-        # since they may or may not be populated.
-
-        # TODO no more secondary_phage_id attribute, so this may need
-        # to evaluate something else.
-        # if tkt.type == "replace":
-        #     tkt.check_secondary_phage_id(null_set, False)
-        # else:
-        #     tkt.check_secondary_phage_id(null_set, True)
+    # TODO implement this check?
+    tkt.check_retrieve_record(null_set, False)
 
 
-    # TODO this may be deleted.
-    # TODO unit test.
-    elif tkt.type == "update":
-        tkt.check_phage_id(null_set, False)
-        tkt.check_host_genus(null_set, False)
-        tkt.check_cluster(null_set, False)
-        tkt.check_annotation_status(null_set, False)
-        tkt.check_description_field(null_set, False)
-        tkt.check_annotation_author(null_set, False)
-        tkt.check_run_mode(null_set, True)
+    # No need to evaluate the Accession and Subcluster fields
+    # since they may or may not be populated.
 
-        # No need to evaluate the Accession and Subcluster fields
-        # since they may or may not be populated.
+    # TODO no more secondary_phage_id attribute, so this may need
+    # to evaluate something else.
+    # if tkt.type == "replace":
+    #     tkt.check_secondary_phage_id(null_set, False)
+    # else:
+    #     tkt.check_secondary_phage_id(null_set, True)
 
 
-    # TODO this may be deleted.
-    # TODO unit test.
-    elif tkt.type == "remove":
 
-        # Everything except the primary phage_id field should be 'none'
-        tkt.check_phage_id(null_set, False)
-        tkt.check_host_genus(null_set, True)
-        tkt.check_subcluster(null_set, True)
-        tkt.check_cluster(null_set, True)
-        tkt.check_annotation_status(null_set, True)
-        tkt.check_description_field(null_set, True)
-        tkt.check_accession(null_set, True)
-        tkt.check_annotation_author(null_set, True)
-        tkt.check_run_mode(null_set, True)
 
-    else:
-        pass
+
+
+
+
+
 
 
 
@@ -194,8 +174,10 @@ def compare_genomes(genome_pair, check_replace=True):
 
 
 
-def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
-                           seq_set, host_set, cluster_set, subcluster_set):
+def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
+                           seq_set=set(), host_set=set(),
+                           cluster_set=set(), subcluster_set=set(),
+                           accession_set=set()):
     """Check a Genome object for errors."""
 
     if tkt.type == "add":
@@ -209,12 +191,6 @@ def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
         gnm.check_name(phage_id_set, True)
         gnm.check_sequence(seq_set, True)
 
-        #genome_pair
-    # TODO if these values are set at the command line, these checks
-    # may no longer be needed.
-    # tkt = tkt.check_description_field(description_field_set)
-    # tkt = tkt.check_run_mode(run_mode_set)
-
     gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
                                 expect=True)
 
@@ -227,8 +203,15 @@ def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
 
 
     # TODO not sure if this is needed.
-    # gnm.check_accession(accession_set, False)
-
+    # Not all genomes have accessions.
+    # If the genome is being added, and if it has an accession,
+    # no other genome is expected to have an identical accession.
+    # If the genome is being replaced, and if it has an accession,
+    # the prior version of the genome may or may not have had
+    # accession data, so no need to check for 'replace' tickets.
+    if gnm.accession != "":
+        if tkt.type == "add":
+            gnm.check_accession(accession_set, False)
 
     gnm.check_annotation_author()
     gnm.check_retrieve_record()
@@ -277,30 +260,9 @@ def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
     gnm.set_value_flag("retain")
     gnm.check_value_flag()
 
-    # Check CDS features
-    index1 = 0
-    while index1 < len(gnm.cds_features):
-        check_cds_for_import(gnm.cds_features[index1],
-            check_locus_tag=tkt.eval_flags["check_locus_tag"],
-            check_gene=tkt.eval_flags["check_gene"],
-            check_description=tkt.eval_flags["check_description"],
-            check_description_field=tkt.eval_flags["check_description_field"])
-        index1 += 1
 
-    # Check tRNA features
-    if tkt.eval_flags["check_trna"]:
-        index2 = 0
-        while index2 < len(gnm.trna_features):
-            check_trna_for_import(gnm.trna_features[index2])
-            index2 += 1
 
-    # Check Source features
-    index3 = 0
-    while index3 < len(gnm.source_features):
-        check_source_for_import(gnm.source_features[index3],
-            check_id_typo=tkt.eval_flags["check_id_typo"],
-            check_host_typo=tkt.eval_flags["check_host_typo"],)
-        index3 += 1
+
 
 
 
@@ -327,61 +289,52 @@ def check_genome_to_import(gnm, tkt, null_set, phage_id_set,
 def check_bundle_for_import(bndl):
     """Check a Bundle for errors."""
 
-    tkt = bndl.ticket
+    bndl.check_ticket()
+    if bndl.ticket is not None:
+
+        tkt = bndl.ticket
+
+        # First, evaluate whether all genomes have been successfully grouped,
+        # and whether all genomes have been paired, as expected.
+        # Based on the ticket type, there are expected to be certain
+        # types of genomes and pairs of genomes in the bundle.
+
+        if tkt.type == "add" or tkt.type == "replace":
 
 
-    # First, evaluate whether all genomes have been successfully grouped,
-    # and whether all genomes have been paired, as expected.
-    # Based on the ticket type, there are expected to be certain
-    # types of genomes and pairs of genomes in the bundle.
+            bndl.check_genome_dict("add")
+            bndl.check_genome_dict("flat_file")
+            bndl.check_genome_pair_dict("flat_file_add")
 
-    if tkt.type == "add" or tkt.type == "replace":
+            # There may or may not be data retrieved from PhagesDB.
+            tkt.set_value_flag("retrieve")
+            if tkt._value_flag:
+                bndl.check_genome_dict("phagesdb")
+                try:
+                    check_phagesdb_genome(bndl.genome_dict["phagesdb"])
+                except:
+                    pass
+                try:
+                    bndl.check_genome_pair_dict("flat_file_phagesdb")
+                except:
+                    pass
 
+        # TODO this may need to be moved elsewhere.
+        tkt.check_compatible_type_and_annotation_status()
 
-        bndl.check_genome_dict("add")
-        bndl.check_genome_dict("flat_file")
-        bndl.check_genome_pair_dict("flat_file_add")
+        if tkt.type == "replace":
 
-        # There may or may not be data retrieved from PhagesDB.
-        tkt.set_value_flag("retrieve")
-        if tkt._value_flag:
-            bndl.check_genome_dict("phagesdb")
-            try:
-                check_phagesdb_genome(bndl.genome_dict["phagesdb"])
-            except:
-                pass
-            try:
-                bndl.check_genome_pair_dict("flat_file_phagesdb")
-            except:
-                pass
+            # There should be a "phamerator" genome.
+            bndl.check_genome_dict("phamerator")
 
-    # TODO this may need to be moved elsewhere.
-    tkt.check_compatible_type_and_annotation_status()
+            # There may or may not be a genome_pair to retain some data.
+            tkt.set_value_flag("retain")
+            if tkt._value_flag:
+                bndl.check_genome_pair_dict("add_phamerator")
 
-    if tkt.type == "replace":
-
-        # There should be a "phamerator" genome.
-        bndl.check_genome_dict("phamerator")
-
-        # There may or may not be a genome_pair to retain some data.
-        tkt.set_value_flag("retain")
-        if tkt._value_flag:
-            bndl.check_genome_pair_dict("add_phamerator")
-
-        # There should be a genome_pair between the current phamerator
-        # genome and the new flat_file genome.
-        bndl.check_genome_pair_dict("flat_file_phamerator")
-        try:
-            compare_genomes(bndl.genome_pair_dict["flat_file_phamerator"],
-                check_replace=tkt.eval_flags["check_replace"])
-        except:
-            pass
-
-
-    # Second, evaluate each genome.
-    # check_genome_to_import(bndl.genome_dict["flat_file"], tkt=tkt, null_set, phage_id_set,
-    #                        seq_set, host_set, cluster_set, subcluster_set)
-
+            # There should be a genome_pair between the current phamerator
+            # genome and the new flat_file genome.
+            bndl.check_genome_pair_dict("flat_file_phamerator")
 
 
 

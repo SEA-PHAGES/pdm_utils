@@ -247,7 +247,7 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
                     sql_handle, column=column, query=query,
                     phage_id_list=phage_id_list)
     for data_dict in result_list:
-        cds_ftr = parse_gene_table_data(result_list[0])
+        cds_ftr = parse_gene_table_data(data_dict)
         cds_list.append(cds_ftr)
     return cds_list
 

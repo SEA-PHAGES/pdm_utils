@@ -486,7 +486,7 @@ def copy_data_to(bndl, type, flag="ticket"):
         genome1.set_value_flag(flag)
         genome1.check_value_flag()
 
-
+# TODO this may no longer be needed.
 def parse_files(file_list, id_field="organism_name"):
     """Parse data from a list of flat files.
 

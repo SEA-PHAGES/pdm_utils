@@ -85,6 +85,22 @@ class Bundle:
 
     # Evaluations.
 
+    def check_ticket(self, eval_id=None):
+        """Check for whether a Ticket object is present.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        if self.ticket is not None:
+            result = "A ticket has been matched."
+            status = "correct"
+        else:
+            result = "No ticket has been matched."
+            status = "error"
+        definition = "Check if a ticket has been matched."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
 
     # TODO is this needed? Seems to have been replaced by
     # check_genome_dictionary.

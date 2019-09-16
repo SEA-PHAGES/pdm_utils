@@ -49,6 +49,27 @@ class TestBundleClass1(unittest.TestCase):
 
 
 
+    def test_check_ticket_1(self):
+        """Check that no error is produced when a ticket is present."""
+        self.bndl.ticket = self.tkt
+        self.bndl.check_ticket("eval_id")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
+
+    def test_check_ticket_2(self):
+        """Check that an error is produced when a ticket is not present."""
+        self.bndl.ticket = None
+        self.bndl.check_ticket("eval_id")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
+
+
+
+
     def test_check_matched_genome_1(self):
         """Check that no error is produced when the genome type is present."""
         self.bndl.ticket = self.tkt
