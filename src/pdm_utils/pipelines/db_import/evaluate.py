@@ -74,7 +74,7 @@ def check_ticket_structure(tkt, type_set, description_field_set,
     tkt.check_annotation_author(null_set, False)
 
     # TODO implement this check?
-    tkt.check_retrieve_record(null_set, False)
+    #tkt.check_retrieve_record(null_set, False)
 
 
     # No need to evaluate the Accession and Subcluster fields

@@ -20,6 +20,7 @@ class TestEvaluateClass(unittest.TestCase):
         self.null_set = constants.EMPTY_SET
         self.type_set = constants.IMPORT_TICKET_TYPE_SET
         self.run_mode_set = constants.RUN_MODES.keys()
+        self.description_field_set = constants.DESCRIPTION_FIELD_SET
 
         self.add_ticket1 = ticket.GenomeTicket()
         self.add_ticket1.type = "add"
@@ -40,7 +41,8 @@ class TestEvaluateClass(unittest.TestCase):
         """Verify no error is produced with a correctly structured
         'add' ticket."""
         evaluate.check_ticket_structure(
-            self.add_ticket1, self.type_set, self.null_set, self.run_mode_set)
+            self.add_ticket1, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
 
         errors = 0
         for evl in self.add_ticket1.evaluations:
@@ -59,13 +61,14 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.type = "invalid"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(tkt.evaluations), 1)
+            self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 1)
 
@@ -77,7 +80,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.phage_id = "none"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -95,7 +99,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.host_genus = "none"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -113,7 +118,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.cluster = "none"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -131,7 +137,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.annotation_status = "none"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -149,7 +156,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.description_field = "none"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -167,7 +175,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.annotation_author = "none"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -185,7 +194,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt = self.add_ticket1
         tkt.run_mode = "invalid"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -197,7 +207,7 @@ class TestEvaluateClass(unittest.TestCase):
 
 
 
-    def test_check_ticket_structure_11(self):
+    def test_check_ticket_structure_10(self):
         """Verify no error is produced with a correctly structured
         'replace' ticket."""
 
@@ -205,7 +215,8 @@ class TestEvaluateClass(unittest.TestCase):
         tkt.type = "replace"
         # tkt.secondary_phage_id = "L5"
         evaluate.check_ticket_structure(
-            tkt, self.type_set, self.null_set, self.run_mode_set)
+            tkt, self.type_set, self.description_field_set,
+            self.null_set, self.run_mode_set)
         errors = 0
         for evl in tkt.evaluations:
             if evl.status == "error":
@@ -214,35 +225,6 @@ class TestEvaluateClass(unittest.TestCase):
             self.assertEqual(len(tkt.evaluations), 8)
         with self.subTest():
             self.assertEqual(errors, 0)
-
-    # TODO now that there is no secondary_phage_id, this may need to be
-    # re-evaluated.
-    # def test_check_ticket_structure_12(self):
-    #     """Verify an error is produced with an incorrectly structured
-    #     'replace' ticket 'secondary_phage_id' field."""
-    #
-    #     tkt = self.add_ticket1
-    #     tkt.type = "replace"
-    #     tkt.secondary_phage_id = "none"
-    #     evaluate.check_ticket_structure(
-    #         tkt, self.type_set, self.null_set, self.run_mode_set)
-    #     errors = 0
-    #     for evl in tkt.evaluations:
-    #         if evl.status == "error":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(len(tkt.evaluations), 9)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 1)
-
-
-
-
-
-
-
-
-
 
 
 
@@ -916,7 +898,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 27)
+        self.assertEqual(len(self.gnm.evaluations), 28)
 
     def test_check_genome_for_import_2(self):
         """Verify correct number of evaluations are produced using
@@ -935,37 +917,37 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 26)
+        self.assertEqual(len(self.gnm.evaluations), 27)
 
 
-    def test_check_genome_for_import_3(self):
+    def test_check_genome_for_import_4(self):
         """Verify correct number of evaluations are produced using
         'check_id_typo' as False."""
         self.tkt.eval_flags["check_id_typo"] = False
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 24)
+        self.assertEqual(len(self.gnm.evaluations), 25)
 
 
-    def test_check_genome_for_import_4(self):
+    def test_check_genome_for_import_5(self):
         """Verify correct number of evaluations are produced using
         'check_host_typo' as False."""
         self.tkt.eval_flags["check_host_typo"] = False
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 23)
+        self.assertEqual(len(self.gnm.evaluations), 24)
 
 
-    def test_check_genome_for_import_5(self):
+    def test_check_genome_for_import_6(self):
         """Verify correct number of evaluations are produced using
         'check_author' as False."""
         self.tkt.eval_flags["check_author"] = False
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 25)
+        self.assertEqual(len(self.gnm.evaluations), 26)
 
 
 
