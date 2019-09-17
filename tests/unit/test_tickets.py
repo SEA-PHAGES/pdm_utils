@@ -351,172 +351,178 @@ class TestTicketFunctions1(unittest.TestCase):
     #         self.assertEqual(self.filled_ticket.type, "add")
 
 
-
-
-    def test_compare_tickets_1(self):
-        """Verify two tickets with no duplicates do not generate an error."""
+    def test_identify_duplicates_1(self):
+        """Verify no duplicates are produced."""
 
         ticket1 = ticket.GenomeTicket()
+        ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
         ticket2 = ticket.GenomeTicket()
+        ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "L5"
         ticket2.accession = "EFG456"
 
+        null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for evl in ticket1.evaluations:
-            if evl.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for evl in ticket2.evaluations:
-            if evl.status == "error":
-                ticket2_errors += 1
+        id_dupes, phage_id_dupes, accession_dupes = \
+            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
 
         with self.subTest():
-            self.assertEqual(len(ticket1.evaluations), 2)
+            self.assertEqual(len(id_dupes), 0)
         with self.subTest():
-            self.assertEqual(len(ticket2.evaluations), 2)
+            self.assertEqual(len(phage_id_dupes), 0)
         with self.subTest():
-            self.assertEqual(ticket1_errors, 0)
-        with self.subTest():
-            self.assertEqual(ticket2_errors, 0)
+            self.assertEqual(len(accession_dupes), 0)
 
-    def test_compare_tickets_2(self):
+
+
+
+
+    def test_identify_duplicates_2(self):
         """Verify two tickets with 'none' duplicates do not generate an error."""
 
         ticket1 = ticket.GenomeTicket()
+        ticket1.id = "none"
         ticket1.type = "replace"
         ticket1.phage_id = "none"
         ticket1.accession = "none"
 
         ticket2 = ticket.GenomeTicket()
+        ticket2.id = "none"
         ticket2.type = "replace"
         ticket2.phage_id = "none"
         ticket2.accession = "none"
 
+        null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for evl in ticket1.evaluations:
-            if evl.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for evl in ticket2.evaluations:
-            if evl.status == "error":
-                ticket2_errors += 1
-
+        id_dupes, phage_id_dupes, accession_dupes = \
+            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
-            self.assertEqual(ticket1_errors, 0)
+            self.assertEqual(len(id_dupes), 0)
         with self.subTest():
-            self.assertEqual(ticket2_errors, 0)
+            self.assertEqual(len(phage_id_dupes), 0)
+        with self.subTest():
+            self.assertEqual(len(accession_dupes), 0)
 
-    def test_compare_tickets_3(self):
+
+
+
+
+    def test_identify_duplicates_3(self):
+        """Verify two tickets with id duplicates
+        do generate an error."""
+
+        ticket1 = ticket.GenomeTicket()
+        ticket1.id = 1
+        ticket1.type = "replace"
+        ticket1.phage_id = "L5"
+        ticket1.accession = "none"
+
+        ticket2 = ticket.GenomeTicket()
+        ticket2.id = 1
+        ticket2.type = "replace"
+        ticket2.phage_id = "Trixie"
+        ticket2.accession = "none"
+
+        null_set = set(["none"])
+        list_of_tickets = [ticket1, ticket2]
+        id_dupes, phage_id_dupes, accession_dupes = \
+            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
+        with self.subTest():
+            self.assertEqual(len(id_dupes), 1)
+        with self.subTest():
+            self.assertEqual(len(phage_id_dupes), 0)
+        with self.subTest():
+            self.assertEqual(len(accession_dupes), 0)
+
+
+
+    def test_identify_duplicates_4(self):
         """Verify two tickets with Primary Phage ID duplicates
         do generate an error."""
 
         ticket1 = ticket.GenomeTicket()
+        ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
         ticket1.accession = "none"
 
         ticket2 = ticket.GenomeTicket()
+        ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
         ticket2.accession = "none"
 
+        null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for evl in ticket1.evaluations:
-            if evl.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for evl in ticket2.evaluations:
-            if evl.status == "error":
-                ticket2_errors += 1
-
+        id_dupes, phage_id_dupes, accession_dupes = \
+            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
-            self.assertEqual(ticket1_errors, 1)
+            self.assertEqual(len(id_dupes), 0)
         with self.subTest():
-            self.assertEqual(ticket2_errors, 1)
+            self.assertEqual(len(phage_id_dupes), 1)
+        with self.subTest():
+            self.assertEqual(len(accession_dupes), 0)
 
 
 
-    def test_compare_tickets_5(self):
+
+    def test_identify_duplicates_5(self):
         """Verify two tickets with Accession duplicates do generate an error."""
 
         ticket1 = ticket.GenomeTicket()
+        ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "none"
         ticket1.accession = "ABC123"
 
         ticket2 = ticket.GenomeTicket()
+        ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "none"
         ticket2.accession = "ABC123"
 
+        null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for evl in ticket1.evaluations:
-            if evl.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for evl in ticket2.evaluations:
-            if evl.status == "error":
-                ticket2_errors += 1
-
+        id_dupes, phage_id_dupes, accession_dupes = \
+            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
-            self.assertEqual(ticket1_errors, 1)
+            self.assertEqual(len(id_dupes), 0)
         with self.subTest():
-            self.assertEqual(ticket2_errors, 1)
+            self.assertEqual(len(phage_id_dupes), 0)
+        with self.subTest():
+            self.assertEqual(len(accession_dupes), 1)
 
-    def test_compare_tickets_6(self):
+    def test_identify_duplicates_6(self):
         """Verify two tickets with multiple duplicates
         do generate multiple errors."""
 
         ticket1 = ticket.GenomeTicket()
+        ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
         ticket1.accession = "ABC123"
 
         ticket2 = ticket.GenomeTicket()
+        ticket2.id = 1
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
         ticket2.accession = "ABC123"
 
+        null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        tickets.compare_tickets(list_of_tickets)
-
-        ticket1_errors = 0
-        for evl in ticket1.evaluations:
-            if evl.status == "error":
-                ticket1_errors += 1
-
-        ticket2_errors = 0
-        for evl in ticket2.evaluations:
-            if evl.status == "error":
-                ticket2_errors += 1
-
+        id_dupes, phage_id_dupes, accession_dupes = \
+            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
-            self.assertEqual(ticket1_errors, 2)
+            self.assertEqual(len(id_dupes), 1)
         with self.subTest():
-            self.assertEqual(ticket2_errors, 2)
-
-
+            self.assertEqual(len(phage_id_dupes), 1)
+        with self.subTest():
+            self.assertEqual(len(accession_dupes), 1)
 
 
 

@@ -54,49 +54,18 @@ def import_io(sql_handle, genome_folder, import_table_file, filename_flag, test_
         results = main(ticket_dict, files_in_folder,
                         sql_handle, eval_flags, description_field)
 
-
-
-
-
-
-
-
     # Now that all flat files and tickets have been evaluated,
     # provide summary of results...
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-# TODO incorporate this standard phage table query to retrieve all
-# genome-level data from PhameratorDB:
-# statement1 = "SELECT PhageID, Name, HostStrain, Sequence, status, \
-#              Cluster2, DateLastModified, Accession, Subcluster2, \
-#              AnnotationAuthor, AnnotationQC, RetrieveRecord \
-#              FROM phage"
-
-
-
-
-
-
-
-###
 def prepare_tickets(import_table_file, eval_flags, description_field):
     """Prepare dictionary of pdm_utils Tickets."""
 
     # TODO parsing from import table:
-    # 1. parse ticket data from table. = prepare_tickets()
-    # 2. set case for all fields. = prepare_tickets()
+    # 1. parse ticket data from table.
+    # 2. set case for all fields.
     # 3. confirm all tickets have a valid type. = check_ticket_structure()
     # 4. populate Genome objects as necessary.
     # 5. retrieve data if needed.
@@ -109,84 +78,59 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
         file_reader = csv.DictReader(file)
         for dict in file_reader:
             list_of_ticket_data.append(dict)
+
     ticket_list = []
+    tkt_errors = 0
     for dict in list_of_ticket_data:
-        tkt = parse_import_ticket_data(data_dict=dict)
+        tkt = tickets.parse_import_ticket_data(data_dict=dict)
         if tkt is not None:
             ticket_list.append(tkt)
         else:
-            # TODO record as error.
-            pass
+            tkt_errors += 1
 
+    # Identify duplicated ticket values.
+    tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set = \
+        tickets.identify_duplicates(ticket_list, null_set=set(["none"]))
 
-
-
-    # TODO unneeded if table is parsed using a dictionary reader.
-    # with open(import_table_file,'r') as file:
-    #     file_reader = csv.reader(file)
-    #     for row in file_reader:
-    #         list_of_ticket_data.append(row)
-    # Convert ticket data to Ticket objects.
-    # Data is returned as a list of ticket objects.
-    # ticket_list = tickets.parse_import_tickets(list_of_ticket_data)
-    # print("Tickets parsed")
-
-    # Add the eval_flag dictionary and description_field to each ticket.
-    for tkt in ticket_list:
-
-        # TODO once pipeline is set up, verify copying is needed.
-        # Copy eval_flags dictionary. Each ticket may alter some of the flags
-        # based on ticket type, so copy dictionary to instantiate a
-        # distinct dictionary.
-        tkt.eval_flags = eval_flags.copy()
-        tkt.description_field = description_field
-
-    # Evaluate the tickets to ensure they are structured properly.
-    # At this point, the quality of the ticket data is not evaluated,
-    # just that the ticket contains fields populated or empty as expected.
-    index1 = 0
-    while index1 < len(ticket_list):
-        evaluate.check_ticket_structure(ticket_list[index1],
-                                        constants.IMPORT_TICKET_TYPE_SET,
-                                        constants.EMPTY_DATE,
-                                        constants.RUN_MODE_SET),
-        index1 += 1
-    # print("Ticket structure checked")
-
-
-    # TODO move tickets.compare_tickets() to evalute module since
-    # it calls ticket check functions?
-    # Now that individual tickets have been validated,
-    # validate the entire group of tickets.
-    tickets.compare_tickets(ticket_list)
-    # print("Tickets compared")
-
-    # Create a dictionary of tickets based on the phage_id.
+    # For each ticket:
+    # 1. Add the eval_flag dictionary and description_field to each ticket.
+    #    Copy eval_flags dictionary. Each ticket may alter some of the flags
+    #    based on ticket type, so copy dictionary to instantiate a
+    #    distinct dictionary.
+    # 2. Evaluate the tickets to ensure they are structured properly.
+    #    At this point, the quality of the ticket data is not evaluated,
+    #    just that the ticket contains fields populated or empty as expected.
+    # 3. Create a dictionary of tickets based on the phage_id.
+    # 4. Check for ticket errors.
     ticket_dict = {}
-    index2 = 0
-    while index2 < len(ticket_list):
-        ticket_dict[ticket_list[index2].phage_id] = ticket_list[index2]
-        index2 += 1
-    # print("Ticket dictionary created")
-
-
-
-
-    # Check for ticket errors.
-    ticket_errors = 0
-    for key in ticket_dict.keys():
-        tkt = ticket_dict[key]
+    x = 0
+    while x < len(ticket_list):
+        tkt = ticket_list[x]
+        tkt.description_field = description_field
+        # TODO once pipeline is set up, verify copying is needed.
+        tkt.eval_flags = eval_flags.copy()
+        evaluate.check_ticket_structure(
+            tkt,
+            type_set=constants.IMPORT_TICKET_TYPE_SET,
+            description_field_set=constants.DESCRIPTION_FIELD_SET,
+            null_set=constants.EMPTY_SET,
+            run_mode_set=constants.RUN_MODE_SET,
+            id_dupe_set=tkt_id_dupe_set,
+            phage_id_dupe_set=phage_id_dupe_set,
+            accession_dupe_set=accession_dupe_set)
         for evl in tkt.evaluations:
             if evl.status == "error":
-                ticket_errors += 1
+                tkt_errors += 1
+        ticket_dict[tkt.phage_id] = tkt
+        x += 1
 
     # TODO handle ticket errors better.
-    if ticket_errors > 0:
+    if tkt_errors > 0:
         print("Error generating tickets from import table.")
         sys.exit(1)
     else:
         return ticket_dict
-###
+
 
 
 def main(ticket_dict, files_in_folder, sql_handle=None):

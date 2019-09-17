@@ -2,55 +2,31 @@
 
 
 from pdm_utils.constants import constants
+from pdm_utils.functions import basic
 
 
-
-
-#
-# def check_import_ticket_structure(
-#         tkt,
-#         type_set=constants.IMPORT_TICKET_TYPE_SET,
-#         annotation_status_set=constants.ANNOTATION_STATUS_SET,
-#         description_field_set=constants.DESCRIPTION_FIELD_SET,
-#         annotation_author_set=constants.ANNOTATION_AUTHOR_SET,
-#         run_mode_set=constants.RUN_MODE_SET,
-#         null_set=constants.EMPTY_SET):
-#     """Evaluate a ticket to confirm it is structured appropriately.
-#     The assumptions for how each field is populated varies depending on
-#     the type of ticket."""
-#
-#     # This function simply evaluates whether there is data in the
-#     # appropriate ticket attributes given the type of ticket.
-#     # It confirms that ticket attributes 'type', 'run_mode', and
-#     # 'description_field' are populated with specific values.
-#     # But it does not evaluate the quality of the data itself for
-#     # the other fields, since those are genome-specific fields and
-#     # can be checked within Genome objects.
-#
-#     #null_set = set(["none"])
-#
-#     # This is the only evaluation that is not dependent on the ticket type.
-#     tkt.check_type(type_set, True)
-#     tkt.check_phage_id(null_set, False)
-#     tkt.check_host_genus(null_set, False)
-#     tkt.check_cluster(null_set, False)
-#     tkt.check_annotation_status(annotation_status_set)
-#     tkt.check_description_field(description_field_set)
-#     tkt.check_annotation_author(annotation_author_set)
-#     tkt.check_run_mode(run_mode_set)
-#
-#     # No need to evaluate the Accession and Subcluster fields
-#     # since they may or may not be populated.
-#
-
-
-
-def check_ticket_structure(tkt, type_set, description_field_set,
-                           null_set, run_mode_set):
+def check_ticket_structure(tkt, type_set=set(), description_field_set=set(),
+        null_set=set(), run_mode_set=set(), id_dupe_set=set(),
+        phage_id_dupe_set=set(), accession_dupe_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
-    the type of ticket."""
+    the type of ticket.
 
+    :param tkt: A pdm_utils Ticket object.
+    :type tkt: Ticket
+    :param description_field_set: Valid description_field options.
+    :type description_field_set: set
+    :param null_set: Values that represent an empty field.
+    :type null_set: set
+    :param run_mode_set: Valid run mode options.
+    :type run_mode_set: set
+    :param id_dupe_set: Predetermined duplicate ticket ids.
+    :type id_dupe_set: set
+    :param phage_id_dupe_set: Predetermined duplicate PhageIDs.
+    :type phage_id_dupe_set: set
+    :param accession_dupe_set: Predetermined duplicate accessions.
+    :type accession_dupe_set: set
+    """
     # This function simply evaluates whether there is data in the
     # appropriate ticket attributes given the type of ticket.
     # It confirms that ticket attributes 'type', 'run_mode', and
@@ -59,7 +35,10 @@ def check_ticket_structure(tkt, type_set, description_field_set,
     # the other fields, since those are genome-specific fields and
     # can be checked within Genome objects.
 
-    #null_set = set(["none"])
+    # Check for duplicated values.
+    tkt.check_duplicate_id(id_dupe_set)
+    tkt.check_duplicate_phage_id(phage_id_dupe_set)
+    tkt.check_duplicate_accession(accession_dupe_set)
 
     # Check these fields for specific values.
     tkt.check_type(type_set, True)
@@ -72,24 +51,10 @@ def check_ticket_structure(tkt, type_set, description_field_set,
     tkt.check_cluster(null_set, False)
     tkt.check_annotation_status(null_set, False)
     tkt.check_annotation_author(null_set, False)
-
-    # TODO implement this check?
-    #tkt.check_retrieve_record(null_set, False)
-
+    tkt.check_retrieve_record(null_set, False)
 
     # No need to evaluate the Accession and Subcluster fields
     # since they may or may not be populated.
-
-    # TODO no more secondary_phage_id attribute, so this may need
-    # to evaluate something else.
-    # if tkt.type == "replace":
-    #     tkt.check_secondary_phage_id(null_set, False)
-    # else:
-    #     tkt.check_secondary_phage_id(null_set, True)
-
-
-
-
 
 
 

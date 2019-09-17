@@ -69,6 +69,7 @@ def parse_import_ticket_data(tkt=None, data_dict=None,
             tkt.set_retrieve_record(int(data_dict["retrieve_record"]))
             return tkt
         else:
+            print("The ticket %s is not formatted correctly." % data_dict)
             return None
 
     elif direction == "ticket_to_dict":
@@ -276,40 +277,45 @@ def parse_import_ticket_data(tkt=None, data_dict=None,
 #     return list_of_tickets
 
 
-
-
-
-# This function has been substantially simplified if Remove tickets
-# store the genome to be removed in the phage_id field, and if
-# it does not try to keep track of the types of tickets from which the
-# conflict arises.
-def compare_tickets(list_of_tickets):
+def identify_duplicates(list_of_tickets, null_set=set()):
     """Compare all tickets to each other to identify ticket conflicts.
 
-    Identifies if the same PhageID or the same Accession
-    is present for multiple tickets, and runs Ticket 'check' functions.
+    Identifies if the same id, PhageID, and Accession
+    is present in multiple tickets.
 
     :param list_of_tickets:
         A list of pdm_utils Ticket objects.
     :type list_of_tickets: list
+    :param null_set:
+        A set of values that may be expected to be duplicated, that
+        should not throw errors.
+    :type null_set: set
+    :returns:
+        tuple (tkt_id_dupes, phage_id_dupes, accession_dupes)
+        WHERE
+        tkt_id_dupes(set) is a set of duplicate ticket ids.
+        phage_id_dupes(set) is a set of duplicate PhageIDs.
+        accession_dupes(set) is a set of duplicate accessions.
+    :rtype: tuple
     """
+    tkt_id_list = []
     accession_list = []
     phage_id_list = []
 
     # Create separate lists to check each field for duplications.
     # Skip "none" values since they are expected to be duplicated.
     for tkt in list_of_tickets:
-        if tkt.phage_id != "none":
+        if tkt.id not in null_set:
+            tkt_id_list.append(tkt.id)
+        if tkt.phage_id not in null_set:
             phage_id_list.append(tkt.phage_id)
-        if tkt.accession != "none":
+        if tkt.accession not in null_set:
             accession_list.append(tkt.accession)
-
-    # Identify duplicate values in the group of tickets.
+    tkt_id_dupe_set = basic.identify_one_list_duplicates(tkt_id_list)
     phage_id_dupe_set = basic.identify_one_list_duplicates(phage_id_list)
     accession_dupe_set = basic.identify_one_list_duplicates(accession_list)
-    for tkt in list_of_tickets:
-        tkt.check_duplicate_phage_id(phage_id_dupe_set)
-        tkt.check_duplicate_accession(accession_dupe_set)
+    return (tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set)
+
 
 
 # TODO re-evaluate the structure of this function. Replace tickets

@@ -36,15 +36,8 @@ class GenomeTicket:
         self.accession = ""
 
 
-
-
         self.evaluations = []
-        self._parsed_fields = 0
         self._value_flag = False
-
-
-        # TODO this attribute may no longer be needed.
-        self.match_strategy = "" # phage_id or filename
 
 
 
@@ -170,22 +163,25 @@ class GenomeTicket:
 
     # Evaluations
 
-    def check_parsed_fields(self, eval_id=None):
-        """Check if the import table contained the correct amount of data.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self._parsed_fields == 11:
-            result = "Import table contains the correct amount of data."
-            status = "correct"
-        else:
-            result = "Import table contains incorrect amount of data."
-            status = "error"
 
-        definition = "Check if import table contains the correct amount of data."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+    # TODO this is no longer needed.
+    # def check_parsed_fields(self, eval_id=None):
+    #     """Check if the import table contained the correct amount of data.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #     if self._parsed_fields == 11:
+    #         result = "Import table contains the correct amount of data."
+    #         status = "correct"
+    #     else:
+    #         result = "Import table contains incorrect amount of data."
+    #         status = "error"
+    #
+    #     definition = "Check if import table contains the correct amount of data."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
 
 
     def check_type(self, check_set, expect=True, eval_id=None):
@@ -437,6 +433,25 @@ class GenomeTicket:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
+    def check_duplicate_id(self, set_of_duplicates, eval_id=None):
+        """Check if the id is unique to this ticket by
+        checking if it is found within a list of previously
+        determined duplicate ids.
+
+        :param set_of_duplicates: Set of reference duplicated values.
+        :type set_of_duplicates: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        if self.id in set_of_duplicates:
+            result = "The id is not unique to this ticket."
+            status = "error"
+        else:
+            result = "The id is unique to this ticket"
+            status = "correct"
+        definition = "Check if the id is unique to this ticket."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
     def check_duplicate_phage_id(self, set_of_duplicates, eval_id=None):
         """Check if the phage_id is unique to this ticket by
@@ -510,10 +525,29 @@ class GenomeTicket:
         self.evaluations.append(evl)
 
 
+    def check_retrieve_record(self, check_set, expect=True, eval_id=None):
+        """Check that the retrieve_record is valid.
 
-
-
-
+        :param check_set: Set of reference accessions.
+        :type check_set: set
+        :param expect:
+            Indicates whether retrieve_record is expected to be present
+            in the check set.
+        :type expect: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        output = basic.check_value_expected_in_set(
+                    self.retrieve_record, check_set, expect)
+        if output:
+            result = "The field is populated correctly."
+            status = "correct"
+        else:
+            result = "The field is not populated correctly."
+            status = "error"
+        definition = "Check if retrieve_record field is correctly populated."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 

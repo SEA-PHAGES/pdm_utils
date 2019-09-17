@@ -276,26 +276,27 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-
-    def test_check_parsed_fields_1(self):
-        """Check that no error is produced if the
-        correct number of fields were parsed."""
-        self.tkt._parsed_fields = 11
-        self.tkt.check_parsed_fields(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.tkt.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.tkt.evaluations[0].id, "eval_id")
-
-    def test_check_parsed_fields_2(self):
-        """Check that an error is produced if the
-        incorrect number of fields were parsed."""
-        self.tkt._parsed_fields = 10
-        self.tkt.check_parsed_fields()
-        with self.subTest():
-            self.assertEqual(self.tkt.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.tkt.evaluations[0].id)
+    # TODO this is not longer needed now that impor tables are parsed
+    # using DictReader.
+    # def test_check_parsed_fields_1(self):
+    #     """Check that no error is produced if the
+    #     correct number of fields were parsed."""
+    #     self.tkt._parsed_fields = 11
+    #     self.tkt.check_parsed_fields(eval_id="eval_id")
+    #     with self.subTest():
+    #         self.assertEqual(self.tkt.evaluations[0].status, "correct")
+    #     with self.subTest():
+    #         self.assertEqual(self.tkt.evaluations[0].id, "eval_id")
+    #
+    # def test_check_parsed_fields_2(self):
+    #     """Check that an error is produced if the
+    #     incorrect number of fields were parsed."""
+    #     self.tkt._parsed_fields = 10
+    #     self.tkt.check_parsed_fields()
+    #     with self.subTest():
+    #         self.assertEqual(self.tkt.evaluations[0].status, "error")
+    #     with self.subTest():
+    #         self.assertIsNone(self.tkt.evaluations[0].id)
 
 
 
@@ -561,6 +562,58 @@ class TestGenomeTicketClass(unittest.TestCase):
         set1 = set(["none"])
         self.tkt.run_mode = "none"
         self.tkt.check_run_mode(set1, False)
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.tkt.evaluations[0].id)
+
+
+
+
+    def test_check_retrieve_record_1(self):
+        """Check that no error is produced if the
+        retrieve_record is not present in the empty/null set
+        and not expected to be in the set."""
+        set1 = set(["none"])
+        self.tkt.retrieve_record = 1
+        self.tkt.check_retrieve_record(set1, False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].id, "eval_id")
+
+    def test_check_retrieve_record_2(self):
+        """Check that an error is produced if the
+        retrieve_record is present in the empty/null set
+        and not expected to be in the set."""
+        set1 = set(["none"])
+        self.tkt.retrieve_record = "none"
+        self.tkt.check_retrieve_record(set1, False)
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.tkt.evaluations[0].id)
+
+
+
+
+    def test_check_duplicate_id_1(self):
+        """Check that no error is produced if the
+        id is not present in the set of duplicated values."""
+        dupe_set = set([0, 1])
+        self.tkt.phage_id = 2
+        self.tkt.check_duplicate_id(dupe_set, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].id, "eval_id")
+
+    def test_check_duplicate_id_2(self):
+        """Check that an error is produced if the
+        id is present in the set of duplicated values."""
+        dupe_set = set([0, 1])
+        self.tkt.id = 1
+        self.tkt.check_duplicate_id(dupe_set)
         with self.subTest():
             self.assertEqual(self.tkt.evaluations[0].status, "error")
         with self.subTest():
