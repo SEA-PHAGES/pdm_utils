@@ -31,7 +31,7 @@ class TestEvaluateClass(unittest.TestCase):
         self.add_ticket1.host_genus = "Mycobacterium smegmatis"
         self.add_ticket1.cluster = "A"
         self.add_ticket1.subcluster = "A2"
-        self.add_ticket1.annotation_status = "final"
+        self.add_ticket1.annotation_status = "draft"
         self.add_ticket1.annotation_author = "hatfull"
         self.add_ticket1.annotation_qc = 1
         self.add_ticket1.retrieve_record = 1
@@ -53,7 +53,7 @@ class TestEvaluateClass(unittest.TestCase):
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(self.add_ticket1.evaluations), 12)
+            self.assertEqual(len(self.add_ticket1.evaluations), 13)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -74,7 +74,7 @@ class TestEvaluateClass(unittest.TestCase):
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(tkt.evaluations), 12)
+            self.assertEqual(len(tkt.evaluations), 13)
         with self.subTest():
             self.assertEqual(errors, 2)
 

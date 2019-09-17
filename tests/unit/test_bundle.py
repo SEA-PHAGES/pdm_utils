@@ -70,97 +70,76 @@ class TestBundleClass1(unittest.TestCase):
 
 
 
-    def test_check_matched_genome_1(self):
-        """Check that no error is produced when the genome type is present."""
-        self.bndl.ticket = self.tkt
-        self.bndl.genome_dict[self.genome1.type] = self.genome1
-        self.bndl.genome_dict[self.genome2.type] = self.genome2
-        self.bndl.check_matched_genome("phamerator", "eval_id")
-        with self.subTest():
-            self.assertEqual(self.bndl.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
-
-    def test_check_matched_genome_2(self):
-        """Check that an error is produced when the genome type is present."""
-        self.bndl.ticket = self.tkt
-        self.bndl.genome_dict[self.genome1.type] = self.genome1
-        self.bndl.genome_dict[self.genome2.type] = self.genome2
-        self.bndl.check_matched_genome("invalid")
-        with self.subTest():
-            self.assertEqual(self.bndl.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.bndl.evaluations[0].id)
 
 
 
 
-    def test_check_genome_dictionary_1(self):
+    def test_check_genome_dict_1(self):
         """Check that no error is produced when a genome is present
         in the dictionary and is expected to be present."""
         self.bndl.genome_dict[self.genome1.type] = self.genome1
-        self.bndl.check_genome_dictionary("flat_file", eval_id="eval_id")
+        self.bndl.check_genome_dict("flat_file", eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
 
-    def test_check_genome_dictionary_2(self):
+    def test_check_genome_dict_2(self):
         """Check that an error is produced when a genome is not present
         in the dictionary and is expected to be present."""
         self.bndl.genome_dict[self.genome1.type] = self.genome1
-        self.bndl.check_genome_dictionary("flat_file", False)
+        self.bndl.check_genome_dict("flat_file", False)
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].status, "error")
         with self.subTest():
             self.assertIsNone(self.bndl.evaluations[0].id)
 
-    def test_check_genome_dictionary_3(self):
+    def test_check_genome_dict_3(self):
         """Check that no error is produced when a genome is not present
         in the dictionary and is not expected to be present."""
-        self.bndl.check_genome_dictionary("flat_file", False)
+        self.bndl.check_genome_dict("flat_file", False)
         self.assertEqual(self.bndl.evaluations[0].status, "correct")
 
-    def test_check_genome_dictionary_4(self):
+    def test_check_genome_dict_4(self):
         """Check that an error is produced when a genome is not present
         in the dictionary and is expected to be present."""
-        self.bndl.check_genome_dictionary("flat_file")
+        self.bndl.check_genome_dict("flat_file")
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 
 
 
-    def test_check_genome_pair_dictionary_1(self):
+    def test_check_genome_pair_dict_1(self):
         """Check that no error is produced when a genome_pair is present
         in the dictionary and is expected to be present."""
         self.bndl.genome_pair_dict["flat_file_phamerator"] = ""
-        self.bndl.check_genome_pair_dictionary(
+        self.bndl.check_genome_pair_dict(
             "flat_file_phamerator", eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
 
-    def test_check_genome_pair_dictionary_2(self):
+    def test_check_genome_pair_dict_2(self):
         """Check that an error is produced when a genome_pair is not present
         in the dictionary and is expected to be present."""
         self.bndl.genome_pair_dict["flat_file_phamerator"] = ""
-        self.bndl.check_genome_pair_dictionary("flat_file_phamerator", False)
+        self.bndl.check_genome_pair_dict("flat_file_phamerator", False)
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].status, "error")
         with self.subTest():
             self.assertIsNone(self.bndl.evaluations[0].id)
 
-    def test_check_genome_pair_dictionary_3(self):
+    def test_check_genome_pair_dict_3(self):
         """Check that no error is produced when a genome_pair is not present
         in the dictionary and is not expected to be present."""
-        self.bndl.check_genome_pair_dictionary("flat_file", False)
+        self.bndl.check_genome_pair_dict("flat_file", False)
         self.assertEqual(self.bndl.evaluations[0].status, "correct")
 
-    def test_check_genome_pair_dictionary_4(self):
+    def test_check_genome_pair_dict_4(self):
         """Check that an error is produced when a genome_pair is not present
         in the dictionary and is expected to be present."""
-        self.bndl.check_genome_pair_dictionary("flat_file")
+        self.bndl.check_genome_pair_dict("flat_file")
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 

@@ -102,32 +102,7 @@ class Bundle:
         self.evaluations.append(evl)
 
 
-    # TODO is this needed? Seems to have been replaced by
-    # check_genome_dictionary.
-    def check_matched_genome(self, key, eval_id=None):
-        """Check for whether a certain type of genome has been added to the
-        genome dictionary.
-
-        :param key:
-            The value to be evaluated if it is a valid key
-            in the Bundle object's 'genome_dict'.
-        :type key: str
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if key in self.genome_dict.keys():
-            result = "The %s genome has been matched." % key
-            status = "correct"
-        else:
-            result = "No %s genome has been matched." % key
-            status = "error"
-
-        definition = "Check if a %s genome type has been " % key + \
-                        "matched to the ticket."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-    def check_genome_dictionary(self, key, expect=True, eval_id=None):
+    def check_genome_dict(self, key, expect=True, eval_id=None):
         """Check if a genome is present in the genome dictionary.
 
         :param key:
@@ -159,7 +134,7 @@ class Bundle:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
-    def check_genome_pair_dictionary(self, key, expect=True, eval_id=None):
+    def check_genome_pair_dict(self, key, expect=True, eval_id=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
 
         :param key:

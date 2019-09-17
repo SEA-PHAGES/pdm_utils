@@ -321,7 +321,7 @@ def create_phage_id_set(sql_handle):
     """
     query = "SELECT PhageID FROM phage"
     # Returns a list of items, where each item is a dictionary of
-    # SQL data for each PhageID.
+    # SQL data for each row in the table.
     result_list = sql_handle.execute_query(query)
     sql_handle.close_connection()
     # Convert to a set of PhageIDs.
@@ -343,7 +343,7 @@ def create_seq_set(sql_handle):
     """
     query = "SELECT Sequence FROM phage"
     # Returns a list of items, where each item is a dictionary of
-    # SQL data for each PhageID.
+    # SQL data for each row in the table.
     result_list = sql_handle.execute_query(query)
     sql_handle.close_connection()
     # Convert to a set of sequences.
@@ -353,6 +353,33 @@ def create_seq_set(sql_handle):
     for dict in result_list:
         result_set.add(dict["Sequence"].decode("utf-8"))
     return result_set
+
+
+
+
+# TODO unittest.
+def create_accession_set(sql_handle):
+    """Create set of accessions currently in PhameratorDB.
+
+    :param sql_handle:
+        A pdm_utils MySQLConnectionHandler object containing
+        information on which database to connect to.
+    :type sql_handle: MySQLConnectionHandler
+    :returns: A set of accessions.
+    :rtype: set
+    """
+    query = "SELECT Accession FROM phage"
+    # Returns a list of items, where each item is a dictionary of
+    # SQL data for each row in the table.
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    # Convert to a set of accessions.
+    result_set = set([])
+    for dict in result_list:
+        result_set.add(dict["Accession"])
+    return result_set
+
+
 
 
 def create_update_statement(table, field1, value1, field2, value2):

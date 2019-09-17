@@ -56,6 +56,8 @@ def check_ticket_structure(tkt, type_set=set(), description_field_set=set(),
     # No need to evaluate the Accession and Subcluster fields
     # since they may or may not be populated.
 
+    # Check if certain combinations of fields make sense.
+    tkt.check_compatible_type_and_annotation_status()
 
 
 
@@ -143,7 +145,27 @@ def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
                            seq_set=set(), host_set=set(),
                            cluster_set=set(), subcluster_set=set(),
                            accession_set=set()):
-    """Check a Genome object for errors."""
+    """Check a Genome object for errors.
+
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :param tkt: A pdm_utils Ticket object.
+    :type tkt: Ticket
+    :param null_set: A set of values representing empty or null data.
+    :type null_set: set
+    :param phage_id_set: A set PhageIDs.
+    :type phage_id_set: set
+    :param seq_set: A set of genome sequences.
+    :type seq_set: set
+    :param host_set: A set of host genera.
+    :type host_set: set
+    :param cluster_set: A set of clusters.
+    :type cluster_set: set
+    :param subcluster_set: A set of subclusters.
+    :type subcluster_set: set
+    :param accession_set: A set of accessions.
+    :type accession_set: set
+    """
 
     if tkt.type == "add":
         gnm.check_id(phage_id_set | null_set, False)
@@ -155,20 +177,16 @@ def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
         gnm.check_id(phage_id_set, True)
         gnm.check_name(phage_id_set, True)
         gnm.check_sequence(seq_set, True)
-
     gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
                                 expect=True)
-
+    gnm.check_annotation_author(check_set=constants.ANNOTATION_AUTHOR_SET)
+    gnm.check_retrieve_record(check_set=constants.RETRIEVE_RECORD_SET)
     gnm.check_cluster(cluster_set, True)
     gnm.check_subcluster(subcluster_set, True)
     gnm.check_subcluster_structure()
     gnm.check_cluster_structure()
     gnm.check_compatible_cluster_and_subcluster()
 
-
-
-    # TODO not sure if this is needed.
-    # Not all genomes have accessions.
     # If the genome is being added, and if it has an accession,
     # no other genome is expected to have an identical accession.
     # If the genome is being replaced, and if it has an accession,
@@ -176,30 +194,20 @@ def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
     # accession data, so no need to check for 'replace' tickets.
     if gnm.accession != "":
         if tkt.type == "add":
-            gnm.check_accession(accession_set, False)
-
-    gnm.check_annotation_author()
-    gnm.check_retrieve_record()
-
-
-
+            gnm.check_accession(check_set=accession_set, expect=False)
     if tkt.eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET)
     gnm.check_compatible_status_and_accession()
     gnm.check_compatible_status_and_descriptions()
-
     if tkt.eval_flags["check_id_typo"]:
         gnm.check_description_name()
         gnm.check_source_name()
         gnm.check_organism_name()
-
     if tkt.eval_flags["check_host_typo"]:
         gnm.check_host_genus(host_set, True)
         gnm.check_description_host_genus()
         gnm.check_source_host_genus()
         gnm.check_organism_host_genus()
-
-
     if tkt.eval_flags["check_author"]:
         if gnm.annotation_author == 1:
             gnm.check_authors(check_set=constants.AUTHOR_SET)
@@ -208,35 +216,16 @@ def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
         else:
             gnm.check_authors(check_set=constants.AUTHOR_SET, expect=False)
 
-
-
     gnm.check_cds_feature_tally()
     gnm.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True)
 
-
-    # TODO not sure if these are needed now that check_feature_ids()
-    # is implemented.
-    # gnm.check_cds_start_end_ids()
-    # gnm.check_cds_end_strand_ids()
-
     # TODO confirm that these check_value_flag() are needed here.
+    # Currently all "copy_data_to/from" functions run the check method
+    # to throw an error if not all data was copied.
     gnm.set_value_flag("retrieve")
     gnm.check_value_flag()
     gnm.set_value_flag("retain")
     gnm.check_value_flag()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -284,8 +273,6 @@ def check_bundle_for_import(bndl):
                 except:
                     pass
 
-        # TODO this may need to be moved elsewhere.
-        tkt.check_compatible_type_and_annotation_status()
 
         if tkt.type == "replace":
 
@@ -303,227 +290,9 @@ def check_bundle_for_import(bndl):
 
 
 
-
-
-
-
-
-
-
 # TODO implement.
 # TODO unit test.
 def check_trna_for_import(trna_obj):
     """Check a TrnaFeature object for errors."""
 
     pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def check_replace_tickets(bndl):
-    """Check several aspects about a genome only if it is being replaced."""
-
-    if len(bndl.genome_pair_dict.keys()) == 0:
-
-        # TODO throw an error - there should be a matched genome_pair object
-        # since this is a check_replace function.
-
-        #
-        #
-        # # If the genome to be added is not spelled the same as the genome
-        # # to be removed, the new genome needs to have a unique name.
-        # if self.phage_id != self.secondary_phage_id:
-        #     tkt.check_phage_id(phage_id_set, False)
-        #
-        # # No need to evaluate the following fields:
-        # # Accession = it will either be an accession or it will be "none"
-        # # Subcluster = it will either be a Subcluster or it will be "none"
-
-        pass
-    else:
-        for key in bndl.genome_pair_dict.keys():
-            compare_genomes(bndl.genome_pair_dict[key])
-
-
-    pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO complete function. It should create SQL statements to update data.
-# TODO implement.
-# TODO unit test.
-def check_update_tickets(list_of_update_objects):
-    """."""
-    pass
-    # index = 0
-    # while index < len(list_of_update_objects):
-    #
-    #     bndl = list_of_update_objects[index]
-    #
-    #     if len(bndl.genome_pairs_dict.keys()) == 0:
-    #         # TODO throw an error if there is no matched Phamerator genome?
-    #         pass
-    #
-    #     for key in bndl.genome_pairs_dict.keys():
-    #
-    #         genome_pair = bndl.genome_pairs_dict[key]
-    #
-    #         # TODO check for conflicting hosts. It is not common to
-    #         # change hosts.
-    #         genome_pair.check_xyz()
-    #
-    #         # TODO check for conflicting status. It is not common to
-    #         # change status unless the current phamerator is draft status.
-    #         # The only common change is from draft to final.
-    #         genome_pair.check_xyz()
-    #
-    #         # TODO check for conflicting accession.
-    #         # It is not common to change from real accession to another
-    #         # real accession. But it is common to change from 'none' to
-    #         # real accession.
-    #         genome_pair.check_xyz()
-    #
-    #         # TODO check for conflicint authorship.
-    #         # It is not common to change authorships.
-    #         genome_pair.check_xyz()
-    #
-    #     index += 1
-
-
-
-
-# TODO complete function. It should create SQL statements to remove data.
-# TODO implement.
-# TODO unit test.
-def check_remove_tickets(list_of_remove_objects, genome_type):
-    """."""
-    pass
-    #
-    #
-    # index = 0
-    # while index < len(list_of_remove_objects):
-    #
-    #     bndl = list_of_update_objects[index]
-    #
-    #     try:
-    #         gnm = bndl.genomes_dict[genome_type]
-    #     except:
-    #         # TODO throw an error if there is no matched Phamerator genome?
-    #         continue
-    #
-    #
-    #     # TODO list of evaluations for remove ticket.
-    #
-    #     # TODO check the status of the removing genome.
-    #     # It is not common to remove anything but a 'draft' genome.
-    #
-    #
-    #     index += 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO implement.
-# TODO unit test.
-# Cds object now contains a method to reset the primary description based
-# on a user-selected choice.
-#If other CDS fields contain descriptions, they can be chosen to
-#replace the default import_cds_qualifier descriptions.
-#Then provide option to verify changes.
-#This block is skipped if user selects to do so.
-# def check_description_field_choice():
-#
-#     if ignore_description_field_check != 'yes':
-#
-#         changed = ""
-#         if (import_cds_qualifier != "product" and feature_product_tally > 0):
-#            print "\nThere are %s CDS products found." % feature_product_tally
-#            change_descriptions()
-#
-#            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
-#                 for feature in all_features_data_list:
-#                     feature[9] = feature[10]
-#                 changed = "product"
-#
-#         if (import_cds_qualifier != "function" and feature_function_tally > 0):
-#             print "\nThere are %s CDS functions found." % feature_function_tally
-#             change_descriptions()
-#
-#             if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
-#                 for feature in all_features_data_list:
-#                     feature[9] = feature[11]
-#                 changed = "function"
-#         if (import_cds_qualifier != "note" and feature_note_tally > 0):
-#
-#             print "\nThere are %s CDS notes found." % feature_note_tally
-#             change_descriptions()
-#
-#             if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
-#                 for feature in all_features_data_list:
-#                     feature[9] = feature[12]
-#                 changed = "note"
-#
-#         if changed != "":
-#             record_warnings += 1
-#             write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
-#             record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
-
-
-###

@@ -410,6 +410,7 @@ class Genome:
 
 
     # TODO this may no longer be needed.
+    # TODO have it enforce integer, to match database format.
     def set_annotation_author(self,value):
         """Convert author name listed in ticket to binary value if needed."""
         # self.annotation_author = basic.convert_author(value)
@@ -418,6 +419,7 @@ class Genome:
 
     # TODO implement.
     # TODO unit test.
+    # TODO have it enforce integer, to match database format.
     def set_annotation_qc(self):
         """Set annotation_qc."""
 
@@ -430,6 +432,7 @@ class Genome:
 
     # TODO implement.
     # TODO unit test.
+    # TODO have it enforce integer, to match database format.
     def set_retrieve_record(self):
         """Set retrieve_record."""
 
@@ -853,7 +856,7 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_accession(self, check_set, expect=False, eval_id=None):
+    def check_accession(self, check_set=set(), expect=False, eval_id=None):
         """Check that the accession is valid.
 
         :param check_set:
