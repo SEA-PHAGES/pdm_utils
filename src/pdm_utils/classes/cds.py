@@ -7,7 +7,7 @@ from pdm_utils.constants import constants
 from pdm_utils.classes import eval
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
-from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 import re
 from collections import OrderedDict
 
@@ -401,10 +401,14 @@ class Cds:
                                        "0_half_open")
 
         new_strand = basic.reformat_strand(self.strand, "numeric")
-
-        self.seqfeature = SeqFeature(FeatureLocation(new_left, new_right),
+        if self.left <= self.right:
+            self.seqfeature = SeqFeature(FeatureLocation(new_left, new_right),\
                                      strand=new_strand, type="CDS")
-
+        else:
+            self.seqfeature = SeqFeature(CompoundLocation\
+                    ([FeatureLocation(new_left, self.genome_length),\
+                    FeatureLocation(0, new_right)]),\
+                    strand = new_strand, type = "CDS")
         self.seqfeature.qualifiers = self.get_qualifiers()
 
     def get_qualifiers(self):

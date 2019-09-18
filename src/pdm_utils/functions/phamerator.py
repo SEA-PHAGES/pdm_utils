@@ -127,7 +127,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         cds_ftr.id = data_dict["GeneID"]
     except:
         pass
-
+    
     try:
         cds_ftr.genome_id = data_dict["PhageID"]
     except:
@@ -142,6 +142,8 @@ def parse_gene_table_data(data_dict, trans_table=11):
         cds_ftr.right = int(data_dict["Stop"])
     except:
         pass
+
+    cds_ftr.coordinate_format = "0_half_open"
 
     try:
         cds_ftr.length = int(data_dict["Length"])

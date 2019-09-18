@@ -5,8 +5,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from classes import genome, cds, mysqlconnectionhandler
-from functions import flat_files, phamerator, basic
+from pdm_utils.classes import genome, cds, mysqlconnectionhandler
+from pdm_utils.functions import flat_files, phamerator, basic
 import os, sys
 
 def database_to_file(database_name, file_export_format, export_folder_path, phage_name_filter_list = []):
@@ -66,7 +66,7 @@ def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_li
     genome_query = "SELECT * FROM phage"
     cds_query = "SELECT * FROM gene"
     genome_list = phamerator.parse_genome_data\
-            (sql_database_handle,\ 
+            (sql_database_handle,\
                     phage_id_list = phage_name_filter_list\
                     ,phage_query = genome_query,\
                     gene_query = cds_query) 
@@ -95,7 +95,7 @@ def set_cds_seqfeatures(phage_genome):
 
     try: 
         def _sorting_key(cds): return cds.left
-    phage_genome.cds_features.sort(key=_sorting_key)
+        phage_genome.cds_features.sort(key=_sorting_key)
     except:
         print("Genome cds features unable to be sorted")
         pass
@@ -130,12 +130,12 @@ def append_database_version(genome_seqrecord, version_data):
         containing SQL database version\
         data does not contain enough values"
     try:
-        genome_seqrecord.annotations['comment'] =\
-                genome_seqrecord.annotations['comment'] +\
+        genome_seqrecord.annotations["comment"] =\
+                genome_seqrecord.annotations["comment"] +\
                 ("Database Version: {};\
                 Schema Version: {}".format\
-                (version_data['version'],\
-                version_data['schema_version']),)
+                (version_data["version"],\
+                version_data["schema_version"]),)
     except:
         raise
 
@@ -185,7 +185,10 @@ if __name__ == "__main__":
             phage_id_list = []
             for args in sys.argv[2:]:
                 phage_id_list.append(args)
-            database_to_file(database_name = sys.argv[1],file_export_format = sys.argv[2], export_folder_path = os.getcwd(), phage_name_filter_list = phage_id_list)
+            database_to_file(database_name = sys.argv[1],\
+                    file_export_format = sys.argv[2],\
+                    export_folder_path = os.getcwd(),\
+                    phage_name_filter_list = phage_id_list)
 
 
 

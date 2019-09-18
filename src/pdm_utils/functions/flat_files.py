@@ -7,6 +7,7 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
 from Bio.Alphabet.IUPAC import *
 from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from pdm_utils.classes import genome, cds, trna, source
 from pdm_utils.functions import basic
 from pdm_utils.constants import constants
@@ -558,8 +559,9 @@ def genome_to_seqrecord(phage_genome):
     record.name = get_seqrecord_name(phage_genome)
     record.id = get_seqrecord_id(phage_genome)
     record.features = get_seqrecord_features(phage_genome)
-    record.description =\
-            get_seq_record_annotations(phage_genome)
+    record.description = get_seqrecord_description(phage_genome)
+    record.annotations=\
+            get_seqrecord_annotations(phage_genome)
 
     return record
 
@@ -653,12 +655,12 @@ def get_seqrecord_annotations(phage_genome):
             (phage_genome.accession)
     annotations["source"] =\
             "{} phage {}".format\
-            (phage_genome.host genus, phage_genome.id)
+            (phage_genome.host_genus, phage_genome.id)
     annotations["taxonomy"].append("Virsues")
     annotations["taxonomy"].append("dsDNA Viruses")
     annotations["taxonomy"].append("Caudovirales")
     annotations["comment"] =\
-            get_seqrecord_annotation_comments(phage_genome)
+            get_seqrecord_annotations_comments(phage_genome)
     return annotations
 
 def get_seqrecord_annotations_comments(phage_genome):
@@ -688,7 +690,7 @@ def get_seqrecord_annotations_comments(phage_genome):
             phage_genome.annotation_qc)
 
     return (cluster_comment, auto_generated_comment,\
-            annotation_status_comment, qc_and_retrieval values)
+            annotation_status_comment, qc_and_retrieval_values)
 
 
 
