@@ -118,8 +118,35 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-
-
+    def test_create_accession_set_1(self):
+        """Retrieve a set of all data from PhageID column."""
+        input_phage_ids_and_accs = [["L5", "ABC123"],
+                                    ["Trixie", "XYZ456"],
+                                    ["D29", "MNO789"]]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = self.db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id_and_accs in input_phage_ids_and_accs:
+            sql = \
+                "INSERT INTO phage (PhageID, Accession, Name, " + \
+                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "AnnotationAuthor) " + \
+                "VALUES (" + \
+                "'%s', '%s', '', '', '', 1, 1, '', '%s', 1, 1, 1);" % \
+                (id_and_accs[0], id_and_accs[1], constants.EMPTY_DATE)
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
+        sql_handle.username = user
+        sql_handle.password = pwd
+        sql_handle.database = self.db
+        result = phamerator.create_accession_set(sql_handle)
+        self.assertEqual(len(result), 3)
 
 
 

@@ -526,20 +526,49 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    # TODO this is probably no longer needed.
-    # def test_set_annotation_author_1(self):
-    #     """Check that annotation_author to set to 1 when author
-    #     is in author_set."""
-    #     input_author = "Hatfull"
-    #     self.gnm.set_annotation_author(input_author)
-    #     self.assertEqual(self.gnm.annotation_author, 1)
-    #
-    # def test_set_annotation_author_2(self):
-    #     """Check that annotation_author to set to 0 when author
-    #     is not in author_set."""
-    #     input_author = "Unknown author"
-    #     self.gnm.set_annotation_author(input_author)
-    #     self.assertEqual(self.gnm.annotation_author, 0)
+
+    def test_set_annotation_author_1(self):
+        """Check that annotation_author to set to 1."""
+        value = 1
+        self.gnm.set_annotation_author(value)
+        self.assertEqual(self.gnm.annotation_author, 1)
+
+    def test_set_annotation_author_2(self):
+        """Check that annotation_author remains a string."""
+        value = "retain"
+        self.gnm.set_annotation_author(value)
+        self.assertEqual(self.gnm.annotation_author, "retain")
+
+
+
+
+
+    def test_set_annotation_qc_1(self):
+        """Check that annotation_author to set to 1."""
+        value = 1
+        self.gnm.set_annotation_qc(value)
+        self.assertEqual(self.gnm.annotation_qc, 1)
+
+    def test_set_annotation_qc_2(self):
+        """Check that annotation_author remains a string."""
+        value = "retain"
+        self.gnm.set_annotation_qc(value)
+        self.assertEqual(self.gnm.annotation_qc, "retain")
+
+
+
+
+    def test_set_retrieve_record_1(self):
+        """Check that annotation_author to set to 1."""
+        value = 1
+        self.gnm.set_retrieve_record(value)
+        self.assertEqual(self.gnm.retrieve_record, 1)
+
+    def test_set_retrieve_record_2(self):
+        """Check that annotation_author remains a string."""
+        value = "retain"
+        self.gnm.set_retrieve_record(value)
+        self.assertEqual(self.gnm.retrieve_record, "retain")
 
 
 

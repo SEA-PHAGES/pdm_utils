@@ -64,9 +64,9 @@ def parse_import_ticket_data(tkt=None, data_dict=None,
             tkt.set_cluster(data_dict["cluster"])
             tkt.set_subcluster(data_dict["subcluster"])
             tkt.set_annotation_status(data_dict["annotation_status"])
-            tkt.annotation_author = int(data_dict["annotation_author"])
             tkt.set_accession(data_dict["accession"])
-            tkt.set_retrieve_record(int(data_dict["retrieve_record"]))
+            tkt.set_annotation_author(data_dict["annotation_author"])
+            tkt.set_retrieve_record(data_dict["retrieve_record"])
             return tkt
         else:
             print("The ticket %s is not formatted correctly." % data_dict)
@@ -344,8 +344,8 @@ def copy_ticket_to_genome(bndl):
         genome1.set_subcluster(tkt.subcluster)
         genome1.set_cluster_subcluster()
         genome1.set_annotation_author(tkt.annotation_author)
-        genome1.annotation_qc = tkt.annotation_qc
-        genome1.retrieve_record = tkt.retrieve_record
+        genome1.set_annotation_qc(tkt.annotation_qc)
+        genome1.set_retrieve_record(tkt.retrieve_record)
 
         bndl.genome_dict[genome1.type] = genome1
 

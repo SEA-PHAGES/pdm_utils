@@ -409,40 +409,28 @@ class Genome:
         self.date = basic.convert_empty(value, format)
 
 
+    def set_annotation_author(self, value):
+        """Convert annotation_author to integer value if possible."""
+        try:
+            self.annotation_author = int(value)
+        except:
+            self.annotation_author = value
 
-    # TODO this may no longer be needed.
-    # TODO have it enforce integer, to match database format.
-    def set_annotation_author(self,value):
-        """Convert author name listed in ticket to binary value if needed."""
-        # self.annotation_author = basic.convert_author(value)
-        self.annotation_author = value
+
+    def set_annotation_qc(self, value):
+        """Convert annotation_qc to integer value if possible."""
+        try:
+            self.annotation_qc = int(value)
+        except:
+            self.annotation_qc = value
 
 
-    # TODO implement.
-    # TODO unit test.
-    # TODO have it enforce integer, to match database format.
-    def set_annotation_qc(self):
-        """Set annotation_qc."""
-
-        # TODO not sure if this is needed.
-        # if self.annotation_status == 'final':
-        #     self.annotation_qc = 1
-        # else:
-        #     self.annotation_qc = 0
-        pass
-
-    # TODO implement.
-    # TODO unit test.
-    # TODO have it enforce integer, to match database format.
-    def set_retrieve_record(self):
-        """Set retrieve_record."""
-
-        # TODO not sure if this is needed.
-        # if self.annotation_author == 1:
-        #     self.retrieve_record = 1
-        # else:
-        #     self.retrieve_record = 0
-        pass
+    def set_retrieve_record(self, value):
+        """Convert retrieve_record to integer value if possible."""
+        try:
+            self.retrieve_record = int(value)
+        except:
+            self.retrieve_record = value
 
 
     def tally_descriptions(self):

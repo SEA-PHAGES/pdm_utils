@@ -90,17 +90,17 @@ def parse_phage_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        gnm.retrieve_record = data_dict["RetrieveRecord"]
+        gnm.set_retrieve_record(data_dict["RetrieveRecord"])
     except:
         pass
 
     try:
-        gnm.annotation_qc = data_dict["AnnotationQC"]
+        gnm.set_annotation_qc(data_dict["AnnotationQC"])
     except:
         pass
 
     try:
-        gnm.annotation_author = data_dict["AnnotationAuthor"]
+        gnm.set_annotation_author(data_dict["AnnotationAuthor"])
     except:
         pass
 
@@ -355,9 +355,6 @@ def create_seq_set(sql_handle):
     return result_set
 
 
-
-
-# TODO unittest.
 def create_accession_set(sql_handle):
     """Create set of accessions currently in PhameratorDB.
 
@@ -378,8 +375,6 @@ def create_accession_set(sql_handle):
     for dict in result_list:
         result_set.add(dict["Accession"])
     return result_set
-
-
 
 
 def create_update_statement(table, field1, value1, field2, value2):
@@ -752,111 +747,5 @@ def implement_remove_statements():
 
 
 
-
-#TODO below: functions that may no longer be needed.
-
-
-
-
-
-
-
-# # TODO this may no longer be needed now that
-# # parse_phage_table_data() is available.
-# def parse_phamerator_data(gnm, data_tuple):
-#     """Parses tuple of data derived from a Phamerator database
-#     and populates a genome object.
-#     Expected data structure:
-#     0 = PhageID
-#     1 = Name
-#     2 = HostStrain
-#     3 = Sequence
-#     4 = status
-#     5 = Cluster2
-#     6 = DateLastModified
-#     7 = Accession
-#     8 = Subcluster2
-#     9 = AnnotationAuthor
-#     10 = AnnotationQC
-#     11 = RetrieveRecord
-#     """
-#
-#     gnm.set_id(data_tuple[0])
-#     gnm.name = data_tuple[1]
-#     gnm.set_host_genus(data_tuple[2])
-#     gnm.set_sequence(data_tuple[3])
-#     gnm.annotation_status = data_tuple[4]
-#     gnm.set_cluster(data_tuple[5])
-#     gnm.set_subcluster(data_tuple[8])
-#     gnm.set_date(data_tuple[6])
-#     gnm.set_accession(data_tuple[7])
-#     gnm.annotation_author = str(data_tuple[9])
-#     gnm.annotation_qc = str(data_tuple[10])
-#     gnm.retrieve_record = str(data_tuple[11])
-#     gnm.type = "phamerator"
-
-
-
-
-
-# TODO this may no longer be needed now that
-# parse_phage_table_data() is available.
-# def create_phamerator_dict(phamerator_data_tuples):
-#     """
-#     Returns a dictionary of Phamerator data retrieved from MySQL query.
-#     Key = PhageID.
-#     Value = Genome object containing parsed MySQL data.
-#     """
-#
-#     genome_dict = {}
-#     for genome_tuple in phamerator_data_tuples:
-#         gnm = genome.Genome()
-#         parse_phamerator_data(gnm,genome_tuple)
-#         genome_dict[gnm.id] = gnm
-#
-#     return genome_dict
-
-#
-# # TODO this may no longer be needed.
-# def create_data_sets(genome_dict):
-#     """
-#     Create sets of all unique values for several fields in the Phamerator data.
-#     """
-#     phage_id_set = set()
-#     host_genus_set = set()
-#     status_set = set()
-#     cluster_set = set()
-#     accession_set = set()
-#     subcluster_set = set()
-#
-#     for genome_id in genome_dict.keys():
-#
-#         gnm = genome_dict[genome_id]
-#         phage_id_set.add(gnm.id)
-#         host_genus_set.add(gnm.host_genus)
-#         status_set.add(gnm.annotation_status)
-#         cluster_set.add(gnm.cluster)
-#
-#         # TODO this was not implemented in original import script,
-#         # so maybe the subcluster 'empty check' is not needed.
-#         # Only add to the accession set if there was an accession,
-#         # and not if it was empty.
-#         if basic.check_empty(gnm.subcluster) == False:
-#             subcluster_set.add(gnm.subcluster)
-#
-#         # Only add to the accession set if there was an accession,
-#         # and not if it was empty.
-#         if basic.check_empty(gnm.accession) == False:
-#             accession_set.add(gnm.accession)
-#
-#     dictionary_of_sets = {}
-#     dictionary_of_sets["phage_id"] = phage_id_set
-#     dictionary_of_sets["host_genus"] = host_genus_set
-#     dictionary_of_sets["annotation_status"] = status_set
-#     dictionary_of_sets["cluster"] = cluster_set
-#     dictionary_of_sets["subcluster"] = subcluster_set
-#     dictionary_of_sets["accession"] = accession_set
-#
-#     return dictionary_of_sets
 
 ###
