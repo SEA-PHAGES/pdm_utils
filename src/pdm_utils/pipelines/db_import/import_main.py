@@ -329,7 +329,7 @@ def prepare_bundle(filename, ticket_dict, id=None):
 
     # TODO in progress below. This is partially redundant with
     # phagesdb.copy_data_to()
-    bndl.gnm.set_value_flag("retrieve"")
+    bndl.gnm.set_value_flag("retrieve")
     if bndl.gnm._value_flag:
         phagesdb.copy_data_from(bndl, "flat_file")
         evaluate.check_phagesdb_genome()
