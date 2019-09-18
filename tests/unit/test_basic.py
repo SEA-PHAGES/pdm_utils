@@ -253,22 +253,13 @@ class TestBasicFunctions(unittest.TestCase):
 
     def test_reformat_coordinates_5(self):
         """Verify invalid input format is not converted."""
-        output_left, output_right = \
+        with self.assertRaises(ValueError):
             basic.reformat_coordinates(5, 10, "invalid", "1_closed")
-        with self.subTest():
-            self.assertEqual(output_left, "")
-        with self.subTest():
-            self.assertEqual(output_right, "")
 
     def test_reformat_coordinates_6(self):
         """Verify invalid output format is not converted."""
-        output_left, output_right = \
+        with self.assertRaises(ValueError):
             basic.reformat_coordinates(5, 10, "1_closed", "invalid")
-        with self.subTest():
-            self.assertEqual(output_left, "")
-        with self.subTest():
-            self.assertEqual(output_right, "")
-
 
 
 

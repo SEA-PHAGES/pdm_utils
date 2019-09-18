@@ -908,7 +908,8 @@ class TestCdsClass(unittest.TestCase):
         self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "invalid"
-        self.feature.reformat_left_and_right(new_format)
+        with self.assertRaises(ValueError):
+            self.feature.reformat_left_and_right(new_format)
         with self.subTest():
             self.assertEqual(self.feature.left, 5)
         with self.subTest():

@@ -114,8 +114,6 @@ def reformat_strand(input_value, format, case=False):
     return new_value
 
 
-# TODO also, coordinates in Cds object can be stored as strings,
-# so this function needs to take that into account.
 def reformat_coordinates(left, right, current, new):
     """Converts common coordinate formats.
 
@@ -157,28 +155,21 @@ def reformat_coordinates(left, right, current, new):
             if new == "1_closed":
                 new_left = left + 1
                 new_right = right
-            elif new == "0_half_open":
-                new_left = left
-                new_right = right
             else:
-                new_left = ""
-                new_right = ""
-        elif current == "1_closed":
-            if new == "1_closed":
                 new_left = left
                 new_right = right
-            elif new == "0_half_open":
+        else:
+            if new == "0_half_open":
                 new_left = left - 1
                 new_right = right
             else:
-                new_left = ""
-                new_right = ""
-        else:
-            new_left = ""
-            new_right = ""
+                new_left = left
+                new_right = right
     else:
-        new_left = ""
-        new_right = ""
+        # new_left = left
+        # new_right = right
+        raise ValueError("Format for CDS coordinate formats must "
+                         "either be '0_half_open' or '1_closed'")
     return (new_left, new_right)
 
 

@@ -303,14 +303,9 @@ class Cds:
         :param new_format: Indicates how coordinates should be formatted.
         :type new_format: str
         """
-
-        new_left, new_right = \
-            basic.reformat_coordinates(self.left, \
-                                       self.right, \
-                                       self.coordinate_format, \
-                                       new_format)
-
-        if (new_left != "" and new_right != ""):
+        new_left, new_right = basic.reformat_coordinates(
+            self.left, self.right, self.coordinate_format, new_format)
+        if (new_format != self.coordinate_format):
             self.left = new_left
             self.right = new_right
             self.coordinate_format = new_format
