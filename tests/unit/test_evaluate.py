@@ -83,348 +83,6 @@ class TestEvaluateClass1(unittest.TestCase):
 
 
 
-
-
-    #
-    # def test_check_add_ticket_1(self):
-    #     """Standard add ticket."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 0)
-    #
-    # def test_check_add_ticket_2(self):
-    #     """Primary Phage ID already present."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_3(self):
-    #     """Primary Phage ID is none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.phage_id = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_4(self):
-    #     """host_genus is none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.host_genus = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_5(self):
-    #     """Cluster is none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.cluster = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_6(self):
-    #     """Status is none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.status = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_7(self):
-    #     """Status is Final."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.status = "final"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_8(self):
-    #     """Description Field is none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.description_field = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_9(self):
-    #     """Secondary Phage ID is not none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.secondary_phage_id = "Trixie"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_10(self):
-    #     """Annotation Author is 0."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.annotation_author = "0"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 0)
-    #
-    # def test_check_add_ticket_11(self):
-    #     """Annotation Author is not 1 or 0."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.annotation_author = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_add_ticket_12(self):
-    #     """Run Mode is none."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.run_mode = "none"
-    #     self.add_ticket.check_add_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    # def test_check_remove_ticket_1(self):
-    #     """Standard remove ticket."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 0)
-    #
-    # def test_check_remove_ticket_2(self):
-    #     """Primary Phage ID is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.phage_id = "Trixie"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_3(self):
-    #     """host_genus is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.host_genus = "Mycobacterium"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_4(self):
-    #     """Cluster is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.cluster = "A"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_5(self):
-    #     """Subcluster is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.subcluster = "A2"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_6(self):
-    #     """Status is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.status = "final"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_7(self):
-    #     """Description Field is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.description_field = "Product"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_8(self):
-    #     """Accession is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.accession = "ABC123"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_9(self):
-    #     """Annotation Author is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.annotation_author = "1"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_10(self):
-    #     """Run Mode is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.run_mode = "phagesdb"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_remove_ticket_11(self):
-    #     """Secondary Phage ID is not present."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.secondary_phage_id = "D29"
-    #     self.remove_ticket.check_remove_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    # def test_check_replace_ticket_1(self):
-    #     """Standard replace ticket."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 0)
-    #
-    # def test_check_replace_ticket_2(self):
-    #     """Primary Phage ID is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock","none"])
-    #     self.replace_ticket.phage_id = "none"
-    #     self.replace_ticket.secondary_phage_id = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_3(self):
-    #     """Primary Phage ID not present and different from Secondary Phage ID."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.phage_id = "D29"
-    #     self.replace_ticket.secondary_phage_id = "L5"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_4(self):
-    #     """Primary Phage ID is present and different from Secondary Phage ID."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.secondary_phage_id = "L5"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 2)
-    #
-    # def test_check_replace_ticket_5(self):
-    #     """host_genus is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.host_genus = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_6(self):
-    #     """Cluster is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.cluster = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_7(self):
-    #     """Status is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.status = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_8(self):
-    #     """Description Field is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.description_field = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_9(self):
-    #     """Secondary Phage ID is not present."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.phage_id = "D29"
-    #     self.replace_ticket.secondary_phage_id = "D29"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_10(self):
-    #     """Annotation Author is 0."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.annotation_author = "0"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 0)
-    #
-    # def test_check_replace_ticket_11(self):
-    #     """Annotation Author is not 1 or 0."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.annotation_author = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_replace_ticket_12(self):
-    #     """Run Mode is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.run_mode = "none"
-    #     self.replace_ticket.check_replace_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    # def test_check_ticket_1(self):
-    #     """Check standard update ticket."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.update_ticket.evaluations), 0)
-    #
-    # def test_check_ticket_2(self):
-    #     """Check update ticket with Primary Phage ID not present."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.update_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.update_ticket.evaluations), 1)
-    #
-    # def test_check_ticket_3(self):
-    #     """Check standard add ticket."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.add_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 0)
-    #
-    # def test_check_ticket_4(self):
-    #     """Check add ticket with Primary Phage ID already present."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.add_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.add_ticket.evaluations), 1)
-    #
-    # def test_check_ticket_5(self):
-    #     """Check standard remove ticket."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 0)
-    #
-    # def test_check_ticket_6(self):
-    #     """Check remove ticket with Primary Phage ID not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.remove_ticket.phage_id = "Trixie"
-    #     self.remove_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.remove_ticket.evaluations), 1)
-    #
-    # def test_check_ticket_7(self):
-    #     """Check standard replace ticket."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.replace_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 0)
-    #
-    # def test_check_ticket_8(self):
-    #     """Check replace ticket when Primary Phage ID is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock","none"])
-    #     self.replace_ticket.phage_id = "none"
-    #     self.replace_ticket.secondary_phage_id = "none"
-    #     self.replace_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.replace_ticket.evaluations), 1)
-    #
-    # def test_check_ticket_9(self):
-    #     """Check non-standard type of ticket."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.update_ticket.type = "other"
-    #     self.update_ticket.check_ticket(phage_id_set)
-    #     self.assertEqual(len(self.update_ticket.evaluations), 0)
-    #
-    ###Above = pasted from test.Ticket.py, since some Ticket methods
-    ###were moved to evaluate.py
-
-
-
-
-
-
-
-
-
-
-
 class TestEvaluateClass2(unittest.TestCase):
 
 
@@ -677,7 +335,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 28)
+        self.assertEqual(len(self.gnm.evaluations), 29)
 
     def test_check_genome_for_import_2(self):
         """Verify correct number of evaluations are produced using
@@ -686,7 +344,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 27)
+        self.assertEqual(len(self.gnm.evaluations), 28)
 
 
     def test_check_genome_for_import_3(self):
@@ -696,7 +354,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 27)
+        self.assertEqual(len(self.gnm.evaluations), 28)
 
 
     def test_check_genome_for_import_4(self):
@@ -706,7 +364,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 25)
+        self.assertEqual(len(self.gnm.evaluations), 26)
 
 
     def test_check_genome_for_import_5(self):
@@ -716,7 +374,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 24)
+        self.assertEqual(len(self.gnm.evaluations), 25)
 
 
     def test_check_genome_for_import_6(self):
@@ -726,7 +384,7 @@ class TestEvaluateClass2(unittest.TestCase):
         evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
-        self.assertEqual(len(self.gnm.evaluations), 26)
+        self.assertEqual(len(self.gnm.evaluations), 27)
 
 
 
