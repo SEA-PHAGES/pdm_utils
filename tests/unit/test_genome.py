@@ -58,7 +58,7 @@ class TestGenomeClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 7)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 57.1429)
+            self.assertEqual(self.gnm.gc, 57.1429)
 
     def test_set_sequence_2(self):
         """Check that sequence is set appropriately if it is an empty string."""
@@ -71,7 +71,7 @@ class TestGenomeClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, -1)
+            self.assertEqual(self.gnm.gc, -1)
 
 
 

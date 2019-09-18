@@ -265,7 +265,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.filename = 24
         self.genome1.translation_table = 25
         self.genome1._length = 29
-        self.genome1._gc = 30
+        self.genome1.gc = 30
         self.genome1.evaluations = 31
         self.genome1.cds_features = 32
         self.genome1._cds_features_tally = 33
@@ -337,7 +337,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2._length, 29)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2._gc, 30)
+            self.assertEqual(self.genome_pair.genome2.gc, 30)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.evaluations, 31)
         with self.subTest():

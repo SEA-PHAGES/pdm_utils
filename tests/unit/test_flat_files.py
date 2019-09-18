@@ -1261,7 +1261,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm._length, 4)
         with self.subTest():
-            self.assertEqual(gnm._gc, 50.00)
+            self.assertEqual(gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(gnm.date, exp_date)
         with self.subTest():
@@ -1756,7 +1756,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -1873,7 +1873,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -1981,7 +1981,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2097,7 +2097,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2218,7 +2218,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, -1)
+            self.assertEqual(self.gnm.gc, -1)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2329,7 +2329,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2445,7 +2445,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2561,7 +2561,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2659,7 +2659,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2780,7 +2780,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
@@ -2900,7 +2900,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._length, 4)
         with self.subTest():
-            self.assertEqual(self.gnm._gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
             self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():

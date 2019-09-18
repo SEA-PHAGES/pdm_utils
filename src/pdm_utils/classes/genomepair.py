@@ -136,8 +136,8 @@ class GenomePair:
                 second.translation_table = first.translation_table
             if (second._length == keyword or keyword is None):
                 second._length = first._length
-            if (second._gc == keyword or keyword is None):
-                second._gc = first._gc
+            if (second.gc == keyword or keyword is None):
+                second.gc = first.gc
             if (second.evaluations == keyword or keyword is None):
                 second.evaluations = first.evaluations
             if (second.cds_features == keyword or keyword is None):

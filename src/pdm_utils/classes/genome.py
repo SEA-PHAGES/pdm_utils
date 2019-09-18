@@ -27,7 +27,7 @@ class Genome:
         self.name = "" # Case sensitive and contains "_Draft".
         self.seq = "" # Biopython Seq object
         self._length = 0 # Size of the nucleotide sequence
-        self._gc = 0 # %GC content
+        self.gc = 0 # %GC content
         self.host_genus = ""
         self.accession = ""
         self.lifestyle = "" # E.g. temperate, obligately lytic, unknown, etc.
@@ -223,9 +223,9 @@ class Genome:
             self.seq = value.upper()
         self._length = len(self.seq)
         if self._length > 0:
-            self._gc = round(GC(self.seq), 4)
+            self.gc = round(GC(self.seq), 4)
         else:
-            self._gc = -1
+            self.gc = -1
 
 
     def set_accession(self, value, format="empty_string"):

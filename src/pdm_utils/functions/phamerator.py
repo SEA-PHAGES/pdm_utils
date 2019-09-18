@@ -63,7 +63,7 @@ def parse_phage_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        gnm._gc = data_dict["GC"]
+        gnm.gc = data_dict["GC"]
     except:
         pass
 
@@ -513,7 +513,7 @@ def create_genome_insert_statement(gnm):
         gnm.host_genus, \
         gnm.seq, \
         gnm._length, \
-        gnm._gc, \
+        gnm.gc, \
         gnm.annotation_status, \
         gnm.date, \
         gnm.retrieve_record, \

@@ -298,7 +298,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.description, "abc")
         with self.subTest():
-            self.assertEqual(self.genome1._gc, 12.12)
+            self.assertEqual(self.genome1.gc, 12.12)
         with self.subTest():
             self.assertEqual(self.genome1.cluster_subcluster, "B")
         with self.subTest():
@@ -724,7 +724,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.accession = "ABC123"
         self.genome1.seq = "ATCG"
         self.genome1._length = 4
-        self.genome1._gc = 0.5001
+        self.genome1.gc = 0.5001
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_qc = "1"
@@ -754,7 +754,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.accession = "ABC123"
         self.genome1.seq = "ATCG"
         self.genome1._length = 4
-        self.genome1._gc = 0.5001
+        self.genome1.gc = 0.5001
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_qc = "1"
