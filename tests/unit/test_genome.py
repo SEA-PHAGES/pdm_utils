@@ -1878,10 +1878,10 @@ class TestGenomeClass(unittest.TestCase):
         expected_phage = ""
         expected_host = ""
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._description_name, expected_phage)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._description_host_genus, expected_host)
 
     def test_parse_description_2(self):
@@ -1891,10 +1891,10 @@ class TestGenomeClass(unittest.TestCase):
         expected_phage = "Trixie"
         expected_host = "Mycobacterium"
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._description_name, expected_phage)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._description_host_genus, expected_host)
 
 
@@ -1907,10 +1907,10 @@ class TestGenomeClass(unittest.TestCase):
         expected_phage = ""
         expected_host = ""
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._source_name, expected_phage)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._source_host_genus, expected_host)
 
     def test_parse_source_2(self):
@@ -1920,10 +1920,10 @@ class TestGenomeClass(unittest.TestCase):
         expected_phage = "Trixie"
         expected_host = "Mycobacterium"
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._source_name, expected_phage)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._source_host_genus, expected_host)
 
 
@@ -1936,10 +1936,10 @@ class TestGenomeClass(unittest.TestCase):
         expected_phage = ""
         expected_host = ""
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._organism_name, expected_phage)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._organism_host_genus, expected_host)
 
     def test_parse_organism_2(self):
@@ -1949,10 +1949,10 @@ class TestGenomeClass(unittest.TestCase):
         expected_phage = "Trixie"
         expected_host = "Mycobacterium"
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._organism_name, expected_phage)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.gnm._organism_host_genus, expected_host)
 
 

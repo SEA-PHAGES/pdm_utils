@@ -427,19 +427,19 @@ def create_genome_update_statements(gnm):
     field1 = "PhageID"
     value1 = gnm.id
     statements = []
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "HostStrain", gnm.host_genus))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "status", gnm.annotation_status))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Accession", gnm.accession))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "AnnotationAuthor", gnm.author))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Cluster", gnm.cluster_subcluster))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Cluster2", gnm.cluster))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Subcluster2", gnm.subcluster))
     return statements
 
@@ -531,11 +531,11 @@ def create_genome_insert_statements(gnm):
     value1 = gnm.id
     statements = []
     statements.append(create_genome_insert_statement(gnm))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Cluster", gnm.cluster_subcluster))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Cluster2", gnm.cluster))
-    statements.append(create_update_statement( \
+    statements.append(create_update_statement(
         table, field1, value1, "Subcluster2", gnm.subcluster))
     return statements
 

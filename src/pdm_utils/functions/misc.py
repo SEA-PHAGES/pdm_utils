@@ -102,7 +102,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #
 #     	#1. Use the file's basename as the PhageID instead of the phage name in the file
 #     	print "\n\n\n\nNormally, the PhageID is determined from the Organism field in the record."
-#     	run_mode_custom_dict['use_basename'] = select_option(\
+#     	run_mode_custom_dict['use_basename'] = select_option(
 #     		"\nInstead, do you want to use the file name as the PhageID? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -111,7 +111,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#assigning GeneIDs. This option provides a locus tag override and will assign GeneIDs
 #     	#by joining PhageID and CDS number.
 #     	print "\n\n\n\nNormally, the GeneIDs are assigned by using the locus tags."
-#     	run_mode_custom_dict['custom_gene_id'] = select_option(\
+#     	run_mode_custom_dict['custom_gene_id'] = select_option(
 #     		"\nInstead, do you want to create GeneIDs by combining the PhageID and gene number? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -119,7 +119,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#New SEA-PHAGES annotated genomes should be check for spelling, but maybe not
 #     	#for other types of genomes.
 #     	print "\n\n\n\nNormally, the GeneIDs are required to contain the phage name without typos."
-#     	run_mode_custom_dict['ignore_gene_id_typo'] = select_option(\
+#     	run_mode_custom_dict['ignore_gene_id_typo'] = select_option(
 #     		"\nInstead, do you want to allow missing or mispelled phage names in the GeneID? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -127,7 +127,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#This should be run for new SEA-PHAGES annotated genomes, but may want to
 #     	#be skipped if importing many genomes from NCBI
 #     	print "\n\n\n\nNormally, the gene descriptions are verified to be present in the import table qualifier."
-#     	run_mode_custom_dict['ignore_description_field_check'] = select_option(\
+#     	run_mode_custom_dict['ignore_description_field_check'] = select_option(
 #     		"\nInstead, do you want to use the import table qualifier without verification? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -136,7 +136,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#replaced with another Final status genome, so it could get annoying to
 #     	#keep getting the warning, so it can be turned off.
 #     	print "\n\n\n\nNormally, a warning is indicated if a Final status genome is being replaced."
-#     	run_mode_custom_dict['ignore_replace_warning'] = select_option(\
+#     	run_mode_custom_dict['ignore_replace_warning'] = select_option(
 #     		"\nInstead, do you want to silence the status warnings? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -144,7 +144,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#Many genomes from NCBI, including SEA-PHAGES, may not have consistently
 #     	#annotated tRNAs. So the tRNA QC can be skipped.
 #     	print "\n\n\n\nNormally, tRNAs are checked only in new manually annotated genomes."
-#     	run_mode_custom_dict['ignore_trna_check'] = select_option(\
+#     	run_mode_custom_dict['ignore_trna_check'] = select_option(
 #     		"\nInstead, do you want to ignore the tRNA quality checks? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -154,7 +154,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#Locus tags from Pecaan auto-annotated and SMART team manually annotated
 #     	#genomes should not be retained.
 #     	print "\n\n\n\nNormally, CDS locus tags are retained only for bona fide Genbank records."
-#     	run_mode_custom_dict['ignore_locus_tag_import'] = select_option(\
+#     	run_mode_custom_dict['ignore_locus_tag_import'] = select_option(
 #     		"\nInstead, do you want to ignore all locus tags? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -163,7 +163,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#checked for new manual annotations. Since NCBI doesn't like to change these
 #     	#types of typos, parsing NCBI records should skip this step.
 #     	print "\n\n\n\nNormally, the phage name is verified only in new manual annotations."
-#     	run_mode_custom_dict['ignore_phage_name_typos'] = select_option(\
+#     	run_mode_custom_dict['ignore_phage_name_typos'] = select_option(
 #     		"\nInstead, do you want to ignore any phage name typos in the header? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -171,7 +171,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#The host name can be found in several header fields. This should be
 #     	#checked for new manual annotations and in SEA-PHAGES NCBI records.
 #     	print "\n\n\n\nNormally, the host name is verified in new manual annotations or SEA-PHAGES NCBI records."
-#     	run_mode_custom_dict['ignore_host_typos'] = select_option(\
+#     	run_mode_custom_dict['ignore_host_typos'] = select_option(
 #     		"\nInstead, do you want to ignore any host name typos in the header? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -179,7 +179,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#Sometimes the generic author 'Lastname' or 'Firstname' gets added in DNA Master
 #     	#This should be checked for new manual annotations only.
 #     	print "\n\n\n\nNormally, the author list is checked to ensure the generic author Lastname,Firstname is absent in new manual annotations."
-#     	run_mode_custom_dict['ignore_generic_author'] = select_option(\
+#     	run_mode_custom_dict['ignore_generic_author'] = select_option(
 #     		"\nDo you want to ignore any generic authors in the author list? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #
@@ -187,7 +187,7 @@ def create_fasta_seqrecord(header, sequence_string):
 #     	#The gene description may contain errors.
 #     	#This should be checked for new manual annotations only.
 #     	print "\n\n\n\nNormally, gene descriptions are checked in new manual annotations."
-#     	run_mode_custom_dict['ignore_description_check'] = select_option(\
+#     	run_mode_custom_dict['ignore_description_check'] = select_option(
 #     		"\nDo you want to ignore gene description checks? (yes or no) ", \
 #     		set(['yes','y','no','n']))
 #

@@ -595,7 +595,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "phamerator", "flat_file", "draft", "final", "eval_id")
         with self.subTest():
             self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
@@ -608,7 +608,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type_x", "phamerator", "flat_file", "draft", "final")
         with self.subTest():
             self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
@@ -621,7 +621,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "phamerator_x", "flat_file", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
@@ -631,7 +631,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "phamerator", "flat_file_x", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
@@ -641,7 +641,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "phamerator", "flat_file_x", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
@@ -652,7 +652,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "phamerator", "phamerator", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
@@ -663,7 +663,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "final"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "draft"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "flat_file", "phamerator", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
@@ -674,7 +674,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = "final"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "draft"
-        self.genome_pair.compare_annotation_status( \
+        self.genome_pair.compare_annotation_status(
             "type", "phamerator", "flat_file", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 

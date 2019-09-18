@@ -1030,7 +1030,7 @@ def parse_flag_file(flag_file):
 #TODO unit test - this may no longer be needed
 # def choose_run_type():
 #
-#     run_type_options = [\
+#     run_type_options = [
 #     	'none',\
 #     	'test',\
 #     	'production']
@@ -1040,7 +1040,7 @@ def parse_flag_file(flag_file):
 #     # print '2: ' + run_type_options[2]
 #     print '1: ' + run_type_options[1] + ' (checks flat files for accuracy, but the database is not changed.)'
 #     print '2: ' + run_type_options[2] + ' (after testing files, the database is updated.)'
-#     run_type = select_option(\
+#     run_type = select_option(
 #     	"\nWhich run type do you want? ", \
 #     	set([1,2]))
 #     run_type = run_type_options[run_type]

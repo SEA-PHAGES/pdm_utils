@@ -1014,10 +1014,10 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.seqfeature.strand, 1)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.feature.seqfeature.location.start.position, 2)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.feature.seqfeature.location.end.position, 5)
 
     def test_set_seqfeature_2(self):
@@ -1031,10 +1031,10 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.seqfeature.strand, 1)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.feature.seqfeature.location.start.position, 1)
         with self.subTest():
-            self.assertEqual(\
+            self.assertEqual(
                 self.feature.seqfeature.location.end.position, 5)
 
 

@@ -480,7 +480,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
     def test_create_update_statement_1(self):
         """Verify correct Cluster statement is created for a non-singleton."""
-        statement = phamerator.create_update_statement( \
+        statement = phamerator.create_update_statement(
             "phage", "PhageID", "L5", "Cluster", "A")
         exp_statement = \
             "UPDATE phage SET Cluster = 'A' WHERE PhageID = 'L5';"
@@ -489,7 +489,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
     def test_create_update_statement_2(self):
         """Verify correct Cluster statement is created for a singleton."""
-        statement = phamerator.create_update_statement( \
+        statement = phamerator.create_update_statement(
                 "phage", "PhageID", "L5", "Cluster", "SINGLETON")
         exp_statement = \
             "UPDATE phage SET Cluster = NULL WHERE PhageID = 'L5';"
@@ -498,7 +498,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
     def test_create_update_statement_3(self):
         """Verify correct Cluster2 statement is created for a singleton."""
-        statement = phamerator.create_update_statement( \
+        statement = phamerator.create_update_statement(
                 "phage", "PhageID", "L5", "Cluster2", "SINGLETON")
         exp_statement = \
             "UPDATE phage SET Cluster2 = NULL WHERE PhageID = 'L5';"
@@ -508,7 +508,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_update_statement_4(self):
         """Verify correct Subcluster2 statement is created for a
         non-empty value."""
-        statement = phamerator.create_update_statement( \
+        statement = phamerator.create_update_statement(
                 "phage", "PhageID", "L5", "Subcluster2", "A2")
         exp_statement = \
             "UPDATE phage SET Subcluster2 = 'A2' WHERE PhageID = 'L5';"
@@ -518,7 +518,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     def test_create_update_statement_5(self):
         """Verify correct Subcluster2 statement is created for an
         empty value."""
-        statement = phamerator.create_update_statement( \
+        statement = phamerator.create_update_statement(
                 "phage", "PhageID", "L5", "Subcluster2", "none")
         exp_statement = \
             "UPDATE phage SET Subcluster2 = NULL WHERE PhageID = 'L5';"
@@ -527,7 +527,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
     def test_create_cluster_statement_6(self):
         """Verify Gene statement is created correctly."""
-        statement = phamerator.create_update_statement( \
+        statement = phamerator.create_update_statement(
             "gene", "GeneID", "SEA_L5_123", "Notes", "Integrase")
         exp_statement = \
             "UPDATE gene SET Notes = 'Integrase' WHERE GeneID = 'SEA_L5_123';"

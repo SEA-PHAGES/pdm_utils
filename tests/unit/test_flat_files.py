@@ -31,7 +31,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         seqfeature = SeqFeature(FeatureLocation(
             ExactPosition(2), ExactPosition(10)),
-            type = "CDS", \
+            type = "CDS",
             strand = 1)
         output_left, output_right, parts = \
             flat_files.parse_coordinates(seqfeature)
@@ -218,18 +218,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_1(self):
         """Verify CDS features is parsed."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["2"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature, genome_id="L5")
@@ -263,7 +263,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -284,18 +284,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_2(self):
         """Verify CDS features is parsed with no locus tag."""
-        qualifier_dict = {"locus_tag_x": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag_x": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["2"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -329,7 +329,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -347,12 +347,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_3(self):
         """Verify CDS features is parsed with problematic coordinates."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["1"]}
 
 
@@ -401,7 +401,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -417,18 +417,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_4(self):
         """Verify CDS features is parsed with no translation."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation_x": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation_x": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["1"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -460,7 +460,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -476,18 +476,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_5(self):
         """Verify CDS features is parsed with no translation table."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table_x": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table_x": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["1"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -519,7 +519,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -535,18 +535,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_6(self):
         """Verify CDS features is parsed with no product."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product_x": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product_x": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["1"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -578,7 +578,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -594,18 +594,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_7(self):
         """Verify CDS features is parsed with no function."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function_x": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function_x": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene": ["1"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -637,7 +637,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -653,18 +653,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_8(self):
         """Verify CDS features is parsed with no note."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note_x": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note_x": [" gp5 "],
                             "gene": ["1"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -696,7 +696,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -712,18 +712,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_9(self):
         """Verify CDS features is parsed with no gene."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene_x": ["2"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
 
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -755,7 +755,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_product, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr.function, \
+            self.assertEqual(self.cds_ftr.function,
                 "hypothetical protein")
         with self.subTest():
             self.assertEqual(self.cds_ftr.processed_function, "")
@@ -772,18 +772,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_cds_seqfeature_10(self):
         """Verify CDS features is parsed with no genome_id."""
-        qualifier_dict = {"locus_tag": ["SEA_L5_1"], \
-                            "translation": ["ABCDE"], \
-                            "transl_table": ["11"], \
-                            "product": [" unknown "], \
-                            "function": [" hypothetical protein "], \
-                            "note": [" gp5 "], \
+        qualifier_dict = {"locus_tag": ["SEA_L5_1"],
+                            "translation": ["ABCDE"],
+                            "transl_table": ["11"],
+                            "product": [" unknown "],
+                            "function": [" hypothetical protein "],
+                            "note": [" gp5 "],
                             "gene_x": ["1"]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
-                    strand = 1, \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
+                    strand = 1,
                     qualifiers = qualifier_dict)
         self.cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
         with self.subTest():
@@ -825,12 +825,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify feature dictionary is constructed correctly with
         several different feature types."""
 
-        feature_list = [ \
-            SeqFeature(type = "CDS"), \
-            SeqFeature(type = "CDS"), \
-            SeqFeature(type = "tRNA"), \
-            SeqFeature(type = "tmRNA"), \
-            SeqFeature(type = "other"), \
+        feature_list = [
+            SeqFeature(type = "CDS"),
+            SeqFeature(type = "CDS"),
+            SeqFeature(type = "tRNA"),
+            SeqFeature(type = "tmRNA"),
+            SeqFeature(type = "other"),
             SeqFeature(type = "gene")]
 
         feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
@@ -872,9 +872,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
     #     """Verify cds objects list is constructed from list of one Biopython
     #     CDS features."""
     #
-    #     seqfeature1 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(2), ExactPosition(10)), \
-    #                 type = "CDS", \
+    #     seqfeature1 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(2), ExactPosition(10)),
+    #                 type = "CDS",
     #                 strand = 1)
     #
     #     biopython_feature_list = [seqfeature1]
@@ -889,21 +889,21 @@ class TestFlatFileFunctions1(unittest.TestCase):
     #     """Verify cds objects list is constructed from list of three Biopython
     #     CDS features."""
     #
-    #     seqfeature1 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(2), ExactPosition(10)), \
-    #                 type = "CDS", \
+    #     seqfeature1 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(2), ExactPosition(10)),
+    #                 type = "CDS",
     #                 strand = 1)
     #
     #
-    #     seqfeature2 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(50), ExactPosition(80)), \
-    #                 type = "CDS", \
+    #     seqfeature2 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(50), ExactPosition(80)),
+    #                 type = "CDS",
     #                 strand = -1)
     #
     #
-    #     seqfeature3 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(5), ExactPosition(6)), \
-    #                 type = "CDS", \
+    #     seqfeature3 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(5), ExactPosition(6)),
+    #                 type = "CDS",
     #                 strand = 1)
     #
     #     biopython_feature_list = [seqfeature1, seqfeature2, seqfeature3]
@@ -921,20 +921,20 @@ class TestFlatFileFunctions1(unittest.TestCase):
     #     """Verify cds objects list is constructed from list of two Biopython
     #     CDS features when a third has an error."""
     #
-    #     seqfeature1 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(2), ExactPosition(10)), \
-    #                 type = "CDS", \
+    #     seqfeature1 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(2), ExactPosition(10)),
+    #                 type = "CDS",
     #                 strand = 1)
     #
     #
-    #     seqfeature2 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(50), ExactPosition(80)), \
-    #                 type = "CDS", \
+    #     seqfeature2 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(50), ExactPosition(80)),
+    #                 type = "CDS",
     #                 strand = -1)
     #
-    #     seqfeature3 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(5), ExactPosition(6)), \
-    #                 type = "CDS", \
+    #     seqfeature3 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(5), ExactPosition(6)),
+    #                 type = "CDS",
     #                 strand = None)
     #
     #
@@ -963,16 +963,16 @@ class TestFlatFileFunctions1(unittest.TestCase):
         string2 = "Mycobacterium smegmatis"
         string3 = "Gordonia terrae"
 
-        qualifier_dict = {"organism": [string1], \
-                            "host": [string2], \
+        qualifier_dict = {"organism": [string1],
+                            "host": [string2],
                             "lab_host": [string3]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "source", \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "source",
                     qualifiers = qualifier_dict)
 
-        self.src_ftr = flat_files.parse_source_seqfeature( \
+        self.src_ftr = flat_files.parse_source_seqfeature(
                             seqfeature, genome_id="Trixie")
 
         with self.subTest():
@@ -994,13 +994,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         string2 = "Mycobacterium smegmatis"
         string3 = "Gordonia terrae"
 
-        qualifier_dict = {"organism_x": [string1], \
-                            "host": [string2], \
+        qualifier_dict = {"organism_x": [string1],
+                            "host": [string2],
                             "lab_host": [string3]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "source", \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "source",
                     qualifiers = qualifier_dict)
 
         self.src_ftr = flat_files.parse_source_seqfeature(seqfeature)
@@ -1020,13 +1020,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         string2 = "Mycobacterium smegmatis"
         string3 = "Gordonia terrae"
 
-        qualifier_dict = {"organism": [string1], \
-                            "host_x": [string2], \
+        qualifier_dict = {"organism": [string1],
+                            "host_x": [string2],
                             "lab_host": [string3]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "source", \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "source",
                     qualifiers = qualifier_dict)
 
         self.src_ftr = flat_files.parse_source_seqfeature(seqfeature)
@@ -1046,13 +1046,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         string2 = "Mycobacterium smegmatis"
         string3 = "Gordonia terrae"
 
-        qualifier_dict = {"organism": [string1], \
-                            "host": [string2], \
+        qualifier_dict = {"organism": [string1],
+                            "host": [string2],
                             "lab_host_x": [string3]}
 
-        seqfeature = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "source", \
+        seqfeature = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "source",
                     qualifiers = qualifier_dict)
 
         self.src_ftr = flat_files.parse_source_seqfeature(seqfeature)
@@ -1084,9 +1084,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
     #     """Verify source objects list is constructed from list of
     #     one Biopython source feature."""
     #
-    #     seqfeature1 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(2), ExactPosition(10)), \
-    #                 type = "source", \
+    #     seqfeature1 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(2), ExactPosition(10)),
+    #                 type = "source",
     #                 strand = 1)
     #
     #     biopython_feature_list = [seqfeature1]
@@ -1102,19 +1102,19 @@ class TestFlatFileFunctions1(unittest.TestCase):
     #     three Biopython source features."""
     #
     #
-    #     seqfeature1 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(2), ExactPosition(10)), \
-    #                 type = "source", \
+    #     seqfeature1 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(2), ExactPosition(10)),
+    #                 type = "source",
     #                 strand = 1)
     #
-    #     seqfeature2 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(50), ExactPosition(80)), \
-    #                 type = "source", \
+    #     seqfeature2 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(50), ExactPosition(80)),
+    #                 type = "source",
     #                 strand = 1)
     #
-    #     seqfeature3 = SeqFeature(FeatureLocation( \
-    #                 ExactPosition(5), ExactPosition(6)), \
-    #                 type = "source", \
+    #     seqfeature3 = SeqFeature(FeatureLocation(
+    #                 ExactPosition(5), ExactPosition(6)),
+    #                 type = "source",
     #                 strand = 1)
     #
     #
@@ -1148,19 +1148,19 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_genome_data_1(self):
         """Verify retrieved flat file data is parsed correctly."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(5000), ExactPosition(6000)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(5000), ExactPosition(6000)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(1), ExactPosition(11000)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(1), ExactPosition(11000)),
+                    type = "source",
                     strand = 1)
 
         # Wrap-around feature, directly copied from
@@ -1178,14 +1178,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         type='CDS',
                         location_operator='join')
 
-        seqfeature5 = SeqFeature(FeatureLocation( \
-                    ExactPosition(9), ExactPosition(50)), \
-                    type = "CDS", \
+        seqfeature5 = SeqFeature(FeatureLocation(
+                    ExactPosition(9), ExactPosition(50)),
+                    type = "CDS",
                     strand = -1)
 
-        seqfeature6 = SeqFeature(FeatureLocation( \
-                    ExactPosition(9), ExactPosition(30)), \
-                    type = "CDS", \
+        seqfeature6 = SeqFeature(FeatureLocation(
+                    ExactPosition(9), ExactPosition(30)),
+                    type = "CDS",
                     strand = 1)
 
 
@@ -1210,18 +1210,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
 
@@ -1321,24 +1321,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         record name."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1361,17 +1361,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1388,24 +1388,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         record organism."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1427,17 +1427,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1457,24 +1457,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         record id."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1497,17 +1497,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
 
@@ -1526,24 +1526,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         accession."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1567,17 +1567,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
         date = "23-JAN-2014"
 
         annotation_dict = { \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1594,24 +1594,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with more
         than one accession."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1634,18 +1634,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 ", "TUV456"], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 ", "TUV456"],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1662,24 +1662,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         record description."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1701,17 +1701,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1726,28 +1726,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, "")
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -1781,24 +1781,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         record source."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1820,17 +1820,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1845,20 +1845,20 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, "")
@@ -1898,24 +1898,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         references."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -1926,17 +1926,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -1951,28 +1951,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "")
@@ -2006,24 +2006,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with
         references that contain no authors."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -2041,18 +2041,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -2067,28 +2067,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "")
@@ -2122,24 +2122,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with an
         empty sequence."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -2162,18 +2162,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq(""), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq(""),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -2188,28 +2188,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2243,14 +2243,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         CDS features."""
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
         feature_list = [seqfeature2, seqfeature3]
@@ -2273,18 +2273,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -2299,28 +2299,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2354,19 +2354,19 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         source features."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature4]
@@ -2389,18 +2389,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -2415,28 +2415,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2470,19 +2470,19 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         tRNA features."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature3, seqfeature4]
@@ -2505,18 +2505,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -2531,28 +2531,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2604,17 +2604,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
@@ -2629,28 +2629,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2685,24 +2685,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         filepath provided."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -2725,18 +2725,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         date = "23-JAN-2014"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             "date": date}
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
         self.gnm = flat_files.parse_genome_data(record)
@@ -2750,28 +2750,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2805,24 +2805,24 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with no
         date provided."""
 
-        seqfeature1 = SeqFeature(FeatureLocation( \
-                    ExactPosition(2), ExactPosition(10)), \
-                    type = "CDS", \
+        seqfeature1 = SeqFeature(FeatureLocation(
+                    ExactPosition(2), ExactPosition(10)),
+                    type = "CDS",
                     strand = 1)
 
-        seqfeature2 = SeqFeature(FeatureLocation( \
-                    ExactPosition(50), ExactPosition(55)), \
-                    type = "tRNA", \
+        seqfeature2 = SeqFeature(FeatureLocation(
+                    ExactPosition(50), ExactPosition(55)),
+                    type = "tRNA",
                     strand = 1)
 
-        seqfeature3 = SeqFeature(FeatureLocation( \
-                    ExactPosition(20), ExactPosition(30)), \
-                    type = "source", \
+        seqfeature3 = SeqFeature(FeatureLocation(
+                    ExactPosition(20), ExactPosition(30)),
+                    type = "source",
                     strand = 1)
 
-        seqfeature4 = SeqFeature(FeatureLocation( \
-                    ExactPosition(100), ExactPosition(1000)), \
-                    type = "CDS", \
+        seqfeature4 = SeqFeature(FeatureLocation(
+                    ExactPosition(100), ExactPosition(1000)),
+                    type = "CDS",
                     strand = 1)
 
         feature_list = [seqfeature1, seqfeature2, seqfeature3, seqfeature4]
@@ -2843,18 +2843,18 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
-                            "references": refs_list, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
+                            "references": refs_list,
                             }
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
-                            features = feature_list, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
+                            features = feature_list,
                             )
 
 
@@ -2870,28 +2870,28 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(self.gnm._organism_name, \
+            self.assertEqual(self.gnm._organism_name,
                                 "KatherineG")
         with self.subTest():
-            self.assertEqual(self.gnm._organism_host_genus, \
+            self.assertEqual(self.gnm._organism_host_genus,
                                 "Gordonia")
         with self.subTest():
             self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
             self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(self.gnm._description_name, \
+            self.assertEqual(self.gnm._description_name,
                                 "L5")
         with self.subTest():
-            self.assertEqual(self.gnm._description_host_genus, \
+            self.assertEqual(self.gnm._description_host_genus,
                                 "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(self.gnm._source_name, \
+            self.assertEqual(self.gnm._source_name,
                                 "phiC31")
         with self.subTest():
-            self.assertEqual(self.gnm._source_host_genus, \
+            self.assertEqual(self.gnm._source_host_genus,
                                 "Streptomyces")
         with self.subTest():
             self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
@@ -2925,9 +2925,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify retrieved flat file data is parsed correctly with
         modified translation table."""
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
                             )
 
         self.gnm = flat_files.parse_genome_data(record,
@@ -2946,16 +2946,16 @@ class TestFlatFileFunctions1(unittest.TestCase):
         organism = "Gordonia phage KatherineG"
         source = "Streptomyces phage phiC31"
 
-        annotation_dict = {"accessions": [" ABC123.1 "], \
-                            "source": source, \
-                            "organism": organism, \
+        annotation_dict = {"accessions": [" ABC123.1 "],
+                            "source": source,
+                            "organism": organism,
                             }
 
-        record = SeqRecord(seq = Seq("atgc"), \
-                            id = "OPQ123.1", \
-                            name = "XYZ123", \
-                            annotations = annotation_dict, \
-                            description = description, \
+        record = SeqRecord(seq = Seq("atgc"),
+                            id = "OPQ123.1",
+                            name = "XYZ123",
+                            annotations = annotation_dict,
+                            description = description,
                             )
 
         self.gnm = flat_files.parse_genome_data(record,
