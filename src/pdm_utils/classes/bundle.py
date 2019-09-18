@@ -11,7 +11,7 @@ class Bundle:
 
         # Initialize all non-calculated attributes:
         self.id = ""
-        self.ticket = ""
+        self.ticket = None
         self.genome_dict = {}
         self.genome_pair_dict = {}
         self.email = None # Email object for automating responses

@@ -19,8 +19,8 @@ class Source:
         self.name = ""
         self.seqfeature = None
         self.type = ""
-        self.left = "" # TODO implement this.
-        self.right = "" # TODO implement this.
+        self.left = -1 # TODO implement this.
+        self.right = -1 # TODO implement this.
         self.organism = ""
         self.host = ""
         self.lab_host = ""

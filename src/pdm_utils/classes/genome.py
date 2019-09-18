@@ -7,6 +7,7 @@ from pdm_utils.classes import eval
 from datetime import datetime
 from Bio.SeqUtils import GC
 from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 import re
 from operator import attrgetter
 from pdm_utils.classes import cds, trna
@@ -25,20 +26,20 @@ class Genome:
         self.subcluster = "" #A1, A2, etc.
         self.id = "" # Unique identifier. Case sensitive, no "_Draft".
         self.name = "" # Case sensitive and contains "_Draft".
-        self.seq = "" # Biopython Seq object
+        self.seq = Seq("", IUPAC.ambiguous_dna) # Biopython Seq object
         self.length = 0 # Size of the nucleotide sequence
-        self.gc = 0 # %GC content
+        self.gc = -1 # %GC content
         self.host_genus = ""
         self.accession = ""
         self.lifestyle = "" # E.g. temperate, obligately lytic, unknown, etc.
-        self.translation_table = ""
+        self.translation_table = 0
 
         # The following attributes are common to PhameratorDB.
         self.cluster_subcluster = "" # Combined cluster/subcluster data.
         self.annotation_status = "" # Final, Draft, Gbk version of genome data
-        self.annotation_author = "" # 1 (can be changed), 0 (can not be changed)
-        self.annotation_qc = "" # 1 (reliable), 0, (not reliable)
-        self.retrieve_record = "" # 1 (auto update), 0 (do not auto update)
+        self.annotation_author = -1 # 1 (can be changed), 0 (can not be changed)
+        self.annotation_qc = -1 # 1 (reliable), 0, (not reliable)
+        self.retrieve_record = -1 # 1 (auto update), 0 (do not auto update)
         self.date = "" # Used for the DateLastModified field.
 
         # The following attributes are common to
@@ -52,7 +53,7 @@ class Genome:
         self.organism = ""
         self._organism_name = ""
         self._organism_host_genus = ""
-        self.authors = "" # Compiled list of all authors named in the record.
+        self.authors = "" # Compiled string of all authors named in the record.
 
         # The following attributes are computed datafields that are
         # common to annotated genomes.

@@ -30,9 +30,9 @@ class GenomeTicket:
         self.cluster = ""
         self.subcluster = ""
         self.annotation_status = ""
-        self.annotation_author = ""
-        self.annotation_qc = ""
-        self.retrieve_record = ""
+        self.annotation_author = -1
+        self.annotation_qc = -1
+        self.retrieve_record = -1
         self.accession = ""
 
 

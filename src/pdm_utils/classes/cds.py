@@ -20,8 +20,7 @@ class Cds:
 
         # The following attributes are common to any CDS.
 
-        # TODO: eventually change how id is computed.
-        self.id = "" # Gene ID comprised of PhageID and Gene name
+        self.id = "" # Gene ID
         self.name = "" # Tends to be an integer for SEA-PHAGES.
         self.genome_id = "" # Genome from which CDS feature is derived.
         self.seqfeature = None # Biopython SeqFeature object.
@@ -30,15 +29,15 @@ class Cds:
         self.coordinate_format = "" # Indexing format used for coordinates.
         self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
         self.parts = 0 # Number of regions that define the feature
-        self.translation_table = ""
-        self.translation = "" # Biopython amino acid Seq object.
+        self.translation_table = 0
+        self.translation = Seq("", IUPAC.protein) # Biopython amino acid Seq object.
         self.translation_length = 0
-        self.seq = "" # Biopython nucleotide Seq object.
+        self.seq = Seq("", IUPAC.ambiguous_dna) # Biopython nucleotide Seq object.
         self.length = 0
 
 
         # The following attributes are common to PhameratorDB.
-        self.pham = "" # TODO build method to implement this.
+        self.pham = 0 # TODO build method to implement this.
         self.description = "" # Raw gene description
         self.processed_description = "" # Non-generic gene descriptions
 
@@ -46,7 +45,7 @@ class Cds:
         # The following attributes are common to
         # GenBank-formatted flat file records.
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
-        self._locus_tag_num = ""
+        self._locus_tag_num = "" # Should be digit, but keep as string.
         self.gene = "" # Tends to be an integer, but not guaranteed.
         self.product = ""
         self.function = ""

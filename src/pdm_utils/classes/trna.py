@@ -16,10 +16,10 @@ class TrnaFeature:
 
         #Datafields from Phamerator database:
         self.type = '' #Feature type: CDS, GenomeBoundary,or tRNA
-        self.left = '' #Position of left boundary of feature, 0-indexed
-        self.right = '' #Position of right boundary of feature, 0-indexed
+        self.left = -1 #Position of left boundary of feature, 0-indexed
+        self.right = -1 #Position of right boundary of feature, 0-indexed
         self.strand = '' #'forward', 'reverse', or 'NA'
-        self.length = ''
+        self.length = 0
 
 
         #Common to Phamerator
