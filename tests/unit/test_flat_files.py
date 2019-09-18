@@ -1297,11 +1297,15 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(gnm.cds_features[0].left, 2)
         with self.subTest():
             self.assertEqual(gnm.cds_features[0].right, 10)
+        with self.subTest():
+            self.assertEqual(gnm.cds_features[0].genome_length, 4)
 
         with self.subTest():
             self.assertEqual(gnm.cds_features[1].left, 154873)
         with self.subTest():
             self.assertEqual(gnm.cds_features[1].right, 4)
+        with self.subTest():
+            self.assertEqual(gnm.cds_features[1].genome_length, 4)
 
         with self.subTest():
             self.assertEqual(gnm.cds_features[2].left, 9)

@@ -576,8 +576,8 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
         input_phage_ids_and_seqs = [["L5", "ATCG"],
-                                    ["Trixie", "AATT"],
-                                    ["D29", "GGCC"]]
+                                    ["Trixie", "AATTC"],
+                                    ["D29", "GGCCATT"]]
 
         input_cds_data = [["L5_001", "L5"],
                           ["L5_002", "L5"],
@@ -644,8 +644,8 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
         input_phage_ids_and_seqs = [["L5", "ATCG"],
-                                    ["Trixie", "AATT"],
-                                    ["D29", "GGCC"]]
+                                    ["Trixie", "AATTC"],
+                                    ["D29", "GGCCATT"]]
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
@@ -686,8 +686,8 @@ class TestPhameratorFunctions(unittest.TestCase):
         is constructed correctly for a valid PhageID."""
 
         input_phage_ids_and_seqs = [["L5", "ATCG"],
-                                    ["Trixie", "AATT"],
-                                    ["D29", "GGCC"]]
+                                    ["Trixie", "AATTC"],
+                                    ["D29", "GGCCATT"]]
 
         input_cds_data = [["L5_001", "L5"],
                           ["L5_002", "L5"],
@@ -750,6 +750,8 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
         with self.subTest():
             self.assertEqual(len(genome_list[0].cds_features), 3)
+        with self.subTest():
+            self.assertEqual(genome_list[0].cds_features[0].genome_length, 4)
 
 
     def test_parse_genome_data_4(self):
@@ -757,8 +759,8 @@ class TestPhameratorFunctions(unittest.TestCase):
         are constructed correctly for multiple valid PhageIDs."""
 
         input_phage_ids_and_seqs = [["L5", "ATCG"],
-                                    ["Trixie", "AATT"],
-                                    ["D29", "GGCC"]]
+                                    ["Trixie", "AATTC"],
+                                    ["D29", "GGCCATT"]]
 
         input_cds_data = [["L5_001", "L5"],
                           ["L5_002", "L5"],
@@ -823,7 +825,16 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(genome_dict["L5"].cds_features), 3)
         with self.subTest():
+            self.assertEqual(
+                genome_dict["L5"].cds_features[0].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(
+                genome_dict["L5"].cds_features[1].genome_length, 4)
+        with self.subTest():
             self.assertEqual(len(genome_dict["Trixie"].cds_features), 2)
+        with self.subTest():
+            self.assertEqual(
+                genome_dict["Trixie"].cds_features[0].genome_length, 5)
         with self.subTest():
             self.assertEqual(len(genome_dict["D29"].cds_features), 0)
 
@@ -877,7 +888,6 @@ class TestPhameratorFunctions(unittest.TestCase):
         sql_handle.database = self.db
         cds_list = phamerator.parse_cds_data(sql_handle, column="PhageID",
                                              phage_id_list=["L5"], query=query)
-
         with self.subTest():
             self.assertEqual(len(cds_list), 1)
         with self.subTest():

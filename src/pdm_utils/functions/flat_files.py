@@ -381,6 +381,7 @@ def parse_genome_data(seqrecord, filepath="",
     if "CDS" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["CDS"]:
             cds_ftr = parse_cds_seqfeature(seqfeature, genome_id=gnm.id)
+            cds_ftr.genome_length = gnm.length
             cds_list.append(cds_ftr)
 
     source_list = []
