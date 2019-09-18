@@ -152,31 +152,6 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-
-    def test_set_wrap_1(self):
-        """Verify wrap is set to False."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.wrap = True
-        self.feature.set_wrap()
-        self.assertFalse(self.feature.wrap)
-
-
-    def test_set_wrap_2(self):
-        """Verify wrap is set to True."""
-        self.feature.left = 10
-        self.feature.right = 5
-        self.feature.wrap = False
-        self.feature.set_wrap()
-        self.assertTrue(self.feature.wrap)
-
-
-
-
-
-
-
-
     def test_translate_seq_1(self):
         """Verify translation is produced from valid nucleotide sequence."""
         self.feature.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)

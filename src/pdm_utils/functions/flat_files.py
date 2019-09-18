@@ -87,7 +87,6 @@ def parse_coordinates(seqfeature):
     return (left, right, parts)
 
 
-# TODO implement set_wrap()?
 def parse_cds_seqfeature(seqfeature, genome_id=""):
     """Parse data from a Biopython CDS SeqFeature object into a Cds object.
 
@@ -114,7 +113,6 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
 
     cds_ftr.set_strand(seqfeature.strand, "fr_short", case = True)
     cds_ftr.left, cds_ftr.right, cds_ftr.compound_parts = parse_coordinates(seqfeature)
-    #cds_ftr.set_wrap()
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
