@@ -1,6 +1,7 @@
 """ Unit tests for evaluate functions."""
 
 
+from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
 from pdm_utils.classes import source
 from pdm_utils.classes import cds
@@ -12,7 +13,7 @@ import unittest
 from Bio.Seq import Seq
 
 
-class TestEvaluateClass(unittest.TestCase):
+class TestEvaluateClass1(unittest.TestCase):
 
 
     def setUp(self):
@@ -78,89 +79,6 @@ class TestEvaluateClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(errors, 2)
 
-
-
-
-
-
-
-
-
-
-
-
-
-    ###Below = pasted from test.Ticket.py, since some Ticket methods
-    ###were moved to evaluate.py. These will now probably need to be implemented
-    # in the 'compare_add_replace_ticket()'' evaluate functions.
-    #
-    # def test_check_update_ticket_1(self):
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[0].status, "correct")
-    #
-    # def test_check_update_ticket_2(self):
-    #     """Primary Phage ID not in set."""
-    #     phage_id_set = set(["L5","RedRock"])
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[0].status, "error")
-    #
-    # def test_check_update_ticket_3(self):
-    #     """host_genus is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.host_genus = "none"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[1].status, "error")
-    #
-    # def test_check_update_ticket_4(self):
-    #     """Cluster is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.cluster = "none"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[2].status, "error")
-    #
-    # def test_check_update_ticket_5(self):
-    #     """Status is none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.status = "none"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[3].status, "error")
-    #
-    # def test_check_update_ticket_6(self):
-    #     """Description Field is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.description_field = "Product"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[4].status, "error")
-    #
-    # def test_check_update_ticket_7(self):
-    #     """Secondary Phage ID is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.secondary_phage_id = "Trixie"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[5].status, "error")
-    #
-    # def test_check_update_ticket_8(self):
-    #     """Annotation Author is 0."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.annotation_author = "0"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[6].status, "correct")
-    #
-    # def test_check_update_ticket_9(self):
-    #     """Annotation Author is not 1 or 0."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.annotation_author = "none"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[6].status, "error")
-    #
-    # def test_check_update_ticket_10(self):
-    #     """Run Mode is not none."""
-    #     phage_id_set = set(["Trixie","L5","RedRock"])
-    #     self.update_ticket.run_mode = "phagesdb"
-    #     self.update_ticket.check_update_ticket(phage_id_set)
-    #     self.assertEqual(self.update_ticket.evaluations[7].status, "error")
-    #
 
 
 
@@ -812,17 +730,65 @@ class TestEvaluateClass2(unittest.TestCase):
 
 
 
-        # self.tkt.eval_flags["check_trna"] = True
+
+
+
+class TestEvaluateClass3(unittest.TestCase):
+
+    def setUp(self):
+        self.bndl = bundle.Bundle()
+        self.tkt = ticket.GenomeTicket()
+        self.gnm1 = genome.Genome()
+        self.gnm2 = genome.Genome()
+
+
+
+
+    def test_check_bundle_for_import_1(self):
+        """Verify all check methods are called."""
+        self.tkt.type = "replace"
+        self.tkt.cluster = "retrieve"
+        self.tkt.subcluster = "retain"
+        self.bndl.ticket = self.tkt
+        evaluate.check_bundle_for_import(self.bndl)
+        self.assertEqual(len(self.bndl.evaluations), 9)
+
+    def test_check_bundle_for_import_2(self):
+        """Verify some check methods are called when there is no Ticket."""
+        evaluate.check_bundle_for_import(self.bndl)
+        self.assertEqual(len(self.bndl.evaluations), 1)
+
+    def test_check_bundle_for_import_3(self):
+        """Verify some check methods are called when there are no 'retrieve'
+        Ticket attributes."""
+        self.tkt.type = "replace"
+        self.tkt.subcluster = "retain"
+        self.bndl.ticket = self.tkt
+        evaluate.check_bundle_for_import(self.bndl)
+        self.assertEqual(len(self.bndl.evaluations), 7)
+
+    def test_check_bundle_for_import_4(self):
+        """Verify some check methods are called when there are no 'retain'
+        Ticket attributes."""
+        self.tkt.type = "replace"
+        self.tkt.cluster = "retrieve"
+        self.bndl.ticket = self.tkt
+        evaluate.check_bundle_for_import(self.bndl)
+        self.assertEqual(len(self.bndl.evaluations), 8)
+
+    def test_check_bundle_for_import_5(self):
+        """Verify some check methods are called when there is no 'replace'
+        Ticket."""
+        self.tkt.cluster = "retrieve"
+        self.bndl.ticket = self.tkt
+        evaluate.check_bundle_for_import(self.bndl)
+        self.assertEqual(len(self.bndl.evaluations), 6)
 
 
 
 
 
-        # self.tkt.eval_flags["check_seq"] = True
-        # self.tkt.eval_flags["check_id_typo"] = True
-        # self.tkt.eval_flags["check_host_typo"] = True
-        # self.tkt.eval_flags["check_author"] = True
-        # self.tkt.eval_flags["check_trna"] = True
+
 
 
 

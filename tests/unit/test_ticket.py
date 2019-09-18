@@ -204,13 +204,19 @@ class TestGenomeTicketClass(unittest.TestCase):
         """Check that value is lowercased when not 'none'."""
         value = "Hatfull"
         self.tkt.set_annotation_author(value)
-        self.assertEqual(self.tkt.annotation_author, "hatfull")
+        self.assertEqual(self.tkt.annotation_author, "Hatfull")
 
     def test_set_annotation_author_2(self):
         """Check that value is lowercased when 'none'."""
         value = "NONE"
         self.tkt.set_annotation_author(value)
         self.assertEqual(self.tkt.annotation_author, "none")
+
+    def test_set_annotation_author_3(self):
+        """Check that int value is set correctly."""
+        value = 1
+        self.tkt.set_annotation_author(value)
+        self.assertEqual(self.tkt.annotation_author, 1)
 
 
 
@@ -227,6 +233,12 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.tkt.set_annotation_qc(value)
         self.assertEqual(self.tkt.annotation_qc, "none")
 
+    def test_set_annotation_qc_3(self):
+        """Check that int value is set correctly."""
+        value = 1
+        self.tkt.set_annotation_qc(value)
+        self.assertEqual(self.tkt.annotation_qc, 1)
+
 
 
 
@@ -242,7 +254,11 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.tkt.set_retrieve_record(value)
         self.assertEqual(self.tkt.retrieve_record, "none")
 
-
+    def test_set_retrieve_record_3(self):
+        """Check that int value is set correctly."""
+        value = 1
+        self.tkt.set_retrieve_record(value)
+        self.assertEqual(self.tkt.retrieve_record, 1)
 
 
     def test_set_run_mode_1(self):

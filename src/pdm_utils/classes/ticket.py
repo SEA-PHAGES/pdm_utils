@@ -127,7 +127,7 @@ class GenomeTicket:
         :param value: Value to be set as the annotation_author.
         :type value: str
         """
-        self.annotation_author = value.lower()
+        self.annotation_author = basic.lower_case(value)
 
     def set_annotation_qc(self, value):
         """Set the set_annotation_qc.

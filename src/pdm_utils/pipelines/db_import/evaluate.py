@@ -4,6 +4,42 @@
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
+def check_bundle_for_import(bndl):
+    """Check a Bundle for errors.
+
+    Evaluate whether all genomes have been successfully grouped,
+    and whether all genomes have been paired, as expected.
+    Based on the ticket type, there are expected to be certain
+    types of genomes and pairs of genomes in the bundle.
+
+    :param bndl: A pdm_utils Bundle object.
+    :type bndl: Bundle
+    """
+    bndl.check_ticket()
+    if bndl.ticket is not None:
+        tkt = bndl.ticket
+        bndl.check_genome_dict("add")
+        bndl.check_genome_dict("flat_file")
+        bndl.check_genome_pair_dict("flat_file_add")
+
+        # There may or may not be data retrieved from PhagesDB.
+        tkt.set_value_flag("retrieve")
+        if tkt._value_flag:
+            bndl.check_genome_dict("phagesdb")
+            bndl.check_genome_pair_dict("flat_file_phagesdb")
+
+        if tkt.type == "replace":
+            bndl.check_genome_dict("phamerator")
+
+            # There may or may not be a genome_pair to retain some data.
+            tkt.set_value_flag("retain")
+            if tkt._value_flag:
+                bndl.check_genome_pair_dict("add_phamerator")
+
+            # There should be a genome_pair between the current phamerator
+            # genome and the new flat_file genome.
+            bndl.check_genome_pair_dict("flat_file_phamerator")
+
 
 def check_ticket_structure(tkt, type_set=set(), description_field_set=set(),
         null_set=set(), run_mode_set=set(), id_dupe_set=set(),
@@ -60,18 +96,10 @@ def check_ticket_structure(tkt, type_set=set(), description_field_set=set(),
     tkt.check_compatible_type_and_annotation_status()
 
 
-
-
-
-
-
-
-
-
 def check_phagesdb_genome(gnm, null_set):
     """Check a Genome object for specific errors when it has been
-    parsed from PhagesDB data in preparation for completing import tickets."""
-
+    parsed from PhagesDB data in preparation for completing import tickets.
+    """
     gnm.check_id(null_set, False)
     gnm.check_name(null_set, False)
     gnm.check_host_genus(null_set, False)
@@ -80,65 +108,6 @@ def check_phagesdb_genome(gnm, null_set):
     gnm.check_accession(null_set, False)
     gnm.check_filename(null_set, False)
     gnm.check_sequence(null_set, False)
-
-
-
-
-
-
-
-def check_source_for_import(src_ftr, check_id_typo=True, check_host_typo=True):
-    """Check a Source object for errors."""
-    if check_id_typo:
-        src_ftr.check_organism_name()
-    if check_host_typo:
-        src_ftr.check_organism_host_genus()
-        src_ftr.check_host_host_genus()
-        src_ftr.check_lab_host_host_genus()
-
-
-def check_cds_for_import(cds_ftr, check_locus_tag=True,
-                         check_gene=True, check_description=True,
-                         check_description_field=True):
-    """Check a Cds object for errors."""
-    cds_ftr.check_amino_acids()
-    cds_ftr.check_translation()
-    cds_ftr.check_translation_length()
-    cds_ftr.check_translation_table()
-    cds_ftr.check_coordinates()
-    cds_ftr.check_strand()
-
-    # These evaluations vary by genome type, stage of import, etc.
-    if check_locus_tag:
-        cds_ftr.check_locus_tag_present()
-        cds_ftr.check_locus_tag_structure()
-    if check_gene:
-        cds_ftr.check_gene_present()
-        cds_ftr.check_gene_structure()
-    if check_locus_tag and check_gene:
-        cds_ftr.check_compatible_gene_and_locus_tag()
-    if check_description:
-        cds_ftr.check_generic_data()
-        cds_ftr.check_valid_description()
-    if check_description_field:
-        cds_ftr.check_description_field()
-
-
-
-def compare_genomes(genome_pair, check_replace=True):
-    """Compare two genomes to identify discrepancies."""
-    genome_pair.compare_genome_sequence()
-    genome_pair.compare_genome_length()
-    genome_pair.compare_cluster()
-    genome_pair.compare_subcluster()
-    genome_pair.compare_accession()
-    genome_pair.compare_host_genus()
-    genome_pair.compare_author()
-
-    if check_replace:
-        genome_pair.compare_annotation_status("type","phamerator",
-            "flat_file","draft","final")
-
 
 
 def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
@@ -228,6 +197,61 @@ def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
     gnm.check_value_flag()
 
 
+def check_source_for_import(src_ftr, check_id_typo=True, check_host_typo=True):
+    """Check a Source object for errors."""
+    if check_id_typo:
+        src_ftr.check_organism_name()
+    if check_host_typo:
+        src_ftr.check_organism_host_genus()
+        src_ftr.check_host_host_genus()
+        src_ftr.check_lab_host_host_genus()
+
+
+def check_cds_for_import(cds_ftr, check_locus_tag=True,
+                         check_gene=True, check_description=True,
+                         check_description_field=True):
+    """Check a Cds object for errors."""
+    cds_ftr.check_amino_acids()
+    cds_ftr.check_translation()
+    cds_ftr.check_translation_length()
+    cds_ftr.check_translation_table()
+    cds_ftr.check_coordinates()
+    cds_ftr.check_strand()
+
+    # These evaluations vary by genome type, stage of import, etc.
+    if check_locus_tag:
+        cds_ftr.check_locus_tag_present()
+        cds_ftr.check_locus_tag_structure()
+    if check_gene:
+        cds_ftr.check_gene_present()
+        cds_ftr.check_gene_structure()
+    if check_locus_tag and check_gene:
+        cds_ftr.check_compatible_gene_and_locus_tag()
+    if check_description:
+        cds_ftr.check_generic_data()
+        cds_ftr.check_valid_description()
+    if check_description_field:
+        cds_ftr.check_description_field()
+
+
+def compare_genomes(genome_pair, check_replace=True):
+    """Compare two genomes to identify discrepancies."""
+    genome_pair.compare_genome_sequence()
+    genome_pair.compare_genome_length()
+    genome_pair.compare_cluster()
+    genome_pair.compare_subcluster()
+    genome_pair.compare_accession()
+    genome_pair.compare_host_genus()
+    genome_pair.compare_author()
+    if check_replace:
+        genome_pair.compare_annotation_status("type","phamerator",
+            "flat_file","draft","final")
+
+
+
+
+
+
 
 
 
@@ -238,55 +262,7 @@ def check_genome_for_import(gnm, tkt, null_set=set(), phage_id_set=set(),
 # TODO unit test below....
 
 
-# TODO implement.
-# TODO unit test.
-def check_bundle_for_import(bndl):
-    """Check a Bundle for errors."""
 
-    bndl.check_ticket()
-    if bndl.ticket is not None:
-
-        tkt = bndl.ticket
-
-        # First, evaluate whether all genomes have been successfully grouped,
-        # and whether all genomes have been paired, as expected.
-        # Based on the ticket type, there are expected to be certain
-        # types of genomes and pairs of genomes in the bundle.
-
-        if tkt.type == "add" or tkt.type == "replace":
-
-
-            bndl.check_genome_dict("add")
-            bndl.check_genome_dict("flat_file")
-            bndl.check_genome_pair_dict("flat_file_add")
-
-            # There may or may not be data retrieved from PhagesDB.
-            tkt.set_value_flag("retrieve")
-            if tkt._value_flag:
-                bndl.check_genome_dict("phagesdb")
-                try:
-                    check_phagesdb_genome(bndl.genome_dict["phagesdb"])
-                except:
-                    pass
-                try:
-                    bndl.check_genome_pair_dict("flat_file_phagesdb")
-                except:
-                    pass
-
-
-        if tkt.type == "replace":
-
-            # There should be a "phamerator" genome.
-            bndl.check_genome_dict("phamerator")
-
-            # There may or may not be a genome_pair to retain some data.
-            tkt.set_value_flag("retain")
-            if tkt._value_flag:
-                bndl.check_genome_pair_dict("add_phamerator")
-
-            # There should be a genome_pair between the current phamerator
-            # genome and the new flat_file genome.
-            bndl.check_genome_pair_dict("flat_file_phamerator")
 
 
 

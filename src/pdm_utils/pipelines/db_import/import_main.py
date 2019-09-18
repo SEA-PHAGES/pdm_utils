@@ -193,10 +193,14 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
             evaluate.compare_genomes(genome_pair,
                 check_replace=bndl.tkt.eval_flags["check_replace"])
 
+        if "phagesdb" in bndl.genome_dict.keys():
+            pdb_gnm = bndl.genome_dict["phagesdb"]
+            check_phagesdb_genome(pdb_gnm)
+
         if "flat_file" in bndl.genome_dict.keys():
-            gnm = bndl.genome_dict["flat_file"]
+            ff_gnm = bndl.genome_dict["flat_file"]
             evaluate.check_genome_for_import(
-                gnm,
+                ff_gnm,
                 bndl.tkt,
                 null_set=null_set,
                 accession_set=phamerator_accession_set,
@@ -208,8 +212,8 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
 
             # Check CDS features.
             x = 0
-            while x < len(gnm.cds_features):
-                check_cds_for_import(gnm.cds_features[x],
+            while x < len(ff_gnm.cds_features):
+                check_cds_for_import(ff_gnm.cds_features[x],
                     check_locus_tag=tkt.eval_flags["check_locus_tag"],
                     check_gene=tkt.eval_flags["check_gene"],
                     check_description=tkt.eval_flags["check_description"],
@@ -219,14 +223,14 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
             # Check tRNA features.
             if tkt.eval_flags["check_trna"]:
                 y = 0
-                while y < len(gnm.trna_features):
-                    check_trna_for_import(gnm.trna_features[y])
+                while y < len(ff_gnm.trna_features):
+                    check_trna_for_import(ff_gnm.trna_features[y])
                     y += 1
 
             # Check Source features.
             z = 0
-            while z < len(gnm.source_features):
-                check_source_for_import(gnm.source_features[z],
+            while z < len(ff_gnm.source_features):
+                check_source_for_import(ff_gnm.source_features[z],
                     check_id_typo=tkt.eval_flags["check_id_typo"],
                     check_host_typo=tkt.eval_flags["check_host_typo"],)
                 z += 1
