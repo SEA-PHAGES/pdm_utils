@@ -48,7 +48,7 @@ def parse_phage_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        gnm.length = data_dict["SequenceLength"]
+        gnm.length = int(data_dict["SequenceLength"])
     except:
         pass
 
@@ -63,7 +63,7 @@ def parse_phage_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        gnm.gc = data_dict["GC"]
+        gnm.gc = float(data_dict["GC"])
     except:
         pass
 
@@ -134,17 +134,17 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr.left = data_dict["Start"]
+        cds_ftr.left = int(data_dict["Start"])
     except:
         pass
 
     try:
-        cds_ftr.right = data_dict["Stop"]
+        cds_ftr.right = int(data_dict["Stop"])
     except:
         pass
 
     try:
-        cds_ftr.length = data_dict["Length"]
+        cds_ftr.length = int(data_dict["Length"])
     except:
         pass
 
