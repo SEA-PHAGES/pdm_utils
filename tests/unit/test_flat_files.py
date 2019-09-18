@@ -255,7 +255,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -321,7 +321,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -393,7 +393,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 0)
+            self.assertEqual(self.cds_ftr.length, 0)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -452,7 +452,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 0)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -511,7 +511,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, -1)
         with self.subTest():
@@ -570,7 +570,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -629,7 +629,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -688,7 +688,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -747,7 +747,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr._translation_length, 5)
         with self.subTest():
-            self.assertEqual(self.cds_ftr._length, 8)
+            self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation_table, 11)
         with self.subTest():
@@ -1259,7 +1259,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(gnm._length, 4)
+            self.assertEqual(gnm.length, 4)
         with self.subTest():
             self.assertEqual(gnm.gc, 50.00)
         with self.subTest():
@@ -1754,7 +1754,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -1871,7 +1871,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -1979,7 +1979,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2095,7 +2095,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2216,7 +2216,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 0)
+            self.assertEqual(self.gnm.length, 0)
         with self.subTest():
             self.assertEqual(self.gnm.gc, -1)
         with self.subTest():
@@ -2327,7 +2327,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2443,7 +2443,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2559,7 +2559,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2657,7 +2657,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2778,7 +2778,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
@@ -2898,7 +2898,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(self.gnm._length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():

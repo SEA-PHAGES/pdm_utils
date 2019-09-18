@@ -26,7 +26,7 @@ class Genome:
         self.id = "" # Unique identifier. Case sensitive, no "_Draft".
         self.name = "" # Case sensitive and contains "_Draft".
         self.seq = "" # Biopython Seq object
-        self._length = 0 # Size of the nucleotide sequence
+        self.length = 0 # Size of the nucleotide sequence
         self.gc = 0 # %GC content
         self.host_genus = ""
         self.accession = ""
@@ -221,8 +221,8 @@ class Genome:
             self.seq = Seq(value).upper()
         else:
             self.seq = value.upper()
-        self._length = len(self.seq)
-        if self._length > 0:
+        self.length = len(self.seq)
+        if self.length > 0:
             self.gc = round(GC(self.seq), 4)
         else:
             self.gc = -1

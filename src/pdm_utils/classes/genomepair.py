@@ -134,8 +134,8 @@ class GenomePair:
                 second.filename = first.filename
             if (second.translation_table == keyword or keyword is None):
                 second.translation_table = first.translation_table
-            if (second._length == keyword or keyword is None):
-                second._length = first._length
+            if (second.length == keyword or keyword is None):
+                second.length = first.length
             if (second.gc == keyword or keyword is None):
                 second.gc = first.gc
             if (second.evaluations == keyword or keyword is None):
@@ -434,7 +434,7 @@ class GenomePair:
         :type eval_id: str
         """
 
-        if self.genome1._length != self.genome2._length:
+        if self.genome1.length != self.genome2.length:
             result = "The two genomes have different sequence lengths."
             status = "error"
         else:

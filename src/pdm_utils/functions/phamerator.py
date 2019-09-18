@@ -48,7 +48,7 @@ def parse_phage_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        gnm._length = data_dict["SequenceLength"]
+        gnm.length = data_dict["SequenceLength"]
     except:
         pass
 
@@ -144,7 +144,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr._length = data_dict["Length"]
+        cds_ftr.length = data_dict["Length"]
     except:
         pass
 
@@ -507,17 +507,17 @@ def create_genome_insert_statement(gnm):
         "AnnotationAuthor) " + \
         "VALUES (" + \
         "'%s', '%s', '%s', '%s', '%s', %s, %s, '%s', '%s', '%s', '%s', '%s');" \
-        % (gnm.id, \
-        gnm.accession, \
-        gnm.name, \
-        gnm.host_genus, \
-        gnm.seq, \
-        gnm._length, \
-        gnm.gc, \
-        gnm.annotation_status, \
-        gnm.date, \
-        gnm.retrieve_record, \
-        gnm.annotation_qc, \
+        % (gnm.id,
+        gnm.accession,
+        gnm.name,
+        gnm.host_genus,
+        gnm.seq,
+        gnm.length,
+        gnm.gc,
+        gnm.annotation_status,
+        gnm.date,
+        gnm.retrieve_record,
+        gnm.annotation_qc,
         gnm.annotation_author)
     return statement
 

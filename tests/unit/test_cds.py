@@ -864,7 +864,7 @@ class TestCdsClass(unittest.TestCase):
         from a sequence."""
         self.feature.seq = Seq("ATCG", IUPAC.unambiguous_dna)
         self.feature.set_nucleotide_length(seq=True)
-        self.assertEqual(self.feature._length, 4)
+        self.assertEqual(self.feature.length, 4)
 
     def test_set_nucleotide_length_2(self):
         """Verify the nucleotide length is correct for a 0-based
@@ -873,7 +873,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.right = 11
         self.feature.coordinate_format = "0_half_open"
         self.feature.set_nucleotide_length()
-        self.assertEqual(self.feature._length, 11)
+        self.assertEqual(self.feature.length, 11)
 
     def test_set_nucleotide_length_3(self):
         """Verify the nucleotide length is correct for a 1-based
@@ -882,7 +882,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.right = 11
         self.feature.coordinate_format = "1_closed"
         self.feature.set_nucleotide_length()
-        self.assertEqual(self.feature._length, 12)
+        self.assertEqual(self.feature.length, 12)
 
     def test_set_nucleotide_length_4(self):
         """Verify the nucleotide length is not set for invalid
@@ -891,7 +891,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.right = 11
         self.feature.coordinate_format = "invalid"
         self.feature.set_nucleotide_length()
-        self.assertEqual(self.feature._length, -1)
+        self.assertEqual(self.feature.length, -1)
 
 
 

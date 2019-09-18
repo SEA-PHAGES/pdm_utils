@@ -38,7 +38,7 @@ class Cds:
         self.translation = "" # Biopython amino acid Seq object.
         self._translation_length = 0
         self.seq = "" # Biopython nucleotide Seq object.
-        self._length = 0
+        self.length = 0
 
 
         # The following attributes are common to PhameratorDB.
@@ -351,17 +351,17 @@ class Cds:
         """
 
         if seq:
-            self._length = len(self.seq)
+            self.length = len(self.seq)
             pass
         else:
             if self.coordinate_format == "0_half_open":
-                self._length = \
+                self.length = \
                     self.right - self.left
             elif self.coordinate_format == "1_closed":
-                self._length = \
+                self.length = \
                     self.right - self.left + 1
             else:
-                self._length = -1
+                self.length = -1
 
 
     def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):

@@ -155,7 +155,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     #         self.assertEqual(self.genome1.retrieve_record, \
     #             output_retrieve_record)
     #     with self.subTest():
-    #         self.assertEqual(self.genome1._length, output_seq_length)
+    #         self.assertEqual(self.genome1.length, output_seq_length)
     #     with self.subTest():
     #         self.assertEqual(self.genome1.type, output_type)
     #
@@ -234,7 +234,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     #         self.assertEqual(self.genome1.retrieve_record, \
     #             output_retrieve_record)
     #     with self.subTest():
-    #         self.assertEqual(self.genome1._length, output_seq_length)
+    #         self.assertEqual(self.genome1.length, output_seq_length)
     #     with self.subTest():
     #         self.assertEqual(self.genome1.type, output_type)
 
@@ -292,7 +292,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(self.genome1.seq, Seq)
         with self.subTest():
-            self.assertEqual(self.genome1._length, 10)
+            self.assertEqual(self.genome1.length, 10)
         with self.subTest():
             self.assertEqual(self.genome1.date, constants.EMPTY_DATE)
         with self.subTest():
@@ -374,7 +374,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds1.right, 100)
         with self.subTest():
-            self.assertEqual(cds1._length, 1000)
+            self.assertEqual(cds1.length, 1000)
         with self.subTest():
             self.assertEqual(cds1.name, "1")
         with self.subTest():
@@ -723,7 +723,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.seq = "ATCG"
-        self.genome1._length = 4
+        self.genome1.length = 4
         self.genome1.gc = 0.5001
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
@@ -753,7 +753,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.annotation_status = "final"
         self.genome1.accession = "ABC123"
         self.genome1.seq = "ATCG"
-        self.genome1._length = 4
+        self.genome1.length = 4
         self.genome1.gc = 0.5001
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"

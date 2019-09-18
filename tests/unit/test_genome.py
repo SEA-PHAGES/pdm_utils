@@ -56,7 +56,7 @@ class TestGenomeClass(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(self.gnm.seq, Seq)
         with self.subTest():
-            self.assertEqual(self.gnm._length, 7)
+            self.assertEqual(self.gnm.length, 7)
         with self.subTest():
             self.assertEqual(self.gnm.gc, 57.1429)
 
@@ -69,7 +69,7 @@ class TestGenomeClass(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(self.gnm.seq, Seq)
         with self.subTest():
-            self.assertEqual(self.gnm._length, 0)
+            self.assertEqual(self.gnm.length, 0)
         with self.subTest():
             self.assertEqual(self.gnm.gc, -1)
 
