@@ -471,16 +471,16 @@ def create_cds_insert_statement(cds_feature):
         "translation, Orientation, Notes, LocusTag) " + \
         "VALUES " + \
         "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % \
-        (cds_feature.id, \
-        cds_feature.genome_id, \
-        cds_feature.left, \
-        cds_feature.right, \
-        cds_feature._translation_length, \
-        cds_feature.name, \
-        cds_feature.type, \
-        cds_feature.translation, \
-        cds_feature.strand, \
-        cds_feature.processed_description, \
+        (cds_feature.id,
+        cds_feature.genome_id,
+        cds_feature.left,
+        cds_feature.right,
+        cds_feature.translation_length,
+        cds_feature.name,
+        cds_feature.type,
+        cds_feature.translation,
+        cds_feature.strand,
+        cds_feature.processed_description,
         cds_feature.locus_tag)
     return statement
 

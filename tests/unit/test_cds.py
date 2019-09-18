@@ -234,7 +234,7 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.translation, "MF")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 2)
+            self.assertEqual(self.feature.translation_length, 2)
 
     def test_set_translation_2(self):
         """Verify that sequence and length is set from valid input."""
@@ -242,7 +242,7 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.translation, "MF")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 2)
+            self.assertEqual(self.feature.translation_length, 2)
 
     def test_set_translation_3(self):
         """Verify that sequence and length is set from invalid input."""
@@ -250,7 +250,7 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.translation, "")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 0)
+            self.assertEqual(self.feature.translation_length, 0)
 
     def test_set_translation_4(self):
         """Verify that sequence and length is set from translating
@@ -261,7 +261,7 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.translation, "MF")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 2)
+            self.assertEqual(self.feature.translation_length, 2)
 
     def test_set_translation_5(self):
         """Verify that sequence and length is set from translating
@@ -273,7 +273,7 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.translation, "")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 0)
+            self.assertEqual(self.feature.translation_length, 0)
 
     def test_set_translation_6(self):
         """Verify that sequence and length is set when no options are
@@ -282,7 +282,7 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.translation, "")
         with self.subTest():
-            self.assertEqual(self.feature._translation_length, 0)
+            self.assertEqual(self.feature.translation_length, 0)
 
 
 
@@ -1067,7 +1067,7 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_translation_length_1(self):
         """Verify a present translation does not produce an error."""
-        self.feature._translation_length = 1
+        self.feature.translation_length = 1
         self.feature.check_translation_length(eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -1076,7 +1076,7 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_translation_length_2(self):
         """Verify a present translation does not produce an error."""
-        self.feature._translation_length = 100
+        self.feature.translation_length = 100
         self.feature.check_translation_length()
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -1085,7 +1085,7 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_translation_length_3(self):
         """Verify that no translation produces an error."""
-        self.feature._translation_length = 0
+        self.feature.translation_length = 0
         self.feature.check_translation_length()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
@@ -1166,7 +1166,7 @@ class TestCdsClass(unittest.TestCase):
     def test_check_translation_1(self):
         """Verify no error is produced by a correct translation."""
         self.feature.translation = Seq("MF", IUPAC.protein)
-        self.feature._translation_length = 2
+        self.feature.translation_length = 2
         self.feature.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
         self.feature.check_translation(eval_id="eval_id")
@@ -1179,7 +1179,7 @@ class TestCdsClass(unittest.TestCase):
         """Verify an error is produced by a translation with an internal
         stop codon."""
         self.feature.translation = Seq("MF", IUPAC.protein)
-        self.feature._translation_length = 2
+        self.feature.translation_length = 2
         self.feature.seq = Seq("ATGTTTTGATGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
         self.feature.check_translation()
@@ -1192,7 +1192,7 @@ class TestCdsClass(unittest.TestCase):
         """Verify an error is produced by a translation shorter than
         expected."""
         self.feature.translation = Seq("MF", IUPAC.protein)
-        self.feature._translation_length = 2
+        self.feature.translation_length = 2
         self.feature.seq = Seq("ATGTTTATGTGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
         self.feature.check_translation()
@@ -1202,7 +1202,7 @@ class TestCdsClass(unittest.TestCase):
         """Verify an error is produced by a translation longer than
         expected."""
         self.feature.translation = Seq("MF", IUPAC.protein)
-        self.feature._translation_length = 2
+        self.feature.translation_length = 2
         self.feature.seq = Seq("ATGTGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
         self.feature.check_translation()
@@ -1212,7 +1212,7 @@ class TestCdsClass(unittest.TestCase):
         """Verify an error is produced by a translation different than
         expected (but same length)."""
         self.feature.translation = Seq("MF", IUPAC.protein)
-        self.feature._translation_length = 2
+        self.feature.translation_length = 2
         self.feature.seq = Seq("ATGATGTGA", IUPAC.unambiguous_dna)
         self.feature.translation_table = 11
         self.feature.check_translation()

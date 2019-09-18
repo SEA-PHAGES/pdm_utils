@@ -36,7 +36,7 @@ class Cds:
 
         self.translation_table = ""
         self.translation = "" # Biopython amino acid Seq object.
-        self._translation_length = 0
+        self.translation_length = 0
         self.seq = "" # Biopython nucleotide Seq object.
         self.length = 0
 
@@ -246,7 +246,7 @@ class Cds:
             self.translation = self.translate_seq()
         else:
             self.translation = Seq("", IUPAC.protein)
-        self._translation_length = len(self.translation)
+        self.translation_length = len(self.translation)
 
 
     def set_translation_table(self, value):
@@ -459,7 +459,7 @@ class Cds:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if self._translation_length < 1:
+        if self.translation_length < 1:
             result = "A translation is not present."
             status = "error"
         else:
@@ -479,10 +479,10 @@ class Cds:
         """
 
         translation = self.translate_seq()
-        if self._translation_length < len(translation):
+        if self.translation_length < len(translation):
             result = "The translation length is shorter than expected."
             status = "error"
-        elif self._translation_length > len(translation):
+        elif self.translation_length > len(translation):
             result = "The translation length is longer than expected."
             status = "error"
         elif self.translation != translation:

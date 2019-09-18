@@ -616,7 +616,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.cds1.genome_id = "L5"
         self.cds1.left = 5
         self.cds1.right = 10
-        self.cds1._translation_length = 20
+        self.cds1.translation_length = 20
         self.cds1.name = "Int"
         self.cds1.type = "CDS"
         self.cds1.translation = "ACKLG"
@@ -645,7 +645,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.cds1.genome_id = "L5"
         self.cds1.left = 5
         self.cds1.right = 10
-        self.cds1._translation_length = 20
+        self.cds1.translation_length = 20
         self.cds1.name = "Int"
         self.cds1.type = "CDS"
         self.cds1.translation = "ACKLG"
@@ -657,7 +657,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.cds2.genome_id = "Trixie"
         self.cds2.left = 1
         self.cds2.right = 100
-        self.cds2._translation_length = 15
+        self.cds2.translation_length = 15
         self.cds2.name = "parA"
         self.cds2.type = "CDS"
         self.cds2.translation = "PPGLA"
@@ -669,7 +669,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.cds3.genome_id = "D29"
         self.cds3.left = 42
         self.cds3.right = 62
-        self.cds3._translation_length = 3
+        self.cds3.translation_length = 3
         self.cds3.name = "D29_123"
         self.cds3.type = "CDS"
         self.cds3.translation = "AVY"

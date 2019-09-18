@@ -253,7 +253,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -319,7 +319,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -391,7 +391,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 0)
         with self.subTest():
@@ -450,7 +450,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 0)
+            self.assertEqual(self.cds_ftr.translation_length, 0)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -509,7 +509,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -568,7 +568,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -627,7 +627,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -686,7 +686,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
@@ -745,7 +745,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.translation, "ABCDE")
         with self.subTest():
-            self.assertEqual(self.cds_ftr._translation_length, 5)
+            self.assertEqual(self.cds_ftr.translation_length, 5)
         with self.subTest():
             self.assertEqual(self.cds_ftr.length, 8)
         with self.subTest():
