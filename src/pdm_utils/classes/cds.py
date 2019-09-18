@@ -20,10 +20,8 @@ class Cds:
     def __init__(self):
 
         # The following attributes are common to any CDS.
-
         self.id = "" # Gene ID
         self.name = "" # Tends to be an integer for SEA-PHAGES.
-        self.genome_id = "" # Genome from which CDS feature is derived.
         self.seqfeature = None # Biopython SeqFeature object.
         self.left = -1 # Genomic position
         self.right = -1 # Genomic position
@@ -35,6 +33,10 @@ class Cds:
         self.translation_length = 0
         self.seq = Seq("", IUPAC.ambiguous_dna) # Biopython nucleotide Seq object.
         self.length = 0
+
+        # Information about the genome from which the feature is derived.
+        self.genome_id = ""
+        self.genome_length = -1
 
 
         # The following attributes are common to PhameratorDB.

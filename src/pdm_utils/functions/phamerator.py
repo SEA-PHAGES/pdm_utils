@@ -298,6 +298,10 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
             cds_list = parse_cds_data(sql_handle, column="PhageID",
                                       phage_id_list=[gnm.id],
                                       query=gene_query)
+            x = 0
+            while x < len(cds_list):
+                cds_list[x].genome_length = gnm.length
+                x += 1
             gnm.cds_features = cds_list
         if trna_query is not None:
             # TODO develop this step once tRNA table and objects are built.
