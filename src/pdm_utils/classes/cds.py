@@ -29,7 +29,7 @@ class Cds:
         self.right = -1 # Genomic position
         self.coordinate_format = "" # Indexing format used for coordinates.
         self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
-        self.compound_parts = 0 # Number of regions that define the feature
+        self.parts = 0 # Number of regions that define the feature
         self.translation_table = ""
         self.translation = "" # Biopython amino acid Seq object.
         self.translation_length = 0

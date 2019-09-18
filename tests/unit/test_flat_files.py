@@ -247,7 +247,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -313,7 +313,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -385,7 +385,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, -1)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 3)
+            self.assertEqual(self.cds_ftr.parts, 3)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -444,7 +444,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -503,7 +503,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -562,7 +562,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -621,7 +621,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -680,7 +680,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
@@ -739,7 +739,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds_ftr.right, 10)
         with self.subTest():
-            self.assertEqual(self.cds_ftr.compound_parts, 1)
+            self.assertEqual(self.cds_ftr.parts, 1)
         with self.subTest():
             self.assertEqual(self.cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
