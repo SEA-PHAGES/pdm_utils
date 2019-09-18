@@ -848,7 +848,61 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(feature_dict["gene"]), 1)
 
+    def test_genome_to_seqrecord_1(self):
+        """Verify that genome_to_seqrecord can initialize
+        a SeqRecord given the basic conditions"""
+        self.gnm.seq = Seq("ATA")
+        self.gnm.name = "Trixie"
+        self.gnm.id = "Trixie"
+        self.gnm.cds_features = []
+        self.gnm.host_genus = "Mycobacterium"
 
+        record = flat_files.genome_to_seqrecord(self.gnm)
+        self.assertEqual(record.name, "Trixie")
+        self.assertEqual(record.id "Trixie")
+        self.assertEqual(record.features, [])
+        self.assertEqual(record.description,\
+                "Mycobacterium phage Trixie, Complete Genome")
+        self.assertEqual(record.seq, Seq("ATA")
+
+    def test_genome_to_seqrecord_2(self):
+        """Verify that genome_to_seqrecord can correctly
+        populate seqrecord annotations"""
+
+        self.gnm.seq = Seq("ATA")
+        self.gnm.date = "2019"
+        self.gnm.accession = "gnm12345"
+        self.gnm.host_genus = "Mycobacterium"
+        self.gnm.id = "Trixie"
+        self.gnm.cluster = "A"
+        self.gnm.subcluster = "A2"
+        self.gnm.annotation_status = "1"
+        self.gnm.retrieve_record = "1"
+        self.gnm.annotation_qc = "1"
+
+        record = flat_files.genome_to_seqrecord(self.gnm)
+        record_comments = record.annotations["comment"]
+
+        self.assertEqual(record.annotations["date"],\
+                "2019")
+        self.assertEqual(record.annotations["accessions"],\
+                ["gnm12345"])
+        self.assertEqual(record.annotations["source"],\
+                "Mycobacterium phage Trixie")
+        self.assertEqual(record_comments[0],\
+                "Cluster: A; Subcluster: A2")
+        self.assertEqual(record_comments[2],\
+                "Annotation status: 1")
+        self.assertEqual(record_comments[3],\
+                "RetrieveRecord : 1; AnnotationQC: 1")
+    def test_genome_to_seqrecord_3(self):
+        self.gnm = None
+        with self.assertRaises(AssertionError):
+            record = flat_files.genome_to_seqrecord(self.gnm)
+    def test_genome_to_seqrecord_4(self):
+        self.gnm = genome.Genome()
+        with self.assertRaises(AttributeError):
+            record = flat_files.genome_to_seqrecord(self.gnm)
 
 
 

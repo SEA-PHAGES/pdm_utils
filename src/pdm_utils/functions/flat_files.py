@@ -5,6 +5,7 @@ GenBank-formatted flat files."""
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
+from Bio.Alphabet.IUPAC import *
 from Bio.Seq import Seq
 from pdm_utils.classes import genome, cds, trna, source
 from pdm_utils.functions import basic
@@ -530,19 +531,163 @@ def parse_files(file_list, id_field="organism_name"):
             # gnm.set_filename(filename)
     return (genomes, valid_files, failed_files)
 
+def genome_to_seqrecord(phage_genome):
+    """Creates a SeqRecord object from the data within
+    the Genome object and returns it
 
+    param:phage_genome:
+        Input a Genome object.a
+    :type phage_genome: genome
+    :returns:
+        record is a SeqRecord object parsed from
+        genome data
+    """
 
+    assert phage_genome != None,\
+    "Genome object passed is None and not initialized"
+    try:
+        record = SeqRecord(phage_genome.seq)
+        record.seq.alphabet = IUPACAmbiguousDNA()
+    except AttributeError:
+        print("Genome object failed to be converted\
+                to SeqRecord.  Genome valid attribute\
+                'seq' is required to convert to SeqRecord\
+                object")
+        raise
+    record.name = get_seqrecord_name(phage_genome)
+    record.id = get_seqrecord_id(phage_genome)
+    record.features = get_seqrecord_features(phage_genome)
+    record.description =\
+            get_seq_record_annotations(phage_genome)
 
+    return record
 
+def get_seqrecord_name(phage_genome):
+    """Helper function that uses Genome data to populate 
+    the name SeqRecord attribute
 
+    :param phage_genome:
+        Input a Genome object.
+    :type phage_genome: genome
+    :returns:
+        name is a string from genome's name attribute
+    """
 
+    name = phage_genome.name
+    return name
 
+def get_seqrecord_id(phage_genome):
+    """Helper function that uses Genome data to populate
+    the id SeqRecord attribute
 
+    :param phage_genome:
+        Input a Genome object.
+    :type phage_genome: genome
+    :returns:
+        id is a string from genome's id attribute
+    """
 
+    id = phage_genome.id
+    return id
 
+def get_seqrecord_features(phage_genome):
+    """Helper function that uses Genome data to populate
+    the features SeqRecord atribute
 
+    :param phage_genome:
+        Input a Genome object.
+    :type phage_genome: genome
+    :returns:
+        features is a list of SeqFeature objects parsed
+        from cds objects
+    """
 
-# TODO unit test below.
+    features = []
+    for phage_cds in phage_genome.cds_features:
+        features.append(phage_cds.seqfeature)
+
+    return features
+
+def get_seqrecord_description(phage_genome):
+    """Helper function that uses Genome data to populate
+    the description SeqRecord attribute
+    :param phage_genome:
+        Input a Genome object.
+    :type phage_genome: genome
+    :returns:
+        description is a formatted string parsed
+        from genome data
+    """
+
+    description = "{} phage {}, Complete Genome".format(\
+            phage_genome.host_genus, phage_genome.id)
+    return description
+
+def get_seqrecord_annotations(phage_genome):
+    """Helper function that uses Genome data to populate
+    the annotations SeqRecord attribute
+
+    :param phage_genome:
+        Input a Genome object.
+    :type phage_genome: genome
+    :returns:
+        annotations(dictionary) is a dictionary with
+        the formatting of BioPython's SeqRecord
+        annotations attribute
+    """
+ 
+    annotations = {"molecule type": "DNA",\
+            "topology" : "linear",\
+            "data_file_divisions" : "PHG",\
+            "date" : "",\
+            "accessions" : [],\
+            "sequence_version" : "1",\
+            "keyword" : [],\
+            "source" : "",\
+            "organism" : "",\
+            "taxonomy" : [],\
+            "comment": ()}
+    annotations["date"] = phage_genome.date
+    annotations["accessions"].append\
+            (phage_genome.accession)
+    annotations["source"] =\
+            "{} phage {}".format\
+            (phage_genome.host genus, phage_genome.id)
+    annotations["taxonomy"].append("Virsues")
+    annotations["taxonomy"].append("dsDNA Viruses")
+    annotations["taxonomy"].append("Caudovirales")
+    annotations["comment"] =\
+            get_seqrecord_annotation_comments(phage_genome)
+    return annotations
+
+def get_seqrecord_annotations_comments(phage_genome):
+    """Helper function that uses Genome data to populate
+    the comment annotation attribute
+
+    :param phage_genome:
+        Input a Genome object.
+    :type phage_genome: genome
+    :returns:
+        cluster_comment, auto_generated_comment
+        annotation_status_comment, qc_and_retrieval values
+        (tuple) is a tuple with
+        the formatting of BioPython's SeqRecord
+        annotations comment attribute
+    """
+
+    cluster_comment = "Cluster{}; Subcluster: {}".format\
+            (phage_genome.cluster, phage_genome.subcluster)
+    auto_generated_comment = "Auto-generated genome record\
+            from Phamerator database"
+    annotation_status_comment = "Annotation status: {}".\
+            format(phage_genome.annotation_status)
+    qc_and_retrieval_values = "RetrieveRecord: {}; \
+            AnnotationQC: {}".format\
+            (phage_genome.retrieve_record,\
+            phage_genome.annotation_qc)
+
+    return (cluster_comment, auto_generated_comment,\
+            annotation_status_comment, qc_and_retrieval values)
 
 
 

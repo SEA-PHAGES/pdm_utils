@@ -9,6 +9,7 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 import re
+from collections import OrderedDict
 
 
 
@@ -402,9 +403,30 @@ class Cds:
         self.seqfeature = SeqFeature(FeatureLocation(new_left, new_right),
                                      strand=new_strand, type="CDS")
 
+        self.seqfeature.qualifiers = self.get_qualifiers()
 
+    def get_qualifiers(self):
+        """Helper function that uses cds data to populate
+        the qualifiers SeqFeature attribute
 
+        :returns:
+            qualifiers(dictionary) is a dictionary with the
+            formating of BioPython's SeqFeature qualifiers
+            attribute.
+        """
 
+        qualifiers = OrderedDict()
+        qualifiers["gene"] = [self.name]
+        qualifiers["locus_tag"] = [self.locus_tag]
+        qualifiers["note"] = ["gp{}".format(self.name)]
+        qualifiers["codon_start"] = ["1"]
+        qualifiers["transl_table"] = ["11"]
+        if self.description != "":
+            qualifiers["product"] = [self.description]
+        qualifiers["id"] = [self.id]
+        qualifiers["translation"] = [self.translation]
+
+        return qualifiers
 
 
 
