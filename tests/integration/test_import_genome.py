@@ -3,7 +3,7 @@
 
 
 import unittest
-from pdm_utils.pipelines.db_import import import_main
+from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.constants import constants
 from pdm_utils.classes import bundle, genome, ticket
 from pdm_utils.classes import mysqlconnectionhandler
@@ -21,7 +21,7 @@ pwd = "tester"
 db = "test_db"
 
 
-class TestImportMain(unittest.TestCase):
+class TestImportGenomeMain(unittest.TestCase):
 
 
     def setUp(self):

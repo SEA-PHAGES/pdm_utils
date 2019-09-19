@@ -12,7 +12,6 @@ from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import bundle
-from pdm_utils.pipelines.db_import import evaluate
 from pdm_utils.constants import constants
 
 def import_io(sql_handle, genome_folder, import_table_file, filename_flag, test_run,

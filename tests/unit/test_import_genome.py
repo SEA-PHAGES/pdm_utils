@@ -7,13 +7,13 @@ from pdm_utils.classes import source
 from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
-from pdm_utils.pipelines.db_import import import_main
+from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.classes import ticket
 import unittest
 from Bio.Seq import Seq
 
 
-class TestImportClass1(unittest.TestCase):
+class TestImportGenomeClass1(unittest.TestCase):
 
 
     def setUp(self):
@@ -45,7 +45,7 @@ class TestImportClass1(unittest.TestCase):
     def test_check_ticket_structure_1(self):
         """Verify no error is produced with a correctly structured
         'add' ticket."""
-        import_main.check_ticket_structure(
+        import_genome.check_ticket_structure(
             self.add_ticket1, type_set=self.type_set,
             description_field_set=self.description_field_set,
             null_set=self.null_set, run_mode_set=self.run_mode_set)
@@ -65,7 +65,7 @@ class TestImportClass1(unittest.TestCase):
 
         tkt = self.add_ticket1
         tkt.type = "invalid"
-        import_main.check_ticket_structure(
+        import_genome.check_ticket_structure(
             self.add_ticket1, type_set=self.type_set,
             description_field_set=self.description_field_set,
             null_set=self.null_set, run_mode_set=self.run_mode_set,
@@ -83,7 +83,7 @@ class TestImportClass1(unittest.TestCase):
 
 
 
-class TestImportClass2(unittest.TestCase):
+class TestImportGenomeClass2(unittest.TestCase):
 
 
     def setUp(self):
@@ -133,21 +133,21 @@ class TestImportClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced when
         check_id_typo = True and check_host_typo = True."""
         src_ftr = source.Source()
-        import_main.check_source(src_ftr)
+        import_genome.check_source(src_ftr)
         self.assertEqual(len(src_ftr.evaluations), 4)
 
     def test_check_source_2(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = False and check_host_typo = True."""
         src_ftr = source.Source()
-        import_main.check_source(src_ftr, check_id_typo=False)
+        import_genome.check_source(src_ftr, check_id_typo=False)
         self.assertEqual(len(src_ftr.evaluations), 3)
 
     def test_check_source_3(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = True and check_host_typo = False."""
         src_ftr = source.Source()
-        import_main.check_source(src_ftr, check_host_typo=False)
+        import_genome.check_source(src_ftr, check_host_typo=False)
         self.assertEqual(len(src_ftr.evaluations), 1)
 
 
@@ -163,7 +163,7 @@ class TestImportClass2(unittest.TestCase):
         check_locus_tag = True, check_gene = True, and
         check_description = True."""
         cds_ftr = cds.Cds()
-        import_main.check_cds(cds_ftr)
+        import_genome.check_cds(cds_ftr)
         self.assertEqual(len(cds_ftr.evaluations), 13)
 
     def test_check_cds_2(self):
@@ -171,7 +171,7 @@ class TestImportClass2(unittest.TestCase):
         check_locus_tag = False, check_gene = True, and
         check_description = True."""
         cds_ftr = cds.Cds()
-        import_main.check_cds(cds_ftr, check_locus_tag=False)
+        import_genome.check_cds(cds_ftr, check_locus_tag=False)
         self.assertEqual(len(cds_ftr.evaluations), 10)
 
     def test_check_cds_3(self):
@@ -179,7 +179,7 @@ class TestImportClass2(unittest.TestCase):
         check_locus_tag = True, check_gene = False, and
         check_description = True."""
         cds_ftr = cds.Cds()
-        import_main.check_cds(cds_ftr, check_gene=False)
+        import_genome.check_cds(cds_ftr, check_gene=False)
         self.assertEqual(len(cds_ftr.evaluations), 10)
 
     def test_check_cds_4(self):
@@ -187,7 +187,7 @@ class TestImportClass2(unittest.TestCase):
         check_locus_tag = True, check_gene = True, and
         check_description = False."""
         cds_ftr = cds.Cds()
-        import_main.check_cds(cds_ftr, check_description=False)
+        import_genome.check_cds(cds_ftr, check_description=False)
         self.assertEqual(len(cds_ftr.evaluations), 12)
 
 
@@ -203,7 +203,7 @@ class TestImportClass2(unittest.TestCase):
         genome_pair = genomepair.GenomePair()
         genome_pair.genome1 = genome1
         genome_pair.genome2 = genome2
-        import_main.compare_genomes(genome_pair)
+        import_genome.compare_genomes(genome_pair)
         self.assertEqual(len(genome_pair.evaluations), 8)
 
 
@@ -213,7 +213,7 @@ class TestImportClass2(unittest.TestCase):
     def test_check_genome_1(self):
         """Verify correct number of evaluations are produced using
         'add' ticket and all eval_flags 'True'."""
-        import_main.check_genome(self.gnm, self.tkt, self.null_set,
+        import_genome.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 29)
@@ -222,7 +222,7 @@ class TestImportClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced using
         'replace' ticket."""
         self.tkt.type = "replace"
-        import_main.check_genome(self.gnm, self.tkt, self.null_set,
+        import_genome.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 28)
@@ -232,7 +232,7 @@ class TestImportClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced using
         'check_seq' as False."""
         self.tkt.eval_flags["check_seq"] = False
-        import_main.check_genome(self.gnm, self.tkt, self.null_set,
+        import_genome.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 28)
@@ -242,7 +242,7 @@ class TestImportClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced using
         'check_id_typo' as False."""
         self.tkt.eval_flags["check_id_typo"] = False
-        import_main.check_genome(self.gnm, self.tkt, self.null_set,
+        import_genome.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 26)
@@ -252,7 +252,7 @@ class TestImportClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced using
         'check_host_typo' as False."""
         self.tkt.eval_flags["check_host_typo"] = False
-        import_main.check_genome(self.gnm, self.tkt, self.null_set,
+        import_genome.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 25)
@@ -262,7 +262,7 @@ class TestImportClass2(unittest.TestCase):
         """Verify correct number of evaluations are produced using
         'check_author' as False."""
         self.tkt.eval_flags["check_author"] = False
-        import_main.check_genome(self.gnm, self.tkt, self.null_set,
+        import_genome.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 27)
@@ -272,7 +272,7 @@ class TestImportClass2(unittest.TestCase):
 
 
 
-class TestImportClass3(unittest.TestCase):
+class TestImportGenomeClass3(unittest.TestCase):
 
     def setUp(self):
         self.bndl = bundle.Bundle()
@@ -289,12 +289,12 @@ class TestImportClass3(unittest.TestCase):
         self.tkt.cluster = "retrieve"
         self.tkt.subcluster = "retain"
         self.bndl.ticket = self.tkt
-        import_main.check_bundle(self.bndl)
+        import_genome.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 9)
 
     def test_check_bundle_2(self):
         """Verify some check methods are called when there is no Ticket."""
-        import_main.check_bundle(self.bndl)
+        import_genome.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 1)
 
     def test_check_bundle_3(self):
@@ -303,7 +303,7 @@ class TestImportClass3(unittest.TestCase):
         self.tkt.type = "replace"
         self.tkt.subcluster = "retain"
         self.bndl.ticket = self.tkt
-        import_main.check_bundle(self.bndl)
+        import_genome.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 7)
 
     def test_check_bundle_4(self):
@@ -312,7 +312,7 @@ class TestImportClass3(unittest.TestCase):
         self.tkt.type = "replace"
         self.tkt.cluster = "retrieve"
         self.bndl.ticket = self.tkt
-        import_main.check_bundle(self.bndl)
+        import_genome.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 8)
 
     def test_check_bundle_5(self):
@@ -320,7 +320,7 @@ class TestImportClass3(unittest.TestCase):
         Ticket."""
         self.tkt.cluster = "retrieve"
         self.bndl.ticket = self.tkt
-        import_main.check_bundle(self.bndl)
+        import_genome.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 6)
 
 
