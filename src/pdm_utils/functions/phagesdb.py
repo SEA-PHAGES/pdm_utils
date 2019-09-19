@@ -171,7 +171,7 @@ def parse_fasta_data(fasta_data):
     return (header, sequence)
 
 
-def parse_genome_data(data_dict):
+def parse_genome_data(data_dict, gnm_type=""):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
     Genome object.
 
@@ -181,7 +181,7 @@ def parse_genome_data(data_dict):
     :rtype: genome
     """
     gnm = genome.Genome()
-    gnm.type = "phagesdb"
+    gnm.type = gnm_type
 
     # Phage Name, PhageID
     phage_name = parse_phage_name(data_dict)
