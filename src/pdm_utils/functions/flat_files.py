@@ -551,10 +551,9 @@ def genome_to_seqrecord(phage_genome):
         record = SeqRecord(phage_genome.seq)
         record.seq.alphabet = IUPACAmbiguousDNA()
     except AttributeError:
-        print("Genome object failed to be converted\
-                to SeqRecord.  Genome valid attribute\
-                'seq' is required to convert to SeqRecord\
-                object")
+        print("Genome object failed to be converted to SeqRecord.",
+              "Genome valid attribute 'seq' is required to",
+              "convert to SeqRecord object.")
         raise
     record.name = get_seqrecord_name(phage_genome)
     record.id = get_seqrecord_id(phage_genome)
@@ -565,8 +564,9 @@ def genome_to_seqrecord(phage_genome):
 
     return record
 
+# TODO Owen unittest.
 def get_seqrecord_name(phage_genome):
-    """Helper function that uses Genome data to populate 
+    """Helper function that uses Genome data to populate
     the name SeqRecord attribute
 
     :param phage_genome:
@@ -579,6 +579,7 @@ def get_seqrecord_name(phage_genome):
     name = phage_genome.name
     return name
 
+# TODO Owen unittest.
 def get_seqrecord_id(phage_genome):
     """Helper function that uses Genome data to populate
     the id SeqRecord attribute
@@ -593,6 +594,7 @@ def get_seqrecord_id(phage_genome):
     id = phage_genome.id
     return id
 
+# TODO Owen unittest.
 def get_seqrecord_features(phage_genome):
     """Helper function that uses Genome data to populate
     the features SeqRecord atribute
@@ -611,6 +613,7 @@ def get_seqrecord_features(phage_genome):
 
     return features
 
+# TODO Owen unittest.
 def get_seqrecord_description(phage_genome):
     """Helper function that uses Genome data to populate
     the description SeqRecord attribute
@@ -626,6 +629,7 @@ def get_seqrecord_description(phage_genome):
             phage_genome.host_genus, phage_genome.id)
     return description
 
+# TODO Owen unittest.
 def get_seqrecord_annotations(phage_genome):
     """Helper function that uses Genome data to populate
     the annotations SeqRecord attribute
@@ -638,7 +642,7 @@ def get_seqrecord_annotations(phage_genome):
         the formatting of BioPython's SeqRecord
         annotations attribute
     """
- 
+
     annotations = {"molecule type": "DNA",\
             "topology" : "linear",\
             "data_file_divisions" : "PHG",\
@@ -663,6 +667,7 @@ def get_seqrecord_annotations(phage_genome):
             get_seqrecord_annotations_comments(phage_genome)
     return annotations
 
+# TODO Owen unittest.
 def get_seqrecord_annotations_comments(phage_genome):
     """Helper function that uses Genome data to populate
     the comment annotation attribute
@@ -678,14 +683,14 @@ def get_seqrecord_annotations_comments(phage_genome):
         annotations comment attribute
     """
 
-    cluster_comment = "Cluster{}; Subcluster: {}".format\
+    cluster_comment = "Cluster: {}; Subcluster: {}".format\
             (phage_genome.cluster, phage_genome.subcluster)
     auto_generated_comment = "Auto-generated genome record\
             from Phamerator database"
     annotation_status_comment = "Annotation status: {}".\
             format(phage_genome.annotation_status)
-    qc_and_retrieval_values = "RetrieveRecord: {}; \
-            AnnotationQC: {}".format\
+    qc_and_retrieval_values = \
+            "RetrieveRecord: {}; AnnotationQC: {}".format\
             (phage_genome.retrieve_record,\
             phage_genome.annotation_qc)
 

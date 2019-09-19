@@ -389,6 +389,8 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(cds1.locus_tag, "SEA_L5_001")
         with self.subTest():
             self.assertEqual(cds1.translation_table, 11)
+        with self.subTest():
+            self.assertEqual(cds1.coordinate_format, "0_half_open")
 
 
     def test_parse_gene_table_data_2(self):

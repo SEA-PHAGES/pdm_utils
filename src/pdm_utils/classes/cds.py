@@ -384,6 +384,7 @@ class Cds:
             self.seq = Seq("", IUPAC.ambiguous_dna)
 
 
+    # TODO Owen unittest for added steps.
     def set_seqfeature(self):
         """Set the 'seqfeature' attribute.
 
@@ -411,6 +412,7 @@ class Cds:
                     strand = new_strand, type = "CDS")
         self.seqfeature.qualifiers = self.get_qualifiers()
 
+    # TODO Owen unittest.
     def get_qualifiers(self):
         """Helper function that uses cds data to populate
         the qualifiers SeqFeature attribute

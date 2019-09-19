@@ -9,6 +9,7 @@ from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from pdm_utils.functions import flat_files, phamerator, basic
 import os, sys
 
+# TODO Owen unittest.
 def database_to_file(database_name, file_export_format, export_folder_path, phage_name_filter_list = []):
     """Use SQL database to export files of the desired format of selected phage data
     :param database_name:
@@ -18,21 +19,22 @@ def database_to_file(database_name, file_export_format, export_folder_path, phag
         Input SeqIO file export format.
     :type file_export_format: str
     :param export_folder_path:
-        Input the path for the placement of the directory 
-        of exported files. 
+        Input the path for the placement of the directory
+        of exported files.
     :type export_folder_path:
     :param phage_name_filter_list:
-        Input a list of phage names within the selected 
+        Input a list of phage names within the selected
         SQL database.
     "type phage_name_filter_list: str[]
     """
-        
+
     sql_handle = establish_database_connection(database_name)
     seqfeature_file_output\
             (retrieve_seqfeature_from_database\
             (sql_handle, phage_name_filter_list),\
-            file_export_format, export_folder_path) 
+            file_export_format, export_folder_path)
 
+# TODO Owen unittest.
 def establish_database_connection(database_name):
     """Creates a mysqlconnectionhandler object and populates its credentials
 
@@ -51,6 +53,7 @@ def establish_database_connection(database_name):
                 and password failed".format(database_name))
     return sql_handle
 
+# TODO Owen unittest.
 def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_list = []):
     """Reads a local SQL database and converts it to a SeqRecord list
 
@@ -58,7 +61,7 @@ def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_li
         Input a mysqlconnectionhandler object.
     :type sql_database_handle: mysqlconnectionhandler
     :param phage_name_filter_list:
-        Input a list of phage names within the selected 
+        Input a list of phage names within the selected
         SQL database.
     :type phage_name_filter_list: str[]
     """
@@ -69,7 +72,7 @@ def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_li
             (sql_database_handle,\
                     phage_id_list = phage_name_filter_list\
                     ,phage_query = genome_query,\
-                    gene_query = cds_query) 
+                    gene_query = cds_query)
     database_versions = retrieve_database_version\
             (sql_database_handle)
     seq_record_list = []
@@ -82,6 +85,7 @@ def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_li
 
     return seq_record_list
 
+# TODO Owen unittest.
 def set_cds_seqfeatures(phage_genome):
     """Helper function that queries for and returns cds data from a SQL database for a specific phage
 
@@ -93,7 +97,7 @@ def set_cds_seqfeatures(phage_genome):
     :type sql_database_handle: mysqlconnectionhandler
     """
 
-    try: 
+    try:
         def _sorting_key(cds): return cds.left
         phage_genome.cds_features.sort(key=_sorting_key)
     except:
@@ -101,11 +105,12 @@ def set_cds_seqfeatures(phage_genome):
         pass
     for cds in phage_genome.cds_features:
         cds.set_seqfeature()
-    
 
+
+# TODO Owen unittest.
 def retrieve_database_version(sql_database_handle):
     """Helper function that queries a SQL database for the database version and schema version
-    
+
     :param sql_database_handle:
         Input a mysqlconnectionhandler object.
     :type sql_database_handle: mysqlconnectionhandler
@@ -114,6 +119,7 @@ def retrieve_database_version(sql_database_handle):
     database_versions_list = phamerator.retrieve_data(sql_database_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
+# TODO Owen unittest.
 def append_database_version(genome_seqrecord, version_data):
     """Helper function that appends the working database version in a comment within a SeqFeature annotation
 
@@ -125,7 +131,7 @@ def append_database_version(genome_seqrecord, version_data):
         Input a version data dictionary parsed from a SQL database.
     :type version_data: dictionary
     """
-   
+
     assert len(version_data) >= 2, "Version data dictionary\
         containing SQL database version\
         data does not contain enough values"
@@ -181,7 +187,7 @@ if __name__ == "__main__":
     else:
         if len(sys.argv) == 3:
             database_to_file(database_name = sys.argv[1], file_export_format = sys.argv[2], export_folder_path =os.getcwd())
-        else: 
+        else:
             phage_id_list = []
             for args in sys.argv[2:]:
                 phage_id_list.append(args)
@@ -189,7 +195,3 @@ if __name__ == "__main__":
                     file_export_format = sys.argv[2],\
                     export_folder_path = os.getcwd(),\
                     phage_name_filter_list = phage_id_list)
-
-
-
-

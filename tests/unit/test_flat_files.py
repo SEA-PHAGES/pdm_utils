@@ -859,11 +859,11 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         record = flat_files.genome_to_seqrecord(self.gnm)
         self.assertEqual(record.name, "Trixie")
-        self.assertEqual(record.id "Trixie")
+        self.assertEqual(record.id, "Trixie")
         self.assertEqual(record.features, [])
         self.assertEqual(record.description,\
                 "Mycobacterium phage Trixie, Complete Genome")
-        self.assertEqual(record.seq, Seq("ATA")
+        self.assertEqual(record.seq, Seq("ATA"))
 
     def test_genome_to_seqrecord_2(self):
         """Verify that genome_to_seqrecord can correctly
@@ -894,13 +894,16 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.assertEqual(record_comments[2],\
                 "Annotation status: 1")
         self.assertEqual(record_comments[3],\
-                "RetrieveRecord : 1; AnnotationQC: 1")
+                "RetrieveRecord: 1; AnnotationQC: 1")
+
     def test_genome_to_seqrecord_3(self):
         self.gnm = None
         with self.assertRaises(AssertionError):
             record = flat_files.genome_to_seqrecord(self.gnm)
+
     def test_genome_to_seqrecord_4(self):
-        self.gnm = genome.Genome()
+        # self.gnm = genome.Genome()
+        self.gnm = ""
         with self.assertRaises(AttributeError):
             record = flat_files.genome_to_seqrecord(self.gnm)
 

@@ -1,11 +1,11 @@
 """Tests the functionality of the unique functions in the database_to_file pipeline"""
 
 import unittest
-from classes import genome
+from pdm_utils.classes import genome
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from pipelines.db_export import database_to_file
+from pdm_utils.pipelines.db_export import database_to_file
 import os, sys, shutil
 
 class TestDatabaseToFile(unittest.TestCase):
@@ -19,4 +19,3 @@ class TestDatabaseToFile(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(os.getcwd(), "database_export_output")))
         self.assertFalse(os.listdir(os.path.join(os.getcwd(), "database_export_output")))
         shutil.rmtree(os.path.join(os.getcwd(), "database_export_output"))
-

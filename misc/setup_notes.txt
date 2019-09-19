@@ -62,6 +62,10 @@ A Phamerator database locally installed
 
 
 
+# To add pdm_utils module to python's syspath on-the-fly, 
+# edit the following command so that it points to your local repo and 
+# execute it in bash:
+export PYTHONPATH="${PYTHONPATH}:/path/to/pdm_utils/src/"
 
 
 
