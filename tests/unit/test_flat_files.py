@@ -1283,99 +1283,97 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                           gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
         with self.subTest():
-            self.assertEqual(gnm.filename, "Phage_ZZZ")
+            self.assertEqual(self.gnm.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(gnm.name, "XYZ123")
+            self.assertEqual(self.gnm.name, "XYZ123")
         with self.subTest():
-            self.assertEqual(gnm.organism, organism)
+            self.assertEqual(self.gnm.organism, organism)
         with self.subTest():
-            self.assertEqual(gnm._organism_name, "KatherineG")
+            self.assertEqual(self.gnm._organism_name, "KatherineG")
         with self.subTest():
-            self.assertEqual(gnm._organism_host_genus, "Gordonia")
+            self.assertEqual(self.gnm._organism_host_genus, "Gordonia")
         with self.subTest():
-            self.assertEqual(gnm.accession, "ABC123")
+            self.assertEqual(self.gnm.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(gnm.description, description)
+            self.assertEqual(self.gnm.description, description)
         with self.subTest():
-            self.assertEqual(gnm._description_name, "L5")
+            self.assertEqual(self.gnm._description_name, "L5")
         with self.subTest():
-            self.assertEqual(gnm._description_host_genus, "Mycobacterium")
+            self.assertEqual(self.gnm._description_host_genus, "Mycobacterium")
         with self.subTest():
-            self.assertEqual(gnm.source, source)
+            self.assertEqual(self.gnm.source, source)
         with self.subTest():
-            self.assertEqual(gnm._source_name, "phiC31")
+            self.assertEqual(self.gnm._source_name, "phiC31")
         with self.subTest():
-            self.assertEqual(gnm._source_host_genus, "Streptomyces")
+            self.assertEqual(self.gnm._source_host_genus, "Streptomyces")
         with self.subTest():
-            self.assertEqual(gnm.authors, "Jane;Doe;Smith")
+            self.assertEqual(self.gnm.authors, "Jane;Doe;Smith")
         with self.subTest():
-            self.assertEqual(gnm.seq, "ATGC")
+            self.assertEqual(self.gnm.seq, "ATGC")
         with self.subTest():
-            self.assertEqual(gnm.length, 4)
+            self.assertEqual(self.gnm.length, 4)
         with self.subTest():
-            self.assertEqual(gnm.gc, 50.00)
+            self.assertEqual(self.gnm.gc, 50.00)
         with self.subTest():
-            self.assertEqual(gnm.date, exp_date)
+            self.assertEqual(self.gnm.date, exp_date)
         with self.subTest():
-            self.assertEqual(len(gnm.cds_features), 4)
+            self.assertEqual(len(self.gnm.cds_features), 4)
         with self.subTest():
-            self.assertEqual(len(gnm.source_features), 1)
+            self.assertEqual(len(self.gnm.source_features), 1)
         with self.subTest():
-            self.assertEqual(len(gnm.trna_features), 1)
+            self.assertEqual(len(self.gnm.trna_features), 1)
         with self.subTest():
-            self.assertEqual(gnm._cds_features_tally, 4)
+            self.assertEqual(self.gnm._cds_features_tally, 4)
         with self.subTest():
-            self.assertEqual(gnm._source_features_tally, 1)
+            self.assertEqual(self.gnm._source_features_tally, 1)
         with self.subTest():
-            self.assertEqual(gnm._trna_features_tally, 1)
+            self.assertEqual(self.gnm._trna_features_tally, 1)
         with self.subTest():
-            self.assertEqual(gnm.translation_table, 11)
+            self.assertEqual(self.gnm.translation_table, 11)
         with self.subTest():
-            self.assertEqual(gnm.id,"KatherineG")
+            self.assertEqual(self.gnm.id,"KatherineG")
         with self.subTest():
-            self.assertEqual(gnm.type, "flat_file")
+            self.assertEqual(self.gnm.type, "flat_file")
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].genome_id, "KatherineG")
+            self.assertEqual(self.gnm.cds_features[0].genome_id, "KatherineG")
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].id, "KatherineG_CDS_1")
+            self.assertEqual(self.gnm.cds_features[0].id, "KatherineG_CDS_1")
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].id, "KatherineG_CDS_4")
+            self.assertEqual(self.gnm.cds_features[1].id, "KatherineG_CDS_4")
         with self.subTest():
-            self.assertEqual(gnm.cds_features[2].id, "KatherineG_CDS_3")
+            self.assertEqual(self.gnm.cds_features[2].id, "KatherineG_CDS_3")
         with self.subTest():
-            self.assertEqual(gnm.cds_features[3].id, "KatherineG_CDS_2")
+            self.assertEqual(self.gnm.cds_features[3].id, "KatherineG_CDS_2")
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].left, 2)
+            self.assertEqual(self.gnm.cds_features[0].left, 2)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].right, 10)
+            self.assertEqual(self.gnm.cds_features[0].right, 10)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].genome_length, 4)
+            self.assertEqual(self.gnm.cds_features[0].genome_length, 4)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].left, 154873)
+            self.assertEqual(self.gnm.cds_features[1].left, 154873)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].right, 4)
+            self.assertEqual(self.gnm.cds_features[1].right, 4)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].genome_length, 4)
+            self.assertEqual(self.gnm.cds_features[1].genome_length, 4)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[2].left, 9)
+            self.assertEqual(self.gnm.cds_features[2].left, 9)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[2].right, 50)
+            self.assertEqual(self.gnm.cds_features[2].right, 50)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[3].left, 9)
+            self.assertEqual(self.gnm.cds_features[3].left, 9)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[3].right, 30)
-
-
-
+            self.assertEqual(self.gnm.cds_features[3].right, 30)
 
 
     def test_parse_genome_data_2(self):
@@ -1436,13 +1434,15 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="")
 
         with self.subTest():
             self.assertEqual(self.gnm.filename, "Phage_ZZZ")
         with self.subTest():
             self.assertEqual(self.gnm.name, "")
-
+        with self.subTest():
+            self.assertEqual(self.gnm.type, "")
 
 
     def test_parse_genome_data_3(self):
@@ -1502,7 +1502,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                              gnm_type="flat_file")
 
         with self.subTest():
             self.assertEqual(self.gnm.filename, "Phage_ZZZ")
@@ -1574,7 +1575,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         with self.subTest():
             self.assertEqual(self.gnm.filename, "Phage_ZZZ")
@@ -1642,7 +1644,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         with self.subTest():
             self.assertEqual(self.gnm.filename, "Phage_ZZZ")
@@ -1710,7 +1713,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         with self.subTest():
             self.assertEqual(self.gnm.filename, "Phage_ZZZ")
@@ -1776,7 +1780,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -1895,7 +1900,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2001,7 +2007,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2117,7 +2124,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2238,7 +2246,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2349,7 +2358,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2465,7 +2475,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2581,7 +2592,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2679,7 +2691,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2800,7 +2813,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             features = feature_list,
                             )
 
-        self.gnm = flat_files.parse_genome_data(record)
+        self.gnm = flat_files.parse_genome_data(record, gnm_type="flat_file")
 
         exp_date = datetime.strptime(date,'%d-%b-%Y')
 
@@ -2920,7 +2933,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
         filepath = "/path/to/file/Phage_ZZZ.gb"
-        self.gnm = flat_files.parse_genome_data(record, filepath)
+        self.gnm = flat_files.parse_genome_data(record, filepath,
+                                                gnm_type="flat_file")
 
         exp_date = basic.convert_empty("","empty_datetime_obj")
 
@@ -2992,7 +3006,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         self.gnm = flat_files.parse_genome_data(record,
-                                                      translation_table = 1)
+                                                gnm_type="flat_file",
+                                                translation_table = 1)
+
         self.assertEqual(self.gnm.translation_table, 1)
 
 
@@ -3020,7 +3036,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         self.gnm = flat_files.parse_genome_data(record,
-                                        phage_id_field = "description_name")
+                                        phage_id_field = "description_name",
+                                        gnm_type="flat_file")
 
         self.assertEqual(self.gnm.id, "L5")
 
@@ -3086,7 +3103,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to(self.bundle1, "add")
+        flat_files.copy_data_to(self.bundle1, "flat_file", "add")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -3120,7 +3137,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         """Check that the function can handle a missing "flat_file" genome."""
 
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to(self.bundle1, "add")
+        flat_files.copy_data_to(self.bundle1, "flat_file", "add")
         self.assertEqual(len(self.bundle1.genome_pair_dict.keys()), 0)
 
 
@@ -3129,7 +3146,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         when a second genome is absent."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        flat_files.copy_data_to(self.bundle1, "add")
+        flat_files.copy_data_to(self.bundle1, "flat_file", "add")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertTrue(genome1._value_flag)
@@ -3143,7 +3160,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to(self.bundle1, "add", "empty")
+        flat_files.copy_data_to(self.bundle1, "flat_file", "add", "empty")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)

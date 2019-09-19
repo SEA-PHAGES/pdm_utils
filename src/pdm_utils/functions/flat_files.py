@@ -260,7 +260,7 @@ def create_seqfeature_dictionary(seqfeature_list):
 
 
 def parse_genome_data(seqrecord, filepath="",
-        translation_table=11, phage_id_field="organism_name"):
+        translation_table=11, phage_id_field="organism_name", gnm_type=""):
     """Parse data from a Biopython SeqRecord object into a Genome object.
 
     All Source, CDS, tRNA, and tmRNA features are parsed into their
@@ -284,7 +284,7 @@ def parse_genome_data(seqrecord, filepath="",
     # Keep track of the file from which the record is derived.
     gnm = genome.Genome()
     gnm.set_filename(filepath)
-    gnm.type = "flat_file"
+    gnm.type = gnm_type
 
     try:
         gnm.name = seqrecord.name
@@ -425,7 +425,7 @@ def parse_genome_data(seqrecord, filepath="",
 
 
 
-def copy_data_to(bndl, type, flag="ticket"):
+def copy_data_to(bndl, from_type, to_type, flag="ticket"):
     """Copy data to a genome object derived from a 'flat_file'.
 
     The Bundle object is expected to contain at least two Genome objects
@@ -442,10 +442,14 @@ def copy_data_to(bndl, type, flag="ticket"):
         A Bundle object containing both Genome objects stored
         in the 'genome_dict' attribute.
     :type bndl: Bundle
-    :param type:
+    :param from_type:
+        Indicates the value of the source genome's 'type',
+        indicating the genome from which data will be copied.
+    :type from_type: str
+    :param to_type:
         The value of the donor genome's 'type' attribute, which is
         used as the its key in the Bundle's 'genome_dict' dictionary.
-    :type type: str
+    :type to_type: str
     :param flag:
         The value used to indicate which 'flat_file'
         attributes should be populated from the donor genome.
@@ -456,8 +460,8 @@ def copy_data_to(bndl, type, flag="ticket"):
     :type flag: str
     """
 
-    if "flat_file" in bndl.genome_dict.keys():
-        genome1 = bndl.genome_dict["flat_file"]
+    if from_type in bndl.genome_dict.keys():
+        genome1 = bndl.genome_dict[from_type]
         genome1.cluster = flag
         genome1.subcluster = flag
         genome1.name = flag # TODO should this attribute be copied?
@@ -470,9 +474,9 @@ def copy_data_to(bndl, type, flag="ticket"):
         genome1.retrieve_record = flag
         genome1.set_value_flag(flag)
 
-        if type in bndl.genome_dict.keys():
+        if to_type in bndl.genome_dict.keys():
 
-            genome2 = bndl.genome_dict[type]
+            genome2 = bndl.genome_dict[to_type]
 
             # Copy all data that is set to 'ticket' and
             # add to Bundle object.
