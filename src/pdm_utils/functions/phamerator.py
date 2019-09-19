@@ -7,7 +7,7 @@ from pdm_utils.classes import cds
 from pdm_utils.functions import basic
 
 
-def parse_phage_table_data(data_dict, trans_table=11):
+def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     """Parse a Phamerator database dictionary to create a Genome object.
 
     :param data_dict:
@@ -105,7 +105,7 @@ def parse_phage_table_data(data_dict, trans_table=11):
         pass
 
     gnm.translation_table = trans_table
-    gnm.type = "phamerator"
+    gnm.type = gnm_type
     return gnm
 
 
@@ -127,7 +127,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         cds_ftr.id = data_dict["GeneID"]
     except:
         pass
-    
+
     try:
         cds_ftr.genome_id = data_dict["PhageID"]
     except:
@@ -541,7 +541,7 @@ def create_genome_insert_statements(gnm):
     return statements
 
 
-def copy_data_from(bndl, type, flag="retain"):
+def copy_data_from(bndl, from_type, to_type, flag="retain"):
     """Copy data from a 'phamerator' genome object.
 
     If a genome object stored in the Bundle object has
@@ -551,21 +551,25 @@ def copy_data_from(bndl, type, flag="retain"):
 
     :param bndl: A pdm_utils Bundle object.
     :type bndl: Bundle
-    :param type:
+    :param from_type:
+        Indicates the value of the source genome's 'type',
+        indicating the genome from which data will be copied.
+    :type from_type: str
+    :param to_type:
         Indicates the value of the target genome's 'type',
         indicating the genome to which data will be copied.
-    :type type: str
+    :type to_type: str
     :param flag:
         Indicates the value that attributes of the target genome object
         must have in order be updated from the 'phamerator' genome object.
     :type flag: str
     """
-    if type in bndl.genome_dict.keys():
-        genome1 = bndl.genome_dict[type]
+    if to_type in bndl.genome_dict.keys():
+        genome1 = bndl.genome_dict[to_type]
         genome1.set_value_flag(flag)
         if genome1._value_flag:
-            if "phamerator" in bndl.genome_dict.keys():
-                genome2 = bndl.genome_dict["phamerator"]
+            if from_type in bndl.genome_dict.keys():
+                genome2 = bndl.genome_dict[from_type]
 
                 # Copy all data that is set to be copied and
                 # add to Bundle object.

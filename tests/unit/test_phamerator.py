@@ -277,7 +277,8 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "AnnotationQC":1,
                      "AnnotationAuthor":1}
 
-        self.genome1 = phamerator.parse_phage_table_data(data_dict)
+        self.genome1 = \
+            phamerator.parse_phage_table_data(data_dict, gnm_type="phamerator")
 
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
@@ -332,7 +333,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.genome1.type, "phamerator")
+            self.assertEqual(self.genome1.type, "")
 
 
 
@@ -802,7 +803,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         not impacted."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        phamerator.copy_data_from(self.bundle1, "add")
+        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -820,7 +821,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        phamerator.copy_data_from(self.bundle1, "add")
+        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -838,7 +839,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome1.type = "invalid"
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        phamerator.copy_data_from(self.bundle1, "add")
+        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
         with self.subTest():
             self.assertEqual(
                 len(self.bundle1.genome_pair_dict.keys()), 0)
@@ -853,7 +854,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        phamerator.copy_data_from(self.bundle1, "invalid")
+        phamerator.copy_data_from(self.bundle1, "phamerator", "invalid")
         with self.subTest():
             self.assertEqual(
                 len(self.bundle1.genome_pair_dict.keys()), 0)
@@ -870,7 +871,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
         self.genome1._value_flag = False
-        phamerator.copy_data_from(self.bundle1, "add")
+        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
         with self.subTest():
             self.assertTrue(self.genome1._value_flag)
         with self.subTest():
