@@ -91,7 +91,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
     def test_parse_genome_data_2(self):
-        """Verify error is produced from no phage_name key."""
+        """Verify output when there is no phage_name key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name_x":"Trixie",
@@ -113,11 +113,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -138,12 +133,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 2)
 
 
     def test_parse_genome_data_3(self):
-        """Verify error is produced from no pcluster key."""
+        """Verify output when there is no pcluster key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -165,11 +158,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -190,12 +178,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 1)
 
 
     def test_parse_genome_data_4(self):
-        """Verify error is produced from no psubcluster key."""
+        """Verify output when there is no psubcluster key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -217,11 +203,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -242,12 +223,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 1)
 
 
     def test_parse_genome_data_5(self):
-        """Verify error is produced from no isolation_host key."""
+        """Verify output when there is no isolation_host key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -269,11 +248,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -294,12 +268,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 1)
 
 
     def test_parse_genome_data_6(self):
-        """Verify error is produced from no genbank_accession key."""
+        """Verify output when there is no genbank_accession key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -321,12 +293,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq_end =   "GTCGGTTA"
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -347,12 +313,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq[-8:], expected_seq_end)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 1)
 
 
     def test_parse_genome_data_7(self):
-        """Verify error is produced from no fasta_file key."""
+        """Verify output when there is no fasta_file key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -373,11 +337,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq = ""
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -396,12 +355,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 2)
 
 
     def test_parse_genome_data_8(self):
-        """Verify error is produced from incorrect fasta_file URL."""
+        """Verify output when there is incorrect fasta_file URL."""
 
         url = "https://phagesdb.org/media/fastas/L5_x.fasta"
         data_dict = {"phage_name":"Trixie",
@@ -422,11 +379,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq = ""
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -445,12 +397,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 1)
 
 
     def test_parse_genome_data_9(self):
-        """Verify that errors accumulate."""
+        """Verify output when there are multiple errors."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"phage_name_x":"Trixie",
@@ -471,11 +421,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_seq = ""
         expected_type = "phagesdb"
 
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-
         with self.subTest():
             self.assertEqual(self.gnm.name, expected_phage_name)
         with self.subTest():
@@ -494,8 +439,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm.seq, expected_seq)
         with self.subTest():
             self.assertEqual(self.gnm.type, expected_type)
-        with self.subTest():
-            self.assertEqual(errors, 8)
 
 
 

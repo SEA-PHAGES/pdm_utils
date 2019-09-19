@@ -1,4 +1,4 @@
-""" Unit tests for evaluate functions."""
+""" Unit tests for import functions."""
 
 
 from pdm_utils.classes import bundle
@@ -7,13 +7,13 @@ from pdm_utils.classes import source
 from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
-from pdm_utils.pipelines.db_import import evaluate
+from pdm_utils.pipelines.db_import import import_main
 from pdm_utils.classes import ticket
 import unittest
 from Bio.Seq import Seq
 
 
-class TestEvaluateClass1(unittest.TestCase):
+class TestImportClass1(unittest.TestCase):
 
 
     def setUp(self):
@@ -45,7 +45,7 @@ class TestEvaluateClass1(unittest.TestCase):
     def test_check_ticket_structure_1(self):
         """Verify no error is produced with a correctly structured
         'add' ticket."""
-        evaluate.check_ticket_structure(
+        import_main.check_ticket_structure(
             self.add_ticket1, type_set=self.type_set,
             description_field_set=self.description_field_set,
             null_set=self.null_set, run_mode_set=self.run_mode_set)
@@ -65,7 +65,7 @@ class TestEvaluateClass1(unittest.TestCase):
 
         tkt = self.add_ticket1
         tkt.type = "invalid"
-        evaluate.check_ticket_structure(
+        import_main.check_ticket_structure(
             self.add_ticket1, type_set=self.type_set,
             description_field_set=self.description_field_set,
             null_set=self.null_set, run_mode_set=self.run_mode_set,
@@ -83,7 +83,7 @@ class TestEvaluateClass1(unittest.TestCase):
 
 
 
-class TestEvaluateClass2(unittest.TestCase):
+class TestImportClass2(unittest.TestCase):
 
 
     def setUp(self):
@@ -127,146 +127,27 @@ class TestEvaluateClass2(unittest.TestCase):
         self.subcluster_set = set(["A1, A2"])
 
 
-    def test_check_phagesdb_genome_1(self):
-        """Verify no error is produced with a correctly structured
-        PhagesDB genome."""
-
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        with self.subTest():
-            self.assertEqual(len(self.gnm.evaluations), 8)
-        with self.subTest():
-            self.assertEqual(errors, 0)
-
-    def test_check_phagesdb_genome_2(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no id."""
-
-        self.gnm.id = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
 
 
-    def test_check_phagesdb_genome_3(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no name."""
-
-        self.gnm.name = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_4(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no host_genus."""
-
-        self.gnm.host_genus = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_5(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no cluster."""
-
-        self.gnm.cluster = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_6(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no subcluster."""
-
-        self.gnm.subcluster = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_7(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no accession."""
-
-        self.gnm.accession = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_8(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no filename."""
-
-        self.gnm.filename = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-    def test_check_phagesdb_genome_9(self):
-        """Verify an error is produced with a PhagesDB genome with
-        no sequence."""
-
-        self.gnm.seq = ""
-        evaluate.check_phagesdb_genome(self.gnm, self.null_set)
-        errors = 0
-        for evl in self.gnm.evaluations:
-            if evl.status == "error":
-                errors += 1
-        self.assertEqual(errors, 1)
-
-
-
-
-
-    def test_check_source_for_import_1(self):
+    def test_check_source_1(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = True and check_host_typo = True."""
         src_ftr = source.Source()
-        evaluate.check_source_for_import(src_ftr)
+        import_main.check_source(src_ftr)
         self.assertEqual(len(src_ftr.evaluations), 4)
 
-    def test_check_source_for_import_2(self):
+    def test_check_source_2(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = False and check_host_typo = True."""
         src_ftr = source.Source()
-        evaluate.check_source_for_import(src_ftr, check_id_typo=False)
+        import_main.check_source(src_ftr, check_id_typo=False)
         self.assertEqual(len(src_ftr.evaluations), 3)
 
-    def test_check_source_for_import_3(self):
+    def test_check_source_3(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = True and check_host_typo = False."""
         src_ftr = source.Source()
-        evaluate.check_source_for_import(src_ftr, check_host_typo=False)
+        import_main.check_source(src_ftr, check_host_typo=False)
         self.assertEqual(len(src_ftr.evaluations), 1)
 
 
@@ -277,40 +158,40 @@ class TestEvaluateClass2(unittest.TestCase):
 
 
 
-    def test_check_cds_for_import_1(self):
+    def test_check_cds_1(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = True, check_gene = True, and
         check_description = True."""
         cds_ftr = cds.Cds()
-        evaluate.check_cds_for_import(cds_ftr)
+        import_main.check_cds(cds_ftr)
         self.assertEqual(len(cds_ftr.evaluations), 13)
 
-    def test_check_cds_for_import_2(self):
+    def test_check_cds_2(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = False, check_gene = True, and
         check_description = True."""
         cds_ftr = cds.Cds()
-        evaluate.check_cds_for_import(cds_ftr, check_locus_tag=False)
+        import_main.check_cds(cds_ftr, check_locus_tag=False)
         self.assertEqual(len(cds_ftr.evaluations), 10)
 
-    def test_check_cds_for_import_3(self):
+    def test_check_cds_3(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = True, check_gene = False, and
         check_description = True."""
         cds_ftr = cds.Cds()
-        evaluate.check_cds_for_import(cds_ftr, check_gene=False)
+        import_main.check_cds(cds_ftr, check_gene=False)
         self.assertEqual(len(cds_ftr.evaluations), 10)
 
-    def test_check_cds_for_import_4(self):
+    def test_check_cds_4(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = True, check_gene = True, and
         check_description = False."""
         cds_ftr = cds.Cds()
-        evaluate.check_cds_for_import(cds_ftr, check_description=False)
+        import_main.check_cds(cds_ftr, check_description=False)
         self.assertEqual(len(cds_ftr.evaluations), 12)
 
 
-    # TODO test_check_cds_for_import_5 to test check_description_field parameter.
+    # TODO test_check_cds_5 to test check_description_field parameter.
 
 
 
@@ -322,66 +203,66 @@ class TestEvaluateClass2(unittest.TestCase):
         genome_pair = genomepair.GenomePair()
         genome_pair.genome1 = genome1
         genome_pair.genome2 = genome2
-        evaluate.compare_genomes(genome_pair)
+        import_main.compare_genomes(genome_pair)
         self.assertEqual(len(genome_pair.evaluations), 8)
 
 
 
 
 
-    def test_check_genome_for_import_1(self):
+    def test_check_genome_1(self):
         """Verify correct number of evaluations are produced using
         'add' ticket and all eval_flags 'True'."""
-        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
+        import_main.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 29)
 
-    def test_check_genome_for_import_2(self):
+    def test_check_genome_2(self):
         """Verify correct number of evaluations are produced using
         'replace' ticket."""
         self.tkt.type = "replace"
-        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
+        import_main.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 28)
 
 
-    def test_check_genome_for_import_3(self):
+    def test_check_genome_3(self):
         """Verify correct number of evaluations are produced using
         'check_seq' as False."""
         self.tkt.eval_flags["check_seq"] = False
-        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
+        import_main.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 28)
 
 
-    def test_check_genome_for_import_4(self):
+    def test_check_genome_4(self):
         """Verify correct number of evaluations are produced using
         'check_id_typo' as False."""
         self.tkt.eval_flags["check_id_typo"] = False
-        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
+        import_main.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 26)
 
 
-    def test_check_genome_for_import_5(self):
+    def test_check_genome_5(self):
         """Verify correct number of evaluations are produced using
         'check_host_typo' as False."""
         self.tkt.eval_flags["check_host_typo"] = False
-        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
+        import_main.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 25)
 
 
-    def test_check_genome_for_import_6(self):
+    def test_check_genome_6(self):
         """Verify correct number of evaluations are produced using
         'check_author' as False."""
         self.tkt.eval_flags["check_author"] = False
-        evaluate.check_genome_for_import(self.gnm, self.tkt, self.null_set,
+        import_main.check_genome(self.gnm, self.tkt, self.null_set,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set)
         self.assertEqual(len(self.gnm.evaluations), 27)
@@ -391,7 +272,7 @@ class TestEvaluateClass2(unittest.TestCase):
 
 
 
-class TestEvaluateClass3(unittest.TestCase):
+class TestImportClass3(unittest.TestCase):
 
     def setUp(self):
         self.bndl = bundle.Bundle()
@@ -402,44 +283,44 @@ class TestEvaluateClass3(unittest.TestCase):
 
 
 
-    def test_check_bundle_for_import_1(self):
+    def test_check_bundle_1(self):
         """Verify all check methods are called."""
         self.tkt.type = "replace"
         self.tkt.cluster = "retrieve"
         self.tkt.subcluster = "retain"
         self.bndl.ticket = self.tkt
-        evaluate.check_bundle_for_import(self.bndl)
+        import_main.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 9)
 
-    def test_check_bundle_for_import_2(self):
+    def test_check_bundle_2(self):
         """Verify some check methods are called when there is no Ticket."""
-        evaluate.check_bundle_for_import(self.bndl)
+        import_main.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 1)
 
-    def test_check_bundle_for_import_3(self):
+    def test_check_bundle_3(self):
         """Verify some check methods are called when there are no 'retrieve'
         Ticket attributes."""
         self.tkt.type = "replace"
         self.tkt.subcluster = "retain"
         self.bndl.ticket = self.tkt
-        evaluate.check_bundle_for_import(self.bndl)
+        import_main.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 7)
 
-    def test_check_bundle_for_import_4(self):
+    def test_check_bundle_4(self):
         """Verify some check methods are called when there are no 'retain'
         Ticket attributes."""
         self.tkt.type = "replace"
         self.tkt.cluster = "retrieve"
         self.bndl.ticket = self.tkt
-        evaluate.check_bundle_for_import(self.bndl)
+        import_main.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 8)
 
-    def test_check_bundle_for_import_5(self):
+    def test_check_bundle_5(self):
         """Verify some check methods are called when there is no 'replace'
         Ticket."""
         self.tkt.cluster = "retrieve"
         self.bndl.ticket = self.tkt
-        evaluate.check_bundle_for_import(self.bndl)
+        import_main.check_bundle(self.bndl)
         self.assertEqual(len(self.bndl.evaluations), 6)
 
 

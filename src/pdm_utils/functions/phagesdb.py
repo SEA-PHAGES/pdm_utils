@@ -1,7 +1,5 @@
 """Functions to interact with PhagesDB"""
 
-
-from pdm_utils.pipelines.db_import import evaluate
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.functions import basic
@@ -222,9 +220,6 @@ def parse_genome_data(data_dict):
             gnm.set_sequence(seq)
             gnm.description = header
             gnm.parse_description()
-
-    # TODO not sure if these evaluations should be in this function or not.
-    evaluate.check_phagesdb_genome(gnm, set([""]))
     return gnm
 
 
