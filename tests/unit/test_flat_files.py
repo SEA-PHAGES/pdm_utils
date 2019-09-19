@@ -3103,7 +3103,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to(self.bundle1, "flat_file", "add")
+        flat_files.copy_data_to(self.bundle1, "add", "flat_file")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -3129,8 +3129,6 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(genome1.retrieve_record, 3)
         with self.subTest():
             self.assertEqual(genome1.translation_table, "empty")
-        with self.subTest():
-            self.assertEqual(genome1.evaluations[0].status, "correct")
 
 
     def test_copy_data_to_2(self):
@@ -3146,12 +3144,9 @@ class TestFlatFileFunctions2(unittest.TestCase):
         when a second genome is absent."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        flat_files.copy_data_to(self.bundle1, "flat_file", "add")
+        flat_files.copy_data_to(self.bundle1, "add", "flat_file")
         genome1 = self.bundle1.genome_dict["flat_file"]
-        with self.subTest():
-            self.assertTrue(genome1._value_flag)
-        with self.subTest():
-            self.assertEqual(genome1.evaluations[0].status, "error")
+        self.assertTrue(genome1._value_flag)
 
 
     def test_copy_data_to_4(self):
@@ -3160,7 +3155,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data_to(self.bundle1, "flat_file", "add", "empty")
+        flat_files.copy_data_to(self.bundle1, "add", "flat_file", "empty")
         genome1 = self.bundle1.genome_dict["flat_file"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -3168,8 +3163,6 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(genome1.cluster, "A")
         with self.subTest():
             self.assertEqual(genome1.translation_table, 11)
-        with self.subTest():
-            self.assertEqual(genome1.evaluations[0].status, "correct")
 
 
 

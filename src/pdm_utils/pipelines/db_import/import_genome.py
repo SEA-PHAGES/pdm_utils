@@ -5,7 +5,8 @@ into PhameratorDB."""
 import time
 from datetime import datetime
 import csv
-
+import os
+import sys
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
@@ -14,8 +15,9 @@ from pdm_utils.functions import phamerator
 from pdm_utils.classes import bundle
 from pdm_utils.constants import constants
 
-def import_io(sql_handle, genome_folder, import_table_file, filename_flag, test_run,
-          description_field, run_mode):
+# TODO unittest.
+def import_io(sql_handle=None, genome_folder="", import_table_file="",
+    filename_flag=False, test_run=True, description_field="", run_mode=""):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
@@ -57,35 +59,23 @@ def import_io(sql_handle, genome_folder, import_table_file, filename_flag, test_
 
 
 
-
-def prepare_tickets(import_table_file, eval_flags, description_field):
+# TODO unittest.
+def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
     """Prepare dictionary of pdm_utils Tickets."""
-
-    # TODO parsing from import table:
     # 1. parse ticket data from table.
     # 2. set case for all fields.
     # 3. confirm all tickets have a valid type.
-    # 4. populate Genome objects as necessary.
-    # 5. retrieve data if needed.
-    # 6. check for PhageID conflicts.
+    # 6. check for duplicated values.
     # 7. confirm correct fields are populated based on ticket type.
-
-    # Retrieve import ticket data.
-    list_of_ticket_data = []
-    with open(import_table_file,'r') as file:
-        file_reader = csv.DictReader(file)
-        for dict in file_reader:
-            list_of_ticket_data.append(dict)
-
     ticket_list = []
     tkt_errors = 0
-    for dict in list_of_ticket_data:
+    file_data = tickets.retrieve_ticket_data(import_table_file)
+    for dict in file_data:
         tkt = tickets.parse_import_ticket_data(data_dict=dict)
         if tkt is not None:
             ticket_list.append(tkt)
         else:
             tkt_errors += 1
-
     # Identify duplicated ticket values.
     tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set = \
         tickets.identify_duplicates(ticket_list, null_set=set(["none"]))
@@ -107,12 +97,12 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
         tkt.description_field = description_field
         # TODO once pipeline is set up, verify copying is needed.
         tkt.eval_flags = eval_flags.copy()
-        check_ticket_structure(
+        check_ticket(
             tkt,
             type_set=constants.IMPORT_TICKET_TYPE_SET,
             description_field_set=constants.DESCRIPTION_FIELD_SET,
             null_set=constants.EMPTY_SET,
-            run_mode_set=constants.RUN_MODE_SET,
+            run_mode_set=constants.RUN_MODES.keys(),
             id_dupe_set=tkt_id_dupe_set,
             phage_id_dupe_set=phage_id_dupe_set,
             accession_dupe_set=accession_dupe_set)
@@ -125,12 +115,12 @@ def prepare_tickets(import_table_file, eval_flags, description_field):
     # TODO handle ticket errors better.
     if tkt_errors > 0:
         print("Error generating tickets from import table.")
-        sys.exit(1)
+        return None
     else:
         return ticket_dict
 
 
-
+# TODO unittest.
 def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
     """Process GenBank-formatted flat files.
 
@@ -278,6 +268,7 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
 
 
 
+# TODO unittest.
 def prepare_bundle(filename, ticket_dict, id=None):
     """Gather all genomic data needed to evaluate the flat file.
 
@@ -318,24 +309,20 @@ def prepare_bundle(filename, ticket_dict, id=None):
         # to a ticket, use the ticket to populate specific
         # genome-level fields such as host, cluster, subcluster, etc.
         tickets.copy_ticket_to_genome(bndl)
-        flat_files.copy_data_to(bndl, "add")
+        flat_files.copy_data_to(bndl, "add", "flat_file", flag="ticket")
+        bndl.gnm.check_value_flag()
 
 
     # Now check to see if there is any missing data for each genome, and
     # retrieve it from phagesdb.
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
-
-    # TODO in progress below. This is partially redundant with
-    # phagesdb.copy_data_to()
-    bndl.gnm.set_value_flag("retrieve")
-    if bndl.gnm._value_flag:
-        phagesdb.copy_data_from(bndl, "flat_file")
+    phagesdb.copy_data_from(bndl, "flat_file", flag="retrieve")
+    bndl.gnm.check_value_flag()
 
         # Each flat_file genome should now contain all requisite
         # data from PhagesDB.
         # Validate each genome by checking that each field is populated correctly.
-    # TODO in progress above.
 
 
 
@@ -356,9 +343,8 @@ def prepare_bundle(filename, ticket_dict, id=None):
         # If any attributes in flat_file are set to 'retain', copy data
         # from the phamerator genome.
         phamerator.copy_data_from(bndl, "flat_file")
+        bndl.gnm.check_value_flag()
     return bndl
-
-
 
 
 
@@ -403,7 +389,7 @@ def check_bundle(bndl):
                                         eval_id="BNDL_009")
 
 
-def check_ticket_structure(tkt, type_set=set(), description_field_set=set(),
+def check_ticket(tkt, type_set=set(), description_field_set=set(),
         null_set=set(), run_mode_set=set(), id_dupe_set=set(),
         phage_id_dupe_set=set(), accession_dupe_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.

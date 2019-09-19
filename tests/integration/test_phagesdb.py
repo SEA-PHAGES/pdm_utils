@@ -343,8 +343,6 @@ class TestPhagesDBFunctions2(unittest.TestCase):
             self.assertEqual(genome1.host_genus, "Gordonia")
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
-        with self.subTest():
-            self.assertEqual(genome1.evaluations[0].status, "correct")
 
     def test_copy_data_from_2(self):
         """Check that an "add" genome with host_genus field set to 'retrieve' is
@@ -360,8 +358,6 @@ class TestPhagesDBFunctions2(unittest.TestCase):
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
-        with self.subTest():
-            self.assertEqual(genome1.evaluations[0].status, "correct")
 
     def test_copy_data_from_3(self):
         """Check that an "invalid" genome with host_genus field set to 'retrieve' is
@@ -376,8 +372,6 @@ class TestPhagesDBFunctions2(unittest.TestCase):
                 len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retrieve")
-        with self.subTest():
-            self.assertEqual(len(self.genome1.evaluations), 0)
 
     def test_copy_data_from_4(self):
         """Check that an "add" genome with host_genus field set to 'retrieve' is
@@ -391,8 +385,6 @@ class TestPhagesDBFunctions2(unittest.TestCase):
                 len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retrieve")
-        with self.subTest():
-            self.assertEqual(len(self.genome1.evaluations), 0)
 
     def test_copy_data_from_5(self):
         """Check that an "add" genome with host_genus field set to 'retrieve' is
@@ -410,8 +402,6 @@ class TestPhagesDBFunctions2(unittest.TestCase):
                 len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retrieve")
-        with self.subTest():
-            self.assertEqual(self.genome1.evaluations[0].status, "error")
 
 
 

@@ -565,28 +565,20 @@ def copy_data_from(bndl, from_type, to_type, flag="retain"):
     :type flag: str
     """
     if to_type in bndl.genome_dict.keys():
-        genome1 = bndl.genome_dict[to_type]
-        genome1.set_value_flag(flag)
-        if genome1._value_flag:
+        to_gnm = bndl.genome_dict[to_type]
+        to_gnm.set_value_flag(flag)
+        if to_gnm._value_flag:
             if from_type in bndl.genome_dict.keys():
-                genome2 = bndl.genome_dict[from_type]
+                from_gnm = bndl.genome_dict[from_type]
 
                 # Copy all data that is set to be copied and
                 # add to Bundle object.
                 genome_pair = genomepair.GenomePair()
-                genome_pair.genome1 = genome1
-                genome_pair.genome2 = genome2
-                genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-                bndl.set_genome_pair(genome_pair, genome1.type, genome2.type)
-
-        # Now record an error if there are still fields
-        # that need to be retained.
-        genome1.set_value_flag(flag)
-        genome1.check_value_flag()
-
-
-
-
+                genome_pair.genome1 = to_gnm
+                genome_pair.genome2 = from_gnm
+                genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
+                bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
+        to_gnm.set_value_flag(flag)
 
 
 

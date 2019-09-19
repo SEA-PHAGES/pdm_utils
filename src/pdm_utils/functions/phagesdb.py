@@ -251,7 +251,7 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from(bndl, type, flag="retrieve"):
+def copy_data_from(bndl, to_type, flag="retrieve"):
     """Copy data from a 'phagesdb' genome object.
 
     If a genome object stored in a bundle object has
@@ -262,35 +262,34 @@ def copy_data_from(bndl, type, flag="retrieve"):
         A pdm_utils bundle object containing at least two genome
         objects.
     :type bndl: bundle
-    :param type:
+    :param to_type:
         Indicates the type of genome that may need
         to be populated from PhagesDB.
-    :type type: str
+    :type to_type: str
+    :param flag:
+        The attribute value that indicates that attribute needs to
+        be copied from PhagesDB.
+    :type flag: str
     """
-    if type in bndl.genome_dict.keys():
-        genome1 = bndl.genome_dict[type]
-        genome1.set_value_flag(flag)
-        if genome1._value_flag:
-            phage_url = construct_phage_url(genome1.id)
+    if to_type in bndl.genome_dict.keys():
+        to_gnm = bndl.genome_dict[to_type]
+        to_gnm.set_value_flag(flag)
+        if to_gnm._value_flag:
+            phage_url = construct_phage_url(to_gnm.id)
             data_dict = retrieve_genome_data(phage_url)
 
             # If there was an error with retrieving data from PhagesDB,
             # an empty dictionary is returned.
             if len(data_dict.keys()) != 0:
-                genome2 = parse_genome_data(data_dict)
-                bndl.genome_dict[genome2.type] = genome2
-
+                from_gnm = parse_genome_data(data_dict)
+                bndl.genome_dict[from_gnm.type] = from_gnm
                 # Copy all retrieved data and add to Bundle object.
                 genome_pair = genomepair.GenomePair()
-                genome_pair.genome1 = genome1
-                genome_pair.genome2 = genome2
-                genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-                bndl.set_genome_pair(genome_pair, genome1.type, genome2.type)
-
-        # Now record an error if there are still fields
-        # that need to be retrieved.
-        genome1.set_value_flag(flag)
-        genome1.check_value_flag()
+                genome_pair.genome1 = to_gnm
+                genome_pair.genome2 = from_gnm
+                genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
+                bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
+        to_gnm.set_value_flag(flag)
 
 
 def retrieve_data_list(url):

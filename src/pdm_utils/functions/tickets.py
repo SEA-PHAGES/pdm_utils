@@ -1,5 +1,6 @@
 """Misc. functions to manipulate tickets."""
 
+import csv
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import phagesdb
@@ -7,6 +8,26 @@ from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
 
+def retrieve_ticket_data(filename):
+    """Open file and retrieve the ticket data.
+
+    :param filename:
+        Path to file containing import ticket data, where
+        each row is assumed to contain column names.
+    :type filename: str
+    :returns:
+        A list of elements, where each element is a dictionary
+        representing one row of data.
+        Each key is a column name and each value is the data
+        stored in that field.
+    :rtype: list
+    """
+    list_of_ticket_data = []
+    with open(filename,'r') as file:
+        file_reader = csv.DictReader(file)
+        for dict in file_reader:
+            list_of_ticket_data.append(dict)
+    return list_of_ticket_data
 
 def parse_import_ticket_data(tkt=None, data_dict=None,
                               direction="dict_to_ticket"):

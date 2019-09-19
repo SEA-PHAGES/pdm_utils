@@ -3,10 +3,12 @@
 
 
 import unittest
+import os
+import shutil
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.constants import constants
 from pdm_utils.classes import bundle, genome, ticket
-from pdm_utils.classes import mysqlconnectionhandler
+from pdm_utils.classes import mysqlconnectionhandler as mch
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
@@ -25,48 +27,56 @@ class TestImportGenomeMain(unittest.TestCase):
 
 
     def setUp(self):
-        pass
+
+
+        self.base_dir = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/test_import")
+        os.mkdir(self.base_dir)
+
+        self.genome_folder = \
+            os.path.join(self.base_dir, "genome_folder")
+        os.mkdir(self.genome_folder)
+
+        self.test_import_table = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_import_table_1.csv")
+
+
+        self.sql_handle = mch.MySQLConnectionHandler()
 
 
 
-    # TODO test not complete. Need to unittest evaluate functions first.
-    def test_evaluate_flat_file_1(self):
-        """."""
+    def test_prepare_tickets_1(self):
+        """Verify dictionary is returned from a correct import table file."""
+        eval_flags=constants.RUN_MODE_PHAGESDB
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table,
+                        eval_flags=constants.RUN_MODE_PHAGESDB,
+                        description_field="product")
+        self.assertEqual(len(tkt_dict.keys()), 2)
 
-        ticket1 = ticket.GenomeTicket()
-        ticket1.id = 1
-        ticket1.type = "replace"
-        ticket1.phage_id = "Trixie"
-        ticket1.host_genus = "Mycobacterium"
-        ticket1.cluster = "A"
-        ticket1.subcluster = "A2"
-        ticket1.annotation_status = "final"
-        ticket1.annotation_author = 1
-        ticket1.annotation_qc = 1
-        ticket1.retrieve_record = 1
-        ticket1.description_field = "product"
-        ticket1.run_mode = "phagesdb"
-        ticket1.accession = "ABC123"
 
-        genome1 = genome.Genome()
-        genome1.type = "flat_file"
-        genome1.id = "Trixie"
-        genome1.seq = Seq("ATGC")
 
-        bndl = bundle.Bundle()
-        bndl.ticket = ticket1
-        bndl.genome_dict[genome1.type] = genome1
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
 
-        host_set = set(["Mycobacterium", "Gordonia"])
-        phage_id_set = set(["L5", "Trixie", "D29"])
-        seq_seq = set(["ATGC", "AAAA", "TTTT"])
-        cluster_set = set(["A", "B", "C", "D"])
-        subcluster_set = set(["A1", "A2", "B1"])
+
+
+    # TODO finish after building tests for other module functions.
+    # def test_import_io_1(self):
+    #     """."""
+    #
+    #     import_genome.import_io(sql_handle=self.sql_handle,
+    #                             genome_folder=self.genome_folder,
+    #                             import_table_file=self.test_import_table,
+    #                             filename_flag=False, test_run=True,
+    #                             description_field="product",
+    #                             run_mode="phagesdb")
+
+
+
+    def tearDown(self):
+        shutil.rmtree(self.base_dir)
 
 
 

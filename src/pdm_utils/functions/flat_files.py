@@ -459,37 +459,29 @@ def copy_data_to(bndl, from_type, to_type, flag="ticket"):
         attributed in the donor genome.
     :type flag: str
     """
-
-    if from_type in bndl.genome_dict.keys():
-        genome1 = bndl.genome_dict[from_type]
-        genome1.cluster = flag
-        genome1.subcluster = flag
-        genome1.name = flag # TODO should this attribute be copied?
-        genome1.host_genus = flag
-        genome1.accession = flag
-        genome1.cluster_subcluster = flag
-        genome1.annotation_status = flag
-        genome1.annotation_author = flag
-        genome1.annotation_qc = flag
-        genome1.retrieve_record = flag
-        genome1.set_value_flag(flag)
-
-        if to_type in bndl.genome_dict.keys():
-
-            genome2 = bndl.genome_dict[to_type]
-
+    if to_type in bndl.genome_dict.keys():
+        to_gnm = bndl.genome_dict[to_type]
+        to_gnm.cluster = flag
+        to_gnm.subcluster = flag
+        to_gnm.name = flag
+        to_gnm.host_genus = flag
+        to_gnm.accession = flag
+        to_gnm.cluster_subcluster = flag
+        to_gnm.annotation_status = flag
+        to_gnm.annotation_author = flag
+        to_gnm.annotation_qc = flag
+        to_gnm.retrieve_record = flag
+        to_gnm.set_value_flag(flag)
+        if from_type in bndl.genome_dict.keys():
+            from_gnm = bndl.genome_dict[from_type]
             # Copy all data that is set to 'ticket' and
             # add to Bundle object.
             genome_pair = genomepair.GenomePair()
-            genome_pair.genome1 = genome1
-            genome_pair.genome2 = genome2
-            genome_pair.copy_data("type", genome2.type, genome1.type, flag)
-            bndl.set_genome_pair(genome_pair, genome1.type, genome2.type)
-
-        # Now record an error if there are still fields
-        # that need to be copied.
-        genome1.set_value_flag(flag)
-        genome1.check_value_flag()
+            genome_pair.genome1 = to_gnm
+            genome_pair.genome2 = from_gnm
+            genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
+            bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
+        to_gnm.set_value_flag(flag)
 
 # TODO this may no longer be needed.
 def parse_files(file_list, id_field="organism_name"):

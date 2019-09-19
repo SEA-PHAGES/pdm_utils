@@ -203,6 +203,7 @@ RUN_MODE_PECAAN = _get_run_mode_pecaan()
 def _get_run_mode_phagesdb(dict=RUN_MODE_BASE):
     new_dict = dict.copy()
     new_dict["import_locus_tag"] = False
+    return new_dict
 RUN_MODE_PHAGESDB = _get_run_mode_phagesdb()
 
 # SEA-PHAGES GenBank records.

@@ -42,10 +42,10 @@ class TestImportGenomeClass1(unittest.TestCase):
 
 
 
-    def test_check_ticket_structure_1(self):
+    def test_check_ticket_1(self):
         """Verify no error is produced with a correctly structured
         'add' ticket."""
-        import_genome.check_ticket_structure(
+        import_genome.check_ticket(
             self.add_ticket1, type_set=self.type_set,
             description_field_set=self.description_field_set,
             null_set=self.null_set, run_mode_set=self.run_mode_set)
@@ -59,13 +59,13 @@ class TestImportGenomeClass1(unittest.TestCase):
             self.assertEqual(errors, 0)
 
 
-    def test_check_ticket_structure_2(self):
+    def test_check_ticket_2(self):
         """Verify an error is produced with an incorrectly structured
         'invalid' ticket 'type' field and duplicate id."""
 
         tkt = self.add_ticket1
         tkt.type = "invalid"
-        import_genome.check_ticket_structure(
+        import_genome.check_ticket(
             self.add_ticket1, type_set=self.type_set,
             description_field_set=self.description_field_set,
             null_set=self.null_set, run_mode_set=self.run_mode_set,
