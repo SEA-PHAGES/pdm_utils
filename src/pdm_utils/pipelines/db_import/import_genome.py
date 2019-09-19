@@ -283,56 +283,40 @@ def prepare_bundle(filename, ticket_dict, id=None):
         evaluate a flat file.
     :rtype: Bundle
     """
-
     bndl = bundle.Bundle()
     bndl.id = id
-    try:
-        seqrecords = list(SeqIO.parse(filename, "genbank"))
-    except:
-        seqrecords = []
-    if len(seqrecords) != 1:
+    seqrecord = flat_files.retrieve_genome_data(filename)
+    if seqrecord is None:
         # TODO throw an error of some sort.
         # Assign some value to the Bundle and break, so that
         # the rest of this function is not executed.
         pass
-
-    gnm = parse_genome_data(seqrecords[0], filepath=filename)
+    gnm = flat_files.parse_genome_data(
+            seqrecord, filepath=filename, gnm_type="flat_file")
     bndl.genome_dict[gnm.type] = gnm
 
-
     # Match ticket (if available) to flat file.
-    matched_ticket = ticket_dict.pop(gnm.id, None)
-    bndl.ticket = matched_ticket
+    bndl.ticket = ticket_dict.pop(gnm.id, None)
     if bndl.ticket is not None:
 
-        # Now that the flat file to be imported is parsed and matched
+        # With the flat file parsed and matched
         # to a ticket, use the ticket to populate specific
         # genome-level fields such as host, cluster, subcluster, etc.
         tickets.copy_ticket_to_genome(bndl)
         flat_files.copy_data_to(bndl, "add", "flat_file", flag="ticket")
-        bndl.gnm.check_value_flag()
+        bndl.genome_dict["flat_file"].check_value_flag()
 
 
-    # Now check to see if there is any missing data for each genome, and
+    # Check to see if there is any missing data for each genome, and
     # retrieve it from phagesdb.
     # If the ticket genome has fields set to 'retrieve', data is
     # retrieved from PhagesDB and populates a new Genome object.
     phagesdb.copy_data_from(bndl, "flat_file", flag="retrieve")
-    bndl.gnm.check_value_flag()
-
-        # Each flat_file genome should now contain all requisite
-        # data from PhagesDB.
-        # Validate each genome by checking that each field is populated correctly.
-
-
-
-
-    # TODO at some point annotation_qc and retrieve_record attributes
-    # will need to be set. These are dependent on the ticket type.
-    # If genomes are being replaced, these fields may be carried over from
-    # the previous genome, combined with their annotation status.
+    bndl.genome_dict["flat_file"].check_value_flag()
 
     # If the ticket type is 'replace', retrieve data from phamerator.
+    # If any attributes in flat_file are set to 'retain', copy data
+    # from the phamerator genome.
     if bndl.ticket.type == "replace":
         query = "SELECT * FROM phage"
         phamerator_genomes = \
@@ -340,10 +324,14 @@ def prepare_bundle(filename, ticket_dict, id=None):
                 phage_query=query)
         if len(phamerator_genomes) == 1:
             bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
-        # If any attributes in flat_file are set to 'retain', copy data
-        # from the phamerator genome.
-        phamerator.copy_data_from(bndl, "flat_file")
-        bndl.gnm.check_value_flag()
+            phamerator.copy_data_from(bndl, "flat_file")
+            bndl.genome_dict["flat_file"].check_value_flag()
+
+    # TODO at some point annotation_qc and retrieve_record attributes
+    # will need to be set. These are dependent on the ticket type.
+    # If genomes are being replaced, these fields may be carried over from
+    # the previous genome, combined with their annotation status.
+
     return bndl
 
 

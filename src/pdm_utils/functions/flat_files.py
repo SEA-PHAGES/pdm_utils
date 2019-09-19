@@ -16,6 +16,37 @@ from pdm_utils.classes import genomepair
 
 
 
+def retrieve_genome_data(filepath):
+    """Retrieve data from a GenBank-formatted flat file.
+
+    :param filepath:
+        Path to GenBank-formatted flat file that will be parsed
+        using Biopython.
+    :type filepath: str
+    :returns:
+        If there is only one record, a Biopython SeqRecord of parsed data.
+        If the file cannot be parsed, or if there are multiple records,
+        None value is returned.
+    :rtype: SeqRecord
+    """
+    try:
+        seqrecords = list(SeqIO.parse(filepath, "genbank"))
+    except:
+        seqrecords = []
+    filename = filepath.split("/")[-1]
+    if len(seqrecords) == 0:
+        print("There are no records in %s." % filename)
+        seqrecord = None
+    elif len(seqrecords) > 1:
+        print("There are multiple records in %s." % filename)
+        seqrecord = None
+    else:
+        seqrecord = seqrecords[0]
+        return seqrecord
+
+
+
+
 
 
 # TODO this function may need to be improved.
@@ -484,50 +515,50 @@ def copy_data_to(bndl, from_type, to_type, flag="ticket"):
         to_gnm.set_value_flag(flag)
 
 # TODO this may no longer be needed.
-def parse_files(file_list, id_field="organism_name"):
-    """Parse data from a list of flat files.
-
-    All GenBank-formatted flat files present in the list of files
-    are first parsed into Biopython SeqRecord objects, and
-    then parsed into pdm_utils Genome objects.
-
-    :param file_list: A list of filenames.
-    :type file_list: list
-    :param id_field:
-        The name of the attribute in the SeqRecord object
-        from which the unique genome identifier/name is stored.
-    :type id_field: str
-    :returns:
-        tuple (genomes, valid_files, failed_files)
-        WHERE
-        genomes(list) is a list of pdm_utils Genome objects parsed
-        from the files.
-        valid_files(list) is a list of filenames from which a
-        Biopython SeqRecord object was successfully parsed.
-        failed_files(list) is a list of filenames from which a
-        Biopython SeqRecord object was not successfully parsed.
-    """
-    failed_files = []
-    valid_files = []
-    genomes = []
-    for filename in file_list:
-        try:
-            seqrecords = list(SeqIO.parse(filename, "genbank"))
-        except:
-            seqrecords = []
-
-        if len(seqrecords) == 1:
-            gnm = parse_genome_data(seqrecords[0], filename, id_field)
-            genomes.append(gnm)
-            valid_files.append(filename)
-        else:
-            failed_files.append(filename)
-            # # If there is no parseable record, a genome object is still
-            # # created and populated with 'type and 'filename'.
-            # gnm = genome.Genome()
-            # gnm.type = "flat_file"
-            # gnm.set_filename(filename)
-    return (genomes, valid_files, failed_files)
+# def parse_files(file_list, id_field="organism_name"):
+#     """Parse data from a list of flat files.
+#
+#     All GenBank-formatted flat files present in the list of files
+#     are first parsed into Biopython SeqRecord objects, and
+#     then parsed into pdm_utils Genome objects.
+#
+#     :param file_list: A list of filenames.
+#     :type file_list: list
+#     :param id_field:
+#         The name of the attribute in the SeqRecord object
+#         from which the unique genome identifier/name is stored.
+#     :type id_field: str
+#     :returns:
+#         tuple (genomes, valid_files, failed_files)
+#         WHERE
+#         genomes(list) is a list of pdm_utils Genome objects parsed
+#         from the files.
+#         valid_files(list) is a list of filenames from which a
+#         Biopython SeqRecord object was successfully parsed.
+#         failed_files(list) is a list of filenames from which a
+#         Biopython SeqRecord object was not successfully parsed.
+#     """
+#     failed_files = []
+#     valid_files = []
+#     genomes = []
+#     for filename in file_list:
+#         try:
+#             seqrecords = list(SeqIO.parse(filename, "genbank"))
+#         except:
+#             seqrecords = []
+#
+#         if len(seqrecords) == 1:
+#             gnm = parse_genome_data(seqrecords[0], filename, id_field)
+#             genomes.append(gnm)
+#             valid_files.append(filename)
+#         else:
+#             failed_files.append(filename)
+#             # # If there is no parseable record, a genome object is still
+#             # # created and populated with 'type and 'filename'.
+#             # gnm = genome.Genome()
+#             # gnm.type = "flat_file"
+#             # gnm.set_filename(filename)
+#     return (genomes, valid_files, failed_files)
 
 def genome_to_seqrecord(phage_genome):
     """Creates a SeqRecord object from the data within
