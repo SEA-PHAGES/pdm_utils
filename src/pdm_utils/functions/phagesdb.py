@@ -251,7 +251,7 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from(bndl, to_type, flag="retrieve"):
+def copy_data_from(bndl, from_type, to_type, flag="retrieve"):
     """Copy data from a 'phagesdb' genome object.
 
     If a genome object stored in a bundle object has
@@ -262,6 +262,9 @@ def copy_data_from(bndl, to_type, flag="retrieve"):
         A pdm_utils bundle object containing at least two genome
         objects.
     :type bndl: bundle
+    :param from_type:
+        Indicates the value assigned to the source genome's 'type'.
+    :type from_type: str
     :param to_type:
         Indicates the type of genome that may need
         to be populated from PhagesDB.
@@ -281,7 +284,7 @@ def copy_data_from(bndl, to_type, flag="retrieve"):
             # If there was an error with retrieving data from PhagesDB,
             # an empty dictionary is returned.
             if len(data_dict.keys()) != 0:
-                from_gnm = parse_genome_data(data_dict)
+                from_gnm = parse_genome_data(data_dict, gnm_type=from_type)
                 bndl.genome_dict[from_gnm.type] = from_gnm
                 # Copy all retrieved data and add to Bundle object.
                 genome_pair = genomepair.GenomePair()

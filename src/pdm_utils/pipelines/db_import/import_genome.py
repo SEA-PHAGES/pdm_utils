@@ -269,7 +269,7 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
 
 
 # TODO unittest.
-def prepare_bundle(filename, ticket_dict, id=None):
+def prepare_bundle(filename="", ticket_dict={}, id=None):
     """Gather all genomic data needed to evaluate the flat file.
 
     :param filename: Name of a GenBank-formatted flat file.
@@ -286,51 +286,51 @@ def prepare_bundle(filename, ticket_dict, id=None):
     bndl = bundle.Bundle()
     bndl.id = id
     seqrecord = flat_files.retrieve_genome_data(filename)
-    if seqrecord is None:
+    if seqrecord is not None:
+        ff_gnm = flat_files.parse_genome_data(
+                seqrecord, filepath=filename, gnm_type="flat_file")
+        bndl.genome_dict[ff_gnm.type] = ff_gnm
+
+        # Match ticket (if available) to flat file.
+        bndl.ticket = ticket_dict.pop(ff_gnm.id, None)
+        if bndl.ticket is not None:
+            # With the flat file parsed and matched
+            # to a ticket, use the ticket to populate specific
+            # genome-level fields such as host, cluster, subcluster, etc.
+            tickets.copy_ticket_to_genome(bndl)
+            flat_files.copy_data_to(bndl, "add", "flat_file", flag="ticket")
+
+            # Check to see if there is any missing data for each genome, and
+            # retrieve it from phagesdb.
+            # If the ticket genome has fields set to 'retrieve', data is
+            # retrieved from PhagesDB and populates a new Genome object.
+            ff_gnm.set_value_flag("retrieve")
+            if ff_gnm._value_flag:
+                phagesdb.copy_data_from(
+                    bndl, "phagesdb", "flat_file", flag="retrieve")
+
+            # If the ticket type is 'replace', retrieve data from phamerator.
+            # If any attributes in flat_file are set to 'retain', copy data
+            # from the phamerator genome.
+            if bndl.ticket.type == "replace":
+                query = "SELECT * FROM phage"
+                phamerator_genomes = \
+                    phamerator.parse_genome_data(sql_handle, phage_id_list=[ff_gnm.id],
+                        phage_query=query)
+                if len(phamerator_genomes) == 1:
+                    bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
+                    phamerator.copy_data_from(bndl, "flat_file")
+
+            # TODO at some point annotation_qc and retrieve_record attributes
+            # will need to be set. These are dependent on the ticket type.
+            # If genomes are being replaced, these fields may be carried over from
+            # the previous genome, combined with their annotation status.
+
+    else:
         # TODO throw an error of some sort.
         # Assign some value to the Bundle and break, so that
         # the rest of this function is not executed.
-        pass
-    gnm = flat_files.parse_genome_data(
-            seqrecord, filepath=filename, gnm_type="flat_file")
-    bndl.genome_dict[gnm.type] = gnm
-
-    # Match ticket (if available) to flat file.
-    bndl.ticket = ticket_dict.pop(gnm.id, None)
-    if bndl.ticket is not None:
-
-        # With the flat file parsed and matched
-        # to a ticket, use the ticket to populate specific
-        # genome-level fields such as host, cluster, subcluster, etc.
-        tickets.copy_ticket_to_genome(bndl)
-        flat_files.copy_data_to(bndl, "add", "flat_file", flag="ticket")
-        bndl.genome_dict["flat_file"].check_value_flag()
-
-
-    # Check to see if there is any missing data for each genome, and
-    # retrieve it from phagesdb.
-    # If the ticket genome has fields set to 'retrieve', data is
-    # retrieved from PhagesDB and populates a new Genome object.
-    phagesdb.copy_data_from(bndl, "flat_file", flag="retrieve")
-    bndl.genome_dict["flat_file"].check_value_flag()
-
-    # If the ticket type is 'replace', retrieve data from phamerator.
-    # If any attributes in flat_file are set to 'retain', copy data
-    # from the phamerator genome.
-    if bndl.ticket.type == "replace":
-        query = "SELECT * FROM phage"
-        phamerator_genomes = \
-            phamerator.parse_genome_data(sql_handle, phage_id_list=[gnm.id],
-                phage_query=query)
-        if len(phamerator_genomes) == 1:
-            bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
-            phamerator.copy_data_from(bndl, "flat_file")
-            bndl.genome_dict["flat_file"].check_value_flag()
-
-    # TODO at some point annotation_qc and retrieve_record attributes
-    # will need to be set. These are dependent on the ticket type.
-    # If genomes are being replaced, these fields may be carried over from
-    # the previous genome, combined with their annotation status.
+        print("No record was retrieved from the file.")
 
     return bndl
 

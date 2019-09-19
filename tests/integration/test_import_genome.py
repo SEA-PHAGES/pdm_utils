@@ -39,12 +39,49 @@ class TestImportGenomeMain(unittest.TestCase):
         os.mkdir(self.genome_folder)
 
         self.test_import_table = \
-            os.path.join(os.path.dirname(__file__), \
+            os.path.join(os.path.dirname(__file__),
             "test_files/test_import_table_1.csv")
 
+        self.test_flat_file1 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_files/test_flat_file_1.gb")
+
+        self.test_flat_file2 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_files/test_flat_file_2.gb")
 
         self.sql_handle = mch.MySQLConnectionHandler()
 
+
+        self.eval_flags = {
+            "check_locus_tag":True,
+            "check_description_field":True,
+            "check_replace":True,
+            "check_trna":True,
+            "import_locus_tag":True,
+            "check_id_typo":True,
+            "check_host_typo":True,
+            "check_author":True,
+            "check_description":True,
+            "check_gene":True
+            }
+        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1.id = 1
+        self.tkt1.type = "add"
+        self.tkt1.phage_id = "L5"
+        self.tkt1.run_mode = "phagesdb"
+        self.tkt1.description_field = "product"
+        self.tkt1.eval_flags = self.eval_flags
+        self.tkt1.host_genus = "Mycobacterium"
+        self.tkt1.cluster = "A"
+        self.tkt1.subcluster = "A2"
+        self.tkt1.annotation_status = "draft"
+        self.tkt1.annotation_author = 1
+        self.tkt1.annotation_qc = 1
+        self.tkt1.retrieve_record = 1
+        self.tkt1.accession = "ABC123"
+
+        self.tkt2 = ticket.GenomeTicket()
 
 
     def test_prepare_tickets_1(self):
@@ -55,6 +92,109 @@ class TestImportGenomeMain(unittest.TestCase):
                         eval_flags=constants.RUN_MODE_PHAGESDB,
                         description_field="product")
         self.assertEqual(len(tkt_dict.keys()), 2)
+
+
+
+
+
+
+
+
+
+
+    def test_prepare_bundle_1(self):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'add' ticket, no phagesdb data."""
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        tkt_gnm = bndl.genome_dict["add"]
+        bndl_tkt = bndl.ticket
+        ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 2)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
+        with self.subTest():
+            self.assertEqual(bndl.id, 1)
+        with self.subTest():
+            self.assertEqual(ff_gnm.id, "L5")
+        with self.subTest():
+            self.assertEqual(ff_gnm.retrieve_record, 1)
+        with self.subTest():
+            self.assertEqual(bndl_tkt.phage_id, "L5")
+
+
+
+
+
+
+    def test_prepare_bundle_2(self):
+        """Verify bundle is returned from a flat file with:
+        no record."""
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(filename=self.test_flat_file2,
+                    ticket_dict=tkt_dict, id=1)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 0)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertIsNone(bndl.ticket)
+
+
+
+
+    def test_prepare_bundle_3(self):
+        """Verify bundle is returned from a flat file with:
+        one record, no ticket."""
+        tkt_dict = {"L5x":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 1)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
+        with self.subTest():
+            self.assertIsNone(bndl.ticket)
+        with self.subTest():
+            self.assertEqual(ff_gnm.id, "L5")
+        with self.subTest():
+            self.assertEqual(ff_gnm.retrieve_record, -1)
+
+
+
+
+    def test_prepare_bundle_4(self):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'add' ticket, with phagesdb data."""
+        self.tkt1.host_genus = "retrieve"
+        self.tkt1.cluster = "B"
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        pdb_gnm = bndl.genome_dict["phagesdb"]
+        ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
+        ff_pdb_pair = bndl.genome_pair_dict["flat_file_phagesdb"]
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 3)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 2)
+        with self.subTest():
+            self.assertEqual(ff_gnm.retrieve_record, 1)
+        with self.subTest():
+            self.assertEqual(ff_gnm.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(ff_gnm.cluster, "B")
+
+
+    # TODO continue unit testing prepare_bundle().
+    # Next test: use a 'replace' ticket.
+
+
 
 
 
