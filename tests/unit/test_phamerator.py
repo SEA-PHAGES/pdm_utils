@@ -481,47 +481,47 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_create_update_statement_1(self):
+    def test_create_update_1(self):
         """Verify correct Cluster statement is created for a non-singleton."""
-        statement = phamerator.create_update_statement(
+        statement = phamerator.create_update(
             "phage", "PhageID", "L5", "Cluster", "A")
         exp_statement = \
             "UPDATE phage SET Cluster = 'A' WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp_statement)
 
-    def test_create_update_statement_2(self):
+    def test_create_update_2(self):
         """Verify correct Cluster statement is created for a singleton."""
-        statement = phamerator.create_update_statement(
+        statement = phamerator.create_update(
                 "phage", "PhageID", "L5", "Cluster", "SINGLETON")
         exp_statement = \
             "UPDATE phage SET Cluster = NULL WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp_statement)
 
-    def test_create_update_statement_3(self):
+    def test_create_update_3(self):
         """Verify correct Cluster2 statement is created for a singleton."""
-        statement = phamerator.create_update_statement(
+        statement = phamerator.create_update(
                 "phage", "PhageID", "L5", "Cluster2", "SINGLETON")
         exp_statement = \
             "UPDATE phage SET Cluster2 = NULL WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp_statement)
 
-    def test_create_update_statement_4(self):
+    def test_create_update_4(self):
         """Verify correct Subcluster2 statement is created for a
         non-empty value."""
-        statement = phamerator.create_update_statement(
+        statement = phamerator.create_update(
                 "phage", "PhageID", "L5", "Subcluster2", "A2")
         exp_statement = \
             "UPDATE phage SET Subcluster2 = 'A2' WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp_statement)
 
-    def test_create_update_statement_5(self):
+    def test_create_update_5(self):
         """Verify correct Subcluster2 statement is created for an
         empty value."""
-        statement = phamerator.create_update_statement(
+        statement = phamerator.create_update(
                 "phage", "PhageID", "L5", "Subcluster2", "none")
         exp_statement = \
             "UPDATE phage SET Subcluster2 = NULL WHERE PhageID = 'L5';"
@@ -530,7 +530,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
     def test_create_cluster_statement_6(self):
         """Verify Gene statement is created correctly."""
-        statement = phamerator.create_update_statement(
+        statement = phamerator.create_update(
             "gene", "GeneID", "SEA_L5_123", "Notes", "Integrase")
         exp_statement = \
             "UPDATE gene SET Notes = 'Integrase' WHERE GeneID = 'SEA_L5_123';"
@@ -612,31 +612,7 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_create_cds_insert_statement_1(self):
-        """Verify CDS INSERT statement is created correctly."""
 
-        self.cds1.id = "SEA_L5_123"
-        self.cds1.genome_id = "L5"
-        self.cds1.left = 5
-        self.cds1.right = 10
-        self.cds1.translation_length = 20
-        self.cds1.name = "Int"
-        self.cds1.type = "CDS"
-        self.cds1.translation = "ACKLG"
-        self.cds1.strand = "forward"
-        self.cds1.processed_description = "integrase"
-        self.cds1.locus_tag = "TAG1"
-
-        statement = phamerator.create_cds_insert_statement(self.cds1)
-
-        exp = "INSERT INTO gene " + \
-        "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
-        "translation, Orientation, Notes, LocusTag) " + \
-        "VALUES " + \
-        "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', " + \
-        "'ACKLG', 'forward', 'integrase', 'TAG1');"
-
-        self.assertEqual(statement, exp)
 
 
 
@@ -717,37 +693,11 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_create_genome_insert_statement_1(self):
-        """Verify genome INSERT statement is created correctly."""
-
-        self.genome1.id = "L5"
-        self.genome1.name = "L5_Draft"
-        self.genome1.host_genus = "Mycobacterium"
-        self.genome1.annotation_status = "final"
-        self.genome1.accession = "ABC123"
-        self.genome1.seq = "ATCG"
-        self.genome1.length = 4
-        self.genome1.gc = 0.5001
-        self.genome1.date = '1/1/2000'
-        self.genome1.retrieve_record = "1"
-        self.genome1.annotation_qc = "1"
-        self.genome1.annotation_author = "1"
-
-        statement = phamerator.create_genome_insert_statement(self.genome1)
-
-        exp = "INSERT INTO phage " + \
-        "(PhageID, Accession, Name, HostStrain, Sequence, " + \
-        "SequenceLength, GC, status, DateLastModified, RetrieveRecord, " + \
-        "AnnotationQC, AnnotationAuthor) " + \
-        "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', 'ATCG', 4, " + \
-        "0.5001, 'final', '1/1/2000', '1', '1', '1');"
-
-        self.assertEqual(statement, exp)
 
 
 
 
-    def test_create_genome_insert_statements_1(self):
+    def test_create_genome_insert_1(self):
         """Verify list of genome INSERT statements is created correctly."""
 
         self.genome1.id = "L5"
@@ -767,7 +717,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
-        statements = phamerator.create_genome_insert_statements(self.genome1)
+        statements = phamerator.create_genome_insert(self.genome1)
         self.assertEqual(len(statements), 4)
 
 

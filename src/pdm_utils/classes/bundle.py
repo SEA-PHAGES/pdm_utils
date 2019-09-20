@@ -68,11 +68,11 @@ class Bundle:
 
         if self.ticket.type == "replace" or self.ticket.type == "add":
             gnm = self.genome_dict["add"]
-            statement = phamerator.create_genome_insert_statement(gnm)
+            statement = phamerator.create_phage_table_insert(gnm)
             self.sql_queries.append(statement)
 
             for cds_ftr in gnm.cds_features:
-                statement = create_cds_insert_statement(cds_ftr)
+                statement = create_gene_table_insert(cds_ftr)
                 self.sql_queries.append(statement)
 
 

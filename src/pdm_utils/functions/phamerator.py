@@ -383,7 +383,7 @@ def create_accession_set(sql_handle):
     return result_set
 
 
-def create_update_statement(table, field1, value1, field2, value2):
+def create_update(table, field1, value1, field2, value2):
     """Create MySQL UPDATE statement.
 
     When the new value to be added is 'singleton' (e.g. for Cluster and
@@ -402,7 +402,7 @@ def create_update_statement(table, field1, value1, field2, value2):
     :param value2:
         The value that will be inserted into 'field2'.
     :type value2: str
-    :returns: A MySQL query.
+    :returns: A MySQL UPDATE statement.
     :rtype: set
     """
     part1 = "UPDATE %s SET %s = " % (table, field2)
@@ -418,36 +418,57 @@ def create_update_statement(table, field1, value1, field2, value2):
     return statement
 
 
-
+# TODO this needs to be revamped. It was originally constructed to handle
+# 'update' tickets that contain several pieces of data.
 def create_genome_update_statements(gnm):
     """Create a collection of genome-level UPDATE statements using data
     in a Genome object.
+
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :returns:
+        A list of MySQL INSERT and UPDATE statement for the
+        phage, gene, and trna tables.
+    :rtype: list
+
     """
 
     table = "phage"
     field1 = "PhageID"
     value1 = gnm.id
     statements = []
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "HostStrain", gnm.host_genus))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "status", gnm.annotation_status))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "Accession", gnm.accession))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "AnnotationAuthor", gnm.author))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "Cluster", gnm.cluster_subcluster))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "Cluster2", gnm.cluster))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "Subcluster2", gnm.subcluster))
     return statements
 
 
-def create_delete_statement(table, field1, data1):
-    """Create MySQL DELETE statement."""
-    statement = "DELETE FROM %s WHERE %s = '%s';" % (table, field1, data1)
+def create_delete_statement(table, field, data):
+    """Create MySQL DELETE statement.
+
+    "'DELETE FROM <table> WHERE <field> = '<data>'."
+
+    :param table: The database table to insert information.
+    :type table: str
+    :param field: The column upon which the statement is conditioned.
+    :type field: str
+    :param data: The value of 'field' upon which the statement is conditioned.
+    :type data: str
+    :returns: A MySQL UPDATE statement.
+    :rtype: str
+    """
+    statement = "DELETE FROM %s WHERE %s = '%s';" % (table, field, data)
     return statement
 
 
@@ -464,25 +485,33 @@ def create_genome_delete_statement(gnm):
     return statements
 
 
-def create_cds_insert_statement(cds_feature):
-    """Create a CDS-level INSERT statement using data in a CDS object."""
+def create_gene_table_insert(cds_ftr):
+    """Create a MySQL gene table INSERT statement..
 
-    statement = "INSERT INTO gene " + \
-        "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
-        "translation, Orientation, Notes, LocusTag) " + \
-        "VALUES " + \
-        "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % \
-        (cds_feature.id,
-        cds_feature.genome_id,
-        cds_feature.left,
-        cds_feature.right,
-        cds_feature.translation_length,
-        cds_feature.name,
-        cds_feature.type,
-        cds_feature.translation,
-        cds_feature.strand,
-        cds_feature.processed_description,
-        cds_feature.locus_tag)
+    :param cds_ftr: A pdm_utils Cds object.
+    :type cds_ftr: Cds
+    :returns:
+        A MySQL statement to INSERT a new row in the 'gene' table
+        with data for several fields.
+    :rtype: str
+    """
+    statement = ("INSERT INTO gene "
+                 "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                 "translation, Orientation, Notes, LocusTag) "
+                 "VALUES "
+                 "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');"
+                 % (cds_ftr.id,
+                    cds_ftr.genome_id,
+                    cds_ftr.left,
+                    cds_ftr.right,
+                    cds_ftr.translation_length,
+                    cds_ftr.name,
+                    cds_ftr.type,
+                    cds_ftr.translation,
+                    cds_ftr.strand,
+                    cds_ftr.processed_description,
+                    cds_ftr.locus_tag)
+                 )
     return statement
 
 
@@ -493,50 +522,63 @@ def create_cds_insert_statements(list_of_features):
 
     statements = []
     for cds_feature in list_of_features:
-        statements.append(create_cds_insert_statement(cds_feature))
+        statements.append(create_gene_table_insert(cds_feature))
     return statements
 
 
-def create_genome_insert_statement(gnm):
-    """Create a genome-level INSERT statements using data
-    in a Genome object."""
+def create_phage_table_insert(gnm):
+    """Create a MySQL phage table INSERT statement.
 
-    statement = \
-        "INSERT INTO phage (PhageID, Accession, Name, " + \
-        "HostStrain, Sequence, SequenceLength, GC, status, " + \
-        "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-        "AnnotationAuthor) " + \
-        "VALUES (" + \
-        "'%s', '%s', '%s', '%s', '%s', %s, %s, '%s', '%s', '%s', '%s', '%s');" \
-        % (gnm.id,
-        gnm.accession,
-        gnm.name,
-        gnm.host_genus,
-        gnm.seq,
-        gnm.length,
-        gnm.gc,
-        gnm.annotation_status,
-        gnm.date,
-        gnm.retrieve_record,
-        gnm.annotation_qc,
-        gnm.annotation_author)
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :returns:
+        A MySQL statement to INSERT a new row in the 'phage' table
+        with data for several fields.
+    :rtype: str
+    """
+    statement = ("INSERT INTO phage (PhageID, Accession, Name, "
+                 "HostStrain, Sequence, SequenceLength, GC, status, "
+                 "DateLastModified, RetrieveRecord, AnnotationQC, "
+                 "AnnotationAuthor) VALUES ("
+                 "'%s', '%s', '%s', '%s', '%s',"
+                 " %s, %s, '%s', '%s', %s, %s, %s);"
+                 % (gnm.id,
+                 gnm.accession,
+                 gnm.name,
+                 gnm.host_genus,
+                 gnm.seq,
+                 gnm.length,
+                 gnm.gc,
+                 gnm.annotation_status,
+                 gnm.date,
+                 gnm.retrieve_record,
+                 gnm.annotation_qc,
+                 gnm.annotation_author)
+                 )
     return statement
 
 
-def create_genome_insert_statements(gnm):
-    """Create a collection of genome-level INSERT statements using data
-    in a Genome object."""
+def create_genome_insert(gnm):
+    """Create a collection of MySQL INSERT and UPDATE statements.
+
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :returns:
+        A list of MySQL INSERT and UPDATE statement for the
+        phage, gene, and trna tables.
+    :rtype: list
+    """
 
     table = "phage"
     field1 = "PhageID"
     value1 = gnm.id
     statements = []
-    statements.append(create_genome_insert_statement(gnm))
-    statements.append(create_update_statement(
+    statements.append(create_phage_table_insert(gnm))
+    statements.append(create_update(
         table, field1, value1, "Cluster", gnm.cluster_subcluster))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "Cluster2", gnm.cluster))
-    statements.append(create_update_statement(
+    statements.append(create_update(
         table, field1, value1, "Subcluster2", gnm.subcluster))
     return statements
 

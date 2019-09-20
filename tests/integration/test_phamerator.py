@@ -960,10 +960,10 @@ class TestPhameratorFunctions(unittest.TestCase):
         input_cds_data = [["L5_001", "L5"], ["Trixie_001", "Trixie"]]
 
         connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        database = self.db,
-                                        cursorclass = pymysql.cursors.DictCursor)
+                                     user = user,
+                                     password = pwd,
+                                     database = self.db,
+                                     cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
@@ -1001,6 +1001,192 @@ class TestPhameratorFunctions(unittest.TestCase):
 
         with self.subTest():
             self.assertEqual(len(cds_list), 2)
+
+
+
+
+
+    # HERE
+    def test_create_phage_table_insert_1(self):
+        """Verify phage table INSERT statement is created correctly."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+        gnm = genome.Genome()
+        gnm.id = "L5"
+        gnm.name = "L5_Draft"
+        gnm.host_genus = "Mycobacterium"
+        gnm.annotation_status = "final"
+        gnm.accession = "ABC123"
+        gnm.seq = "ATCG"
+        gnm.length = 4
+        gnm.gc = 0.5001
+        gnm.date = constants.EMPTY_DATE
+        gnm.retrieve_record = 1
+        gnm.annotation_qc = 1
+        gnm.annotation_author = 1
+        statement = phamerator.create_phage_table_insert(gnm)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        query =  ("SELECT PhageID, Accession, Name, "
+                 "HostStrain, Sequence, SequenceLength, GC, status, "
+                 "DateLastModified, RetrieveRecord, AnnotationQC, "
+                 "AnnotationAuthor FROM phage WHERE PhageID = 'L5'")
+        connection = pymysql.connect(host = "localhost",
+                                     user = user,
+                                     password = pwd,
+                                     database = self.db,
+                                     cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = ("INSERT INTO phage "
+               "(PhageID, Accession, Name, HostStrain, Sequence, "
+               "SequenceLength, GC, status, DateLastModified, RetrieveRecord, "
+               "AnnotationQC, AnnotationAuthor) "
+               "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', 'ATCG', 4, "
+               "0.5001, 'final', '%s', 1, 1, 1);" % constants.EMPTY_DATE)
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["PhageID"], "L5")
+        with self.subTest():
+            self.assertEqual(results["Accession"], "ABC123")
+        with self.subTest():
+            self.assertEqual(results["Name"], "L5_Draft")
+        with self.subTest():
+            self.assertEqual(results["HostStrain"], "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(results["Sequence"].decode("utf-8"), "ATCG")
+        with self.subTest():
+            self.assertEqual(results["SequenceLength"], 4)
+        with self.subTest():
+            self.assertEqual(results["GC"], 0.5001)
+        with self.subTest():
+            self.assertEqual(results["status"], "final")
+        with self.subTest():
+            self.assertEqual(results["DateLastModified"], constants.EMPTY_DATE)
+        with self.subTest():
+            self.assertEqual(results["RetrieveRecord"], 1)
+        with self.subTest():
+            self.assertEqual(results["AnnotationQC"], 1)
+        with self.subTest():
+            self.assertEqual(results["AnnotationAuthor"], 1)
+
+
+
+
+
+
+
+    def test_create_gene_table_insert_1(self):
+        """Verify gene table INSERT statement is created correctly."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+
+        # Note: even though this function acts on the gene table, a
+        # corresponding entry in the phage table is required.
+        insert1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostStrain, Sequence, "
+                   "SequenceLength, GC, status, DateLastModified, "
+                   "RetrieveRecord, AnnotationQC, AnnotationAuthor) "
+                   "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', '%s', 1, 1, 1);"
+                   % constants.EMPTY_DATE)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(insert1)
+        connection.commit()
+        connection.close()
+
+        cds1 = cds.Cds()
+        cds1.id = "SEA_L5_123"
+        cds1.genome_id = "L5"
+        cds1.left = 5
+        cds1.right = 10
+        cds1.translation_length = 20
+        cds1.name = "Int"
+        cds1.type = "CDS"
+        cds1.translation = "ACKLG"
+        cds1.strand = "F"
+        cds1.processed_description = "integrase"
+        cds1.locus_tag = "TAG1"
+        insert2 = phamerator.create_gene_table_insert(cds1)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(insert2)
+        connection.commit()
+        connection.close()
+        query =  ("SELECT GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                  "translation, Orientation, Notes, LocusTag FROM gene "
+                  "WHERE PhageID = 'L5'")
+        connection = pymysql.connect(host = "localhost",
+                                     user = user,
+                                     password = pwd,
+                                     database = self.db,
+                                     cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = ("INSERT INTO gene "
+               "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+               "translation, Orientation, Notes, LocusTag) "
+               "VALUES "
+               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', "
+               "'ACKLG', 'F', 'integrase', 'TAG1');")
+        with self.subTest():
+            self.assertEqual(insert2, exp)
+        with self.subTest():
+            self.assertEqual(results["GeneID"], "SEA_L5_123")
+        with self.subTest():
+            self.assertEqual(results["PhageID"], "L5")
+        with self.subTest():
+            self.assertEqual(results["Start"], 5)
+        with self.subTest():
+            self.assertEqual(results["Stop"], 10)
+        with self.subTest():
+            self.assertEqual(results["Length"], 20)
+        with self.subTest():
+            self.assertEqual(results["Name"], "Int")
+        with self.subTest():
+            self.assertEqual(results["TypeID"], "CDS")
+        with self.subTest():
+            self.assertEqual(results["translation"], "ACKLG")
+        with self.subTest():
+            self.assertEqual(results["Orientation"], "F")
+        with self.subTest():
+            self.assertEqual(results["Notes"].decode("utf-8"), "integrase")
+        with self.subTest():
+            self.assertEqual(results["LocusTag"], "TAG1")
+
+
+
+
+
+
+
+
+
 
 
 
