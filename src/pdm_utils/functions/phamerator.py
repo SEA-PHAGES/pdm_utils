@@ -454,7 +454,7 @@ def create_genome_update_statements(gnm):
     return statements
 
 
-def create_delete_statement(table, field, data):
+def create_delete(table, field, data):
     """Create MySQL DELETE statement.
 
     "'DELETE FROM <table> WHERE <field> = '<data>'."
@@ -472,21 +472,12 @@ def create_delete_statement(table, field, data):
     return statement
 
 
-# TODO this may no longer be needed.
-def create_genome_delete_statement(gnm):
-    """Create a genome-level DELETE statements using data
-    in a Genome object."""
-
-    table = "phage"
-    field1 = "PhageID"
-    value1 = gnm.id
-    statements = []
-    statements.append(create_delete_statement(table, field1, value1))
-    return statements
-
-
+# TODO should this function first check datatypes and formats?
+# Strand should be either "F" or "R"
+# Start, stop, length = int
+# TypeID = 'CDS'
 def create_gene_table_insert(cds_ftr):
-    """Create a MySQL gene table INSERT statement..
+    """Create a MySQL gene table INSERT statement.
 
     :param cds_ftr: A pdm_utils Cds object.
     :type cds_ftr: Cds
@@ -513,17 +504,6 @@ def create_gene_table_insert(cds_ftr):
                     cds_ftr.locus_tag)
                  )
     return statement
-
-
-# TODO this function could also receive a genome object.
-def create_cds_insert_statements(list_of_features):
-    """Create a collection of CDS-level INSERT statements using data
-    in a list of CDS objects."""
-
-    statements = []
-    for cds_feature in list_of_features:
-        statements.append(create_gene_table_insert(cds_feature))
-    return statements
 
 
 def create_phage_table_insert(gnm):
@@ -568,7 +548,6 @@ def create_genome_insert(gnm):
         phage, gene, and trna tables.
     :rtype: list
     """
-
     table = "phage"
     field1 = "PhageID"
     value1 = gnm.id

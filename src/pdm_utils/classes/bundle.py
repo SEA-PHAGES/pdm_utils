@@ -63,7 +63,7 @@ class Bundle:
 
         if self.ticket.type == "replace" or self.ticket.type == "remove":
             gnm = self.genome_dict["remove"]
-            statement = phamerator.create_genome_delete_statement(gnm)
+            statement = phamerator.create_delete("phage", "PhageID", gnm.id)
             self.sql_queries.append(statement)
 
         if self.ticket.type == "replace" or self.ticket.type == "add":

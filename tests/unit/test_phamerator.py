@@ -585,114 +585,13 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_create_delete_statement_1(self):
+    def test_create_delete_1(self):
         """Verify correct DELETE statement is created."""
         statement = \
-            phamerator.create_delete_statement("phage", "PhageID", "L5")
+            phamerator.create_delete("phage", "PhageID", "L5")
         exp_statement = "DELETE FROM phage WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp_statement)
-
-
-
-
-    def test_create_genome_delete_statement_1(self):
-        """Verify list of DELETE statements are created correctly."""
-
-        self.genome1.id = "L5"
-        statements = phamerator.create_genome_delete_statement(self.genome1)
-        exp_statements = 1
-        exp = "DELETE FROM phage WHERE PhageID = 'L5';"
-
-        with self.subTest():
-            self.assertEqual(len(statements), 1)
-        with self.subTest():
-            self.assertEqual(statements[0], exp)
-
-
-
-
-
-
-
-
-
-    def test_create_cds_insert_statements_1(self):
-        """Verify list of CDS INSERT statements is created correctly."""
-
-        self.cds1.id = "SEA_L5_123"
-        self.cds1.genome_id = "L5"
-        self.cds1.left = 5
-        self.cds1.right = 10
-        self.cds1.translation_length = 20
-        self.cds1.name = "Int"
-        self.cds1.type = "CDS"
-        self.cds1.translation = "ACKLG"
-        self.cds1.strand = "forward"
-        self.cds1.processed_description = "integrase"
-        self.cds1.locus_tag = "TAG1"
-
-        self.cds2.id = "SEA_TRIXIE_123"
-        self.cds2.genome_id = "Trixie"
-        self.cds2.left = 1
-        self.cds2.right = 100
-        self.cds2.translation_length = 15
-        self.cds2.name = "parA"
-        self.cds2.type = "CDS"
-        self.cds2.translation = "PPGLA"
-        self.cds2.strand = "reverse"
-        self.cds2.processed_description = "parA"
-        self.cds2.locus_tag = "TAG2"
-
-        self.cds3.id = "SEA_D29_123"
-        self.cds3.genome_id = "D29"
-        self.cds3.left = 42
-        self.cds3.right = 62
-        self.cds3.translation_length = 3
-        self.cds3.name = "D29_123"
-        self.cds3.type = "CDS"
-        self.cds3.translation = "AVY"
-        self.cds3.strand = "reverse"
-        self.cds3.processed_description = ""
-        self.cds3.locus_tag = ""
-
-        cds_features = [self.cds1, self.cds2, self.cds3]
-
-        statements = phamerator.create_cds_insert_statements(cds_features)
-
-        exp1 = "INSERT INTO gene " + \
-        "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
-        "translation, Orientation, Notes, LocusTag) " + \
-        "VALUES " + \
-        "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', " + \
-        "'ACKLG', 'forward', 'integrase', 'TAG1');"
-
-        exp2 = "INSERT INTO gene " + \
-        "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
-        "translation, Orientation, Notes, LocusTag) " + \
-        "VALUES " + \
-        "('SEA_TRIXIE_123', 'Trixie', 1, 100, 15, 'parA', 'CDS', " + \
-        "'PPGLA', 'reverse', 'parA', 'TAG2');"
-
-        exp3 = "INSERT INTO gene " + \
-        "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
-        "translation, Orientation, Notes, LocusTag) " + \
-        "VALUES " + \
-        "('SEA_D29_123', 'D29', 42, 62, 3, 'D29_123', 'CDS', " + \
-        "'AVY', 'reverse', '', '');"
-
-        with self.subTest():
-            self.assertEqual(len(statements), 3)
-        with self.subTest():
-            self.assertEqual(statements[0], exp1)
-        with self.subTest():
-            self.assertEqual(statements[1], exp2)
-        with self.subTest():
-            self.assertEqual(statements[2], exp3)
-
-
-
-
 
 
 
