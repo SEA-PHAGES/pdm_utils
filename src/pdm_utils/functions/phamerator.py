@@ -255,7 +255,7 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
 
 
 def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
-                      gene_query=None, trna_query=None):
+                      gene_query=None, trna_query=None, gnm_type=""):
     """Returns a list of Genome objects containing data parsed from MySQL
     Phamerator database.
 
@@ -295,7 +295,7 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
                                              phage_id_list=phage_id_list,
                                              query=phage_query)
     for data_dict in result_list1:
-        gnm = parse_phage_table_data(data_dict)
+        gnm = parse_phage_table_data(data_dict, gnm_type=gnm_type)
         if gene_query is not None:
             cds_list = parse_cds_data(sql_handle, column="PhageID",
                                       phage_id_list=[gnm.id],

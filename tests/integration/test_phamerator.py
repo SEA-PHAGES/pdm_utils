@@ -624,14 +624,17 @@ class TestPhameratorFunctions(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = self.db
-        genome_list = phamerator.parse_genome_data(
-                        sql_handle, phage_id_list=["L5"], phage_query=phage_query)
+        genome_list = phamerator.parse_genome_data(sql_handle,
+                        phage_id_list=["L5"], phage_query=phage_query,
+                        gnm_type="phamerator")
         with self.subTest():
             self.assertEqual(len(genome_list), 1)
         with self.subTest():
             self.assertEqual(genome_list[0].id, "L5")
         with self.subTest():
             self.assertEqual(genome_list[0].seq, "ATCG")
+        with self.subTest():
+            self.assertEqual(genome_list[0].type, "phamerator")
         with self.subTest():
             self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
         with self.subTest():
@@ -746,6 +749,8 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(genome_list[0].id, "L5")
         with self.subTest():
             self.assertEqual(genome_list[0].seq, "ATCG")
+        with self.subTest():
+            self.assertEqual(genome_list[0].type, "")
         with self.subTest():
             self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
         with self.subTest():

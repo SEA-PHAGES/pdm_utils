@@ -166,7 +166,7 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
     bundle_count = 1
     for filename in files_in_folder:
 
-        bndl = prepare_bundle(filename, ticket_dict, id=bundle_count)
+        bndl = prepare_bundle(filename, ticket_dict, sql_handle, id=bundle_count)
 
         # Create sets of unique values for different data fields.
         # Since data from each parsed flat file is imported into the
@@ -267,15 +267,17 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
             failed_filename_list, evaluation_dict, query_dict)
 
 
-
-# TODO unittest.
-def prepare_bundle(filename="", ticket_dict={}, id=None):
+def prepare_bundle(filename="", ticket_dict={}, sql_handle=None, id=None):
     """Gather all genomic data needed to evaluate the flat file.
 
     :param filename: Name of a GenBank-formatted flat file.
     :type filename: str
     :param ticket_dict: A dictionary of Tickets.
     :type ticket_dict: dict
+    :param sql_handle:
+        A pdm_utils MySQLConnectionHandler object containing
+        information on which database to connect to.
+    :type sql_handle: MySQLConnectionHandler
     :param id: Identifier to be assigned to the bundled dataset.
     :type id: int
     :returns:
@@ -286,7 +288,12 @@ def prepare_bundle(filename="", ticket_dict={}, id=None):
     bndl = bundle.Bundle()
     bndl.id = id
     seqrecord = flat_files.retrieve_genome_data(filename)
-    if seqrecord is not None:
+    if seqrecord is None:
+        # TODO throw an error of some sort.
+        # Assign some value to the Bundle and break, so that
+        # the rest of this function is not executed.
+        print("No record was retrieved from the file.")
+    else:
         ff_gnm = flat_files.parse_genome_data(
                 seqrecord, filepath=filename, gnm_type="flat_file")
         bndl.genome_dict[ff_gnm.type] = ff_gnm
@@ -313,25 +320,28 @@ def prepare_bundle(filename="", ticket_dict={}, id=None):
             # If any attributes in flat_file are set to 'retain', copy data
             # from the phamerator genome.
             if bndl.ticket.type == "replace":
-                query = "SELECT * FROM phage"
-                phamerator_genomes = \
-                    phamerator.parse_genome_data(sql_handle, phage_id_list=[ff_gnm.id],
-                        phage_query=query)
-                if len(phamerator_genomes) == 1:
-                    bndl.genome_dict[phamerator_genomes[0].type] = phamerator_genomes[0]
-                    phamerator.copy_data_from(bndl, "flat_file")
-
-            # TODO at some point annotation_qc and retrieve_record attributes
-            # will need to be set. These are dependent on the ticket type.
-            # If genomes are being replaced, these fields may be carried over from
-            # the previous genome, combined with their annotation status.
-
-    else:
-        # TODO throw an error of some sort.
-        # Assign some value to the Bundle and break, so that
-        # the rest of this function is not executed.
-        print("No record was retrieved from the file.")
-
+                if sql_handle is None:
+                    print("Ticket %s is a 'replace' ticket but no"
+                          " details about how to connect to the"
+                          " Phamerator database have been provided."
+                          " Unable to retrieve data."
+                          % bndl.ticket.id)
+                else:
+                    query = "SELECT * FROM phage"
+                    pmr_genomes =  phamerator.parse_genome_data(
+                                       sql_handle=sql_handle,
+                                       phage_id_list=[ff_gnm.id],
+                                       phage_query=query,
+                                       gnm_type="phamerator")
+                    if len(pmr_genomes) == 1:
+                        pmr_gnm = pmr_genomes[0]
+                        bndl.genome_dict[pmr_gnm.type] = pmr_gnm
+                        phamerator.copy_data_from(
+                            bndl, "phamerator", "flat_file")
+                    else:
+                        print("There is no %s genome in the Phamerator"
+                              " database. Unable to retrieve data."
+                              % ff_gnm.id)
     return bndl
 
 
