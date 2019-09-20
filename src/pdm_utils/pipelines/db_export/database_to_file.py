@@ -32,7 +32,7 @@ def database_to_file(database_name, file_export_format, export_folder_path, phag
     seqfeature_file_output\
             (retrieve_seqfeature_from_database\
             (sql_handle, phage_name_filter_list),\
-            file_export_format, export_folder_path)
+            file_export_format, export_folder_path, export_dir_name = database_name)
 
 # TODO Owen unittest.
 def establish_database_connection(database_name):
@@ -146,7 +146,7 @@ def append_database_version(genome_seqrecord, version_data):
         raise
 
 
-def seqfeature_file_output(seq_record_list, file_format, input_path):
+def seqfeature_file_output(seq_record_list, file_format, input_path, export_dir_name = "Database"):
     """Outputs files with a particuar format from a SeqRecord list
 
     :param seq_record_list:
@@ -162,7 +162,7 @@ def seqfeature_file_output(seq_record_list, file_format, input_path):
     """
 
 
-    output_dir="database_export_output"
+    output_dir="{}".format(export_dir_name)
     try:
         os.mkdir(os.path.join(input_path, output_dir))
     except:
@@ -173,8 +173,9 @@ def seqfeature_file_output(seq_record_list, file_format, input_path):
                     create database_export_output\
                     directory in {}".format(input_path))
     for record in seq_record_list:
-        output_dir="database_export_output/{}.{}".format\
-                (record.name, file_format)
+        output_dir="{}/{}.{}".format\
+                (export_dir_name,\
+                record.name, file_format)
         output_path=os.path.join(input_path, output_dir)
         output_handle=open(output_path, "w+")
         SeqIO.write(record, output_handle, file_format)
