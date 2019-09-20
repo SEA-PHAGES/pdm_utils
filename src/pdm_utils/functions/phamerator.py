@@ -383,8 +383,10 @@ def create_accession_set(sql_handle):
     return result_set
 
 
-def create_update(table, field1, value1, field2, value2):
+def create_update(table, field2, value2, field1, value1):
     """Create MySQL UPDATE statement.
+
+    "'UPDATE <table> SET <field2> = '<value2' WHERE <field1> = '<data1>'."
 
     When the new value to be added is 'singleton' (e.g. for Cluster and
     Cluster2 fields), or an empty value (e.g. None, "none", etc.),
@@ -416,42 +418,6 @@ def create_update(table, field1, value1, field2, value2):
         part2 = part2b
     statement = part1 + part2 + part3
     return statement
-
-
-# TODO this needs to be revamped. It was originally constructed to handle
-# 'update' tickets that contain several pieces of data.
-def create_genome_update_statements(gnm):
-    """Create a collection of genome-level UPDATE statements using data
-    in a Genome object.
-
-    :param gnm: A pdm_utils Genome object.
-    :type gnm: Genome
-    :returns:
-        A list of MySQL INSERT and UPDATE statement for the
-        phage, gene, and trna tables.
-    :rtype: list
-
-    """
-
-    table = "phage"
-    field1 = "PhageID"
-    value1 = gnm.id
-    statements = []
-    statements.append(create_update(
-        table, field1, value1, "HostStrain", gnm.host_genus))
-    statements.append(create_update(
-        table, field1, value1, "status", gnm.annotation_status))
-    statements.append(create_update(
-        table, field1, value1, "Accession", gnm.accession))
-    statements.append(create_update(
-        table, field1, value1, "AnnotationAuthor", gnm.author))
-    statements.append(create_update(
-        table, field1, value1, "Cluster", gnm.cluster_subcluster))
-    statements.append(create_update(
-        table, field1, value1, "Cluster2", gnm.cluster))
-    statements.append(create_update(
-        table, field1, value1, "Subcluster2", gnm.subcluster))
-    return statements
 
 
 def create_delete(table, field, data):
@@ -538,6 +504,7 @@ def create_phage_table_insert(gnm):
     return statement
 
 
+# TODO integration test? Not sure if this is really needed.
 def create_genome_insert(gnm):
     """Create a collection of MySQL INSERT and UPDATE statements.
 
@@ -764,7 +731,41 @@ def implement_remove_statements():
 
 
 
-
+# # TODO probably no longer needed.
+# # TODO this needs to be revamped. It was originally constructed to handle
+# # 'update' tickets that contain several pieces of data.
+# def create_genome_update_statements(gnm):
+#     """Create a collection of genome-level UPDATE statements using data
+#     in a Genome object.
+#
+#     :param gnm: A pdm_utils Genome object.
+#     :type gnm: Genome
+#     :returns:
+#         A list of MySQL INSERT and UPDATE statement for the
+#         phage, gene, and trna tables.
+#     :rtype: list
+#
+#     """
+#
+#     table = "phage"
+#     field1 = "PhageID"
+#     value1 = gnm.id
+#     statements = []
+#     statements.append(create_update(
+#         table, field1, value1, "HostStrain", gnm.host_genus))
+#     statements.append(create_update(
+#         table, field1, value1, "status", gnm.annotation_status))
+#     statements.append(create_update(
+#         table, field1, value1, "Accession", gnm.accession))
+#     statements.append(create_update(
+#         table, field1, value1, "AnnotationAuthor", gnm.author))
+#     statements.append(create_update(
+#         table, field1, value1, "Cluster", gnm.cluster_subcluster))
+#     statements.append(create_update(
+#         table, field1, value1, "Cluster2", gnm.cluster))
+#     statements.append(create_update(
+#         table, field1, value1, "Subcluster2", gnm.subcluster))
+#     return statements
 
 
 

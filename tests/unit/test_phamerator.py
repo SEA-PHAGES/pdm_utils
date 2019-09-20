@@ -481,118 +481,51 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_create_update_1(self):
-        """Verify correct Cluster statement is created for a non-singleton."""
-        statement = phamerator.create_update(
-            "phage", "PhageID", "L5", "Cluster", "A")
-        exp_statement = \
-            "UPDATE phage SET Cluster = 'A' WHERE PhageID = 'L5';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
-
-    def test_create_update_2(self):
-        """Verify correct Cluster statement is created for a singleton."""
-        statement = phamerator.create_update(
-                "phage", "PhageID", "L5", "Cluster", "SINGLETON")
-        exp_statement = \
-            "UPDATE phage SET Cluster = NULL WHERE PhageID = 'L5';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
-
-    def test_create_update_3(self):
-        """Verify correct Cluster2 statement is created for a singleton."""
-        statement = phamerator.create_update(
-                "phage", "PhageID", "L5", "Cluster2", "SINGLETON")
-        exp_statement = \
-            "UPDATE phage SET Cluster2 = NULL WHERE PhageID = 'L5';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
-
-    def test_create_update_4(self):
-        """Verify correct Subcluster2 statement is created for a
-        non-empty value."""
-        statement = phamerator.create_update(
-                "phage", "PhageID", "L5", "Subcluster2", "A2")
-        exp_statement = \
-            "UPDATE phage SET Subcluster2 = 'A2' WHERE PhageID = 'L5';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
-
-    def test_create_update_5(self):
-        """Verify correct Subcluster2 statement is created for an
-        empty value."""
-        statement = phamerator.create_update(
-                "phage", "PhageID", "L5", "Subcluster2", "none")
-        exp_statement = \
-            "UPDATE phage SET Subcluster2 = NULL WHERE PhageID = 'L5';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
-
-    def test_create_cluster_statement_6(self):
-        """Verify Gene statement is created correctly."""
-        statement = phamerator.create_update(
-            "gene", "GeneID", "SEA_L5_123", "Notes", "Integrase")
-        exp_statement = \
-            "UPDATE gene SET Notes = 'Integrase' WHERE GeneID = 'SEA_L5_123';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
 
 
 
-
-    def test_create_genome_update_statements_1(self):
-        """Verify list of statements are created correctly."""
-
-        self.genome1.id = "L5"
-        self.genome1.host_genus = "Mycobacterium"
-        self.genome1.annotation_status = "final"
-        self.genome1.accession = "ABC123"
-        self.genome1.author = "1"
-        self.genome1.cluster_subcluster = "A123"
-        self.genome1.cluster = "A"
-        self.genome1.subcluster = "A2"
-
-        statements = phamerator.create_genome_update_statements(self.genome1)
-
-        end = " WHERE PhageID = 'L5';"
-        exp_statements = 7
-        exp_host = "UPDATE phage SET HostStrain = 'Mycobacterium'" + end
-        exp_status = "UPDATE phage SET status = 'final'" + end
-        exp_accession = "UPDATE phage SET Accession = 'ABC123'" + end
-        exp_author = "UPDATE phage SET AnnotationAuthor = '1'" + end
-        exp_clust_sub = "UPDATE phage SET Cluster = 'A123'" + end
-        exp_cluster = "UPDATE phage SET Cluster2 = 'A'" + end
-        exp_subcluster = "UPDATE phage SET Subcluster2 = 'A2'" + end
-
-
-        with self.subTest():
-            self.assertEqual(len(statements), 7)
-        with self.subTest():
-            self.assertEqual(statements[0], exp_host)
-        with self.subTest():
-            self.assertEqual(statements[1], exp_status)
-        with self.subTest():
-            self.assertEqual(statements[2], exp_accession)
-        with self.subTest():
-            self.assertEqual(statements[3], exp_author)
-        with self.subTest():
-            self.assertEqual(statements[4], exp_clust_sub)
-        with self.subTest():
-            self.assertEqual(statements[5], exp_cluster)
-        with self.subTest():
-            self.assertEqual(statements[6], exp_subcluster)
-
-
-
-
-    def test_create_delete_1(self):
-        """Verify correct DELETE statement is created."""
-        statement = \
-            phamerator.create_delete("phage", "PhageID", "L5")
-        exp_statement = "DELETE FROM phage WHERE PhageID = 'L5';"
-        with self.subTest():
-            self.assertEqual(statement, exp_statement)
-
+    # # TODO probably no longer needed.
+    # def test_create_genome_update_statements_1(self):
+    #     """Verify list of statements are created correctly."""
+    #
+    #     self.genome1.id = "L5"
+    #     self.genome1.host_genus = "Mycobacterium"
+    #     self.genome1.annotation_status = "final"
+    #     self.genome1.accession = "ABC123"
+    #     self.genome1.author = "1"
+    #     self.genome1.cluster_subcluster = "A123"
+    #     self.genome1.cluster = "A"
+    #     self.genome1.subcluster = "A2"
+    #
+    #     statements = phamerator.create_genome_update_statements(self.genome1)
+    #
+    #     end = " WHERE PhageID = 'L5';"
+    #     exp_statements = 7
+    #     exp_host = "UPDATE phage SET HostStrain = 'Mycobacterium'" + end
+    #     exp_status = "UPDATE phage SET status = 'final'" + end
+    #     exp_accession = "UPDATE phage SET Accession = 'ABC123'" + end
+    #     exp_author = "UPDATE phage SET AnnotationAuthor = '1'" + end
+    #     exp_clust_sub = "UPDATE phage SET Cluster = 'A123'" + end
+    #     exp_cluster = "UPDATE phage SET Cluster2 = 'A'" + end
+    #     exp_subcluster = "UPDATE phage SET Subcluster2 = 'A2'" + end
+    #
+    #
+    #     with self.subTest():
+    #         self.assertEqual(len(statements), 7)
+    #     with self.subTest():
+    #         self.assertEqual(statements[0], exp_host)
+    #     with self.subTest():
+    #         self.assertEqual(statements[1], exp_status)
+    #     with self.subTest():
+    #         self.assertEqual(statements[2], exp_accession)
+    #     with self.subTest():
+    #         self.assertEqual(statements[3], exp_author)
+    #     with self.subTest():
+    #         self.assertEqual(statements[4], exp_clust_sub)
+    #     with self.subTest():
+    #         self.assertEqual(statements[5], exp_cluster)
+    #     with self.subTest():
+    #         self.assertEqual(statements[6], exp_subcluster)
 
 
 

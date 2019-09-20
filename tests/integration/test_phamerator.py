@@ -23,7 +23,7 @@ user = 'tester'
 pwd = 'tester'
 
 
-class TestPhameratorFunctions(unittest.TestCase):
+class TestPhameratorFunctions1(unittest.TestCase):
 
 
 
@@ -1086,22 +1086,74 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
+    def tearDown(self):
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute("DROP DATABASE %s" % self.db)
+        connection.commit()
+        connection.close()
 
 
-    def test_create_gene_table_insert_1(self):
-        """Verify gene table INSERT statement is created correctly."""
-        # Note: even though this function returns a string and doesn't
-        # actually utilize a MySQL database, this test ensures
-        # that the returned statement will function properly in MySQL.
 
-        # Note: even though this function acts on the gene table, a
-        # corresponding entry in the phage table is required.
+
+
+class TestPhameratorFunctions2(unittest.TestCase):
+
+    def setUp(self):
+        """In order to test MySQL database-related functions, create a
+        new, empty 'test' database and structure it using the
+        same schema as in PhameratorDB.
+        Each unittest will populate the empty database as needed."""
+
+        self.db = "test_db"
+        self.schema_file = "test_schema4.sql"
+
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+
+        # First, test if a test database already exists within mysql.
+        # If there is, delete it so that a fresh test database is installed.
+        sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
+              "WHERE SCHEMA_NAME = '%s'" % self.db
+        cur.execute(sql)
+        result = cur.fetchall()
+
+        if len(result) != 0:
+            cur.execute("DROP DATABASE %s" % self.db)
+            connection.commit()
+
+        # Next, create the database within mysql.
+        cur.execute("CREATE DATABASE %s" % self.db)
+        connection.commit()
+        connection.close()
+
+        # Now import the empty schema from file.
+        # Seems like pymysql has trouble with this step, so use subprocess.
+        schema_filepath = \
+            os.path.join(os.path.dirname(__file__),
+                        "test_files/",
+                        self.schema_file)
+
+        handle = open(schema_filepath, "r")
+        command_string = "mysql -u %s -p%s %s" % (user, pwd, self.db)
+        command_list = command_string.split(" ")
+        proc = subprocess.check_call(command_list, stdin = handle)
+        handle.close()
+
+        # Add the L5 genome to the phage table.
         insert1 = ("INSERT INTO phage "
                    "(PhageID, Accession, Name, HostStrain, Sequence, "
                    "SequenceLength, GC, status, DateLastModified, "
-                   "RetrieveRecord, AnnotationQC, AnnotationAuthor) "
+                   "RetrieveRecord, AnnotationQC, AnnotationAuthor,"
+                   "Cluster2, Subcluster2) "
                    "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
-                   "'ATCG', 4, 0.5001, 'final', '%s', 1, 1, 1);"
+                   "'ATCG', 4, 0.5001, 'final', '%s', 1, 1, 1, 'A', 'A2');"
                    % constants.EMPTY_DATE)
         connection = pymysql.connect(host="localhost",
                                      user=user,
@@ -1113,6 +1165,24 @@ class TestPhameratorFunctions(unittest.TestCase):
         connection.commit()
         connection.close()
 
+        self.std_phage_query = \
+            ("SELECT PhageID, Accession, Name, "
+             "HostStrain, Sequence, SequenceLength, GC, status, "
+             "DateLastModified, RetrieveRecord, AnnotationQC, "
+             "AnnotationAuthor, Cluster2, Subcluster2 "
+             "FROM phage WHERE PhageID = 'L5'")
+
+        self.std_cds_query = \
+            ("SELECT GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+             "translation, Orientation, Notes, LocusTag FROM gene "
+             "WHERE PhageID = 'L5'")
+
+
+    def test_create_gene_table_insert_1(self):
+        """Verify gene table INSERT statement is created correctly."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
         cds1 = cds.Cds()
         cds1.id = "SEA_L5_123"
         cds1.genome_id = "L5"
@@ -1135,16 +1205,13 @@ class TestPhameratorFunctions(unittest.TestCase):
         cur.execute(insert2)
         connection.commit()
         connection.close()
-        query =  ("SELECT GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
-                  "translation, Orientation, Notes, LocusTag FROM gene "
-                  "WHERE PhageID = 'L5'")
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
                                      database = self.db,
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        cur.execute(query)
+        cur.execute(self.std_cds_query)
         results = cur.fetchall()[0]
         cur.close()
         connection.close()
@@ -1182,22 +1249,265 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
+    def test_create_update_1(self):
+        """Verify correct Cluster2 statement is created for a non-singleton."""
+        statement = phamerator.create_update(
+            "phage", "Cluster2", "B", "PhageID", "L5")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_phage_query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = "UPDATE phage SET Cluster2 = 'B' WHERE PhageID = 'L5';"
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["Cluster2"], "B")
+
+    def test_create_update_2(self):
+        """Verify correct Cluster2 statement is created for a singleton."""
+        statement = phamerator.create_update(
+            "phage", "Cluster2", "SINGLETON", "PhageID", "L5")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_phage_query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = "UPDATE phage SET Cluster2 = NULL WHERE PhageID = 'L5';"
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertIsNone(results["Cluster2"])
+
+    def test_create_update_3(self):
+        """Verify correct Subcluster2 statement is created for a
+        non-empty value."""
+        statement = phamerator.create_update(
+            "phage", "Subcluster2", "A2", "PhageID", "L5")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_phage_query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = "UPDATE phage SET Subcluster2 = 'A2' WHERE PhageID = 'L5';"
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["Subcluster2"], "A2")
+
+    def test_create_cluster_statement_4(self):
+        """Verify Gene table statement is created correctly."""
+        # First add gene SEA_L5_123 to the database.
+        input = ("INSERT INTO gene "
+               "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+               "translation, Orientation, Notes, LocusTag) "
+               "VALUES "
+               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', "
+               "'ACKLG', 'F', 'integrase', 'TAG1');")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(input)
+        connection.commit()
+        connection.close()
+
+        # Second run the update statement.
+        statement = phamerator.create_update(
+            "gene", "Notes", "Repressor", "GeneID", "SEA_L5_123")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+
+        # Third, retrieve the current state of the gene table.
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_cds_query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = "UPDATE gene SET Notes = 'Repressor' WHERE GeneID = 'SEA_L5_123';"
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["Notes"].decode("utf-8"), "Repressor")
+
+
+
+
+    def test_create_delete_1(self):
+        """Verify correct DELETE statement is created
+        for a PhageID in the phage table."""
+        # First, retrieve the current state of the phage table.
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_phage_query)
+        results1 = cur.fetchall()
+        cur.close()
+        connection.close()
+        results1_phageids = set()
+        for dict in results1:
+            results1_phageids.add(dict["PhageID"])
+
+        # Second, execute the DELETE statement.
+        statement = phamerator.create_delete("phage", "PhageID", "L5")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+
+        # Third, retrieve the current state of the phage table.
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_phage_query)
+        results2 = cur.fetchall()
+        cur.close()
+        connection.close()
+        results2_phageids = set()
+        for dict in results2:
+            results2_phageids.add(dict["PhageID"])
+
+        exp = "DELETE FROM phage WHERE PhageID = 'L5';"
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(len(results1_phageids), 1)
+        with self.subTest():
+            self.assertEqual(len(results2_phageids), 0)
 
 
 
 
 
 
+    def test_create_delete_2(self):
+        """Verify correct DELETE statement is created
+        for a single GeneID in the gene table."""
+
+        # First add two genes to the database.
+        input1 = ("INSERT INTO gene "
+                  "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                  "translation, Orientation, Notes, LocusTag) "
+                  "VALUES "
+                  "('SEA_L5_1', 'L5', 5, 10, 20, 'LysA', 'CDS', "
+                  "'ABCDEF', 'F', 'lysin', 'TAG1');")
+        input2 = ("INSERT INTO gene "
+                  "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                  "translation, Orientation, Notes, LocusTag) "
+                  "VALUES "
+                  "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', "
+                  "'ACKLG', 'F', 'integrase', 'TAG123');")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(input1)
+        cur.execute(input2)
+        connection.commit()
+        connection.close()
+
+        # Second, retrieve the current state of the gene table.
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_cds_query)
+        results1 = cur.fetchall()
+        cur.close()
+        connection.close()
+        results1_phageids = set()
+        results1_geneids = set()
+        for dict in results1:
+            results1_phageids.add(dict["PhageID"])
+            results1_geneids.add(dict["GeneID"])
+
+        # Third, execute the DELETE statement.
+        statement = phamerator.create_delete("gene", "GeneID", "SEA_L5_1")
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+
+        # Fourth, retrieve the current state of the gene table.
+        connection = pymysql.connect(host="localhost",user=user,
+                                     password=pwd, database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_cds_query)
+        results2 = cur.fetchall()
+        cur.close()
+        connection.close()
+        results2_phageids = set()
+        results2_geneids = set()
+        for dict in results2:
+            results2_phageids.add(dict["PhageID"])
+            results2_geneids.add(dict["GeneID"])
+
+        exp = "DELETE FROM gene WHERE GeneID = 'SEA_L5_1';"
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(len(results1_phageids), 1)
+        with self.subTest():
+            self.assertEqual(len(results1_geneids), 2)
+        with self.subTest():
+            self.assertEqual(len(results2_phageids), 1)
+        with self.subTest():
+            self.assertEqual(len(results2_geneids), 1)
 
 
 
     def tearDown(self):
-
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
-
         cur = connection.cursor()
         cur.execute("DROP DATABASE %s" % self.db)
         connection.commit()
