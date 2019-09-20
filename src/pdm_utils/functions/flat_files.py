@@ -456,7 +456,7 @@ def parse_genome_data(seqrecord, filepath="",
 
 
 
-def copy_data_to(bndl, from_type, to_type, flag="ticket"):
+def copy_data(bndl, from_type, to_type, flag="ticket"):
     """Copy data to a genome object derived from a 'flat_file'.
 
     The Bundle object is expected to contain at least two Genome objects

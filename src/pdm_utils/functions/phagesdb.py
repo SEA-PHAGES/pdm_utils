@@ -251,7 +251,7 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data_from(bndl, from_type, to_type, flag="retrieve"):
+def copy_data(bndl, from_type, to_type, flag="retrieve"):
     """Copy data from a 'phagesdb' genome object.
 
     If a genome object stored in a bundle object has

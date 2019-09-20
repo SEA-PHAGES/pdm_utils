@@ -541,7 +541,7 @@ def create_genome_insert_statements(gnm):
     return statements
 
 
-def copy_data_from(bndl, from_type, to_type, flag="retain"):
+def copy_data(bndl, from_type, to_type, flag="retain"):
     """Copy data from a 'phamerator' genome object.
 
     If a genome object stored in the Bundle object has

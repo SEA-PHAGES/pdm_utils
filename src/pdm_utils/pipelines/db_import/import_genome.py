@@ -305,7 +305,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None, id=None):
             # to a ticket, use the ticket to populate specific
             # genome-level fields such as host, cluster, subcluster, etc.
             tickets.copy_ticket_to_genome(bndl)
-            flat_files.copy_data_to(bndl, "add", "flat_file", flag="ticket")
+            flat_files.copy_data(bndl, "add", "flat_file", flag="ticket")
 
             # Check to see if there is any missing data for each genome, and
             # retrieve it from phagesdb.
@@ -313,7 +313,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None, id=None):
             # retrieved from PhagesDB and populates a new Genome object.
             ff_gnm.set_value_flag("retrieve")
             if ff_gnm._value_flag:
-                phagesdb.copy_data_from(
+                phagesdb.copy_data(
                     bndl, "phagesdb", "flat_file", flag="retrieve")
 
             # If the ticket type is 'replace', retrieve data from phamerator.
@@ -336,7 +336,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None, id=None):
                     if len(pmr_genomes) == 1:
                         pmr_gnm = pmr_genomes[0]
                         bndl.genome_dict[pmr_gnm.type] = pmr_gnm
-                        phamerator.copy_data_from(
+                        phamerator.copy_data(
                             bndl, "phamerator", "flat_file")
                     else:
                         print("There is no %s genome in the Phamerator"
@@ -535,7 +535,7 @@ def check_genome(gnm, tkt, null_set=set(), phage_id_set=set(),
                           eval_id="GNM_032")
 
     # TODO confirm that these check_value_flag() are needed here.
-    # Currently all "copy_data_to/from" functions run the check method
+    # Currently all "copy_data" functions run the check method
     # to throw an error if not all data was copied.
     gnm.set_value_flag("retrieve")
     gnm.check_value_flag(eval_id="GNM_033")

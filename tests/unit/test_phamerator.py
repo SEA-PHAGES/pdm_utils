@@ -798,12 +798,12 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.cluster = "A"
 
-    def test_copy_data_from_1(self):
+    def test_copy_data_1(self):
         """Check that an "add" genome with no fields set to 'retain' is
         not impacted."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
+        phamerator.copy_data(self.bundle1, "phamerator", "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -812,14 +812,14 @@ class TestPhameratorFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
 
-    def test_copy_data_from_2(self):
+    def test_copy_data_2(self):
         """Check that an "add" genome with host_genus field set to 'retain' is
         populated correctly."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
+        phamerator.copy_data(self.bundle1, "phamerator", "add")
         genome1 = self.bundle1.genome_dict["add"]
         with self.subTest():
             self.assertFalse(genome1._value_flag)
@@ -828,34 +828,34 @@ class TestPhameratorFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome1.cluster, "B")
 
-    def test_copy_data_from_3(self):
+    def test_copy_data_3(self):
         """Check that an "invalid" genome with host_genus field set to 'retain' is
         not populated correctly."""
 
         self.genome1.type = "invalid"
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
+        phamerator.copy_data(self.bundle1, "phamerator", "add")
         with self.subTest():
             self.assertEqual(
                 len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retain")
 
-    def test_copy_data_from_4(self):
+    def test_copy_data_4(self):
         """Check that an "add" genome with host_genus field set to 'retain' is
         not populated correctly when "invalid" type is requested."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
-        phamerator.copy_data_from(self.bundle1, "phamerator", "invalid")
+        phamerator.copy_data(self.bundle1, "phamerator", "invalid")
         with self.subTest():
             self.assertEqual(
                 len(self.bundle1.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertEqual(self.genome1.host_genus, "retain")
 
-    def test_copy_data_from_5(self):
+    def test_copy_data_5(self):
         """Check that an "add" genome with host_genus field set to 'retain' is
         not populated correctly when there is no matching "phamerator"
         genomet type."""
@@ -863,7 +863,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.genome1.host_genus = "retain"
         self.genome1._value_flag = False
-        phamerator.copy_data_from(self.bundle1, "phamerator", "add")
+        phamerator.copy_data(self.bundle1, "phamerator", "add")
         with self.subTest():
             self.assertTrue(self.genome1._value_flag)
         with self.subTest():
