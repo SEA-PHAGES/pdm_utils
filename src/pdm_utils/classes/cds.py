@@ -369,19 +369,19 @@ class Cds:
 
         if isinstance(value, Seq):
             self.seq = value.upper()
-            elif value is not None:
-                try:
-                    self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
-                except:
-                    self.seq = Seq("", IUPAC.ambiguous_dna)
-            elif parent_genome_seq is not None:
-                try:
-                    self.seq = self.seqfeature.extract(parent_genome_seq)
-                except:
-                    # TODO not sure if this is the proper alphabet to use.
-                    self.seq = Seq("", IUPAC.ambiguous_dna)
-            else:
+        elif value is not None:
+            try:
+                self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
+            except:
                 self.seq = Seq("", IUPAC.ambiguous_dna)
+        elif parent_genome_seq is not None:
+            try:
+                self.seq = self.seqfeature.extract(parent_genome_seq)
+            except:
+                # TODO not sure if this is the proper alphabet to use.
+                self.seq = Seq("", IUPAC.ambiguous_dna)
+        else:
+            self.seq = Seq("", IUPAC.ambiguous_dna)
 
 
     # TODO Owen unittest for added steps.
