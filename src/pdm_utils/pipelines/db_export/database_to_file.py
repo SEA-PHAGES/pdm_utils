@@ -181,18 +181,28 @@ def seqfeature_file_output(seq_record_list, file_format, input_path, export_dir_
         SeqIO.write(record, output_handle, file_format)
         output_handle.close()
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
+#To be removed and replaced with run.py functionality
+def main(args):
+    if len(args) < 2:
         print("Please try again with the following arguments:")
-        print("database_to_file.py database_name file_type PhageID1 PhageID2 etc..")
+        print("database_to_file.py database_name file_type PhageID1 Phage ID2 etc..")
     else:
-        if len(sys.argv) == 3:
-            database_to_file(database_name = sys.argv[1], file_export_format = sys.argv[2], export_folder_path =os.getcwd())
+        if len(args) == 2:
+            database_to_file(database_name = args[0],\
+                    file_export_format = args[1],\
+                    export_folder_path = os.getcwd())
         else:
             phage_id_list = []
-            for args in sys.argv[2:]:
-                phage_id_list.append(args)
-            database_to_file(database_name = sys.argv[1],\
-                    file_export_format = sys.argv[2],\
-                    export_folder_path = os.getcwd(),\
-                    phage_name_filter_list = phage_id_list)
+            for arg in args[2:]:
+                phage_id_list.append(arg)
+            database_to_file(database_name = args[0],\
+                        file_export_format = args[1],\
+                        export_folder_path = os.getcwd(),\
+                        phage_name_filter_list = phage_id_list)
+
+if __name__ == "__main__":
+    main_args = ()
+    for arg in sys.argv[1:]:
+        main_args = main_args + (arg,)
+    main(main_args)
+    
