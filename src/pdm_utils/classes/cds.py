@@ -17,358 +17,358 @@ from collections import OrderedDict
 class Cds:
     """Class to hold data about a CDS feature."""
 
-        def __init__(self):
+    def __init__(self):
 
             # The following attributes are common to any CDS.
-            self.id = "" # Gene ID
-            self.name = "" # Tends to be an integer for SEA-PHAGES.
-            self.seqfeature = None # Biopython SeqFeature object.
-            self.left = -1 # Genomic position
-            self.right = -1 # Genomic position
-            self.coordinate_format = "" # Indexing format used for coordinates.
-            self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
-            self.parts = 0 # Number of regions that define the feature
-            self.translation_table = 0
-            self.translation = Seq("", IUPAC.protein) # Biopython amino acid Seq object.
-            self.translation_length = 0
-            self.seq = Seq("", IUPAC.ambiguous_dna) # Biopython nucleotide Seq object.
-            self.length = 0
+        self.id = "" # Gene ID
+        self.name = "" # Tends to be an integer for SEA-PHAGES.
+        self.seqfeature = None # Biopython SeqFeature object.
+        self.left = -1 # Genomic position
+        self.right = -1 # Genomic position
+        self.coordinate_format = "" # Indexing format used for coordinates.
+        self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
+        self.parts = 0 # Number of regions that define the feature
+        self.translation_table = 0
+        self.translation = Seq("", IUPAC.protein) # Biopython amino acid Seq object.
+        self.translation_length = 0
+        self.seq = Seq("", IUPAC.ambiguous_dna) # Biopython nucleotide Seq object.
+        self.length = 0
 
-            # Information about the genome from which the feature is derived.
-            self.genome_id = ""
-            self.genome_length = -1
-
-
-            # The following attributes are common to PhameratorDB.
-            self.pham = 0 # TODO build method to implement this.
-            self.description = "" # Raw gene description
-            self.processed_description = "" # Non-generic gene descriptions
+        # Information about the genome from which the feature is derived.
+        self.genome_id = ""
+        self.genome_length = -1
 
 
-            # The following attributes are common to
-            # GenBank-formatted flat file records.
-            self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
-            self._locus_tag_num = "" # Should be digit, but keep as string.
-            self.gene = "" # Tends to be an integer, but not guaranteed.
-            self.product = ""
-            self.function = ""
-            self.note = ""
-            self.processed_product = ""
-            self.processed_function = ""
-            self.processed_note = ""
-
-            # The following attributes are usefule for processing data
-            # from various data sources.
-            self.evaluations = []
-            self.type = ""
-            self._left_right_strand_id = ()
-            self._end_strand_id = ()
-            self._start_end_id = ()
+        # The following attributes are common to PhameratorDB.
+        self.pham = 0 # TODO build method to implement this.
+        self.description = "" # Raw gene description
+        self.processed_description = "" # Non-generic gene descriptions
 
 
+        # The following attributes are common to
+        # GenBank-formatted flat file records.
+        self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
+        self._locus_tag_num = "" # Should be digit, but keep as string.
+        self.gene = "" # Tends to be an integer, but not guaranteed.
+        self.product = ""
+        self.function = ""
+        self.note = ""
+        self.processed_product = ""
+        self.processed_function = ""
+        self.processed_note = ""
+
+        # The following attributes are usefule for processing data
+        # from various data sources.
+        self.evaluations = []
+        self.type = ""
+        self._left_right_strand_id = ()
+        self._end_strand_id = ()
+        self._start_end_id = ()
 
 
-        def set_locus_tag(self, tag="", delimiter="_", check_value=None):
-            """Set locus tag and parse the locus_tag feature number.
 
-            :param tag:
-                Input locus_tag data.
-            :type tag: str
-            :param delimiter:
-                Value used to split locus_tag data.
-            :type delimiter: str
-            :param check_value:
-                Indicates genome name or other value that will be used to parse
-                the locus_tag to identify the feature number. If no check_value
-                is provided, the genome_id attribute is used.
-            :type check_value: str
-            """
-            self.locus_tag = tag
-            if check_value is None:
-                check_value = self.genome_id
-            pattern = re.compile(check_value.lower())
-            parts = tag.split(delimiter)
 
-            index = 0
-            found = False
-            while (index < len(parts) and not found):
-                search_result = pattern.search(parts[index].lower())
-                if search_result != None:
-                    found = True
-                else:
-                    index += 1
-            if found:
-                if index == len(parts) - 1:
-                    value = parts[index][search_result.end():]
-                else:
-                    value = parts[-1]
+    def set_locus_tag(self, tag="", delimiter="_", check_value=None):
+        """Set locus tag and parse the locus_tag feature number.
+
+        :param tag:
+            Input locus_tag data.
+        :type tag: str
+        :param delimiter:
+            Value used to split locus_tag data.
+        :type delimiter: str
+        :param check_value:
+            Indicates genome name or other value that will be used to parse
+            the locus_tag to identify the feature number. If no check_value
+            is provided, the genome_id attribute is used.
+        :type check_value: str
+        """
+        self.locus_tag = tag
+        if check_value is None:
+            check_value = self.genome_id
+        pattern = re.compile(check_value.lower())
+        parts = tag.split(delimiter)
+
+        index = 0
+        found = False
+        while (index < len(parts) and not found):
+            search_result = pattern.search(parts[index].lower())
+            if search_result != None:
+                found = True
+            else:
+                index += 1
+        if found:
+            if index == len(parts) - 1:
+                value = parts[index][search_result.end():]
             else:
                 value = parts[-1]
-            if value.isdigit():
-                self._locus_tag_num = value
+        else:
+            value = parts[-1]
+        if value.isdigit():
+            self._locus_tag_num = value
 
 
 
-        def set_name(self, value=None):
-            """Set the feature name.
+    def set_name(self, value=None):
+        """Set the feature name.
 
-            Ideally, the name of the CDS will be an integer. This information
-            can be stored in multiple fields in the GenBank-formatted flat file.
-            The name is first derived from the 'gene' qualifier, then
-            the 'locus_tag' qualifier, and finally left empty.
+        Ideally, the name of the CDS will be an integer. This information
+        can be stored in multiple fields in the GenBank-formatted flat file.
+        The name is first derived from the 'gene' qualifier, then
+        the 'locus_tag' qualifier, and finally left empty.
 
-            :param value:
-                Indicates a value that should be used to directly set
-                the name regardless of the 'gene' and '_locus_tag_num'
-                attributes.
-            :type value: str
-            """
+        :param value:
+            Indicates a value that should be used to directly set
+            the name regardless of the 'gene' and '_locus_tag_num'
+            attributes.
+        :type value: str
+        """
 
-            # 1. PECAAN Draft:
-            #    The 'gene' qualifier should be present and contain an integer.
-            # 2. New SEA-PHAGES Final:
-            #    The 'gene' qualifier should be present and contain an integer.
-            # 3. SEA-PHAGES Final in GenBank:
-            #    The 'gene' qualifier may or may not be present, and
-            #    it may or may not have an integer.
-            #    The 'locus_tag' qualifier may or may not be present,
-            #    and may or may not have an integer.
-            # 4. Non-SEA-PHAGES in GenBank:
-            #    The 'gene' qualifier may or may not be present, and
-            #    it may or may not have an integer.
-            #    The 'locus_tag' qualifier may or may not be present,
-            #    and may or may not have an integer.
+        # 1. PECAAN Draft:
+        #    The 'gene' qualifier should be present and contain an integer.
+        # 2. New SEA-PHAGES Final:
+        #    The 'gene' qualifier should be present and contain an integer.
+        # 3. SEA-PHAGES Final in GenBank:
+        #    The 'gene' qualifier may or may not be present, and
+        #    it may or may not have an integer.
+        #    The 'locus_tag' qualifier may or may not be present,
+        #    and may or may not have an integer.
+        # 4. Non-SEA-PHAGES in GenBank:
+        #    The 'gene' qualifier may or may not be present, and
+        #    it may or may not have an integer.
+        #    The 'locus_tag' qualifier may or may not be present,
+        #    and may or may not have an integer.
 
-            if value is not None:
-                self.name = value
-            elif self.gene != "":
-                self.name = self.gene
-            elif self._locus_tag_num != "":
-                self.name = self._locus_tag_num
-            else:
-                self.name = ""
-
-
-        def set_description(self, value):
-            """Set the description and processed_description attributes.
-
-            :param value:
-                Indicates which reference attributes are used
-                to set the attributes ('product', 'function', 'note').
-            :type value: str
-            """
-
-            if value == "product":
-                self.description = self.product
-                self.processed_description = self.processed_product
-            elif value == "function":
-                self.description = self.function
-                self.processed_description = self.processed_function
-            elif value == "note":
-                self.description = self.note
-                self.processed_description = self.processed_note
-            else:
-                pass
+        if value is not None:
+            self.name = value
+        elif self.gene != "":
+            self.name = self.gene
+        elif self._locus_tag_num != "":
+            self.name = self._locus_tag_num
+        else:
+            self.name = ""
 
 
-        def get_start_end(self):
-            """Return the coordinates in start-end format."""
+    def set_description(self, value):
+        """Set the description and processed_description attributes.
 
-            # Ensure format of strand info.
-            strand = basic.reformat_strand(self.strand, "fr_long")
+        :param value:
+            Indicates which reference attributes are used
+            to set the attributes ('product', 'function', 'note').
+        :type value: str
+        """
 
-            if strand == "forward":
-                start = self.left
-                end = self.right
-            elif strand == "reverse":
-                start = self.right
-                end = self.left
-            else:
-                start = -1
-                end = -1
+        if value == "product":
+            self.description = self.product
+            self.processed_description = self.processed_product
+        elif value == "function":
+            self.description = self.function
+            self.processed_description = self.processed_function
+        elif value == "note":
+            self.description = self.note
+            self.processed_description = self.processed_note
+        else:
+            pass
 
-            return (start, end)
 
-        def translate_seq(self):
-            """Translate the CDS nucleotide sequence.
+    def get_start_end(self):
+        """Return the coordinates in start-end format."""
 
-            Use Biopython to translate the nucleotide sequece.
-            The method expects the nucleotide sequence to be a valid CDS
-            sequence in which:
+        # Ensure format of strand info.
+        strand = basic.reformat_strand(self.strand, "fr_long")
 
-                1. it begins with a valid start codon,
-                2. it ends with a stop codon,
-                3. it contains only one stop codon,
-                4. its length is divisible by 3,
-                5. it translates non-standard start codons to methionine.
+        if strand == "forward":
+            start = self.left
+            end = self.right
+        elif strand == "reverse":
+            start = self.right
+            end = self.left
+        else:
+            start = -1
+            end = -1
 
-            If these criteria are not met, an empty Seq object is returned.
+        return (start, end)
 
-            :returns: Amino acid sequence
-            :rtype: Seq
-            """
+    def translate_seq(self):
+        """Translate the CDS nucleotide sequence.
 
+        Use Biopython to translate the nucleotide sequece.
+        The method expects the nucleotide sequence to be a valid CDS
+        sequence in which:
+
+            1. it begins with a valid start codon,
+            2. it ends with a stop codon,
+            3. it contains only one stop codon,
+            4. its length is divisible by 3,
+            5. it translates non-standard start codons to methionine.
+
+        If these criteria are not met, an empty Seq object is returned.
+
+        :returns: Amino acid sequence
+        :rtype: Seq
+        """
+
+        try:
+            translation = self.seq.translate(table=self.translation_table,
+                                             cds=True)
+        except:
+            translation = Seq("", IUPAC.protein)
+        return translation
+
+
+    def set_translation(self, value=None, translate=False):
+        """Set translation and its length.
+
+        The translation is coerced into a Biopython Seq object.
+        If no input translation value is provided, the translation is
+        generated from the parent genome nucleotide sequence.
+        If an input translation value is provided, the 'translate'
+        parameter has no impact.
+
+        :param value: Amino acid sequence
+        :type value: str or Seq
+        :param translate:
+            Indicates whether the translation should be generated
+            from the parent genome nucleotide sequence.
+        :type translate: bool
+        """
+
+        if isinstance(value, Seq):
+            self.translation = value.upper()
+        elif value is not None:
             try:
-                translation = self.seq.translate(table=self.translation_table,
-                                                 cds=True)
+                self.translation = Seq(value.upper(), IUPAC.protein)
             except:
-                translation = Seq("", IUPAC.protein)
-            return translation
-
-
-        def set_translation(self, value=None, translate=False):
-            """Set translation and its length.
-
-            The translation is coerced into a Biopython Seq object.
-            If no input translation value is provided, the translation is
-            generated from the parent genome nucleotide sequence.
-            If an input translation value is provided, the 'translate'
-            parameter has no impact.
-
-            :param value: Amino acid sequence
-            :type value: str or Seq
-            :param translate:
-                Indicates whether the translation should be generated
-                from the parent genome nucleotide sequence.
-            :type translate: bool
-            """
-
-            if isinstance(value, Seq):
-                self.translation = value.upper()
-            elif value is not None:
-                try:
-                    self.translation = Seq(value.upper(), IUPAC.protein)
-                except:
-                    self.translation = Seq("", IUPAC.protein)
-            elif translate:
-                self.translation = self.translate_seq()
-            else:
                 self.translation = Seq("", IUPAC.protein)
-            self.translation_length = len(self.translation)
+        elif translate:
+            self.translation = self.translate_seq()
+        else:
+            self.translation = Seq("", IUPAC.protein)
+        self.translation_length = len(self.translation)
 
 
-        def set_translation_table(self, value):
-            """Set translation table integer.
+    def set_translation_table(self, value):
+        """Set translation table integer.
 
-            :param value:
-                Translation table that should be used to generate the translation.
-            :type value: int
-            """
+        :param value:
+            Translation table that should be used to generate the translation.
+        :type value: int
+        """
 
-            try:
-                self.translation_table = int(value)
-            except:
-                self.translation_table = -1
-
-
-        def set_strand(self, value, format, case=False):
-            """Sets strand based on indicated format.
-
-            Relies on the  `reformat_strand` function to manage strand data.
-
-            :param value: Input strand value.
-            :type value: misc.
-            :param format: Indicates how the strand data should be formatted.
-            :type format: str
-            :param case: Indicates whether the output strand data should be cased.
-            :type case: bool
-            """
-            self.strand = basic.reformat_strand(value, format, case)
+        try:
+            self.translation_table = int(value)
+        except:
+            self.translation_table = -1
 
 
-        def set_location_id(self):
-            """Create a tuple of feature location data.
+    def set_strand(self, value, format, case=False):
+        """Sets strand based on indicated format.
 
-            For left and right coordinates of the feature, it doesn't matter
-            whether the feature is complex with a translational frameshift or not.
-            Retrieving the "left" and "right" boundary attributes return the very
-            beginning and end of the feature, disregarding the
-            inner "join" coordinates.
-            If only the feature "end" coordinate is used, strand information is
-            required.
-            If "start" and "end" coordinates are used instead of "left" and "right"
-            coordinates, no strand information is required.
-            """
-            self._left_right_strand_id = (self.left, self.right, self.strand)
+        Relies on the  `reformat_strand` function to manage strand data.
 
-            start, end = self.get_start_end()
-            self._end_strand_id = (end, self.strand)
-            self._start_end_id = (start, end)
+        :param value: Input strand value.
+        :type value: misc.
+        :param format: Indicates how the strand data should be formatted.
+        :type format: str
+        :param case: Indicates whether the output strand data should be cased.
+        :type case: bool
+        """
+        self.strand = basic.reformat_strand(value, format, case)
 
 
-        def reformat_left_and_right(self, new_format):
-            """Convert left and right coordinates to new coordinate format.
-            This also updates the coordinate format attribute to reflect
-            change.
+    def set_location_id(self):
+        """Create a tuple of feature location data.
 
-            Relies on the `reformat_coordinates` function.
+        For left and right coordinates of the feature, it doesn't matter
+        whether the feature is complex with a translational frameshift or not.
+        Retrieving the "left" and "right" boundary attributes return the very
+        beginning and end of the feature, disregarding the
+        inner "join" coordinates.
+        If only the feature "end" coordinate is used, strand information is
+        required.
+        If "start" and "end" coordinates are used instead of "left" and "right"
+        coordinates, no strand information is required.
+        """
+        self._left_right_strand_id = (self.left, self.right, self.strand)
 
-            :param new_format: Indicates how coordinates should be formatted.
-            :type new_format: str
-            """
-            new_left, new_right = basic.reformat_coordinates(
-                self.left, self.right, self.coordinate_format, new_format)
-            if (new_format != self.coordinate_format):
-                self.left = new_left
-                self.right = new_right
-                self.coordinate_format = new_format
+        start, end = self.get_start_end()
+        self._end_strand_id = (end, self.strand)
+        self._start_end_id = (start, end)
 
 
-        def set_nucleotide_length(self, seq=False):
-            """Set the length of the nucleotide sequence.
+    def reformat_left_and_right(self, new_format):
+        """Convert left and right coordinates to new coordinate format.
+        This also updates the coordinate format attribute to reflect
+        change.
 
-            :param seq:
-                Nucleotide length can be computed multiple ways.
-                If the 'seq' parameter is False, the 'left' and 'right'
-                coordinates are used to determine the length (and take into
-                account the 'coordinate_format' attribute. However, for
-                compound features, this value may not be accurate.
-                If the 'seq' parameter is True, the nucleotide sequence is used
-                to determine the length. When the sequence reflects the
-                entire feature (including compound features), the length
-                will be accurate.
-            :type seq: bool
-            """
+        Relies on the `reformat_coordinates` function.
 
-            if seq:
-                self.length = len(self.seq)
-                pass
+        :param new_format: Indicates how coordinates should be formatted.
+        :type new_format: str
+        """
+        new_left, new_right = basic.reformat_coordinates(
+            self.left, self.right, self.coordinate_format, new_format)
+        if (new_format != self.coordinate_format):
+            self.left = new_left
+            self.right = new_right
+            self.coordinate_format = new_format
+
+
+    def set_nucleotide_length(self, seq=False):
+        """Set the length of the nucleotide sequence.
+
+        :param seq:
+            Nucleotide length can be computed multiple ways.
+            If the 'seq' parameter is False, the 'left' and 'right'
+            coordinates are used to determine the length (and take into
+            account the 'coordinate_format' attribute. However, for
+            compound features, this value may not be accurate.
+            If the 'seq' parameter is True, the nucleotide sequence is used
+            to determine the length. When the sequence reflects the
+            entire feature (including compound features), the length
+            will be accurate.
+        :type seq: bool
+        """
+
+        if seq:
+            self.length = len(self.seq)
+            pass
+        else:
+            if self.coordinate_format == "0_half_open":
+                self.length = \
+                    self.right - self.left
+            elif self.coordinate_format == "1_closed":
+                self.length = \
+                    self.right - self.left + 1
             else:
-                if self.coordinate_format == "0_half_open":
-                    self.length = \
-                        self.right - self.left
-                elif self.coordinate_format == "1_closed":
-                    self.length = \
-                        self.right - self.left + 1
-                else:
-                    self.length = -1
+                self.length = -1
 
 
-        def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
-            """Set the nucleotide sequence of the feature.
+    def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
+        """Set the nucleotide sequence of the feature.
 
-            This method can directly set the attribute from a supplied 'value',
-            or it can retrieve the sequence from the parent genome using
-            Biopython. In this latter case, it relies on a Biopython SeqFeature
-            object for the sequence extraction method and coordinates.
-            If this object was generated from a Biopython-parsed
-            GenBank-formatted flat file, the coordinates are by default
-            '0-based half-open', the object contains coordinates for every
-            part of the feature (e.g. if it is a compound feature) and
-            fuzzy locations. As a result, the length of the retrieved sequence
-            may not exactly match the length indicated from the 'left' and 'right'
-            coordinates.
-            If the nucleotide sequence 'value' is provided, the
-            'parent_genome_seq' does not impact the result.
+        This method can directly set the attribute from a supplied 'value',
+        or it can retrieve the sequence from the parent genome using
+        Biopython. In this latter case, it relies on a Biopython SeqFeature
+        object for the sequence extraction method and coordinates.
+        If this object was generated from a Biopython-parsed
+        GenBank-formatted flat file, the coordinates are by default
+        '0-based half-open', the object contains coordinates for every
+        part of the feature (e.g. if it is a compound feature) and
+        fuzzy locations. As a result, the length of the retrieved sequence
+        may not exactly match the length indicated from the 'left' and 'right'
+        coordinates.
+        If the nucleotide sequence 'value' is provided, the
+        'parent_genome_seq' does not impact the result.
 
-            :param value: Input nucleotide sequence
-            :type value: str of Seq
-            :param parent_genome_seq: Input parent genome nucleotide sequence.
-            :type parent_genome_seq: Seq
-            """
+        :param value: Input nucleotide sequence
+        :type value: str of Seq
+        :param parent_genome_seq: Input parent genome nucleotide sequence.
+        :type parent_genome_seq: Seq
+        """
 
-            if isinstance(value, Seq):
-                self.seq = value.upper()
+        if isinstance(value, Seq):
+            self.seq = value.upper()
             elif value is not None:
                 try:
                     self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
@@ -384,8 +384,8 @@ class Cds:
                 self.seq = Seq("", IUPAC.ambiguous_dna)
 
 
-        # TODO Owen unittest for added steps.
-        def set_seqfeature(self):
+    # TODO Owen unittest for added steps.
+    def set_seqfeature(self):
         """Set the 'seqfeature' attribute.
 
         The 'seqfeature' attribute stores a Biopython SeqFeature object,
