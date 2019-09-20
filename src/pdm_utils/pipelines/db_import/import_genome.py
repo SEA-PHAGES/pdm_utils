@@ -176,6 +176,12 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
         phamerator_seq_set = phamerator.create_seq_set(sql_handle)
         phamerator_accession_set = phamerator.create_accession_set(sql_handle)
 
+
+
+
+
+        # TODO below create sub-function for the checks? There are a lot of
+        # parameters for the genome checks that the others don't need.
         check_bundle(bndl)
         if (bndl.tkt is not None and bndl.tkt.type == "replace"):
             genome_pair = bndl.genome_pair_dict["flat_file_phamerator"]
@@ -235,8 +241,12 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
             # if it is not a test run.
             if not test_run:
                 bndl.create_sql_statements()
-                sql_handle.execute_transaction(bndl.sql_queries)
+                result = sql_handle.execute_transaction(bndl.sql_queries)
                 query_dict[bndl.ticket.phage_id] = bndl.sql_queries
+                if result == 1:
+                    # Log the error, if there was an issue with
+                    # executing the statements.
+                    pass
             else:
                 pass
             success_ticket_list.append(ticket_data_dict)
