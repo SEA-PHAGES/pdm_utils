@@ -62,8 +62,8 @@ A Phamerator database locally installed
 
 
 
-# To add pdm_utils module to python's syspath on-the-fly, 
-# edit the following command so that it points to your local repo and 
+# To add pdm_utils module to python's syspath on-the-fly,
+# edit the following command so that it points to your local repo and
 # execute it in bash:
 export PYTHONPATH="${PYTHONPATH}:/path/to/pdm_utils/src/"
 
@@ -110,11 +110,12 @@ python3 -m unittest discover ../tests/integration/ -p test_phamerator.py
 
 
 
-# For Phamerator integration tests, it is expected that MySQL user 'tester'
-# exists with password 'tester' that has all privileges for 'test_db' database.
+# For Phamerator integration tests, it is expected that MySQL user 'pdm_anon'
+# exists with password 'pdm_anon' that has all privileges for 'test_db' database.
 # Log in to MySQL as the 'root' user and execute the following commands:
-CREATE USER 'tester'@'localhost' IDENTIFIED BY 'tester';
-GRANT ALL PRIVILEGES ON test_db.* TO 'tester'@'localhost';
+CREATE USER 'pdm_anon'@'localhost' IDENTIFIED BY 'pdm_anon';
+GRANT ALL PRIVILEGES ON test_db.* TO 'pdm_anon'@'localhost';
+GRANT SELECT ON *.* TO 'pdm_anon'@'localhost';
 FLUSH PRIVILEGES;
 
 
