@@ -9,7 +9,6 @@ from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from pdm_utils.functions import flat_files, phamerator, basic
 import os, sys
 
-# TODO Owen unittest.
 def database_to_file(database_name, file_export_format, export_folder_path, phage_name_filter_list = []):
     """Use SQL database to export files of the desired format of selected phage data
     :param database_name:
@@ -30,11 +29,10 @@ def database_to_file(database_name, file_export_format, export_folder_path, phag
 
     sql_handle = establish_database_connection(database_name)
     seqfeature_file_output\
-            (retrieve_seqfeature_from_database\
+            (retrieve_seqrecord_from_database\
             (sql_handle, phage_name_filter_list),\
             file_export_format, export_folder_path, export_dir_name = database_name)
 
-# TODO Owen unittest.
 def establish_database_connection(database_name):
     """Creates a mysqlconnectionhandler object and populates its credentials
 
@@ -53,8 +51,7 @@ def establish_database_connection(database_name):
                 and password failed".format(database_name))
     return sql_handle
 
-# TODO Owen unittest.
-def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_list = []):
+def retrieve_seqrecord_from_database (sql_database_handle, phage_name_filter_list = []):
     """Reads a local SQL database and converts it to a SeqRecord list
 
     :param sql_database_handle:
@@ -85,7 +82,6 @@ def retrieve_seqfeature_from_database (sql_database_handle, phage_name_filter_li
 
     return seq_record_list
 
-# TODO Owen unittest.
 def set_cds_seqfeatures(phage_genome):
     """Helper function that queries for and returns cds data from a SQL database for a specific phage
 
@@ -107,19 +103,21 @@ def set_cds_seqfeatures(phage_genome):
         cds.set_seqfeature()
 
 
-# TODO Owen unittest.
 def retrieve_database_version(sql_database_handle):
     """Helper function that queries a SQL database for the database version and schema version
 
     :param sql_database_handle:
         Input a mysqlconnectionhandler object.
     :type sql_database_handle: mysqlconnectionhandler
+    :returns:
+        database_versions_list(dictionary) is a dictionary
+        of size 2 that contains values tied to keys
+        "version" and "schema_version"
     """
 
     database_versions_list = phamerator.retrieve_data(sql_database_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
-# TODO Owen unittest.
 def append_database_version(genome_seqrecord, version_data):
     """Helper function that appends the working database version in a comment within a SeqFeature annotation
 
