@@ -29,7 +29,7 @@ class TestRunFunctions1(unittest.TestCase):
         self.parser.add_argument("-db", "--database")
         self.parser.add_argument("-if", "--input_folder")
         self.parser.add_argument("-it", "--import_table")
-        self.parser.add_argument("-ff", "--filename_flag")
+        self.parser.add_argument("-gf", "--genome_id_field")
         self.parser.add_argument("-tr", "--test_run")
         self.parser.add_argument("-rm", "--run_mode")
         self.parser.add_argument("-df", "--description_field")

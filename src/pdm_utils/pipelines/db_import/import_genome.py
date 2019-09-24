@@ -16,8 +16,8 @@ from pdm_utils.classes import bundle
 from pdm_utils.constants import constants
 
 # TODO unittest.
-def import_io(sql_handle=None, genome_folder="", import_table_file="",
-    filename_flag=False, test_run=True, description_field="", run_mode=""):
+def input_output(sql_handle=None, genome_folder="", import_table_file="",
+    genome_id_field="", test_run=True, description_field="", run_mode=""):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
@@ -52,7 +52,9 @@ def import_io(sql_handle=None, genome_folder="", import_table_file="",
     if len(files_in_folder) > 0:
 
         # TODO not sure how many elements (or what types) are returned.
-        results = main(ticket_dict, files_in_folder, sql_handle, test_run)
+        # TODO check order of parameters.
+        results = main(ticket_dict, files_in_folder, sql_handle,
+                       test_run, genome_id_field, filename_flag)
 
     # Now that all flat files and tickets have been evaluated,
     # provide summary of results...
@@ -95,7 +97,6 @@ def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
     while x < len(ticket_list):
         tkt = ticket_list[x]
         tkt.description_field = description_field
-        # TODO once pipeline is set up, verify copying is needed.
         tkt.eval_flags = eval_flags.copy()
         check_ticket(
             tkt,
@@ -121,7 +122,8 @@ def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
 
 
 # TODO unittest.
-def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
+def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True,
+         genome_id_field=""):
     """Process GenBank-formatted flat files.
 
     :param ticket_dict:
@@ -166,7 +168,8 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
     bundle_count = 1
     for filename in files_in_folder:
 
-        bndl = prepare_bundle(filename, ticket_dict, sql_handle, id=bundle_count)
+        bndl = prepare_bundle(filename, ticket_dict, sql_handle,
+                              genome_id_field=genome_id_field, id=bundle_count)
 
         # Create sets of unique values for different data fields.
         # Since data from each parsed flat file is imported into the
@@ -277,7 +280,8 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True):
             failed_filename_list, evaluation_dict, query_dict)
 
 
-def prepare_bundle(filename="", ticket_dict={}, sql_handle=None, id=None):
+def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
+                   genome_id_field="", id=None):
     """Gather all genomic data needed to evaluate the flat file.
 
     :param filename: Name of a GenBank-formatted flat file.
@@ -305,7 +309,10 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None, id=None):
         print("No record was retrieved from the file.")
     else:
         ff_gnm = flat_files.parse_genome_data(
-                seqrecord, filepath=filename, gnm_type="flat_file")
+                    seqrecord,
+                    filepath=filename,
+                    genome_id_field=genome_id_field,
+                    gnm_type="flat_file")
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
         # Match ticket (if available) to flat file.

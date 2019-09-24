@@ -47,9 +47,9 @@ IMPORT_TABLE_HELP = \
         9. Accession
         10. Run mode
     """
-FILENAME_FLAG_HELP = \
-    ("Indicates whether the filename_flag should be used "
-     "to identify the genome during import.")
+GENOME_ID_FIELD_HELP = \
+    ("Indicates the flat file field that should be used "
+     "as the unique identifier for the genome during import.")
 TEST_RUN_HELP = \
     ("Indicates whether the script should make any changes to the database. "
      "If False, the production run will implement all changes in the "
@@ -79,8 +79,9 @@ def create_parser():
     # Specific to import pipeline:
     parser.add_argument("-it", "--import_table", type=os.path.abspath,
         help=IMPORT_TABLE_HELP)
-    parser.add_argument("-ff", "--filename_flag", action="store_true",
-        default=False, help=FILENAME_FLAG_HELP)
+    parser.add_argument("-gf", "--genome_id_field", type=str,
+        default="organism_name", choices=["organism_name", "filename"],
+        help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-tr", "--test_run", action="store_false", default=True,
         help=TEST_RUN_HELP)
     parser.add_argument("-rm", "--run_mode", type=str.lower,
@@ -190,9 +191,9 @@ def run_import(args):
         sys.exit(1)
 
     # If everything checks out, pass args to the main import pipeline:
-    import_genome.import_io(sql_handle=args.sql_handle,
+    import_genome.input_output(sql_handle=args.sql_handle,
         genome_folder=args.input_folder, import_table_file=args.import_table,
-        filename_flag=args.filename_flag, test_run=args.test_run,
+        genome_id_field=args.genome_id_field, test_run=args.test_run,
         description_field=args.description_field, run_mode=args.run_mode)
 
 # TODO implement.
