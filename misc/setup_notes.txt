@@ -174,4 +174,9 @@ pip install /path/to/folder/pdm_utils_XXXX.tar.gz
 
 # Upload to PyPI
 twine upload dist/*
+
+# Download package from PyPI
 pip install pdm_utils
+
+# Upgrade to the newest version from PyPI
+pip install --upgrade pdm_utils
