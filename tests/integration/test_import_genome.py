@@ -148,7 +148,7 @@ class TestImportGenomeMain(unittest.TestCase):
         one record, one 'add' ticket, no phagesdb data."""
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1)
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         tkt_gnm = bndl.genome_dict["add"]
         bndl_tkt = bndl.ticket
@@ -176,7 +176,7 @@ class TestImportGenomeMain(unittest.TestCase):
         no record."""
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file2,
-                    ticket_dict=tkt_dict, id=1)
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 0)
         with self.subTest():
@@ -192,7 +192,7 @@ class TestImportGenomeMain(unittest.TestCase):
         one record, no ticket."""
         tkt_dict = {"L5x":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1)
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 1)
@@ -215,7 +215,7 @@ class TestImportGenomeMain(unittest.TestCase):
         self.tkt1.cluster = "B"
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1)
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         pdb_gnm = bndl.genome_dict["phagesdb"]
         ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
@@ -274,7 +274,8 @@ class TestImportGenomeMain(unittest.TestCase):
         self.tkt1.annotation_author = "retain"
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, sql_handle=self.sql_handle, id=1)
+                    ticket_dict=tkt_dict, sql_handle=self.sql_handle, id=1,
+                    genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         pmr_gnm = bndl.genome_dict["phamerator"]
         ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
@@ -332,7 +333,8 @@ class TestImportGenomeMain(unittest.TestCase):
         self.tkt1.annotation_author = "retain"
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, sql_handle=self.sql_handle, id=1)
+                    ticket_dict=tkt_dict, sql_handle=self.sql_handle, id=1,
+                    genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
@@ -387,7 +389,7 @@ class TestImportGenomeMain(unittest.TestCase):
         self.tkt1.annotation_author = "retain"
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1)
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)

@@ -81,10 +81,10 @@ class TestRunFunctions1(unittest.TestCase):
 
 
 
-    # Using the patch decorator to bypass the call to import_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_io")
-    def test_run_import_1(self, import_io_mock):
-        """Verify that correct args calls import_io."""
+    # Using the patch decorator to bypass the call to input_output.
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
+    def test_run_import_1(self, input_output_mock):
+        """Verify that correct args calls input_output."""
         args_list = ["import",
                      "--database=Actino_Draft",
                      "--input_folder=/path/to/folder",
@@ -92,15 +92,15 @@ class TestRunFunctions1(unittest.TestCase):
                      "--run_mode=phagesdb"]
         args = self.parser.parse_args(args=args_list)
         run.run_import(args)
-        self.assertTrue(import_io_mock.called)
+        self.assertTrue(input_output_mock.called)
 
-    # Note: the import_io() patch is added because if sys.exit() is mocked,
-    # then the function continues and calls import_io(), which will
+    # Note: the input_output() patch is added because if sys.exit() is mocked,
+    # then the function continues and calls input_output(), which will
     # cause an error.
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    def test_run_import_2(self, sys_exit_mock, import_io_mock):
-        """Verify that import_io is not called due to
+    def test_run_import_2(self, sys_exit_mock, input_output_mock):
+        """Verify that input_output is not called due to
         a missing database arg."""
         args_list = ["--input_folder=/path/to/folder",
                      "--import_table=/path/to/table.csv",
@@ -109,10 +109,10 @@ class TestRunFunctions1(unittest.TestCase):
         run.run_import(args)
         self.assertTrue(sys_exit_mock.called)
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    def test_run_import_3(self, sys_exit_mock, import_io_mock):
-        """Verify that import_io is not called due to
+    def test_run_import_3(self, sys_exit_mock, input_output_mock):
+        """Verify that input_output is not called due to
         a missing input_folder arg."""
         args_list = ["--database=Actino_Draft",
                      "--import_table=/path/to/table.csv",
@@ -121,10 +121,10 @@ class TestRunFunctions1(unittest.TestCase):
         run.run_import(args)
         self.assertTrue(sys_exit_mock.called)
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    def test_run_import_4(self, sys_exit_mock, import_io_mock):
-        """Verify that import_io is not called due to
+    def test_run_import_4(self, sys_exit_mock, input_output_mock):
+        """Verify that input_output is not called due to
         a missing import_table arg."""
         args_list = ["--database=Actino_Draft",
                      "--input_folder=/path/to/folder",
@@ -133,10 +133,10 @@ class TestRunFunctions1(unittest.TestCase):
         run.run_import(args)
         self.assertTrue(sys_exit_mock.called)
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    def test_run_import_5(self, sys_exit_mock, import_io_mock):
-        """Verify that import_io is not called due to
+    def test_run_import_5(self, sys_exit_mock, input_output_mock):
+        """Verify that input_output is not called due to
         a missing run_mode arg."""
         args_list = ["--database=Actino_Draft",
                      "--input_folder=/path/to/folder",

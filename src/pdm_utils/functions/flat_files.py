@@ -291,7 +291,7 @@ def create_seqfeature_dictionary(seqfeature_list):
 
 
 def parse_genome_data(seqrecord, filepath="",
-        translation_table=11, phage_id_field="organism_name", gnm_type=""):
+        translation_table=11, genome_id_field="organism_name", gnm_type=""):
     """Parse data from a Biopython SeqRecord object into a Genome object.
 
     All Source, CDS, tRNA, and tmRNA features are parsed into their
@@ -304,10 +304,10 @@ def parse_genome_data(seqrecord, filepath="",
     :param translation_table:
         The applicable translation table for the genome's CDS features.
     :type translation_table: int
-    :param phage_id_field:
+    :param genome_id_field:
         The SeqRecord attribute from which the unique genome
         identifier/name is stored.
-    :type phage_id_field: str
+    :type genome_id_field: str
     :returns: A pdm_utils Genome object.
     :rtype: Genome
     """
@@ -402,7 +402,7 @@ def parse_genome_data(seqrecord, filepath="",
         gnm.date = basic.convert_empty("", "empty_datetime_obj")
 
     # Now that record fields are parsed, set the phage_id.
-    gnm.set_id(attribute=phage_id_field)
+    gnm.set_id(attribute=genome_id_field)
 
     # Create lists of parsed features.
     # Note: Biopython instantiates the features attribute with

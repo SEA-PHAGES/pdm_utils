@@ -3036,7 +3036,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             )
 
         self.gnm = flat_files.parse_genome_data(record,
-                                        phage_id_field = "description_name",
+                                        genome_id_field = "description_name",
                                         gnm_type="flat_file")
 
         self.assertEqual(self.gnm.id, "L5")
