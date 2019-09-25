@@ -8,9 +8,10 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from pdm_utils.functions import flat_files, phamerator, basic
 from functools import singledispatch
-import os, sys
+from typing import List, Dict
+import os, sys, typing
 
-def database_to_file(database_name, file_export_format, export_folder_path, phage_list_input):
+def database_to_file(database_name: str, file_export_format: str, export_folder_path: str, phage_list_input):
     """Use SQL database to export files of the desired format of selected phage data
     :param database_name:
         Input SQL database name.
@@ -55,7 +56,7 @@ def _(phage_list_input):
 
     return phage_list
 
-def establish_database_connection(database_name):
+def establish_database_connection(database_name: str):
     """Creates a mysqlconnectionhandler object and populates its credentials
 
     :param tag database_name:
@@ -73,7 +74,9 @@ def establish_database_connection(database_name):
                 and password failed".format(database_name))
     return sql_handle
 
-def retrieve_seqrecord_from_database (sql_database_handle, phage_name_filter_list = []):
+def retrieve_seqrecord_from_database\
+        (sql_database_handle: mysqlconnectionhandler.MySQLConnectionHandler\
+        ,phage_name_filter_list: List[str] = []):
     """Reads a local SQL database and converts it to a SeqRecord list
 
     :param sql_database_handle:
@@ -84,8 +87,6 @@ def retrieve_seqrecord_from_database (sql_database_handle, phage_name_filter_lis
         SQL database.
     :type phage_name_filter_list: str[]
     """
-    
-    assert(isinstance(phage_name_filter_list, list))   
     
     genome_query = "SELECT * FROM phage"
     cds_query = "SELECT * FROM gene"
@@ -106,7 +107,7 @@ def retrieve_seqrecord_from_database (sql_database_handle, phage_name_filter_lis
 
     return seq_record_list
 
-def set_cds_seqfeatures(phage_genome):
+def set_cds_seqfeatures(phage_genome: genome.Genome):
     """Helper function that queries for and returns cds data from a SQL database for a specific phage
 
     :param phage_genome:
@@ -117,20 +118,20 @@ def set_cds_seqfeatures(phage_genome):
     :type sql_database_handle: mysqlconnectionhandler
     """
 
-    assert isinstance(phage_genome, genome.Genome),\
-            "Parameter passed for set_cds_seqfeatures is not a genome object"
-
     try:
         def _sorting_key(cds): return cds.left
         phage_genome.cds_features.sort(key=_sorting_key)
     except:
+        if phage_genome == None:
+            raise TypeError
         print("Genome cds features unable to be sorted")
         pass
     for cds in phage_genome.cds_features:
         cds.set_seqfeature()
 
 
-def retrieve_database_version(sql_database_handle):
+def retrieve_database_version\
+        (sql_database_handle: mysqlconnectionhandler.MySQLConnectionHandler):
     """Helper function that queries a SQL database for the database version and schema version
 
     :param sql_database_handle:
@@ -142,14 +143,11 @@ def retrieve_database_version(sql_database_handle):
         "version" and "schema_version"
     """
 
-    assert isinstance(sql_database_handle,\
-            mysqlconnectionhandler.MySQLConnectionHandler)\
-            , "Parameter passed is not a MySQLConnectionHandler object"
-
     database_versions_list = phamerator.retrieve_data(sql_database_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
-def append_database_version(genome_seqrecord, version_data):
+def append_database_version(genome_seqrecord: SeqRecord,\
+        version_data: Dict):
     """Helper function that appends the working database version in a comment within a SeqFeature annotation
 
     :param genome_seqfeature:
@@ -161,13 +159,11 @@ def append_database_version(genome_seqrecord, version_data):
     :type version_data: dictionary
     """
 
-    assert isinstance(genome_seqrecord, SeqRecord),\
-            "Parameter passed to append_database_version\
-            is not a SeqRecord object"
-
-    assert len(version_data) >= 2, "Version data dictionary\
+    if len(version_data) < 2:
+        print("Version data dictionary\
         containing SQL database version\
-        data does not contain enough values"
+        data does not contain enough values")
+        raise ValueError
     try:
         genome_seqrecord.annotations["comment"] =\
                 genome_seqrecord.annotations["comment"] +\
@@ -176,10 +172,12 @@ def append_database_version(genome_seqrecord, version_data):
                 (version_data["version"],\
                 version_data["schema_version"]),)
     except:
+        if genome_seqrecord == None:
+            raise TypeError
         raise
 
 
-def seqfeature_file_output(seq_record_list, file_format, input_path, export_dir_name = "Database"):
+def seqfeature_file_output(seq_record_list: List[SeqRecord], file_format: str, input_path: str, export_dir_name: str = "Database"):
     """Outputs files with a particuar format from a SeqRecord list
 
     :param seq_record_list:
@@ -194,9 +192,11 @@ def seqfeature_file_output(seq_record_list, file_format, input_path, export_dir_
     :type input_path: str
     """
 
-    assert os.path.exists(input_path),\
-            "Path parameter passed to seqfeature_file_output\
-            is not a valid path"
+    if not os.path.exists(input_path):
+        print("Path parameter passed to seqfeature_file_output\
+            is not a valid path")
+        raise ValueError
+
     try:
         os.mkdir(os.path.join(input_path, export_dir_name))
     except:

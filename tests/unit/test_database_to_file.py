@@ -65,7 +65,7 @@ class TestDatabaseToFile(unittest.TestCase):
                 (self.test_genome.cds_features[2].left, 2)
 
     def test_set_cds_seqfeatures_3(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(TypeError):
             database_to_file.set_cds_seqfeatures(None)
 
     def test_append_database_version_1(self):
@@ -78,10 +78,10 @@ class TestDatabaseToFile(unittest.TestCase):
                 Schema Version: 1")
 
     def test_append_database_version_2(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             database_to_file.append_database_version\
                     (self.test_seqrecord, {})
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(TypeError):
             database_to_file.append_database_version\
                     (None, self.test_version)
