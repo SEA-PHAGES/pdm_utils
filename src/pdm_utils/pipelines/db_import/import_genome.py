@@ -7,6 +7,7 @@ from datetime import datetime
 import csv
 import os
 import sys
+import argparse
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
@@ -14,6 +15,124 @@ from pdm_utils.functions import phagesdb
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import bundle
 from pdm_utils.constants import constants
+
+
+
+###
+def run_import(unparsed_args_list):
+    """Verify the correct arguments are selected for import new genomes."""
+
+    IMPORT_HELP = ("Pipeline to import new genome data into "
+                   "a Phamerator MySQL database.")
+    DATABASE_HELP = "Name of the MySQL database to import the genomes."
+    INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
+    IMPORT_GENOME_FOLDER_HELP = """
+        Path to the folder containing
+        GenBank-formatted flat files
+        to be processed."""
+    IMPORT_TABLE_HELP = """
+        Path to the CSV-formatted table containing
+        instructions to process each genome.
+        Structure of import ticket table:
+            1. Action to implement on the database (add, remove)
+            2. PhageID
+            3. Host genus
+            4. Cluster
+            5. Subcluster
+            6. Annotation status (draft, final, unknown)
+            7. Annotation authorship (hatfull, gbk)
+            8. Gene description field (product, note, function)
+            9. Accession
+            10. Run mode
+        """
+    GENOME_ID_FIELD_HELP = """
+        Indicates the flat file field that should be used
+        as the unique identifier for the genome during import.
+        """
+    TEST_RUN_HELP = \
+        ("Indicates whether the script should make any changes to the database. "
+         "If False, the production run will implement all changes in the "
+         "indicated database. If True, the test run will not "
+         "implement any changes")
+    RUN_MODE_HELP = \
+        ("Indicates the evaluation configuration "
+         "for importing genomes.")
+    DESCRIPTION_FIELD_HELP = \
+        ("Indicates the field in CDS features that is expected "
+         "to store the gene description.")
+    parser = argparse.ArgumentParser(description=IMPORT_HELP)
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser.add_argument("input_folder", type=os.path.abspath,
+        help=INPUT_FOLDER_HELP)
+    parser.add_argument("import_table", type=os.path.abspath,
+        help=IMPORT_TABLE_HELP)
+    parser.add_argument("-gf", "--genome_id_field", type=str,
+        default="organism_name", choices=["organism_name", "filename"],
+        help=GENOME_ID_FIELD_HELP)
+    parser.add_argument("-tr", "--test_run", action="store_false", default=True,
+        help=TEST_RUN_HELP)
+    parser.add_argument("-rm", "--run_mode", type=str.lower,
+        choices=list(constants.RUN_MODES.keys()), default="phagesdb",
+        help=RUN_MODE_HELP)
+    parser.add_argument("-df", "--description_field", default="product",
+        choices=list(constants.DESCRIPTION_FIELD_SET),
+        help=DESCRIPTION_FIELD_HELP)
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils.run <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
+    args = parser.parse_args(unparsed_args_list[2:])
+
+    # Validate args.
+    sql_handle = phamerator.get_sql_handle(args.database)
+    if sql_handle == None:
+        print("No connection to the selected database.")
+        sys.exit(1)
+
+    valid_folder = basic.verify_path(args.input_folder, "dir")
+    if not valid_folder:
+        print("Invalid input folder.")
+        sys.exit(1)
+
+    valid_import_table = basic.verify_path(args.import_table, "file")
+    if not valid_import_table:
+        print("Invalid import table file.")
+        sys.exit(1)
+
+    # TODO run_mode needs to be improved.
+    # It should be able to receive a filename that can be parsed
+    # into an eval_flag dictionary.
+
+    # If everything checks out, pass args to the main import pipeline:
+    input_output(sql_handle=sql_handle,
+        genome_folder=args.input_folder, import_table_file=args.import_table,
+        genome_id_field=args.genome_id_field, test_run=args.test_run,
+        description_field=args.description_field, run_mode=args.run_mode)
+
+
+
+
+
+###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # TODO unittest.
 def input_output(sql_handle=None, genome_folder="", import_table_file="",

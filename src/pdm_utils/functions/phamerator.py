@@ -7,6 +7,18 @@ from pdm_utils.classes import cds
 from pdm_utils.functions import basic
 
 
+# TODO unittest.
+def get_sql_handle(database):
+    """Set up MySQL credentials."""
+    sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.open_connection()
+    if (not sql_handle.credential_status or not sql_handle._database_status):
+        return None
+    else:
+        return sql_handle
+
+
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     """Parse a Phamerator database dictionary to create a Genome object.
 

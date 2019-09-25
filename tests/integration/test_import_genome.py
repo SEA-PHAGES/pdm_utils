@@ -7,6 +7,8 @@ import pymysql
 import os
 import shutil
 import subprocess
+from unittest.mock import patch
+import argparse
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.constants import constants
 from pdm_utils.classes import bundle, genome, ticket
@@ -25,7 +27,7 @@ pwd = "pdm_anon"
 db = "test_db"
 
 
-class TestImportGenomeMain(unittest.TestCase):
+class TestImportGenomeMain1(unittest.TestCase):
 
 
     def setUp(self):
@@ -123,6 +125,13 @@ class TestImportGenomeMain(unittest.TestCase):
         self.tkt1.accession = "ABC123"
 
         self.tkt2 = ticket.GenomeTicket()
+
+
+
+
+
+
+
 
 
     def test_prepare_tickets_1(self):
@@ -407,32 +416,6 @@ class TestImportGenomeMain(unittest.TestCase):
 
 
 
-        #
-        # phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
-        #               + " Cluster2, DateLastModified, Accession, Subcluster2," \
-        #               + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
-        #               + " FROM phage"
-        # gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
-        #              + " TypeID, translation, Orientation, Notes, LocusTag" \
-        #              + " FROM gene"
-        #
-        #              ###
-
-
-
-
-    # TODO finish after building tests for other module functions.
-    # def test_import_io_1(self):
-    #     """."""
-    #
-    #     import_genome.import_io(sql_handle=self.sql_handle,
-    #                             genome_folder=self.genome_folder,
-    #                             import_table_file=self.test_import_table,
-    #                             filename_flag=False, test_run=True,
-    #                             description_field="product",
-    #                             run_mode="phagesdb")
-
-
 
     def tearDown(self):
 
@@ -450,6 +433,137 @@ class TestImportGenomeMain(unittest.TestCase):
         connection.close()
 
 
+
+
+
+
+class TestImportGenomeMain2(unittest.TestCase):
+
+    def setUp(self):
+        self.test_filepath1 = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_flat_file_1.gb")
+
+        self.test_directory1 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/input_folder")
+        os.mkdir(self.test_directory1)
+
+
+        self.sql_handle_1 = mch.MySQLConnectionHandler()
+        self.sql_handle_1.database = db
+        self.sql_handle_1.username = user
+        self.sql_handle_1.password = pwd
+
+        self.sql_handle_2 = None
+
+
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument("pipeline")
+        self.args1 = self.parser.parse_args(["import"])
+
+
+###
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
+    @patch("pdm_utils.functions.phamerator.get_sql_handle")
+    def test_run_import_1(self, get_handle_mock, input_output_mock):
+        """Verify that correct args calls input_output."""
+        args_list = ["run.py",
+                     "import",
+                     "Actino_Draft",
+                     self.test_directory1,
+                     self.test_filepath1]
+        get_handle_mock.return_value = self.sql_handle_1
+        import_genome.run_import(args_list)
+        with self.subTest():
+            self.assertTrue(get_handle_mock.called)
+        with self.subTest():
+            self.assertTrue(input_output_mock.called)
+
+    # Note: the input_output() patch is added because if sys.exit() is mocked,
+    # then the function continues and calls input_output(), which will
+    # cause an error.
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
+    @patch("sys.exit")
+    @patch("pdm_utils.functions.phamerator.get_sql_handle")
+    def test_run_import_2(self, get_handle_mock, input_output_mock,
+                          sys_exit_mock):
+        """Verify that input_output is not called due to missing sql_handle."""
+        args_list = ["run.py",
+                     "import",
+                     "Actino_Draft",
+                     self.test_directory1,
+                     self.test_filepath1]
+        get_handle_mock.return_value = self.sql_handle_2
+        import_genome.run_import(args_list)
+        with self.subTest():
+            self.assertTrue(get_handle_mock.called)
+        with self.subTest():
+            self.assertTrue(input_output_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
+    @patch("sys.exit")
+    @patch("pdm_utils.functions.phamerator.get_sql_handle")
+    def test_run_import_3(self, get_handle_mock, input_output_mock,
+                          sys_exit_mock):
+        """Verify that input_output is not called due to invalid folder."""
+        args_list = ["run.py",
+                     "import",
+                     "Actino_Draft",
+                     self.test_directory1 + "asdf",
+                     self.test_filepath1]
+        get_handle_mock.return_value = self.sql_handle_1
+        import_genome.run_import(args_list)
+        with self.subTest():
+            self.assertTrue(get_handle_mock.called)
+        with self.subTest():
+            self.assertTrue(input_output_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
+    @patch("sys.exit")
+    @patch("pdm_utils.functions.phamerator.get_sql_handle")
+    def test_run_import_4(self, get_handle_mock, input_output_mock,
+                          sys_exit_mock):
+        """Verify that input_output is not called due to invalid file."""
+        args_list = ["run.py",
+                     "import",
+                     "Actino_Draft",
+                     self.test_directory1,
+                     self.test_filepath1 + "asdf"]
+        get_handle_mock.return_value = self.sql_handle_1
+        import_genome.run_import(args_list)
+        with self.subTest():
+            self.assertTrue(get_handle_mock.called)
+        with self.subTest():
+            self.assertTrue(input_output_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
+
+
+    def tearDown(self):
+        shutil.rmtree(self.test_directory1)
 
 
 
