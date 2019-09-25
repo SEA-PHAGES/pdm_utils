@@ -7,9 +7,10 @@ from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from pdm_utils.functions import flat_files, phamerator, basic
+from functools import singledispatch
 import os, sys
 
-def database_to_file(database_name, file_export_format, export_folder_path, phage_name_filter_list = []):
+def database_to_file(database_name, file_export_format, export_folder_path, phage_list_input):
     """Use SQL database to export files of the desired format of selected phage data
     :param database_name:
         Input SQL database name.
@@ -26,12 +27,33 @@ def database_to_file(database_name, file_export_format, export_folder_path, phag
         SQL database.
     "type phage_name_filter_list: str[]
     """
-    
+   
+    phage_name_filter_list =\
+            parse_phage_list_input(phage_list_input)
+
     sql_handle = establish_database_connection(database_name)
     seqfeature_file_output\
             (retrieve_seqrecord_from_database\
             (sql_handle, phage_name_filter_list),\
             file_export_format, export_folder_path, export_dir_name = database_name)
+
+@singledispatch
+def parse_phage_list_input(phage_list_input):
+    return phage_list_input
+
+@parse_phage_list_input.register(str)
+def _(phage_list_input):
+    if not os.path.isfile(phage_list_input):
+        raise ValueError("File {} is not found".\
+                format(phage_list_input))
+
+    phage_list = []
+    with open(phage_list_input) as csv:
+        csv_reader = csv.reader(csv, delimiter = ",")
+        for name in csv_reader:
+            phage_list.append(name)
+
+    return phage_list
 
 def establish_database_connection(database_name):
     """Creates a mysqlconnectionhandler object and populates its credentials
@@ -211,7 +233,7 @@ def main(args):
             database_to_file(database_name = args[0],\
                         file_export_format = args[1],\
                         export_folder_path = os.getcwd(),\
-                        phage_name_filter_list = phage_id_list)
+                        phage_list_input = phage_id_list)
 
 if __name__ == "__main__":
     main_args = ()
