@@ -6,7 +6,6 @@ import sys
 import argparse
 from pdm_utils.pipelines.db_import import import_genome
 
-# TODO unittest.
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
 
@@ -24,7 +23,8 @@ def main():
         "cdd",
         "phamerate",
         "export",
-        "compare"}
+        "compare",
+        "database_to_file"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP)
     pipe_parser.add_argument("pipeline", type=str,
@@ -40,6 +40,9 @@ def main():
     elif args.pipeline == "phamerate":
         pass
     elif args.pipeline == "export":
+        pass
+    # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
+    elif args.pipeline == "database_to_file":
         pass
     else:
         pass

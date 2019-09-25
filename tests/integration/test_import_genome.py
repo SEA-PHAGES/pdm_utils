@@ -7,7 +7,7 @@ import pymysql
 import os
 import shutil
 import subprocess
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import argparse
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.constants import constants
@@ -414,9 +414,6 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-
-
-
     def tearDown(self):
 
         # Remove all contents in the directory created for the test.
@@ -449,66 +446,98 @@ class TestImportGenomeMain2(unittest.TestCase):
             "test_wd/input_folder")
         os.mkdir(self.test_directory1)
 
-
         self.sql_handle_1 = mch.MySQLConnectionHandler()
-        self.sql_handle_1.database = db
+        # self.sql_handle_1.database = "Actino_Draft"
         self.sql_handle_1.username = user
         self.sql_handle_1.password = pwd
 
-        self.sql_handle_2 = None
-
+        self.sql_handle_2 = mch.MySQLConnectionHandler()
+        self.sql_handle_2.database = "Actino_Draft"
+        self.sql_handle_2.username = user
+        self.sql_handle_2.password = pwd
+        self.sql_handle_2.credential_status = False
+        self.sql_handle_2._database_status = False
 
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("pipeline")
         self.args1 = self.parser.parse_args(["import"])
 
 
-###
     @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
-    @patch("pdm_utils.functions.phamerator.get_sql_handle")
-    def test_run_import_1(self, get_handle_mock, input_output_mock):
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_run_import_1(self, mch_mock, input_output_mock):
         """Verify that correct args calls input_output."""
         args_list = ["run.py",
                      "import",
                      "Actino_Draft",
                      self.test_directory1,
                      self.test_filepath1]
-        get_handle_mock.return_value = self.sql_handle_1
+        mch_mock.return_value = self.sql_handle_1
         import_genome.run_import(args_list)
         with self.subTest():
-            self.assertTrue(get_handle_mock.called)
+            self.assertTrue(mch_mock.called)
         with self.subTest():
             self.assertTrue(input_output_mock.called)
 
-    # Note: the input_output() patch is added because if sys.exit() is mocked,
-    # then the function continues and calls input_output(), which will
-    # cause an error.
     @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    @patch("pdm_utils.functions.phamerator.get_sql_handle")
-    def test_run_import_2(self, get_handle_mock, input_output_mock,
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_run_import_2(self, mch_mock, input_output_mock,
                           sys_exit_mock):
-        """Verify that input_output is not called due to missing sql_handle."""
+        """Verify that input_output is not called due to
+        invalid sql credential_status."""
         args_list = ["run.py",
                      "import",
                      "Actino_Draft",
                      self.test_directory1,
                      self.test_filepath1]
-        get_handle_mock.return_value = self.sql_handle_2
+
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = "Actino_Draft"
+        sql_handle_mock.credential_status = True
+        sql_handle_mock._database_status = False
+        mch_mock.return_value = sql_handle_mock
+
         import_genome.run_import(args_list)
         with self.subTest():
-            self.assertTrue(get_handle_mock.called)
+            self.assertTrue(mch_mock.called)
         with self.subTest():
             self.assertTrue(input_output_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
 
 
+    @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
+    @patch("sys.exit")
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_run_import_3(self, mch_mock, input_output_mock,
+                          sys_exit_mock):
+        """Verify that input_output is not called due to
+        invalid sql database_status."""
+        args_list = ["run.py",
+                     "import",
+                     "Actino_Draft",
+                     self.test_directory1,
+                     self.test_filepath1]
+
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = "Actino_Draft"
+        sql_handle_mock.credential_status = False
+        sql_handle_mock._database_status = True
+        mch_mock.return_value = sql_handle_mock
+
+        import_genome.run_import(args_list)
+        with self.subTest():
+            self.assertTrue(mch_mock.called)
+        with self.subTest():
+            self.assertTrue(input_output_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
 
     @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    @patch("pdm_utils.functions.phamerator.get_sql_handle")
-    def test_run_import_3(self, get_handle_mock, input_output_mock,
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_run_import_4(self, mch_mock, input_output_mock,
                           sys_exit_mock):
         """Verify that input_output is not called due to invalid folder."""
         args_list = ["run.py",
@@ -516,10 +545,10 @@ class TestImportGenomeMain2(unittest.TestCase):
                      "Actino_Draft",
                      self.test_directory1 + "asdf",
                      self.test_filepath1]
-        get_handle_mock.return_value = self.sql_handle_1
+        mch_mock.return_value = self.sql_handle_1
         import_genome.run_import(args_list)
         with self.subTest():
-            self.assertTrue(get_handle_mock.called)
+            self.assertTrue(mch_mock.called)
         with self.subTest():
             self.assertTrue(input_output_mock.called)
         with self.subTest():
@@ -528,8 +557,8 @@ class TestImportGenomeMain2(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.db_import.import_genome.input_output")
     @patch("sys.exit")
-    @patch("pdm_utils.functions.phamerator.get_sql_handle")
-    def test_run_import_4(self, get_handle_mock, input_output_mock,
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_run_import_5(self, mch_mock, input_output_mock,
                           sys_exit_mock):
         """Verify that input_output is not called due to invalid file."""
         args_list = ["run.py",
@@ -537,29 +566,15 @@ class TestImportGenomeMain2(unittest.TestCase):
                      "Actino_Draft",
                      self.test_directory1,
                      self.test_filepath1 + "asdf"]
-        get_handle_mock.return_value = self.sql_handle_1
+        mch_mock.return_value = self.sql_handle_1
         import_genome.run_import(args_list)
         with self.subTest():
-            self.assertTrue(get_handle_mock.called)
+            self.assertTrue(mch_mock.called)
         with self.subTest():
             self.assertTrue(input_output_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-###
 
 
     def tearDown(self):

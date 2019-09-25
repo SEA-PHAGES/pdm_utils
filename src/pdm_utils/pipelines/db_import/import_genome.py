@@ -15,10 +15,9 @@ from pdm_utils.functions import phagesdb
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import bundle
 from pdm_utils.constants import constants
+from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
-
-###
 def run_import(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
@@ -83,8 +82,10 @@ def run_import(unparsed_args_list):
     args = parser.parse_args(unparsed_args_list[2:])
 
     # Validate args.
-    sql_handle = phamerator.get_sql_handle(args.database)
-    if sql_handle == None:
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = args.database
+    sql_handle.open_connection()
+    if (not sql_handle.credential_status or not sql_handle._database_status):
         print("No connection to the selected database.")
         sys.exit(1)
 
@@ -107,29 +108,6 @@ def run_import(unparsed_args_list):
         genome_folder=args.input_folder, import_table_file=args.import_table,
         genome_id_field=args.genome_id_field, test_run=args.test_run,
         description_field=args.description_field, run_mode=args.run_mode)
-
-
-
-
-
-###
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
