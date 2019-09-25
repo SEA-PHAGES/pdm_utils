@@ -8,8 +8,8 @@ import shutil
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils import run
 
-user = "tester"
-pwd = "tester"
+user = "pdm_anon"
+pwd = "pdm_anon"
 db = "test_db"
 
 class TestRunFunctions1(unittest.TestCase):

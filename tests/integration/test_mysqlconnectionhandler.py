@@ -1,7 +1,7 @@
 """
 Integration tests for the MySQLConnectionHandler class.
-Assumptions: 'anonymous'@'localhost' identified by 'anonymous' exists
-with 'anonymous' password and has
+Assumptions: 'pdm_anon'@'localhost' identified by 'pdm_anon' exists
+with 'pdm_anon' password and has
 select granted on all tables of all databases.
 """
 
@@ -13,8 +13,8 @@ from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 class TestMySQLConnectionHandler(unittest.TestCase):
     def setUp(self):
         self.handler = MySQLConnectionHandler()
-        self.valid_user = "anonymous"
-        self.valid_pass = "anonymous"
+        self.valid_user = "pdm_anon"
+        self.valid_pass = "pdm_anon"
         self.valid_db = "Actino_Draft"
         self.invalid_user = "invalid"
         self.invalid_pass = "invalid"

@@ -17,10 +17,10 @@ import pymysql
 # pwd = getpass.getpass(prompt="mysql password: ")
 
 
-# The following integration tests user the 'tester' MySQL user.
+# The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = 'tester'
-pwd = 'tester'
+user = "pdm_anon"
+pwd = "pdm_anon"
 
 
 class TestPhameratorFunctions1(unittest.TestCase):
