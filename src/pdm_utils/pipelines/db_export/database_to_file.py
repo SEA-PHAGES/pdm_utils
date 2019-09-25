@@ -26,7 +26,7 @@ def database_to_file(database_name, file_export_format, export_folder_path, phag
         SQL database.
     "type phage_name_filter_list: str[]
     """
-
+    
     sql_handle = establish_database_connection(database_name)
     seqfeature_file_output\
             (retrieve_seqrecord_from_database\
@@ -62,7 +62,9 @@ def retrieve_seqrecord_from_database (sql_database_handle, phage_name_filter_lis
         SQL database.
     :type phage_name_filter_list: str[]
     """
-
+    
+    assert(isinstance(phage_name_filter_list, list))   
+    
     genome_query = "SELECT * FROM phage"
     cds_query = "SELECT * FROM gene"
     genome_list = phamerator.parse_genome_data\
@@ -93,6 +95,9 @@ def set_cds_seqfeatures(phage_genome):
     :type sql_database_handle: mysqlconnectionhandler
     """
 
+    assert isinstance(phage_genome, genome.Genome),\
+            "Parameter passed for set_cds_seqfeatures is not a genome object"
+
     try:
         def _sorting_key(cds): return cds.left
         phage_genome.cds_features.sort(key=_sorting_key)
@@ -115,6 +120,10 @@ def retrieve_database_version(sql_database_handle):
         "version" and "schema_version"
     """
 
+    assert isinstance(sql_database_handle,\
+            mysqlconnectionhandler.MySQLConnectionHandler)\
+            , "Parameter passed is not a MySQLConnectionHandler object"
+
     database_versions_list = phamerator.retrieve_data(sql_database_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
@@ -129,6 +138,10 @@ def append_database_version(genome_seqrecord, version_data):
         Input a version data dictionary parsed from a SQL database.
     :type version_data: dictionary
     """
+
+    assert isinstance(genome_seqrecord, SeqRecord),\
+            "Parameter passed to append_database_version\
+            is not a SeqRecord object"
 
     assert len(version_data) >= 2, "Version data dictionary\
         containing SQL database version\
@@ -159,17 +172,19 @@ def seqfeature_file_output(seq_record_list, file_format, input_path, export_dir_
     :type input_path: str
     """
 
-
-    output_dir="{}".format(export_dir_name)
+    assert os.path.exists(input_path),\
+            "Path parameter passed to seqfeature_file_output\
+            is not a valid path"
     try:
-        os.mkdir(os.path.join(input_path, output_dir))
+        os.mkdir(os.path.join(input_path, export_dir_name))
     except:
-        if os.path.exists(os.path.join(input_path, output_dir)):
+        if os.path.exists(os.path.join(input_path, export_dir_name)):
             pass
         else:
             print("Mkdir function failed to \
                     create database_export_output\
                     directory in {}".format(input_path))
+            raise ValueError 
     for record in seq_record_list:
         output_dir="{}/{}.{}".format\
                 (export_dir_name,\
