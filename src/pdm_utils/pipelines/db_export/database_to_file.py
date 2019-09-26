@@ -26,10 +26,11 @@ def database_to_file(database_name: str, file_export_format: str, export_folder_
     :param phage_name_filter_list:
         Input a list of phage names within the selected
         SQL database.
-    "type phage_name_filter_list: str[]
+    :type phage_name_filter_list: list[str]:
     """
    
-    phage_name_filter_list =\
+
+        phage_name_filter_list =\
             parse_phage_list_input(phage_list_input)
 
     sql_handle = establish_database_connection(database_name)
@@ -39,11 +40,30 @@ def database_to_file(database_name: str, file_export_format: str, export_folder_
             file_export_format, export_folder_path, export_dir_name = database_name)
 
 @singledispatch
-def parse_phage_list_input(phage_list_input):
+def parse_phage_list_input(phage_list_input): 
+    """Helper function to populate the filter list for a SQL query
+    :param phage_list_input:
+        Input a list of phage names.
+    :type phage_list_input: list[str]:
+    :return phage_list_input:
+        returns the same phage_list_input:
+    """
+
+
     return phage_list_input
 
 @parse_phage_list_input.register(str)
 def _(phage_list_input):
+    """Helper function to populate the filter list for a SQL query
+    :param phage_list_input:
+        Input a csv file path.
+    :type phage_list_input: str:
+    :return phage_list:
+        Returns a list of phage names
+    :type phage_list: list[str]:
+    """
+
+
     if not os.path.isfile(phage_list_input):
         raise ValueError("File {} is not found".\
                 format(phage_list_input))
@@ -51,8 +71,8 @@ def _(phage_list_input):
     phage_list = []
     with open(phage_list_input) as csv:
         csv_reader = csv.reader(csv, delimiter = ",")
-        for name in csv_reader:
-            phage_list.append(name)
+        for name in csv_reader[1:]:
+            phage_list.append(name[0])
 
     return phage_list
 
