@@ -30,7 +30,7 @@ def database_to_file(database_name: str, file_export_format: str, export_folder_
     """
    
 
-        phage_name_filter_list =\
+    phage_name_filter_list =\
             parse_phage_list_input(phage_list_input)
 
     sql_handle = establish_database_connection(database_name)
