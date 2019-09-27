@@ -71,7 +71,7 @@ except:
                 3. Host genus of the updated phage\n\
                 4. Cluster of the updated phage\n\
                 5. Subcluster of the updated phage\n\
-                6. Annotation status of the updated phage (draft, final, gbk)\n\
+                6. Annotation status of the updated phage (draft, final, unknown)\n\
                 7. Annotation authorship of the updated phage (hatfull, gbk)\n\
                 8. Gene description field of the updated phage (product, note, function)\n\
                 9. Accession of the updated phage\n\

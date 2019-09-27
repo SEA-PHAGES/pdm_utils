@@ -61,7 +61,7 @@ except:
 				3. Host genus of the updated phage\n\
 				4. Cluster of the updated phage\n\
 				5. Subcluster of the updated phage\n\
-				6. Annotation status of the updated phage (draft, final, gbk)\n\
+				6. Annotation status of the updated phage (draft, final, unknown)\n\
 				7. Annotation authorship of the updated phage (hatfull, gbk)\n\
 				8. Gene description field of the updated phage (product, note, function)\n\
 				9. Accession of the updated phage\n\
@@ -602,8 +602,7 @@ write_out(output_file,"\nRun type: " + run_type)
 #7 = Accession
 #8 = Subcluster2
 #9 = AnnotationAuthor
-#10 = AnnotationQC
-#11 = RetrieveRecord
+#10 = RetrieveRecord
 try:
 	con = mdb.connect(mysqlhost, username, password, database)
 	con.autocommit(False)
@@ -621,7 +620,7 @@ try:
 	cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,\
 						Cluster2,DateLastModified,Accession,\
 						Subcluster2,AnnotationAuthor,\
-						AnnotationQC,RetrieveRecord FROM phage")
+						RetrieveRecord FROM phage")
 	current_genome_data_tuples = cur.fetchall()
 	cur.execute("COMMIT")
 	cur.close()
@@ -684,8 +683,8 @@ for genome_tuple in current_genome_data_tuples:
 	#7 = Modified Accession
 	#8 = Subcluster2
 	#9 = AnnotationAuthor
-	#10 = AnnotationQC
-	#11 = RetrieveRecord
+	#10 = RetrieveRecord
+	#Used to retrieve AnnotationQC, but now there is a "1" placeholder.
 	modified_genome_data_lists.append([genome_tuple[0],\
 										genome_tuple[1],\
 										genome_tuple[2],\
@@ -696,8 +695,8 @@ for genome_tuple in current_genome_data_tuples:
 										modified_accession,\
 										genome_tuple[8],\
 										str(genome_tuple[9]),\
-										str(genome_tuple[10]),\
-										str(genome_tuple[11])])
+										"1",\
+										str(genome_tuple[10])])
 
 
 
@@ -1441,7 +1440,7 @@ for genome_data in update_data_list:
 	#Status data check
 	if genome_data[4] != matched_phamerator_data[4]:
 
-		#It is not common to change from 'gbk' or 'final' to anything else
+		#It is not common to change from 'unknown' or 'final' to anything else
 		if matched_phamerator_data[4] != 'draft':
 
 			print "\n\nThere is conflicting status data for genome %s" % genome_data[1]
@@ -2267,7 +2266,7 @@ for filename in genbank_files:
 			#Import and Phamerator status data check
 			if import_status != phamerator_status:
 
-				#It is not common to change from 'gbk' or 'final' to anything else
+				#It is not common to change from 'unknown' or 'final' to anything else
 				if phamerator_status != 'draft':
 
 					record_warnings += 1
@@ -2355,7 +2354,7 @@ for filename in genbank_files:
 
 			elif len(query_results) == 1:
 
-				#If the new genome is a Final or Gbk, this code block
+				#If the new genome is a Final or Unknown, this code block
 				#alerts the user, unless this warning is turned off.
 				if query_results[0][1].lower() != "draft" and ignore_replace_warning != 'yes':
 
@@ -2420,7 +2419,7 @@ for filename in genbank_files:
 		elif import_author == '1' and import_status == 'draft':
 			pass
 
-		#For non-Hatfull authored annotations of any kind (draft, final, gbk),
+		#For non-Hatfull authored annotations of any kind (draft, final, unknown),
 		#Graham may or may not be an author
 		else:
 			if search_result != None:
@@ -2490,7 +2489,7 @@ for filename in genbank_files:
 			else:
 				ncbi_update_status = '0'
 
-			if import_status == 'draft' or import_status == 'gbk':
+			if import_status == 'draft' or import_status == 'unknown':
 				annotation_qc = '0'
 			else:
 				annotation_qc = '1'
@@ -2540,10 +2539,10 @@ for filename in genbank_files:
 		phage_data_list.append(import_status) #[7]
 		phage_data_list.append(date) #[8]
 		phage_data_list.append(ncbi_update_status) #[9]
-		phage_data_list.append(annotation_qc) #[10]
+		phage_data_list.append(annotation_qc) #[10] No longer imported though.
 		phage_data_list.append(import_author) #[11]
 
-		add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationQC, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
+		add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
 										% (phage_data_list[0],\
 										phage_data_list[1],\
 										phage_data_list[2],\
@@ -2554,7 +2553,6 @@ for filename in genbank_files:
 										phage_data_list[7],\
 										phage_data_list[8],\
 										phage_data_list[9],\
-										phage_data_list[10],\
 										phage_data_list[11]))
 
 
@@ -3349,15 +3347,15 @@ for filename in genbank_files:
 
 
 		#Add all updated gene feature data to the add_replace_statements list
+		# element [6] = 'typeID', which is no longer valid for db schema 5
 		for feature in all_features_data_list:
-			add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, TypeID, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
+			add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
 									% (feature[0],\
 									feature[1],\
 									feature[2],\
 									feature[3],\
 									feature[4],\
 									feature[5],\
-									feature[6],\
 									feature[7],\
 									feature[8],\
 									feature[9],\

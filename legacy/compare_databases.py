@@ -326,7 +326,7 @@ class PhameratorGenome(AnnotatedGenome):
         AnnotatedGenome.__init__(self)
         # Non-computed datafields
         self.__phage_id = ''
-        self.__status = '' #Final, Draft, Gbk version of genome data
+        self.__status = '' #Final, Draft, Unknown version of genome data
         self.__cluster_subcluster = '' #Combined cluster_subcluster data.
         self.__ncbi_update_flag = ''
         self.__date_last_modified = ''
@@ -350,13 +350,13 @@ class PhameratorGenome(AnnotatedGenome):
         #Be sure to first set the accession attribute before the status attribute,
         #else this will throw an error.
         #Now that the AnnotationAuthor field contains authorship data, the
-        #'gbk' annotation status now reflects an 'unknown' annotation (in
+        #'unknown' annotation status now reflects an 'unknown' annotation (in
         #regards to if it was auto-annotated or manually annotated).
-        #So for the status-accession error, if the status is 'gbk' ('unkown'),
+        #So for the status-accession error, if the status is 'unknown',
         #there is no reason to assume whether there should be an accession or not.
         #Only for 'final' (manually annotated) genomes should there be an accession.
-        #Old code, using 'gbk':
-        # if (self.__status == 'final' or self.__status == 'gbk') and self.get_accession() == '':
+        #Old code, using 'unknown':
+        # if (self.__status == 'final' or self.__status == 'unknown') and self.get_accession() == '':
         #     self.__status_accession_error = True
         if self.__status == 'final' and self.get_accession() == '':
             self.__status_accession_error = True
@@ -1970,16 +1970,16 @@ else:
 
 
 #Determine which types of genomes should be checked based on
-#the status of the annotations: draft, final, gbk
+#the status of the annotations: draft, final, unknown
 analyze_genome_status_options = [\
     'none',\
     'draft only',\
     'final only',\
-    'gbk only',\
+    'unknown only',\
     'draft and final',\
-    'draft and gbk',\
-    'final and gbk',\
-    'draft, final, and gbk']
+    'draft and unknown',\
+    'final and unknown',\
+    'draft, final, and unknown']
 print '\n\nThe following types of Phamerator genomes based on annotation status can be analyzed:'
 #print '0: ' + analyze_genome_status_options[0]
 print '1: ' + analyze_genome_status_options[1]
@@ -2004,20 +2004,20 @@ if analyze_genome_status == 1:
 elif analyze_genome_status == 2:
     valid_genome_status_set.add('final')
 elif analyze_genome_status == 3:
-    valid_genome_status_set.add('gbk')
+    valid_genome_status_set.add('unknown')
 elif analyze_genome_status == 4:
     valid_genome_status_set.add('draft')
     valid_genome_status_set.add('final')
 elif analyze_genome_status == 5:
     valid_genome_status_set.add('draft')
-    valid_genome_status_set.add('gbk')
+    valid_genome_status_set.add('unknown')
 elif analyze_genome_status == 6:
     valid_genome_status_set.add('final')
-    valid_genome_status_set.add('gbk')
+    valid_genome_status_set.add('unknown')
 elif analyze_genome_status == 7:
     valid_genome_status_set.add('draft')
     valid_genome_status_set.add('final')
-    valid_genome_status_set.add('gbk')
+    valid_genome_status_set.add('unknown')
 else:
     pass
 

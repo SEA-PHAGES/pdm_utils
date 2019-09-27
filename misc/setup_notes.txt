@@ -89,7 +89,10 @@ source activate pdm_utils-user
 
 
 
-
+# conda environment to manage Python2-based legacy scripts
+conda create --name pdm_utils-legacy python=2 biopython tabulate paramiko
+source activate pdm_utils-legacy
+pip install MySQLdb
 
 
 # The directory of integration and unit tests can be stored completely
