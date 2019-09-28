@@ -7,6 +7,7 @@ import argparse
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
 from pdm_utils.pipelines.db_export import export_database
+from pdm_utils.pipelines.db_freeze import freeze_database
 
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
@@ -26,7 +27,8 @@ def main():
         "phamerate",
         "export",
         "compare",
-        "database_to_file"}
+        "database_to_file",
+        "freeze"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP)
     pipe_parser.add_argument("pipeline", type=str,
@@ -46,6 +48,8 @@ def main():
     # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
     elif args.pipeline == "database_to_file":
         pass
+    elif args.pipeline == "freeze":
+        freeze_database.main(sys.argv)
     else:
         pass
     print("Pipeline completed")
