@@ -6,6 +6,7 @@ import sys
 import argparse
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
+from pdm_utils.pipelines.db_export import export_database
 
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
@@ -41,7 +42,7 @@ def main():
     elif args.pipeline == "phamerate":
         pass
     elif args.pipeline == "export":
-        pass
+        export_database.main(sys.argv)
     # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
     elif args.pipeline == "database_to_file":
         pass
