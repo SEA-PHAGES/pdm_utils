@@ -5,6 +5,7 @@ then passes all command line arguments to the main pipeline module.
 import sys
 import argparse
 from pdm_utils.pipelines.db_import import import_genome
+from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
 
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
@@ -32,7 +33,7 @@ def main():
                         help=PIPELINE_HELP)
     args = pipe_parser.parse_args(sys.argv[1:2])
     if args.pipeline == "retrieve_data":
-        pass
+        retrieve_database_updates.main(sys.argv)
     elif args.pipeline == "import":
         import_genome.run_import(sys.argv)
     elif args.pipeline == "cdd":
