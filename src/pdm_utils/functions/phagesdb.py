@@ -222,7 +222,6 @@ def parse_genome_data(data_dict, gnm_type=""):
             gnm.parse_description()
     return gnm
 
-
 def retrieve_genome_data(phage_url):
     """Retrieve all data from PhagesDB for a specific phage.
 
@@ -234,6 +233,7 @@ def retrieve_genome_data(phage_url):
     try:
         data_json = urllib.request.urlopen(phage_url)
         data_dict = json.loads(data_json.read())
+        # TODO should data_dict.close() be called after retrieving data?
     except:
         data_dict = {}
     return data_dict

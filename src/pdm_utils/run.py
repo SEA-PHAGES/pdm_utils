@@ -8,6 +8,7 @@ from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
 from pdm_utils.pipelines.db_export import export_database
 from pdm_utils.pipelines.db_freeze import freeze_database
+from pdm_utils.pipelines.db_compare import compare_databases
 
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
@@ -51,7 +52,7 @@ def main():
     elif args.pipeline == "freeze":
         freeze_database.main(sys.argv)
     else:
-        pass
+        compare_databases.main(sys.argv)
     print("Pipeline completed")
 
 if __name__ == "__main__":
