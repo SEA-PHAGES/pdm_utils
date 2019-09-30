@@ -583,7 +583,7 @@ def genome_to_seqrecord(phage_genome):
               "convert to SeqRecord object.")
         raise
     record.name = phage_genome.name
-    record.id = phage_genome.id
+    record.id = phage_genome.accession
     record.features = get_seqrecord_features(phage_genome)
     record.description = get_seqrecord_description(phage_genome)
     record.annotations=\
@@ -687,8 +687,8 @@ def get_seqrecord_annotations_comments(phage_genome):
             (phage_genome.cluster, phage_genome.subcluster)
     auto_generated_comment = "Auto-generated genome record\
             from Phamerator database"
-    annotation_status_comment = "Annotation status: {}\
-            Annotation Author: {}".format\
+    annotation_status_comment =\
+            "Annotation status: {}; Annotation Author: {}".format\
             (phage_genome.annotation_status,\
             phage_genome.annotation_author)
     qc_and_retrieval_values = \

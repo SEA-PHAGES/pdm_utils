@@ -9,7 +9,8 @@ from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from pdm_utils.functions import flat_files, phamerator, basic
 from functools import singledispatch
 from typing import List, Dict
-import os, sys, typing, argparse, csv, pathlib
+from pathlib import Path
+import os, sys, typing, argparse, csv
 
 def run_file_export(unparsed_args_list):
     """Verify the correct arguments are selected for database to file"""
@@ -35,8 +36,7 @@ def run_file_export(unparsed_args_list):
     FILE_FORMAT = ("""
         Type of file to be exported into a directory
         The following are file export format options:
-            -genbank, or gb is the standard GenBank 
-                flat file format
+            -gb is the standard GenBank flat file format
             -fasta is a generic file containing a sequence                  and an information header
             -csv is a standard table 
                 (comma seperated values) format 
@@ -57,7 +57,7 @@ def run_file_export(unparsed_args_list):
 
     phage_list_input_args = parser.add_mutually_exclusive_group(required = True)
     phage_list_input_args.add_argument("-csv", "--import_table",\
-            nargs = 1, type=os.path.abspath, help = IMPORT_TABLE_HELP)
+            nargs = 1, type=str, help = IMPORT_TABLE_HELP)
     phage_list_input_args.add_argument("-sg", "--single_genome",\
             nargs = 1, type=str, help = SINGLE_GENOME_HELP)
     phage_list_input_args.add_argument("-mgs", "--multiple_genomes",\
@@ -81,7 +81,7 @@ def run_file_export(unparsed_args_list):
     
     if args.import_table != None: 
         phage_name_filter_list = \
-                parse_phage_list_input(pathlib.Path(args.import_table))
+                parse_phage_list_input(Path(args.import_table))
     elif args.single_genome != None:
         phage_name_filter_list = \
                 parse_phage_list_input(args.single_genome)
@@ -95,7 +95,7 @@ def run_file_export(unparsed_args_list):
             (retrieve_seqrecord_from_database\
             (sql_handle, phage_name_filter_list),\
             file_format = args.file_format,\
-            export_path = args.export_directory,\
+            export_path = Path(args.export_directory),\
             export_dir_name = args.folder_name)
 
 @singledispatch
@@ -136,7 +136,7 @@ def _(phage_list_input):
     phage_list.append(phage_list_input)
     return phage_list
 
-@parse_phage_list_input.register(pathlib.Path)
+@parse_phage_list_input.register(Path)
 def _(phage_list_input):
     """Helper function to populate the filter list for a SQL query
     :param phage_list_input:
@@ -148,7 +148,7 @@ def _(phage_list_input):
     """
 
 
-    if not os.path.isfile(phage_list_input):
+    if not q.exists:
         raise ValueError("File {} is not found".\
                 format(phage_list_input))
 
@@ -281,7 +281,7 @@ def append_database_version(genome_seqrecord: SeqRecord,\
         raise
 
 def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
-        export_path: str, export_dir_name: str = "file_export"):
+        export_path: Path, export_dir_name: str = "file_export"):
     """Outputs files with a particuar format from a SeqRecord list
 
     :param seq_record_list:
@@ -290,32 +290,32 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
     :param file_format:
         Input SeqIO file output format
     :type file_format: str
-    :param input_path:
+    :param export_path:
         Input the path for the placement of the directory
         of exported files
-    :type input_path: str
+    :type input_path: Path
     """
-    export_path = os.path.abspath(export_path)
-    if not os.path.exists(export_path):
+    export_path = export_path.resolve()
+    print(export_path)
+    print(export_dir_name)
+    if not export_path.exists():
         print("Path parameter passed to seqfeature_file_output\
             is not a valid path")
         raise ValueError
 
     try:
-        os.mkdir(os.path.join(export_path, export_dir_name))
+        export_path = Path(os.path.join(export_path, export_dir_name))
+        if not export_path.is_dir():
+            export_path.mkdir()
     except:
-        if os.path.exists(os.path.join(export_path, export_dir_name)):
-            pass
-        else:
-            print("Mkdir function failed to \
-                    create database_export_output\
-                    directory in {}".format(export_path))
-            raise ValueError 
+        print("Mkdir function failed to \
+                create database_export_output\
+                directory in {}".format(export_path))
+        raise ValueError 
     for record in seqrecord_list:
-        output_dir="{}/{}.{}".format\
-                (export_dir_name,\
-                record.name, file_format)
-        output_path=os.path.join(export_path, output_dir)
+        output_dir="{}.{}".format\
+                (record.name, file_format)
+        output_path=export_path.joinpath(output_dir)
         output_handle=open(output_path, "w+")
         if file_format == "csv":
             pass 

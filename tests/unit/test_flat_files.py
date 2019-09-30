@@ -877,6 +877,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.gnm.cluster = "A"
         self.gnm.subcluster = "A2"
         self.gnm.annotation_status = "1"
+        self.gnm.annotation_author = "1"
         self.gnm.retrieve_record = "1"
         self.gnm.annotation_qc = "1"
 
@@ -892,7 +893,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.assertEqual(record_comments[0],\
                 "Cluster: A; Subcluster: A2")
         self.assertEqual(record_comments[2],\
-                "Annotation status: 1")
+                "Annotation status: 1; Annotation Author: 1")
         self.assertEqual(record_comments[3],\
                 "RetrieveRecord: 1; AnnotationQC: 1")
 
