@@ -72,7 +72,7 @@ def write_out(filename,statement):
 
 
 #For questionable data, user is requested to clarify if the data is correct or not
-def question(message):
+def question(message, output_file):
 	number = -1
 	while number < 0:
 		value = input("Is this correct? (yes or no): ")
@@ -988,7 +988,7 @@ def main(unparsed_args_list):
 			row[2] = row[2].split(' ')[0] #Keep only the genus in the host data field and discard the rest
 			if row[2] not in phageHost_set:
 				print("The host strain %s is not currently in the database." % row[2])
-				table_errors +=  question("\nError: %s is not the correct host for %s." % (row[2],row[1])) #errors will be incremented if host was not correct
+				table_errors +=  question("\nError: %s is not the correct host for %s." % (row[2],row[1]), output_file) #errors will be incremented if host was not correct
 
 
 		#Modify Cluster and Subcluster if needed
@@ -1034,7 +1034,7 @@ def main(unparsed_args_list):
 		if row[8] != "none":
 			if row[8] not in phageSubcluster_set:
 				print("The Subcluster %s is not currently in the database." % row[8])
-				table_errors +=  question("\nError: %s is not the correct Subcluster for %s." % (row[8],row[1]))
+				table_errors +=  question("\nError: %s is not the correct Subcluster for %s." % (row[8],row[1]), output_file)
 
 			if len(row[8]) > 5:
 				write_out(output_file,"\nError: phage %s Subcluster designation %s exceeds character limit." % (row[1],row[8]))
@@ -1048,7 +1048,7 @@ def main(unparsed_args_list):
 
 			if (row[3] not in phageCluster_set and row[3] != "singleton"):
 				print("The Cluster %s is not currently in the database." % row[3])
-				table_errors +=  question("\nError: %s is not the correct Cluster for %s." % (row[3],row[1]))
+				table_errors +=  question("\nError: %s is not the correct Cluster for %s." % (row[3],row[1]), output_file)
 
 			if (row[3] != "singleton" and len(row[3]) > 5):
 				write_out(output_file,"\nError: phage %s Cluster designation %s exceeds character limit." % (row[1],row[3]))
@@ -1077,7 +1077,7 @@ def main(unparsed_args_list):
 		#Modify Status if needed
 		if (row[4] not in phageStatus_set and row[4] != "none"):
 				print("The status %s is not currently in the database." % row[4])
-				table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
+				table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]), output_file)
 		if len(row[4]) > 5:
 			write_out(output_file,"\nError: the status %s exceeds character limit." % row[4])
 			table_errors += 1
@@ -1086,7 +1086,7 @@ def main(unparsed_args_list):
 		#Modify Description Qualifier if needed
 		if (row[5] not in description_set and row[5] != "none"):
 			print(row[5] + " is an uncommon qualifier.")
-			table_errors += question("\nError: %s is an incorrect qualifier." % row[5])
+			table_errors += question("\nError: %s is an incorrect qualifier." % row[5], output_file)
 
 
 		#Modify Accession if needed
@@ -1199,7 +1199,7 @@ def main(unparsed_args_list):
 			#Status
 			if row[4] == "final":
 				print(row[1] + " to be added is listed as Final status, but no Draft (or other) genome is listed to be removed.")
-				table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]))
+				table_errors +=  question("\nError: %s is not the correct status for %s." % (row[4],row[1]), output_file)
 
 			#SecondPhageID
 			if row[6] != "none":
@@ -1274,7 +1274,7 @@ def main(unparsed_args_list):
 
 			if row[1] != row[6]:
 				print("%s to replace %s is not spelled the same." %(row[1],row[6]))
-				table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]))
+				table_errors +=  question("\nError: Phage %s is not spelled the same as phage %s." % (row[1],row[6]), output_file)
 
 			#Accession = it will either be an accession or it will be "none"
 			#Subcluster = it will either be a Subcluster or it will be "none"
@@ -1336,7 +1336,7 @@ def main(unparsed_args_list):
 		if current_add[0] != "none":
 			if current_add in add_set:
 				print(genome_data[1] + " appears to be involved in more than one step.")
-				table_errors += question("\nError: %s is duplicated" % str(current_add))
+				table_errors += question("\nError: %s is duplicated" % str(current_add), output_file)
 
 			else:
 				add_set.add(current_add)
@@ -1350,7 +1350,7 @@ def main(unparsed_args_list):
 		if current_remove[0] != "none":
 			if current_remove in remove_set:
 				print(genome_data[6] + " appears to be involved in more than one step.")
-				table_errors += question("\nError: %s is duplicated" % str(current_remove))
+				table_errors += question("\nError: %s is duplicated" % str(current_remove), output_file)
 
 			else:
 				remove_set.add(current_remove)
@@ -1379,12 +1379,12 @@ def main(unparsed_args_list):
 		if current_add != current_remove:
 			if (current_add in remove_set and current_add != "none"):
 				print(genome_data[1] + " appears to be involved in more than one step.")
-				table_errors += question("\nError: %s is duplicated" % str(current_add))
+				table_errors += question("\nError: %s is duplicated" % str(current_add), output_file)
 
 
 			if (current_remove in add_set and current_remove != "none"):
 				print(genome_data[6] + " appears to be involved in more than one step.")
-				table_errors += question("\nError: %s is duplicated" % str(current_remove))
+				table_errors += question("\nError: %s is duplicated" % str(current_remove), output_file)
 
 
 
@@ -1444,7 +1444,7 @@ def main(unparsed_args_list):
 			print("Phamerator host: %s" % matched_phamerator_data[2])
 			print("Import ticket host: %s" % genome_data[2])
 			print("The new host data will be imported.")
-			table_errors += question("\nError: incorrect host data for %s." % genome_data[1])
+			table_errors += question("\nError: incorrect host data for %s." % genome_data[1], output_file)
 
 
 		#Status data check
@@ -1457,7 +1457,7 @@ def main(unparsed_args_list):
 				print("Phamerator status: %s" % matched_phamerator_data[4])
 				print("Import ticket status: %s" % genome_data[4])
 				print("The new status data will be imported.")
-				table_errors += question("\nError: incorrect status data for %s." % genome_data[1])
+				table_errors += question("\nError: incorrect status data for %s." % genome_data[1], output_file)
 
 			#It is common to change status from 'draft' to 'final', but not anything else
 			elif genome_data[4] != "final":
@@ -1466,7 +1466,7 @@ def main(unparsed_args_list):
 				print("Phamerator status: %s" % matched_phamerator_data[4])
 				print("Import ticket status: %s" % genome_data[4])
 				print("The new status data will be imported.")
-				table_errors += question("\nError: incorrect status data for %s." % genome_data[1])
+				table_errors += question("\nError: incorrect status data for %s." % genome_data[1], output_file)
 
 
 		#Accession data check
@@ -1476,7 +1476,7 @@ def main(unparsed_args_list):
 			print("Phamerator accession: %s" % matched_phamerator_data[7])
 			print("Import ticket accession: %s" % genome_data[7])
 			print("The new accession data will be imported.")
-			table_errors += question("\nError: incorrect accession data for %s." % genome_data[1])
+			table_errors += question("\nError: incorrect accession data for %s." % genome_data[1], output_file)
 
 		elif genome_data[7] != "none" and matched_phamerator_data[7] != "none" and genome_data[7] != matched_phamerator_data[7]:
 
@@ -1484,7 +1484,7 @@ def main(unparsed_args_list):
 			print("Phamerator accession: %s" % matched_phamerator_data[7])
 			print("Import ticket accession: %s" % genome_data[7])
 			print("The new accession data will be imported.")
-			table_errors += question("\nError: incorrect accession data for %s." % genome_data[1])
+			table_errors += question("\nError: incorrect accession data for %s." % genome_data[1], output_file)
 
 		#Cluster, Subcluster check = no need to check this, as this data may be
 		#more frequently updated than other fields.
@@ -1497,7 +1497,7 @@ def main(unparsed_args_list):
 			print("Phamerator author: %s" % author_dictionary[matched_phamerator_data[9]])
 			print("Import ticket author: %s" % author_dictionary[genome_data[9]])
 			print("The new author data will be imported.")
-			table_errors += question("\nError: incorrect author data for %s." % genome_data[1])
+			table_errors += question("\nError: incorrect author data for %s." % genome_data[1], output_file)
 
 
 	#Check to see if genomes to be removed are the correct status
@@ -1514,7 +1514,7 @@ def main(unparsed_args_list):
 				print("The genome %s to be removed is currently %s status." % \
 						(genome_data[6],matched_phamerator_data[4]))
 				table_errors += question("\nError: %s is %s status and should not be removed." % \
-						(genome_data[6],matched_phamerator_data[4]))
+						(genome_data[6],matched_phamerator_data[4]), output_file)
 		except:
 			pass
 
@@ -2009,7 +2009,7 @@ def main(unparsed_args_list):
 				write_out(output_file,"\nWarning: phage %s contains unexpected nucleotide(s): %s" % (phageName,str(nucleotide_error_set)))
 				for element in nucleotide_error_set:
 					print("\nThere are %s unexpected %s nucleotides in %s." % (phageSeq.count(element),element,phageName))
-				record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName)
+				record_errors += question("\nError: problem with DNA sequence in phage %s." % phageName, output_file)
 
 
 
@@ -2023,7 +2023,7 @@ def main(unparsed_args_list):
 			except:
 				record_name = ""
 				print("\nRecord does not have record Locus information.")
-				record_errors += question("\nError: problem with header info of file %s." % filename)
+				record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 
 			try:
@@ -2031,7 +2031,7 @@ def main(unparsed_args_list):
 			except:
 				record_id = ""
 				print("\nRecord does not have record ID information.")
-				record_errors += question("\nError: problem with header info of file %s." % filename)
+				record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 
 			try:
@@ -2039,7 +2039,7 @@ def main(unparsed_args_list):
 			except:
 				record_def = ""
 				print("\nRecord does not have record definition information.")
-				record_errors += question("\nError: problem with header info of file %s." % filename)
+				record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 
 			try:
@@ -2047,7 +2047,7 @@ def main(unparsed_args_list):
 			except:
 				record_source = ""
 				print("\nRecord does not have record source information.")
-				record_errors += question("\nError: problem with header info of file %s." % filename)
+				record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 
 			#Date of the record
@@ -2275,7 +2275,7 @@ def main(unparsed_args_list):
 					print("Phamerator host: %s" % phamerator_host)
 					print("Import ticket host: %s" % import_host)
 					print("The new host data will be imported.")
-					record_errors += question("\nError: incorrect host data for %s." % phageName)
+					record_errors += question("\nError: incorrect host data for %s." % phageName, output_file)
 
 
 				#Import and Phamerator status data check
@@ -2289,7 +2289,7 @@ def main(unparsed_args_list):
 						print("Phamerator status: %s" % phamerator_status)
 						print("Import ticket status: %s" % import_status)
 						print("The new status data will be imported.")
-						record_errors += question("\nError: incorrect status data for %s." % phageName)
+						record_errors += question("\nError: incorrect status data for %s." % phageName, output_file)
 
 					#It is common to change status from 'draft' to 'final', but not anything else
 					elif import_status != "final":
@@ -2299,7 +2299,7 @@ def main(unparsed_args_list):
 						print("Phamerator status: %s" % phamerator_status)
 						print("Import ticket status: %s" % import_status)
 						print("The new status data will be imported.")
-						record_errors += question("\nError: incorrect status data for %s." % phageName)
+						record_errors += question("\nError: incorrect status data for %s." % phageName, output_file)
 
 
 				#Verify there are no accession conflicts.
@@ -2326,7 +2326,7 @@ def main(unparsed_args_list):
 					print("Parsed accession from file: %s" % parsed_accession)
 					print("If the parsed accession is not None, it will be imported.")
 					print("If the parsed accession is None, but the import ticket accession is not None, it will be imported.")
-					record_errors += question("\nError: incorrect accession data for %s." % phageName)
+					record_errors += question("\nError: incorrect accession data for %s." % phageName, output_file)
 
 					if parsed_accession != "none":
 						accession_to_upload = parsed_accession
@@ -2350,7 +2350,7 @@ def main(unparsed_args_list):
 					print("Phamerator author: %s" % author_dictionary[phamerator_author])
 					print("Import ticket author: %s" % author_dictionary[import_author])
 					print("The new author data will be imported.")
-					record_errors += question("\nError: incorrect author data for %s." % phageName)
+					record_errors += question("\nError: incorrect author data for %s." % phageName, output_file)
 
 
 
@@ -2365,7 +2365,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: %s appears to be a different genome sequence than %s. These genomes do not match." % (phageName,import_genome_replace))
 					print("The genome will still be replaced.")
-					record_errors += question("\nError: %s and %s have different genome sequences." % (phageName,import_genome_replace))
+					record_errors += question("\nError: %s and %s have different genome sequences." % (phageName,import_genome_replace), output_file)
 
 				elif len(query_results) == 1:
 
@@ -2376,7 +2376,7 @@ def main(unparsed_args_list):
 						record_warnings += 1
 						write_out(output_file,"\nWarning: The genome in the database with matching sequence, %s, is listed as %s status." % (query_results[0][0],query_results[0][1]))
 						print("The genome will still be replaced.")
-						record_errors +=  question("\nError: the genome to be removed, %s, was incorrect status." %import_genome_replace)
+						record_errors +=  question("\nError: the genome to be removed, %s, was incorrect status." %import_genome_replace, output_file)
 
 					#The genome to be replaced does not match the genome
 					#name in the database with the same sequence.
@@ -2393,7 +2393,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: The date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
 					print('Despite it being an older record, the phage %s will continue to be imported.' % phageName)
-					record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
+					record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod), output_file)
 
 				#Create the DELETE command
 				add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + import_genome_replace + "';")
@@ -2426,7 +2426,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: Graham Hatfull is not a listed author for genome %s" % phageName)
 					print("The genome will continue to be imported.")
-					record_errors += question("\nError: incorrect author data for %s." % phageName)
+					record_errors += question("\nError: incorrect author data for %s." % phageName, output_file)
 
 
 			#For Hatfull authored draft annotations, it doesn't matter whether
@@ -2441,7 +2441,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: Graham Hatfull is a listed author for genome %s" % phageName)
 					print("The genome will continue to be imported.")
-					record_errors += question("\nError: incorrect author data for %s." % phageName)
+					record_errors += question("\nError: incorrect author data for %s." % phageName, output_file)
 
 
 
@@ -2460,7 +2460,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: the author list appears to contain a generic Lastname, Firstname author for genome %s" % phageName)
 					print("The genome will continue to be imported.")
-					record_errors += question("\nError: incorrect author data for %s." % phageName)
+					record_errors += question("\nError: incorrect author data for %s." % phageName, output_file)
 
 
 
@@ -2557,7 +2557,7 @@ def main(unparsed_args_list):
 			phage_data_list.append(annotation_qc) #[10] No longer imported though.
 			phage_data_list.append(import_author) #[11]
 
-			add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s")""" \
+			add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
 											% (phage_data_list[0],\
 											phage_data_list[1],\
 											phage_data_list[2],\
@@ -2689,14 +2689,14 @@ def main(unparsed_args_list):
 							write_out(output_file,"\nWarning: tRNA starting at %s does not appear to have correct terminal nucleotide in %s phage." \
 									% (tRNA_left + 1,phageName))
 							record_errors += question("\nError: tRNA starting at %s has incorrect terminal nucleotide in %s phage." \
-									% (tRNA_left + 1,phageName))
+									% (tRNA_left + 1,phageName), output_file)
 
 						if tRNA_size < 60 or tRNA_size > 100:
 							record_warnings += 1
 							write_out(output_file,"\nWarning: tRNA starting at %s does not appear to be the correct size in %s phage."  \
 									% (tRNA_left + 1,phageName))
 							record_errors += question("\nError: tRNA starting at %s is incorrect size in %s phage." \
-									% (tRNA_left + 1,phageName))
+									% (tRNA_left + 1,phageName), output_file)
 
 
 						#Retrieve and check product
@@ -2791,7 +2791,7 @@ def main(unparsed_args_list):
 					if (geneID not in geneID_set and geneID not in all_GeneID_set):
 						duplicate = False
 						write_out(output_file,"\nGeneID %s duplication has been automatically resolved by renaming ID to %s." % (old_ID,geneID))
-						duplicate_answer = question("\nError: feature %s of %s is a duplicate geneID." % (old_ID,phageName))
+						duplicate_answer = question("\nError: feature %s of %s is a duplicate geneID." % (old_ID,phageName), output_file)
 
 						#If user indicates the feature with the new geneID should not be added, add to record_errors. Otherwise, assign new geneID to the geneID_set
 						if duplicate_answer == 1:
@@ -2804,7 +2804,7 @@ def main(unparsed_args_list):
 				if duplicate == True:
 					record_warnings += 1
 					write_out(output_file,"\nWarning: unable to resolve duplicate geneID %s conflict. This CDS will be skipped, but processing of the other genes will continue." % old_ID)
-					record_errors += question("\nError: feature %s of phage %s is a duplicate geneID and cannot be renamed to %s." % (old_ID,phageName,geneID))
+					record_errors += question("\nError: feature %s of phage %s is a duplicate geneID and cannot be renamed to %s." % (old_ID,phageName,geneID), output_file)
 					continue
 
 
@@ -2830,7 +2830,7 @@ def main(unparsed_args_list):
 				else:
 					record_warnings += 1
 					write_out(output_file,"\nWarning: feature %s of %s does not have a common orientation. This CDS will be skipped, but processing of the other genes will continue." % (geneID,phageName))
-					record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName))
+					record_errors += question("\nError: feature %s of %s does not have correct orientation." % (geneID,phageName), output_file)
 					continue
 
 
@@ -2850,7 +2850,7 @@ def main(unparsed_args_list):
 						strStop = ""
 						record_warnings += 1
 						write_out(output_file,"\nWarning: gene %s is a compound feature that is unable to be parsed. This CDS will be skipped, but processing of the other genes will continue." % geneID)
-						record_errors += question("\nError: unable to parse gene %s of phage %s." % (geneID,phageName))
+						record_errors += question("\nError: unable to parse gene %s of phage %s." % (geneID,phageName), output_file)
 						continue
 
 					else:
@@ -2882,7 +2882,7 @@ def main(unparsed_args_list):
 				else:
 					record_warnings += 1
 					write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue." % (geneID,strStart,strStop))
-					record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName))
+					record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName), output_file)
 					continue
 
 				#Test if there is a gene with the same coordinates already parsed.
@@ -2892,7 +2892,7 @@ def main(unparsed_args_list):
 				else:
 					record_warnings += 1
 					write_out(output_file,"\nWarning: multiple genes have coordinates %s. This is likely a gene feature duplication." % str(coordinate_tuple))
-					record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple))
+					record_errors += question("\nError: gene coordinates %s are duplicated in this genome." % str(coordinate_tuple), output_file)
 
 
 
@@ -2911,7 +2911,7 @@ def main(unparsed_args_list):
 					geneLen = 0
 					record_warnings += 1
 					write_out(output_file,"\nWarning: gene %s has no translation. This CDS will be skipped, but processing of the other genes will continue." % geneID)
-					record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
+					record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName), output_file)
 					continue
 
 				#Check translation for possible errors
@@ -2921,7 +2921,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: feature %s of %s appears to have unexpected amino acid(s)." % (geneID,phageName))
 					print("Unexpected amino acids: " + str(amino_acid_error_set))
-					record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName))
+					record_errors += question("\nError: problem with %s translation in phage %s." % (geneID,phageName), output_file)
 
 				#Translation table used
 				try:
@@ -3003,7 +3003,7 @@ def main(unparsed_args_list):
 						record_warnings += 1
 						write_out(output_file,"\nWarning: the description for feature %s of %s contains a period." % (geneID,phageName))
 						print(assigned_description)
-						record_errors += question("\nError: problem with description for feature %s of %s." % (geneID,phageName))
+						record_errors += question("\nError: problem with description for feature %s of %s." % (geneID,phageName), output_file)
 
 
 
@@ -3104,7 +3104,7 @@ def main(unparsed_args_list):
 			#The record_summary_cds list contains the column headers, so at minimum, it is length == 1
 			if len(record_summary_cds) == 1:
 				print("\nNo CDS features were found in this record. The genome will still be added to the database.")
-				record_errors += question("\nError: no CDS features found in %s." % filename)
+				record_errors += question("\nError: no CDS features found in %s." % filename, output_file)
 
 
 			#Process the source and organism fields to look for problems
@@ -3160,7 +3160,7 @@ def main(unparsed_args_list):
 
 				if find_name(pattern1,record_def_trimmed.split(' ')) == 0:
 					print("\nRecord definition does not have identical phage name as found in the record organism field.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				#REVIEW the above Record definition check replaces the code block below
 				# if find_name(pattern1,record_def[:-18].split(' ')) == 0:
@@ -3176,12 +3176,12 @@ def main(unparsed_args_list):
 				#Record source QC
 				if find_name(pattern1,record_source.split(' ')) == 0:
 					print("\nRecord source does not have identical phage name as found in the record organism field.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				#Source feature organism QC
 				if find_name(pattern1,feature_source_organism.split(' ')) == 0:
 					print("\nSource feature organism does not have identical phage name as found in the record organism field.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 
 
@@ -3201,33 +3201,33 @@ def main(unparsed_args_list):
 
 				if (find_name(pattern3,record_def.split(' ')) == 0 and record_def.split(' ')[0].lower() not in host_ignore):
 					print("\nRecord definition does not appear to have same host data as found in import table.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				if (find_name(pattern3,record_source.split(' ')) == 0 and record_source.split(' ')[0].lower() not in host_ignore):
 
 					print("\nRecord source does not appear to have same host data as found in import table.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				if (find_name(pattern3,record_organism.split(' ')) == 0 and record_organism.split(' ')[0].lower() not in host_ignore):
 
 					print("\nRecord organism does not appear to have same host data as found in import table.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				if (find_name(pattern3,feature_source_organism.split(' ')) == 0 and feature_source_organism.split(' ')[0].lower() not in host_ignore):
 
 					print("\nSource feature organism does not appear to have same host data as found in import table.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				#Host and Lab_Host data may not have been present, so skip if it is blank
 				if (feature_source_host != "" and find_name(pattern3,feature_source_host.split(' ')) == 0 and feature_source_host.split(' ')[0].lower() not in host_ignore):
 
 					print("\nSource feature host does not appear to have same host data as found in import table.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 				if (feature_source_lab_host != "" and find_name(pattern3,feature_source_lab_host.split(' ')) == 0 and feature_source_lab_host.split(' ')[0].lower() not in host_ignore):
 
 					print("\nSource feature lab host does not appear to have same host data as found in import table.")
-					record_errors += question("\nError: problem with header info of file %s." % filename)
+					record_errors += question("\nError: problem with header info of file %s." % filename, output_file)
 
 
 
@@ -3241,7 +3241,7 @@ def main(unparsed_args_list):
 			if missing_locus_tag_tally > 0:
 				record_warnings += 1
 				write_out(output_file,"\nWarning: phage %s from file %s is missing %s CDS locus tag(s)." % (phageName, filename, missing_locus_tag_tally))
-				record_errors += question("\nError: problem with locus tags in file  %s." % filename)
+				record_errors += question("\nError: problem with locus tags in file  %s." % filename, output_file)
 
 
 			#Check the phage name spelling in the locus tags.
@@ -3261,7 +3261,7 @@ def main(unparsed_args_list):
 					record_warnings += 1
 					write_out(output_file,"\nWarning: there are %s geneID(s) that do not have the identical phage name included." % geneID_typo_tally)
 					print(geneID_typo_list)
-					record_errors += question("\nError: problem with locus tags of file %s." % filename)
+					record_errors += question("\nError: problem with locus tags of file %s." % filename, output_file)
 
 
 
@@ -3276,14 +3276,14 @@ def main(unparsed_args_list):
 				transl_table_list = list(transl_table_set)
 				if transl_table_list[0] != '11':
 					write_out(output_file,"\nThe translation table used for %s is: %s." % (phageName,transl_table_list[0]))
-					record_errors += question("\nError: phage %s does not use correct translation table." % phageName)
+					record_errors += question("\nError: phage %s does not use correct translation table." % phageName, output_file)
 			else:
 				pass
 
 			if missing_transl_table_tally > 0:
 				record_warnings += 1
 				write_out(output_file,"\nWarning: there are %s genes with no translation table for phage %s." % (missing_transl_table_tally,phageName))
-				record_errors += question("\nError: phage %s has missing translation table information." % phageName)
+				record_errors += question("\nError: phage %s has missing translation table information." % phageName, output_file)
 
 
 
@@ -3325,7 +3325,7 @@ def main(unparsed_args_list):
 					print("\nThere are %s CDS products found." % feature_product_tally)
 					change_descriptions()
 
-					if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
+					if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename), output_file) == 1:
 
 						for feature in all_features_data_list:
 							feature[9] = feature[10]
@@ -3337,7 +3337,7 @@ def main(unparsed_args_list):
 					change_descriptions()
 
 
-					if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
+					if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename), output_file) == 1:
 
 						for feature in all_features_data_list:
 							feature[9] = feature[11]
@@ -3349,7 +3349,7 @@ def main(unparsed_args_list):
 					print("\nThere are %s CDS notes found." % feature_note_tally)
 					change_descriptions()
 
-					if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
+					if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename), output_file) == 1:
 
 						for feature in all_features_data_list:
 							feature[9] = feature[12]
@@ -3358,13 +3358,13 @@ def main(unparsed_args_list):
 				if changed != "":
 					record_warnings += 1
 					write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
-					record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
+					record_errors += question("\nError: problem with CDS descriptions of file %s." % filename, output_file)
 
 
 			#Add all updated gene feature data to the add_replace_statements list
 			# element [6] = 'typeID', which is no longer valid for db schema 5
 			for feature in all_features_data_list:
-				add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s","%s");""" \
+				add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" \
 										% (feature[0],\
 										feature[1],\
 										feature[2],\

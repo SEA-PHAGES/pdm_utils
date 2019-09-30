@@ -19,7 +19,7 @@ try:
 	import pymysql as pms
 	# import MySQLdb as mdb
 	# TODO Christian - python3 alternative to pp?
-	import pp
+	# import pp
 except ImportError:
 	print("Unable to load one or more 3rd party libraries (pymysql or pp).")
 	print("Install libraries and try again.")
@@ -84,12 +84,16 @@ def search(geneid, translation, database, username, password, cd_db):
 						cur.execute(sqlQuery)
 
 					# TODO Christian = how to handle this exception?
+					# This occurs if there is already a domain in the database,
+					# so this needs to work corretly as this exception is
+					# utilized frequently.
 					except pms.err.Error as err:
 					  	if err.args[0] == 1062:
 					  		#print("Error %d: %s" % (e.args[0],e.args[1]))
 					  		print("%s. This hit will be ignored." % e.args[1])
 					  	else:
 					  		sys.exit(1)
+					# Below: python2 exception clause:
 					# except mdb.Error, e:
 					#   	if e[0] == 1062:
 					#   		#print("Error %d: %s" % (e.args[0],e.args[1]))

@@ -2146,7 +2146,6 @@ def main(unparsed_args_list):
             if save_phamerator_records == 'yes':
 
                 #To output a fasta file, a Biopython SeqRecord must be created first
-                print("check: ", type(genome_object.get_sequence()), "start: ", genome_object.get_sequence()[:4])
                 phamerator_fasta_seqrecord = SeqRecord(Seq(genome_object.get_sequence()),\
                                             id=genome_object.get_search_name(),\
                                             description='')

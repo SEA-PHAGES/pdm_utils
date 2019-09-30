@@ -947,7 +947,7 @@ def main(unparsed_args_list):
                     import_table_name = phamerator_id
 
                 # Determine what the status of the genome will be.
-                # If the genome in Phamerator was already 'final' or 'gbk',
+                # If the genome in Phamerator was already 'final' or 'unknown',
                 # then keep the status unchanged. If the genome in Phamerator
                 # was 'draft', the status should be changed to 'final'.
                 if phamerator_status == 'draft':
