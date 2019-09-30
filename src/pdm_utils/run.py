@@ -9,6 +9,8 @@ from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
 from pdm_utils.pipelines.db_export import export_database
 from pdm_utils.pipelines.db_freeze import freeze_database
 from pdm_utils.pipelines.db_compare import compare_databases
+from pdm_utils.pipelines.db_import import import_phage
+from pdm_utils.pipelines.cdd import cdd_pp
 
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
@@ -29,7 +31,8 @@ def main():
         "export",
         "compare",
         "database_to_file",
-        "freeze"}
+        "freeze",
+        "import_phage"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP)
     pipe_parser.add_argument("pipeline", type=str,
@@ -41,7 +44,7 @@ def main():
     elif args.pipeline == "import":
         import_genome.run_import(sys.argv)
     elif args.pipeline == "cdd":
-        pass
+        cdd_pp.main(sys.argv)
     elif args.pipeline == "phamerate":
         pass
     elif args.pipeline == "export":
@@ -51,6 +54,9 @@ def main():
         pass
     elif args.pipeline == "freeze":
         freeze_database.main(sys.argv)
+    # Note: import_phage is the legacy import script and will be deprecated.
+    elif args.pipeline == "import_phage":
+        import_phage.main(sys.argv)
     else:
         compare_databases.main(sys.argv)
     print("Pipeline completed")

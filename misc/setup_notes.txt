@@ -75,10 +75,10 @@ export PYTHONPATH="${PYTHONPATH}:/path/to/pdm_utils/src/"
 # All python code in the repo can be executed using the following Conda
 # environment 'phamerator'.
 # First install Anaconda locally. Then execute the following commands:
-conda create --name pdm_utils-dev mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine
+conda create --name pdm_utils-dev mysql python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine tabulate
 source activate pdm_utils-dev
 
-conda create --name pdm_utils-user mysql python pip biopython pymysql paramiko
+conda create --name pdm_utils-user mysql python pip biopython pymysql paramiko tabulate
 source activate pdm_utils-user
 
 
