@@ -1,1 +1,1 @@
-Field,Data Type,Data originGeneID,varchar(35),k_phamerate scriptname,int(10) unsigned,k_phamerate scriptorderAdded,int(5) unsigned,MySQL auto-increment
+Field,Data Type,Data originGeneID,varchar(35),phameratename,int(10) unsigned,phamerate
