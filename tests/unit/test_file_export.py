@@ -74,8 +74,7 @@ class TestDatabaseToFile(unittest.TestCase):
 
         comment_tuple = self.test_seqrecord.annotations["comment"]
         self.assertEqual(comment_tuple[4],\
-                "Database Version: 1;\
-                Schema Version: 1")
+                "Database Version: 1; Schema Version: 1")
 
     def test_append_database_version_2(self):
         with self.assertRaises(ValueError):

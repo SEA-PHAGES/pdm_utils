@@ -622,7 +622,7 @@ def get_seqrecord_description(phage_genome):
         from genome data
     """
 
-    description = "{} phage {}, Complete Genome".format(\
+    description = "{} phage {}, complete genome".format(\
             phage_genome.host_genus, phage_genome.id)
     return description
 
@@ -682,11 +682,14 @@ def get_seqrecord_annotations_comments(phage_genome):
         the formatting of BioPython's SeqRecord
         annotations comment attribute
     """
-
-    cluster_comment = "Cluster: {}; Subcluster: {}".format\
-            (phage_genome.cluster, phage_genome.subcluster)
-    auto_generated_comment = "Auto-generated genome record\
-            from Phamerator database"
+    if phage_genome.subcluster == "":
+        cluster_comment = "Cluster: {}; Subcluster: None".format\
+                (phage_genome.cluster)
+    else:
+        cluster_comment = "Cluster: {}; Subcluster: {}".format\
+                (phage_genome.cluster, phage_genome.subcluster)
+    auto_generated_comment =\
+            "Auto-generated genome record from Phamerator database"
     annotation_status_comment =\
             "Annotation status: {}; Annotation Author: {}".format\
             (phage_genome.annotation_status,\

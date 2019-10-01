@@ -30,8 +30,7 @@ def run_file_export(unparsed_args_list):
             7. Gene description field (product, note, function)
             9. Accession
         """
-    SINGLE_GENOME_HELP = "Input the name of a single genome to be exported"
-    MULTIPLE_GENOME_HELP = "Input the name of multiple genomes to be exported"
+    SINGLE_GENOMES_HELP = "Input the name of a single genome or multiple genomes to be exported"
     ALL_HELP = "Automatically selects all genomes from a database to be exported"
     FILE_FORMAT = ("""
         Type of file to be exported into a directory
@@ -58,10 +57,8 @@ def run_file_export(unparsed_args_list):
     phage_list_input_args = parser.add_mutually_exclusive_group(required = True)
     phage_list_input_args.add_argument("-csv", "--import_table",\
             nargs = 1, type=str, help = IMPORT_TABLE_HELP)
-    phage_list_input_args.add_argument("-sg", "--single_genome",\
-            nargs = 1, type=str, help = SINGLE_GENOME_HELP)
-    phage_list_input_args.add_argument("-mgs", "--multiple_genomes",\
-            nargs = '+', type=str, help = MULTIPLE_GENOME_HELP)
+    phage_list_input_args.add_argument("-sgs", "--single_genomes",\
+            nargs = '+', type=str, help = SINGLE_GENOMES_HELP)
     phage_list_input_args.add_argument("-a", "--all", help = ALL_HELP, action = 'store_true')
 
     parser.add_argument("-dir", "--export_directory",\
@@ -82,13 +79,10 @@ def run_file_export(unparsed_args_list):
     if args.import_table != None: 
         phage_name_filter_list = \
                 parse_phage_list_input(Path(args.import_table))
-    elif args.single_genome != None:
+    elif args.single_genomes != None:
         phage_name_filter_list = \
-                parse_phage_list_input(args.single_genome)
-    elif args.multiple_genomes != None:
-        phage_name_filter_list = \
-                parse_phage_list_input(args.multiple_genomes)
-    else:
+                parse_phage_list_input(args.single_genomes)
+    elif args.all == True:
         phage_name_filter_list = []
 
     seqfeature_file_output\
@@ -271,8 +265,7 @@ def append_database_version(genome_seqrecord: SeqRecord,\
     try:
         genome_seqrecord.annotations["comment"] =\
                 genome_seqrecord.annotations["comment"] +\
-                ("Database Version: {};\
-                Schema Version: {}".format\
+                ("Database Version: {}; Schema Version: {}".format\
                 (version_data["version"],\
                 version_data["schema_version"]),)
     except:
@@ -296,8 +289,6 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
     :type input_path: Path
     """
     export_path = export_path.resolve()
-    print(export_path)
-    print(export_dir_name)
     if not export_path.exists():
         print("Path parameter passed to seqfeature_file_output\
             is not a valid path")
@@ -323,5 +314,9 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
             SeqIO.write(record, output_handle, file_format)
         output_handle.close()
 
+def main(args):
+    args.insert(0, "blank_argument")
+    run_file_export(args)
+
 if __name__ == "__main__":
-    run_file_export(sys.argv) 
+    main(sys.argv)

@@ -861,7 +861,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.assertEqual(record.name, "Trixie")
         self.assertEqual(record.features, [])
         self.assertEqual(record.description,\
-                "Mycobacterium phage Trixie, Complete Genome")
+                "Mycobacterium phage Trixie, complete genome")
         self.assertEqual(record.seq, Seq("ATA"))
 
     def test_genome_to_seqrecord_2(self):
