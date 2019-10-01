@@ -1,11 +1,11 @@
-"""Tests the functionality of the unique functions in the database_to_file pipeline"""
+"""Tests the functionality of the unique functions in the file_export pipeline"""
 
 import unittest
 from pdm_utils.classes import genome, cds
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from pdm_utils.pipelines.db_export import database_to_file
+from pdm_utils.pipelines.db_export import file_export
 from pdm_utils.functions import flat_files
 
 class TestDatabaseToFile(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestDatabaseToFile(unittest.TestCase):
     def test_set_cds_seqfeatures_1(self):
         test_cds_list = [self.cds_1, self.cds_2, self.cds_3]
         self.test_genome.cds_features = test_cds_list
-        database_to_file.set_cds_seqfeatures\
+        file_export.set_cds_seqfeatures\
                 (self.test_genome)
 
         for test_cds in self.test_genome.cds_features:
@@ -51,7 +51,7 @@ class TestDatabaseToFile(unittest.TestCase):
     def test_set_cds_seqfeatures_2(self):
         test_cds_list = [self.cds_3, self.cds_2, self.cds_1]
         self.test_genome.cds_features = test_cds_list
-        database_to_file.set_cds_seqfeatures\
+        file_export.set_cds_seqfeatures\
                 (self.test_genome)
 
         for test_cds in self.test_genome.cds_features:
@@ -66,10 +66,10 @@ class TestDatabaseToFile(unittest.TestCase):
 
     def test_set_cds_seqfeatures_3(self):
         with self.assertRaises(TypeError):
-            database_to_file.set_cds_seqfeatures(None)
+            file_export.set_cds_seqfeatures(None)
 
     def test_append_database_version_1(self):
-        database_to_file.append_database_version\
+        file_export.append_database_version\
                 (self.test_seqrecord, self.test_version)
 
         comment_tuple = self.test_seqrecord.annotations["comment"]
@@ -79,9 +79,9 @@ class TestDatabaseToFile(unittest.TestCase):
 
     def test_append_database_version_2(self):
         with self.assertRaises(ValueError):
-            database_to_file.append_database_version\
+            file_export.append_database_version\
                     (self.test_seqrecord, {})
 
         with self.assertRaises(TypeError):
-            database_to_file.append_database_version\
+            file_export.append_database_version\
                     (None, self.test_version)

@@ -859,7 +859,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         record = flat_files.genome_to_seqrecord(self.gnm)
         self.assertEqual(record.name, "Trixie")
-        self.assertEqual(record.id, "Trixie")
         self.assertEqual(record.features, [])
         self.assertEqual(record.description,\
                 "Mycobacterium phage Trixie, Complete Genome")
