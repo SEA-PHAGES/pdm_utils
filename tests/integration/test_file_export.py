@@ -6,14 +6,15 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from pdm_utils.pipelines.db_export import file_export
 from pdm_utils.classes import mysqlconnectionhandler
+from pathlib import Path
 import os, sys, shutil, unittest
 
-class TestDatabaseToFile(unittest.TestCase):
+class TestFileExport(unittest.TestCase):
 
     def setUp(self):
         self.test_sql_handle = mysqlconnectionhandler.MySQLConnectionHandler\
-               (username = 'anonymous',\
-                password = 'anonymous',\
+               (username = 'pdm_anon',\
+                password = 'pdm_anon',\
                 database = 'Actino_Draft')
         self.test_sql_handle._credential_status = True
         self.test_sql_handle._database_status = True
@@ -46,17 +47,18 @@ class TestDatabaseToFile(unittest.TestCase):
 
     def test_seqfeature_file_output_1(self):
         file_export.seqfeature_file_output\
-                (self.test_seqrecord_list, self.test_format, os.getcwd())
+                (self.test_seqrecord_list, self.test_format,\
+                Path(os.getcwd()))
         self.assertTrue(os.path.exists(os.path.join\
-                (os.getcwd(), "Database")))
+                (os.getcwd(), "file_export")))
         self.assertFalse(os.listdir(os.path.join\
-                (os.getcwd(), "Database")))
-        shutil.rmtree(os.path.join(os.getcwd(), "Database"))
+                (os.getcwd(), "file_export")))
+        shutil.rmtree(os.path.join(os.getcwd(), "file_export"))
 
     def test_seqfeature_file_output_2(self):
         file_export.seqfeature_file_output\
                 (self.test_seqrecord_list,\
-                self.test_format, os.getcwd(),\
+                self.test_format, Path(os.getcwd()),\
                 export_dir_name = self.database_name)
         self.assertTrue(os.path.exists(os.path.join\
                 (os.getcwd(), "Test_db")))
