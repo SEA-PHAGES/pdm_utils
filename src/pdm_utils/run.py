@@ -26,6 +26,7 @@ def main():
     VALID_PIPELINES = {
         "retrieve_data",
         "import",
+        "import_dev",
         "cdd",
         "phamerate",
         "export",
@@ -41,7 +42,12 @@ def main():
     args = pipe_parser.parse_args(sys.argv[1:2])
     if args.pipeline == "retrieve_data":
         retrieve_database_updates.main(sys.argv)
+    # Note: import_phage is the legacy import script and will be deprecated.
+    # Once import_genome is tested and operational, 'import' will call the
+    # 'import_genome' module instead of the 'import_phage' module.
     elif args.pipeline == "import":
+        import_phage.main(sys.argv)
+    elif args.pipeline == "import_dev":
         import_genome.run_import(sys.argv)
     elif args.pipeline == "cdd":
         cdd_pp.main(sys.argv)
@@ -54,9 +60,6 @@ def main():
         pass
     elif args.pipeline == "freeze":
         freeze_database.main(sys.argv)
-    # Note: import_phage is the legacy import script and will be deprecated.
-    elif args.pipeline == "import_phage":
-        import_phage.main(sys.argv)
     else:
         compare_databases.main(sys.argv)
     print("Pipeline completed")
