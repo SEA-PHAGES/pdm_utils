@@ -10,7 +10,7 @@ class TestRunFunctions1(unittest.TestCase):
     def setUp(self):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("pipeline")
-        self.args1 = self.parser.parse_args(["import"])
+        self.args1 = self.parser.parse_args(["import_dev"])
 
     @patch("pdm_utils.pipelines.db_import.import_genome.run_import")
     @patch("argparse.ArgumentParser.parse_args")
