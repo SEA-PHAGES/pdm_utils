@@ -19,7 +19,7 @@ class Cds:
 
     def __init__(self):
 
-        # The following attributes are common to any CDS.
+            # The following attributes are common to any CDS.
         self.id = "" # Gene ID
         self.name = "" # Tends to be an integer for SEA-PHAGES.
         self.seqfeature = None # Biopython SeqFeature object.
@@ -425,7 +425,8 @@ class Cds:
 
         qualifiers = OrderedDict()
         qualifiers["gene"] = [self.name]
-        qualifiers["locus_tag"] = [self.locus_tag]
+        if self.locus_tag != "":
+            qualifiers["locus_tag"] = [self.locus_tag]
         qualifiers["note"] = ["gp{}".format(self.name)]
         qualifiers["codon_start"] = ["1"]
         qualifiers["transl_table"] = ["11"]

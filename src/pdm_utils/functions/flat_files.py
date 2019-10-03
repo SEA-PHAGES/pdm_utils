@@ -582,8 +582,8 @@ def genome_to_seqrecord(phage_genome):
               "Genome valid attribute 'seq' is required to",
               "convert to SeqRecord object.")
         raise
-    record.name = get_seqrecord_name(phage_genome)
-    record.id = get_seqrecord_id(phage_genome)
+    record.name = phage_genome.name
+    record.id = phage_genome.accession
     record.features = get_seqrecord_features(phage_genome)
     record.description = get_seqrecord_description(phage_genome)
     record.annotations=\
@@ -591,37 +591,7 @@ def genome_to_seqrecord(phage_genome):
 
     return record
 
-# TODO Owen unittest.
-def get_seqrecord_name(phage_genome):
-    """Helper function that uses Genome data to populate
-    the name SeqRecord attribute
-
-    :param phage_genome:
-        Input a Genome object.
-    :type phage_genome: genome
-    :returns:
-        name is a string from genome's name attribute
-    """
-
-    name = phage_genome.name
-    return name
-
-# TODO Owen unittest.
-def get_seqrecord_id(phage_genome):
-    """Helper function that uses Genome data to populate
-    the id SeqRecord attribute
-
-    :param phage_genome:
-        Input a Genome object.
-    :type phage_genome: genome
-    :returns:
-        id is a string from genome's id attribute
-    """
-
-    id = phage_genome.id
-    return id
-
-# TODO Owen unittest.
+#TODO Owen unittest.
 def get_seqrecord_features(phage_genome):
     """Helper function that uses Genome data to populate
     the features SeqRecord atribute
@@ -652,7 +622,7 @@ def get_seqrecord_description(phage_genome):
         from genome data
     """
 
-    description = "{} phage {}, Complete Genome".format(\
+    description = "{} phage {}, complete genome".format(\
             phage_genome.host_genus, phage_genome.id)
     return description
 
@@ -672,7 +642,7 @@ def get_seqrecord_annotations(phage_genome):
 
     annotations = {"molecule type": "DNA",\
             "topology" : "linear",\
-            "data_file_divisions" : "PHG",\
+            "data_file_division" : "PHG",\
             "date" : "",\
             "accessions" : [],\
             "sequence_version" : "1",\
@@ -687,6 +657,9 @@ def get_seqrecord_annotations(phage_genome):
     annotations["source"] =\
             "{} phage {}".format\
             (phage_genome.host_genus, phage_genome.id)
+    annotations["organism"] =\
+            "{} phage {}".format\
+            (phage_genome.host_genus, phage_genome.name)
     annotations["taxonomy"].append("Virsues")
     annotations["taxonomy"].append("dsDNA Viruses")
     annotations["taxonomy"].append("Caudovirales")
@@ -709,13 +682,18 @@ def get_seqrecord_annotations_comments(phage_genome):
         the formatting of BioPython's SeqRecord
         annotations comment attribute
     """
-
-    cluster_comment = "Cluster: {}; Subcluster: {}".format\
-            (phage_genome.cluster, phage_genome.subcluster)
-    auto_generated_comment = "Auto-generated genome record\
-            from Phamerator database"
-    annotation_status_comment = "Annotation status: {}".\
-            format(phage_genome.annotation_status)
+    if phage_genome.subcluster == "":
+        cluster_comment = "Cluster: {}; Subcluster: None".format\
+                (phage_genome.cluster)
+    else:
+        cluster_comment = "Cluster: {}; Subcluster: {}".format\
+                (phage_genome.cluster, phage_genome.subcluster)
+    auto_generated_comment =\
+            "Auto-generated genome record from Phamerator database"
+    annotation_status_comment =\
+            "Annotation status: {}; Annotation Author: {}".format\
+            (phage_genome.annotation_status,\
+            phage_genome.annotation_author)
     qc_and_retrieval_values = \
             "RetrieveRecord: {}; AnnotationQC: {}".format\
             (phage_genome.retrieve_record,\
