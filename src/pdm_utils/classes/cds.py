@@ -19,7 +19,7 @@ class Cds:
 
     def __init__(self):
 
-            # The following attributes are common to any CDS.
+        # The following attributes are common to any CDS.
         self.id = "" # Gene ID
         self.name = "" # Tends to be an integer for SEA-PHAGES.
         self.seqfeature = None # Biopython SeqFeature object.

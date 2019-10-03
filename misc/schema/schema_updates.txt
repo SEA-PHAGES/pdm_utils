@@ -1,0 +1,74 @@
+# Below is a history of changes associated with each database schema
+# (relative to the prior schema).
+
+
+# Schema version: 1
+# Created: 20180620
+# Created by: Travis Mavrich
+# Database derived from: Actinobacteriophage_789
+
+
+# Schema version: 2
+# Created: 20180620
+# Created by: Travis Mavrich
+# Database derived from: Actinobacteriophage_1060
+# No statement record.
+# Added phage.RetrieveRecord
+# Added phage.AnnotationQC
+# Added phage.Program
+# Added phage.AnnotationAuthor
+
+
+# Schema version: 3
+# Created: 20180620
+# Created by: Travis Mavrich
+# Database derived from: Actino_Draft
+# No statement record.
+# Added version.schema_version
+# Added phage.Cluster2
+# Added phage.Subcluster2
+# Removed phage.Program
+
+
+# Schema version: 4
+# Created:
+# Created by: Christian Gauthier
+# Database derived from:
+# No statement record.
+# Added table trna
+# Added table tmrna
+# Added table trna_structures
+
+
+# Schema version: 5
+# Created: 20191002
+# Created by: Travis Mavrich
+# Database derived from: Actino_Draft (v310, s4)
+UPDATE version SET schema_version = 5;
+UPDATE version SET version = 311;
+DROP TABLE node;
+DROP TABLE host_range;
+DROP TABLE host;
+DROP TABLE pham_history;
+DROP TABLE pham_old;
+DROP TABLE scores_summary;
+ALTER TABLE phage DROP COLUMN Prophage;
+ALTER TABLE phage DROP COLUMN Isolated;
+ALTER TABLE phage DROP COLUMN ProphageOffset;
+ALTER TABLE phage DROP COLUMN DateLastSearched;
+ALTER TABLE phage DROP COLUMN AnnotationQC;
+ALTER TABLE gene DROP COLUMN StartCodon;
+ALTER TABLE gene DROP COLUMN StopCodon;
+ALTER TABLE gene DROP COLUMN GC1;
+ALTER TABLE gene DROP COLUMN GC2;
+ALTER TABLE gene DROP COLUMN GC3;
+ALTER TABLE gene DROP COLUMN GC;
+ALTER TABLE gene DROP COLUMN LeftNeighbor;
+ALTER TABLE gene DROP COLUMN RightNeighbor;
+ALTER TABLE gene DROP COLUMN clustalw_status;
+ALTER TABLE gene DROP COLUMN blast_status;
+ALTER TABLE gene DROP COLUMN TypeID;
+ALTER TABLE pham DROP COLUMN orderAdded;
+ALTER TABLE phage MODIFY status varchar(7);
+UPDATE phage SET status = 'unknown' WHERE status = 'gbk';
+ALTER TABLE phage MODIFY status enum('unknown','draft','final');
