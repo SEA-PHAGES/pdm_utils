@@ -2,13 +2,26 @@
 # (relative to the prior schema).
 
 
+# Schema version: 0
+# File: Actino_Draft_schema0.sql, Actino_Draft_schema0_updates.sql
+# Created: N/A
+# Created by: Charles Bowman
+# Database derived from: unknown
+# The empty schema does not contain CASCADE settings.
+# The schema_updates file adds CASCADE settings to the schema.
+
+
 # Schema version: 1
+# File: Actino_Draft_schema1.sql
 # Created: 20180620
 # Created by: Travis Mavrich
 # Database derived from: Actinobacteriophage_789
+# No statement record.
+# Contains CASCADE settings.
 
 
 # Schema version: 2
+# File: Actino_Draft_schema2.sql
 # Created: 20180620
 # Created by: Travis Mavrich
 # Database derived from: Actinobacteriophage_1060
@@ -20,6 +33,7 @@
 
 
 # Schema version: 3
+# File: Actino_Draft_schema3.sql
 # Created: 20180620
 # Created by: Travis Mavrich
 # Database derived from: Actino_Draft
@@ -31,16 +45,15 @@
 
 
 # Schema version: 4
-# Created:
+# File: Actino_Draft_schema4.sql
+# Created: 20190726
 # Created by: Christian Gauthier
-# Database derived from:
+# Database derived from: unknown
 # No statement record.
-# Added table trna
-# Added table tmrna
-# Added table trna_structures
-
+# TODO Christian can insert statement record.
 
 # Schema version: 5
+# File: Actino_Draft_schema5.sql
 # Created: 20191002
 # Created by: Travis Mavrich
 # Database derived from: Actino_Draft (v310, s4)

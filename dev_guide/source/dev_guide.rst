@@ -230,3 +230,23 @@ This repo utilizes the following coding conventions:
         - should be constructed for the ``unittest`` module.
         - should have a docstring that briefly states the purpose of the test (although doesn't need to be specifically structured).
         - are split into unit and integration test directories. If the test relies on pure python, it should be stored in the 'unit' directory. These tests run very quickly. If it relies on MySQL, PhagesDB, parsing files, creating files and directories, etc. it should be stored in the 'integration' directory. These tests run more slowly.
+
+
+Maintaining schema history
+--------------------------
+
+A history of each unique database schema is stored under /misc/schemas/.
+As the structure of the database changes, perform the following:
+
+    1. In MySQL, update the schema number and version number::
+
+        mysql> UPDATE version SET schema_version = <new schema int>
+        mysql> UPDATE version SET version = <new version int>
+
+
+    2. In bash, create an empty schema::
+
+        > mysqldump --no-data -u root -p --skip-comments Actino_Draft > Actino_Draft_schema<new schema int>.sql
+
+    3. Add the sql file to the schemas directory.
+    4. Update the schema_updates.txt history file with the changes, including a list of all MySQL statements executed to change the schema.
