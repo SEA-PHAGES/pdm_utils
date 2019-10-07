@@ -342,6 +342,7 @@ class Interactive_Filter(cmd.Cmd):
         """
 
         os.system('cls' if os.name == 'nt' else 'clear')
+        print(self.intro)
 
     def do_return(self, *args):
         """Finish quering and return results
