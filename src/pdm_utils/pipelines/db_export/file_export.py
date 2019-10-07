@@ -21,29 +21,33 @@ def run_file_export(unparsed_args_list):
 
     args = parse_file_export_args(unparsed_args_list)
        
-    if args.import_table != None: 
+    if args.import_table: 
         phage_name_filter_list = \
                 parse_phage_list_input(Path(args.import_table))
-    elif args.single_genomes != None:
+    elif args.single_genomes:
         phage_name_filter_list = \
                 parse_phage_list_input(args.single_genomes)
-    elif args.all:
+    else:
         phage_name_filter_list = []
 
     if not args.interactive:
         if args.verbose:
             print("Establishing database connection to {}".\
                     format(args.database))
+            verbosity = True
+        
+        if args.database == None:
+            args.database = input("MySQL database: ")
         sql_handle = establish_database_connection(args.database)
     
         seqfeature_file_output\
                 (retrieve_seqrecord_from_database\
                 (sql_handle, phage_name_filter_list,\
-                verbose = args.verbose),\
+                verbose = verbosity),\
                 file_format = args.file_format,\
                 export_path = Path(args.export_directory),\
                 export_dir_name = args.folder_name,\
-                verbose = args.verbose)
+                verbose = verbosity)
 
     else:
         interactive_file_export = Interactive_File_Export\
@@ -120,18 +124,19 @@ def parse_file_export_args(unparsed_args_list):
 
     
     parser = argparse.ArgumentParser(description = DATABASE_TO_FILE_HELP)
-    parser.add_argument("database", type=str, help = DATABASE_HELP)
-    parser.add_argument("file_format", type=str, help = FILE_FORMAT,\
+    parser.add_argument("-db", "--database", type=str, help = DATABASE_HELP,\
+            default = None)
+    parser.add_argument("-ff", "--file_format", type=str, help = FILE_FORMAT,\
             default = "gb",\
             choices = file_format_choices)
 
 
-    phage_list_input_args = parser.add_mutually_exclusive_group(required = True)
+    phage_list_input_args = parser.add_mutually_exclusive_group()
     phage_list_input_args.add_argument("-csv", "--import_table",\
             nargs = 1, type=str, help = IMPORT_TABLE_HELP)
     phage_list_input_args.add_argument("-sgs", "--single_genomes",\
             nargs = '+', type=str, help = SINGLE_GENOMES_HELP)
-    phage_list_input_args.add_argument("-a", "--all", help = ALL_HELP, action = 'store_true')
+    phage_list_input_args.add_argument("-a", "--all", help = ALL_HELP, action ='store_true')
 
     verbose_options = parser.add_mutually_exclusive_group()
     verbose_options.add_argument\
@@ -151,7 +156,7 @@ def parse_file_export_args(unparsed_args_list):
             default = "file_export", type = str, \
             help = FOLDER_NAME_HELP)
 
-    
+    parser.set_defaults(input = 'a', verbose = 'v') 
 
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     
@@ -408,13 +413,8 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
 def main(args):
     """Function to initialize file export"""
 
-    if len(args) == 2 and (args[1] == "--interactive" or args[1] == "-i"):
-        interactive_file_export = Interactive_File_Export()
-        interactive_file_export.cmdloop()
-
-    else: 
-        args.insert(0, "blank_argument")
-        run_file_export(args)
+    args.insert(0, "blank_argument")
+    run_file_export(args)
 
 class Interactive_File_Export(cmd.Cmd):
 
@@ -492,12 +492,14 @@ class Interactive_File_Export(cmd.Cmd):
         """
 
         self.directory_name = input("Export Directory Name: ") 
+
     def do_clear(self, *args):        
         """Clears display terminal
         USAGE: clear
         """
 
         os.system('cls' if os.name == 'nt' else 'clear')
+        print(self.intro)
        
     def do_export(self, *args):
         """Exit interface and finish exporting files
