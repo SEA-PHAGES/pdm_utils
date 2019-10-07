@@ -5,13 +5,14 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from pdm_utils.classes import genome, cds, mysqlconnectionhandler
+from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
 from pdm_utils.functions import flat_files, phamerator, basic
 from functools import singledispatch
 from typing import List, Dict
 from pathlib import Path
-import os, sys, typing, argparse, csv
+import cmd, readline, os, sys, typing, argparse, csv
 
+file_format_choices = ["gb", "fasta", "csv"]
 
 def run_file_export(unparsed_args_list):
     """Uses parsed args to call file export functions 
@@ -29,7 +30,7 @@ def run_file_export(unparsed_args_list):
     elif args.all:
         phage_name_filter_list = []
 
-    if not args.full:
+    if not args.interactive:
         if args.verbose:
             print("Establishing database connection to {}".\
                     format(args.database))
@@ -44,13 +45,25 @@ def run_file_export(unparsed_args_list):
                 export_dir_name = args.folder_name,\
                 verbose = args.verbose)
 
-    #TODO Owen interacitivity
     else:
-        print("Full interactivity not implemented!")
+        interactive_file_export = Interactive_File_Export\
+                (file_format = args.file_format, database = args.database,\
+                phage_filter_list = phage_name_filter_list,\
+                export_directory_name = args.folder_name,\
+                export_directory_path = Path(args.export_directory))
+
+        interactive_file_export.cmdloop()
+        export_dict = interactive_file_export.data
+
+        seqfeature_file_output\
+                (retrieve_seqrecord_from_database\
+                (export_dict["sql_handle"], export_dict["phage_filter_list"],\
+                verbose = True),\
+                file_format = export_dict["file_format"],\
+                export_path = export_dict["directory_path"],\
+                export_dir_name = export_dict["directory_name"],
+                verbose = True)
           
-
-
-
 def parse_file_export_args(unparsed_args_list):
     """Verifies the correct arguments are selected 
     for database to file
@@ -76,8 +89,7 @@ def parse_file_export_args(unparsed_args_list):
                 (comma seperated values) format 
                 for information
         """) 
-    file_format_choices = ["gb", "fasta", "csv"]
-
+    
     IMPORT_TABLE_HELP = """
         Path to the CSV-formatted table containing
         instructions to process each genome.
@@ -126,7 +138,7 @@ def parse_file_export_args(unparsed_args_list):
             ("-v", "--verbose", help = VERBOSE_INTERACTIVITY,\
             action = 'store_true')
     verbose_options.add_argument\
-            ("-f", "--full", help = FULL_INTERACTIVITY,\
+            ("-i", "--interactive", help = FULL_INTERACTIVITY,\
             action = 'store_true')
     verbose_options.add_argument\
             ("-s", "--silent", help = SILENT_INTERACTIVITY,\
@@ -208,7 +220,8 @@ def _(phage_list_input):
     return phage_list
 
 def establish_database_connection(database_name: str):
-    """Creates a mysqlconnectionhandler object and populates its credentials
+    """Creates a mysqlconnectionhandler object 
+    and populates its credentials
 
     :param tag database_name:
         Input SQL database name.
@@ -221,13 +234,8 @@ def establish_database_connection(database_name: str):
     try:
         sql_handle.validate_credentials
     except:
-        print("SQL connection to database {} with username\
-                and password failed".format(database_name))
-
-    sql_handle.open_connection()
-    if(not sql_handle.credential_status or not sql_handle._database_status):
-        print("No connection to the selected database.")
-        sys.exit(1)
+        print("SQL connection to database {}\
+                with username and password failed".format(database_name))
 
     return sql_handle
 
@@ -298,7 +306,7 @@ def set_cds_seqfeatures(phage_genome: genome.Genome):
 
 
 def retrieve_database_version\
-        (sql_database_handle: mysqlconnectionhandler.MySQLConnectionHandler):
+        (sql_handle: mysqlconnectionhandler.MySQLConnectionHandler):
     """Helper function that queries a SQL database for the database version and schema version
 
     :param sql_database_handle:
@@ -310,7 +318,8 @@ def retrieve_database_version\
         "version" and "schema_version"
     """
 
-    database_versions_list = phamerator.retrieve_data(sql_database_handle, query='SELECT * FROM version')
+    database_versions_list = phamerator.retrieve_data\
+            (sql_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
 def append_database_version(genome_seqrecord: SeqRecord,\
@@ -397,8 +406,124 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
         output_handle.close()
 
 def main(args):
-    args.insert(0, "blank_argument")
-    run_file_export(args)
+    """Function to initialize file export"""
+
+    if len(args) == 2 and (args[1] == "--interactive" or args[1] == "-i"):
+        interactive_file_export = Interactive_File_Export()
+        interactive_file_export.cmdloop()
+
+    else: 
+        args.insert(0, "blank_argument")
+        run_file_export(args)
+
+class Interactive_File_Export(cmd.Cmd):
+
+    def __init__(self, file_format = "gb", database = None,\
+        phage_filter_list = [], sql_handle = None, \
+        export_directory_name = "file_export",\
+        export_directory_path = Path(os.getcwd())):
+
+        super(Interactive_File_Export, self).__init__()
+
+        self.file_format = file_format
+        self.database = database
+        self.phage_filter_list = phage_filter_list
+        self.sql_handle = sql_handle
+        self.directory_name = export_directory_name
+        self.directory_path = export_directory_path
+
+        self.intro =\
+        """---------------Hatfull Helper's File Export---------------
+        Type help or ? to list commands.\n"""
+        self.prompt = "(database) (export)user@localhost: "
+        self.data = None
+
+    def preloop(self):
+        
+        if self.database == None:
+            print("---------------------Database Login ---------------------")
+            self.database = input("MySQL database: ")
+
+        if self.sql_handle == None or \
+                self.sql_handle.database != self.database:
+             
+            self.sql_handle = establish_database_connection(self.database)
+        self.prompt = "({}) (export){}@localhost: ".\
+                format(self.database, self.sql_handle._username)
+
+    def do_filter(self, *args):
+        """Filters and queries database for genomes.
+        USAGE: filter
+        """
+        db_filter = filter.Filter(self.database)
+        interactive_filter = filter.Interactive_Filter\
+                (db_filter = db_filter, sql_handle = self.sql_handle)
+        interactive_filter.cmdloop()
+        self.phage_filter_list = interactive_filter.data
+         
+    def do_format(self, *args):
+        """Sets the current file format for genome export
+        USAGE: format
+        """
+
+        format = input("File Format: ")
+        if format in file_export_choices:
+            self.file_format = format
+            print("\
+                    Changed format to {}.\n".format(self.file_format))
+        else:
+            print("File format not supported.\n")
+        
+    def do_directory_path(self, *args):
+        """Sets the export directory name for genome export
+        USAGE: format
+        """
+        
+        path = Path(input("Export Directory Path: "))
+        if path.resolve():
+            self.directory_path = path
+        else:
+            print("\
+                    Path not found.")
+
+    def do_directory_name(self, *args):
+        """Sets the export directory name for genome export
+        USAGE: format
+        """
+
+        self.directory_name = input("Export Directory Name: ") 
+    def do_clear(self, *args):        
+        """Clears display terminal
+        USAGE: clear
+        """
+
+        os.system('cls' if os.name == 'nt' else 'clear')
+       
+    def do_export(self, *args):
+        """Exit interface and finish exporting files
+        USAGE: export
+        """
+        print("\
+                Initiating Export...\n")
+
+        return True
+
+    def do_exit(self, *args):
+        """Exits program entirely without returning values
+        USAGE: exit
+        """
+        print("\
+                Exiting...\n")
+
+        sys.exit(1)
+
+    def postloop(self):
+
+        self.data = {"sql_handle" : self.sql_handle,\
+                "phage_filter_list" : self.phage_filter_list,\
+                "file_format" : self.file_format,\
+                "directory_path" : self.directory_path,\
+                "directory_name" : self.directory_name}
 
 if __name__ == "__main__":
     main(sys.argv)
