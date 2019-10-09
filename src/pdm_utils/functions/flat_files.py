@@ -583,7 +583,8 @@ def genome_to_seqrecord(phage_genome):
               "convert to SeqRecord object.")
         raise
     record.name = phage_genome.name
-    record.id = phage_genome.accession
+    if phage_genome.accession != "":
+        record.id = phage_genome.accession
     record.features = get_seqrecord_features(phage_genome)
     record.description = get_seqrecord_description(phage_genome)
     record.annotations=\
@@ -652,8 +653,6 @@ def get_seqrecord_annotations(phage_genome):
             "taxonomy" : [],\
             "comment": ()}
     annotations["date"] = phage_genome.date
-    annotations["accessions"].append\
-            (phage_genome.accession)
     annotations["source"] =\
             "{} phage {}".format\
             (phage_genome.host_genus, phage_genome.id)
