@@ -93,44 +93,47 @@ class Filter:
         self.retrieve_results()
         return len(self.results)
 
-    def retrieve_results(self, visual = False):
+    def retrieve_results(self, verbose = False):
        
         self.update()
+        if self.phage_filters:
+            phage_results = retrieve_phage_results()
+        
+        if self.gene_filters:
+            gene_results = retrieve_gene_results()
+
         if self.phage_filters and self.gene_filters:
-            database_phage_results = [] 
-            for result in phamerator.retrieve_data\
-                    (self.sql_handle, query = self.phage_query):
-                database_phage_results.append(result['Name'])
-            database_gene_results = []
-            for result in phamerator.retrieve_data\
-                    (self.sql_handle, query = self.gene_query):
-                database_gene_results.append(result['PhageID'])
-            self.results = set(database_phage_results).\
-                    intersection(database_gene_results)
+            self.results = set(phage_results).intersection(gene_results)
+        elif self.phage_filters:
+            self.results = phage_results
 
         elif self.gene_filters:
+            self.results = gene_results
+            
+    def retrieve_phage_results(self):
+        """Helper function to retrieve phage table results"""
 
-            database_gene_results = []
-            for result in phamerator.retrieve_data\
+        database_results = [] 
+        for result in phamerator.retrieve_data\
+                    (self.sql_handle, query = self.phage_query):
+            database_results.append(result['Name'])
+
+        return database_results
+
+    def retrieve_gene_results(self):
+        """Helper function to retrieve gene table results"""
+        database_gene_results = []
+        for result in phamerator.retrieve_data\
                     (self.sql_handle, query = self.gene_query):
-                database_gene_results.append(result['phageID'])
-            self.results = database_gene_results
+            database_gene_results.append(result['phageID'])
 
-        elif self.phage_filters:
-            
-            database_phage_results = []
-            for result in phamerator.retrieve_data\
-                    (self.sql_handle, query = self.phage_query):
-                database_phage_results.append(result['Name'])
-            self.results = database_phage_results
+        database_results = []
+        for gene_result in database_gene_results:
+            if gene_result not in database_results:
+                database_results.append(gene_result)
 
-        else:
-            database_results = []
-            for result in phamerator.retrieve_data\
-                    (self.sql_handle, query = self.phage_query):
-                database_results.append(result['Name'])
-            self.results = database_results
-            
+        return database_results
+ 
     def accession(self, filter_value: str):
         self.phage_filters.update({"accession" :\
             "Accession = '{}'".format(filter_value)})
@@ -176,18 +179,32 @@ class Filter:
         self.gene_filters.update({"id":\
             "id  = '{}'".format(filter_value)})
 
-    def add_filter(self, filter: str, filter_value: str):
+    def add_filter(self, filter: str, filter_value: str, gene_selection = False):
 
-        if filter.lower() in self.phage_attributes:
-            self.phage_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
-            return True
+        if gene_selection == False: 
+            if filter.lower() in self.phage_attributes:
+                self.phage_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                return True
 
-        elif filter.lower() in self.gene_attributes:
-            self.gene_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
-            return True
+            elif filter.lower() in self.gene_attributes:
+                self.gene_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                return True
+
+            else:
+                return False
 
         else:
-            return False
+            if filter.lower() in self.gene_attributes:
+                self.gene_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                return True
+
+            elif filter.lower() in self.phage_attributes:
+                self.phage_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                return True
+
+            else:
+                return False
+
 
     def interactive(self, sql_handle = None):
         
@@ -250,11 +267,10 @@ class Cmd_Filter(cmd.Cmd):
             print("Attribute not in database.\n ")
 
         else:
-
+            
             filter_value = input("Enter {} value: ".format(filter))
             self.filter.add_filter(filter, filter_value)
             self.retrieve_hits()
-
 
     def retrieve_hits(self, *args):
         "Function to retrieve the hits for filtering functions"

@@ -405,8 +405,15 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
         output_handle.close()
 
 def write_csv_log(genome_list, export_path):
-    log_path = Path(os.path.join(export_path, "log.csv"))
+    """Writes a formatted csv file from genome objects"""
 
+    log_path = Path(os.path.join(export_path, "log.csv"))
+    logversion = 0
+
+    while(log_path.exists()):
+        logversion += 1
+        log_path = Path(os.path.join(export_path, "log{}.csv".format(logversion)))
+    
     with open(log_path, 'w', newline = "") as csvfile:
         logwriter = csv.writer(csvfile, delimiter=",", quotechar = "|", quoting = csv.QUOTE_MINIMAL)
         csv_format = [[],[],[],[],[],[],[],[],[],[]]
@@ -493,8 +500,10 @@ class Cmd_Export(cmd.Cmd):
                 self.folder_export()
             elif option == "log":
                 if self.csv_toggle:
+                    print("Csv logging off. \n")
                     self.csv_toggle = False
                 else:
+                    print("Csv logging on. \n")
                     self.csv_toggle = True
         else:
             print("""Folder command option not supported
