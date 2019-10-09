@@ -51,46 +51,6 @@ class TestBasicFunctions(unittest.TestCase):
 
 
 
-    def test_edit_suffix_list_1(self):
-        """Verify suffix is added to a list of values."""
-        input_list = ["a", "b"]
-        new_list = basic.edit_list_suffix(input_list, suffix="_x")
-        with self.subTest():
-            self.assertEqual(new_list[0], "a_x")
-        with self.subTest():
-            self.assertEqual(new_list[1], "b_x")
-
-    def test_edit_suffix_list_2(self):
-        """Verify suffix is not added to an empty list."""
-        input_list = []
-        new_list = basic.edit_list_suffix(input_list, suffix="_x")
-        self.assertEqual(len(new_list),0)
-
-    def test_edit_suffix_list_3(self):
-        """Verify suffix is not added a second time."""
-        input_list = ["a_x", "b"]
-        new_list = basic.edit_list_suffix(input_list, suffix="_x")
-        with self.subTest():
-            self.assertEqual(new_list[0], "a_x")
-        with self.subTest():
-            self.assertEqual(new_list[1], "b_x")
-
-    def test_edit_suffix_list_4(self):
-        """Verify suffix is removed."""
-        input_list = ["a_x", "b"]
-        new_list = basic.edit_list_suffix(input_list, suffix="_x", add=False)
-        with self.subTest():
-            self.assertEqual(new_list[0], "a")
-        with self.subTest():
-            self.assertEqual(new_list[1], "b")
-
-    def test_edit_suffix_list_5(self):
-        """Verify suffix is not removed from empty list."""
-        input_list = []
-        new_list = basic.edit_list_suffix(input_list, suffix="_x", add=False)
-        self.assertEqual(len(new_list),0)
-
-
 
     def test_create_indices_1(self):
         """Verify correct indices produced from batch_size of 1."""

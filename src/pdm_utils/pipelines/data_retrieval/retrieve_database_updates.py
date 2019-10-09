@@ -13,7 +13,7 @@ from urllib import request, error
 try:
     import pymysql as pms
     import Bio
-    from Bio import Entrez, SeqIO
+    from Bio import SeqIO
 except ModuleNotFoundError as err:
     print(err)
     sys.exit(1)
@@ -89,9 +89,11 @@ def main(unparsed_args_list):
     # include the user's email address and tool name.
     if retrieve_ncbi_updates is True:
         batch_size = 200
-        Entrez.tool = "NCBIRecordRetrievalScript"
-        Entrez.email = input("\nPlease provide email address for NCBI: ")
-        Entrez.api_key = "3b6b113d973599ce1b30c2f94a38508c5908"
+        email = input("\nPlease provide email address for NCBI: ")
+        ncbi.set_entrez_credentials(
+            tool="NCBIRecordRetrievalScript",
+            email=email,
+            api_key="3b6b113d973599ce1b30c2f94a38508c5908")
 
     # Create appropriate output directories.  Each update type gets its own
     # directory in working_dir, as well as a sub-directory for genomes and a
@@ -546,6 +548,8 @@ def main(unparsed_args_list):
 
                 # Matched name and host
                 phagesdb_name = matched_phagesdb_data['phage_name']
+                print(phagesdb_name)
+                print(matched_phagesdb_data['isolation_host'])
                 phagesdb_host = matched_phagesdb_data['isolation_host']['genus']
 
                 # Matched accession
@@ -773,17 +777,9 @@ def main(unparsed_args_list):
         unique_accession_list = list(unique_accession_dict.keys())
 
         # Add [ACCN] field to each accession number
-        appended_accessions2 = basic.edit_list_suffix(unique_accession_list, "[ACCN]")
-        # HERE for some reason edit_list_suffix is trimming first "A" of some accessions.
-        # the item.strip() is not stripping the entire string, but instances of
-        # each individual letter.
+        appended_accessions = \
+            [accession + "[ACCN]" for accession in unique_accession_list]
 
-        appended_accessions = [accession + "[ACCN]" for accession in
-                               unique_accession_list]
-
-        print(appended_accessions2)
-        print(appended_accessions)
-        input("pause")
         # Keep track of specific records
         retrieved_record_list = []
         retrieval_error_list = []
@@ -823,10 +819,10 @@ def main(unparsed_args_list):
 
             # Now get summaries for these records using esummary
             accessions_to_retrieve = []
-            summary_handle = Entrez.esummary(db="nucleotide",
-                                             query_key=search_query_key,
-                                             webenv=search_webenv)
-            summary_records = Entrez.read(summary_handle)
+            summary_records = ncbi.get_summaries(db="nucleotide",
+                                                 query_key=search_query_key,
+                                                 webenv=search_webenv)
+
             for doc_sum in summary_records:
                 doc_sum_name = doc_sum["Title"]
                 doc_sum_accession = doc_sum["Caption"]
@@ -867,16 +863,15 @@ def main(unparsed_args_list):
                                                   doc_sum_date,
                                                   'record not new'])
 
-            summary_handle.close()
 
             if len(accessions_to_retrieve) > 0:
-                fetch_query = ",".join(accessions_to_retrieve)
-                fetch_handle = Entrez.efetch(db="nucleotide", id=fetch_query,
-                                             rettype="gb", retmode="text")
-                fetch_records = SeqIO.parse(fetch_handle, "genbank")
-                for record in fetch_records:
-                    retrieved_record_list.append(record)
-                fetch_handle.close()
+                output_list = ncbi.get_records(accessions_to_retrieve,
+                                               db="nucleotide",
+                                               rettype="gb",
+                                               retmode="text")
+                retrieved_record_list.extend(output_list)
+
+
 
         # Report the genomes that could not be retrieved.
         tally_retrieval_failure = len(retrieval_error_list)

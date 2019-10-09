@@ -52,16 +52,6 @@ def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
         pass
     return value
 
-def edit_list_suffix(item_list, suffix, add=True):
-    """Adds or removes the indicated suffix to a list of input values.
-
-    If the suffix is already present, it will not add it a second time.
-    """
-    new_item_list = [item.strip(suffix) for item in item_list]
-    if add:
-        new_item_list = [value + suffix for value in new_item_list]
-    return new_item_list
-
 def create_indices(input_list, batch_size):
     """Create list of start and stop indices to split a list into batches."""
     index_list = []
