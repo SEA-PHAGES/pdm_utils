@@ -14,7 +14,10 @@ import cmd, readline, os, sys, typing, argparse, csv
 
 
 #Global file constants
-file_format_choices = ["gb", "fasta", "csv"]
+file_format_choices = ["gb", "fasta", "clustal", "embl",\
+        "fasta-2line", "fastq", "fastq-solexa", "fastq-illumina",\
+        "ig", "igmt", "nexus", "phd", "phylip", "pir", "seqxml",\
+        "sff", "stockholm", "tab", "qual"]
 
 def run_file_export(unparsed_args_list):
     """Uses parsed args to call file export functions 
@@ -33,23 +36,30 @@ def run_file_export(unparsed_args_list):
         phage_name_filter_list = []
 
     if not args.interactive:
-        if args.verbose:
-            print("Establishing database connection to {}".\
-                    format(args.database))
-            verbosity = True
-        
         if args.database == None:
             args.database = input("MySQL database: ")
         sql_handle = establish_database_connection(args.database)
-    
-        seqfeature_file_output\
-                (retrieve_seqrecord_from_database\
-                (sql_handle, phage_name_filter_list,\
-                verbose = verbosity),\
-                file_format = args.file_format,\
-                export_path = Path(args.export_directory),\
-                export_dir_name = args.folder_name,\
-                verbose = verbosity)
+
+        print("Establishing database connection to {}".\
+                    format(sql_handle.database))
+
+        if args.csv_log:
+            genome_data = retrieve_seqrecord_from_database\
+                (sql_handle,phage_name_filter_list, verbose = args.verbose, genome_log = True)
+            seqfeature_file_output\
+                    (genome_data[0],\
+                    file_format = args.file_format,\
+                    export_path = Path(args.export_directory),\
+                    export_dir_name = args.folder_name,\
+                    verbose = args.verbose, csv_log = genome_data[1])
+        else:
+            seqfeature_file_output\
+                    (retrieve_seqrecord_from_database\
+                    (sql_handle,phage_name_filter_list,verbose = args.verbose)\
+                    , file_format = args.file_format,\
+                    export_path = Path(args.export_directory,\
+                    export_dir_name = args.folder_name,\
+                    verbose = args.verbose))
 
     else:
         interactive_file_export = Cmd_Export\
@@ -77,13 +87,10 @@ def parse_file_export_args(unparsed_args_list):
             data to formatted text files")
     DATABASE_HELP = ("Name of the MySQL database to import the genomes.")
     FILE_FORMAT = ("""
-        Type of file to be exported into a directory
-        The following are file export format options:
+        Type of file to be exported into a directory 
+        The following are standard file export format options:
             -gb is the standard GenBank flat file format
             -fasta is a generic file containing a sequence                  and an information header
-            -csv is a standard table 
-                (comma seperated values) format 
-                for information
         """) 
     
     IMPORT_TABLE_HELP = """
@@ -113,6 +120,9 @@ def parse_file_export_args(unparsed_args_list):
             "Input the path of the directory to store export files"
     FOLDER_NAME_HELP =\
             "Input the name of the folder which will contain the export files"  
+
+    CSV_LOG_HELP =\
+            "Toggle to export a log file with data from the exported genomes"
 
     
     parser = argparse.ArgumentParser(description = DATABASE_TO_FILE_HELP)
@@ -147,7 +157,8 @@ def parse_file_export_args(unparsed_args_list):
     parser.add_argument("-name", "--folder_name",\
             default = "file_export", type = str, \
             help = FOLDER_NAME_HELP)
-
+    parser.add_argument("-log", "--csv_log",\
+            help = CSV_LOG_HELP, action = 'store_true')
     parser.set_defaults(input = 'a', verbose = 'v') 
 
     parsed_args = parser.parse_args(unparsed_args_list[2:])
@@ -178,20 +189,6 @@ def _(phage_list_input):
 
     return phage_list_input
 
-#Owen: Reundant, to be reimplemented 
-###@parse_phage_list_input.register(str)
-#def _(phage_list_input):
-#    """Helper function to populate the filter list for a SQL query
-#    :param phage_list_input:
-#        Input a single genome name string.
-#    :type phage_list_input: str:
-#    :return phage_list:
-#        Returns a list containing a singular phage name.
-#    """
-#    phage_list = []
-#    phage_list.append(phage_list_input)
-#    return phage_list
-
 @parse_phage_list_input.register(Path)
 def _(phage_list_input):
     """Helper function to populate the filter list for a SQL query
@@ -204,13 +201,13 @@ def _(phage_list_input):
     """
 
 
-    if not q.exists:
+    if not phage_list_input.exists():
         raise ValueError("File {} is not found".\
                 format(phage_list_input))
 
     phage_list = []
-    with open(phage_list_input) as csv:
-        csv_reader = csv.reader(csv, delimiter = ",")
+    with open(phage_list_input, newline = '') as csv:
+        csv_reader = csv.reader(csv, delimiter = ",", quotechar = '|')
         for name in csv_reader[1:]:
             phage_list.append(name[0])
 
@@ -238,8 +235,8 @@ def establish_database_connection(database_name: str):
 
 def retrieve_seqrecord_from_database\
         (sql_database_handle: mysqlconnectionhandler.MySQLConnectionHandler\
-        , phage_name_filter_list: List[str] = [],
-        verbose = False):
+        , phage_name_filter_list: List[str],
+        verbose = False, genome_log = False):
     """Reads a local SQL database and converts it to a SeqRecord list
 
     :param sql_database_handle:
@@ -276,8 +273,10 @@ def retrieve_seqrecord_from_database\
         append_database_version(seqrecord, database_versions)
         seq_record_list.append(seqrecord)
 
-
-    return seq_record_list
+    if not genome_log:
+        return seq_record_list
+    else:
+        return (seq_record_list, genome_list)
 
 def set_cds_seqfeatures(phage_genome: genome.Genome):
     """Helper function that queries for and returns cds data from a SQL database for a specific phage
@@ -350,7 +349,7 @@ def append_database_version(genome_seqrecord: SeqRecord,\
 
 def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
         export_path: Path, export_dir_name: str = "file_export",\
-        verbose = False):
+        verbose = False, csv_log = None):
     """Outputs files with a particuar format from a SeqRecord list
 
     :param seq_record_list:
@@ -387,6 +386,9 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
                 create database_export_output\
                 directory in {}".format(export_path))
         raise ValueError 
+    
+    if csv_log:
+        write_csv_log(csv_log, export_path)
 
     if verbose:
         print("Writing selected data to files...")
@@ -401,6 +403,25 @@ def seqfeature_file_output(seqrecord_list: List[SeqRecord], file_format: str,\
         else:
             SeqIO.write(record, output_handle, file_format)
         output_handle.close()
+
+def write_csv_log(genome_list, export_path):
+    log_path = Path(os.path.join(export_path, "log.csv"))
+
+    with open(log_path, 'w', newline = "") as csvfile:
+        logwriter = csv.writer(csvfile, delimiter=",", quotechar = "|", quoting = csv.QUOTE_MINIMAL)
+        csv_format = [[],[],[],[],[],[],[],[],[],[]]
+        for gnm in genome_list:
+            csv_format[0].append("exported")
+            csv_format[1].append(gnm.name)
+            csv_format[2].append(gnm.host_genus)
+            csv_format[3].append(gnm.cluster)
+            csv_format[4].append(gnm.subcluster)
+            csv_format[5].append(gnm.annotation_status)
+            csv_format[6].append(gnm.annotation_author)
+            csv_format[7].append("phage genome")
+            csv_format[8].append(gnm.accession)
+        for row in csv_format:
+            logwriter.writerow(row)
 
 def main(args):
     """Function to initialize file export"""
@@ -423,6 +444,7 @@ class Cmd_Export(cmd.Cmd):
         self.sql_handle = sql_handle
         self.directory_name = export_directory_name
         self.directory_path = export_directory_path
+        self.csv_toggle = False
 
         self.intro =\
         """---------------Hatfull Helper's File Export---------------
@@ -454,10 +476,10 @@ class Cmd_Export(cmd.Cmd):
 
     def do_folder(self, *args):
         """Selects options for current folder
-        FOLDER OPTIONS: Format, Path, Name, Export
+        FOLDER OPTIONS: Format, Path, Name, Export, Log
         """
 
-        options = ["format", "path", "name", "export"]
+        options = ["format", "path", "name", "export", "log"]
         option = args[0].lower()
 
         if option in options:
@@ -469,9 +491,14 @@ class Cmd_Export(cmd.Cmd):
                 self.folder_directory_name()
             elif option =="export":
                 self.folder_export()
+            elif option == "log":
+                if self.csv_toggle:
+                    self.csv_toggle = False
+                else:
+                    self.csv_toggle = True
         else:
             print("""Folder command option not supported
-            FOLDER OPTIONS: Format, Path, Name, Export
+            FOLDER OPTIONS: Format, Path, Name, Export, Log
             """)
 
     def folder_format(self):
@@ -511,15 +538,25 @@ class Cmd_Export(cmd.Cmd):
         """
         print("\
                 Initiating Export...\n")
+        if self.csv_toggle:
+            genome_data = retrieve_seqrecord_from_database\
+                    (self.sql_handle, self.phage_filter_list,\
+                    verbose = True, genome_log = True)
+            seqfeature_file_output(genome_data[0],\
+                    file_format = self.file_format,\
+                    export_path = self.directory_path,\
+                    export_dir_name = self.directory_name,
+                    verbose = True, csv_log = genome_data[1])
 
-        seqfeature_file_output\
-                (retrieve_seqrecord_from_database\
-                (self.sql_handle, self.phage_filter_list,\
-                verbose = True),\
-                file_format = self.file_format,\
-                export_path = self.directory_path,\
-                export_dir_name = self.directory_name,
-                verbose = True)
+        else:
+            seqfeature_file_output\
+                    (retrieve_seqrecord_from_database\
+                    (self.sql_handle, self.phage_filter_list,\
+                    verbose = True),\
+                    file_format = self.file_format,\
+                    export_path = self.directory_path,\
+                    export_dir_name = self.directory_name,
+                    verbose = True)
 
     def do_clear(self, *args):        
         """Clears display terminal
