@@ -20,7 +20,8 @@ except ModuleNotFoundError as err:
 
 # from misc_functions import ask_yes_no, close_files
 from pdm_utils.functions.basic import ask_yes_no, close_files
-
+from pdm_utils.functions import basic
+from pdm_utils.functions import ncbi
 
 def main(unparsed_args_list):
     # set up argparse to interact with users at the command line interface.
@@ -772,9 +773,17 @@ def main(unparsed_args_list):
         unique_accession_list = list(unique_accession_dict.keys())
 
         # Add [ACCN] field to each accession number
+        appended_accessions2 = basic.edit_list_suffix(unique_accession_list, "[ACCN]")
+        # HERE for some reason edit_list_suffix is trimming first "A" of some accessions.
+        # the item.strip() is not stripping the entire string, but instances of
+        # each individual letter.
+
         appended_accessions = [accession + "[ACCN]" for accession in
                                unique_accession_list]
 
+        print(appended_accessions2)
+        print(appended_accessions)
+        input("pause")
         # Keep track of specific records
         retrieved_record_list = []
         retrieval_error_list = []
@@ -784,27 +793,23 @@ def main(unparsed_args_list):
         # to create each batch.
         # For instace, if there are five accessions, batch size of two produces
         # indices = 0,2,4
-        for batch_index_start in range(0, len(unique_accession_list), batch_size):
-
-            if batch_index_start + batch_size > len(unique_accession_list):
-                batch_index_stop = len(unique_accession_list)
-            else:
-                batch_index_stop = batch_index_start + batch_size
-
+        batch_indices = basic.create_indices(unique_accession_list, batch_size)
+        for indices in batch_indices:
+            batch_index_start = indices[0]
+            batch_index_stop = indices[1]
+            print("retrieving batch: ", batch_index_start, batch_index_stop)
             current_batch_size = batch_index_stop - batch_index_start
             delimiter = " | "
             esearch_term = delimiter.join(appended_accessions[
                                           batch_index_start:batch_index_stop])
 
             # Use esearch for each accession
-            search_handle = Entrez.esearch(db="nucleotide", term=esearch_term,
-                                           usehistory="y")
-            search_record = Entrez.read(search_handle)
+            search_record = ncbi.run_esearch(db="nucleotide", term=esearch_term,
+                                usehistory="y")
             search_count = int(search_record["Count"])
             search_webenv = search_record["WebEnv"]
             search_query_key = search_record["QueryKey"]
 
-            search_handle.close()
 
             # Keep track of the accessions that failed to be located in NCBI
             if search_count < current_batch_size:

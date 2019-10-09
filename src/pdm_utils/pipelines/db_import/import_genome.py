@@ -8,6 +8,7 @@ import csv
 import os
 import sys
 import argparse
+import pathlib
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
@@ -89,13 +90,18 @@ def run_import(unparsed_args_list):
         print("No connection to the selected database.")
         sys.exit(1)
 
-    valid_folder = basic.verify_path(args.input_folder, "dir")
-    if not valid_folder:
+
+    args.input_folder = pathlib.Path(args.input_folder)
+    args.input_folder.expanduser()
+    args.input_folder.resolve()
+    if not args.input_folder.is_dir():
         print("Invalid input folder.")
         sys.exit(1)
 
-    valid_import_table = basic.verify_path(args.import_table, "file")
-    if not valid_import_table:
+    args.import_table = pathlib.Path(args.import_table)
+    args.import_table.expanduser()
+    args.import_table.resolve()
+    if not args.import_table.is_file():
         print("Invalid import table file.")
         sys.exit(1)
 

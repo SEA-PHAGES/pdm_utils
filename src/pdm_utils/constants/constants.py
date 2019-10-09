@@ -88,6 +88,15 @@ API_SUFFIX = "/?format=json"
 API_HOST_GENERA = "https://phagesdb.org/api/host_genera/"
 API_CLUSTERS = "https://phagesdb.org/api/clusters/"
 
+# API at phagesdb has you specify how many results to return.
+# 1 page at length 100000 will return everything.
+SEQUENCED_PAGE = 1
+SEQUENCED_SIZE = 100000
+API_SEQUENCED = "https://phagesdb.org/api/sequenced_phages/?" \
+                 + "page=%s" % SEQUENCED_PAGE \
+                 + "&page_size=%s" % SEQUENCED_SIZE
+
+
 # TODO this is probably no longer needed.
 # # Set of valid file extensions for flat files to be evaluated.
 # ADMISSIBLE_FILE_TYPES = set(["gb","gbf","gbk","txt"])
@@ -258,3 +267,7 @@ RUN_MODES = {
     "misc":RUN_MODE_MISC,
     "custom":RUN_MODE_CUSTOM
     }
+
+# Phamerator server info
+DB_HOST = "phamerator.webfactional.com"
+DB_HOST_DIR = "/home/phamerator/webapps/htdocs/databases_Hatfull/"
