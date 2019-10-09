@@ -12,6 +12,8 @@ from typing import List, Dict
 from pathlib import Path
 import cmd, readline, os, sys, typing, argparse, csv
 
+
+#Global file constants
 file_format_choices = ["gb", "fasta", "csv"]
 
 def run_file_export(unparsed_args_list):
@@ -50,24 +52,14 @@ def run_file_export(unparsed_args_list):
                 verbose = verbosity)
 
     else:
-        interactive_file_export = Interactive_File_Export\
+        interactive_file_export = Cmd_Export\
                 (file_format = args.file_format, database = args.database,\
                 phage_filter_list = phage_name_filter_list,\
                 export_directory_name = args.folder_name,\
                 export_directory_path = Path(args.export_directory))
 
         interactive_file_export.cmdloop()
-        export_dict = interactive_file_export.data
-
-        seqfeature_file_output\
-                (retrieve_seqrecord_from_database\
-                (export_dict["sql_handle"], export_dict["phage_filter_list"],\
-                verbose = True),\
-                file_format = export_dict["file_format"],\
-                export_path = export_dict["directory_path"],\
-                export_dir_name = export_dict["directory_name"],
-                verbose = True)
-          
+                  
 def parse_file_export_args(unparsed_args_list):
     """Verifies the correct arguments are selected 
     for database to file
@@ -416,14 +408,14 @@ def main(args):
     args.insert(0, "blank_argument")
     run_file_export(args)
 
-class Interactive_File_Export(cmd.Cmd):
+class Cmd_Export(cmd.Cmd):
 
     def __init__(self, file_format = "gb", database = None,\
         phage_filter_list = [], sql_handle = None, \
         export_directory_name = "file_export",\
         export_directory_path = Path(os.getcwd())):
 
-        super(Interactive_File_Export, self).__init__()
+        super(Cmd_Export, self).__init__()
 
         self.file_format = file_format
         self.database = database
@@ -451,19 +443,39 @@ class Interactive_File_Export(cmd.Cmd):
         self.prompt = "({}) (export){}@localhost: ".\
                 format(self.database, self.sql_handle._username)
 
-    def do_filter(self, *args):
+    def do_search(self, *args):
         """Filters and queries database for genomes.
-        USAGE: filter
         """
-        db_filter = filter.Filter(self.database)
-        interactive_filter = filter.Interactive_Filter\
+        db_filter = filter.Filter(self.database, self.sql_handle)
+        interactive_filter = filter.Cmd_Filter\
                 (db_filter = db_filter, sql_handle = self.sql_handle)
         interactive_filter.cmdloop()
         self.phage_filter_list = interactive_filter.data
-         
-    def do_format(self, *args):
+
+    def do_folder(self, *args):
+        """Selects options for current folder
+        FOLDER OPTIONS: Format, Path, Name, Export
+        """
+
+        options = ["format", "path", "name", "export"]
+        option = args[0].lower()
+
+        if option in options:
+            if option == "format":
+                self.folder_format()
+            elif option == "path":
+                self.folder_directory_path()
+            elif option == "name":
+                self.folder_directory_name()
+            elif option =="export":
+                self.folder_export()
+        else:
+            print("""Folder command option not supported
+            FOLDER OPTIONS: Format, Path, Name, Export
+            """)
+
+    def folder_format(self):
         """Sets the current file format for genome export
-        USAGE: format
         """
 
         format = input("File Format: ")
@@ -474,7 +486,7 @@ class Interactive_File_Export(cmd.Cmd):
         else:
             print("File format not supported.\n")
         
-    def do_directory_path(self, *args):
+    def folder_directory_path(self):
         """Sets the export directory name for genome export
         USAGE: format
         """
@@ -486,12 +498,28 @@ class Interactive_File_Export(cmd.Cmd):
             print("\
                     Path not found.")
 
-    def do_directory_name(self, *args):
+    def folder_directory_name(self):
         """Sets the export directory name for genome export
         USAGE: format
         """
 
         self.directory_name = input("Export Directory Name: ") 
+
+    def folder_export(self, *args):
+        """Exit interface and finish exporting files
+        USAGE: export
+        """
+        print("\
+                Initiating Export...\n")
+
+        seqfeature_file_output\
+                (retrieve_seqrecord_from_database\
+                (self.sql_handle, self.phage_filter_list,\
+                verbose = True),\
+                file_format = self.file_format,\
+                export_path = self.directory_path,\
+                export_dir_name = self.directory_name,
+                verbose = True)
 
     def do_clear(self, *args):        
         """Clears display terminal
@@ -501,15 +529,6 @@ class Interactive_File_Export(cmd.Cmd):
         os.system('cls' if os.name == 'nt' else 'clear')
         print(self.intro)
        
-    def do_export(self, *args):
-        """Exit interface and finish exporting files
-        USAGE: export
-        """
-        print("\
-                Initiating Export...\n")
-
-        return True
-
     def do_exit(self, *args):
         """Exits program entirely without returning values
         USAGE: exit
@@ -518,14 +537,6 @@ class Interactive_File_Export(cmd.Cmd):
                 Exiting...\n")
 
         sys.exit(1)
-
-    def postloop(self):
-
-        self.data = {"sql_handle" : self.sql_handle,\
-                "phage_filter_list" : self.phage_filter_list,\
-                "file_format" : self.file_format,\
-                "directory_path" : self.directory_path,\
-                "directory_name" : self.directory_name}
 
 if __name__ == "__main__":
     main(sys.argv)

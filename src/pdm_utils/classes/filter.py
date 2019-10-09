@@ -6,25 +6,39 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from typing import List
-from pprint import pprint
 import cmd, readline, argparse, os, sys
 
+
+#Global file constants
+
+
 class Filter:
-    def __init__(self, database_name, phage_id_list: List[str] = []):
+    def __init__(self, database_name, sql_handle, phage_id_list: List[str] = []):
         """Initializes a Filter object used to filter
         results from a SQL database
         """
         self.database = database_name
-        
+        self.sql_handle = sql_handle
+
         self.phage_query = "SELECT Name FROM phage"
         self.gene_query = "SELECT phageID FROM gene"
-        
+       
         self.results = []
                 
         self.phage_filters = {}
         self.gene_filters = {}
 
         self.history = []
+    
+        self.phage_attributes = []
+        for column in self.sql_handle.execute_query(query =\
+                "DESCRIBE phage"):
+            self.phage_attributes.append(column["Field"].lower())
+
+        self.gene_attributes = []
+        for column in self.sql_handle.execute_query(query =\
+                "DESCRIBE gene"):
+            self.gene_attributes.append(column["Field"].lower())
 
     def reset(self):
         """Resets created queries and filters 
@@ -43,15 +57,21 @@ class Filter:
     def update(self):
         """Resets created queries for the Filter object"""
 
-        
-        self.phage_query = "SELECT Name FROM phage " +\
+        if self.phage_filters: 
+            self.phage_query = "SELECT Name FROM phage WHERE " +\
                 " and ".join(list(self.phage_filters.values()))
+        else:
+            self.phage_query = "SELECT Name FROM phage"
 
-        self.gene_query = "SELECT phageID FROM gene " +\
+        if self.gene_filters: 
+            self.gene_query = "SELECT phageID FROM gene WHERE " +\
                 " and ".join(list(self.gene_filters.values()))
+        else:
+            self.gene_query = "SELECT phageID FROM gene"
 
-        self.history.append((self.phage_filters, self.gene_filters))
-                    
+        if self.phage_filters or self.gene_filters: 
+            self.history.append((self.phage_filters, self.gene_filters))
+
     def undo(self):
         """Undos last filter option"""
 
@@ -66,40 +86,24 @@ class Filter:
             self.gene_filters = last_filters[1]
 
         else:
-            self.reset()
+            self.reset() 
 
-    def establish_connection(self):
-        """Creates a mysqlconnectionhandler object 
-        and populates its credentials
-        """
+    def hits(self): 
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.database = self.database
-        sql_handle.get_credentials()
-        try:
-            sql_handle.validate_credentials
-        except:
-            print("Sql connection to database {} \
-                    with username  and password failed".format(database_name))
-
-        return sql_handle 
-
-    def hits(self, sql_handle): 
-
-        self.retrieve_results(sql_handle)
+        self.retrieve_results()
         return len(self.results)
 
-    def retrieve_results(self, sql_handle, visual = False):
+    def retrieve_results(self, visual = False):
        
         self.update()
         if self.phage_filters and self.gene_filters:
             database_phage_results = [] 
             for result in phamerator.retrieve_data\
-                    (sql_handle, query = self.phage_query):
+                    (self.sql_handle, query = self.phage_query):
                 database_phage_results.append(result['Name'])
             database_gene_results = []
             for result in phamerator.retrieve_data\
-                    (sql_handle, query = self.gene_query):
+                    (self.sql_handle, query = self.gene_query):
                 database_gene_results.append(result['PhageID'])
             self.results = set(database_phage_results).\
                     intersection(database_gene_results)
@@ -108,7 +112,7 @@ class Filter:
 
             database_gene_results = []
             for result in phamerator.retrieve_data\
-                    (sql_handle, query = self.gene_query):
+                    (self.sql_handle, query = self.gene_query):
                 database_gene_results.append(result['phageID'])
             self.results = database_gene_results
 
@@ -116,173 +120,152 @@ class Filter:
             
             database_phage_results = []
             for result in phamerator.retrieve_data\
-                    (sql_handle, query = self.phage_query):
+                    (self.sql_handle, query = self.phage_query):
                 database_phage_results.append(result['Name'])
             self.results = database_phage_results
 
         else:
             database_results = []
             for result in phamerator.retrieve_data\
-                    (sql_handle, query = self.phage_query):
+                    (self.sql_handle, query = self.phage_query):
                 database_results.append(result['Name'])
             self.results = database_results
             
-    def accession(self, filter: str):
+    def accession(self, filter_value: str):
         self.phage_filters.update({"accession" :\
-            "WHERE Accession = '{}'".format(filter)})
+            "Accession = '{}'".format(filter_value)})
 
-    def name(self, filter: str):
+    def name(self, filter_value: str):
 
         self.phage_filters.update({"name" :\
-            "WHERE Name = '{}'".format(filter)})
+            "Name = '{}'".format(filter_value)})
 
-    def phageID(self, filter: str):
+    def phageID(self, filter_value: str):
         self.phage_filters.update({"id":\
-            "WHERE PhageID = '{}'".format(filter)})
+            "PhageID = '{}'".format(filter_value)})
 
-    def cluster(self, filter: str):
+    def cluster(self, filter_value: str):
         self.phage_filters.update({"cluster":\
-            "WHERE Cluster2 = '{}'".format(filter)}) 
+            "Cluster2 = '{}'".format(filter_value)}) 
 
-    def subcluster(self, filter: str):
+    def subcluster(self, filter_value: str):
         self.phage_filters.update({"subcluster":\
-            "WHERE Subcluster2 = '{}'".format(filter)})
+            "Subcluster2 = '{}'".format(filter_value)})
 
-    def status(self, filter: str):
+    def status(self, filter_value: str):
         self.phage_filters.update({"status":\
-            "WHERE status = '{}'".format(filter)})
+            "status = '{}'".format(filter_value)})
 
-    def retrieve_record(self, filter: str):
+    def retrieve_record(self, filter_value: str):
         self.phage_filters.update({"retrieve":\
-            "WHERE RetrieveRecord = '{}'".format(filter)})
+            "RetrieveRecord = '{}'".format(filter_value)})
 
-    def annotation_qc(self, filter: str):
+    def annotation_qc(self, filter_value: str):
         self.phage_filters.update({"annotation_qc":\
-            "WHERE AnnotationQC = '{}'".format(filter)})
+            "AnnotationQC = '{}'".format(filter_value)})
 
-    def annotation_author(self, filter: str):
+    def annotation_author(self, filter_value: str):
         self.phage_filters.update({"annotation_author":\
-            "WHERE AnnotationAuthor = '{}'".format(filter)})
+            "AnnotationAuthor = '{}'".format(filter_value)})
 
-    def gene_product(self, filter: str):
+    def gene_product(self, filter_value: str):
         self.gene_filters.update({"product":\
-            "WHERE Notes = '{}'".format(filter)})
+            "Notes = '{}'".format(filter_value)})
 
-    def gene_id(self, filter: str):
+    def gene_id(self, filter_value: str):
         self.gene_filters.update({"id":\
-            "WHERE id  = '{}'".format(filter)})
+            "id  = '{}'".format(filter_value)})
+
+    def add_filter(self, filter: str, filter_value: str):
+
+        if filter.lower() in self.phage_attributes:
+            self.phage_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+            return True
+
+        elif filter.lower() in self.gene_attributes:
+            self.gene_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+            return True
+
+        else:
+            return False
 
     def interactive(self, sql_handle = None):
         
         interactive_filter = \
-                Interactive_Filter(db_filter = self, sql_handle = sql_handle)
+                Cmd_Filter(db_filter = self, sql_handle = sql_handle)
         interactive_filter.cmdloop()
 
-class Interactive_Filter(cmd.Cmd):
+class Cmd_Filter(cmd.Cmd):
        
     def __init__(self, db_filter = None, sql_handle = None):
-        super(Interactive_Filter, self).__init__()
+        super(Cmd_Filter, self).__init__()
         self.filter = db_filter
         self.sql_handle = sql_handle
         self.intro =\
-        """---------------Hatfull Helper's Filtering---------------
+        """---------------Database Search and Query---------------
         Type help or ? to list commands.\n"""
         self.prompt = "(database) (filter)user@localhost: "
         self.data = None
 
-    def preloop(self, db_filter = None, sql_handle = None):
-                
-        if self.filter == None:
-            print("---------------------Database Login---------------------")
-            self.filter = Filter(input("MySQL database: "))
-
+    def preloop(self):
         
-        if self.sql_handle == None:
-            self.sql_handle =\
-                    self.filter.establish_connection()
-        self.prompt = "({}) (filter){}@localhost: ".format\
-                (self.filter.database, self.sql_handle._username)
-         
-    def do_accession(self, *args):
-        """Search for genomes by accession number.
-        USAGE: accession
-        """
-        self.filter.accession(input("Accession: "))
-        self.retrieve_hits()
+        if self.filter == None:
+            if self.sql_handle == None:
+                self.sql_handle = mysqlconnectionhandler = MySQLConnectionHandler()
+                print("---------------------Database Login---------------------")
+                self.sql_handle.database = input("MySQL database: ")
+                self.sql_handle.get_credentials()
+                try:
+                    self.sql_handle.validate_credentials()
+                except:
+                    print("Unable to create a mysql connection.")
+                    exit(1) 
+            self.filter = Filter(self.sql_handle.database, self.sql_handle)
 
-    def do_name(self, *args):
-        """Search for genomes by name.
-        USAGE: name
-        """
-        self.filter.name(input("Name: "))
-        self.retrieve_hits()
+        self.prompt = "({}) (export){}@localhost: ".\
+                format(self.sql_handle.database, self.sql_handle._username)
+            
+        
 
-    def do_cluster(self, *args):
-        """Search for genomes by cluster.
-        USAGE: cluster
+    def do_filter(self, *unparsed_args):
         """
-        self.filter.cluster(input("Cluster: "))
-        self.retrieve_hits()
+        Formats a MySQL database query for a given attribute
+        FILTER OPTIONS: Accession, Name, Cluster
+        Subcluster, Annotation_Status, Retrieve_Record,
+        Annotation_QC, Annotation_Author, Notes, GeneID
+        """
+        
+        filter = unparsed_args[0]
 
-    def do_subcluster(self, *args):
-        """Search for genomes by subcluster.
-        USAGE: subcluster
-        """
-        self.filter.subcluster(input("Subcluster: "))
-        self.retrieve_hits()
+        if filter == "":
+            print(""" Please select a valid attribute:
+            FILTER OPTIONS: Accession, Name, Cluster
+            Subcluster, Annotation_Status, Retrieve_Record,
+            Annotation_QC, Annotation_Author, Notes, GeneID
+            """)
 
-    def do_status(self, *args):
-        """Search for genomes by annotation status.
-        USAGE: Status :Status:
-        """
-        self.filter.status(input("Status: "))
-        self.retrieve_hits()
+        elif not (filter.lower() in self.filter.phage_attributes\
+                or filter.lower() in self.filter.gene_attributes):
+            
+            print("Attribute not in database.\n ")
 
-    def do_retrieve_record(self, *args):
-        """Search for genomes by retrieve record value.
-        USAGE: retrieve_record
-        """
-        self.filter.retrieve_record(input("Retrieve Record: "))
-        self.retrieve_hits()
+        else:
 
-    def do_annotation_QC(self, *args):
-        """Search for genomes by annotation quality control.
-        USAGE: annotation_QC
-        """
-        self.filter.annotation_qc(input("Annotation QC: "))
-        self.retrieve_hits()
+            filter_value = input("Enter {} value: ".format(filter))
+            self.filter.add_filter(filter, filter_value)
+            self.retrieve_hits()
 
-    def do_annotation_author(self, *args):
-        """Search for genomes by annotation authorship.
-        USAGE: annotation_author
-        """
-        self.filter.annotation_author(input("Annotation Author: "))
-        self.retrieve_hits()
-
-    def do_gene_product(self, *args):
-        """Search for genomes by gene products.
-        USAGE: gene_product
-        """
-        self.filter.gene_product(input("Gene Product: ") )
-        self.retrieve_hits()
-
-    def do_gene_ID(self, *args):
-        """Search for genomes by gene IDs.
-        USAGE: gene_ID
-        """
-        self.filter.gene_id(input("Gene ID: "))
-        self.retrieve_hits()
 
     def retrieve_hits(self, *args):
         "Function to retrieve the hits for filtering functions"
-        hits = self.filter.hits(self.sql_handle)
+        hits = self.filter.hits()
         if hits <= 0:
             print("\
                     No Database Hits.")
             print("\
                     Reloading last filtering options...\n")
             self.filter.undo()
-            self.filter.retrieve_results(self.sql_handle)
+            self.filter.retrieve_results()
         else:
             print("\
                     Database Hits: {}\n".format(hits))
@@ -294,34 +277,63 @@ class Interactive_Filter(cmd.Cmd):
         self.filter.undo()
         print("\
                 Reloaded last filtering options")
-        print("\
-                Database Hits: {}\n".format(len(self.filter.results)))
+            
+        self.do_show_filters()
 
-    def do_show_results(self, *args):
+    def do_show(self,*args):
+        """Displays information on current filtering
+        SHOW OPTIONS: Results, Filters, Hits"""
+
+        options = ["results", "filters", "hits"]
+        option = args[0].lower()
+
+        if option in options:
+            if option == "results":
+                self.show_results()
+            elif option == "filters":
+                self.show_filters()
+            elif option == "hits":
+                self.retrieve_hits()
+
+        else:
+            print("""Please input a valid option
+            SHOW OPTIONS: Results, Filter,Hits""")
+
+    def show_results(self):
         """Shows results for current database filtering
-        USAGE: show_results
         """
        
         print("\
-                Results:")
+                Results:\n")
         for row in range(0, len(self.filter.results), 3):
-            pprint(self.filter.results[row:row+3])
+            result_row = self.filter.results[row:row+3]
+            if len(result_row) == 3:
+                print("%-20s %-20s %s" % \
+                        (result_row[0], result_row[1], result_row[2]))
+            elif len(result_row) == 2:
+                print("%-20s %-20s" % \
+                        (result_row[0], result_row[1]))
+
+            elif len(result_row) == 1:
+                print("%s" % (result_row[0]))
+
         print("\n")
 
-    def do_show_filters(self, *args):
+    def show_filters(self, *args):
         """Displays current fitlers
-        USAGE: shpw_filters
         """
         if self.filter.phage_filters:
             print("\
                     Phage table filters:")
-            pprint(self.filter.phage_filters)
+            for phage_filter in self.filter.phage_filters.values():
+                print("    " + phage_filter)
             print("\n")
 
         if self.filter.gene_filters:
             print("\
                     Gene table filters:")
-            pprint(self.filter.gene_filters)
+            for gene_filter in self.filter.gene_filters.values():
+                print("    " + gene_filter)
             print("\n")
 
         if not self.filter.phage_filters and not self.filter.gene_filters:
@@ -366,5 +378,5 @@ class Interactive_Filter(cmd.Cmd):
         self.data = self.filter.results
 
 if __name__ == "__main__":
-    mainloop = Interactive_Filter() 
+    mainloop = Cmd_Filter() 
     mainloop.cmdloop()
