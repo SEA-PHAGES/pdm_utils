@@ -47,7 +47,7 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
-    # Using the patch decorator to bypass the user-requried input() value.
+    # Using the patch decorator to bypass the user-required input() value.
     @patch("pdm_utils.functions.basic.get_input", return_value = "yes")
     def test_get_input(self, input):
         """Verify the function retrieves input."""
@@ -183,6 +183,20 @@ class TestBasicFunctions1(unittest.TestCase):
                                  "test_files/test_flag_file_2.csv")
         flag_dict = basic.parse_flag_file(flag_file)
         self.assertEqual(len(flag_dict.keys()), 1)
+
+
+
+    # Using the patch decorator to bypass the user-required input() value.
+    @patch("getpass.getpass")
+    def test_get_user_pwd_1(self, getpass_mock):
+        """."""
+        mock_results = ["user", "pwd"]
+        getpass_mock.side_effect = mock_results
+        results = basic.get_user_pwd()
+        with self.subTest():
+            self.assertEqual(results[0], "user")
+        with self.subTest():
+            self.assertEqual(results[1], "pwd")
 
 
 

@@ -4,6 +4,7 @@ modules in this package to prevent circular imports."""
 from pdm_utils.constants import constants
 import os
 import csv
+import getpass
 
 
 def find_expression(expression, list_of_items):
@@ -937,7 +938,11 @@ def parse_flag_file(flag_file):
     return eval_flags
 
 
-
+def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
+    """Get username and password."""
+    username = getpass.getpass(prompt=user_prompt)
+    password = getpass.getpass(prompt=pwd_prompt)
+    return (username, password)
 
 
 #TODO Unit test below

@@ -3,28 +3,29 @@
 # Travis Mavrich
 # University of Pittsburgh
 # 20160713
-# Updated by Christian Gauthier 20181115 - 20190114; paramiko version was old and had been deprecated, resulting in inability to use SFTP to export SQL and version files to phamerator server
-# Paramiko version was upgraded, then some minor changes were made to the script to comply with new Paramiko standards
-# After finishing updating the database, and ready to upload to webfactional...
-
+# Updated by Christian Gauthier 20181115 - 20190114;
+# paramiko version was old and had been deprecated, resulting in inability
+# to use SFTP to export SQL and version files to phamerator server.
+# Paramiko version was upgraded, then some minor changes were made to
+# the script to comply with new paramiko standards.
+# Updated by Travis 20191010; paramiko functions moved to server module.
 
 
 
 #Import built-in modules
-import time, sys, os, getpass
+import time, sys, os
 import subprocess
 
-#Import third-party modules, add log file for paramiko because it throws an error otherwise
+#Import third-party modules
 try:
     import pymysql as pms
-    # import MySQLdb as mdb
-    import paramiko
-    paramiko.util.log_to_file("/tmp/paramiko.log") # new soft requirement for compliance with Paramiko standards
 except:
-    print("\nUnable to import one or more of the following third-party modules: paramiko, pymysql.")
+    print("\nUnable to import one or more of the following third-party modules: pymysql.")
     print("Install modules and try again.\n\n")
     sys.exit(1)
 
+from pdm_utils.functions import server
+from pdm_utils.functions import basic
 
 def main(unparsed_args_list):
     #Get the command line parameters
@@ -167,16 +168,12 @@ def main(unparsed_args_list):
 
 
         #Set up MySQL parameters
-        mysqlhost = 'localhost'
-        username = getpass.getpass(prompt='mySQL username:')
-        password = getpass.getpass(prompt='mySQL password:')
-
-
+        username, password = basic.get_user_pwd(user_prompt="MySQL username: ",
+                                pwd_prompt="MySQL password: ")
 
         #Verify connection to database
         try:
             con = pms.connect("localhost", username, password, database)
-            # con = mdb.connect(mysqlhost, username, password, database)
             con.autocommit(False)
             cur = con.cursor()
         except pms.err.Error as err:
@@ -323,16 +320,15 @@ def main(unparsed_args_list):
 
 
         #Set up MySQL parameters
-        mysqlhost = 'localhost'
-        username = getpass.getpass(prompt='mySQL username:')
-        password = getpass.getpass(prompt='mySQL password:')
+        username, password = basic.get_user_pwd(
+                                user_prompt="MySQL username: ",
+                                pwd_prompt="MySQL password: ")
 
 
 
         #Verify connection to database
         try:
             con = pms.connect("localhost", username, password, database)
-            # con = mdb.connect(mysqlhost, username, password, database)
             con.autocommit(False)
             cur = con.cursor()
         except pms.err.Error as err:
@@ -442,6 +438,7 @@ def main(unparsed_args_list):
 
     if server_upload == "yes":
 
+        server.set_log_file("/tmp/paramiko.log")
 
         #Verify the path to both files exists
         if os.path.exists(main_dir + versionfile) == False:
@@ -458,54 +455,47 @@ def main(unparsed_args_list):
 
         #Set up paramiko parameters
         host = 'phamerator.webfactional.com'
-        host_username = getpass.getpass(prompt='Server username:')
-        host_password = getpass.getpass(prompt='Server password:')
-
-        try:
-            transport = paramiko.Transport(host)
-        except:
-            print("Unable to find server: " + host)
-            print("\nThe export script did not complete.")
-            print("\nExiting export script.")
+        transport = server.get_transport(host)
+        if transport is None:
+            print("Exiting export script.")
             sys.exit(1)
 
-
-        try:
-            transport.connect(username=host_username,password=host_password)
-            sftp = paramiko.SFTPClient.from_transport(transport)
-
-        except:
-            print("Unable to connect to server. Incorrect username and password")
-            print("\nThe export script did not complete.")
-            print("\nExiting export script.")
+        sftp = server.setup_sftp_conn(transport)
+        if sftp is None:
+            print("Exiting export script.")
             sys.exit(1)
 
-        try:
-            #First upload the version file
-            print("Uploading the version file...")
-            sftp.put(main_dir + versionfile,'/home/phamerator/webapps/htdocs/databases_Hatfull/' + versionfile)
+        remote_dir = "/home/phamerator/webapps/htdocs/databases_Hatfull/"
+
+        #First upload the version file
+        print("Uploading the version file...")
+        local_version = main_dir + versionfile
+        remote_version = remote_dir + versionfile
+        result1 = server.upload_file(sftp, local_version, remote_version)
+        if result1:
             print("Version file successfully uploaded.")
+        else:
+            print("Unable to upload version file.")
 
-
-            #Second upload the version file
-            print("Uploading the sql database...")
-            sftp.put(main_dir + dumpfile1,'/home/phamerator/webapps/htdocs/databases_Hatfull/' + dumpfile1)
+        #Second upload the sql file
+        print("Uploading the sql database...")
+        local_dumpfile = main_dir + dumpfile1
+        remote_dumpfile = remote_dir + dumpfile1
+        result2 = server.upload_file(sftp, local_dumpfile, remote_dumpfile)
+        if result2:
             print("Database successfully uploaded.")
+        else:
+            print("Unable to upload database file.")
 
-        except:
-            print("Problems encountered with the specified local or destination directories")
+        # Exit if there was a problem uploading either file.
+        if (result1 == False or result2 == False):
             print("\nThe export script did not complete.")
             print("\nExiting export script.")
             sys.exit(1)
-
 
         #Close the connections
         sftp.close()
         transport.close()
-
-
-
-
 
     #Close script.
     print("\n\n\n\nExport script completed.")
