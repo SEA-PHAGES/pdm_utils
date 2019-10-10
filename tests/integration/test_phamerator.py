@@ -33,11 +33,11 @@ class TestPhameratorFunctions1(unittest.TestCase):
         same schema as in PhameratorDB.
         Each unittest will populate the empty database as needed."""
 
-        # self.db = "test_schema4"
+        # self.db = "test_schema5"
         # self.schema_file = self.db + ".sql"
 
         self.db = "test_db"
-        self.schema_file = "test_schema4.sql"
+        self.schema_file = "test_schema5.sql"
 
 
         self.sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -99,10 +99,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '', 1, 1, 'final', '%s', 1, 1);" % \
                 (id, constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -133,10 +132,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '%s', '', '', '', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '%s', '', '', '', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_accs[0], id_and_accs[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -168,10 +166,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -208,10 +205,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -219,7 +215,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                 + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -230,7 +226,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                         sql_handle, column="PhageID",
                         phage_id_list=["L5"], query=query)
         with self.subTest():
-            self.assertEqual(len(result_list[0].keys()), 12)
+            self.assertEqual(len(result_list[0].keys()), 11)
         with self.subTest():
             self.assertEqual(result_list[0]["PhageID"], "L5")
 
@@ -252,10 +248,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -263,7 +258,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                 + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -294,10 +289,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -305,7 +299,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                 + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -336,10 +330,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -347,7 +340,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                 + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -379,10 +372,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql)
         connection.commit()
@@ -390,7 +382,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                 + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -421,19 +413,18 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -442,7 +433,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT" \
                 + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " TypeID, translation, Orientation, Notes, LocusTag" \
+                + " translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -476,19 +467,18 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -497,7 +487,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT" \
                 + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " TypeID, translation, Orientation, Notes, LocusTag" \
+                + " translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -535,19 +525,18 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -556,7 +545,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT" \
                 + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " TypeID, translation, Orientation, Notes, LocusTag" \
+                + " translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -595,20 +584,20 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) VALUES (" + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " \
+                " VALUES (" + \
                 "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
                  % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                " 1, 10.10, 'final', '%s', 1, 1);" \
                 % constants.EMPTY_DATE
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -617,7 +606,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                       + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                      + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                      + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -659,11 +648,11 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
                  % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                " 1, 10.10, 'final', '%s', 1, 1);" \
                 % constants.EMPTY_DATE
             cur.execute(sql)
         connection.commit()
@@ -671,7 +660,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                       + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                      + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                      + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -708,20 +697,20 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
                  % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                " 1, 10.10, 'final', '%s', 1, 1);" \
                 % constants.EMPTY_DATE
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -730,10 +719,10 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                       + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                      + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                      + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
         gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
-                     + " TypeID, translation, Orientation, Notes, LocusTag" \
+                     + " translation, Orientation, Notes, LocusTag" \
                      + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -783,20 +772,20 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
                  % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1, 1);" \
+                " 1, 10.10, 'final', '%s', 1, 1);" \
                 % constants.EMPTY_DATE
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -805,10 +794,10 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         phage_query = "SELECT PhageID, Name, HostStrain, Sequence, status," \
                       + " Cluster2, DateLastModified, Accession, Subcluster2," \
-                      + " AnnotationAuthor, AnnotationQC, RetrieveRecord" \
+                      + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
         gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
-                     + " TypeID, translation, Orientation, Notes, LocusTag" \
+                     + " translation, Orientation, Notes, LocusTag" \
                      + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -863,19 +852,18 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -884,7 +872,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT" \
                 + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " TypeID, translation, Orientation, Notes, LocusTag" \
+                + " translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -918,19 +906,18 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
         connection.commit()
@@ -938,7 +925,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT" \
                 + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " TypeID, translation, Orientation, Notes, LocusTag" \
+                + " translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -969,19 +956,18 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
-                "AnnotationAuthor) " + \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, '', '%s', 1, 1, 1);" % \
+                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
                 (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
             sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, " + \
+                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', '', 'F', '', '');" % \
+                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
                 (cds_data[0], cds_data[1])
             cur.execute(sql2)
 
@@ -990,7 +976,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
         query = "SELECT" \
                 + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " TypeID, translation, Orientation, Notes, LocusTag" \
+                + " translation, Orientation, Notes, LocusTag" \
                 + " FROM gene"
 
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -1023,7 +1009,6 @@ class TestPhameratorFunctions1(unittest.TestCase):
         gnm.gc = 0.5001
         gnm.date = constants.EMPTY_DATE
         gnm.retrieve_record = 1
-        gnm.annotation_qc = 1
         gnm.annotation_author = 1
         statement = phamerator.create_phage_table_insert(gnm)
         connection = pymysql.connect(host="localhost",
@@ -1037,7 +1022,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection.close()
         query =  ("SELECT PhageID, Accession, Name, "
                  "HostStrain, Sequence, SequenceLength, GC, status, "
-                 "DateLastModified, RetrieveRecord, AnnotationQC, "
+                 "DateLastModified, RetrieveRecord, "
                  "AnnotationAuthor FROM phage WHERE PhageID = 'L5'")
         connection = pymysql.connect(host = "localhost",
                                      user = user,
@@ -1052,9 +1037,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
         exp = ("INSERT INTO phage "
                "(PhageID, Accession, Name, HostStrain, Sequence, "
                "SequenceLength, GC, status, DateLastModified, RetrieveRecord, "
-               "AnnotationQC, AnnotationAuthor) "
+               "AnnotationAuthor) "
                "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', 'ATCG', 4, "
-               "0.5001, 'final', '%s', 1, 1, 1);" % constants.EMPTY_DATE)
+               "0.5001, 'final', '%s', 1, 1);" % constants.EMPTY_DATE)
         with self.subTest():
             self.assertEqual(statement, exp)
         with self.subTest():
@@ -1077,8 +1062,6 @@ class TestPhameratorFunctions1(unittest.TestCase):
             self.assertEqual(results["DateLastModified"], constants.EMPTY_DATE)
         with self.subTest():
             self.assertEqual(results["RetrieveRecord"], 1)
-        with self.subTest():
-            self.assertEqual(results["AnnotationQC"], 1)
         with self.subTest():
             self.assertEqual(results["AnnotationAuthor"], 1)
 
@@ -1109,7 +1092,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         Each unittest will populate the empty database as needed."""
 
         self.db = "test_db"
-        self.schema_file = "test_schema4.sql"
+        self.schema_file = "test_schema5.sql"
 
         connection = pymysql.connect(host = "localhost",
                                         user = user,
@@ -1150,10 +1133,10 @@ class TestPhameratorFunctions2(unittest.TestCase):
         insert1 = ("INSERT INTO phage "
                    "(PhageID, Accession, Name, HostStrain, Sequence, "
                    "SequenceLength, GC, status, DateLastModified, "
-                   "RetrieveRecord, AnnotationQC, AnnotationAuthor,"
+                   "RetrieveRecord, AnnotationAuthor,"
                    "Cluster2, Subcluster2) "
                    "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
-                   "'ATCG', 4, 0.5001, 'final', '%s', 1, 1, 1, 'A', 'A2');"
+                   "'ATCG', 4, 0.5001, 'final', '%s', 1, 1, 'A', 'A2');"
                    % constants.EMPTY_DATE)
         connection = pymysql.connect(host="localhost",
                                      user=user,
@@ -1168,12 +1151,12 @@ class TestPhameratorFunctions2(unittest.TestCase):
         self.std_phage_query = \
             ("SELECT PhageID, Accession, Name, "
              "HostStrain, Sequence, SequenceLength, GC, status, "
-             "DateLastModified, RetrieveRecord, AnnotationQC, "
+             "DateLastModified, RetrieveRecord, "
              "AnnotationAuthor, Cluster2, Subcluster2 "
              "FROM phage WHERE PhageID = 'L5'")
 
         self.std_cds_query = \
-            ("SELECT GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+            ("SELECT GeneID, PhageID, Start, Stop, Length, Name, "
              "translation, Orientation, Notes, LocusTag FROM gene "
              "WHERE PhageID = 'L5'")
 
@@ -1216,10 +1199,10 @@ class TestPhameratorFunctions2(unittest.TestCase):
         cur.close()
         connection.close()
         exp = ("INSERT INTO gene "
-               "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+               "(GeneID, PhageID, Start, Stop, Length, Name, "
                "translation, Orientation, Notes, LocusTag) "
                "VALUES "
-               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', "
+               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
                "'ACKLG', 'F', 'integrase', 'TAG1');")
         with self.subTest():
             self.assertEqual(insert2, exp)
@@ -1235,8 +1218,6 @@ class TestPhameratorFunctions2(unittest.TestCase):
             self.assertEqual(results["Length"], 20)
         with self.subTest():
             self.assertEqual(results["Name"], "Int")
-        with self.subTest():
-            self.assertEqual(results["TypeID"], "CDS")
         with self.subTest():
             self.assertEqual(results["translation"], "ACKLG")
         with self.subTest():
@@ -1329,10 +1310,10 @@ class TestPhameratorFunctions2(unittest.TestCase):
         """Verify Gene table statement is created correctly."""
         # First add gene SEA_L5_123 to the database.
         input = ("INSERT INTO gene "
-               "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+               "(GeneID, PhageID, Start, Stop, Length, Name, "
                "translation, Orientation, Notes, LocusTag) "
                "VALUES "
-               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', "
+               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
                "'ACKLG', 'F', 'integrase', 'TAG1');")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=self.db,
@@ -1429,16 +1410,16 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         # First add two genes to the database.
         input1 = ("INSERT INTO gene "
-                  "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                  "(GeneID, PhageID, Start, Stop, Length, Name, "
                   "translation, Orientation, Notes, LocusTag) "
                   "VALUES "
-                  "('SEA_L5_1', 'L5', 5, 10, 20, 'LysA', 'CDS', "
+                  "('SEA_L5_1', 'L5', 5, 10, 20, 'LysA', "
                   "'ABCDEF', 'F', 'lysin', 'TAG1');")
         input2 = ("INSERT INTO gene "
-                  "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                  "(GeneID, PhageID, Start, Stop, Length, Name, "
                   "translation, Orientation, Notes, LocusTag) "
                   "VALUES "
-                  "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', 'CDS', "
+                  "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
                   "'ACKLG', 'F', 'integrase', 'TAG123');")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=self.db,

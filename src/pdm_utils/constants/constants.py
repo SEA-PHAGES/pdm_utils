@@ -22,9 +22,8 @@ IMPORT_TABLE_DICT = {
 
 
 NAME_SUFFIX = "_Draft"
-ANNOTATION_STATUS_SET = set(["draft", "final", "gbk"])
+ANNOTATION_STATUS_SET = set(["draft", "final", "unknown"])
 ANNOTATION_AUTHOR_SET = set([0,1])
-ANNOTATION_QC_SET = set([0,1])
 RETRIEVE_RECORD_SET = set([0,1])
 EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')
 LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI", "PHIRE"])

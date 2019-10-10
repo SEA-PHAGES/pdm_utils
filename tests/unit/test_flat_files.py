@@ -878,7 +878,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.gnm.annotation_status = "1"
         self.gnm.annotation_author = "1"
         self.gnm.retrieve_record = "1"
-        self.gnm.annotation_qc = "1"
 
         record = flat_files.genome_to_seqrecord(self.gnm)
         record_comments = record.annotations["comment"]
@@ -894,7 +893,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.assertEqual(record_comments[2],\
                 "Annotation status: 1; Annotation Author: 1")
         self.assertEqual(record_comments[3],\
-                "RetrieveRecord: 1; AnnotationQC: 1")
+                "RetrieveRecord: 1")
 
     def test_genome_to_seqrecord_3(self):
         self.gnm = None
@@ -3093,7 +3092,6 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.genome2.cluster_subcluster = "C"
         self.genome2.annotation_status = "final"
         self.genome2.annotation_author = 1
-        self.genome2.annotation_qc = 2
         self.genome2.retrieve_record = 3
         self.genome2.translation_table = 11
 
@@ -3123,8 +3121,6 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(genome1.annotation_status, "final")
         with self.subTest():
             self.assertEqual(genome1.annotation_author, 1)
-        with self.subTest():
-            self.assertEqual(genome1.annotation_qc, 2)
         with self.subTest():
             self.assertEqual(genome1.retrieve_record, 3)
         with self.subTest():

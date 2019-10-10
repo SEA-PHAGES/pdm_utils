@@ -34,7 +34,6 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.add_ticket1.subcluster = "A2"
         self.add_ticket1.annotation_status = "draft"
         self.add_ticket1.annotation_author = "hatfull"
-        self.add_ticket1.annotation_qc = 1
         self.add_ticket1.retrieve_record = 1
         self.add_ticket1.accession = "ABC123.1"
 

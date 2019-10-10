@@ -542,22 +542,6 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-
-    def test_set_annotation_qc_1(self):
-        """Check that annotation_author to set to 1."""
-        value = 1
-        self.gnm.set_annotation_qc(value)
-        self.assertEqual(self.gnm.annotation_qc, 1)
-
-    def test_set_annotation_qc_2(self):
-        """Check that annotation_author remains a string."""
-        value = "retain"
-        self.gnm.set_annotation_qc(value)
-        self.assertEqual(self.gnm.annotation_qc, "retain")
-
-
-
-
     def test_set_retrieve_record_1(self):
         """Check that annotation_author to set to 1."""
         value = 1
@@ -900,16 +884,16 @@ class TestGenomeClass(unittest.TestCase):
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_compatible_status_and_descriptions_5(self):
-        """Check that gbk genome with no descriptions does not produce
+        """Check that unknown genome with no descriptions does not produce
         an error."""
-        self.gnm.annotation_status = "gbk"
+        self.gnm.annotation_status = "unknown"
         self.gnm.check_compatible_status_and_descriptions()
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_compatible_status_and_descriptions_6(self):
-        """Check that gbk genome with descriptions does not produce
+        """Check that unknown genome with descriptions does not produce
         an error."""
-        self.gnm.annotation_status = "gbk"
+        self.gnm.annotation_status = "unknown"
         self.gnm._cds_processed_descriptions_tally = 1
         self.gnm.check_compatible_status_and_descriptions()
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
@@ -1758,53 +1742,6 @@ class TestGenomeClass(unittest.TestCase):
         check_set = set(["1", "2"])
         self.gnm.annotation_author = 1
         self.gnm.check_annotation_author(check_set=check_set)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_annotation_qc_1(self):
-        """Verify that no error is produced when the annotation_qc
-        is valid."""
-        self.gnm.annotation_qc = 0
-        self.gnm.check_annotation_qc(
-            check_set=constants.ANNOTATION_QC_SET, eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_annotation_qc_2(self):
-        """Verify that no error is produced when the annotation_qc
-        is valid."""
-        self.gnm.annotation_qc = 1
-        self.gnm.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_annotation_qc_3(self):
-        """Verify that an error is produced when the annotation_qc
-        is not valid."""
-        self.gnm.annotation_qc = "1"
-        self.gnm.check_annotation_qc(check_set=constants.ANNOTATION_QC_SET)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-    def test_check_annotation_qc_4(self):
-        """Verify that no error is produced when the annotation_qc
-        is valid based on a supplied set."""
-        check_set = set(["1", "2"])
-        self.gnm.annotation_qc = "1"
-        self.gnm.check_annotation_qc(check_set=check_set)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_annotation_qc_5(self):
-        """Verify that an error is produced when the annotation_qc
-        is invalid based on a supplied set."""
-        check_set = set(["1", "2"])
-        self.gnm.annotation_qc = 1
-        self.gnm.check_annotation_qc(check_set=check_set)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
 

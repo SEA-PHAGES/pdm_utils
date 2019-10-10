@@ -500,7 +500,6 @@ def copy_data(bndl, from_type, to_type, flag="ticket"):
         to_gnm.cluster_subcluster = flag
         to_gnm.annotation_status = flag
         to_gnm.annotation_author = flag
-        to_gnm.annotation_qc = flag
         to_gnm.retrieve_record = flag
         to_gnm.set_value_flag(flag)
         if from_type in bndl.genome_dict.keys():
@@ -694,13 +693,11 @@ def get_seqrecord_annotations_comments(phage_genome):
             "Annotation status: {}; Annotation Author: {}".format\
             (phage_genome.annotation_status,\
             phage_genome.annotation_author)
-    qc_and_retrieval_values = \
-            "RetrieveRecord: {}; AnnotationQC: {}".format\
-            (phage_genome.retrieve_record,\
-            phage_genome.annotation_qc)
+    retrieval_value = \
+            "RetrieveRecord: {}".format(phage_genome.retrieve_record)
 
     return (cluster_comment, auto_generated_comment,\
-            annotation_status_comment, qc_and_retrieval_values)
+            annotation_status_comment, retrieval_value)
 
 
 

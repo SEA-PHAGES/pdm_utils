@@ -31,7 +31,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     def setUp(self):
-        self.schema_file = "test_schema4.sql"
+        self.schema_file = "test_schema5.sql"
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
@@ -120,7 +120,6 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.subcluster = "A2"
         self.tkt1.annotation_status = "draft"
         self.tkt1.annotation_author = 1
-        self.tkt1.annotation_qc = 1
         self.tkt1.retrieve_record = 1
         self.tkt1.accession = "ABC123"
 
@@ -251,11 +250,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         and no phagesdb data."""
 
         l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",
-                   4, 1, "draft", constants.EMPTY_DATE, 1, 1, 1]
+                   4, 1, "draft", constants.EMPTY_DATE, 1, 1]
         trixie_data = ["Trixie", "XYZ456", "Trixie", "Mycobacterium", "AATTC",
-                       5, 1, "final", constants.EMPTY_DATE, 1, 1, 1]
+                       5, 1, "final", constants.EMPTY_DATE, 1, 1]
         d29_data = ["D29", "XYZ456", "D29", "Mycobacterium", "GGCCATT",
-                    7, 1, "final", constants.EMPTY_DATE, 1, 1, 1]
+                    7, 1, "final", constants.EMPTY_DATE, 1, 1]
         input_phage_ids_and_seqs = [l5_data, trixie_data, d29_data]
         connection = pymysql.connect(host = "localhost",
                                      user = user,
@@ -267,13 +266,12 @@ class TestImportGenomeMain1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 "'%s', '%s', '%s', '%s', '%s', " \
                  % (data[0], data[1], data[2], data[3], data[4] ) + \
-                " %s, %s, '%s', '%s', %s, %s, %s);" \
-                % (data[5], data[6], data[7], data[8], data[9],
-                data[10], data[11])
+                " %s, %s, '%s', '%s', %s, %s);" \
+                % (data[5], data[6], data[7], data[8], data[9], data[10])
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -311,11 +309,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         and no phagesdb data."""
 
         l5_data = ["L5x", "ABC123", "L5_Draft", "Mycobacterium", "ATCG",
-                   4, 1, "draft", constants.EMPTY_DATE, 1, 1, 1]
+                   4, 1, "draft", constants.EMPTY_DATE, 1, 1]
         trixie_data = ["Trixie", "XYZ456", "Trixie", "Gordonia", "AATTC",
-                       5, 1, "final", constants.EMPTY_DATE, 1, 1, 1]
+                       5, 1, "final", constants.EMPTY_DATE, 1, 1]
         d29_data = ["D29", "XYZ456", "D29", "Mycobacterium", "GGCCATT",
-                    7, 1, "final", constants.EMPTY_DATE, 1, 1, 1]
+                    7, 1, "final", constants.EMPTY_DATE, 1, 1]
         input_phage_ids_and_seqs = [l5_data, trixie_data, d29_data]
         connection = pymysql.connect(host = "localhost",
                                      user = user,
@@ -327,13 +325,12 @@ class TestImportGenomeMain1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 "'%s', '%s', '%s', '%s', '%s', " \
                  % (data[0], data[1], data[2], data[3], data[4] ) + \
-                " %s, %s, '%s', '%s', %s, %s, %s);" \
-                % (data[5], data[6], data[7], data[8], data[9],
-                data[10], data[11])
+                " %s, %s, '%s', '%s', %s, %s);" \
+                % (data[5], data[6], data[7], data[8], data[9], data[10])
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -367,11 +364,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         no MySQL connection handle, and no phagesdb data."""
 
         l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",
-                   4, 1, "draft", constants.EMPTY_DATE, 1, 1, 1]
+                   4, 1, "draft", constants.EMPTY_DATE, 1, 1]
         trixie_data = ["Trixie", "XYZ456", "Trixie", "Mycobacterium", "AATTC",
-                       5, 1, "final", constants.EMPTY_DATE, 1, 1, 1]
+                       5, 1, "final", constants.EMPTY_DATE, 1, 1]
         d29_data = ["D29", "XYZ456", "D29", "Mycobacterium", "GGCCATT",
-                    7, 1, "final", constants.EMPTY_DATE, 1, 1, 1]
+                    7, 1, "final", constants.EMPTY_DATE, 1, 1]
         input_phage_ids_and_seqs = [l5_data, trixie_data, d29_data]
         connection = pymysql.connect(host = "localhost",
                                      user = user,
@@ -383,13 +380,12 @@ class TestImportGenomeMain1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationQC, " + \
+                "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 "'%s', '%s', '%s', '%s', '%s', " \
                  % (data[0], data[1], data[2], data[3], data[4] ) + \
-                " %s, %s, '%s', '%s', %s, %s, %s);" \
-                % (data[5], data[6], data[7], data[8], data[9],
-                data[10], data[11])
+                " %s, %s, '%s', '%s', %s, %s);" \
+                % (data[5], data[6], data[7], data[8], data[9], data[10])
             cur.execute(sql1)
         connection.commit()
         connection.close()

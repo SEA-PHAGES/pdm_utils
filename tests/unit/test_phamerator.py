@@ -63,7 +63,7 @@ class TestPhameratorFunctions(unittest.TestCase):
                             "XYZ_Draft",
                             "Arthrobacter",
                             "GGGG",
-                            "gbk",
+                            "unknown",
                             "X",
                             "1/1/1900",
                             "none",
@@ -94,7 +94,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #     input_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
     #     input_accession = "  ABC123.1  "
     #     input_annotation_author = "1"
-    #     input_annotation_qc = "1"
     #     input_retrieve_record = "1"
     #
     #     data_tuple = (input_phage_id,
@@ -107,7 +106,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #                     input_accession,
     #                     input_subcluster,
     #                     input_annotation_author,
-    #                     input_annotation_qc,
     #                     input_retrieve_record)
     #
     #     phamerator.parse_phamerator_data(self.genome1, data_tuple)
@@ -122,7 +120,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #     output_date = datetime.strptime('1/1/2000', '%m/%d/%Y')
     #     output_accession = "ABC123"
     #     output_annotation_author = "1"
-    #     output_annotation_qc = "1"
     #     output_retrieve_record = "1"
     #     output_type = "phamerator"
     #     output_seq_length = 4
@@ -149,8 +146,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #     with self.subTest():
     #         self.assertEqual(self.genome1.annotation_author, \
     #             output_annotation_author)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
     #     with self.subTest():
     #         self.assertEqual(self.genome1.retrieve_record, \
     #             output_retrieve_record)
@@ -173,7 +168,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #     input_date = None
     #     input_accession = None
     #     input_annotation_author = "1"
-    #     input_annotation_qc = "1"
     #     input_retrieve_record = "1"
     #
     #     data_tuple = (input_phage_id,
@@ -186,7 +180,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #                     input_accession,
     #                     input_subcluster,
     #                     input_annotation_author,
-    #                     input_annotation_qc,
     #                     input_retrieve_record)
     #
     #     phamerator.parse_phamerator_data(self.genome1, data_tuple)
@@ -201,7 +194,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #     output_date = datetime.strptime('1/1/0001', '%m/%d/%Y')
     #     output_accession = ""
     #     output_annotation_author = "1"
-    #     output_annotation_qc = "1"
     #     output_retrieve_record = "1"
     #     output_type = "phamerator"
     #     output_seq_length = 4
@@ -228,8 +220,6 @@ class TestPhameratorFunctions(unittest.TestCase):
     #     with self.subTest():
     #         self.assertEqual(self.genome1.annotation_author, \
     #             output_annotation_author)
-    #     with self.subTest():
-    #         self.assertEqual(self.genome1.annotation_qc, output_annotation_qc)
     #     with self.subTest():
     #         self.assertEqual(self.genome1.retrieve_record, \
     #             output_retrieve_record)
@@ -274,7 +264,6 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "Subcluster2":"A2",
                      "status":"final",
                      "RetrieveRecord":1,
-                     "AnnotationQC":1,
                      "AnnotationAuthor":1}
 
         self.genome1 = \
@@ -310,8 +299,6 @@ class TestPhameratorFunctions(unittest.TestCase):
             self.assertEqual(self.genome1.annotation_status, "final")
         with self.subTest():
             self.assertEqual(self.genome1.retrieve_record, 1)
-        with self.subTest():
-            self.assertEqual(self.genome1.annotation_qc, 1)
         with self.subTest():
             self.assertEqual(self.genome1.annotation_author, 1)
         with self.subTest():
@@ -358,7 +345,6 @@ class TestPhameratorFunctions(unittest.TestCase):
                      "Stop":100,
                      "Length":1000,
                      "Name":"1",
-                     "TypeID":"CDS",
                      "translation":"AGGPT",
                      "Orientation":"F",
                      "Notes":"description".encode("utf-8"),
@@ -458,7 +444,7 @@ class TestPhameratorFunctions(unittest.TestCase):
     #
     #     exp_ids = set(["L5","Trixie","KatherineG","XYZ"])
     #     exp_host = set(["Mycobacterium","Gordonia","Arthrobacter"])
-    #     exp_status = set(["final","gbk"])
+    #     exp_status = set(["final","unknown"])
     #     exp_cluster = set(["A","X"])
     #     exp_subcluster = set(["A2","A15"])
     #     exp_accession = set(["ABC123","EFG123","XYZ123"])
@@ -542,9 +528,7 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.gc = 0.5001
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
-        self.genome1.annotation_qc = "1"
         self.genome1.annotation_author = "1"
-
         self.genome1.cluster_subcluster = "A123"
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"

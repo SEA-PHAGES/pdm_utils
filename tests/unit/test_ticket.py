@@ -221,27 +221,6 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_set_annotation_qc_1(self):
-        """Check that value is not lowercased when not 'none'."""
-        value = "ABC"
-        self.tkt.set_annotation_qc(value)
-        self.assertEqual(self.tkt.annotation_qc, "ABC")
-
-    def test_set_annotation_qc_2(self):
-        """Check that value is lowercased when 'none'."""
-        value = "NONE"
-        self.tkt.set_annotation_qc(value)
-        self.assertEqual(self.tkt.annotation_qc, "none")
-
-    def test_set_annotation_qc_3(self):
-        """Check that int value is set correctly."""
-        value = 1
-        self.tkt.set_annotation_qc(value)
-        self.assertEqual(self.tkt.annotation_qc, 1)
-
-
-
-
     def test_set_retrieve_record_1(self):
         """Check that value is not lowercased when not 'none'."""
         value = "ABC"

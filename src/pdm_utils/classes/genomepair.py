@@ -118,8 +118,6 @@ class GenomePair:
                 second.date = first.date
             if (second.annotation_author == keyword or keyword is None):
                 second.annotation_author = first.annotation_author
-            if (second.annotation_qc == keyword or keyword is None):
-                second.annotation_qc = first.annotation_qc
             if (second.retrieve_record == keyword or keyword is None):
                 second.retrieve_record = first.retrieve_record
             if (second.description == keyword or keyword is None):

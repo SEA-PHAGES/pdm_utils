@@ -78,7 +78,6 @@ class TestTicketFunctions1(unittest.TestCase):
         self.filled_ticket.subcluster = "A2"
         self.filled_ticket.annotation_status = "final"
         self.filled_ticket.annotation_author = 1
-        self.filled_ticket.annotation_qc = 1
         self.filled_ticket.retrieve_record = 1
         self.filled_ticket.description_field = "product"
         self.filled_ticket.accession = "ABC123"
@@ -278,8 +277,6 @@ class TestTicketFunctions1(unittest.TestCase):
     #         self.assertEqual(self.tkt.annotation_status, "final")
     #     with self.subTest():
     #         self.assertEqual(self.tkt.annotation_author, "hatfull")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.annotation_qc, 1)
     #     with self.subTest():
     #         self.assertEqual(self.tkt.retrieve_record, 1)
     #     with self.subTest():
@@ -679,7 +676,6 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket.subcluster = "A2"
         self.add_ticket.annotation_status = "final"
         self.add_ticket.annotation_author = 1
-        self.add_ticket.annotation_qc = 1
         self.add_ticket.retrieve_record = 1
         self.add_ticket.accession = "ABC123.1"
         self.bundle1 = bundle.Bundle()
@@ -696,7 +692,6 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket.subcluster = "A2"
         self.remove_ticket.annotation_status = "final"
         self.remove_ticket.annotation_author = 1
-        self.remove_ticket.annotation_qc = 1
         self.remove_ticket.retrieve_record = 1
         self.remove_ticket.accession = "ABC123.1"
         self.bundle2 = bundle.Bundle()
@@ -716,7 +711,6 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket.subcluster = "A2"
         self.invalid_ticket.annotation_status = "final"
         self.invalid_ticket.annotation_author = 1
-        self.invalid_ticket.annotation_qc = 1
         self.invalid_ticket.retrieve_record = 1
         self.invalid_ticket.accession = "ABC123.1"
         self.bundle3 = bundle.Bundle()
@@ -746,8 +740,6 @@ class TestTicketFunctions4(unittest.TestCase):
             self.assertEqual(matched_genome.annotation_status, "final")
         with self.subTest():
             self.assertEqual(matched_genome.annotation_author, 1)
-        with self.subTest():
-            self.assertEqual(matched_genome.annotation_qc, 1)
         with self.subTest():
             self.assertEqual(matched_genome.retrieve_record, 1)
         with self.subTest():
