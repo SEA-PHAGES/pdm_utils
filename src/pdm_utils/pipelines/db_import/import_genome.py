@@ -49,7 +49,7 @@ def run_import(unparsed_args_list):
         Indicates the flat file field that should be used
         as the unique identifier for the genome during import.
         """
-    TEST_RUN_HELP = \
+    PROD_RUN_HELP = \
         ("Indicates whether the script should make any changes to the database. "
          "If False, the production run will implement all changes in the "
          "indicated database. If True, the test run will not "
@@ -69,8 +69,8 @@ def run_import(unparsed_args_list):
     parser.add_argument("-gf", "--genome_id_field", type=str,
         default="organism_name", choices=["organism_name", "filename"],
         help=GENOME_ID_FIELD_HELP)
-    parser.add_argument("-tr", "--test_run", action="store_false", default=True,
-        help=TEST_RUN_HELP)
+    parser.add_argument("-p", "--prod_run", action="store_true", default=False,
+        help=PROD_RUN_HELP)
     parser.add_argument("-rm", "--run_mode", type=str.lower,
         choices=list(constants.RUN_MODES.keys()), default="phagesdb",
         help=RUN_MODE_HELP)
@@ -112,7 +112,7 @@ def run_import(unparsed_args_list):
     # If everything checks out, pass args to the main import pipeline:
     input_output(sql_handle=sql_handle,
         genome_folder=args.input_folder, import_table_file=args.import_table,
-        genome_id_field=args.genome_id_field, test_run=args.test_run,
+        genome_id_field=args.genome_id_field, prod_run=args.prod_run,
         description_field=args.description_field, run_mode=args.run_mode)
 
 
@@ -120,7 +120,7 @@ def run_import(unparsed_args_list):
 
 # TODO unittest.
 def input_output(sql_handle=None, genome_folder="", import_table_file="",
-    genome_id_field="", test_run=True, description_field="", run_mode=""):
+    genome_id_field="", prod_run=False, description_field="", run_mode=""):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
@@ -157,7 +157,7 @@ def input_output(sql_handle=None, genome_folder="", import_table_file="",
         # TODO not sure how many elements (or what types) are returned.
         # TODO check order of parameters.
         results = main(ticket_dict, files_in_folder, sql_handle,
-                       test_run, genome_id_field, filename_flag)
+                       prod_run, genome_id_field, filename_flag)
 
     # Now that all flat files and tickets have been evaluated,
     # provide summary of results...
@@ -225,7 +225,7 @@ def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
 
 
 # TODO unittest.
-def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True,
+def main(ticket_dict, files_in_folder, sql_handle=None, prod_run=False,
          genome_id_field=""):
     """Process GenBank-formatted flat files.
 
@@ -241,10 +241,10 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True,
         A pdm_utils MySQLConnectionHandler object containing
         information on which database to connect to.
     :type sql_handle: MySQLConnectionHandler
-    :param test_run:
+    :param prod_run:
         Indicates whether the database should be updated from the
         import tickets.
-    :type test_run: bool
+    :type prod_run: bool
     :returns:
     :rtype:
     """
@@ -345,7 +345,7 @@ def main(ticket_dict, files_in_folder, sql_handle=None, test_run=True,
         if errors == 0:
             # Now import the data into the database if there are no errors and
             # if it is not a test run.
-            if not test_run:
+            if prod_run:
                 bndl.create_sql_statements()
                 result = sql_handle.execute_transaction(bndl.sql_queries)
                 query_dict[bndl.ticket.phage_id] = bndl.sql_queries
