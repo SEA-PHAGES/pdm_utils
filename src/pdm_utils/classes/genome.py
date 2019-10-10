@@ -36,9 +36,8 @@ class Genome:
 
         # The following attributes are common to PhameratorDB.
         self.cluster_subcluster = "" # Combined cluster/subcluster data.
-        self.annotation_status = "" # Final, Draft, Gbk version of genome data
+        self.annotation_status = "" # Final, Draft, Unknown version of genome data
         self.annotation_author = -1 # 1 (can be changed), 0 (can not be changed)
-        self.annotation_qc = -1 # 1 (reliable), 0, (not reliable)
         self.retrieve_record = -1 # 1 (auto update), 0 (do not auto update)
         self.date = "" # Used for the DateLastModified field.
 
@@ -415,14 +414,6 @@ class Genome:
             self.annotation_author = int(value)
         except:
             self.annotation_author = value
-
-
-    def set_annotation_qc(self, value):
-        """Convert annotation_qc to integer value if possible."""
-        try:
-            self.annotation_qc = int(value)
-        except:
-            self.annotation_qc = value
 
 
     def set_retrieve_record(self, value):
@@ -931,25 +922,6 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_annotation_qc(self, check_set=set(), eval_id=None):
-        """Check that the annotation_qc is valid.
-
-        :param check_set: Set of reference annotation_qc values.
-        :type check_set: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.annotation_qc in check_set:
-            result = "The annotation_qc is valid."
-            status = "correct"
-        else:
-            result = "The annotation_qc is not valid."
-            status = "error"
-        definition = "Check that the annotation_qc is valid."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
     def check_retrieve_record(self, check_set=set(), eval_id=None):
         """Check that the retrieve_record is valid.
 
@@ -1003,10 +975,10 @@ class Genome:
         :type eval_id: str
         """
         # Now that the AnnotationAuthor attribute contains authorship data, the
-        # 'gbk' annotation status now reflects an 'unknown' annotation (in
+        # 'unknown' annotation status now reflects an 'unknown' annotation (in
         # regards to if it was auto-annotated or manually annotated).
         # So for the annotation_status-accession error,
-        # if the annotation_status is 'gbk' ('unkown'),
+        # if the annotation_status is 'unkown',
         # there is no reason to assume whether there should be an accession
         # or not. Only for 'final' (manually annotated) genomes should
         # there be an accession.

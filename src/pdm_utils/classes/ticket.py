@@ -31,7 +31,6 @@ class GenomeTicket:
         self.subcluster = ""
         self.annotation_status = ""
         self.annotation_author = -1
-        self.annotation_qc = -1
         self.retrieve_record = -1
         self.accession = ""
 
@@ -129,13 +128,6 @@ class GenomeTicket:
         """
         self.annotation_author = basic.lower_case(value)
 
-    def set_annotation_qc(self, value):
-        """Set the set_annotation_qc.
-
-        :param value: Value to be set as the annotation_qc.
-        :type value: str
-        """
-        self.annotation_qc = basic.lower_case(value)
 
     def set_retrieve_record(self, value):
         """Set the set_retrieve_record.

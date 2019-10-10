@@ -95,11 +95,6 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
-        gnm.set_annotation_qc(data_dict["AnnotationQC"])
-    except:
-        pass
-
-    try:
         gnm.set_annotation_author(data_dict["AnnotationAuthor"])
     except:
         pass
@@ -123,6 +118,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
     """
 
     cds_ftr = cds.Cds()
+    cds_ftr.type = "CDS"
     try:
         cds_ftr.id = data_dict["GeneID"]
     except:
@@ -152,11 +148,6 @@ def parse_gene_table_data(data_dict, trans_table=11):
 
     try:
         cds_ftr.name = data_dict["Name"]
-    except:
-        pass
-
-    try:
-        cds_ftr.type = data_dict["TypeID"]
     except:
         pass
 
@@ -441,7 +432,6 @@ def create_delete(table, field, data):
 # TODO should this function first check datatypes and formats?
 # Strand should be either "F" or "R"
 # Start, stop, length = int
-# TypeID = 'CDS'
 def create_gene_table_insert(cds_ftr):
     """Create a MySQL gene table INSERT statement.
 
@@ -453,17 +443,16 @@ def create_gene_table_insert(cds_ftr):
     :rtype: str
     """
     statement = ("INSERT INTO gene "
-                 "(GeneID, PhageID, Start, Stop, Length, Name, TypeID, "
+                 "(GeneID, PhageID, Start, Stop, Length, Name, "
                  "translation, Orientation, Notes, LocusTag) "
                  "VALUES "
-                 "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');"
+                 "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s');"
                  % (cds_ftr.id,
                     cds_ftr.genome_id,
                     cds_ftr.left,
                     cds_ftr.right,
                     cds_ftr.translation_length,
                     cds_ftr.name,
-                    cds_ftr.type,
                     cds_ftr.translation,
                     cds_ftr.strand,
                     cds_ftr.processed_description,
@@ -484,10 +473,10 @@ def create_phage_table_insert(gnm):
     """
     statement = ("INSERT INTO phage (PhageID, Accession, Name, "
                  "HostStrain, Sequence, SequenceLength, GC, status, "
-                 "DateLastModified, RetrieveRecord, AnnotationQC, "
+                 "DateLastModified, RetrieveRecord, "
                  "AnnotationAuthor) VALUES ("
                  "'%s', '%s', '%s', '%s', '%s',"
-                 " %s, %s, '%s', '%s', %s, %s, %s);"
+                 " %s, %s, '%s', '%s', %s, %s);"
                  % (gnm.id,
                  gnm.accession,
                  gnm.name,
@@ -498,7 +487,6 @@ def create_phage_table_insert(gnm):
                  gnm.annotation_status,
                  gnm.date,
                  gnm.retrieve_record,
-                 gnm.annotation_qc,
                  gnm.annotation_author)
                  )
     return statement

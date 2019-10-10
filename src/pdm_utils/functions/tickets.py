@@ -251,18 +251,6 @@ def parse_import_ticket_data(tkt=None, data_dict=None,
 #         else:
 #             pass
 #
-#         if direction == "list_to_ticket":
-#             # Convert to integer if possible.
-#             try:
-#                 data_list[9] = int(data_list[9])
-#             except:
-#                 pass
-#             tkt.set_annotation_qc(data_list[9])
-#         elif direction == "ticket_to_list":
-#             # Convert to string.
-#             data_list[9] = str(tkt.annotation_qc)
-#         else:
-#             pass
 #
 #         if direction == "list_to_ticket":
 #             # Convert to integer if possible.
@@ -365,7 +353,6 @@ def copy_ticket_to_genome(bndl):
         genome1.set_subcluster(tkt.subcluster)
         genome1.set_cluster_subcluster()
         genome1.set_annotation_author(tkt.annotation_author)
-        genome1.set_annotation_qc(tkt.annotation_qc)
         genome1.set_retrieve_record(tkt.retrieve_record)
 
         bndl.genome_dict[genome1.type] = genome1
