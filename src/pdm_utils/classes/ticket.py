@@ -40,8 +40,11 @@ class GenomeTicket:
 
 
 
-
-
+        # TODO in dev
+        self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
+        self.data_retain = set() # Data that should be retained from Phamerator.
+        self.data_ticket = set() # Data to be added to genome from ticket.
+        self.ticket_dict = {} # Original ticket data.
 
 
 
