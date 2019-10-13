@@ -5,6 +5,25 @@ from Bio.Alphabet import IUPAC
 from datetime import datetime
 
 IMPORT_TABLE_SIZE = 12
+
+IMPORT_TABLE_REQ_DICT = {
+    "id":"",
+    "type":"",
+    "phage_id":"",
+    }
+
+IMPORT_TABLE_OPT_DICT = {
+    "description_field":"",
+    "run_mode":"",
+    "host_genus":"",
+    "cluster":"",
+    "subcluster":"",
+    "annotation_status":"",
+    "annotation_author":"",
+    "accession":"",
+    "retrieve_record":""
+    }
+
 IMPORT_TABLE_DICT = {
     "id":"",
     "type":"",
@@ -52,7 +71,7 @@ PROTEIN_ALPHABET = set(IUPAC.protein.letters)
 # Replace = delete a genome and replace it with another.
 # Update = make changes to one or more fields related to a genome
 # already present in the database (e.g. HostStrain, Cluster, Subcluster, etc.)
-IMPORT_TICKET_TYPE_SET = set(["add", "replace",])
+IMPORT_TICKET_TYPE_SET = set(["add", "replace"])
 
 # Create set of most common gene description genbank qualifiers.
 DESCRIPTION_FIELD_SET = set(["product", "note", "function"])
@@ -155,117 +174,6 @@ HOST_GENUS_DICT = {
     "Mycolicibacterium":"Mycobacterium"
     }
 
-
-
-# Define run modes:
-
-# TODO implement the 'import_locus_tag' option.
-
-# Options that impact how data is processed but are not utilized
-# for evaluation of specific parts of a flat file:
-
-# 'check_replace':           Should unexpected genome replacements be reported?
-# 'import_locus_tag':        Should locus_tags be imported?
-
-
-# Options that are utilized during the evaluation stage:
-
-# 'check_locus_tag':         Should the structure of locus_tags be checked?
-# 'check_description_field': Should CDS descriptions in unexpected
-#                            fields be reported?
-# 'check_description':       Should unexpected CDS descriptions be reported?
-# 'check_trna':              Should tRNA features be evaluated?
-# 'check_id_typo':           Should genome ID typos be reported?
-# 'check_host_typo':         Should host typos be reported?
-# 'check_author':            Should unexpected authors be reported?
-# 'check_gene':              Should the CDS 'gene' qualifier be evaluated?
-# 'check_seq':               Should the nucleotide sequence be evaluated?
-
-def _get_run_mode_base():
-    dict = {
-        "check_locus_tag":True,
-        "check_description_field":True,
-        "check_replace":True,
-        "check_trna":True,
-        "import_locus_tag":True,
-        "check_id_typo":True,
-        "check_host_typo":True,
-        "check_author":True,
-        "check_description":True,
-        "check_gene":True
-        }
-    return dict
-
-RUN_MODE_BASE = _get_run_mode_base()
-
-
-# Auto-annotations.
-def _get_run_mode_pecaan():
-    new_dict = _get_run_mode_base()
-    new_dict["check_locus_tag"] = False
-    new_dict["check_trna"] = False
-    new_dict["import_locus_tag"] = False
-    new_dict["check_id_typo"] = False
-    new_dict["check_host_typo"] = False
-    new_dict["check_author"] = False
-    new_dict["check_description"] = False
-    return new_dict
-RUN_MODE_PECAAN = _get_run_mode_pecaan()
-
-# Manual annotations.
-def _get_run_mode_phagesdb():
-    new_dict = _get_run_mode_base()
-    new_dict["import_locus_tag"] = False
-    return new_dict
-RUN_MODE_PHAGESDB = _get_run_mode_phagesdb()
-
-# SEA-PHAGES GenBank records.
-def _get_run_mode_sea_auto():
-    new_dict = _get_run_mode_base()
-    new_dict["check_locus_tag"] = False
-    new_dict["check_description_field"] = False
-    new_dict["check_replace"] = False
-    new_dict["check_trna"] = False
-    new_dict["check_id_typo"] = False
-    new_dict["check_author"] = False
-    new_dict["check_description"] = False
-    new_dict["check_gene"] = False
-    return new_dict
-RUN_MODE_SEA_AUTO = _get_run_mode_sea_auto()
-
-# Non-SEA-PHAGES GenBank records.
-def _get_run_mode_misc():
-    new_dict = _get_run_mode_base()
-    new_dict["check_locus_tag"] = False
-    new_dict["check_replace"] = False
-    new_dict["check_trna"] = False
-    new_dict["check_id_typo"] = False
-    new_dict["check_host_typo"] = False
-    new_dict["check_author"] = False
-    new_dict["check_description"] = False
-    new_dict["check_gene"] = False
-    return new_dict
-RUN_MODE_MISC = _get_run_mode_misc()
-
-# Custom QC settings. User can select the settings, so it is initialized as
-# a copy of the base run_mode. At the command line, the user can
-# provide the customized combination of options.
-RUN_MODE_CUSTOM = _get_run_mode_base()
-
-
-# A dictionary that holds all the other run_mode dictionaries.
-# Import tables will use the keys to retrieve the right combination
-# of parameters. If new options needed to be created, they need to
-# be added to this dictionary.
-# The 'custom' dictionary enables the user to specify a unique
-# combination of options at the command line.
-RUN_MODES = {
-    "pecaan":RUN_MODE_PECAAN,
-    "phagesdb":RUN_MODE_PHAGESDB,
-    "sea_auto":RUN_MODE_SEA_AUTO,
-    "misc":RUN_MODE_MISC,
-    "custom":RUN_MODE_CUSTOM
-    }
 
 # Phamerator server info
 DB_HOST = "phamerator.webfactional.com"

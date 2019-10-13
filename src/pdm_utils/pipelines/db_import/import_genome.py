@@ -19,6 +19,116 @@ from pdm_utils.constants import constants
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
+# Eval_flag definitions.
+EVAL_FLAGS = {
+    # Options that impact how data is processed but are not utilized
+    # for evaluation of specific parts of a flat file:
+    "check_replace": "Should unexpected genome replacements be reported?",
+    "import_locus_tag": "Should CDS feature locus_tags be imported?",
+
+    # Options that are utilized during the evaluation stage:
+    "check_locus_tag": "Should the structure of CDS feature locus_tags be checked?",
+    "check_description_field": "Should CDS descriptions in unexpected fields be reported?",
+    "check_description": "Should unexpected CDS descriptions be reported?",
+    "check_trna": "Should tRNA features be evaluated?",
+    "check_id_typo": "Should genome ID typos be reported?",
+    "check_host_typo": "Should host typos be reported?",
+    "check_author": "Should unexpected authors be reported?",
+    "check_gene": "Should the CDS 'gene' qualifier be evaluated?",
+    "check_seq": "Should the nucleotide sequence be evaluated?"
+    }
+
+# TODO unittest.
+def get_eval_flag_dict(run_mode):
+    """."""
+    # Base dictionary with all flags set to True.
+    dict = {}
+    for key in EVAL_FLAGS:
+        dict[key] = True
+
+    # Auto-annotations.
+    if run_mode == "pecaan":
+        dict["check_locus_tag"] = False
+        dict["check_trna"] = False
+        dict["import_locus_tag"] = False
+        dict["check_id_typo"] = False
+        dict["check_host_typo"] = False
+        dict["check_author"] = False
+        dict["check_description"] = False
+
+    # Manual annotations.
+    elif run_mode == "phagesdb":
+        dict["import_locus_tag"] = False
+
+    # SEA-PHAGES GenBank records.
+    elif run_mode == "sea_auto":
+        dict["check_locus_tag"] = False
+        dict["check_description_field"] = False
+        dict["check_replace"] = False
+        dict["check_trna"] = False
+        dict["check_id_typo"] = False
+        dict["check_author"] = False
+        dict["check_description"] = False
+        dict["check_gene"] = False
+
+    # Non-SEA-PHAGES GenBank records.
+    elif run_mode == "misc":
+        dict["check_locus_tag"] = False
+        dict["check_replace"] = False
+        dict["check_trna"] = False
+        dict["check_id_typo"] = False
+        dict["check_host_typo"] = False
+        dict["check_author"] = False
+        dict["check_description"] = False
+        dict["check_gene"] = False
+
+    # Custom QC settings. User can select the settings, so it is initialized as
+    # a copy of the base run_mode. The user can provide the
+    # customized combination of options.
+    elif run_mode == "custom":
+        for key in dict.keys():
+            prompt = "Eval_flag: %s. %s" % (key, EVAL_FLAGS[key])
+            response = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+            if response is None:
+                print("The default setting for this eval_flag will be used.")
+            else:
+                dict[key] = response
+    else:
+        print("A valid run_mode has not been selected.")
+    return dict
+
+# A dictionary that holds all the eval_flag dictionaries.
+# TODO Unittest.
+RUN_MODES = {
+    "options":{
+        "pecaan": \
+            ("Relaxed evaluations for draft genome annotations "
+             "retrieved from PECAAN since some data has not yet been "
+             "manually reviewed (such as locus_tags)."),
+        "phagesdb": \
+            ("Most stringent evaluations for final genome annotations "
+             "retrieved from PhagesDB since this data will be "
+             "submitted to GenBank."),
+        "sea_auto": \
+            ("Relaxed evaluations for genome annotations generated "
+             "through SEA-PHAGES but retrieved from GenBank since "
+             "some of this data can no longer be modified."),
+        "misc": \
+            ("Very relaxed evaluations for genome annotations "
+             "not generated through SEA-PHAGES, since the data cannot be "
+             "modified."),
+        "custom": \
+            ("User-defined evaluations for customized import.")
+        },
+    "pecaan": get_eval_flag_dict("pecaan"),
+    "phagesdb": get_eval_flag_dict("phagesdb"),
+    "sea_auto": get_eval_flag_dict("sea_auto"),
+    "misc": get_eval_flag_dict("misc"),
+    "custom": get_eval_flag_dict("custom")
+    }
+
+
+# TODO unittest?
 def run_import(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
@@ -148,7 +258,9 @@ def input_output(sql_handle=None, genome_folder="", import_table_file="",
             print("Error with the eval_flag_file")
             sys.exit(1)
 
-    ticket_dict = prepare_tickets(import_table_file, eval_flags,
+    input_run_mode_dict = {run_mode: eval_flags}
+
+    ticket_dict = prepare_tickets(import_table_file, input_run_mode_dict,
                                   description_field)
 
     # Proceed if there is at least one file to process.
@@ -165,7 +277,7 @@ def input_output(sql_handle=None, genome_folder="", import_table_file="",
 
 
 # TODO unittest.
-def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
+def prepare_tickets(import_table_file="", input_run_mode_dict={}, description_field=""):
     """Prepare dictionary of pdm_utils Tickets."""
     # 1. parse ticket data from table.
     # 2. set case for all fields.
@@ -174,13 +286,38 @@ def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
     # 7. confirm correct fields are populated based on ticket type.
     ticket_list = []
     tkt_errors = 0
+
+    run_mode = input_run_mode_dict.keys()[0]
+    eval_flags = input_run_mode_dict[run_mode]
+
+
     file_data = tickets.retrieve_ticket_data(import_table_file)
     for dict in file_data:
-        tkt = tickets.parse_import_ticket_data(data_dict=dict)
-        if tkt is not None:
+        result = tickets.modify_import_data(dict)
+        if result:
+            tkt = tickets.parse_import_ticket_data2(dict)
+
+            # Only set description_field from parameter if it wasn't
+            # set within the ticket.
+            if tkt.description_field == "":
+                tkt.description_field = description_field
+            if tkt.run_mode == "":
+                tkt.run_mode = run_mode
+                tkt.eval_flags = eval_flags.copy()
             ticket_list.append(tkt)
         else:
             tkt_errors += 1
+
+    # Old format.
+    # for dict in file_data:
+    #     tkt = tickets.parse_import_ticket_data(data_dict=dict)
+    #     if tkt is not None:
+    #         ticket_list.append(tkt)
+    #     else:
+    #         tkt_errors += 1
+
+
+
     # Identify duplicated ticket values.
     tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set = \
         tickets.identify_duplicates(ticket_list, null_set=set(["none"]))
@@ -199,8 +336,6 @@ def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
     x = 0
     while x < len(ticket_list):
         tkt = ticket_list[x]
-        tkt.description_field = description_field
-        tkt.eval_flags = eval_flags.copy()
         check_ticket(
             tkt,
             type_set=constants.IMPORT_TICKET_TYPE_SET,

@@ -13,13 +13,9 @@ class GenomeTicket:
     def __init__(self):
 
         # Initialize all non-calculated attributes:
-        self.id = "" # Unique identifier
-        self.type = "" # Add, Replace, Remove, UPDATE
-
-        # Attribute used to populate Genome objects for any ticket type.
+        self.id = None # Unique identifier
+        self.type = "" # Add, Replace
         self.phage_id = ""
-
-        # Attribute used to evaluate all 'add' and 'replace' ticket types.
         self.run_mode = ""
         self.description_field = ""
         self.eval_flags = {} # Dictionary of evaluation flags.
@@ -46,6 +42,17 @@ class GenomeTicket:
         self.data_ticket = set() # Data to be added to genome from ticket.
         self.ticket_dict = {} # Original ticket data.
 
+
+    # TODO unittest.
+    def set_field_trackers():
+        """."""
+        for key in self.ticket_dict.keys():
+            if self.ticket_dict[key] == "retrieve":
+                self.data_retrieve.append(key)
+            elif self.ticket_dict[key] == "retain":
+                self.data_retain.append(key)
+            else:
+                self.data_ticket.append(key)
 
 
     # When parsing data from an import ticket, some fields should be

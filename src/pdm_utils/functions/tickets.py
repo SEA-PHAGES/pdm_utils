@@ -112,9 +112,168 @@ def parse_import_ticket_data(tkt=None, data_dict=None,
         return None
 
 
+# TODO unittest
+def modify_import_data(data_dict):
+    """Converts import ticket data to a Ticket object.
+
+    :param data_dict:
+        A dictionary of data with the following keys:
+
+            0. Import action
+            1. Primary PhageID
+            2. Host
+            3. Cluster
+            4. Subcluster
+            5. Status
+            6. Annotation Author (int)
+            7. Feature field
+            8. Accession
+            9. Retrieve Record (int)
+            10. Run mode
+
+    :type data_dict: dict
+    :returns:
+        If successful, a Ticket object is returned.
+        If the keys are not correct, None object is returned.
+    :rtype: Ticket or None
+    """
+    # Some import table fields are required. Others are optional.
+    required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
+    optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+
+    # First check if all required fields are present.
+    missing_req_fields = required_keys - data_dict.keys()
+    # Second, check if there are any fields that are not expected.
+    extra_fields = data_dict.keys() - required_keys - optional_keys
+
+    # If row in import table has more fields than headers, they are
+    # assigned None by csv.DictReader.
+    # If row in import table contains fields with no data, they are
+    # assigned "" by csv.DictReader.
+    # "retrieve" = get data from PhagesDB.
+    # "retain" = get data from current genome in Phamerator.
+    # "none" = there is no applicable data (only for accession and subcluster)
+    # "" = source of data should be automatically determined (optional)
+    if (len(missing_req_fields) == 0 and len(extra_fields) == 0):
+
+        # Convert None values to "".
+        set_empty(data_dict)
+        # Confirm that certain keywords are lowercase.
+        set_keywords(data_dict, set(["retrieve", "retain", "none"]))
+        # Determine which fields are not present, and add them to the dict.
+        set_missing_keys(data_dict, optional_keys)
+        # Certain fields should be lowercase.
+        data_dict["type"] = data_dict["type"].lower()
+        data_dict["description_field"] = data_dict["description_field"].lower()
+        data_dict["run_mode"] = data_dict["run_mode"].lower()
+        # For fields that are empty (""), set them with default values.
+        set_retrieve_or_retain(data_dict, "host_genus")
+        set_retrieve_or_retain(data_dict, "cluster")
+        set_retrieve_or_retain(data_dict, "subcluster")
+        set_retrieve_or_retain(data_dict, "accession")
+        set_1_or_retain(data_dict, "annotation_author")
+        set_1_or_retain(data_dict, "retrieve_record")
+        set_draft_or_final(data_dict, "annotation_status")
+        return True
+    else:
+        print("The ticket %s is not formatted correctly." % data_dict)
+        return False
 
 
 
+def parse_import_ticket_data2(data_dict):
+    """Converts import ticket data to a Ticket object.
+
+    :param data_dict:
+        A dictionary of data with the following keys:
+
+            0. Import action type
+            1. Primary PhageID
+            2. Host
+            3. Cluster
+            4. Subcluster
+            5. Status
+            6. Annotation Author (int)
+            7. Feature field
+            8. Accession
+            9. Retrieve Record (int)
+            10. Run mode
+
+    :type data_dict: dict
+    :returns: A pdm_utils Ticket object.
+    :rtype: Ticket
+    """
+    tkt = ticket.GenomeTicket()
+    tkt.id = data_dict["id"]
+    tkt.type = data_dict["type"]
+    tkt.phage_id = data_dict["phage_id"]
+    tkt.description_field = data_dict["description_field"]
+    tkt.run_mode = data_dict["run_mode"]
+    if tkt.run_mode in constants.RUN_MODES.keys():
+        tkt.eval_flags = constants.RUN_MODES[tkt.run_mode]
+    if tkt.run_mode == "custom":
+        # Call interactive function to determine eval_flags
+        # eval_flags = get_eval_flags()
+        pass        
+    tkt.ticket_dict = data_dict
+    tkt.set_field_trackers()
+    return tkt
+
+
+# TODO unittest.
+def set_empty(data_dict):
+    """."""
+    for key in data_dict.keys():
+        if data_dict[key] is None:
+            data_dict[key] = ""
+
+# TODO unittest.
+def set_keywords(data_dict, keywords):
+    """."""
+    for key in data_dict.keys():
+        value = data_dict[key]
+        if value.lower() in keywords:
+            data_dict[key] = value.lower()
+
+
+
+# TODO unittest.
+def set_missing_keys(data_dict, expected_keys):
+    """."""
+    missing_keys = expected_keys - data_dict.keys()
+    for key in missing_keys:
+        data_dict[key] = ""
+
+
+
+# TODO unittest.
+def set_retrieve_or_retain(data_dict, key):
+    """."""
+    if data_dict[key] == "":
+        if data_dict["type"] == "add":
+            data_dict[key] = "retrieve"
+        else:
+            ata_dict[key] = "retain"
+
+
+
+# TODO unittest.
+def set_1_or_retain(data_dict, key):
+    """."""
+    if data_dict[key] == "":
+        if data_dict["type"] == "add":
+            data_dict[key] = "1"
+        else:
+            ata_dict[key] = "retain"
+
+# TODO unittest.
+def set_draft_or_final(data_dict, key):
+    """."""
+    if data_dict[key] == "":
+        if data_dict["type"] == "add":
+            data_dict[key] = "draft"
+        else:
+            ata_dict[key] = "final"
 
 
 
