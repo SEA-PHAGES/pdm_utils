@@ -1,64 +1,125 @@
+"""
+This class handles start-to-end phameration of the translations present
+in a Phamerator database. Phameration can proceed using either MMseqs2
+(default) or blastclust. MMseqs2 is always faster than blastclust by at
+least an order of magnitude, but clustering specificity, sensitivity,
+and accuracy vary based on chosen parameters.
+"""
+
 import os
 import shutil
 import sys
-from subprocess import *
+from subprocess import Popen, PIPE
+import shlex
 import pymysql as pms
 import random
 import colorsys
+import csv
+
+from pdm_utils.constants.constants import BLASTCLUST_PATH
 
 
-class MMseqsPhameratorHandler:
-    def __init__(self, mysql_handler):
+class PhameratorHandler:
+    def __init__(self, mysql_handler, parsed_args):
         """
-        This object is intended to handle the phameration of genes in
-        a Phamerator database using MMseqs2.  It has methods and
-        attributes suitable for: storing extant pham data to conserve
-        pham numbers and colors where possible; retrieving geneid and
-        translation data and writing them to a file; filtering out
-        redundant translations before writing the genes to a file;
-        re-associating redundant geneids after phameration; converting
-        the FASTA input into the MMseqs2 database format; running
-        MMseqs2 with a host of different parameters; parsing MMseqs2
-        output; reinserting MMseqs2 pham data into the database, and
-        fixing miscolored phams and orphams.
-        :param mysql_connection: a pymysql connection object
+        :param mysql_handler: a MySQLConnectionHandler object
         """
         # MySQL connection object to be used for querying the database
         self.mysql_handler = mysql_handler
 
-        # Flag to filter genes with duplicate translations, or not
+        # Flag to denote whether redundant translations should be filtered
         self.filter_redundant = True
 
-        # File and directory names for use in several methods
-        self.temp_dir = "/tmp/MMseqs2"
-        self.fasta_input = "temp_input.fasta"
-        self.mmseqs_input = "sequenceDB"
-        self.mmseqs_output = "clusterDB"
-        self.parseable_output = "temp_output.fasta"
+        # Flag to direct program flow at stages where MMseqs2 and blastclust
+        # differ in their requirements
+        self.use_blast = parsed_args.use_blast
+
+        # I/O attributes
+        self.temp_dir = "/tmp/phamerate"
+        self.query_fasta = "phamerate_input.fasta"
+
+        self.mmseqs_in = "sequenceDB"
+        self.mmseqs_out = "clusterDB"
+        self.mmseqs_parseable_out = "phamerate_output.fasta"
+
+        self.blast_db = "targetDB"
+        self.blast_out = "phamerate_output.txt"
+
+        # Clustering parameters (method populates them based on use_blast flag)
+        self.cluster_params = self.get_default_params(parsed_args)
 
         # Store current database status for use at the end
-        self.old_phams = {}
-        self.old_colors = {}
-        self.duplicate_genes = {}
+        self.old_phams = dict()
+        self.old_colors = dict()
+        self.geneids_to_translations = dict()
+        self.duplicate_translations = dict()
         self.new_genes = set()
 
         # Store new database data for injection back into the database
-        self.new_phams = {}
-        self.new_colors = {}
-
-        # Set the MMseqs2 clustering parameter defaults.
-        self.threads = 4
-        self.verbosity = 3
-        self.single_step = False
-        self.max_seqs = 250
-        self.min_seq_id = 0.8
-        self.coverage = 0.8
-        self.alignment_mode = 3
-        self.coverage_mode = 0
-        self.cluster_mode = 0
+        self.new_phams = dict()
+        self.new_colors = dict()
 
         # Log file to write output to
         self.log = open("/tmp/MMseqsPhamerationLog.txt", "w")
+
+    def main(self):
+        """
+        Main workflow for phameration (doesn't care which parameters
+        or program are to be used).
+        :return:
+        """
+        # Refresh temp dir (essential for MMseqs2 - otherwise it will use old
+        # outputs as "new" and run super fast but also potentially with the
+        # wrong output
+        self.refresh_temp_dir()
+
+        # Get old pham data
+        self.read_existing_phams()
+        self.read_unphamerated_genes()
+
+        # Write fasta input and create appropriate cluster database
+        self.write_fasta()
+        self.create_cluster_db()
+
+        # Phamerate
+        self.phamerate()
+
+        # Read output, reintroduce duplicates
+        self.read_new_phams()
+        self.reintroduce_duplicates()
+
+        # Preserve pham names/colors and reinsert
+        self.preserve_pham_names()
+        self.reinsert_pham_data()
+
+        # Fix miscolored phams
+        self.fix_miscolored_phams()
+
+    @staticmethod
+    def get_default_params(parsed_args):
+        """
+        Determines which default parameters to use depending on the
+        use_blast flag's value. MMseqs2 and blastclust have different
+        parameters (some value overlap but names are all different).
+        :param parsed_args: parsed command line arguments list
+        :type parsed_args: Namespace object from argparse
+        :return: params
+        """
+        if parsed_args.use_blast:
+            params = {"-S": parsed_args.identity,
+                      "-L": float(parsed_args.coverage)/100,
+                      "-a": parsed_args.threads}
+        else:
+            params = {"--threads": parsed_args.threads,
+                      "-v": parsed_args.verbose,
+                      "--cluster-steps": parsed_args.steps,
+                      "--max-seqs": parsed_args.max_seqs,
+                      "--min-seq-id": float(parsed_args.identity)/100,
+                      "-c": float(parsed_args.coverage)/100,
+                      "--alignment-mode": parsed_args.aln_mode,
+                      "--cov-mode": parsed_args.cov_mode,
+                      "--cluster-mode": parsed_args.clu_mode}
+        return params
 
     def refresh_temp_dir(self):
         """
@@ -85,24 +146,17 @@ class MMseqsPhameratorHandler:
                 print("Error {}: {}".format(e.args[0], e.args[1]))
                 sys.exit(1)
 
-    def get_existing_pham_data(self):
+    def read_existing_phams(self):
         """
-        This function retrieves pham names, GeneIDs, and colors for
-        those genes present in the pham/pham_color tables (i.e. genes
-        whose phages weren't updated in the present round of updates).
-        It then iterates through the returned tuple of tuples and, for
-        each pham name (keys in self.old_phams and self.old_colors), if
-        the name is present in the existing keys for old_phams, add the
-        geneid to that pham.  Otherwise, it's a pham we haven't stored
-        information for yet, and we need to store both the current gene
-        and the pham color.
+        Retrieves pham names, GeneIDs, and colors for genes present in
+        the pham/pham_color tables (those genes whose phages were NOT
+        updated in the current set of database updates).
         :return:
         """
         try:
-            query = "SELECT a.name, a.GeneID, b.color FROM (SELECT p.name," \
-                    "g.GeneID FROM gene g INNER JOIN pham p ON g.GeneID = " \
-                    "p.GeneID) AS a INNER JOIN pham_color AS b ON a.name = " \
-                    "b.name ORDER BY a.Name ASC"
+            query = "SELECT * FROM (SELECT a.name, a.GeneID, b.color FROM " \
+                    "pham AS a INNER JOIN pham_color AS b on a.name = " \
+                    "b.name) AS c ORDER BY c.name ASC"
             result_list = self.mysql_handler.execute_query(query)
         except pms.err.InternalError as e:
             print("Error {}: {}".format(e.args[0], e.args[1]))
@@ -115,25 +169,23 @@ class MMseqsPhameratorHandler:
             geneid = dictionary["GeneID"]
             color = dictionary["color"]
             if name in self.old_phams.keys():
-                self.old_phams[name] = self.old_phams[name] | set([geneid])
+                self.old_phams[name] = self.old_phams[name] | {geneid}
             else:
-                self.old_phams[name] = set([geneid])
+                self.old_phams[name] = {geneid}
                 self.old_colors[name] = color
+
         return
 
-    def get_unphamerated_geneids(self):
+    def read_unphamerated_genes(self):
         """
-        This function retrieves the GeneIDs for those genes present in
-        the gene table, but not the pham table (i.e. genes whose phages
-        were updated in the present round of updates).  It iterates
-        through the returned tuple of tuples and adds each GeneID to
-        the set of unphamerated genes.
+        Retrieves GeneIDs for those genes present in the gene table but
+        not the pham table (genes whose phages WERE updated in the
+        current set of database updates.
         :return:
         """
         try:
             query = "SELECT GeneID FROM gene WHERE GeneID NOT IN (SELECT " \
-                    "g.GeneID FROM gene AS g INNER JOIN pham AS p ON " \
-                    "g.GeneID = p.GeneID)"
+                    "GeneID from pham)"
             result_list = self.mysql_handler.execute_query(query)
         except pms.err.InternalError as e:
             print("Error {}: {}".format(e.args[0], e.args[1]))
@@ -143,20 +195,17 @@ class MMseqsPhameratorHandler:
 
         for dictionary in result_list:
             geneid = dictionary["GeneID"]
-            self.new_genes = self.new_genes | set([geneid])
+            self.new_genes = self.new_genes | {geneid}
+
         return
 
-    def write_geneids_and_translations_to_fasta(self):
+    def write_fasta(self):
         """
-        This function retrieves all GeneIDs and translations in the
-        gene table.  It either writes them all to self.fasta_input or
-        filters out GeneIDs with duplicated translations and stores
-        the duplicate groups in self.duplicate_genes and writes the
-        non-redundant translations to self.fasta_input.  It also clears
-        the old pham and pham_color data from their respective tables.
+        Retrieves all GeneIDs and translations in the gene table.
+        Filters duplicates if it's supposed to, then writes phameration
+        input FASTA file. Clears old pham/color data from their tables.
         :return:
         """
-        # Interact with database.
         try:
             # Clear old pham data - auto commits at end of transaction
             commands = ["TRUNCATE TABLE pham", "TRUNCATE TABLE pham_color"]
@@ -168,158 +217,156 @@ class MMseqsPhameratorHandler:
             print("Error: {}".format(err))
             sys.exit(1)
 
+        # Parse geneids and translations - sort into duplicate translation
+        # groups
+        for dictionary in result_list:
+            geneid = dictionary["GeneID"]
+            translation = dictionary["translation"].replace("-", "M")
+            self.geneids_to_translations[geneid] = translation
+
+            duplicate_group = self.duplicate_translations.get(translation, [])
+            duplicate_group.append(geneid)
+
+            self.duplicate_translations[translation] = duplicate_group
+
         # Write GeneIDs and translations to file
+        print("Begin write genes to fasta...")
         try:
-            print("Writing genes to fasta file")
-            f = open("{}/{}".format(self.temp_dir, self.fasta_input), "w")
+            f = open("{}/{}".format(self.temp_dir, self.query_fasta), "w")
+            # Write all genes if not filtering redundant
+            if not self.filter_redundant:
+                for geneid in self.geneids_to_translations.keys():
+                    f.write(">{}\n{}\n".format(
+                        geneid, self.geneids_to_translations[geneid]))
+            else:
+                for translation in self.duplicate_translations.keys():
+                    f.write(">{}\n{}\n".format(
+                        self.duplicate_translations[translation][0],
+                        translation))
         except IOError as e:
             print("Error {}: {}".format(e.args[0], e.args[1]))
             sys.exit(1)
+        except IndexError as err:
+            print("Error {}: {}".format(err.args[0], err.args[1]))
+            sys.exit(1)
 
-        # Write all gene data if self.filter_redundant is set to False
-        if self.filter_redundant is False:
-            try:
-                for dictionary in result_list:
-                    f.write(">{}\n".format(dictionary["GeneID"]))
-                    f.write("{}\n".format(dictionary["translation"].replace(
-                        "-", "M")))
-            except IOError as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                sys.exit(1)
-        # Otherwise, filter redundant translations, group their geneids
-        # and pick a random geneid from the group for the FASTA file.
+        print("Finish write genes to fasta...")
+
+        return
+
+    def create_cluster_db(self):
+        """
+        Converts query_fasta to the appropriate database format for
+        the clustering program to be used.
+        :return:
+        """
+        # If we'll be running blastclust, make a blastdb
+        if len(self.cluster_params) == 3:
+            command = "makeblastdb -in {} -out {} -dbtype prot " \
+                      "-parse_seqids".format(self.query_fasta, self.blast_db)
+
+        # Else, make an mmseqsdb
         else:
-            try:
-                trans_and_geneids = {}
-                for dictionary in result_list:
-                    geneids = trans_and_geneids.get(dictionary["translation"],
-                                                    set())
-                    geneids.add(dictionary["GeneID"])
-                    trans_and_geneids[dictionary["translation"]] = geneids
+            command = "mmseqs createdb {}/{} {}/{}".format(
+                self.temp_dir, self.query_fasta, self.temp_dir, self.mmseqs_in)
 
-                for trans in trans_and_geneids.keys():
-                    geneid = random.sample(trans_and_geneids[trans], 1)[0]
-                    self.duplicate_genes[geneid] = trans_and_geneids[trans]
-                    f.write(">{}\n".format(geneid))
-                    f.write("{}\n".format(trans.replace("-", "M")))
-                f.close()
-            except IndexError as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                sys.exit(1)
-            except IOError as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                sys.exit(1)
+        with Popen(args=shlex.split(command), stdout=PIPE) as process:
+            self.log.write(process.stdout.read().decode("utf-8") + "\n\n")
+
         return
 
-    def convert_fasta_to_mmseqsdb(self):
+    def phamerate(self):
         """
-        This function converts the file at self.fasta_input to the db
-        format used internally by MMseqs2 (self.mmseqs_input).
+        Runs the appropriate clustering program with user-defined
+        parameters.
         :return:
         """
-        try:
-            args = ["mmseqs", "createdb", "{}/{}".format(self.temp_dir,
-                                                         self.fasta_input),
-                    "{}/{}".format(self.temp_dir, self.mmseqs_input)]
-            output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            self.log.write(str(output))
-        except OSError as err:
-            print("Error {}: {}".format(err.args[0], err.args[1]))
-            sys.exit(1)
-        return
-
-    def cluster_database(self):
-        """
-        This function runs MMseqs2 with the defined parameters.
-        :return:
-        """
-        if self.single_step is True:
-            try:
-                args = ["mmseqs", "cluster", "{}/{}".format(self.temp_dir,
-                                                           self.mmseqs_input),
-                        "{}/{}".format(self.temp_dir, self.mmseqs_output),
-                        self.temp_dir, "--remove-tmp-files",
-                        "--single-step-clustering", "--threads",
-                        str(self.threads), "-v", str(self.verbosity),
-                        "--max-seqs", str(self.max_seqs), "--min-seq-id",
-                        str(self.min_seq_id), "-c", str(self.coverage),
-                        "--alignment-mode", str(self.alignment_mode),
-                        "--cov-mode", str(self.coverage_mode),
-                        "--cluster-mode", str(self.cluster_mode)]
-                output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
-                                       stderr=PIPE).communicate()
-                self.log.write(str(output))
-            except OSError as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                sys.exit(1)
+        # If only 3 parameters, use blastclust
+        if len(self.cluster_params) == 3:
+            base = "{}/bin/blastclust -i {}/{} -d {}/{} -o {}/{}".format(
+                str(BLASTCLUST_PATH), self.temp_dir, self.query_fasta,
+                self.temp_dir, self.blast_db, self.temp_dir, self.blast_out)
+        # Otherwise use mmseqs2
         else:
-            try:
-                args = ["mmseqs", "cluster", "{}/{}".format(self.temp_dir,
-                                                           self.mmseqs_input),
-                        "{}/{}".format(self.temp_dir, self.mmseqs_output),
-                        self.temp_dir, "--remove-tmp-files", "--threads",
-                        str(self.threads), "-v", str(self.verbosity),
-                        "--max-seqs", str(self.max_seqs), "--min-seq-id",
-                        str(self.min_seq_id), "-c", str(self.coverage),
-                        "--alignment-mode", str(self.alignment_mode),
-                        "--cov-mode", str(self.coverage_mode),
-                        "--cluster-mode", str(self.cluster_mode)]
-                output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
-                                       stderr=PIPE).communicate()
-                self.log.write(str(output))
-            except OSError as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                sys.exit(1)
+            base = "mmseqs cluster {}/{} {}/{} {}".format(
+                self.temp_dir, self.mmseqs_in, self.temp_dir,
+                self.mmseqs_out, self.temp_dir)
+
+        # Parameters are already sorted out properly so we can just add them
+        # to the base command string
+        for param in self.cluster_params.keys():
+            base += " {} {}".format(param, self.cluster_params[param])
+
+        # Print starting clustering
+        print("Beginning clustering...")
+
+        with Popen(args=shlex.split(base), stdout=PIPE, stderr=PIPE) as process:
+            self.log.write(process.stdout.read().decode("utf-8") + "\n\n")
+            self.log.write(process.stderr.read().decode("utf-8") + "\n\n")
+
+        print("Finish clustering...")
+
         return
 
-    def convert_and_parse_output(self):
+    def read_new_phams(self):
         """
-        This function converts the MMseqs2 output into a format similar
-        to the Pearson FASTA format.  It then parses this output, with
-        the knowledge that null bits (\x00) signify new clusters or if
-        found alone in a line, that the end of file is here.
+        Reads phameration output (for mmseqs it converts output to more
+        parseable format first).
         :return:
         """
-        # Convert the output
-        try:
-            args = ["mmseqs", "createseqfiledb", "{}/{}".format(
-                self.temp_dir, self.mmseqs_input), "{}/{}".format(
-                self.temp_dir, self.mmseqs_output), "{}/{}".format(
-                self.temp_dir, self.parseable_output)]
-            output, errors = Popen(args=args, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            self.log.write(str(output))
-        except OSError as err:
-            print("Error {}: {}".format(err.args[0], err.args[1]))
-            sys.exit(1)
+        # Variables to temporarily store the new pham data
+        phams = {}
+        name = 1
+        geneids = []
 
-        # Parse the output
-        try:
-            f = open("{}/{}".format(self.temp_dir, self.parseable_output), "r")
-            line = f.readline()
+        # blastclust output reading is easy, try that first
+        if len(self.cluster_params) == 3:
+            print("Begin reading blastclust phams...")
+            with open(self.blast_out, "r") as fh:
+                in_reader = csv.reader(fh, delimiter=" ")
+                for i, row in enumerate(in_reader):
+                    geneids = [geneid for geneid in row[:-1]]
+                    phams[i + 1] = geneids
+            print("Finish reading blastclust phams...")
 
-            phams = {}
-            number = 1
-            geneids = []
+        # mmseqs more complex - convert output first
+        else:
+            print("Begin converting mmseqs output...")
+            command = "mmseqs createseqfiledb {}/{} {}/{} {}/{}".format(
+                self.temp_dir, self.mmseqs_in, self.temp_dir,
+                self.mmseqs_out, self.temp_dir, self.mmseqs_parseable_out)
 
-            while line != "\x00":  # While end of file hasn't been reached
-                if line[0] == ">":  # FASTA header, grab GeneID
-                    geneids.append(line[1:].rstrip("\n").rstrip(" "))
-                elif "\x00" in line:  # New pham
-                    phams[number] = set(geneids)  # Dump current geneids
-                    number += 1  # Increment pham number
-                    geneids = [line[2:].rstrip("\n").rstrip(" ")]  # GeneID
-                else:
-                    pass  # Skip translation lines
-                line = f.readline()  # Get next line
-            phams[number] = set(geneids)  # Dump the last pham
-            f.close()
-        except IOError as err:
-            print("Error {}: {}".format(err.args[0], err.args[1]))
-            sys.exit(1)
+            with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) \
+                    as process:
+                self.log.write(process.stdout.read().decode("utf-8") + "\n\n")
+                self.log.write(process.stderr.read().decode("utf-8") + "\n\n")
 
-        # Write the new_phams attribute with these new pham compositions
+            print("Finish converting mmseqs output...")
+            print("Begin reading mmseqs phams...")
+
+            with open("{}/{}".format(
+                    self.temp_dir, self.mmseqs_parseable_out, "r")) as fh:
+                line = fh.readline()
+                # EOF is marked by null bit
+                while line != "\x00":
+                    # If line is FASTA header, grab GeneID
+                    if line.startswith(">"):
+                        geneids.append(line.lstrip(">").rstrip("\n").rstrip(" "))
+                    # If line starts with null bit, new pham encountered
+                    elif line.startswith("\x00"):
+                        phams[name] = set(geneids)
+                        name += 1
+                        geneids = [line.lstrip("\x00").lstrip(">").rstrip(
+                            "\n").rstrip(" ")]
+                    # Otherwise we're on a translation - skip
+                    else:
+                        pass
+                    line = fh.readline()
+                # Dump the last pham
+                phams[name] = set(geneids)
+
+            print("Finish reading mmseqs phams...")
+
         self.new_phams = phams
 
         return
@@ -331,20 +378,23 @@ class MMseqsPhameratorHandler:
         pham in question
         :return:
         """
+        # Only have something to do if filter_redundant is set to True
         if self.filter_redundant is True:
             for key in self.new_phams.keys():
                 geneids = self.new_phams[key]
                 new_geneids = []
                 for gene in geneids:
-                    duplicate_group = self.duplicate_genes[gene]
+                    # Look up the translation and duplicate group
+                    translation = self.geneids_to_translations[gene]
+                    duplicate_group = self.duplicate_translations[translation]
                     for geneid in duplicate_group:
                         new_geneids.append(geneid)
+                # Overwrite the pham with expanded geneid set
                 self.new_phams[key] = set(new_geneids)
-        else:
-            pass
+
         return
 
-    def conserve_pham_names(self):
+    def preserve_pham_names(self):
         """
         This function overwrites self.new_phams with the conserved pham
         names, once they're figured out.  It also populates

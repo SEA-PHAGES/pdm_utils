@@ -2,15 +2,18 @@
 It verifies a valid pipeline is selected,
 then passes all command line arguments to the main pipeline module.
 """
-import sys
 import argparse
-from pdm_utils.pipelines.db_import import import_genome
+import sys
+
+from pdm_utils.pipelines.cdd import cdd_pp
 from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
+from pdm_utils.pipelines.db_compare import compare_databases
 from pdm_utils.pipelines.db_export import export_database
 from pdm_utils.pipelines.db_freeze import freeze_database
-from pdm_utils.pipelines.db_compare import compare_databases
+from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.db_import import import_phage
-from pdm_utils.pipelines.cdd import cdd_pp
+from pdm_utils.pipelines.phamerate import phamerate
+
 
 def main():
     """Verify a valid pipeline is selected and arguments provided are valid.
@@ -52,7 +55,7 @@ def main():
     elif args.pipeline == "cdd":
         cdd_pp.main(sys.argv)
     elif args.pipeline == "phamerate":
-        pass
+        phamerate.main(sys.argv[sys.argv.index("phamerate")+1:])
     elif args.pipeline == "export":
         export_database.main(sys.argv)
     # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
@@ -63,6 +66,7 @@ def main():
     else:
         compare_databases.main(sys.argv)
     print("Pipeline completed")
+
 
 if __name__ == "__main__":
     main()
