@@ -135,10 +135,9 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_tickets_1(self):
         """Verify dictionary is returned from a correct import table file."""
-        eval_flags=constants.RUN_MODE_PHAGESDB
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table,
-                        eval_flags=constants.RUN_MODE_PHAGESDB,
+                        run_mode="phagesdb",
                         description_field="product")
         self.assertEqual(len(tkt_dict.keys()), 2)
 

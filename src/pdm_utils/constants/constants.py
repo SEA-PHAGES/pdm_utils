@@ -174,7 +174,6 @@ HOST_GENUS_DICT = {
     "Mycolicibacterium":"Mycobacterium"
     }
 
-
 # Phamerator server info
 DB_HOST = "phamerator.webfactional.com"
 DB_HOST_DIR = "/home/phamerator/webapps/htdocs/databases_Hatfull/"

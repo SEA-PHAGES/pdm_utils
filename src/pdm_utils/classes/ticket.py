@@ -22,37 +22,16 @@ class GenomeTicket:
 
         # Attributes used to populate Genome objects for
         # 'update', 'add', and 'replace' ticket types.
-        self.host_genus = ""
-        self.cluster = ""
-        self.subcluster = ""
-        self.annotation_status = ""
-        self.annotation_author = -1
-        self.retrieve_record = -1
-        self.accession = ""
+        self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
+        self.data_retain = set() # Data that should be retained from Phamerator.
+        self.data_ticket = set() # Data to be added to genome from ticket.
+        self.data_dict = {} # Original ticket data.
 
-
+        # Used to check the structure of the ticket data.
         self.evaluations = []
         self._value_flag = False
 
 
-
-        # TODO in dev
-        self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
-        self.data_retain = set() # Data that should be retained from Phamerator.
-        self.data_ticket = set() # Data to be added to genome from ticket.
-        self.ticket_dict = {} # Original ticket data.
-
-
-    # TODO unittest.
-    def set_field_trackers():
-        """."""
-        for key in self.ticket_dict.keys():
-            if self.ticket_dict[key] == "retrieve":
-                self.data_retrieve.append(key)
-            elif self.ticket_dict[key] == "retain":
-                self.data_retain.append(key)
-            else:
-                self.data_ticket.append(key)
 
 
     # When parsing data from an import ticket, some fields should be
@@ -82,70 +61,6 @@ class GenomeTicket:
         """
         self.run_mode = value.lower()
 
-    def set_phage_id(self, value):
-        """Set the phage_id.
-
-        :param value: Value to be set as the phage_id.
-        :type value: str
-        """
-        self.phage_id = basic.lower_case(value)
-
-    def set_host(self, value):
-        """Set the host_genus.
-
-        :param value: Value to be set as the host_genus.
-        :type value: str
-        """
-        self.host_genus = basic.lower_case(value)
-
-    def set_cluster(self, value):
-        """Set the cluster.
-
-        :param value: Value to be set as the cluster.
-        :type value: str
-        """
-        self.cluster = basic.lower_case(value)
-
-    def set_subcluster(self, value):
-        """Set the subcluster.
-
-        :param value: Value to be set as the subcluster.
-        :type value: str
-        """
-        self.subcluster = basic.lower_case(value)
-
-    def set_annotation_status(self, value):
-        """Set the annotation_status.
-
-        :param value: Value to be set as the annotation_status.
-        :type value: str
-        """
-        self.annotation_status = value.lower()
-
-    def set_accession(self, value):
-        """Set the accession.
-
-        :param value: Value to be set as the accession.
-        :type value: str
-        """
-        self.accession = basic.lower_case(value)
-
-    def set_annotation_author(self, value):
-        """Set the annotation_author.
-
-        :param value: Value to be set as the annotation_author.
-        :type value: str
-        """
-        self.annotation_author = basic.lower_case(value)
-
-
-    def set_retrieve_record(self, value):
-        """Set the set_retrieve_record.
-
-        :param value: Value to be set as the retrieve_record.
-        :type value: str
-        """
-        self.retrieve_record = basic.lower_case(value)
 
     def set_value_flag(self, value):
         """Sets the flag if any attributes contain the specified 'value'.
@@ -160,30 +75,20 @@ class GenomeTicket:
         else:
             self._value_flag = False
 
-
+    def set_field_trackers(self):
+        """Assigns ticket dictionary keys to specific sets."""
+        for key in self.data_dict.keys():
+            if self.data_dict[key] == "retrieve":
+                self.data_retrieve.add(key)
+            elif self.data_dict[key] == "retain":
+                self.data_retain.add(key)
+            else:
+                self.data_ticket.add(key)
 
 
     # Evaluations
 
 
-
-    # TODO this is no longer needed.
-    # def check_parsed_fields(self, eval_id=None):
-    #     """Check if the import table contained the correct amount of data.
-    #
-    #     :param eval_id: Unique identifier for the evaluation.
-    #     :type eval_id: str
-    #     """
-    #     if self._parsed_fields == 11:
-    #         result = "Import table contains the correct amount of data."
-    #         status = "correct"
-    #     else:
-    #         result = "Import table contains incorrect amount of data."
-    #         status = "error"
-    #
-    #     definition = "Check if import table contains the correct amount of data."
-    #     evl = eval.Eval(eval_id, definition, result, status)
-    #     self.evaluations.append(evl)
 
 
     def check_type(self, check_set, expect=True, eval_id=None):
@@ -236,106 +141,6 @@ class GenomeTicket:
         self.evaluations.append(evl)
 
 
-    def check_host_genus(self, check_set, expect=True, eval_id=None):
-        """Check that the host_genus is valid.
-
-        :param check_set: Set of reference host_genus values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the host_genus is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.host_genus, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if host_genus field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_subcluster(self, check_set, expect=True, eval_id=None):
-        """Check that the subcluster is valid.
-
-        :param check_set: Set of reference subclusters.
-        :type check_set: set
-        :param expect:
-            Indicates whether the subcluster is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.subcluster, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if subcluster field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_cluster(self, check_set, expect=True, eval_id=None):
-        """Check that the cluster is valid.
-
-        :param check_set: Set of reference clusters.
-        :type check_set: set
-        :param expect:
-            Indicates whether the cluster is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.cluster, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if cluster field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_annotation_status(self, check_set, expect=True, eval_id=None):
-        """Check that the annotation_status is valid.
-
-        :param check_set: Set of reference annotation_status values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the annotation_status is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.annotation_status, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if annotation_status field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
     def check_description_field(self, check_set, expect=True, eval_id=None):
         """Check that the description_field is valid.
 
@@ -357,56 +162,6 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = "error"
         definition = "Check if description_field field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_accession(self, check_set, expect=True, eval_id=None):
-        """Check that the accession is valid.
-
-        :param check_set: Set of reference accessions.
-        :type check_set: set
-        :param expect:
-            Indicates whether the accession is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.accession, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if accession field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_annotation_author(self, check_set, expect=True, eval_id=None):
-        """Check that the annotation_author is valid.
-
-        :param check_set: Set of reference annotation_author values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the annotation_author is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.annotation_author, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if annotation_author field is correctly populated."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -476,27 +231,6 @@ class GenomeTicket:
         self.evaluations.append(evl)
 
 
-    def check_duplicate_accession(self, set_of_duplicates, eval_id=None):
-        """Check if the accession is unique to this ticket by
-        checking if it is found within a list of previously
-        determined duplicate accessions.
-
-        :param set_of_duplicates: Set of reference duplicated values.
-        :type set_of_duplicates: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.accession in set_of_duplicates:
-            result = "The accession is not unique to this ticket."
-            status = "error"
-        else:
-            result = "The accession is unique to this ticket"
-            status = "correct"
-        definition = "Check if the accession is unique to this ticket."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
     def check_compatible_type_and_annotation_status(self, eval_id=None):
         """Check if the ticket type and annotation_status are compatible.
 
@@ -525,35 +259,6 @@ class GenomeTicket:
                      + " are compatible."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
-
-
-    def check_retrieve_record(self, check_set, expect=True, eval_id=None):
-        """Check that the retrieve_record is valid.
-
-        :param check_set: Set of reference accessions.
-        :type check_set: set
-        :param expect:
-            Indicates whether retrieve_record is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.retrieve_record, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if retrieve_record field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-
-
 
 
 ###

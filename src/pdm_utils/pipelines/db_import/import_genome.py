@@ -19,115 +19,6 @@ from pdm_utils.constants import constants
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
-# Eval_flag definitions.
-EVAL_FLAGS = {
-    # Options that impact how data is processed but are not utilized
-    # for evaluation of specific parts of a flat file:
-    "check_replace": "Should unexpected genome replacements be reported?",
-    "import_locus_tag": "Should CDS feature locus_tags be imported?",
-
-    # Options that are utilized during the evaluation stage:
-    "check_locus_tag": "Should the structure of CDS feature locus_tags be checked?",
-    "check_description_field": "Should CDS descriptions in unexpected fields be reported?",
-    "check_description": "Should unexpected CDS descriptions be reported?",
-    "check_trna": "Should tRNA features be evaluated?",
-    "check_id_typo": "Should genome ID typos be reported?",
-    "check_host_typo": "Should host typos be reported?",
-    "check_author": "Should unexpected authors be reported?",
-    "check_gene": "Should the CDS 'gene' qualifier be evaluated?",
-    "check_seq": "Should the nucleotide sequence be evaluated?"
-    }
-
-# TODO unittest.
-def get_eval_flag_dict(run_mode):
-    """."""
-    # Base dictionary with all flags set to True.
-    dict = {}
-    for key in EVAL_FLAGS:
-        dict[key] = True
-
-    # Auto-annotations.
-    if run_mode == "pecaan":
-        dict["check_locus_tag"] = False
-        dict["check_trna"] = False
-        dict["import_locus_tag"] = False
-        dict["check_id_typo"] = False
-        dict["check_host_typo"] = False
-        dict["check_author"] = False
-        dict["check_description"] = False
-
-    # Manual annotations.
-    elif run_mode == "phagesdb":
-        dict["import_locus_tag"] = False
-
-    # SEA-PHAGES GenBank records.
-    elif run_mode == "sea_auto":
-        dict["check_locus_tag"] = False
-        dict["check_description_field"] = False
-        dict["check_replace"] = False
-        dict["check_trna"] = False
-        dict["check_id_typo"] = False
-        dict["check_author"] = False
-        dict["check_description"] = False
-        dict["check_gene"] = False
-
-    # Non-SEA-PHAGES GenBank records.
-    elif run_mode == "misc":
-        dict["check_locus_tag"] = False
-        dict["check_replace"] = False
-        dict["check_trna"] = False
-        dict["check_id_typo"] = False
-        dict["check_host_typo"] = False
-        dict["check_author"] = False
-        dict["check_description"] = False
-        dict["check_gene"] = False
-
-    # Custom QC settings. User can select the settings, so it is initialized as
-    # a copy of the base run_mode. The user can provide the
-    # customized combination of options.
-    elif run_mode == "custom":
-        for key in dict.keys():
-            prompt = "Eval_flag: %s. %s" % (key, EVAL_FLAGS[key])
-            response = basic.ask_yes_no(prompt=prompt, response_attempt=3)
-            if response is None:
-                print("The default setting for this eval_flag will be used.")
-            else:
-                dict[key] = response
-    else:
-        print("A valid run_mode has not been selected.")
-    return dict
-
-# A dictionary that holds all the eval_flag dictionaries.
-# TODO Unittest.
-RUN_MODES = {
-    "options":{
-        "pecaan": \
-            ("Relaxed evaluations for draft genome annotations "
-             "retrieved from PECAAN since some data has not yet been "
-             "manually reviewed (such as locus_tags)."),
-        "phagesdb": \
-            ("Most stringent evaluations for final genome annotations "
-             "retrieved from PhagesDB since this data will be "
-             "submitted to GenBank."),
-        "sea_auto": \
-            ("Relaxed evaluations for genome annotations generated "
-             "through SEA-PHAGES but retrieved from GenBank since "
-             "some of this data can no longer be modified."),
-        "misc": \
-            ("Very relaxed evaluations for genome annotations "
-             "not generated through SEA-PHAGES, since the data cannot be "
-             "modified."),
-        "custom": \
-            ("User-defined evaluations for customized import.")
-        },
-    "pecaan": get_eval_flag_dict("pecaan"),
-    "phagesdb": get_eval_flag_dict("phagesdb"),
-    "sea_auto": get_eval_flag_dict("sea_auto"),
-    "misc": get_eval_flag_dict("misc"),
-    "custom": get_eval_flag_dict("custom")
-    }
-
-
 # TODO unittest?
 def run_import(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
@@ -277,50 +168,25 @@ def input_output(sql_handle=None, genome_folder="", import_table_file="",
 
 
 # TODO unittest.
-def prepare_tickets(import_table_file="", input_run_mode_dict={}, description_field=""):
+def prepare_tickets(import_table_file="", run_mode="", description_field="",
+                    required_keys=set(), optional_keys=set(), keywords=set()):
     """Prepare dictionary of pdm_utils Tickets."""
     # 1. parse ticket data from table.
     # 2. set case for all fields.
     # 3. confirm all tickets have a valid type.
     # 6. check for duplicated values.
     # 7. confirm correct fields are populated based on ticket type.
-    ticket_list = []
+    list_of_tkts = []
     tkt_errors = 0
-
-    run_mode = input_run_mode_dict.keys()[0]
-    eval_flags = input_run_mode_dict[run_mode]
-
-
-    file_data = tickets.retrieve_ticket_data(import_table_file)
-    for dict in file_data:
-        result = tickets.modify_import_data(dict)
-        if result:
-            tkt = tickets.parse_import_ticket_data2(dict)
-
-            # Only set description_field from parameter if it wasn't
-            # set within the ticket.
-            if tkt.description_field == "":
-                tkt.description_field = description_field
-            if tkt.run_mode == "":
-                tkt.run_mode = run_mode
-                tkt.eval_flags = eval_flags.copy()
-            ticket_list.append(tkt)
-        else:
-            tkt_errors += 1
-
-    # Old format.
-    # for dict in file_data:
-    #     tkt = tickets.parse_import_ticket_data(data_dict=dict)
-    #     if tkt is not None:
-    #         ticket_list.append(tkt)
-    #     else:
-    #         tkt_errors += 1
-
-
+    list_of_data_dicts = tickets.retrieve_ticket_data(import_table_file)
+    list_of_tkts = tickets.construct_tickets(list_of_data_dicts, run_mode,
+                    description_field, required_keys, optional_keys,
+                    keywords)
+    if len(list_of_data_dicts) != len(list_of_tkts):
+        tkt_errors += 1
 
     # Identify duplicated ticket values.
-    tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set = \
-        tickets.identify_duplicates(ticket_list, null_set=set(["none"]))
+    tkt_id_dupes, phage_id_dupes = tickets.identify_duplicates(list_of_tkts)
 
     # For each ticket:
     # 1. Add the eval_flag dictionary and description_field to each ticket.
@@ -334,8 +200,8 @@ def prepare_tickets(import_table_file="", input_run_mode_dict={}, description_fi
     # 4. Check for ticket errors.
     ticket_dict = {}
     x = 0
-    while x < len(ticket_list):
-        tkt = ticket_list[x]
+    while x < len(list_of_tkts):
+        tkt = list_of_tkts[x]
         check_ticket(
             tkt,
             type_set=constants.IMPORT_TICKET_TYPE_SET,
@@ -343,8 +209,7 @@ def prepare_tickets(import_table_file="", input_run_mode_dict={}, description_fi
             null_set=constants.EMPTY_SET,
             run_mode_set=constants.RUN_MODES.keys(),
             id_dupe_set=tkt_id_dupe_set,
-            phage_id_dupe_set=phage_id_dupe_set,
-            accession_dupe_set=accession_dupe_set)
+            phage_id_dupe_set=phage_id_dupe_set)
         for evl in tkt.evaluations:
             if evl.status == "error":
                 tkt_errors += 1
@@ -642,9 +507,10 @@ def check_bundle(bndl):
                                         eval_id="BNDL_009")
 
 
+# TODO fix unittests after revamping function.
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
         null_set=set(), run_mode_set=set(), id_dupe_set=set(),
-        phage_id_dupe_set=set(), accession_dupe_set=set()):
+        phage_id_dupe_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket.
@@ -661,8 +527,6 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     :type id_dupe_set: set
     :param phage_id_dupe_set: Predetermined duplicate PhageIDs.
     :type phage_id_dupe_set: set
-    :param accession_dupe_set: Predetermined duplicate accessions.
-    :type accession_dupe_set: set
     """
     # This function simply evaluates whether there is data in the
     # appropriate ticket attributes given the type of ticket.
@@ -675,7 +539,6 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     # Check for duplicated values.
     tkt.check_duplicate_id(id_dupe_set, eval_id="TKT_001")
     tkt.check_duplicate_phage_id(phage_id_dupe_set, eval_id="TKT_002")
-    tkt.check_duplicate_accession(accession_dupe_set, eval_id="TKT_003")
 
     # Check these fields for specific values.
     tkt.check_type(type_set, True, eval_id="TKT_004")
@@ -684,14 +547,6 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
 
     # For these fields, simply check that they are not empty.
     tkt.check_phage_id(null_set, False, eval_id="TKT_007")
-    tkt.check_host_genus(null_set, False, eval_id="TKT_008")
-    tkt.check_cluster(null_set, False, eval_id="TKT_009")
-    tkt.check_annotation_status(null_set, False, eval_id="TKT_010")
-    tkt.check_annotation_author(null_set, False, eval_id="TKT_011")
-    tkt.check_retrieve_record(null_set, False, eval_id="TKT_012")
-
-    # No need to evaluate the Accession and Subcluster fields
-    # since they may or may not be populated.
 
     # Check if certain combinations of fields make sense.
     tkt.check_compatible_type_and_annotation_status(eval_id="TKT_013")

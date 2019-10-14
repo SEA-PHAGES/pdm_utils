@@ -29,107 +29,10 @@ def retrieve_ticket_data(filename):
             list_of_ticket_data.append(dict)
     return list_of_ticket_data
 
-def parse_import_ticket_data(tkt=None, data_dict=None,
-                              direction="dict_to_ticket"):
-    """Converts import ticket data between a list and Ticket object formats.
 
-    :param tkt: A pdm_utils Ticket object.
-    :type tkt: Ticket
-    :param data_dict:
-        A dictionary of data with the following keys:
-
-            0. Import action
-            1. Primary PhageID
-            2. Host
-            3. Cluster
-            4. Subcluster
-            5. Status
-            6. Annotation Author (int)
-            7. Feature field
-            8. Accession
-            9. Retrieve Record (int)
-            10. Run mode
-
-    :type data_dict: dict
-    :param direction:
-        Indicates whether data in the dictionary should populate a
-        Ticket object ('dict_to_ticket') or data in a Ticket object should
-        populate a dictionary ('ticket_to_dict').
-    :type direction: str
-    :returns:
-        If successful, a Ticket or dict object is returned.
-        If copying from a dictionary to Ticket, and the keys are not correct,
-        None object is returned.
-        If an invalid 'direction' is selected, None object is returned.
-    :rtype: Ticket, dict, or None
-    """
-    # By providing the ability to transfer data from both
-    # a dictionary-to-ticket and a ticket-to-dictionary, it helps ensure that
-    # conversion between the two formats is consistent.
-    if direction == "dict_to_ticket":
-        key_check = data_dict.keys() ^ constants.IMPORT_TABLE_DICT.keys()
-
-        # If row in import table has more fields than headers, they are
-        # assigned None by csv.DictReader.
-        # If row in import table contains fields with no data, they are
-        # assigned "" by csv.DictReader.
-        value_check = set(["", None]) - set(data_dict.values())
-        if (len(key_check) == 0 and len(value_check) == 2):
-            tkt = ticket.GenomeTicket()
-            tkt.id = data_dict["id"]
-            tkt.set_type(data_dict["type"])
-            tkt.set_description_field(data_dict["description_field"])
-            tkt.set_run_mode(data_dict["run_mode"])
-            tkt.set_phage_id(data_dict["phage_id"])
-            tkt.set_host(data_dict["host_genus"])
-            tkt.set_cluster(data_dict["cluster"])
-            tkt.set_subcluster(data_dict["subcluster"])
-            tkt.set_annotation_status(data_dict["annotation_status"])
-            tkt.set_accession(data_dict["accession"])
-            tkt.set_annotation_author(data_dict["annotation_author"])
-            tkt.set_retrieve_record(data_dict["retrieve_record"])
-            return tkt
-        else:
-            print("The ticket %s is not formatted correctly." % data_dict)
-            return None
-
-    elif direction == "ticket_to_dict":
-        data_dict = {}
-        data_dict["id"] = tkt.id
-        data_dict["type"] = tkt.type
-        data_dict["description_field"] = tkt.description_field
-        data_dict["run_mode"] = tkt.run_mode
-        data_dict["phage_id"] = tkt.phage_id
-        data_dict["host_genus"] = tkt.host_genus
-        data_dict["cluster"] = tkt.cluster
-        data_dict["subcluster"] = tkt.subcluster
-        data_dict["annotation_status"] = tkt.annotation_status
-        data_dict["annotation_author"] = tkt.annotation_author
-        data_dict["accession"] = tkt.accession
-        data_dict["retrieve_record"] = tkt.retrieve_record
-        return data_dict
-    else:
-        return None
-
-
-# TODO unittest
-def modify_import_data(data_dict):
-    """Converts import ticket data to a Ticket object.
-
-    :param data_dict:
-        A dictionary of data with the following keys:
-
-            0. Import action
-            1. Primary PhageID
-            2. Host
-            3. Cluster
-            4. Subcluster
-            5. Status
-            6. Annotation Author (int)
-            7. Feature field
-            8. Accession
-            9. Retrieve Record (int)
-            10. Run mode
+def modify_import_data(data_dict, required_keys, optional_keys, keywords):
+    """Checks and modifies a data dictionary to conform to requirements
+    for a ticket object.
 
     :type data_dict: dict
     :returns:
@@ -138,9 +41,6 @@ def modify_import_data(data_dict):
     :rtype: Ticket or None
     """
     # Some import table fields are required. Others are optional.
-    required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
-    optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
-
     # First check if all required fields are present.
     missing_req_fields = required_keys - data_dict.keys()
     # Second, check if there are any fields that are not expected.
@@ -159,7 +59,7 @@ def modify_import_data(data_dict):
         # Convert None values to "".
         set_empty(data_dict)
         # Confirm that certain keywords are lowercase.
-        set_keywords(data_dict, set(["retrieve", "retain", "none"]))
+        set_keywords(data_dict, keywords)
         # Determine which fields are not present, and add them to the dict.
         set_missing_keys(data_dict, optional_keys)
         # Certain fields should be lowercase.
@@ -167,21 +67,20 @@ def modify_import_data(data_dict):
         data_dict["description_field"] = data_dict["description_field"].lower()
         data_dict["run_mode"] = data_dict["run_mode"].lower()
         # For fields that are empty (""), set them with default values.
-        set_retrieve_or_retain(data_dict, "host_genus")
-        set_retrieve_or_retain(data_dict, "cluster")
-        set_retrieve_or_retain(data_dict, "subcluster")
-        set_retrieve_or_retain(data_dict, "accession")
-        set_1_or_retain(data_dict, "annotation_author")
-        set_1_or_retain(data_dict, "retrieve_record")
-        set_draft_or_final(data_dict, "annotation_status")
+        set_dict_value(data_dict, "host_genus", "retrieve", "retain")
+        set_dict_value(data_dict, "cluster", "retrieve", "retain")
+        set_dict_value(data_dict, "subcluster", "retrieve", "retain")
+        set_dict_value(data_dict, "accession", "retrieve", "retain")
+        set_dict_value(data_dict, "annotation_author", "1", "retain")
+        set_dict_value(data_dict, "retrieve_record", "1", "retain")
+        set_dict_value(data_dict, "annotation_status", "draft", "final")
         return True
     else:
         print("The ticket %s is not formatted correctly." % data_dict)
         return False
 
 
-
-def parse_import_ticket_data2(data_dict):
+def parse_import_ticket_data(data_dict):
     """Converts import ticket data to a Ticket object.
 
     :param data_dict:
@@ -209,240 +108,68 @@ def parse_import_ticket_data2(data_dict):
     tkt.phage_id = data_dict["phage_id"]
     tkt.description_field = data_dict["description_field"]
     tkt.run_mode = data_dict["run_mode"]
-    if tkt.run_mode in constants.RUN_MODES.keys():
-        tkt.eval_flags = constants.RUN_MODES[tkt.run_mode]
-    if tkt.run_mode == "custom":
-        # Call interactive function to determine eval_flags
-        # eval_flags = get_eval_flags()
-        pass        
-    tkt.ticket_dict = data_dict
+    tkt.data_dict = data_dict
     tkt.set_field_trackers()
     return tkt
 
 
-# TODO unittest.
 def set_empty(data_dict):
-    """."""
+    """Convert None values to an empty string."""
     for key in data_dict.keys():
         if data_dict[key] is None:
             data_dict[key] = ""
 
-# TODO unittest.
 def set_keywords(data_dict, keywords):
-    """."""
+    """Convert specific values in a dictionary to lowercase."""
     for key in data_dict.keys():
         value = data_dict[key]
-        if value.lower() in keywords:
-            data_dict[key] = value.lower()
+        if isinstance(value, str):
+            if value.lower() in keywords:
+                data_dict[key] = value.lower()
 
 
-
-# TODO unittest.
 def set_missing_keys(data_dict, expected_keys):
-    """."""
+    """Add a list of keys-values to a dictionary if it doesn't have those keys."""
     missing_keys = expected_keys - data_dict.keys()
     for key in missing_keys:
         data_dict[key] = ""
 
 
+def set_dict_value(data_dict, key, first, second):
+    """Set the value for a specific key based on 'type' key-value.
 
-# TODO unittest.
-def set_retrieve_or_retain(data_dict, key):
-    """."""
+    It expects that the dictionary contains the indicated key, as well as
+    a "type" key."""
     if data_dict[key] == "":
         if data_dict["type"] == "add":
-            data_dict[key] = "retrieve"
+            data_dict[key] = first
         else:
-            ata_dict[key] = "retain"
+            data_dict[key] = second
 
 
+def construct_tickets(list_of_data_dict, run_mode, description_field,
+                      required_keys, optional_keys, keywords):
+    """Construct tickets from parsed data dictionaries."""
 
-# TODO unittest.
-def set_1_or_retain(data_dict, key):
-    """."""
-    if data_dict[key] == "":
-        if data_dict["type"] == "add":
-            data_dict[key] = "1"
+    list_of_tickets = []
+    for dict in list_of_data_dict:
+        result = modify_import_data(dict, required_keys, optional_keys, keywords)
+        if result:
+            tkt = parse_import_ticket_data(dict)
+
+            # Only set description_field and run_mode from parameters
+            # if they weren't set within the ticket.
+            if tkt.description_field == "":
+                tkt.description_field = description_field
+            if tkt.run_mode == "":
+                tkt.run_mode = run_mode
+            if tkt.run_mode in constants.RUN_MODES.keys():
+                tkt.eval_flags = constants.get_eval_flag_dict(tkt.run_mode)
+            list_of_tickets.append(tkt)
         else:
-            ata_dict[key] = "retain"
+            print("Unable to create ticket.")
+    return list_of_tickets
 
-# TODO unittest.
-def set_draft_or_final(data_dict, key):
-    """."""
-    if data_dict[key] == "":
-        if data_dict["type"] == "add":
-            data_dict[key] = "draft"
-        else:
-            ata_dict[key] = "final"
-
-
-
-
-
-
-
-
-
-# TODO this may no longer be needed
-# def parse_import_ticket_data_list(tkt, data_list,
-#                                   expected_size = constants.IMPORT_TABLE_SIZE,
-#                                   id = "", direction="list_to_ticket"):
-#     """Converts import ticket data between a list and Ticket object formats.
-#
-#     :param tkt: A pdm_utils Ticket object.
-#     :type tkt: Ticket
-#     :param data_list:
-#         A list of data with the following structure:
-#
-#             0. Import action
-#             1. Primary PhageID
-#             2. Host
-#             3. Cluster
-#             4. Subcluster
-#             5. Status
-#             6. Annotation Author
-#             7. Feature field
-#             8. Accession
-#             9. Annotation QC
-#             10. Retrieve Record
-#             11. Run mode
-#
-#     :type data_list: list
-#     :param expected_size:
-#         Indicates how many elements should be in 'data_list'.
-#     :type expected_size: int
-#     :param direction:
-#         Indicates whether data in the list should populate a
-#         Ticket object ('list_to_ticket') or data in a Ticket object should
-#         populate a list ('ticket_to_list').
-#     :type direction: str
-#     :param id:
-#         A value used to populate the ticket's 'id' attribute, if data is
-#         copied to a ticket.
-#     :type id: str, int
-#     """
-#     # By providing the ability to transfer data from both
-#     # a list-to-ticket and a ticket-to-list, it helps ensure that
-#     # conversion between the two formats is consistent.
-#
-#     # Verify the row of information has the correct number of fields to parse.
-#     if len(data_list) == expected_size:
-#
-#         if direction == "list_to_ticket":
-#             tkt._parsed_fields = len(data_list)
-#             tkt.id = id
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_type(data_list[0])
-#         elif direction == "ticket_to_list":
-#             data_list[0] = tkt.type
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_description_field(data_list[7])
-#         elif direction == "ticket_to_list":
-#             data_list[7] = tkt.description_field
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_run_mode(data_list[11])
-#         elif direction == "ticket_to_list":
-#             data_list[11] = tkt.run_mode
-#         else:
-#             pass
-#
-#         # This data will eventually populate a Genome object.
-#         if direction == "list_to_ticket":
-#             tkt.set_phage_id(data_list[1])
-#         elif direction == "ticket_to_list":
-#             data_list[1] = tkt.phage_id
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_host(data_list[2])
-#         elif direction == "ticket_to_list":
-#             data_list[2] = tkt.host_genus
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_cluster(data_list[3])
-#         elif direction == "ticket_to_list":
-#             data_list[3] = tkt.cluster
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_subcluster(data_list[4])
-#         elif direction == "ticket_to_list":
-#             data_list[4] = tkt.subcluster
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_annotation_status(data_list[5])
-#         elif direction == "ticket_to_list":
-#             data_list[5] = str(tkt.annotation_status)
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             # Convert to integer if possible.
-#             try:
-#                 data_list[6] = int(data_list[6])
-#             except:
-#                 pass
-#             tkt.set_annotation_author(data_list[6])
-#
-#         elif direction == "ticket_to_list":
-#             # Convert to string.
-#             data_list[6] = str(tkt.annotation_author)
-#         else:
-#             pass
-#
-#         if direction == "list_to_ticket":
-#             tkt.set_accession(data_list[8])
-#         elif direction == "ticket_to_list":
-#             data_list[8] = tkt.accession
-#         else:
-#             pass
-#
-#
-#         if direction == "list_to_ticket":
-#             # Convert to integer if possible.
-#             try:
-#                 data_list[10] = int(data_list[10])
-#             except:
-#                 pass
-#             tkt.set_retrieve_record(data_list[10])
-#         elif direction == "ticket_to_list":
-#             # Convert to string.
-#             data_list[10] = str(tkt.retrieve_record)
-#         else:
-#             pass
-
-# TODO this may no longer be needed.
-# def parse_import_tickets(list_of_lists):
-#     """Parses list of lists of data to a list of Tickets.
-#
-#     :param list_of_lists:
-#         A list of items, where each item is a list of data.
-#     :type list_of_lists: list
-#     :returns: A list of pdm_utils Ticket objects.
-#     :rtype: list
-#     """
-#
-#     counter = 1
-#     list_of_tickets = []
-#     for list_of_data in list_of_lists:
-#         tkt = ticket.GenomeTicket()
-#         parse_import_ticket_data_list(tkt, list_of_data, id = counter)
-#         list_of_tickets.append(tkt)
-#         counter += 1
-#     return list_of_tickets
 
 
 def identify_duplicates(list_of_tickets, null_set=set()):
@@ -459,15 +186,13 @@ def identify_duplicates(list_of_tickets, null_set=set()):
         should not throw errors.
     :type null_set: set
     :returns:
-        tuple (tkt_id_dupes, phage_id_dupes, accession_dupes)
+        tuple (tkt_id_dupes, phage_id_dupes)
         WHERE
         tkt_id_dupes(set) is a set of duplicate ticket ids.
         phage_id_dupes(set) is a set of duplicate PhageIDs.
-        accession_dupes(set) is a set of duplicate accessions.
     :rtype: tuple
     """
     tkt_id_list = []
-    accession_list = []
     phage_id_list = []
 
     # Create separate lists to check each field for duplications.
@@ -477,12 +202,9 @@ def identify_duplicates(list_of_tickets, null_set=set()):
             tkt_id_list.append(tkt.id)
         if tkt.phage_id not in null_set:
             phage_id_list.append(tkt.phage_id)
-        if tkt.accession not in null_set:
-            accession_list.append(tkt.accession)
     tkt_id_dupe_set = basic.identify_one_list_duplicates(tkt_id_list)
     phage_id_dupe_set = basic.identify_one_list_duplicates(phage_id_list)
-    accession_dupe_set = basic.identify_one_list_duplicates(accession_list)
-    return (tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set)
+    return (tkt_id_dupe_set, phage_id_dupe_set)
 
 
 
