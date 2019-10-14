@@ -3,6 +3,7 @@ database."""
 
 from Bio.Alphabet import IUPAC
 from datetime import datetime
+from pathlib import Path
 
 IMPORT_TABLE_SIZE = 12
 IMPORT_TABLE_DICT = {
@@ -40,6 +41,9 @@ EMPTY_SET = set(["",
                 "0",
                 0,
                 EMPTY_DATE])
+
+# Path to blastclust binary
+BLASTCLUST_PATH = Path("~/bin/blast-2.2.14/").expanduser()
 
 
 # Set up dna and protein alphabets to verify sequence integrity
