@@ -7,6 +7,7 @@ from pdm_utils.classes import source
 from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
+from pdm_utils.functions import run_modes
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.classes import ticket
 import unittest
@@ -20,10 +21,10 @@ class TestImportGenomeClass1(unittest.TestCase):
 
         self.null_set = constants.EMPTY_SET
         self.type_set = constants.IMPORT_TICKET_TYPE_SET
-        self.run_mode_set = constants.RUN_MODES.keys()
+        self.run_mode_set = run_modes.RUN_MODES.keys()
         self.description_field_set = constants.DESCRIPTION_FIELD_SET
 
-        self.ticket_dict = {
+        self.data_dict = {
             "host_genus": "Mycobacterium smegmatis",
             "cluster": "A",
             "subcluster": "A2",
@@ -39,48 +40,49 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.add_ticket1.phage_id = "Trixie_Draft"
         self.add_ticket1.run_mode = "phagesdb"
         self.add_ticket1.description_field = "product"
-        self.add_ticket1.ticket_dict = self.ticket_dict
+        self.add_ticket1.data_dict = self.data_dict
+        self.add_ticket1.eval_flags = {"a":1, "b":2}
 
         self.id_dupe_set = set([1])
 
 
     # TODO these need to be updated.
-    # def test_check_ticket_1(self):
-    #     """Verify no error is produced with a correctly structured
-    #     'add' ticket."""
-    #     import_genome.check_ticket(
-    #         self.add_ticket1, type_set=self.type_set,
-    #         description_field_set=self.description_field_set,
-    #         null_set=self.null_set, run_mode_set=self.run_mode_set)
-    #     errors = 0
-    #     for evl in self.add_ticket1.evaluations:
-    #         if evl.status == "error":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(len(self.add_ticket1.evaluations), 13)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 0)
-    #
-    #
-    # def test_check_ticket_2(self):
-    #     """Verify an error is produced with an incorrectly structured
-    #     'invalid' ticket 'type' field and duplicate id."""
-    #
-    #     tkt = self.add_ticket1
-    #     tkt.type = "invalid"
-    #     import_genome.check_ticket(
-    #         self.add_ticket1, type_set=self.type_set,
-    #         description_field_set=self.description_field_set,
-    #         null_set=self.null_set, run_mode_set=self.run_mode_set,
-    #         id_dupe_set=self.id_dupe_set)
-    #     errors = 0
-    #     for evl in tkt.evaluations:
-    #         if evl.status == "error":
-    #             errors += 1
-    #     with self.subTest():
-    #         self.assertEqual(len(tkt.evaluations), 13)
-    #     with self.subTest():
-    #         self.assertEqual(errors, 2)
+    def test_check_ticket_1(self):
+        """Verify no error is produced with a correctly structured
+        'add' ticket."""
+        import_genome.check_ticket(
+            self.add_ticket1, type_set=self.type_set,
+            description_field_set=self.description_field_set,
+            null_set=self.null_set, run_mode_set=self.run_mode_set)
+        errors = 0
+        for evl in self.add_ticket1.evaluations:
+            if evl.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(self.add_ticket1.evaluations), 8)
+        with self.subTest():
+            self.assertEqual(errors, 0)
+
+
+    def test_check_ticket_2(self):
+        """Verify an error is produced with an incorrectly structured
+        'invalid' ticket 'type' field and duplicate id."""
+
+        tkt = self.add_ticket1
+        tkt.type = "invalid"
+        import_genome.check_ticket(
+            self.add_ticket1, type_set=self.type_set,
+            description_field_set=self.description_field_set,
+            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            id_dupe_set=self.id_dupe_set)
+        errors = 0
+        for evl in tkt.evaluations:
+            if evl.status == "error":
+                errors += 1
+        with self.subTest():
+            self.assertEqual(len(tkt.evaluations), 8)
+        with self.subTest():
+            self.assertEqual(errors, 2)
 
 
 
@@ -289,11 +291,12 @@ class TestImportGenomeClass3(unittest.TestCase):
     def test_check_bundle_1(self):
         """Verify all check methods are called."""
         self.tkt.type = "replace"
-        self.tkt.cluster = "retrieve"
-        self.tkt.subcluster = "retain"
+        self.tkt.data_retrieve = set(["cluster"])
+        self.tkt.data_retain = set(["subcluster"])
+        self.tkt.data_ticket = set(["host_genus"])
         self.bndl.ticket = self.tkt
         import_genome.check_bundle(self.bndl)
-        self.assertEqual(len(self.bndl.evaluations), 9)
+        self.assertEqual(len(self.bndl.evaluations), 6)
 
     def test_check_bundle_2(self):
         """Verify some check methods are called when there is no Ticket."""
@@ -304,27 +307,22 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify some check methods are called when there are no 'retrieve'
         Ticket attributes."""
         self.tkt.type = "replace"
-        self.tkt.subcluster = "retain"
+        self.tkt.data_retain = set(["subcluster"])
+        self.tkt.data_ticket = set(["host_genus"])
         self.bndl.ticket = self.tkt
         import_genome.check_bundle(self.bndl)
-        self.assertEqual(len(self.bndl.evaluations), 7)
+        self.assertEqual(len(self.bndl.evaluations), 5)
 
-    def test_check_bundle_4(self):
-        """Verify some check methods are called when there are no 'retain'
-        Ticket attributes."""
-        self.tkt.type = "replace"
-        self.tkt.cluster = "retrieve"
-        self.bndl.ticket = self.tkt
-        import_genome.check_bundle(self.bndl)
-        self.assertEqual(len(self.bndl.evaluations), 8)
 
     def test_check_bundle_5(self):
         """Verify some check methods are called when there is no 'replace'
         Ticket."""
-        self.tkt.cluster = "retrieve"
+        self.tkt.data_retrieve = set(["cluster"])
+        self.tkt.data_retain = set(["subcluster"])
+        self.tkt.data_ticket = set(["host_genus"])
         self.bndl.ticket = self.tkt
         import_genome.check_bundle(self.bndl)
-        self.assertEqual(len(self.bndl.evaluations), 6)
+        self.assertEqual(len(self.bndl.evaluations), 4)
 
 
 

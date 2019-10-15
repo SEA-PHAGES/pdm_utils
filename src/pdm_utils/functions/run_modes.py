@@ -1,6 +1,5 @@
 """Run mode functions and dictionaries."""
 
-from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
 # Eval_flag definitions.
@@ -22,31 +21,23 @@ EVAL_FLAGS = {
     "check_seq": "Should the nucleotide sequence be evaluated?"
     }
 
-
 # Run mode definitions.
 RUN_MODES = {
-    "pecaan": \
-        ("Relaxed evaluations for draft genome annotations "
-         "retrieved from PECAAN since some data has not yet been "
-         "manually reviewed (such as locus_tags)."),
-    "phagesdb": \
-        ("Most stringent evaluations for final genome annotations "
-         "retrieved from PhagesDB since this data will be "
-         "submitted to GenBank."),
-    "sea_auto": \
-        ("Relaxed evaluations for genome annotations generated "
-         "through SEA-PHAGES but retrieved from GenBank since "
-         "some of this data can no longer be modified."),
-    "misc": \
-        ("Very relaxed evaluations for genome annotations "
-         "not generated through SEA-PHAGES, since the data cannot be "
-         "modified."),
-    "custom": \
-        ("User-defined evaluations for customized import.")
+    "pecaan": ("Relaxed evaluations for draft genome annotations "
+               "retrieved from PECAAN since some data has not yet been "
+               "manually reviewed (such as locus_tags)."),
+    "phagesdb": ("Most stringent evaluations for final genome annotations "
+                 "retrieved from PhagesDB since this data will be "
+                 "submitted to GenBank."),
+    "sea_auto": ("Relaxed evaluations for genome annotations generated "
+                 "through SEA-PHAGES but retrieved from GenBank since "
+                 "some of this data can no longer be modified."),
+    "misc": ("Very relaxed evaluations for genome annotations "
+             "not generated through SEA-PHAGES, since the data cannot be "
+             "modified."),
+    "custom": ("User-defined evaluations for customized import.")
     }
 
-
-# TODO unittest.
 def get_eval_flag_dict(run_mode):
     """."""
     # Base dictionary with all flags set to True.

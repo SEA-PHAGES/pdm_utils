@@ -207,6 +207,45 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+    def test_check_eval_flags_1(self):
+        """Check that no error is produced if the
+        eval_flags is empty and not expected to contain data."""
+        self.tkt.eval_flag_dict = {}
+        self.tkt.check_eval_flags(False, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].id, "eval_id")
+
+    def test_check_eval_flags_2(self):
+        """Check that no error is produced if the
+        eval_flags is not empty and expected to contain data."""
+        self.tkt.eval_flags = {"a":1, "b":2}
+        self.tkt.check_eval_flags(True)
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.tkt.evaluations[0].id)
+
+    def test_check_eval_flags_3(self):
+        """Check that an error is produced if the
+        eval_flags is not empty and not expected to contain data."""
+        self.tkt.eval_flags = {"a":1, "b":2}
+        self.tkt.check_eval_flags(False)
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "error")
+
+    def test_check_eval_flags_4(self):
+        """Check that an error is produced if the
+        eval_flags is empty and expected to contain data."""
+        self.tkt.eval_flags = {}
+        self.tkt.check_eval_flags(True)
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "error")
+
+
+
+
     def test_check_duplicate_id_1(self):
         """Check that no error is produced if the
         id is not present in the set of duplicated values."""
@@ -264,7 +303,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         """Verify that no error is produced with "add" type and "draft"
         annotation_status."""
         self.tkt.type = "add"
-        self.tkt.annotation_status = "draft"
+        self.tkt.data_dict["annotation_status"] = "draft"
         self.tkt.check_compatible_type_and_annotation_status(
             eval_id="eval_id")
         with self.subTest():
@@ -276,7 +315,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         """Verify that an error is produced with "add" type and "final"
         annotation_status."""
         self.tkt.type = "add"
-        self.tkt.annotation_status = "final"
+        self.tkt.data_dict["annotation_status"] = "final"
         self.tkt.check_compatible_type_and_annotation_status()
         with self.subTest():
             self.assertEqual(self.tkt.evaluations[0].status, "error")
@@ -287,7 +326,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         """Verify that no error is produced with "replace" type and "final"
         annotation_status."""
         self.tkt.type = "replace"
-        self.tkt.annotation_status = "final"
+        self.tkt.data_dict["annotation_status"] = "final"
         self.tkt.check_compatible_type_and_annotation_status()
         self.assertEqual(self.tkt.evaluations[0].status, "correct")
 
@@ -295,7 +334,7 @@ class TestGenomeTicketClass(unittest.TestCase):
         """Verify that no error is produced with "replace" type and "draft"
         annotation_status."""
         self.tkt.type = "replace"
-        self.tkt.annotation_status = "draft"
+        self.tkt.data_dict["annotation_status"] = "draft"
         self.tkt.check_compatible_type_and_annotation_status()
         self.assertEqual(self.tkt.evaluations[0].status, "error")
 

@@ -4,6 +4,7 @@ import csv
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import phagesdb
+from pdm_utils.functions import run_modes
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
@@ -147,12 +148,18 @@ def set_dict_value(data_dict, key, first, second):
             data_dict[key] = second
 
 
-def construct_tickets(list_of_data_dict, run_mode, description_field,
+def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
                       required_keys, optional_keys, keywords):
     """Construct tickets from parsed data dictionaries."""
 
+
     list_of_tickets = []
     for dict in list_of_data_dict:
+
+        # Each ticket should contain a distinct eval_flag dictionary object.
+        input_run_mode = run_mode_eval_dict["run_mode"]
+        input_eval_flag_dict = run_mode_eval_dict["eval_flag_dict"].copy()
+
         result = modify_import_data(dict, required_keys, optional_keys, keywords)
         if result:
             tkt = parse_import_ticket_data(dict)
@@ -162,9 +169,11 @@ def construct_tickets(list_of_data_dict, run_mode, description_field,
             if tkt.description_field == "":
                 tkt.description_field = description_field
             if tkt.run_mode == "":
-                tkt.run_mode = run_mode
-            if tkt.run_mode in constants.RUN_MODES.keys():
-                tkt.eval_flags = constants.get_eval_flag_dict(tkt.run_mode)
+                tkt.run_mode = input_run_mode
+                tkt.eval_flags = input_eval_flag_dict
+            else:
+                if tkt.run_mode in run_modes.RUN_MODES.keys():
+                    tkt.eval_flags = run_modes.get_eval_flag_dict(tkt.run_mode)
             list_of_tickets.append(tkt)
         else:
             print("Unable to create ticket.")
@@ -242,7 +251,33 @@ def copy_ticket_to_genome(bndl):
     else:
         pass
 
+# TODO this will probably replace the first copy_ticket_to_genome()
+def get_genome(tkt, gnm_type=""):
+    """Construct a genome object from a ticket.
 
+    :param tkt: A pdm_utils Ticket object.
+    :type tkt: Ticket
+    """
+    gnm = genome.Genome()
+    gnm.type = gnm_type
+    gnm.set_id(value=tkt.phage_id)
+    gnm.name = tkt.phage_id
+    if "host_genus" in tkt.data_ticket:
+        gnm.set_host_genus(tkt.data_dict["host_genus"])
+    if "accession" in tkt.data_ticket:
+        gnm.set_accession(tkt.data_dict["accession"])
+    if "annotation_status" in tkt.data_ticket:
+        gnm.annotation_status = tkt.data_dict["annotation_status"]
+    if "cluster" in tkt.data_ticket:
+        gnm.set_cluster(tkt.data_dict["cluster"])
+    if "subcluster" in tkt.data_ticket:
+        gnm.set_subcluster(tkt.data_dict["subcluster"])
+    if "annotation_author" in tkt.data_ticket:
+        gnm.set_annotation_author(tkt.data_dict["annotation_author"])
+    if "retrieve_record" in tkt.data_ticket:
+        gnm.set_retrieve_record(tkt.data_dict["retrieve_record"])
+    gnm.set_cluster_subcluster()
+    return gnm
 
 
 # TODO re-evaluate if needed, since updates and add/replaces are

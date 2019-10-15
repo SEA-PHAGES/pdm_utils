@@ -190,6 +190,37 @@ class GenomeTicket:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
+
+    def check_eval_flags(self, expect=True, eval_id=None):
+        """Check that the eval_flags is valid.
+
+        :param expect:
+            Indicates whether the eval_flags is expected to contain data.
+        :type expect: bool
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        keys = len(self.eval_flags)
+        if keys > 0 and expect:
+            output = True
+        elif keys == 0 and not expect:
+            output = True
+        else:
+            output = False
+
+        if output:
+            result = "The field is populated correctly."
+            status = "correct"
+        else:
+            result = "The field is not populated correctly."
+            status = "error"
+        definition = "Check if eval_flags field is correctly populated."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
+
+
+
     def check_duplicate_id(self, set_of_duplicates, eval_id=None):
         """Check if the id is unique to this ticket by
         checking if it is found within a list of previously
@@ -242,12 +273,16 @@ class GenomeTicket:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if (self.type == "add" and self.annotation_status == "final"):
+        try:
+            annotation_status = self.data_dict["annotation_status"]
+        except:
+            annotation_status = ""
+        if (self.type == "add" and annotation_status == "final"):
             result = "The ticket type indicates that a genome" + \
                      "with 'final' annotation_status will be added," + \
                      "which is not expected."
             status = "error"
-        elif (self.type == "replace" and self.annotation_status == "draft"):
+        elif (self.type == "replace" and annotation_status == "draft"):
             result = "The ticket type indicates that a genome" + \
                      "with 'draft' annotation_status will be replaced," + \
                      "which is not expected."

@@ -17,6 +17,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
+from unittest.mock import patch
 
 
 
@@ -79,10 +80,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             os.path.join(self.base_dir, "genome_folder")
         os.mkdir(self.genome_folder)
 
-        self.test_import_table = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_import_table_1.csv")
-
         self.test_flat_file1 = \
             os.path.join(os.path.dirname(__file__),
             "test_files/test_flat_file_1.gb")
@@ -108,6 +105,16 @@ class TestImportGenomeMain1(unittest.TestCase):
             "check_description":True,
             "check_gene":True
             }
+
+        self.data_dict = {}
+        self.data_dict["host_genus"] = "Arthrobacter"
+        self.data_dict["cluster"] = "B"
+        self.data_dict["subcluster"] = "B2"
+        self.data_dict["annotation_status"] = "draft"
+        self.data_dict["annotation_author"] = 1
+        self.data_dict["retrieve_record"] = 1
+        self.data_dict["accession"] = "ABC123"
+
         self.tkt1 = ticket.GenomeTicket()
         self.tkt1.id = 1
         self.tkt1.type = "add"
@@ -115,33 +122,9 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.run_mode = "phagesdb"
         self.tkt1.description_field = "product"
         self.tkt1.eval_flags = self.eval_flags
-        self.tkt1.host_genus = "Mycobacterium"
-        self.tkt1.cluster = "A"
-        self.tkt1.subcluster = "A2"
-        self.tkt1.annotation_status = "draft"
-        self.tkt1.annotation_author = 1
-        self.tkt1.retrieve_record = 1
-        self.tkt1.accession = "ABC123"
+        self.tkt1.data_dict = self.data_dict
 
         self.tkt2 = ticket.GenomeTicket()
-
-
-
-
-
-
-
-
-
-    def test_prepare_tickets_1(self):
-        """Verify dictionary is returned from a correct import table file."""
-        tkt_dict = import_genome.prepare_tickets(
-                        import_table_file=self.test_import_table,
-                        run_mode="phagesdb",
-                        description_field="product")
-        self.assertEqual(len(tkt_dict.keys()), 2)
-
-
 
 
 
@@ -153,23 +136,30 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, no phagesdb data."""
+        # Omit cluster to verify that only attributes in the data_ticket set
+        # are copied.
+        self.tkt1.data_ticket = set(["host_genus", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
-        tkt_gnm = bndl.genome_dict["add"]
+        tkt_gnm = bndl.genome_dict["ticket"]
         bndl_tkt = bndl.ticket
-        ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
         with self.subTest():
             self.assertEqual(bndl.id, 1)
         with self.subTest():
             self.assertEqual(ff_gnm.id, "L5")
         with self.subTest():
             self.assertEqual(ff_gnm.retrieve_record, 1)
+        with self.subTest():
+            self.assertEqual(ff_gnm.host_genus, "Arthrobacter")
+        with self.subTest():
+            self.assertEqual(ff_gnm.cluster, "")
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "L5")
 
@@ -181,13 +171,14 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_2(self):
         """Verify bundle is returned from a flat file with:
         no record."""
+        self.tkt1.data_ticket = set(["host_genus", "cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file2,
                     ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 0)
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertIsNone(bndl.ticket)
 
@@ -197,14 +188,15 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_3(self):
         """Verify bundle is returned from a flat file with:
         one record, no ticket."""
+        self.tkt1.data_ticket = set(["host_genus", "cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
         tkt_dict = {"L5x":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 1)
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
         with self.subTest():
             self.assertIsNone(bndl.ticket)
         with self.subTest():
@@ -215,28 +207,49 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
+
+
+    def test_prepare_bundle_100(self):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'add' ticket, no data_ticket, no phagesdb data."""
+        self.tkt1.data_ticket = set()
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
+        ff_gnm = bndl.genome_dict["flat_file"]
+        bndl_tkt = bndl.ticket
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 1)
+        with self.subTest():
+            self.assertEqual(ff_gnm.retrieve_record, -1)
+
+
+
+
+
     def test_prepare_bundle_4(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, with phagesdb data."""
-        self.tkt1.host_genus = "retrieve"
-        self.tkt1.cluster = "B"
+        # Use cluster and host_genus to confirm that only attributes
+        # within the data_retrieve set are copied.
+        self.tkt1.data_ticket = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_dict["host_genus"] = "retrieve"
+        self.tkt1.data_retrieve = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         pdb_gnm = bndl.genome_dict["phagesdb"]
-        ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
-        ff_pdb_pair = bndl.genome_pair_dict["flat_file_phagesdb"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 3)
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 2)
-        with self.subTest():
-            self.assertEqual(ff_gnm.retrieve_record, 1)
         with self.subTest():
             self.assertEqual(ff_gnm.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(ff_gnm.cluster, "B")
+        with self.subTest():
+            self.assertEqual(pdb_gnm.cluster, "A")
 
 
 
@@ -247,8 +260,9 @@ class TestImportGenomeMain1(unittest.TestCase):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with phamerator data,
         and no phagesdb data."""
-
-        l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",
+        # Use host_genus and accession to confirm that only attributes
+        # in the data_retain set are copied.
+        l5_data = ["L5", "EFG789", "L5_Draft", "Gordonia", "ATCG",
                    4, 1, "draft", constants.EMPTY_DATE, 1, 1]
         trixie_data = ["Trixie", "XYZ456", "Trixie", "Mycobacterium", "AATTC",
                        5, 1, "final", constants.EMPTY_DATE, 1, 1]
@@ -276,26 +290,28 @@ class TestImportGenomeMain1(unittest.TestCase):
         connection.close()
 
         self.tkt1.type = "replace"
-        self.tkt1.cluster = "B"
-        self.tkt1.annotation_author = "retain"
+        self.tkt1.data_dict["host_genus"] = "retain"
+        self.tkt1.data_ticket = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_retain = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, sql_handle=self.sql_handle, id=1,
                     genome_id_field="organism_name")
         ff_gnm = bndl.genome_dict["flat_file"]
         pmr_gnm = bndl.genome_dict["phamerator"]
-        ff_tkt_pair = bndl.genome_pair_dict["flat_file_add"]
         ff_pmr_pair = bndl.genome_pair_dict["flat_file_phamerator"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 3)
         with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 2)
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
         with self.subTest():
-            self.assertEqual(ff_gnm.retrieve_record, 1)
+            self.assertEqual(ff_gnm.host_genus, "Gordonia")
         with self.subTest():
-            self.assertEqual(ff_gnm.host_genus, "Mycobacterium")
+            self.assertEqual(ff_gnm.accession, "ABC123")
         with self.subTest():
-            self.assertEqual(ff_gnm.annotation_author, 1)
+            self.assertEqual(pmr_gnm.accession, "EFG789")
 
 
 
@@ -307,7 +323,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         one record, one 'replace' ticket, no phamerator data,
         and no phagesdb data."""
 
-        l5_data = ["L5x", "ABC123", "L5_Draft", "Mycobacterium", "ATCG",
+        l5_data = ["L5x", "ABC123", "L5_Draft", "Gordonia", "ATCG",
                    4, 1, "draft", constants.EMPTY_DATE, 1, 1]
         trixie_data = ["Trixie", "XYZ456", "Trixie", "Gordonia", "AATTC",
                        5, 1, "final", constants.EMPTY_DATE, 1, 1]
@@ -335,7 +351,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         connection.close()
 
         self.tkt1.type = "replace"
-        self.tkt1.annotation_author = "retain"
+        self.tkt1.data_dict["host_genus"] = "retain"
+        self.tkt1.data_ticket = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_retain = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, sql_handle=self.sql_handle, id=1,
@@ -344,13 +364,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
         with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
-        with self.subTest():
-            self.assertEqual(ff_gnm.retrieve_record, 1)
-        with self.subTest():
-            self.assertEqual(ff_gnm.host_genus, "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(ff_gnm.annotation_author, "retain")
+            self.assertEqual(ff_gnm.host_genus, "")
 
 
 
@@ -390,7 +404,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         connection.close()
 
         self.tkt1.type = "replace"
-        self.tkt1.annotation_author = "retain"
+        self.tkt1.data_dict["host_genus"] = "retain"
+        self.tkt1.data_ticket = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_retain = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
@@ -398,13 +416,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
         with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
-        with self.subTest():
-            self.assertEqual(ff_gnm.retrieve_record, 1)
-        with self.subTest():
-            self.assertEqual(ff_gnm.host_genus, "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(ff_gnm.annotation_author, "retain")
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
 
 
 
@@ -574,6 +586,142 @@ class TestImportGenomeMain2(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.test_directory1)
+
+
+
+
+
+
+class TestImportGenomeMain3(unittest.TestCase):
+
+    def setUp(self):
+
+        self.run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                                   "eval_flag_dict": {"a":1}}
+        self.required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
+        self.optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+        self.keywords = set(["retrieve", "retain", "none"])
+
+
+        self.test_import_table1 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_files/test_import_table_1.csv")
+
+        # Valid data dictionary.
+        self.data_dict1 = {}
+        self.data_dict1["type"] = "add"
+        self.data_dict1["id"] = 1
+        self.data_dict1["phage_id"] = "Trixie"
+        self.data_dict1["description_field"] = "product"
+        self.data_dict1["run_mode"] = "phagesdb"
+        self.data_dict1["host_genus"] = "retrieve"
+        self.data_dict1["cluster"] = "retain"
+
+        # Valid data dictionary.
+        self.data_dict2 = {}
+        self.data_dict2["type"] = "add"
+        self.data_dict2["id"] = 2
+        self.data_dict2["phage_id"] = "L5"
+        self.data_dict2["description_field"] = "product"
+        self.data_dict2["run_mode"] = "phagesdb"
+        self.data_dict2["host_genus"] = "retrieve"
+        self.data_dict2["cluster"] = "retain"
+
+
+        self.dict1_dict2 = [self.data_dict1, self.data_dict2]
+
+
+
+
+    def test_prepare_tickets_1(self):
+        """Verify dictionary is returned from a correct import table file."""
+
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table1,
+                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        description_field="product",
+                        required_keys=self.required_keys,
+                        optional_keys=self.optional_keys,
+                        keywords=self.keywords)
+        self.assertEqual(len(tkt_dict.keys()), 2)
+
+
+    # Patch so that a variety of different types of files don't need
+    # to be created just to test this function.
+    @patch("pdm_utils.functions.tickets.retrieve_ticket_data")
+    def test_prepare_tickets_2(self, mock_retrieve_tickets):
+        """Verify dictionary is returned from two correct
+        import data dictionaries."""
+
+        mock_retrieve_tickets.return_value = self.dict1_dict2
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table1,
+                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        description_field="product",
+                        required_keys=self.required_keys,
+                        optional_keys=self.optional_keys,
+                        keywords=self.keywords)
+        self.assertEqual(len(tkt_dict.keys()), 2)
+
+
+    @patch("pdm_utils.functions.tickets.retrieve_ticket_data")
+    def test_prepare_tickets_3(self, mock_retrieve_tickets):
+        """Verify no dictionary is returned from one correct
+        and one incorrect import data dictionaries."""
+
+        self.data_dict2.pop("phage_id")
+        mock_retrieve_tickets.return_value = self.dict1_dict2
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table1,
+                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        description_field="product",
+                        required_keys=self.required_keys,
+                        optional_keys=self.optional_keys,
+                        keywords=self.keywords)
+        self.assertIsNone(tkt_dict)
+
+
+
+
+    @patch("pdm_utils.functions.tickets.retrieve_ticket_data")
+    def test_prepare_tickets_4(self, mock_retrieve_tickets):
+        """Verify no dictionary is returned from one correct
+        data dictionary and one correct data dictionary with
+        duplicated phage_id."""
+
+        self.data_dict2["phage_id"] = "Trixie"
+        mock_retrieve_tickets.return_value = self.dict1_dict2
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table1,
+                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        description_field="product",
+                        required_keys=self.required_keys,
+                        optional_keys=self.optional_keys,
+                        keywords=self.keywords)
+        self.assertIsNone(tkt_dict)
+
+
+    @patch("pdm_utils.functions.tickets.retrieve_ticket_data")
+    def test_prepare_tickets_5(self, mock_retrieve_tickets):
+        """Verify no dictionary is returned from one correct
+        data dictionary and one incorrect data dictionary with
+        invalid ticket type."""
+
+        self.data_dict2["type"] = "invalid"
+        mock_retrieve_tickets.return_value = self.dict1_dict2
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table1,
+                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        description_field="product",
+                        required_keys=self.required_keys,
+                        optional_keys=self.optional_keys,
+                        keywords=self.keywords)
+        self.assertIsNone(tkt_dict)
+
+
+
+
+
 
 
 

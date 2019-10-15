@@ -5,6 +5,7 @@ from pdm_utils.classes import genome
 from pdm_utils.classes import ticket
 from pdm_utils.classes import eval
 from pdm_utils.functions import tickets
+from pdm_utils.functions import run_modes
 from pdm_utils.constants import constants
 import unittest
 
@@ -174,13 +175,16 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
+
     def test_construct_tickets_1(self):
-        """Verify two tickets constructed correctly. The first ticket
-        contains all required and optional fields. The second ticket contains
-        all required fields."""
+        """Verify two tickets are constructed correctly.
+        The first ticket contains all required and optional fields.
+        The second ticket contains all required fields."""
         dict_list = [self.ticket_dict1, self.ticket_dict4]
+        run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                              "eval_flag_dict": {"check_locus_tag": False}}
         list_of_tickets = tickets.construct_tickets(dict_list,
-                "pecaan", "function", self.required_keys,
+                run_mode_eval_dict, "function", self.required_keys,
                 self.optional_keys, self.keywords)
         with self.subTest():
             self.assertEqual(len(list_of_tickets), 2)
@@ -191,7 +195,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertTrue(list_of_tickets[0].eval_flags["check_locus_tag"])
         with self.subTest():
-            self.assertEqual(list_of_tickets[1].run_mode, "pecaan")
+            self.assertEqual(list_of_tickets[1].run_mode, "custom_run_mode")
         with self.subTest():
             self.assertEqual(list_of_tickets[1].description_field, "function")
         with self.subTest():
@@ -201,12 +205,65 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify one ticket is constructed correctly. The second data
         dictionary is not structured correctly."""
         dict_list = [self.ticket_dict1, self.ticket_dict2]
+        run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                              "eval_flag_dict": {}}
         list_of_tickets = tickets.construct_tickets(dict_list,
-                "pecaan", "function", self.required_keys,
+                run_mode_eval_dict, "function", self.required_keys,
                 self.optional_keys, self.keywords)
         with self.subTest():
             self.assertEqual(len(list_of_tickets), 1)
 
+    def test_construct_tickets_3(self):
+        """Verify four tickets constructed correctly. The first two tickets
+        contain all required and optional fields. The second two tickets
+        contain all required fields. Verify that each eval_flag dictionary
+        is a separate object that can be modified without impacting the other
+        eval_flag dictionaries."""
+
+        tkt_dict1 = {}
+        tkt_dict1["type"] = "add"
+        tkt_dict1["id"] = 1
+        tkt_dict1["phage_id"] = "Trixie"
+        tkt_dict1["description_field"] = "product"
+        tkt_dict1["run_mode"] = "phagesdb"
+
+        tkt_dict2 = {}
+        tkt_dict2["type"] = "add"
+        tkt_dict2["id"] = 2
+        tkt_dict2["phage_id"] = "L5"
+        tkt_dict2["description_field"] = "product"
+        tkt_dict2["run_mode"] = "phagesdb"
+
+        tkt_dict3 = {}
+        tkt_dict3["type"] = "add"
+        tkt_dict3["id"] = 3
+        tkt_dict3["phage_id"] = "RedRock"
+
+        tkt_dict4 = {}
+        tkt_dict4["type"] = "add"
+        tkt_dict4["id"] = 4
+        tkt_dict4["phage_id"] = "Bxb1"
+
+        dict_list = [tkt_dict1, tkt_dict2, tkt_dict3, tkt_dict4]
+        run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                              "eval_flag_dict": {"check_locus_tag": False}}
+        tkt_list = tickets.construct_tickets(dict_list,
+                run_mode_eval_dict, "function", self.required_keys,
+                self.optional_keys, self.keywords)
+
+        tkt_list[0].eval_flags["check_locus_tag"] = 0
+        tkt_list[1].eval_flags["check_locus_tag"] = 1
+        tkt_list[2].eval_flags["check_locus_tag"] = 2
+        tkt_list[3].eval_flags["check_locus_tag"] = 3
+
+        with self.subTest():
+            self.assertEqual(tkt_list[0].eval_flags["check_locus_tag"], 0)
+        with self.subTest():
+            self.assertEqual(tkt_list[1].eval_flags["check_locus_tag"], 1)
+        with self.subTest():
+            self.assertEqual(tkt_list[2].eval_flags["check_locus_tag"], 2)
+        with self.subTest():
+            self.assertEqual(tkt_list[3].eval_flags["check_locus_tag"], 3)
 
 
 
@@ -534,6 +591,115 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
 
+
+class TestTicketFunctions5(unittest.TestCase):
+
+    def setUp(self):
+        self.data_dict = {}
+        self.data_dict["host_genus"] = "Mycobacterium smegmatis"
+        self.data_dict["accession"] = "ABC123.1"
+        self.data_dict["annotation_status"] = "final"
+        self.data_dict["cluster"] = "A"
+        self.data_dict["subcluster"] = "A2"
+        self.data_dict["annotation_author"] = 1
+        self.data_dict["retrieve_record"] = 1
+        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1.phage_id = "Trixie_Draft"
+        self.tkt1.data_dict = self.data_dict
+
+    def test_get_genome_1(self):
+        """Verify no data from ticket is added to genome."""
+        self.tkt1.data_ticket = set([""])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.id, "Trixie")
+        with self.subTest():
+            self.assertEqual(gnm.name, "Trixie_Draft")
+        with self.subTest():
+            self.assertEqual(gnm.type, "add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "")
+        with self.subTest():
+            self.assertEqual(gnm.subcluster, "")
+        with self.subTest():
+            self.assertEqual(gnm.cluster_subcluster, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_status, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_author, -1)
+        with self.subTest():
+            self.assertEqual(gnm.retrieve_record, -1)
+        with self.subTest():
+            self.assertEqual(gnm.accession, "")
+
+    def test_get_genome_2(self):
+        """Verify host_genus data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["host_genus"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "")
+
+    def test_get_genome_3(self):
+        """Verify cluster data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["cluster"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "A")
+        with self.subTest():
+            self.assertEqual(gnm.cluster_subcluster, "A")
+
+    def test_get_genome_4(self):
+        """Verify subcluster data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["subcluster"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.subcluster, "A2")
+        with self.subTest():
+            self.assertEqual(gnm.cluster_subcluster, "A2")
+
+    def test_get_genome_5(self):
+        """Verify annotation_status data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["annotation_status"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_status, "final")
+
+    def test_get_genome_6(self):
+        """Verify annotation_author data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["annotation_author"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_author, 1)
+
+    def test_get_genome_7(self):
+        """Verify retrieve_record data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["retrieve_record"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.retrieve_record, 1)
+
+    def test_get_genome_8(self):
+        """Verify accession data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["accession"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.accession, "ABC123")
 
 if __name__ == '__main__':
     unittest.main()
