@@ -46,7 +46,6 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.id_dupe_set = set([1])
 
 
-    # TODO these need to be updated.
     def test_check_ticket_1(self):
         """Verify no error is produced with a correctly structured
         'add' ticket."""
@@ -59,7 +58,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(self.add_ticket1.evaluations), 8)
+            self.assertEqual(len(self.add_ticket1.evaluations), 9)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -80,7 +79,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             if evl.status == "error":
                 errors += 1
         with self.subTest():
-            self.assertEqual(len(tkt.evaluations), 8)
+            self.assertEqual(len(tkt.evaluations), 9)
         with self.subTest():
             self.assertEqual(errors, 2)
 

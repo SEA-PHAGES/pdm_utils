@@ -609,7 +609,7 @@ class TestImportGenomeMain3(unittest.TestCase):
 
         # Valid data dictionary.
         self.data_dict1 = {}
-        self.data_dict1["type"] = "add"
+        self.data_dict1["type"] = "replace"
         self.data_dict1["id"] = 1
         self.data_dict1["phage_id"] = "Trixie"
         self.data_dict1["description_field"] = "product"
@@ -619,7 +619,7 @@ class TestImportGenomeMain3(unittest.TestCase):
 
         # Valid data dictionary.
         self.data_dict2 = {}
-        self.data_dict2["type"] = "add"
+        self.data_dict2["type"] = "replace"
         self.data_dict2["id"] = 2
         self.data_dict2["phage_id"] = "L5"
         self.data_dict2["description_field"] = "product"

@@ -72,9 +72,6 @@ class TestPhameratorFunctions(unittest.TestCase):
                             "0",
                             "0")
 
-        self.cds1 = cds.Cds()
-        self.cds2 = cds.Cds()
-        self.cds3 = cds.Cds()
 
 
 
@@ -325,12 +322,20 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
+    def test_convert_for_sql_1(self):
+        """Verify non-empy value returned contains ''."""
+        value = phamerator.convert_for_sql("A")
+        self.assertEqual(value, "'A'")
 
+    def test_convert_for_sql_2(self):
+        """Verify empty value returned is NULL."""
+        value = phamerator.convert_for_sql("")
+        self.assertEqual(value, "NULL")
 
-
-
-
-
+    def test_convert_for_sql_3(self):
+        """Verify 'singleton' value returned is NULL."""
+        value = phamerator.convert_for_sql("SINGLETON")
+        self.assertEqual(value, "NULL")
 
 
 
@@ -515,8 +520,9 @@ class TestPhameratorFunctions(unittest.TestCase):
 
 
 
-    def test_create_genome_insert_1(self):
-        """Verify list of genome INSERT statements is created correctly."""
+    def test_create_genome_statements_1(self):
+        """Verify list of INSERT statements is created correctly for:
+        'add' ticket, and no CDS features."""
 
         self.genome1.id = "L5"
         self.genome1.name = "L5_Draft"
@@ -533,12 +539,82 @@ class TestPhameratorFunctions(unittest.TestCase):
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
-        statements = phamerator.create_genome_insert(self.genome1)
-        self.assertEqual(len(statements), 4)
+        statements = phamerator.create_genome_statements(
+                        self.genome1, tkt_type="add")
+        self.assertEqual(len(statements), 1)
 
 
+    def test_create_genome_statements_2(self):
+        """Verify list of INSERT statements is created correctly for:
+        'replace' ticket, and no CDS features."""
+
+        self.genome1.id = "L5"
+        self.genome1.name = "L5_Draft"
+        self.genome1.host_genus = "Mycobacterium"
+        self.genome1.annotation_status = "final"
+        self.genome1.accession = "ABC123"
+        self.genome1.seq = "ATCG"
+        self.genome1.length = 4
+        self.genome1.gc = 0.5001
+        self.genome1.date = '1/1/2000'
+        self.genome1.retrieve_record = "1"
+        self.genome1.annotation_author = "1"
+        self.genome1.cluster_subcluster = "A123"
+        self.genome1.cluster = "A"
+        self.genome1.subcluster = "A2"
+
+        statements = phamerator.create_genome_statements(
+                        self.genome1, tkt_type="replace")
+        self.assertEqual(len(statements), 2)
 
 
+    def test_create_genome_statements_3(self):
+        """Verify list of INSERT statements is created correctly for:
+        'add' ticket, and two CDS features."""
+
+        cds1 = cds.Cds()
+        cds1.genome_id = "L5"
+        cds1.left = 10
+        cds1.right = 100
+        cds1.length = 1000
+        cds1.name = "1"
+        cds1.type = "CDS"
+        cds1.translation = "AGGPT"
+        cds1.strand = "F"
+        cds1.description = "description"
+        cds1.locus_tag = "SEA_L5_001"
+
+        cds2 = cds.Cds()
+        cds2.genome_id = "L5"
+        cds2.left = 100
+        cds2.right = 1000
+        cds2.length = 10000
+        cds2.name = "2"
+        cds2.type = "CDS"
+        cds2.translation = "AKKQE"
+        cds2.strand = "R"
+        cds2.description = "description"
+        cds2.locus_tag = "SEA_L5_002"
+
+        self.genome1.id = "L5"
+        self.genome1.name = "L5_Draft"
+        self.genome1.host_genus = "Mycobacterium"
+        self.genome1.annotation_status = "final"
+        self.genome1.accession = "ABC123"
+        self.genome1.seq = "ATCG"
+        self.genome1.length = 4
+        self.genome1.gc = 0.5001
+        self.genome1.date = '1/1/2000'
+        self.genome1.retrieve_record = "1"
+        self.genome1.annotation_author = "1"
+        self.genome1.cluster_subcluster = "A123"
+        self.genome1.cluster = "A"
+        self.genome1.subcluster = "A2"
+        self.genome1.cds_features = [cds1, cds2]
+
+        statements = phamerator.create_genome_statements(
+                        self.genome1, tkt_type="add")
+        self.assertEqual(len(statements), 3)
 
 
 

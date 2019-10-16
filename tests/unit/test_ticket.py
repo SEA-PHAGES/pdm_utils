@@ -341,7 +341,34 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
+    def test_check_compatible_type_and_data_retain_1(self):
+        """Verify that no error is produced with "add" type and data_retain
+        is empty."""
+        self.tkt.type = "add"
+        self.tkt.data_retain = set()
+        self.tkt.check_compatible_type_and_data_retain(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].id, "eval_id")
 
+    def test_check_compatible_type_and_data_retain_2(self):
+        """Verify that no error is produced with "replace" type and data_retain
+        is not empty."""
+        self.tkt.type = "replace"
+        self.tkt.data_retain = set(["host_genus"])
+        self.tkt.check_compatible_type_and_data_retain(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "correct")
+
+    def test_check_compatible_type_and_data_retain_3(self):
+        """Verify that an error is produced with "add" type and data_retain
+        is not empty."""
+        self.tkt.type = "add"
+        self.tkt.data_retain = set(["host_genus"])
+        self.tkt.check_compatible_type_and_data_retain(eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.tkt.evaluations[0].status, "error")
 
 if __name__ == '__main__':
     unittest.main()

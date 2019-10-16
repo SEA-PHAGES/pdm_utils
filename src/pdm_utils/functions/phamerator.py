@@ -374,6 +374,15 @@ def create_accession_set(sql_handle):
     return result_set
 
 
+def convert_for_sql(value):
+    """Convert a value for inserting into MySQL."""
+    if (basic.check_empty(value) == True or value.lower() == "singleton"):
+        value = "NULL"
+    else:
+        value = "'%s'" % value
+    return value
+
+
 def create_update(table, field2, value2, field1, value1):
     """Create MySQL UPDATE statement.
 
@@ -400,13 +409,7 @@ def create_update(table, field2, value2, field1, value1):
     """
     part1 = "UPDATE %s SET %s = " % (table, field2)
     part3 = " WHERE %s = '%s';" % (field1, value1)
-    part2a = "NULL"
-    part2b = "'%s'" % value2
-    if (basic.check_empty(value2) == True or \
-        value2.lower() == "singleton"):
-        part2 = part2a
-    else:
-        part2 = part2b
+    part2 = convert_for_sql(value2)
     statement = part1 + part2 + part3
     return statement
 
@@ -471,52 +474,46 @@ def create_phage_table_insert(gnm):
         with data for several fields.
     :rtype: str
     """
-    statement = ("INSERT INTO phage (PhageID, Accession, Name, "
-                 "HostStrain, Sequence, SequenceLength, GC, status, "
-                 "DateLastModified, RetrieveRecord, "
-                 "AnnotationAuthor) VALUES ("
-                 "'%s', '%s', '%s', '%s', '%s',"
-                 " %s, %s, '%s', '%s', %s, %s);"
-                 % (gnm.id,
-                 gnm.accession,
-                 gnm.name,
-                 gnm.host_genus,
-                 gnm.seq,
-                 gnm.length,
-                 gnm.gc,
-                 gnm.annotation_status,
-                 gnm.date,
-                 gnm.retrieve_record,
-                 gnm.annotation_author)
+    cluster = convert_for_sql(gnm.cluster)
+    subcluster = convert_for_sql(gnm.subcluster)
+    cluster_subcluster = convert_for_sql(gnm.cluster_subcluster)
+
+    statement = ("INSERT INTO phage "
+                 "(PhageID, Accession, Name, HostStrain, Sequence, "
+                 "SequenceLength, GC, status, DateLastModified, "
+                 "RetrieveRecord, AnnotationAuthor, "
+                 "Cluster, Cluster2, Subcluster2) "
+                 "VALUES "
+                 "('%s', '%s', '%s', '%s', '%s', "
+                 "%s, %s, '%s', '%s', "
+                 "%s, %s, "
+                 "%s, %s, %s);"
+                 % (gnm.id, gnm.accession, gnm.name, gnm.host_genus, gnm.seq,
+                 gnm.length, gnm.gc, gnm.annotation_status, gnm.date,
+                 gnm.retrieve_record, gnm.annotation_author,
+                 cluster_subcluster, cluster, subcluster)
                  )
     return statement
 
 
-# TODO integration test? Not sure if this is really needed.
-def create_genome_insert(gnm):
-    """Create a collection of MySQL INSERT and UPDATE statements.
+def create_genome_statements(gnm, tkt_type=""):
+    """Create list of MySQL statements based on the ticket type."""
 
-    :param gnm: A pdm_utils Genome object.
-    :type gnm: Genome
-    :returns:
-        A list of MySQL INSERT and UPDATE statement for the
-        phage, gene, and trna tables.
-    :rtype: list
-    """
-    table = "phage"
-    field1 = "PhageID"
-    value1 = gnm.id
-    statements = []
-    statements.append(create_phage_table_insert(gnm))
-    statements.append(create_update(
-        table, field1, value1, "Cluster", gnm.cluster_subcluster))
-    statements.append(create_update(
-        table, field1, value1, "Cluster2", gnm.cluster))
-    statements.append(create_update(
-        table, field1, value1, "Subcluster2", gnm.subcluster))
-    return statements
+    sql_statements = []
+    if tkt_type == "replace":
+        statement1 = create_delete("phage", "PhageID", gnm.id)
+        sql_statements.append(statement1)
+    statement2 = create_phage_table_insert(gnm)
+    sql_statements.append(statement2)
+    for cds_ftr in gnm.cds_features:
+        statement3 = create_gene_table_insert(cds_ftr)
+        sql_statements.append(statement3)
 
+    # TODO add steps to insert tRNA and tmRNA data.
 
+    return sql_statements
+
+# TODO this may no longer be needed.
 def copy_data(bndl, from_type, to_type, flag="retain"):
     """Copy data from a 'phamerator' genome object.
 
@@ -719,41 +716,6 @@ def implement_remove_statements():
 
 
 
-# # TODO probably no longer needed.
-# # TODO this needs to be revamped. It was originally constructed to handle
-# # 'update' tickets that contain several pieces of data.
-# def create_genome_update_statements(gnm):
-#     """Create a collection of genome-level UPDATE statements using data
-#     in a Genome object.
-#
-#     :param gnm: A pdm_utils Genome object.
-#     :type gnm: Genome
-#     :returns:
-#         A list of MySQL INSERT and UPDATE statement for the
-#         phage, gene, and trna tables.
-#     :rtype: list
-#
-#     """
-#
-#     table = "phage"
-#     field1 = "PhageID"
-#     value1 = gnm.id
-#     statements = []
-#     statements.append(create_update(
-#         table, field1, value1, "HostStrain", gnm.host_genus))
-#     statements.append(create_update(
-#         table, field1, value1, "status", gnm.annotation_status))
-#     statements.append(create_update(
-#         table, field1, value1, "Accession", gnm.accession))
-#     statements.append(create_update(
-#         table, field1, value1, "AnnotationAuthor", gnm.author))
-#     statements.append(create_update(
-#         table, field1, value1, "Cluster", gnm.cluster_subcluster))
-#     statements.append(create_update(
-#         table, field1, value1, "Cluster2", gnm.cluster))
-#     statements.append(create_update(
-#         table, field1, value1, "Subcluster2", gnm.subcluster))
-#     return statements
 
 
 

@@ -278,22 +278,44 @@ class GenomeTicket:
         except:
             annotation_status = ""
         if (self.type == "add" and annotation_status == "final"):
-            result = "The ticket type indicates that a genome" + \
-                     "with 'final' annotation_status will be added," + \
-                     "which is not expected."
+            result = ("The ticket type indicates that a genome "
+                     "with 'final' annotation_status will be added, "
+                     "which is not expected.")
             status = "error"
         elif (self.type == "replace" and annotation_status == "draft"):
-            result = "The ticket type indicates that a genome" + \
-                     "with 'draft' annotation_status will be replaced," + \
-                     "which is not expected."
+            result = ("The ticket type indicates that a genome "
+                     "with 'draft' annotation_status will be replaced, "
+                     "which is not expected.")
             status = "error"
         else:
             result = "The ticket type and annotation_status are expected."
             status = "correct"
-        definition = "Check if the ticket type and annotation_status" \
-                     + " are compatible."
+        definition = ("Check if the ticket type and annotation_status "
+                     "are compatible.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
+
+    def check_compatible_type_and_data_retain(self, eval_id=None):
+        """Check if the ticket type and data_retain are compatible.
+
+        If the ticket type is 'add', then the data_retain set is not
+        expected to have any data.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        if (self.type == "add" and len(self.data_retain) > 0):
+            result = ("The ticket type indicates that a genome "
+                     "that will be added should also retain data, "
+                     "from a genome in the database, which is not expected.")
+            status = "error"
+        else:
+            result = "The ticket type and data_retain set are expected."
+            status = "correct"
+        definition = ("Check if the ticket type and data_retain "
+                      "are compatible.")
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 ###
