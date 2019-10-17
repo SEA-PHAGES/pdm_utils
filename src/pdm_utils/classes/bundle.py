@@ -145,9 +145,10 @@ class Bundle:
             if evl.status == "error":
                 self._errors += 1
 
-        for evl in self.ticket.evaluations:
-            if evl.status == "error":
-                self._errors += 1
+        if self.ticket is not None:
+            for evl in self.ticket.evaluations:
+                if evl.status == "error":
+                    self._errors += 1
 
         for key in self.genome_dict.keys():
             gnm = self.genome_dict[key]

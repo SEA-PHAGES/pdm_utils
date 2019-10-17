@@ -212,20 +212,26 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 1)
 
     def test_check_for_errors_6(self):
+        """Check that a bundle with no ticket is not counted."""
+        self.bndl.ticket = None
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 0)
+
+    def test_check_for_errors_7(self):
         """Check that a genome 'correct' eval is not counted."""
         self.eval1.status = "correct"
         self.genome1.evaluations.append(self.eval1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_7(self):
+    def test_check_for_errors_8(self):
         """Check that a genome 'error' eval is counted."""
         self.eval1.status = "error"
         self.genome1.evaluations.append(self.eval1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
 
-    def test_check_for_errors_8(self):
+    def test_check_for_errors_9(self):
         """Check that two genome 'correct' evals are not counted."""
         self.eval1.status = "correct"
         self.eval2.status = "correct"
@@ -234,7 +240,7 @@ class TestBundleClass2(unittest.TestCase):
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_9(self):
+    def test_check_for_errors_10(self):
         """Check that two genome 'error' evals are counted."""
         self.eval1.status = "error"
         self.eval2.status = "error"
@@ -243,21 +249,21 @@ class TestBundleClass2(unittest.TestCase):
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 2)
 
-    def test_check_for_errors_10(self):
+    def test_check_for_errors_11(self):
         """Check that a cds 'correct' eval is not counted."""
         self.eval1.status = "correct"
         self.cds1.evaluations.append(self.eval1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_11(self):
+    def test_check_for_errors_12(self):
         """Check that a cds 'error' eval is counted."""
         self.eval1.status = "error"
         self.cds1.evaluations.append(self.eval1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
 
-    def test_check_for_errors_12(self):
+    def test_check_for_errors_13(self):
         """Check that two cds 'correct' evals are not counted."""
         self.eval1.status = "correct"
         self.eval2.status = "correct"
@@ -266,7 +272,7 @@ class TestBundleClass2(unittest.TestCase):
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_13(self):
+    def test_check_for_errors_14(self):
         """Check that two cds 'error' evals are counted."""
         self.eval1.status = "error"
         self.eval2.status = "error"
@@ -275,21 +281,21 @@ class TestBundleClass2(unittest.TestCase):
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 2)
 
-    def test_check_for_errors_14(self):
+    def test_check_for_errors_15(self):
         """Check that a genome_pair 'correct' eval is not counted."""
         self.eval1.status = "correct"
         self.genome_pair1.evaluations.append(self.eval1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_15(self):
+    def test_check_for_errors_16(self):
         """Check that a genome_pair 'error' eval is counted."""
         self.eval1.status = "error"
         self.genome_pair1.evaluations.append(self.eval1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
 
-    def test_check_for_errors_16(self):
+    def test_check_for_errors_17(self):
         """Check that two genome_pair 'correct' evals are not counted."""
         self.eval1.status = "correct"
         self.eval2.status = "correct"
@@ -298,7 +304,7 @@ class TestBundleClass2(unittest.TestCase):
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_17(self):
+    def test_check_for_errors_18(self):
         """Check that two genome_pair 'error' evals are counted."""
         self.eval1.status = "error"
         self.eval2.status = "error"
@@ -306,6 +312,7 @@ class TestBundleClass2(unittest.TestCase):
         self.genome_pair2.evaluations.append(self.eval2)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 2)
+
 
 
 
