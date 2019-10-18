@@ -798,18 +798,21 @@ def get_input(prompt=""):
     return input(prompt)
 
 
-def identify_files(path_to_folder):
+def identify_files(path_to_folder, ignore_set=set()):
     """Create a list of filenames from an indicated directory.
 
     :param path_to_folder: A valid directory path.
-    :type path_to_folder: str
+    :type path_to_folder: Path
+    :param ignore_set:
+        A set of strings representing filenames to ignore.
+    :type ignore_set: set
     :returns: List of valid files in the directory.
     :rtype: list
     """
     files_in_folder = []
-    for item in os.listdir(path_to_folder):
-        item_path = os.path.join(path_to_folder, item)
-        if os.path.isfile(item_path):
+    for item in path_to_folder.iterdir():
+        item_path = Path(path_to_folder, item)
+        if (item_path.is_file() and item.name not in ignore_set):
             files_in_folder.append(item)
     return files_in_folder
 
@@ -870,7 +873,6 @@ def verify_path(filepath, kind=None):
         return False
 
 
-# TODO this may no longer be needed.
 def make_new_dir(output_dir, new_dir, attempt=1):
     """Make a new directory.
 
@@ -880,59 +882,22 @@ def make_new_dir(output_dir, new_dir, attempt=1):
 
     :param output_dir:
         Full path to the directory where the new directory will be created.
-    :type output_dir: str
+    :type output_dir: Path
     :param new_dir: Name of the new directory to be created.
-    :type new_dir: str
+    :type new_dir: Path
     :param attempt: Number of attempts to create the directory.
     :type attempt: int
     :returns:
-        If successful, the name of the created directory.
-        If unsuccessful, empty string "".
-    :rtype: str
+        If successful, the full path of the created directory.
+        If unsuccessful, None.
+    :rtype: Path, None
     """
     valid = False
     count = 0
     while (not valid and count < attempt):
         if count > 0:
-            new_dir_mod = new_dir + "_" + str(count)
-        else:
-            new_dir_mod = new_dir
-        new_path = os.path.join(output_dir, new_dir_mod)
-        if not verify_path(new_path, "dir"):
-            valid = True
-            os.mkdir(new_path)
-        count += 1
-    if not valid:
-        return ""
-    else:
-        return new_dir_mod
-
-# TODO in progress.
-# TODO unittest.
-def make_new_dir2(output_dir, new_dir, attempt=1):
-    """Make a new directory.
-
-    Checks to verify the new directory name is valid and does not
-    already exist. If it already exists, it attempts to extend
-    the name with an integer suffix.
-
-    :param output_dir:
-        Full path to the directory where the new directory will be created.
-    :type output_dir: str
-    :param new_dir: Name of the new directory to be created.
-    :type new_dir: str
-    :param attempt: Number of attempts to create the directory.
-    :type attempt: int
-    :returns:
-        If successful, the name of the created directory.
-        If unsuccessful, empty string "".
-    :rtype: str
-    """
-    valid = False
-    count = 0
-    while (not valid and count < attempt):
-        if count > 0:
-            new_dir_mod = new_dir + "_" + str(count)
+            new_dir_mod = new_dir.stem + "_" + str(count)
+            new_dir_mod = Path(new_dir_mod)
         else:
             new_dir_mod = new_dir
         new_path = Path(output_dir, new_dir_mod)
@@ -941,9 +906,9 @@ def make_new_dir2(output_dir, new_dir, attempt=1):
             new_path.mkdir()
         count += 1
     if not valid:
-        return ""
+        return None
     else:
-        return new_dir_mod
+        return new_path
 
 
 def parse_flag_file(flag_file):

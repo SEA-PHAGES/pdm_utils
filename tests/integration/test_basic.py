@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 import os
 import shutil
+from pathlib import Path
 
 
 
@@ -78,15 +79,10 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
-    def test_identify_files_1(self):
-        """Verify only correct number of elements are returned.
-        There is one folder in the test directory, so the total number
-        of files should be 1 less than the total contents of the
-        directory."""
-        list_of_directory_contents = os.listdir(self.test_directory1)
-        expected = len(list_of_directory_contents) - 1
-        list_of_files = basic.identify_files(self.test_directory1)
-        self.assertEqual(len(list_of_files), expected)
+
+
+
+
 
 
 
@@ -205,7 +201,7 @@ class TestBasicFunctions2(unittest.TestCase):
     def setUp(self):
         self.base_dir = \
             os.path.join(os.path.dirname(__file__),
-            "test_wd/test_make_new_dir")
+            "test_wd/new_dir")
         os.mkdir(self.base_dir)
 
 
@@ -213,54 +209,78 @@ class TestBasicFunctions2(unittest.TestCase):
 
     def test_make_new_dir_1(self):
         """Verify new directory is created."""
-        new_dir = "test_dir"
-        output_dir = basic.make_new_dir(self.base_dir, new_dir)
+        base = Path(self.base_dir)
+        test_dir = Path("test_dir")
+        output_path = basic.make_new_dir(base, test_dir)
         exp_dir = "test_dir"
-        exp_path = os.path.join(self.base_dir, exp_dir)
+        exp_path = Path(base, exp_dir)
         with self.subTest():
-            self.assertTrue(os.path.isdir(exp_path))
+            self.assertTrue(exp_path.is_dir())
         with self.subTest():
-            self.assertEqual(exp_dir, output_dir)
+            self.assertEqual(exp_dir, output_path.stem)
 
     def test_make_new_dir_2(self):
         """Verify no new directory is created when a directory already
         exists and attempt = 1."""
-        new_dir = "test_dir"
-        os.mkdir(os.path.join(self.base_dir, new_dir))
-        output_dir = basic.make_new_dir(self.base_dir, new_dir)
-        self.assertEqual(output_dir, "")
-
-
+        base = Path(self.base_dir)
+        new_dir = Path("test_dir")
+        Path(base, new_dir).mkdir()
+        output_path = basic.make_new_dir(base, new_dir)
+        self.assertIsNone(output_path)
 
     def test_make_new_dir_3(self):
         """Verify new directory is created when a directory already
         exists and attempt = 2."""
-        new_dir = "test_dir"
-        os.mkdir(os.path.join(self.base_dir, new_dir))
-        output_dir = basic.make_new_dir(self.base_dir, new_dir, attempt=2)
-        exp_dir = "test_dir_1"
-        exp_path = os.path.join(self.base_dir, exp_dir)
+        base = Path(self.base_dir)
+        new_dir = Path("test_dir")
+        Path(base, new_dir).mkdir()
+        output_path = basic.make_new_dir(base, new_dir, attempt=2)
+        exp_dir = Path("test_dir_1")
+        exp_path = Path(base, exp_dir)
         with self.subTest():
-            self.assertTrue(os.path.isdir(exp_path))
+            self.assertTrue(exp_path.is_dir())
         with self.subTest():
-            self.assertEqual(output_dir, exp_dir)
+            self.assertEqual(exp_dir.stem, output_path.stem)
 
-    def test_make_new_dir_3(self):
+    def test_make_new_dir_4(self):
         """Verify new directory is created when two directories already
         exists and attempt = 3."""
-        new_dir = "test_dir"
-        os.mkdir(os.path.join(self.base_dir, new_dir))
-        os.mkdir(os.path.join(self.base_dir, new_dir + "_1"))
-        output_dir = basic.make_new_dir(self.base_dir, new_dir, attempt=3)
-        exp_dir = "test_dir_2"
-        exp_path = os.path.join(self.base_dir, exp_dir)
+        base = Path(self.base_dir)
+        new_dir = Path("test_dir")
+        Path(base, new_dir).mkdir()
+        Path(base, new_dir.stem + "_1").mkdir()
+        output_path = basic.make_new_dir(base, new_dir, attempt=3)
+        exp_dir = Path("test_dir_2")
+        exp_path = Path(self.base_dir, exp_dir)
         with self.subTest():
             self.assertTrue(os.path.isdir(exp_path))
         with self.subTest():
-            self.assertEqual(output_dir, exp_dir)
+            self.assertEqual(exp_dir.stem, output_path.stem)
 
 
 
+    def test_identify_files_1(self):
+        """Verify the correct number of elements are returned when
+        no ignore set is provided."""
+        base = Path(self.base_dir)
+        Path(base, "new_dir").mkdir()
+        Path(base, "file1.txt").touch()
+        Path(base, ".DS_Store").touch()
+        list_of_files = basic.identify_files(base)
+        exp_num_files = 2
+        self.assertEqual(len(list_of_files), exp_num_files)
+
+    def test_identify_files_2(self):
+        """Verify the correct number of elements are returned when
+        an ignore set is provided."""
+        base = Path(self.base_dir)
+        Path(base, "new_dir").mkdir()
+        Path(base, "file1.txt").touch()
+        Path(base, ".DS_Store").touch()
+        suffix_set = set([".DS_Store"])
+        list_of_files = basic.identify_files(base, suffix_set)
+        exp_num_files = 1
+        self.assertEqual(len(list_of_files), exp_num_files)
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)

@@ -18,6 +18,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
 from unittest.mock import patch
+from pathlib import Path
 
 
 
@@ -722,10 +723,270 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
 
+class TestImportGenomeMain4(unittest.TestCase):
+
+
+    def setUp(self):
+
+        self.flat_file_l5 = os.path.join(os.path.dirname(__file__),
+                            "test_files/test_flat_file_1.gb")
+        self.flat_file_l5 = Path(self.flat_file_l5)
+
+        self.flat_file_trixie = os.path.join(os.path.dirname(__file__),
+                            "test_files/test_flat_file_6.gb")
+        self.flat_file_trixie = Path(self.flat_file_trixie)
+
+        self.sql_handle = mch.MySQLConnectionHandler()
+        self.sql_handle.database = "Actino_Draft"
+        self.sql_handle.username = user
+        self.sql_handle.password = pwd
+
+        self.eval_flags = {}
+        self.eval_flags["check_seq"] = True
+        self.eval_flags["check_id_typo"] = True
+        self.eval_flags["check_host_typo"] = True
+        self.eval_flags["check_author"] = True
+        self.eval_flags["check_trna"] = True
+        self.eval_flags["check_gene"] = True
+        self.eval_flags["check_locus_tag"] = True
+        self.eval_flags["check_description"] = True
+        self.eval_flags["check_description_field"] = True
+
+        self.data_dict1 = {}
+        self.data_dict1["type"] = "replace"
+        self.data_dict1["id"] = 1
+        self.data_dict1["phage_id"] = "L5"
+        self.data_dict1["description_field"] = "product"
+        self.data_dict1["run_mode"] = "phagesdb"
+        self.data_dict1["host_genus"] = "Mycobacterium"
+        self.data_dict1["cluster"] = "A"
+
+        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1.id = 1
+        self.tkt1.phage_id = "L5"
+        self.tkt1.run_mode = "phagesdb"
+        self.tkt1.description_field = "product"
+        self.tkt1.eval_flags = self.eval_flags
+        self.tkt1.data_dict = self.data_dict1
+
+        self.data_dict2 = {}
+        self.data_dict2["type"] = "replace"
+        self.data_dict2["id"] = 1
+        self.data_dict2["phage_id"] = "Trixie"
+        self.data_dict2["description_field"] = "product"
+        self.data_dict2["run_mode"] = "phagesdb"
+        self.data_dict2["host_genus"] = "Gordonia"
+        self.data_dict2["cluster"] = "B"
+
+        self.tkt2 = ticket.GenomeTicket()
+        self.tkt2.id = 2
+        self.tkt2.phage_id = "Trixie"
+        self.tkt2.run_mode = "phagesdb"
+        self.tkt2.description_field = "product"
+        self.tkt2.eval_flags = self.eval_flags
+        self.tkt2.data_dict = self.data_dict2
 
 
 
 
+    def test_process_files_and_tickets_1(self):
+        """Verify correct output using:
+        no files,
+        no unmatched tickets."""
+        ticket_dict = {}
+        files = []
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, sql_handle=self.sql_handle,
+                            prod_run=False, genome_id_field="organism_name")
+        success_ticket_list = results_tuple[0]
+        failed_ticket_list = results_tuple[1]
+        success_filename_list = results_tuple[2]
+        failed_filename_list = results_tuple[3]
+        evaluation_dict = results_tuple[4]
+        with self.subTest():
+            self.assertEqual(len(success_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(success_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(len(evaluation_dict.keys()), 0)
+
+
+    # Patching so avoid an attempt to add data to the database.
+    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    def test_process_files_and_tickets_2(self, import_into_db_mock):
+        """Verify correct output using:
+        two files with no tickets,
+        unsuccessful import,
+        no unmatched tickets."""
+        ticket_dict = {}
+        files = [self.flat_file_l5, self.flat_file_trixie]
+        import_into_db_mock.side_effect = [False, False]
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, sql_handle=self.sql_handle,
+                            prod_run=False, genome_id_field="organism_name")
+
+        success_ticket_list = results_tuple[0]
+        failed_ticket_list = results_tuple[1]
+        success_filename_list = results_tuple[2]
+        failed_filename_list = results_tuple[3]
+        evaluation_dict = results_tuple[4]
+        with self.subTest():
+            self.assertEqual(len(success_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(success_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_filename_list), 2)
+        with self.subTest():
+            self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+
+
+    # Patching so avoid an attempt to add data to the database.
+    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    def test_process_files_and_tickets_3(self, import_into_db_mock):
+        """Verify correct output using:
+        two files with matched tickets,
+        successful import,
+        no unmatched tickets."""
+        ticket_dict = {self.tkt1.phage_id: self.tkt1,
+                       self.tkt2.phage_id: self.tkt2}
+        files = [self.flat_file_l5, self.flat_file_trixie]
+        import_into_db_mock.side_effect = [True, True]
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, sql_handle=self.sql_handle,
+                            prod_run=False, genome_id_field="organism_name")
+        success_ticket_list = results_tuple[0]
+        failed_ticket_list = results_tuple[1]
+        success_filename_list = results_tuple[2]
+        failed_filename_list = results_tuple[3]
+        evaluation_dict = results_tuple[4]
+        with self.subTest():
+            self.assertEqual(len(success_ticket_list), 2)
+        with self.subTest():
+            self.assertEqual(len(failed_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(success_filename_list), 2)
+        with self.subTest():
+            self.assertEqual(len(failed_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+
+
+    # Patching so avoid an attempt to add data to the database.
+    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    def test_process_files_and_tickets_4(self, import_into_db_mock):
+        """Verify correct output using:
+        two files with matched tickets,
+        unsuccessful import,
+        no unmatched tickets."""
+        ticket_dict = {self.tkt1.phage_id: self.tkt1,
+                       self.tkt2.phage_id: self.tkt2}
+        files = [self.flat_file_l5, self.flat_file_trixie]
+        import_into_db_mock.side_effect = [False, False]
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, sql_handle=self.sql_handle,
+                            prod_run=False, genome_id_field="organism_name")
+        success_ticket_list = results_tuple[0]
+        failed_ticket_list = results_tuple[1]
+        success_filename_list = results_tuple[2]
+        failed_filename_list = results_tuple[3]
+        evaluation_dict = results_tuple[4]
+        with self.subTest():
+            self.assertEqual(len(success_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_ticket_list), 2)
+        with self.subTest():
+            self.assertEqual(len(success_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_filename_list), 2)
+        with self.subTest():
+            self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+
+
+    def test_process_files_and_tickets_5(self):
+        """Verify correct output using:
+        no files,
+        two unmatched tickets."""
+        ticket_dict = {self.tkt1.phage_id: self.tkt1,
+                       self.tkt2.phage_id: self.tkt2}
+        files = []
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, sql_handle=self.sql_handle,
+                            prod_run=False, genome_id_field="organism_name")
+        success_ticket_list = results_tuple[0]
+        failed_ticket_list = results_tuple[1]
+        success_filename_list = results_tuple[2]
+        failed_filename_list = results_tuple[3]
+        evaluation_dict = results_tuple[4]
+        with self.subTest():
+            self.assertEqual(len(success_ticket_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_ticket_list), 2)
+        with self.subTest():
+            self.assertEqual(len(success_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(len(failed_filename_list), 0)
+        with self.subTest():
+            self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+
+
+    # Patching so avoid an attempt to add data to the database.
+    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    def test_process_files_and_tickets_6(self, import_into_db_mock):
+        """Verify correct output using:
+        one file matched to ticket with successful import,
+        one file unmatched to ticket with unsuccessful import,
+        one unmatched ticket."""
+        self.tkt2.phage_id = "Trixie_x"
+        ticket_dict = {self.tkt1.phage_id: self.tkt1,
+                       self.tkt2.phage_id: self.tkt2}
+        files = [self.flat_file_l5, self.flat_file_trixie]
+        import_into_db_mock.side_effect = [True, False]
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, sql_handle=self.sql_handle,
+                            prod_run=False, genome_id_field="organism_name")
+        success_ticket_list = results_tuple[0]
+        failed_ticket_list = results_tuple[1]
+        success_filename_list = results_tuple[2]
+        failed_filename_list = results_tuple[3]
+        evaluation_dict = results_tuple[4]
+        with self.subTest():
+            self.assertEqual(len(success_ticket_list), 1)
+        with self.subTest():
+            self.assertEqual(len(failed_ticket_list), 1)
+        with self.subTest():
+            self.assertEqual(len(success_filename_list), 1)
+        with self.subTest():
+            self.assertEqual(len(failed_filename_list), 1)
+        with self.subTest():
+            self.assertEqual(evaluation_dict.keys(), set([1, 2, 3]))
+
+
+
+
+
+# TODO In progress for testing setup()
+class TestImportGenomeMain5(unittest.TestCase):
+
+    # TODO In progress for testing setup()
+    def setUp(self):
+
+        self.base_dir = os.path.join(os.path.dirname(__file__),
+                            "test_wd/test_import")
+        self.base_dir = Path(self.base_dir)
+        self.base_dir.mkdir()
+
+
+    # TODO In progress for testing setup()
+    def tearDown(self):
+
+        # Remove all contents in the directory created for the test.
+        #shutil.rmtree(self.base_dir)
 
 if __name__ == '__main__':
     unittest.main()
