@@ -35,8 +35,7 @@ def main():
         "export",
         "compare",
         "database_to_file",
-        "freeze",
-        "import_phage"}
+        "freeze"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP)
     pipe_parser.add_argument("pipeline", type=str,

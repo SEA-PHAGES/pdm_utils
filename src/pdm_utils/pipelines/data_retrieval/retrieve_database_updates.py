@@ -548,8 +548,6 @@ def main(unparsed_args_list):
 
                 # Matched name and host
                 phagesdb_name = matched_phagesdb_data['phage_name']
-                print(phagesdb_name)
-                print(matched_phagesdb_data['isolation_host'])
                 phagesdb_host = matched_phagesdb_data['isolation_host']['genus']
 
                 # Matched accession
