@@ -2,13 +2,15 @@
 into PhameratorDB."""
 
 
-import time
-from datetime import datetime
-import csv
-import os
-import sys
 import argparse
+import csv
+from datetime import datetime
+import logging
+import os
 import pathlib
+import shutil
+import sys
+import time
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
@@ -20,6 +22,15 @@ from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
+# Add a logger named after this module. Then add a null handler, which
+# suppresses any output statements. This allows other modules that call this
+# module to define the handler and output formats. If this module is the
+# main module being called, the top level run_import function instantiates
+# the root logger and configuration.
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
+
 def run_import(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
@@ -27,6 +38,7 @@ def run_import(unparsed_args_list):
                    "a Phamerator MySQL database.")
     DATABASE_HELP = "Name of the MySQL database to import the genomes."
     INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
+    OUTPUT_FOLDER_HELP = ("Path to the folder containing to store results.")
     IMPORT_GENOME_FOLDER_HELP = """
         Path to the folder containing
         GenBank-formatted flat files
@@ -61,6 +73,10 @@ def run_import(unparsed_args_list):
     DESCRIPTION_FIELD_HELP = \
         ("Indicates the field in CDS features that is expected "
          "to store the gene description.")
+    LOG_FILE_HELP = \
+        ("Indicates the name of the file to log the import results.")
+
+
     parser = argparse.ArgumentParser(description=IMPORT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("input_folder", type=os.path.abspath,
@@ -78,6 +94,16 @@ def run_import(unparsed_args_list):
     parser.add_argument("-df", "--description_field", default="product",
         choices=list(constants.DESCRIPTION_FIELD_SET),
         help=DESCRIPTION_FIELD_HELP)
+
+    # TODO set default output_folder to input_folder.
+    parser.add_argument("-o", "--output_folder", type=os.path.abspath,
+        default=pathlib.Path(), help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-l", "--log_file", type=os.path.abspath,
+        default="import.log",
+        help=LOG_FILE_HELP)
+
+
+
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
@@ -98,6 +124,13 @@ def run_import(unparsed_args_list):
         print("Invalid input folder.")
         sys.exit(1)
 
+    args.output_folder = pathlib.Path(args.output_folder)
+    args.output_folder.expanduser()
+    args.output_folder.resolve()
+    if not args.output_folder.is_dir():
+        print("Invalid output folder.")
+        sys.exit(1)
+
     args.import_table = pathlib.Path(args.import_table)
     args.import_table.expanduser()
     args.import_table.resolve()
@@ -105,26 +138,30 @@ def run_import(unparsed_args_list):
         print("Invalid import table file.")
         sys.exit(1)
 
+    args.log_file = pathlib.Path(args.log_file)
+    args.log_file.expanduser()
+    args.log_file.resolve()
+
+    # Set up root logger.
+    logging.basicConfig(filename=args.log_file, filemode="w", level=logging.DEBUG)
+
     # If everything checks out, pass args to the main import pipeline:
-    # TODO add output_folder parameter and args.output_folder.
-    setup(sql_handle=sql_handle,
-        genome_folder=args.input_folder, import_table_file=args.import_table,
-        genome_id_field=args.genome_id_field, prod_run=args.prod_run,
-        description_field=args.description_field, run_mode=args.run_mode,
-        output_folder="")
+    data_io(sql_handle=sql_handle,
+            genome_folder=args.input_folder, import_table_file=args.import_table,
+            genome_id_field=args.genome_id_field, prod_run=args.prod_run,
+            description_field=args.description_field, run_mode=args.run_mode,
+            output_folder=args.output_folder)
 
 
-
-
-# TODO unittest.
-def setup(sql_handle=None, genome_folder=pathlib.Path(), import_table_file="",
+def data_io(sql_handle=None, genome_folder=pathlib.Path(), import_table_file="",
     genome_id_field="", prod_run=False, description_field="", run_mode="",
     output_folder=pathlib.Path()):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
-    results_folder = "%s_import_results" % date
-    results_path = basic.make_new_dir(output_folder, results_folder)
+    results_folder = f"{date}_results"
+    results_folder = pathlib.Path(results_folder)
+    results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
     if results_path is None:
         print("\nUnable to create output_folder.")
         sys.exit(1)
@@ -138,11 +175,15 @@ def setup(sql_handle=None, genome_folder=pathlib.Path(), import_table_file="",
     # Get the tickets.
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
     run_mode_eval_dict = {"run_mode": run_mode, "eval_flag_dict": eval_flags}
+
+    required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
+    optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+    keywords = set(["retrieve", "retain", "none"])
     ticket_dict = prepare_tickets(
                     import_table_file, run_mode_eval_dict, description_field,
-                    required_keys=constants.IMPORT_TABLE_REQ_DICT.keys(),
-                    optional_keys=constants.IMPORT_TABLE_OPT_DICT.keys(),
-                    keywords=set(["retrieve", "retain", "none"]))
+                    required_keys=required_keys,
+                    optional_keys=optional_keys,
+                    keywords=keywords)
 
     if ticket_dict is None:
         print("Invalid import table. Unable to evaluate flat files.")
@@ -158,53 +199,64 @@ def setup(sql_handle=None, genome_folder=pathlib.Path(), import_table_file="",
     failed_filename_list = results_tuple[3]
     evaluation_dict = results_tuple[4]
 
-    # Prepare output
-    failed_path = pathlib.Path(results_path, "fail")
-    success_path = pathlib.Path(results_path, "success")
-    failed_path.mkdir()
-    success_path.mkdir()
+    # Output data.
+    headers = list(required_keys) + list(optional_keys)
+    if (len(success_ticket_list) > 0 or len(success_filename_list) > 0):
+        success_path = pathlib.Path(results_path, "success")
+        success_path.mkdir()
+        if len(success_ticket_list) > 0:
+            success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
+            tickets.export_ticket_data(success_ticket_list, success_tkt_file, headers)
+        if len(success_filename_list) > 0:
+            success_genomes_path = pathlib.Path(success_path, "genomes")
+            success_genomes_path.mkdir()
+            for file in success_filename_list:
+                new_file = pathlib.Path(success_genomes_path, file.name)
+                shutil.move(str(file), str(new_file))
 
-    order = list(required_keys) + list(optional_keys)
-    if len(success_ticket_list) > 0:
-        # TODO this should be improved to retain a specific column order.
-        success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
-        with open(success_tkt_file, "w") as file_handle:
-            for tkt_dict in success_ticket_list:
-                file_writer = csv.DictWriter(file_handle, order)
+    if (len(failed_ticket_list) > 0 or len(failed_filename_list) > 0):
+        failed_path = pathlib.Path(results_path, "fail")
+        failed_path.mkdir()
+        if len(failed_ticket_list) > 0:
+            failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
+            tickets.export_ticket_data(failed_ticket_list, failed_tkt_file, headers)
+        if len(failed_filename_list) > 0:
+            failed_genomes_path = pathlib.Path(failed_path, "genomes")
+            failed_genomes_path.mkdir()
+            for file in failed_filename_list:
+                new_file = pathlib.Path(failed_genomes_path, file.name)
+                shutil.move(str(file), str(new_file))
 
-    if len(failed_ticket_list) > 0:
-        failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
-        with open(failed_tkt_file, "w") as file_handle:
-            for tkt_dict in failed_ticket_list:
-                file_writer = csv.DictWriter(file_handle, order)
-
-    if len(success_filename_list) > 0:
-        success_genomes_path = pathlib.Path(success_path, "genomes")
-        success_genomes_path.mkdir()
-        for file in success_filename_list:
-            new_file = Path(success_genomes_path, file.name)
-            shutil.move(str(file), str(new_file))
-
-    if len(failed_filename_list) > 0:
-        failed_genomes_path = pathlib.Path(failed_path, "genomes")
-        failed_genomes_path.mkdir()
-        for file in failed_filename_list:
-            new_file = Path(failed_genomes_path, file.name)
-            shutil.move(str(file), str(new_file))
-
-    # TODO write out evaluations to some sort of log file.
-    for bundle_id in evaluation_dict:
-        print("Evaluations for bundle {}:".format(bundle_id))
-        bundle_evals = evaluation_dict[bundle_id]
-        for key in bundle_evals:
-            print("Evaluations for {}".format(key))
-            evl_list = bundle_evals[key]
-            for evl in evl_list:
-                print("Evaluation: {}. Definition: {}. Status: {}. Result: {}.".format( \
-                    evl.id, evl.definition, evl.status, evl.result))
-
-
+    log_evaluations(evaluation_dict)
     print("Import complete.")
+
+
+def log_evaluations(dict_of_dict_of_lists):
+    """Export evaluations to log.
+
+    Structure of the evaluation dictionary:
+        {1: {"bundle": [eval_object1, ...],
+             "ticket": [eval_object1, ...],
+             "genome": [eval_object1, ...]},
+         2: {...}}
+    """
+    for key1 in dict_of_dict_of_lists:
+        msg1 = f"Evaluations for bundle {key1}:"
+        logger.info(msg1)
+        print(msg1)
+        dict_of_lists = dict_of_dict_of_lists[key1]
+        for key2 in dict_of_lists:
+            msg2 = f"Evaluations for {key2}:"
+            logger.info(msg2)
+            print(msg2)
+            evl_list = dict_of_lists[key2]
+            for evl in evl_list:
+                msg3 = (f"Evaluation: {evl.id}. Definition: {evl.definition}. "
+                        f"Status: {evl.status}. Result: {evl.result}.")
+                logger.info(msg3)
+                print(msg3)
+
+
 
 
 def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
@@ -434,11 +486,10 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
             if bndl.ticket.type == "replace":
 
                 if sql_handle is None:
-                    print("Ticket %s is a 'replace' ticket but no "
+                    print(f"Ticket {bndl.ticket.id} is a 'replace' ticket but no "
                           "details about how to connect to the "
                           "Phamerator database have been provided. "
-                          "Unable to retrieve data."
-                          % bndl.ticket.id)
+                          "Unable to retrieve data.")
                 else:
                     query = "SELECT * FROM phage"
                     pmr_genomes =  phamerator.parse_genome_data(
@@ -459,9 +510,8 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                         gnm_pair = genomepair.GenomePair()
                         bndl.set_genome_pair(gnm_pair, ff_gnm.type, pmr_gnm.type)
                     else:
-                        print("There is no %s genome in the Phamerator"
-                              " database. Unable to retrieve data."
-                              % ff_gnm.id)
+                        print(f"There is no {ff_gnm.id} genome in the Phamerator"
+                              " database. Unable to retrieve data.")
     return bndl
 
 

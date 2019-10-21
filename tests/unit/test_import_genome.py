@@ -9,7 +9,7 @@ from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
 from pdm_utils.pipelines.db_import import import_genome
-from pdm_utils.classes import ticket
+from pdm_utils.classes import ticket, eval
 import unittest
 from Bio.Seq import Seq
 from unittest.mock import patch
@@ -667,9 +667,33 @@ class TestImportGenomeClass4(unittest.TestCase):
 
 
 
+class TestImportGenomeClass5(unittest.TestCase):
+    def setUp(self):
+        self.evl1 = eval.Eval()
+        self.evl1.id = "GNM0001"
+        self.evl1.definition = "temp"
+        self.evl1.status = "error"
+        self.evl1.result = "Failed evaluation."
+
+        self.evl2 = eval.Eval()
+        self.evl2.id = "GNM0002"
+        self.evl2.definition = "temp"
+        self.evl2.status = "error"
+        self.evl2.result = "Failed evaluation."
+
+        self.evl3 = eval.Eval()
+        self.evl3.id = "GNM0003"
+        self.evl3.definition = "temp"
+        self.evl3.status = "correct"
+        self.evl3.result = "Failed evaluation."
 
 
-
+    def test_log_evaluations(self):
+        """Verify function executes."""
+        evaluation_dict = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict)
 
 
 if __name__ == '__main__':

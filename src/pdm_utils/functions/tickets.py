@@ -7,6 +7,22 @@ from pdm_utils.functions import phagesdb
 from pdm_utils.functions import run_modes
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
+import pathlib
+
+def export_ticket_data(list_of_data_dicts, file_path, headers):
+    """Save a dictionary of data to file using specified column headers.
+
+    Ensures the output file contains a specified number of columns,
+    and it ensures the column headers are exported as well."""
+
+    headers_dict = {}
+    for header in headers:
+        headers_dict[header] = header
+    with open(file_path, "w") as file_handle:
+        file_writer = csv.DictWriter(file_handle, headers)
+        file_writer.writerow(headers_dict)
+        for data_dict in list_of_data_dicts:
+            file_writer.writerow(data_dict)
 
 
 def retrieve_ticket_data(filename):
