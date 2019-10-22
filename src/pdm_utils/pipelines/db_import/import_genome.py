@@ -25,13 +25,72 @@ from pdm_utils.classes import mysqlconnectionhandler as mch
 # Add a logger named after this module. Then add a null handler, which
 # suppresses any output statements. This allows other modules that call this
 # module to define the handler and output formats. If this module is the
-# main module being called, the top level run_import function instantiates
+# main module being called, the top level main function instantiates
 # the root logger and configuration.
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def run_import(unparsed_args_list):
+
+
+# TODO unittest
+def main(unparsed_args_list):
+    """Runs the complete import pipeline.
+
+    This is the only function of the pipeline that requires user input.
+    All other functions can be implemented from other scripts."""
+
+    args = parse_args(unparsed_args_list)
+
+    # Validate folders and files.
+    args.input_folder = set_path(args.input_folder, kind="dir", expect=True)
+    args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
+    args.import_table = set_path(args.import_table, kind="file", expect=True)
+    args.log_file = pathlib.Path(args.output_folder, args.log_file)
+    args.log_file = set_path(args.log_file, kind="file", expect=False)
+
+    # Set up root logger.
+    logging.basicConfig(filename=args.log_file, filemode="w",
+                        level=logging.DEBUG)
+    logger.info("Folder and file arguments verified.")
+
+    # Get connection to database.
+    sql_handle = setup_sql_handle(args.database)
+    logger.info("Connected to database.")
+
+    # If everything checks out, pass on args for data input/output:
+    data_io(sql_handle=sql_handle,
+            genome_folder=args.input_folder,
+            import_table_file=args.import_table,
+            genome_id_field=args.genome_id_field, prod_run=args.prod_run,
+            description_field=args.description_field, run_mode=args.run_mode,
+            output_folder=args.output_folder)
+
+def setup_sql_handle(database):
+    """Connect to a MySQL database."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.open_connection()
+    if (not sql_handle.credential_status or not sql_handle._database_status):
+        print("No connection to the selected database.")
+        sys.exit(1)
+    else:
+        return sql_handle
+
+
+def set_path(path, kind=None, expect=True):
+    """Confirm validity of path argument."""
+    path = path.expanduser()
+    path = path.resolve()
+    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
+    if not result:
+        print(msg)
+        sys.exit(1)
+    else:
+        return path
+
+
+def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
     IMPORT_HELP = ("Pipeline to import new genome data into "
@@ -74,83 +133,38 @@ def run_import(unparsed_args_list):
         ("Indicates the field in CDS features that is expected "
          "to store the gene description.")
     LOG_FILE_HELP = \
-        ("Indicates the name of the file to log the import results.")
-
+        ("Indicates the name of the file to log the import results. "
+         "This will be created in the output folder.")
 
     parser = argparse.ArgumentParser(description=IMPORT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("input_folder", type=os.path.abspath,
+    parser.add_argument("input_folder", type=pathlib.Path,
         help=INPUT_FOLDER_HELP)
-    parser.add_argument("import_table", type=os.path.abspath,
+    parser.add_argument("import_table", type=pathlib.Path,
         help=IMPORT_TABLE_HELP)
-    parser.add_argument("-gf", "--genome_id_field", type=str,
+    parser.add_argument("-g", "--genome_id_field", type=str.lower,
         default="organism_name", choices=["organism_name", "filename"],
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-p", "--prod_run", action="store_true", default=False,
         help=PROD_RUN_HELP)
-    parser.add_argument("-rm", "--run_mode", type=str.lower,
+    parser.add_argument("-r", "--run_mode", type=str.lower,
         choices=list(run_modes.RUN_MODES.keys()), default="phagesdb",
         help=RUN_MODE_HELP)
-    parser.add_argument("-df", "--description_field", default="product",
-        choices=list(constants.DESCRIPTION_FIELD_SET),
+    parser.add_argument("-d", "--description_field", type=str.lower,
+        default="product", choices=list(constants.DESCRIPTION_FIELD_SET),
         help=DESCRIPTION_FIELD_HELP)
-
-    # TODO set default output_folder to input_folder.
-    parser.add_argument("-o", "--output_folder", type=os.path.abspath,
-        default=pathlib.Path(), help=OUTPUT_FOLDER_HELP)
-    parser.add_argument("-l", "--log_file", type=os.path.abspath,
-        default="import.log",
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+        default=pathlib.Path("/tmp/"), help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-l", "--log_file", type=pathlib.Path,
+        default=pathlib.Path("import.log"),
         help=LOG_FILE_HELP)
-
-
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
+    return args
 
-    # Validate args.
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = args.database
-    sql_handle.open_connection()
-    if (not sql_handle.credential_status or not sql_handle._database_status):
-        print("No connection to the selected database.")
-        sys.exit(1)
-
-    args.input_folder = pathlib.Path(args.input_folder)
-    args.input_folder.expanduser()
-    args.input_folder.resolve()
-    if not args.input_folder.is_dir():
-        print("Invalid input folder.")
-        sys.exit(1)
-
-    args.output_folder = pathlib.Path(args.output_folder)
-    args.output_folder.expanduser()
-    args.output_folder.resolve()
-    if not args.output_folder.is_dir():
-        print("Invalid output folder.")
-        sys.exit(1)
-
-    args.import_table = pathlib.Path(args.import_table)
-    args.import_table.expanduser()
-    args.import_table.resolve()
-    if not args.import_table.is_file():
-        print("Invalid import table file.")
-        sys.exit(1)
-
-    args.log_file = pathlib.Path(args.log_file)
-    args.log_file.expanduser()
-    args.log_file.resolve()
-
-    # Set up root logger.
-    logging.basicConfig(filename=args.log_file, filemode="w", level=logging.DEBUG)
-
-    # If everything checks out, pass args to the main import pipeline:
-    data_io(sql_handle=sql_handle,
-            genome_folder=args.input_folder, import_table_file=args.import_table,
-            genome_id_field=args.genome_id_field, prod_run=args.prod_run,
-            description_field=args.description_field, run_mode=args.run_mode,
-            output_folder=args.output_folder)
 
 
 def data_io(sql_handle=None, genome_folder=pathlib.Path(),

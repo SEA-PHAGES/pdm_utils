@@ -873,6 +873,60 @@ def verify_path(filepath, kind=None):
         return False
 
 
+
+def verify_path2(path, kind=None, expect=True):
+    """Confirm validity of path argument.
+
+    :param path: path
+    :type path: Path object
+    """
+    if kind == "file":
+        exists = path.is_file()
+        if (exists and not expect):
+            result = False
+            msg = f"The file {path} already exists."
+        elif (not exists and expect):
+            result = False
+            msg = f"The file {path} does not exist."
+        else:
+            result = True
+            msg = None
+    elif kind == "dir":
+        exists = path.is_dir()
+        if (exists and not expect):
+            result = False
+            msg = f"The directory {path} already exists."
+        elif (not exists and expect):
+            result = False
+            msg = f"The directory {path} does not exist."
+        else:
+            result = True
+            msg = None
+    elif kind == None:
+        exists = path.exists()
+        if (exists and not expect):
+            result = False
+            msg = f"The {path} already exists."
+        elif (not exists and expect):
+            result = False
+            msg = f"The {path} does not exist."
+        else:
+            result = True
+            msg = None
+    else:
+        result = False
+        msg = (f"{kind} is not a valid kind (None, dir, file) "
+              "for this function.")
+
+    return result, msg
+
+
+
+
+
+
+
+
 def make_new_dir(output_dir, new_dir, attempt=1):
     """Make a new directory.
 

@@ -12,6 +12,7 @@ from unittest.mock import patch, Mock
 import argparse
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.constants import constants
+from pdm_utils.functions import basic
 from pdm_utils.classes import bundle, genome, ticket, eval
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from Bio.SeqRecord import SeqRecord
@@ -20,6 +21,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, Reference
 from unittest.mock import patch
 from pathlib import Path
+import getpass
 
 
 
@@ -449,14 +451,212 @@ class TestImportGenomeMain2(unittest.TestCase):
         self.test_filepath1 = \
             os.path.join(os.path.dirname(__file__), \
             "test_files/test_flat_file_1.gb")
+        self.test_filepath1 = Path(self.test_filepath1)
 
         self.test_directory1 = \
             os.path.join(os.path.dirname(__file__),
-            "test_wd/input_folder")
+            "test_wd/test_dir")
+        self.test_directory1 = Path(self.test_directory1)
+        self.test_directory1.mkdir()
+        # self.file = Path(self.test_directory1, "new_file.txt")
+        # self.dir = Path(self.test_directory1, "new_dir")
+
+        # Minimum args list
+        self.args_list = ["run.py",
+                          "import",
+                          "Actino_Draft",
+                          str(self.test_directory1),
+                          str(self.test_filepath1)]
+
+
+    def tearDown(self):
+        shutil.rmtree(self.test_directory1)
+
+
+
+
+    def test_parse_args_1(self):
+        """Verify args when minimum args_list is provided."""
+        args = import_genome.parse_args(self.args_list)
+        with self.subTest():
+            self.assertEqual(args.database, "Actino_Draft")
+        with self.subTest():
+            self.assertEqual(args.input_folder, self.test_directory1)
+        with self.subTest():
+            self.assertEqual(args.import_table, self.test_filepath1)
+        with self.subTest():
+            self.assertEqual(args.genome_id_field, "organism_name")
+        with self.subTest():
+            self.assertFalse(args.prod_run)
+        with self.subTest():
+            self.assertEqual(args.run_mode, "phagesdb")
+        with self.subTest():
+            self.assertEqual(args.description_field, "product")
+        with self.subTest():
+            self.assertEqual(args.output_folder, Path("/tmp/"))
+        with self.subTest():
+            self.assertEqual(args.log_file, Path("import.log"))
+
+
+    @patch("sys.exit")
+    def test_parse_args_2(self, sys_exit_mock):
+        """Verify sys exit when too few arguments are provided."""
+        self.args_list.pop()
+        args = import_genome.parse_args(self.args_list)
+        self.assertTrue(sys_exit_mock.called)
+
+
+    def test_parse_args_3(self):
+        """Verify parsed args when all args are explicitly provided
+        using short name."""
+        output_folder = "/path/to/output/"
+        log_file = "/path/to/logfile.txt"
+        self.args_list.extend(["-g", "FILENAME",
+                               "-p",
+                               "-r", "PECAAN",
+                               "-d", "FUNCTION",
+                               "-o", output_folder,
+                               "-l", log_file
+                               ])
+        args = import_genome.parse_args(self.args_list)
+        with self.subTest():
+            self.assertEqual(args.genome_id_field, "filename")
+        with self.subTest():
+            self.assertTrue(args.prod_run)
+        with self.subTest():
+            self.assertEqual(args.run_mode, "pecaan")
+        with self.subTest():
+            self.assertEqual(args.description_field, "function")
+        with self.subTest():
+            self.assertEqual(args.output_folder, Path(output_folder))
+        with self.subTest():
+            self.assertEqual(args.log_file, Path(log_file))
+
+
+    def test_parse_args_4(self):
+        """Verify parsed args when all args are explicitly provided
+        using long name."""
+        output_folder = "/path/to/output/"
+        log_file = "/path/to/logfile.txt"
+        self.args_list.extend(["--genome_id_field", "FILENAME",
+                               "--prod_run",
+                               "--run_mode", "PECAAN",
+                               "--description_field", "FUNCTION",
+                               "--output_folder", output_folder,
+                               "--log_file", log_file
+                               ])
+        args = import_genome.parse_args(self.args_list)
+        with self.subTest():
+            self.assertEqual(args.genome_id_field, "filename")
+        with self.subTest():
+            self.assertTrue(args.prod_run)
+        with self.subTest():
+            self.assertEqual(args.run_mode, "pecaan")
+        with self.subTest():
+            self.assertEqual(args.description_field, "function")
+        with self.subTest():
+            self.assertEqual(args.output_folder, Path(output_folder))
+        with self.subTest():
+            self.assertEqual(args.log_file, Path(log_file))
+
+
+
+
+class TestImportGenomeMain3(unittest.TestCase):
+
+    def setUp(self):
+        self.test_directory1 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/test_dir")
         os.mkdir(self.test_directory1)
+        self.file = Path(self.test_directory1, "new_file.txt")
+        self.dir = Path(self.test_directory1, "new_dir")
+        self.parser = argparse.ArgumentParser()
+
+
+    def tearDown(self):
+        shutil.rmtree(self.test_directory1)
+
+
+    def test_set_path_1(self):
+        """Verify output when file exists and is expected to exist."""
+        self.file.touch()
+        output = import_genome.set_path(self.file, kind="file", expect=True)
+        with self.subTest():
+            self.assertIsInstance(output, Path)
+        with self.subTest():
+            self.assertEqual(str(self.file), str(output))
+
+    @patch("sys.exit")
+    def test_set_path_2(self, sys_exit_mock):
+        """Verify script exits when file does not exist,
+        and is not expected to exist."""
+        output = import_genome.set_path(self.file, kind="file", expect=True)
+        self.assertTrue(sys_exit_mock.called)
+
+
+    @patch("pdm_utils.functions.basic.verify_path2")
+    def test_set_path_3(self, verify_path2_mock):
+        """Verify home directory expansion."""
+        home = Path("~")
+        home = home.expanduser()
+        test_file = Path("~/path/to/file.txt")
+        verify_path2_mock.return_value = (True, None)
+        output = import_genome.set_path(test_file, kind="file", expect=True)
+        exp = Path(home, "path/to/file.txt")
+        self.assertEqual(output, exp)
+
+
+    @patch("pdm_utils.functions.basic.verify_path2")
+    def test_set_path_4(self, verify_path2_mock):
+        """Verify '..' directory resolution."""
+        test_file = Path("/dir1/dir2/../file.txt")
+        verify_path2_mock.return_value = (True, None)
+        output = import_genome.set_path(test_file, kind="file", expect=True)
+        exp = Path("/dir1/file.txt")
+        self.assertEqual(output, exp)
+
+
+    @patch("pdm_utils.functions.basic.verify_path2")
+    def test_set_path_5(self, verify_path2_mock):
+        """Verify home directory expansion and '..' directory resolution."""
+        home = Path("~")
+        home = home.expanduser()
+        test_file = Path("~/dir1/dir2/../file.txt")
+        verify_path2_mock.return_value = (True, None)
+        output = import_genome.set_path(test_file, kind="file", expect=True)
+        exp = Path(home, "dir1/file.txt")
+        self.assertEqual(output, exp)
+
+
+
+
+class TestImportGenomeMain4(unittest.TestCase):
+
+    def setUp(self):
+        # self.genome_file1 = \
+        #     os.path.join(os.path.dirname(__file__), \
+        #     "test_files/test_flat_file_1.gb")
+        # self.genome_file1 = Path(self.genome_file1)
+
+        self.import_table = \
+            os.path.join(os.path.dirname(__file__), \
+            "test_files/test_import_table_1.csv")
+        self.import_table = Path(self.import_table)
+
+        self.base_dir = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/test_folder")
+        self.base_dir = Path(self.base_dir)
+        self.base_dir.mkdir()
+
+        self.input_folder = Path(self.base_dir, "input_folder")
+        self.output_folder = Path(self.base_dir, "output_folder")
+        self.log_file = Path(self.base_dir, "test_log.txt")
+
 
         self.sql_handle_1 = mch.MySQLConnectionHandler()
-        # self.sql_handle_1.database = "Actino_Draft"
+        self.sql_handle_1.database = "Actino_Draft"
         self.sql_handle_1.username = user
         self.sql_handle_1.password = pwd
 
@@ -467,134 +667,165 @@ class TestImportGenomeMain2(unittest.TestCase):
         self.sql_handle_2.credential_status = False
         self.sql_handle_2._database_status = False
 
-        self.parser = argparse.ArgumentParser()
-        self.parser.add_argument("pipeline")
-        self.args1 = self.parser.parse_args(["import"])
+        self.args_list = ["run.py",
+                          "import",
+                          "Actino_Draft",
+                          str(self.input_folder),
+                          str(self.import_table),
+                          "-g", "FILENAME",
+                          "-p",
+                          "-r", "PECAAN",
+                          "-d", "FUNCTION",
+                          "-o", str(self.output_folder),
+                          "-l", str(self.log_file)
+                          ]
 
+    def tearDown(self):
+        shutil.rmtree(self.base_dir)
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_run_import_1(self, mch_mock, setup_mock):
-        """Verify that correct args calls setup."""
-        args_list = ["run.py",
-                     "import",
-                     "Actino_Draft",
-                     self.test_directory1,
-                     self.test_filepath1]
-        mch_mock.return_value = self.sql_handle_1
-        import_genome.run_import(args_list)
+    # import_genome.setup_sql_handle() calls
+    # MySQLConnectionHandler.open_connection(),
+    # which uses getpass.getpass() to get the username and password.
+    @patch("getpass.getpass")
+    def test_setup_sql_handle_1(self, getpass_mock):
+        """Verify that sql_handle returned with valid info."""
+        getpass_mock.side_effect = [user, pwd]
+        sql_handle = import_genome.setup_sql_handle("Actino_Draft")
         with self.subTest():
-            self.assertTrue(mch_mock.called)
+            self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertTrue(setup_mock.called)
+            self.assertIsNotNone(sql_handle)
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+
     @patch("sys.exit")
     @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_run_import_2(self, mch_mock, setup_mock,
-                          sys_exit_mock):
-        """Verify that setup is not called due to
-        invalid sql credential_status."""
-        args_list = ["run.py",
-                     "import",
-                     "Actino_Draft",
-                     self.test_directory1,
-                     self.test_filepath1]
-
-        sql_handle_mock = Mock()
-        sql_handle_mock.database = "Actino_Draft"
-        sql_handle_mock.credential_status = True
-        sql_handle_mock._database_status = False
-        mch_mock.return_value = sql_handle_mock
-
-        import_genome.run_import(args_list)
-        with self.subTest():
-            self.assertTrue(mch_mock.called)
-        with self.subTest():
-            self.assertTrue(setup_mock.called)
-        with self.subTest():
-            self.assertTrue(sys_exit_mock.called)
-
-
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
-    @patch("sys.exit")
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_run_import_3(self, mch_mock, setup_mock,
-                          sys_exit_mock):
-        """Verify that setup is not called due to
-        invalid sql database_status."""
-        args_list = ["run.py",
-                     "import",
-                     "Actino_Draft",
-                     self.test_directory1,
-                     self.test_filepath1]
-
+    def test_setup_sql_handle_2(self, mch_mock, sys_exit_mock):
+        """Verify that sys exit is called when credential_status = False."""
         sql_handle_mock = Mock()
         sql_handle_mock.database = "Actino_Draft"
         sql_handle_mock.credential_status = False
         sql_handle_mock._database_status = True
         mch_mock.return_value = sql_handle_mock
-
-        import_genome.run_import(args_list)
+        sql_handle = import_genome.setup_sql_handle("Actino_Draft")
         with self.subTest():
             self.assertTrue(mch_mock.called)
         with self.subTest():
-            self.assertTrue(setup_mock.called)
-        with self.subTest():
             self.assertTrue(sys_exit_mock.called)
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+
     @patch("sys.exit")
     @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_run_import_4(self, mch_mock, setup_mock,
-                          sys_exit_mock):
-        """Verify that setup is not called due to invalid folder."""
-        args_list = ["run.py",
-                     "import",
-                     "Actino_Draft",
-                     self.test_directory1 + "asdf",
-                     self.test_filepath1]
-        mch_mock.return_value = self.sql_handle_1
-        import_genome.run_import(args_list)
+    def test_setup_sql_handle_3(self, mch_mock, sys_exit_mock):
+        """Verify that sys exit is called when _database_status = False."""
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = "Actino_Draft"
+        sql_handle_mock.credential_status = True
+        sql_handle_mock._database_status = False
+        mch_mock.return_value = sql_handle_mock
+        sql_handle = import_genome.setup_sql_handle("Actino_Draft")
         with self.subTest():
             self.assertTrue(mch_mock.called)
         with self.subTest():
-            self.assertTrue(setup_mock.called)
+            self.assertTrue(sys_exit_mock.called)
+
+
+    @patch("sys.exit")
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_setup_sql_handle_4(self, mch_mock, sys_exit_mock):
+        """Verify that sys exit is called when credential_status = False and
+        _database_status = False."""
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = "Actino_Draft"
+        sql_handle_mock.credential_status = False
+        sql_handle_mock._database_status = False
+        mch_mock.return_value = sql_handle_mock
+        sql_handle = import_genome.setup_sql_handle("Actino_Draft")
+        with self.subTest():
+            self.assertTrue(mch_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
+
+
 
 
     @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.setup_sql_handle")
+    def test_main_1(self, setup_sql_mock, data_io_mock):
+        """Verify that correct args calls data_io."""
+        self.input_folder.mkdir()
+        self.output_folder.mkdir()
+        setup_sql_mock.return_value = self.sql_handle_1
+        import_genome.main(self.args_list)
+        self.assertTrue(data_io_mock.called)
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.setup_sql_handle")
     @patch("sys.exit")
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_run_import_5(self, mch_mock, setup_mock,
-                          sys_exit_mock):
-        """Verify that setup is not called due to invalid file."""
-        args_list = ["run.py",
-                     "import",
-                     "Actino_Draft",
-                     self.test_directory1,
-                     self.test_filepath1 + "asdf"]
-        mch_mock.return_value = self.sql_handle_1
-        import_genome.run_import(args_list)
-        with self.subTest():
-            self.assertTrue(mch_mock.called)
-        with self.subTest():
-            self.assertTrue(setup_mock.called)
-        with self.subTest():
-            self.assertTrue(sys_exit_mock.called)
+    def test_main_2(self, sys_exit_mock, setup_sql_mock, data_io_mock):
+        """Verify that invalid input folder calls sys exit."""
+        # self.input_folder.mkdir()
+        self.output_folder.mkdir()
+        setup_sql_mock.return_value = self.sql_handle_1
+        import_genome.main(self.args_list)
+        self.assertTrue(sys_exit_mock.called)
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+    @patch("pdm_utils.pipelines.db_import.import_genome.setup_sql_handle")
+    @patch("sys.exit")
+    def test_main_3(self, sys_exit_mock, setup_sql_mock, data_io_mock):
+        """Verify that invalid import file calls sys exit."""
+        self.input_folder.mkdir()
+        self.output_folder.mkdir()
+        self.args_list[4] = ""
+        setup_sql_mock.return_value = self.sql_handle_1
+        import_genome.main(self.args_list)
+        self.assertTrue(sys_exit_mock.called)
+
+    #
+    #
+    #
+    #
+    #
+    # @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+    # @patch("sys.exit")
+    # @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    # def test_main_2(self, mch_mock, data_io_mock,
+    #                       sys_exit_mock):
+    #     """Verify that setup is not called due to
+    #     invalid sql credential_status."""
+    #     args_list = ["run.py",
+    #                  "import",
+    #                  "Actino_Draft",
+    #                  self.test_directory1,
+    #                  self.test_filepath1]
+    #
+    #     sql_handle_mock = Mock()
+    #     sql_handle_mock.database = "Actino_Draft"
+    #     sql_handle_mock.credential_status = True
+    #     sql_handle_mock._database_status = False
+    #     mch_mock.return_value = sql_handle_mock
+    #
+    #     import_genome.main(args_list)
+    #     with self.subTest():
+    #         self.assertTrue(mch_mock.called)
+    #     with self.subTest():
+    #         self.assertTrue(data_io_mock.called)
+    #     with self.subTest():
+    #         self.assertTrue(sys_exit_mock.called)
+    #
+    #
 
 
 
-    def tearDown(self):
-        shutil.rmtree(self.test_directory1)
 
 
 
 
 
 
-class TestImportGenomeMain3(unittest.TestCase):
+
+class TestImportGenomeMain5(unittest.TestCase):
 
     def setUp(self):
 
@@ -724,7 +955,7 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
 
-class TestImportGenomeMain4(unittest.TestCase):
+class TestImportGenomeMain6(unittest.TestCase):
 
 
     def setUp(self):
@@ -971,10 +1202,8 @@ class TestImportGenomeMain4(unittest.TestCase):
 
 
 
-# TODO In progress for testing setup()
-class TestImportGenomeMain5(unittest.TestCase):
+class TestImportGenomeMain7(unittest.TestCase):
 
-    # TODO In progress for testing setup()
     def setUp(self):
 
         self.base_dir = os.path.join(os.path.dirname(__file__),

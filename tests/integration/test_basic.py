@@ -288,5 +288,205 @@ class TestBasicFunctions2(unittest.TestCase):
 
 
 
+class TestBasicFunctions3(unittest.TestCase):
+
+    def setUp(self):
+        self.test_directory1 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/test_dir")
+        os.mkdir(self.test_directory1)
+        self.file = Path(self.test_directory1, "new_file.txt")
+        self.dir = Path(self.test_directory1, "new_dir")
+
+    def tearDown(self):
+        shutil.rmtree(self.test_directory1)
+
+
+
+
+    def test_verify_path2_1(self):
+        """Verify output when file exists, is expected to exist,
+        and kind = 'file'."""
+        self.file.touch()
+        result, msg = basic.verify_path2(self.file, kind="file", expect=True)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_2(self):
+        """Verify output when file exists, is not expected to exist,
+        and kind = 'file'."""
+        self.file.touch()
+        result, msg = basic.verify_path2(self.file, kind="file", expect=False)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_3(self):
+        """Verify output when file does not exist, is not expected to exist,
+        and kind = 'file'."""
+        result, msg = basic.verify_path2(self.file, kind="file", expect=False)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_4(self):
+        """Verify output when file does not exist, is expected to exist,
+        and kind = 'file'."""
+        result, msg = basic.verify_path2(self.file, kind="file", expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_5(self):
+        """Verify output when file exists, is expected to exist,
+        and kind = 'dir'."""
+        self.file.touch()
+        result, msg = basic.verify_path2(self.dir, kind="dir", expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_6(self):
+        """Verify output when file exists, is expected to exist,
+        and kind = None."""
+        self.file.touch()
+        result, msg = basic.verify_path2(self.file, kind=None, expect=True)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_7(self):
+        """Verify output when file exists, is not expected to exist,
+        and kind = None."""
+        self.file.touch()
+        result, msg = basic.verify_path2(self.file, kind=None, expect=False)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_8(self):
+        """Verify output when file does not exist, is not expected to exist,
+        and kind = None."""
+        result, msg = basic.verify_path2(self.file, kind=None, expect=False)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_9(self):
+        """Verify output when file does not exist, is expected to exist,
+        and kind = None."""
+        result, msg = basic.verify_path2(self.file, kind=None, expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_10(self):
+        """Verify output when file exists, is expected to exist,
+        and kind = 'invalid'."""
+        result, msg = basic.verify_path2(self.file, kind="invalid", expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_11(self):
+        """Verify output when directory exists, is expected to exist,
+        and kind = 'dir'."""
+        self.dir.mkdir()
+        result, msg = basic.verify_path2(self.dir, kind="dir", expect=True)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_12(self):
+        """Verify output when directory exists, is not expected to exist,
+        and kind = 'dir'."""
+        self.dir.mkdir()
+        result, msg = basic.verify_path2(self.dir, kind="dir", expect=False)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_13(self):
+        """Verify output when directory does not exist,
+        is not expected to exist, and kind = 'dir'."""
+        result, msg = basic.verify_path2(self.dir, kind="dir", expect=False)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_14(self):
+        """Verify output when directory does not exist,
+        is expected to exist, and kind = 'dir'."""
+        result, msg = basic.verify_path2(self.dir, kind="dir", expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_15(self):
+        """Verify output when directory exists, is expected to exist,
+        and kind = 'file'."""
+        self.dir.mkdir()
+        result, msg = basic.verify_path2(self.dir, kind="file", expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+    def test_verify_path2_16(self):
+        """Verify output when directory exists, is expected to exist, and
+        kind = None."""
+        self.dir.mkdir()
+        result, msg = basic.verify_path2(self.dir, kind=None, expect=True)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertIsNone(msg)
+
+
+    def test_verify_path2_17(self):
+        """Verify output when directory exists, is expected to exist,
+        and kind = 'invalid'."""
+        self.dir.mkdir()
+        result, msg = basic.verify_path2(self.dir, kind="invalid", expect=True)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertIsNotNone(msg)
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
