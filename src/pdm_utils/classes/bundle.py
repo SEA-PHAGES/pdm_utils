@@ -89,19 +89,19 @@ class Bundle:
         """
 
         if key in self.genome_dict.keys():
-            result = "The %s genome is present." % key
+            result = f"The {key} genome is present."
             if expect:
                 status = "correct"
             else:
                 status = "error"
         else:
-            result = "The %s genome is not present." % key
+            result = f"The {key} genome is not present."
             if not expect:
                 status = "correct"
             else:
                 status = "error"
 
-        definition = "Check if the %s genome is present." % key
+        definition = f"Check if the {key} genome is present."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -121,19 +121,19 @@ class Bundle:
         """
 
         if key in self.genome_pair_dict.keys():
-            result = "The %s genome_pair is present." % key
+            result = f"The {key} genome_pair is present."
             if expect:
                 status = "correct"
             else:
                 status = "error"
         else:
-            result = "The %s genome_pair is not present." % key
+            result = f"The {key} genome_pair is not present."
             if not expect:
                 status = "correct"
             else:
                 status = "error"
 
-        definition = "Check if the %s genome_pair is present." % key
+        definition = f"Check if the {key} genome_pair is present."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 

@@ -44,15 +44,15 @@ class TestImportGenomeMain1(unittest.TestCase):
         # First, test if a test database already exists within mysql.
         # If there is, delete it so that a fresh test database is installed.
         sql = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
-              "WHERE SCHEMA_NAME = '%s'" % db)
+              f"WHERE SCHEMA_NAME = '{db}'")
         cur.execute(sql)
         result = cur.fetchall()
         if len(result) != 0:
-            cur.execute("DROP DATABASE %s" % db)
+            cur.execute(f"DROP DATABASE {db}")
             connection.commit()
 
         # Next, create the database within mysql.
-        cur.execute("CREATE DATABASE %s" % db)
+        cur.execute(f"CREATE DATABASE {db}")
         connection.commit()
         connection.close()
 
@@ -64,7 +64,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                         self.schema_file)
 
         handle = open(schema_filepath, "r")
-        command_string = "mysql -u %s -p%s %s" % (user, pwd, db)
+        command_string = f"mysql -u {user} -p{pwd} {db}"
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list, stdin = handle)
         handle.close()
@@ -283,10 +283,10 @@ class TestImportGenomeMain1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
-                "'%s', '%s', '%s', '%s', '%s', " \
-                 % (data[0], data[1], data[2], data[3], data[4] ) + \
-                " %s, %s, '%s', '%s', %s, %s);" \
-                % (data[5], data[6], data[7], data[8], data[9], data[10])
+                f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
+                f"'{data[3]}', '{data[4]}', " + \
+                f" {data[5]}, {data[6]}, '{data[7]}', " + \
+                f"'{data[8]}', {data[9]}, {data[10]});"
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -344,10 +344,10 @@ class TestImportGenomeMain1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
-                "'%s', '%s', '%s', '%s', '%s', " \
-                 % (data[0], data[1], data[2], data[3], data[4] ) + \
-                " %s, %s, '%s', '%s', %s, %s);" \
-                % (data[5], data[6], data[7], data[8], data[9], data[10])
+                f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
+                f"'{data[3]}', '{data[4]}', " + \
+                f" {data[5]}, {data[6]}, '{data[7]}', " + \
+                f"'{data[8]}', {data[9]}, {data[10]});"
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -397,10 +397,10 @@ class TestImportGenomeMain1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
-                "'%s', '%s', '%s', '%s', '%s', " \
-                 % (data[0], data[1], data[2], data[3], data[4] ) + \
-                " %s, %s, '%s', '%s', %s, %s);" \
-                % (data[5], data[6], data[7], data[8], data[9], data[10])
+                f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
+                f"'{data[3]}', '{data[4]}', " + \
+                f" {data[5]}, {data[6]}, '{data[7]}', " + \
+                f"'{data[8]}', {data[9]}, {data[10]});"
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -434,7 +434,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                                      password=pwd,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        cur.execute("DROP DATABASE %s" % db)
+        cur.execute(f"DROP DATABASE {db}")
         connection.commit()
         connection.close()
 

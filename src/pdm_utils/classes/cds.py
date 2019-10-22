@@ -847,12 +847,12 @@ class Cds:
             processed = ""
 
         if original == processed:
-            result = "The '%s' field is correct." % attribute
+            result = f"The '{attribute}' field is correct."
             status = "correct"
         else:
-            result = "The '%s' field is not correct." % attribute
+            result = f"The '{attribute}' field is not correct."
             status = "error"
-        definition = "Check if the '%s' field contains generic data." % attribute
+        definition = f"Check if the '{attribute}' field contains generic data."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 

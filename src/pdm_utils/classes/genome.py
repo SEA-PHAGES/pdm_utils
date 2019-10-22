@@ -1223,7 +1223,7 @@ class Genome:
             else:
                 result = "Some attributes are not populated."
                 status = "error"
-        definition = "Check if there are any attributes that are set to %s."
+        definition = "Check if there are any attributes that are set correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 

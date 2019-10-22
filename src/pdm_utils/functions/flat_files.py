@@ -35,10 +35,10 @@ def retrieve_genome_data(filepath):
         seqrecords = []
     filename = filepath.split("/")[-1]
     if len(seqrecords) == 0:
-        print("There are no records in %s." % filename)
+        print(f"There are no records in {filename}.")
         seqrecord = None
     elif len(seqrecords) > 1:
-        print("There are multiple records in %s." % filename)
+        print(f"There are multiple records in {filename}." )
         seqrecord = None
     else:
         seqrecord = seqrecords[0]

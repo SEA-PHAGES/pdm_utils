@@ -111,8 +111,8 @@ API_CLUSTERS = "https://phagesdb.org/api/clusters/"
 SEQUENCED_PAGE = 1
 SEQUENCED_SIZE = 100000
 API_SEQUENCED = "https://phagesdb.org/api/sequenced_phages/?" \
-                 + "page=%s" % SEQUENCED_PAGE \
-                 + "&page_size=%s" % SEQUENCED_SIZE
+                 + f"page={SEQUENCED_PAGE}" \
+                 + f"&page_size={SEQUENCED_SIZE}"
 
 
 # TODO this is probably no longer needed.

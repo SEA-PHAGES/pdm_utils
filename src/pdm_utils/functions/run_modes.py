@@ -86,7 +86,7 @@ def get_eval_flag_dict(run_mode):
     # customized combination of options.
     elif run_mode == "custom":
         for key in dict.keys():
-            prompt = "Eval_flag: %s. %s" % (key, EVAL_FLAGS[key])
+            prompt = f"Eval_flag: {key}. {EVAL_FLAGS[key]}"
             response = basic.ask_yes_no(prompt=prompt, response_attempt=3)
             if response is None:
                 print("The default setting for this eval_flag will be used.")

@@ -93,7 +93,7 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
         set_dict_value(data_dict, "annotation_status", "draft", "final")
         return True
     else:
-        print("The ticket %s is not formatted correctly." % data_dict)
+        print(f"The ticket {data_dict} is not formatted correctly.")
         return False
 
 

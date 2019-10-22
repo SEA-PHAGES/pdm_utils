@@ -207,7 +207,7 @@ def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
     """
     if (phage_id_list is not None and len(phage_id_list) > 0):
         query = query \
-                + " WHERE %s IN ('" % column \
+                + f" WHERE {column} IN ('" \
                 + "','".join(phage_id_list) \
                 + "')"
     query = query + ";"
@@ -379,7 +379,7 @@ def convert_for_sql(value):
     if (basic.check_empty(value) == True or value.lower() == "singleton"):
         value = "NULL"
     else:
-        value = "'%s'" % value
+        value = f"'{value}'"
     return value
 
 
@@ -407,8 +407,8 @@ def create_update(table, field2, value2, field1, value1):
     :returns: A MySQL UPDATE statement.
     :rtype: set
     """
-    part1 = "UPDATE %s SET %s = " % (table, field2)
-    part3 = " WHERE %s = '%s';" % (field1, value1)
+    part1 = f"UPDATE {table} SET {field2} = "
+    part3 = f" WHERE {field1} = '{value1}';"
     part2 = convert_for_sql(value2)
     statement = part1 + part2 + part3
     return statement
@@ -428,7 +428,7 @@ def create_delete(table, field, data):
     :returns: A MySQL UPDATE statement.
     :rtype: str
     """
-    statement = "DELETE FROM %s WHERE %s = '%s';" % (table, field, data)
+    statement = f"DELETE FROM {table} WHERE {field} = '{data}';"
     return statement
 
 
@@ -449,17 +449,11 @@ def create_gene_table_insert(cds_ftr):
                  "(GeneID, PhageID, Start, Stop, Length, Name, "
                  "translation, Orientation, Notes, LocusTag) "
                  "VALUES "
-                 "('%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s');"
-                 % (cds_ftr.id,
-                    cds_ftr.genome_id,
-                    cds_ftr.left,
-                    cds_ftr.right,
-                    cds_ftr.translation_length,
-                    cds_ftr.name,
-                    cds_ftr.translation,
-                    cds_ftr.strand,
-                    cds_ftr.processed_description,
-                    cds_ftr.locus_tag)
+                 f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.left}, "
+                 f"{cds_ftr.right}, {cds_ftr.translation_length}, "
+                 f"'{cds_ftr.name}', '{cds_ftr.translation}', "
+                 f"'{cds_ftr.strand}', '{cds_ftr.processed_description}', "
+                 f"'{cds_ftr.locus_tag}');"
                  )
     return statement
 
@@ -484,14 +478,12 @@ def create_phage_table_insert(gnm):
                  "RetrieveRecord, AnnotationAuthor, "
                  "Cluster, Cluster2, Subcluster2) "
                  "VALUES "
-                 "('%s', '%s', '%s', '%s', '%s', "
-                 "%s, %s, '%s', '%s', "
-                 "%s, %s, "
-                 "%s, %s, %s);"
-                 % (gnm.id, gnm.accession, gnm.name, gnm.host_genus, gnm.seq,
-                 gnm.length, gnm.gc, gnm.annotation_status, gnm.date,
-                 gnm.retrieve_record, gnm.annotation_author,
-                 cluster_subcluster, cluster, subcluster)
+                 f"('{gnm.id}', '{gnm.accession}', '{gnm.name}', "
+                 f"'{gnm.host_genus}', '{gnm.seq}', "
+                 f"{gnm.length}, {gnm.gc}, '{gnm.annotation_status}', "
+                 f"'{gnm.date}', {gnm.retrieve_record}, "
+                 f"{gnm.annotation_author}, "
+                 f"{cluster_subcluster}, {cluster}, {subcluster});"
                  )
     return statement
 
@@ -623,7 +615,7 @@ def implement_update_statements():
 
             con.close()
         else:
-            write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
+            write_out(output_file,f"\nRUN TYPE IS {run_type}, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n")
     else:
         write_out(output_file,"\nError: problem processing data list to update genomes. Check input table format.\nNo changes have been made to the database.")
         write_out(output_file,"\nExiting import script.")
@@ -685,7 +677,7 @@ def implement_remove_statements():
                 mdb_exit("\nError: problem removing genomes with no replacements.\nNo remove actions have been implemented.")
             con.close()
         else:
-            write_out(output_file,"\nRUN TYPE IS %s, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n" % run_type)
+            write_out(output_file,f"\nRUN TYPE IS {run_type}, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n")
     else:
         write_out(output_file,"\nError: problem processing data list to remove genomes. Check input table format.\nNo remove actions have been implemented.")
         output_file.close()

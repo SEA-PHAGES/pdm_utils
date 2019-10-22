@@ -153,9 +153,9 @@ def run_import(unparsed_args_list):
             output_folder=args.output_folder)
 
 
-def data_io(sql_handle=None, genome_folder=pathlib.Path(), import_table_file="",
-    genome_id_field="", prod_run=False, description_field="", run_mode="",
-    output_folder=pathlib.Path()):
+def data_io(sql_handle=None, genome_folder=pathlib.Path(),
+    import_table_file=pathlib.Path(), genome_id_field="", prod_run=False,
+    description_field="", run_mode="", output_folder=pathlib.Path()):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
     date = time.strftime("%Y%m%d")
