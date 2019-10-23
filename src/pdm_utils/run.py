@@ -48,7 +48,7 @@ def main():
     elif args.pipeline == "import":
         import_phage.main(sys.argv)
     elif args.pipeline == "import_dev":
-        import_genome.run_import(sys.argv)
+        import_genome.main(sys.argv)
     elif args.pipeline == "cdd":
         cdd_pp.main(sys.argv)
     elif args.pipeline == "phamerate":

@@ -33,7 +33,6 @@ logger.addHandler(logging.NullHandler())
 
 
 
-# TODO unittest
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
 
@@ -65,6 +64,9 @@ def main(unparsed_args_list):
             genome_id_field=args.genome_id_field, prod_run=args.prod_run,
             description_field=args.description_field, run_mode=args.run_mode,
             output_folder=args.output_folder)
+
+    logger.info("Import complete.")
+
 
 def setup_sql_handle(database):
     """Connect to a MySQL database."""
@@ -155,8 +157,8 @@ def parse_args(unparsed_args_list):
         help=DESCRIPTION_FIELD_HELP)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
         default=pathlib.Path("/tmp/"), help=OUTPUT_FOLDER_HELP)
-    parser.add_argument("-l", "--log_file", type=pathlib.Path,
-        default=pathlib.Path("import.log"),
+    parser.add_argument("-l", "--log_file", type=str,
+        default="import.log",
         help=LOG_FILE_HELP)
 
     # Assumed command line arg structure:
@@ -172,18 +174,20 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
     description_field="", run_mode="", output_folder=pathlib.Path()):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
+
+    logger.info("Setting up environment.")
     date = time.strftime("%Y%m%d")
     results_folder = f"{date}_results"
     results_folder = pathlib.Path(results_folder)
     results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
     if results_path is None:
-        print("\nUnable to create output_folder.")
+        logger.info("Unable to create output_folder.")
         sys.exit(1)
 
     # Get the files to process.
     files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
     if len(files_to_process) == 0:
-        print("There are no flat files to evaluate.")
+        logger.info("There are no flat files to evaluate.")
         sys.exit(1)
 
     # Get the tickets.
@@ -200,7 +204,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
                     keywords=keywords)
 
     if ticket_dict is None:
-        print("Invalid import table. Unable to evaluate flat files.")
+        logger.info("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
 
     # Evaluate files and tickets.
@@ -214,6 +218,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
     evaluation_dict = results_tuple[4]
 
     # Output data.
+    logger.info("Logging successful tickets and files.")
     headers = list(required_keys) + list(optional_keys)
     if (len(success_ticket_list) > 0 or len(success_filename_list) > 0):
         success_path = pathlib.Path(results_path, "success")
@@ -228,6 +233,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
                 new_file = pathlib.Path(success_genomes_path, file.name)
                 shutil.move(str(file), str(new_file))
 
+    logger.info("Logging failed tickets and files.")
     if (len(failed_ticket_list) > 0 or len(failed_filename_list) > 0):
         failed_path = pathlib.Path(results_path, "fail")
         failed_path.mkdir()
@@ -241,9 +247,8 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
                 new_file = pathlib.Path(failed_genomes_path, file.name)
                 shutil.move(str(file), str(new_file))
 
+    logger.info("Logging evaluations.")
     log_evaluations(evaluation_dict)
-    print("Import complete.")
-
 
 def log_evaluations(dict_of_dict_of_lists):
     """Export evaluations to log.

@@ -12,7 +12,7 @@ class TestRunFunctions1(unittest.TestCase):
         self.parser.add_argument("pipeline")
         self.args1 = self.parser.parse_args(["import_dev"])
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.run_import")
+    @patch("pdm_utils.pipelines.db_import.import_genome.main")
     @patch("argparse.ArgumentParser.parse_args")
     def test_main_1(self, parse_args_mock, run_pipeline_mock):
         """Verify that main runs correctly with:
