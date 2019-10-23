@@ -29,6 +29,7 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict1["run_mode"] = "phagesdb"
         self.ticket_dict1["host_genus"] = "retrieve"
         self.ticket_dict1["cluster"] = "retain"
+        self.ticket_dict1["subcluster"] = "A2"
 
         self.ticket_dict2 = {}
 
@@ -84,7 +85,7 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-
+    #HERE
     def test_parse_import_ticket_data_1(self):
         """Verify ticket is generated from correct data dictionary."""
         tkt = tickets.parse_import_ticket_data(self.ticket_dict1)
@@ -99,13 +100,13 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.run_mode, "phagesdb")
         with self.subTest():
-            self.assertEqual(len(tkt.data_dict.keys()), 7)
+            self.assertEqual(len(tkt.data_dict.keys()), 8)
         with self.subTest():
-            self.assertEqual(len(tkt.data_retrieve), 1)
+            self.assertEqual(tkt.data_retrieve, set(["host_genus"]))
         with self.subTest():
-            self.assertEqual(len(tkt.data_retain), 1)
+            self.assertEqual(tkt.data_retain, set(["cluster"]))
         with self.subTest():
-            self.assertEqual(len(tkt.data_ticket), 5)
+            self.assertEqual(tkt.data_ticket, set(["subcluster"]))
 
 
 

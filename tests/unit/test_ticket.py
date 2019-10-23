@@ -75,29 +75,29 @@ class TestGenomeTicketClass(unittest.TestCase):
 
 
 
-    def test_set_field_trackers_1(self):
-        """Check that keys are assigned to sets as expected."""
-        self.tkt.data_dict = {"host_genus":"retrieve",
-                              "cluster":"retain",
-                              "subcluster":"A2"}
-        self.tkt.set_field_trackers()
-        with self.subTest():
-            self.assertEqual(self.tkt.data_retrieve, {"host_genus"})
-        with self.subTest():
-            self.assertEqual(self.tkt.data_retain, {"cluster"})
-        with self.subTest():
-            self.assertEqual(self.tkt.data_ticket, {"subcluster"})
-
-    def test_set_field_trackers_2(self):
-        """Check that no keys are assigned to sets."""
-        self.tkt.data_dict = {}
-        self.tkt.set_field_trackers()
-        with self.subTest():
-            self.assertEqual(len(self.tkt.data_retrieve), 0)
-        with self.subTest():
-            self.assertEqual(len(self.tkt.data_retain), 0)
-        with self.subTest():
-            self.assertEqual(len(self.tkt.data_ticket), 0)
+    # def test_set_field_trackers_1(self):
+    #     """Check that keys are assigned to sets as expected."""
+    #     self.tkt.data_dict = {"host_genus":"retrieve",
+    #                           "cluster":"retain",
+    #                           "subcluster":"A2"}
+    #     self.tkt.set_field_trackers()
+    #     with self.subTest():
+    #         self.assertEqual(self.tkt.data_retrieve, {"host_genus"})
+    #     with self.subTest():
+    #         self.assertEqual(self.tkt.data_retain, {"cluster"})
+    #     with self.subTest():
+    #         self.assertEqual(self.tkt.data_ticket, {"subcluster"})
+    #
+    # def test_set_field_trackers_2(self):
+    #     """Check that no keys are assigned to sets."""
+    #     self.tkt.data_dict = {}
+    #     self.tkt.set_field_trackers()
+    #     with self.subTest():
+    #         self.assertEqual(len(self.tkt.data_retrieve), 0)
+    #     with self.subTest():
+    #         self.assertEqual(len(self.tkt.data_retain), 0)
+    #     with self.subTest():
+    #         self.assertEqual(len(self.tkt.data_ticket), 0)
 
 
     def test_check_type_1(self):

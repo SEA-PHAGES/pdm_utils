@@ -119,14 +119,35 @@ def parse_import_ticket_data(data_dict):
     :returns: A pdm_utils Ticket object.
     :rtype: Ticket
     """
+    ticket_attributes = set(["id", "type", "phage_id",
+                             "description_field", "run_mode"])
+    other_attributes = data_dict.keys() - ticket_attributes
+
     tkt = ticket.GenomeTicket()
-    tkt.id = data_dict["id"]
-    tkt.type = data_dict["type"]
-    tkt.phage_id = data_dict["phage_id"]
-    tkt.description_field = data_dict["description_field"]
-    tkt.run_mode = data_dict["run_mode"]
     tkt.data_dict = data_dict
-    tkt.set_field_trackers()
+    for attr in ticket_attributes:
+        attr_value = data_dict[attr]
+        setattr(tkt, attr, attr_value)
+
+    data_retrieve = set()
+    data_retain = set()
+    data_ticket = set()
+
+    other_attributes = list(other_attributes)
+    x = 0
+    while x < len(other_attributes):
+        attr = other_attributes[x]
+        attr_value = data_dict[attr]
+        if attr_value == "retrieve":
+            data_retrieve.add(attr)
+        elif attr_value == "retain":
+            data_retain.add(attr)
+        else:
+            data_ticket.add(attr)
+        x += 1
+    tkt.data_retrieve = data_retrieve
+    tkt.data_retain = data_retain
+    tkt.data_ticket = data_ticket
     return tkt
 
 

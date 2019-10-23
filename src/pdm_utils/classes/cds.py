@@ -487,14 +487,18 @@ class Cds:
         """
 
         translation = self.translate_seq()
-        if self.translation_length < len(translation):
-            result = "The translation length is shorter than expected."
+        exp_len = len(translation)
+        if self.translation_length < exp_len:
+            result = (f"The translation length ({self.translation_length}) "
+                     f"is shorter than expected ({exp_len}).")
             status = "error"
-        elif self.translation_length > len(translation):
-            result = "The translation length is longer than expected."
+        elif self.translation_length > exp_len:
+            result = (f"The translation length ({self.translation_length}) "
+                     f"is longer than expected ({exp_len}).")
             status = "error"
         elif self.translation != translation:
-            result = "The translation is different than expected."
+            result = (f"The translation ({self.translation})is different "
+                     f"than expected ({translation}).")
             status = "error"
         else:
             result = "The translation is correct."

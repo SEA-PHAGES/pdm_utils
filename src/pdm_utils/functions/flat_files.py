@@ -159,6 +159,7 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
         translation = ""
     translation = Seq(translation, Alphabet.IUPAC.protein)
     cds_ftr.set_translation(translation)
+    # TODO set_nucleotide_sequence() here?
     cds_ftr.set_nucleotide_length()
 
     try:
@@ -415,6 +416,7 @@ def parse_genome_data(seqrecord, filepath="",
         for seqfeature in seqfeature_dict["CDS"]:
             cds_ftr = parse_cds_seqfeature(seqfeature, genome_id=gnm.id)
             cds_ftr.genome_length = gnm.length
+            cds_ftr.set_nucleotide_sequence(parent_genome_seq=gnm.seq)
             cds_list.append(cds_ftr)
 
     source_list = []

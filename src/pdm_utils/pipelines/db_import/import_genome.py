@@ -64,7 +64,7 @@ def main(unparsed_args_list):
             genome_id_field=args.genome_id_field, prod_run=args.prod_run,
             description_field=args.description_field, run_mode=args.run_mode,
             output_folder=args.output_folder)
-
+    # input("paused before completion")
     logger.info("Import complete.")
 
 
@@ -262,18 +262,20 @@ def log_evaluations(dict_of_dict_of_lists):
     for key1 in dict_of_dict_of_lists:
         msg1 = f"Evaluations for bundle {key1}:"
         logger.info(msg1)
-        print(msg1)
+        # print(msg1)
         dict_of_lists = dict_of_dict_of_lists[key1]
         for key2 in dict_of_lists:
             msg2 = f"Evaluations for {key2}:"
             logger.info(msg2)
-            print(msg2)
+            # print(msg2)
             evl_list = dict_of_lists[key2]
             for evl in evl_list:
-                msg3 = (f"Evaluation: {evl.id}. Definition: {evl.definition}. "
-                        f"Status: {evl.status}. Result: {evl.result}.")
+                msg3 = (f"Evaluation: {evl.id}. "
+                        f"Status: {evl.status}. "
+                        f"Definition: {evl.definition}. "
+                        f"Result: {evl.result}.")
                 logger.info(msg3)
-                print(msg3)
+                # print(msg3)
 
 
 
@@ -296,18 +298,27 @@ def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
 
     list_of_tkts = []
     tkt_errors = 0
+    logger.info("Retrieving ticket data.")
     list_of_data_dicts = tickets.retrieve_ticket_data(import_table_file)
+
+    logger.info("Constructing tickets.")
     list_of_tkts = tickets.construct_tickets(list_of_data_dicts, run_mode_eval_dict,
                     description_field, required_keys, optional_keys,
                     keywords)
     if len(list_of_data_dicts) != len(list_of_tkts):
         tkt_errors += 1
-    tkt_id_dupes, phage_id_dupes = tickets.identify_duplicates(list_of_tkts)
-    ticket_dict = {}
 
+    logger.info("Identifying duplicate tickets.")
+    tkt_id_dupes, phage_id_dupes = tickets.identify_duplicates(list_of_tkts)
+
+    ticket_dict = {}
     x = 0
     while x < len(list_of_tkts):
         tkt = list_of_tkts[x]
+        tkt_summary = (f"ID: {tkt.id}. "
+                       f"Type: {tkt.type}. "
+                       f"PhageID: {tkt.phage_id}.")
+        logger.info(f"Checking ticket structure for: {tkt_summary}.")
         check_ticket(
             tkt,
             type_set=constants.IMPORT_TICKET_TYPE_SET,
@@ -317,8 +328,15 @@ def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
             id_dupe_set=tkt_id_dupes,
             phage_id_dupe_set=phage_id_dupes)
         for evl in tkt.evaluations:
+            evl_summary = (f"Evaluation: {evl.id}. "
+                           f"Status: {evl.status}. "
+                           f"Definition: {evl.definition}. "
+                           f"Result {evl.result}.")
             if evl.status == "error":
                 tkt_errors += 1
+                logger.error(evl_summary)
+            else:
+                logger.info(evl_summary)
         ticket_dict[tkt.phage_id] = tkt
         x += 1
 
@@ -770,7 +788,8 @@ def check_source(src_ftr, eval_flags):
 
 def check_cds(cds_ftr, eval_flags):
     """Check a Cds object for errors."""
-    cds_ftr.check_amino_acids(eval_id="CDS_001")
+    cds_ftr.check_amino_acids(check_set=constants.PROTEIN_ALPHABET,
+                              eval_id="CDS_001")
     cds_ftr.check_translation(eval_id="CDS_002")
     cds_ftr.check_translation_length(eval_id="CDS_003")
     cds_ftr.check_translation_table(eval_id="CDS_004")

@@ -75,16 +75,27 @@ class GenomeTicket:
         else:
             self._value_flag = False
 
-    def set_field_trackers(self):
-        """Assigns ticket dictionary keys to specific sets."""
-        for key in self.data_dict.keys():
-            if self.data_dict[key] == "retrieve":
-                self.data_retrieve.add(key)
-            elif self.data_dict[key] == "retain":
-                self.data_retain.add(key)
-            else:
-                self.data_ticket.add(key)
 
+    # TODO this may no longer be needed.
+    # def set_field_trackers(self):
+    #     """Assigns ticket dictionary keys to specific sets.
+    #
+    #     Only certain keys can be retrieved or retained."""
+    #
+    #     retrieve_keys = set(["host_genus", "cluster",
+    #                          "subcluster", "accession"])
+    #     retain_keys = retrieve_keys | set(["annotation_author",
+    #                                        "retrieve_record"])
+    #     # TODO unittest improved functionality.
+    #     for key in self.data_dict.keys():
+    #         if (self.data_dict[key] == "retrieve" and key in retrieve_keys):
+    #             self.data_retrieve.add(key)
+    #         elif (self.data_dict[key] == "retain" and key in retain_keys):
+    #             self.data_retain.add(key)
+    #         elif key in retain_keys:
+    #             self.data_ticket.add(key)
+    #         else:
+    #             pass
 
     # Evaluations
 
