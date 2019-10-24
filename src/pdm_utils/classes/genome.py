@@ -880,7 +880,9 @@ class Genome:
             Unique identifier for the evaluation.
         :type eval_id: str
         """
-        authors_list = self.authors.lower().split(";")
+        authors = self.authors.lower()
+        authors = authors.replace(";", ",")
+        authors_list = authors.split(",")
         authors_list = [x.strip() for x in authors_list]
         authors_set = set(authors_list)
         mutual_authors_set = authors_set & check_set
@@ -1223,7 +1225,7 @@ class Genome:
             else:
                 result = "Some attributes are not populated."
                 status = "error"
-        definition = "Check if there are any attributes that are set to %s."
+        definition = "Check if there are any attributes that are set correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 

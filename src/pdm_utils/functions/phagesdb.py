@@ -294,6 +294,32 @@ def copy_data(bndl, from_type, to_type, flag="retrieve"):
                 bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
         to_gnm.set_value_flag(flag)
 
+# TODO this will probably replace copy_data()
+def get_genome(phage_id, gnm_type=""):
+    """Get genome data from 'phagesdb'.
+
+    :param phage_id:
+        The name of the phage to be retrieved from PhagesDB.
+    :type phage_id: str
+    :param gnm_type:
+        Indicates the type of genome.
+    :type gnm_type: str
+    """
+    phage_url = construct_phage_url(phage_id)
+    data_dict = retrieve_genome_data(phage_url)
+    if len(data_dict.keys()) != 0:
+        gnm = parse_genome_data(data_dict, gnm_type=gnm_type)
+    else:
+        gnm = None
+    return gnm
+
+
+
+
+
+
+
+
 
 def retrieve_data_list(url):
     """Retrieve list of data from PhagesDB.

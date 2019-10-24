@@ -1,10 +1,12 @@
-""" Unit tests for misc. ticket functions"""
+"""Unit tests for misc. ticket functions."""
 
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
 from pdm_utils.classes import ticket
 from pdm_utils.classes import eval
 from pdm_utils.functions import tickets
+from pdm_utils.functions import run_modes
+from pdm_utils.constants import constants
 import unittest
 
 
@@ -15,159 +17,78 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.tkt = ticket.GenomeTicket()
+        self.required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
+        self.optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+        self.keywords = set(["retrieve", "retain", "none"])
 
-        self.normal_ticket_list = ["add",
-                                "Trixie",
-                                "Mycobacterium",
-                                "A",
-                                "A2",
-                                "Final",
-                                "Hatfull",
-                                "Product",
-                                "ABC123",
-                                "1",
-                                "1",
-                                "phagesdb"]
+        self.ticket_dict1 = {}
+        self.ticket_dict1["type"] = "add"
+        self.ticket_dict1["id"] = 1
+        self.ticket_dict1["phage_id"] = "Trixie"
+        self.ticket_dict1["description_field"] = "product"
+        self.ticket_dict1["run_mode"] = "phagesdb"
+        self.ticket_dict1["host_genus"] = "retrieve"
+        self.ticket_dict1["cluster"] = "retain"
+        self.ticket_dict1["subcluster"] = "A2"
 
-        self.short_ticket_list = ["add",
-                                "Trixie",
-                                "Mycobacterium",
-                                "A",
-                                "A2",
-                                "Final",
-                                "Hatfull"]
+        self.ticket_dict2 = {}
 
-        self.long_ticket_list = ["add",
-                                "Trixie",
-                                "Mycobacterium",
-                                "A",
-                                "A2",
-                                "Final",
-                                "Hatfull",
-                                "Product",
-                                "ABC123",
-                                "1",
-                                "1",
-                                "phagesdb",
-                                "none",
-                                "extra"]
-
-        self.normal_ticket_list2 = ["replace",
-                                "KatherineG",
-                                "Gordonia",
-                                "A",
-                                "A15",
-                                "Final",
-                                "Hatfull",
-                                "Product",
-                                "XYZ456",
-                                "1",
-                                "1",
-                                "phagesdb"]
+        self.ticket_dict3 = {}
+        self.ticket_dict3["type"] = "ADD"
+        self.ticket_dict3["id"] = 1
+        self.ticket_dict3["phage_id"] = "Trixie"
+        self.ticket_dict3["description_field"] = "PRODUCT"
+        self.ticket_dict3["run_mode"] = "PHAGESDB"
+        self.ticket_dict3["host_genus"] = "RETRIEVE"
+        self.ticket_dict3["subcluster"] = None
 
 
-        self.empty_ticket_list = [None] * 12
+        self.ticket_dict4 = {}
+        self.ticket_dict4["type"] = "ADD"
+        self.ticket_dict4["id"] = 1
+        self.ticket_dict4["phage_id"] = "Trixie"
 
-        self.filled_ticket = ticket.GenomeTicket()
-        self.filled_ticket.id = 1
-        self.filled_ticket.type = "add"
-        self.filled_ticket.phage_id = "Trixie"
-        self.filled_ticket.host_genus = "Mycobacterium"
-        self.filled_ticket.cluster = "A"
-        self.filled_ticket.subcluster = "A2"
-        self.filled_ticket.annotation_status = "final"
-        self.filled_ticket.annotation_author = 1
-        self.filled_ticket.retrieve_record = 1
-        self.filled_ticket.description_field = "product"
-        self.filled_ticket.accession = "ABC123"
-        self.filled_ticket.run_mode = "phagesdb"
 
-        self.normal_ticket_dict = {}
-        self.normal_ticket_dict["type"] = "add"
-        self.normal_ticket_dict["id"] = 1
-        self.normal_ticket_dict["phage_id"] = "Trixie"
-        self.normal_ticket_dict["host_genus"] = "Mycobacterium"
-        self.normal_ticket_dict["cluster"] = "A"
-        self.normal_ticket_dict["subcluster"] = "A2"
-        self.normal_ticket_dict["annotation_status"] = "final"
-        self.normal_ticket_dict["annotation_author"] = 1
-        self.normal_ticket_dict["description_field"] = "product"
-        self.normal_ticket_dict["accession"] = "ABC123"
-        self.normal_ticket_dict["retrieve_record"] = 1
-        self.normal_ticket_dict["run_mode"] = "phagesdb"
+    def test_modify_import_data_1(self):
+        """Verify returns False if there are missing required keys."""
+        result = tickets.modify_import_data(self.ticket_dict2,
+                    self.required_keys, self.optional_keys, self.keywords)
+        self.assertFalse(result)
+
+
+    def test_modify_import_data_2(self):
+        """Verify returns False if there are extra keys."""
+        self.ticket_dict3["extra"] = "extra"
+        result = tickets.modify_import_data(self.ticket_dict3,
+                    self.required_keys, self.optional_keys, self.keywords)
+        self.assertFalse(result)
+
+
+    def test_modify_import_data_3(self):
+        """Verify returns True with completed dictionary."""
+        result = tickets.modify_import_data(self.ticket_dict3,
+                    self.required_keys, self.optional_keys, self.keywords)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["subcluster"], "retrieve")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["host_genus"], "retrieve")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["annotation_author"], "1")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["type"], "add")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["description_field"], "product")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["run_mode"], "phagesdb")
 
 
 
-
-
-
-
-
-
-
-
-
-    # # TODO this may no longer be needed.
-    # def test_parse_import_tickets_1(self):
-    #     """Verify two lists of correct data are parsed."""
-    #     list_of_lists = [self.normal_ticket_list,
-    #                      self.normal_ticket_list2]
-    #     list_of_tickets = tickets.parse_import_tickets(list_of_lists)
-    #     with self.subTest():
-    #         self.assertEqual(len(list_of_tickets), 2)
-    #     with self.subTest():
-    #         type = list_of_tickets[0].type
-    #         self.assertEqual(type, "add")
-    #     with self.subTest():
-    #         type = list_of_tickets[1].type
-    #         self.assertEqual(type, "replace")
-    #     with self.subTest():
-    #         self.assertEqual(list_of_tickets[0].id, 1)
-    #     with self.subTest():
-    #         self.assertEqual(list_of_tickets[1].id, 2)
-    #
-    #
-    # def test_parse_import_tickets_2(self):
-    #     """Verify two lists of incorrect data are not parsed."""
-    #     list_of_lists = [self.short_ticket_list,
-    #                      self.long_ticket_list]
-    #     list_of_tickets = tickets.parse_import_tickets(list_of_lists)
-    #     with self.subTest():
-    #         self.assertEqual(len(list_of_tickets), 2)
-    #     with self.subTest():
-    #         type = list_of_tickets[0].type
-    #         self.assertEqual(type, "")
-    #     with self.subTest():
-    #         type = list_of_tickets[1].type
-    #         self.assertEqual(type, "")
-    #
-    # def test_parse_import_tickets_3(self):
-    #     """Verify mixed lists of correct and incorrect data are
-    #     parsed correctly."""
-    #     list_of_lists = [self.short_ticket_list,
-    #                     self.normal_ticket_list,
-    #                      self.long_ticket_list]
-    #     list_of_tickets = tickets.parse_import_tickets(list_of_lists)
-    #     with self.subTest():
-    #         self.assertEqual(len(list_of_tickets), 3)
-    #     with self.subTest():
-    #         type = list_of_tickets[0].type
-    #         self.assertEqual(type, "")
-    #     with self.subTest():
-    #         type = list_of_tickets[1].type
-    #         self.assertEqual(type, "add")
-    #     with self.subTest():
-    #         type = list_of_tickets[2].type
-    #         self.assertEqual(type, "")
-
-
-
-
+    #HERE
     def test_parse_import_ticket_data_1(self):
         """Verify ticket is generated from correct data dictionary."""
-        tkt = tickets.parse_import_ticket_data(
-                data_dict=self.normal_ticket_dict)
+        tkt = tickets.parse_import_ticket_data(self.ticket_dict1)
         with self.subTest():
             self.assertEqual(tkt.id, 1)
         with self.subTest():
@@ -175,177 +96,176 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.phage_id, "Trixie")
         with self.subTest():
-            self.assertEqual(tkt.host_genus, "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(tkt.cluster, "A")
-        with self.subTest():
-            self.assertEqual(tkt.subcluster, "A2")
-        with self.subTest():
-            self.assertEqual(tkt.annotation_status, "final")
-        with self.subTest():
-            self.assertEqual(tkt.annotation_author, 1)
-        with self.subTest():
-            self.assertEqual(tkt.retrieve_record, 1)
-        with self.subTest():
             self.assertEqual(tkt.description_field, "product")
         with self.subTest():
-            self.assertEqual(tkt.accession, "ABC123")
-        with self.subTest():
             self.assertEqual(tkt.run_mode, "phagesdb")
-
-    def test_parse_import_ticket_data_2(self):
-        """Verify data dictionary with not enough keys is not parsed."""
-        self.normal_ticket_dict.pop("cluster")
-        tkt = tickets.parse_import_ticket_data(
-                data_dict=self.normal_ticket_dict)
-        self.assertIsNone(tkt)
-
-    def test_parse_import_ticket_data_3(self):
-        """Verify data dictionary with too many keys is not parsed."""
-        self.normal_ticket_dict["extra"] = "extra"
-        tkt = tickets.parse_import_ticket_data(
-                data_dict=self.normal_ticket_dict)
-        self.assertIsNone(tkt)
-
-    def test_parse_import_ticket_data_4(self):
-        """Verify data dictionary with an empty value "" is not parsed."""
-        self.normal_ticket_dict["phage_id"] = ""
-        tkt = tickets.parse_import_ticket_data(
-                data_dict=self.normal_ticket_dict)
-        self.assertIsNone(tkt)
-
-    def test_parse_import_ticket_data_5(self):
-        """Verify data dictionary with a None value is not parsed."""
-        self.normal_ticket_dict["phage_id"] = None
-        tkt = tickets.parse_import_ticket_data(
-                data_dict=self.normal_ticket_dict)
-        self.assertIsNone(tkt)
-
-    def test_parse_import_ticket_data_6(self):
-        """Verify properly structured data is parsed correctly."""
-        data_dict = tickets.parse_import_ticket_data(tkt=self.filled_ticket,
-                        direction="ticket_to_dict")
         with self.subTest():
-            self.assertEqual(data_dict["id"], 1)
+            self.assertEqual(len(tkt.data_dict.keys()), 8)
+        with self.subTest():
+            self.assertEqual(tkt.data_retrieve, set(["host_genus"]))
+        with self.subTest():
+            self.assertEqual(tkt.data_retain, set(["cluster"]))
+        with self.subTest():
+            self.assertEqual(tkt.data_ticket, set(["subcluster"]))
+
+
+
+
+    def test_set_empty_1(self):
+        """Verify one None value is set to ''."""
+        data_dict = {"type":"add","cluster":None}
+        tickets.set_empty(data_dict)
         with self.subTest():
             self.assertEqual(data_dict["type"], "add")
         with self.subTest():
-            self.assertEqual(data_dict["phage_id"], "Trixie")
-        with self.subTest():
-            self.assertEqual(data_dict["host_genus"], "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(data_dict["cluster"], "A")
-        with self.subTest():
-            self.assertEqual(data_dict["subcluster"], "A2")
-        with self.subTest():
-            self.assertEqual(data_dict["annotation_status"], "final")
-        with self.subTest():
-            self.assertEqual(data_dict["annotation_author"], 1)
-        with self.subTest():
-            self.assertEqual(data_dict["retrieve_record"], 1)
-        with self.subTest():
-            self.assertEqual(data_dict["description_field"], "product")
-        with self.subTest():
-            self.assertEqual(data_dict["accession"], "ABC123")
-        with self.subTest():
-            self.assertEqual(data_dict["run_mode"], "phagesdb")
-
-    def test_parse_import_ticket_data_7(self):
-        """Verify None object is returned if direction is invalid."""
-        result = tickets.parse_import_ticket_data(
-                data_dict=self.normal_ticket_dict, direction="invalid")
-        self.assertIsNone(result)
+            self.assertEqual(data_dict["cluster"], "")
 
 
 
-    # # TODO this may no longer be needed.
-    # def test_parse_import_ticket_data_list_1(self):
-    #     """Verify properly structured data is parsed correctly."""
-    #     tickets.parse_import_ticket_data_list(self.tkt, self.normal_ticket_list)
-    #
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.type, "add")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.phage_id, "Trixie")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.host_genus, "Mycobacterium")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.cluster, "A")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.subcluster, "A2")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.annotation_status, "final")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.annotation_author, "hatfull")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.retrieve_record, 1)
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.description_field, "product")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.accession, "ABC123")
-    #     with self.subTest():
-    #         self.assertEqual(self.tkt.run_mode, "phagesdb")
-    #
-    # def test_parse_import_ticket_data_list_2(self):
-    #     """Verify id is set appropriately."""
-    #     tickets.parse_import_ticket_data_list(self.tkt,
-    #                                 self.normal_ticket_list,
-    #                                 id = "TicketXYZ")
-    #     self.assertEqual(self.tkt.id, "TicketXYZ")
-    #
-    # def test_parse_import_ticket_data_list_3(self):
-    #     """Verify improperly structured data is not parsed."""
-    #     tickets.parse_import_ticket_data_list(self.tkt, self.short_ticket_list)
-    #     self.assertEqual(self.tkt.type, "")
-    #
-    # def test_parse_import_ticket_data_list_4(self):
-    #     """Verify improperly structured data is not parsed."""
-    #     tickets.parse_import_ticket_data_list(self.tkt, self.long_ticket_list)
-    #     self.assertEqual(self.tkt.type, "")
-    #
-    # def test_parse_import_ticket_data_list_5(self):
-    #     """Verify properly structured data is parsed correctly."""
-    #
-    #     tickets.parse_import_ticket_data_list(self.filled_ticket,
-    #                                      self.empty_ticket_list,
-    #                                      direction = "ticket_to_list")
-    #
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[0], "add")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[1], "Trixie")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[2], "Mycobacterium")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[3], "A")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[4], "A2")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[5], "final")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[6], "1")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[9], "1")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[10], "1")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[7], "product")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[8], "ABC123")
-    #     with self.subTest():
-    #         self.assertEqual(self.empty_ticket_list[11], "phagesdb")
-    #
-    # def test_parse_import_ticket_data_list_6(self):
-    #     """Verify no changes are made if the direction is invalid."""
-    #
-    #     tickets.parse_import_ticket_data_list(self.filled_ticket,
-    #                                      self.empty_ticket_list,
-    #                                      direction = "invalid")
-    #
-    #     with self.subTest():
-    #         self.assertIsNone(self.empty_ticket_list[0])
-    #     with self.subTest():
-    #         self.assertEqual(self.filled_ticket.type, "add")
+
+    def test_set_keywords_1(self):
+        """Verify one value is lowercased."""
+        data_dict = {"type":"ADD","cluster":"RETRIEVE"}
+        keywords = set(["retrieve", "retain"])
+        tickets.set_keywords(data_dict, keywords)
+        with self.subTest():
+            self.assertEqual(data_dict["type"], "ADD")
+        with self.subTest():
+            self.assertEqual(data_dict["cluster"], "retrieve")
+
+
+
+
+    def test_set_missing_keys_1(self):
+        """Verify one missing key is added."""
+        data_dict = {"type":"add", "cluster":""}
+        key_set = set(["type", "host_genus"])
+        tickets.set_missing_keys(data_dict, key_set)
+        with self.subTest():
+            self.assertEqual(len(data_dict.keys()), 3)
+        with self.subTest():
+            self.assertEqual(data_dict["host_genus"], "")
+
+    def test_set_missing_keys_2(self):
+        """Verify no missing key is added."""
+        data_dict = {"type":"add", "cluster":""}
+        key_set = set(["type", "cluster"])
+        tickets.set_missing_keys(data_dict, key_set)
+        self.assertEqual(len(data_dict.keys()), 2)
+
+
+
+
+    def test_set_dict_value_1(self):
+        """Verify empty value is replaced with first value."""
+        data_dict = {"type":"add", "cluster":""}
+        tickets.set_dict_value(data_dict, "cluster", "A", "B")
+        self.assertEqual(data_dict["cluster"], "A")
+
+    def test_set_dict_value_2(self):
+        """Verify empty value is replaced with second value."""
+        data_dict = {"type":"replace", "cluster":""}
+        tickets.set_dict_value(data_dict, "cluster", "A", "B")
+        self.assertEqual(data_dict["cluster"], "B")
+
+    def test_set_dict_value_3(self):
+        """Verify non-empty value is not replaced."""
+        data_dict = {"type":"replace", "cluster":"C"}
+        tickets.set_dict_value(data_dict, "cluster", "A", "B")
+        self.assertEqual(data_dict["cluster"], "C")
+
+
+
+
+    def test_construct_tickets_1(self):
+        """Verify two tickets are constructed correctly.
+        The first ticket contains all required and optional fields.
+        The second ticket contains all required fields."""
+        dict_list = [self.ticket_dict1, self.ticket_dict4]
+        run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                              "eval_flag_dict": {"check_locus_tag": False}}
+        list_of_tickets = tickets.construct_tickets(dict_list,
+                run_mode_eval_dict, "function", self.required_keys,
+                self.optional_keys, self.keywords)
+        with self.subTest():
+            self.assertEqual(len(list_of_tickets), 2)
+        with self.subTest():
+            self.assertEqual(list_of_tickets[0].run_mode, "phagesdb")
+        with self.subTest():
+            self.assertEqual(list_of_tickets[0].description_field, "product")
+        with self.subTest():
+            self.assertTrue(list_of_tickets[0].eval_flags["check_locus_tag"])
+        with self.subTest():
+            self.assertEqual(list_of_tickets[1].run_mode, "custom_run_mode")
+        with self.subTest():
+            self.assertEqual(list_of_tickets[1].description_field, "function")
+        with self.subTest():
+            self.assertFalse(list_of_tickets[1].eval_flags["check_locus_tag"])
+
+    def test_construct_tickets_2(self):
+        """Verify one ticket is constructed correctly. The second data
+        dictionary is not structured correctly."""
+        dict_list = [self.ticket_dict1, self.ticket_dict2]
+        run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                              "eval_flag_dict": {}}
+        list_of_tickets = tickets.construct_tickets(dict_list,
+                run_mode_eval_dict, "function", self.required_keys,
+                self.optional_keys, self.keywords)
+        with self.subTest():
+            self.assertEqual(len(list_of_tickets), 1)
+
+    def test_construct_tickets_3(self):
+        """Verify four tickets constructed correctly. The first two tickets
+        contain all required and optional fields. The second two tickets
+        contain all required fields. Verify that each eval_flag dictionary
+        is a separate object that can be modified without impacting the other
+        eval_flag dictionaries."""
+
+        tkt_dict1 = {}
+        tkt_dict1["type"] = "add"
+        tkt_dict1["id"] = 1
+        tkt_dict1["phage_id"] = "Trixie"
+        tkt_dict1["description_field"] = "product"
+        tkt_dict1["run_mode"] = "phagesdb"
+
+        tkt_dict2 = {}
+        tkt_dict2["type"] = "add"
+        tkt_dict2["id"] = 2
+        tkt_dict2["phage_id"] = "L5"
+        tkt_dict2["description_field"] = "product"
+        tkt_dict2["run_mode"] = "phagesdb"
+
+        tkt_dict3 = {}
+        tkt_dict3["type"] = "add"
+        tkt_dict3["id"] = 3
+        tkt_dict3["phage_id"] = "RedRock"
+
+        tkt_dict4 = {}
+        tkt_dict4["type"] = "add"
+        tkt_dict4["id"] = 4
+        tkt_dict4["phage_id"] = "Bxb1"
+
+        dict_list = [tkt_dict1, tkt_dict2, tkt_dict3, tkt_dict4]
+        run_mode_eval_dict = {"run_mode": "custom_run_mode",
+                              "eval_flag_dict": {"check_locus_tag": False}}
+        tkt_list = tickets.construct_tickets(dict_list,
+                run_mode_eval_dict, "function", self.required_keys,
+                self.optional_keys, self.keywords)
+
+        tkt_list[0].eval_flags["check_locus_tag"] = 0
+        tkt_list[1].eval_flags["check_locus_tag"] = 1
+        tkt_list[2].eval_flags["check_locus_tag"] = 2
+        tkt_list[3].eval_flags["check_locus_tag"] = 3
+
+        with self.subTest():
+            self.assertEqual(tkt_list[0].eval_flags["check_locus_tag"], 0)
+        with self.subTest():
+            self.assertEqual(tkt_list[1].eval_flags["check_locus_tag"], 1)
+        with self.subTest():
+            self.assertEqual(tkt_list[2].eval_flags["check_locus_tag"], 2)
+        with self.subTest():
+            self.assertEqual(tkt_list[3].eval_flags["check_locus_tag"], 3)
+
 
 
     def test_identify_duplicates_1(self):
@@ -355,58 +275,45 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
-        ticket1.accession = "ABC123"
 
         ticket2 = ticket.GenomeTicket()
         ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "L5"
-        ticket2.accession = "EFG456"
 
         null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        id_dupes, phage_id_dupes, accession_dupes = \
+        id_dupes, phage_id_dupes = \
             tickets.identify_duplicates(list_of_tickets, null_set=null_set)
 
         with self.subTest():
             self.assertEqual(len(id_dupes), 0)
         with self.subTest():
             self.assertEqual(len(phage_id_dupes), 0)
-        with self.subTest():
-            self.assertEqual(len(accession_dupes), 0)
-
-
-
 
 
     def test_identify_duplicates_2(self):
-        """Verify two tickets with 'none' duplicates do not generate an error."""
+        """Verify two tickets with 'none' duplicates
+        do not generate an error."""
 
         ticket1 = ticket.GenomeTicket()
         ticket1.id = "none"
         ticket1.type = "replace"
         ticket1.phage_id = "none"
-        ticket1.accession = "none"
 
         ticket2 = ticket.GenomeTicket()
         ticket2.id = "none"
         ticket2.type = "replace"
         ticket2.phage_id = "none"
-        ticket2.accession = "none"
 
         null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        id_dupes, phage_id_dupes, accession_dupes = \
+        id_dupes, phage_id_dupes = \
             tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
             self.assertEqual(len(id_dupes), 0)
         with self.subTest():
             self.assertEqual(len(phage_id_dupes), 0)
-        with self.subTest():
-            self.assertEqual(len(accession_dupes), 0)
-
-
-
 
 
     def test_identify_duplicates_3(self):
@@ -417,24 +324,20 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "L5"
-        ticket1.accession = "none"
 
         ticket2 = ticket.GenomeTicket()
         ticket2.id = 1
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
-        ticket2.accession = "none"
 
         null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        id_dupes, phage_id_dupes, accession_dupes = \
+        id_dupes, phage_id_dupes = \
             tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
             self.assertEqual(len(id_dupes), 1)
         with self.subTest():
             self.assertEqual(len(phage_id_dupes), 0)
-        with self.subTest():
-            self.assertEqual(len(accession_dupes), 0)
 
 
 
@@ -446,53 +349,21 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
-        ticket1.accession = "none"
 
         ticket2 = ticket.GenomeTicket()
         ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
-        ticket2.accession = "none"
 
         null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        id_dupes, phage_id_dupes, accession_dupes = \
+        id_dupes, phage_id_dupes = \
             tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
             self.assertEqual(len(id_dupes), 0)
         with self.subTest():
             self.assertEqual(len(phage_id_dupes), 1)
-        with self.subTest():
-            self.assertEqual(len(accession_dupes), 0)
 
-
-
-
-    def test_identify_duplicates_5(self):
-        """Verify two tickets with Accession duplicates do generate an error."""
-
-        ticket1 = ticket.GenomeTicket()
-        ticket1.id = 1
-        ticket1.type = "replace"
-        ticket1.phage_id = "none"
-        ticket1.accession = "ABC123"
-
-        ticket2 = ticket.GenomeTicket()
-        ticket2.id = 2
-        ticket2.type = "replace"
-        ticket2.phage_id = "none"
-        ticket2.accession = "ABC123"
-
-        null_set = set(["none"])
-        list_of_tickets = [ticket1, ticket2]
-        id_dupes, phage_id_dupes, accession_dupes = \
-            tickets.identify_duplicates(list_of_tickets, null_set=null_set)
-        with self.subTest():
-            self.assertEqual(len(id_dupes), 0)
-        with self.subTest():
-            self.assertEqual(len(phage_id_dupes), 0)
-        with self.subTest():
-            self.assertEqual(len(accession_dupes), 1)
 
     def test_identify_duplicates_6(self):
         """Verify two tickets with multiple duplicates
@@ -502,24 +373,20 @@ class TestTicketFunctions1(unittest.TestCase):
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
-        ticket1.accession = "ABC123"
 
         ticket2 = ticket.GenomeTicket()
         ticket2.id = 1
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
-        ticket2.accession = "ABC123"
 
         null_set = set(["none"])
         list_of_tickets = [ticket1, ticket2]
-        id_dupes, phage_id_dupes, accession_dupes = \
+        id_dupes, phage_id_dupes = \
             tickets.identify_duplicates(list_of_tickets, null_set=null_set)
         with self.subTest():
             self.assertEqual(len(id_dupes), 1)
         with self.subTest():
             self.assertEqual(len(phage_id_dupes), 1)
-        with self.subTest():
-            self.assertEqual(len(accession_dupes), 1)
 
 
 
@@ -538,36 +405,6 @@ class TestTicketFunctions2(unittest.TestCase):
 
         self.bundle1.ticket = self.ticket1
         self.bundle2.ticket = self.ticket2
-
-
-    # TODO no longer needed probably.
-    # def test_assign_match_strategy_1(self):
-    #     """Verify strategy is assigned with no error produced."""
-    #     input_strategy = "phage_id"
-    #     self.bundle1.ticket.match_strategy = input_strategy
-    #     self.bundle2.ticket.match_strategy = input_strategy
-    #     list1 = [self.bundle1, self.bundle2] # Trixie, L5
-    #     output_strategy, eval_result = \
-    #         tickets.assign_match_strategy(list1)
-    #     with self.subTest():
-    #         self.assertEqual(output_strategy, input_strategy)
-    #     with self.subTest():
-    #         self.assertEqual(eval_result.status, "correct")
-    #
-    # def test_assign_match_strategy_2(self):
-    #     """Verify no strategy is assigned and an error is produced."""
-    #     input_strategy1 = "phage_id"
-    #     input_strategy2 = "filename"
-    #     self.bundle1.ticket.match_strategy = input_strategy1
-    #     self.bundle2.ticket.match_strategy = input_strategy2
-    #     list1 = [self.bundle1, self.bundle2] # Trixie, L5
-    #     output_strategy, eval_result = \
-    #         tickets.assign_match_strategy(list1)
-    #     expected_strategy = ""
-    #     with self.subTest():
-    #         self.assertEqual(output_strategy, expected_strategy)
-    #     with self.subTest():
-    #         self.assertEqual(eval_result.status, "error")
 
 
 
@@ -745,22 +582,6 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome.accession, "ABC123")
 
-    # TODO this is probably no longer needed.
-    # def test_copy_ticket_to_genome_2(self):
-    #     """Verify data from 'remove' ticket is added to genome."""
-    #
-    #     tickets.copy_ticket_to_genome(self.bundle2)
-    #     matched_genome1 = self.bundle2.genome_dict["add"]
-    #     # matched_genome2 = self.bundle2.genome_dict["remove"]
-    #
-    #     with self.subTest():
-    #         self.assertEqual(matched_genome1.id, "Trixie")
-    #     with self.subTest():
-    #         self.assertEqual(matched_genome1.name, "Trixie_Draft")
-    #     # with self.subTest():
-    #     #     self.assertEqual(matched_genome2.id, "L5")
-    #     # with self.subTest():
-    #     #     self.assertEqual(matched_genome2.name, "")
 
     def test_copy_ticket_to_genome_3(self):
         """Verify data from 'invalid' ticket is not added to genome."""
@@ -772,340 +593,114 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
 
+class TestTicketFunctions5(unittest.TestCase):
 
+    def setUp(self):
+        self.data_dict = {}
+        self.data_dict["host_genus"] = "Mycobacterium smegmatis"
+        self.data_dict["accession"] = "ABC123.1"
+        self.data_dict["annotation_status"] = "final"
+        self.data_dict["cluster"] = "A"
+        self.data_dict["subcluster"] = "A2"
+        self.data_dict["annotation_author"] = 1
+        self.data_dict["retrieve_record"] = 1
+        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1.phage_id = "Trixie_Draft"
+        self.tkt1.data_dict = self.data_dict
 
-# TODO below code is broken since I have changed how eval is structured.
-#
-#
-#
-#
-# class TestTicketFunctions5(unittest.TestCase):
-#
-#     def setUp(self):
-#
-#         self.genome1 = genome.Genome()
-#         self.genome2 = genome.Genome()
-#         self.genome3 = genome.Genome()
-#         self.genome4 = genome.Genome()
-#
-#         self.ticket1 = ticket.GenomeTicket()
-#         self.ticket2 = ticket.GenomeTicket()
-#         self.ticket3 = ticket.GenomeTicket()
-#         self.ticket4 = ticket.GenomeTicket()
-#
-#         self.bundle1 = bundle.Bundle()
-#         self.bundle2 = bundle.Bundle()
-#         self.bundle3 = bundle.Bundle()
-#         self.bundle4 = bundle.Bundle()
-#
-#         self.bundle1.ticket = self.ticket1
-#         self.bundle2.ticket = self.ticket2
-#         self.bundle3.ticket = self.ticket3
-#         self.bundle4.ticket = self.ticket4
-#
-#
-#     def test_match_genomes_to_tickets_1(self):
-#         """Verify that one genome is matched to ticket using phage_id."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "phage_id"
-#         self.genome1.id = "Trixie"
-#
-#
-#         list1 = [self.bundle1] # Trixie
-#         list2 = [self.genome1] # Trixie
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "phamerator")
-#
-#         matched_genome = list1[0].genome_dict["phamerator"]
-#         id = matched_genome.id
-#         expected_id = "Trixie"
-#         with self.subTest():
-#             self.assertEqual(id, expected_id)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 0)
-#
-#     def test_match_genomes_to_tickets_2(self):
-#         """Verify that one genome is matched to ticket using filename."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#
-#         list1 = [self.bundle1] # Trixie
-#         list2 = [self.genome1] # Trixie
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome = list1[0].genome_dict["flat_file"]
-#         id = matched_genome.filename
-#         expected_id = "Trixie"
-#         with self.subTest():
-#             self.assertEqual(id, expected_id)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 0)
-#
-#     def test_match_genomes_to_tickets_3(self):
-#         """Verify that one genome is matched to ticket,
-#         and one genome is not matched (no matching ticket), using filename."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#         self.genome2.filename = "L5"
-#
-#
-#         list1 = [self.bundle1] # Trixie
-#         list2 = [self.genome1, self.genome2] # Trixie, L5
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome = list1[0].genome_dict["flat_file"]
-#         id = matched_genome.filename
-#         expected_id = "Trixie"
-#         with self.subTest():
-#             self.assertEqual(id, expected_id)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 1)
-#
-#     def test_match_genomes_to_tickets_4(self):
-#         """Verify that one ticket is matched to genome,
-#         and one ticket is not matched (no matching genome), using filename."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#
-#         self.bundle2.ticket.phage_id = "L5"
-#         self.bundle2.ticket.match_strategy = "filename"
-#
-#         list1 = [self.bundle1, self.bundle2] # Trixie, L5
-#         list2 = [self.genome1] # Trixie
-#
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome = list1[0].genome_dict["flat_file"]
-#         id = matched_genome.filename
-#         expected_id = "Trixie"
-#         with self.subTest():
-#             self.assertEqual(id, expected_id)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 1)
-#
-#     def test_match_genomes_to_tickets_5(self):
-#         """Verify that two genomes are matched to tickets,
-#         using filename."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#
-#         self.bundle2.ticket.phage_id = "L5"
-#         self.bundle2.ticket.match_strategy = "filename"
-#         self.genome2.filename = "L5"
-#
-#
-#         list1 = [self.bundle1, self.bundle2] # Trixie, L5
-#         list2 = [self.genome1, self.genome2] # Trixie, L5
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome1 = list1[0].genome_dict["flat_file"]
-#         id1 = matched_genome1.filename
-#         expected_id1 = "Trixie"
-#
-#         matched_genome2 = list1[1].genome_dict["flat_file"]
-#         id2 = matched_genome2.filename
-#         expected_id2 = "L5"
-#
-#         with self.subTest():
-#             self.assertEqual(id1, expected_id1)
-#         with self.subTest():
-#             self.assertEqual(id2, expected_id2)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 0)
-#
-#     def test_match_genomes_to_tickets_6(self):
-#         """Verify that no genomes are matched to tickets due to
-#         conflicting strategies."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "phage_id"
-#         self.genome1.filename = "Trixie"
-#
-#         self.bundle2.ticket.phage_id = "L5"
-#         self.bundle2.ticket.match_strategy = "filename"
-#         self.genome2.filename = "L5"
-#
-#         list1 = [self.bundle1, self.bundle2] # Trixie, L5
-#         list2 = [self.genome1, self.genome2] # Trixie, L5
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         with self.subTest():
-#             self.assertEqual(len(list1[0].genome_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(len(list1[0].genome_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 3)
-#
-#     def test_match_genomes_to_tickets_7(self):
-#         """Verify that three genomes are matched to tickets,
-#         using filename."""
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#
-#         self.bundle2.ticket.phage_id = "L5"
-#         self.bundle2.ticket.match_strategy = "filename"
-#         self.genome2.filename = "L5"
-#
-#         self.bundle3.ticket.phage_id = "D29"
-#         self.bundle3.ticket.match_strategy = "filename"
-#         self.genome3.filename = "D29"
-#
-#         list1 = [self.bundle1, self.bundle2, self.bundle3]
-#         list2 = [self.genome1, self.genome2, self.genome3]
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome1 = list1[0].genome_dict["flat_file"]
-#         id1 = matched_genome1.filename
-#         expected_id1 = "Trixie"
-#
-#         matched_genome2 = list1[1].genome_dict["flat_file"]
-#         id2 = matched_genome2.filename
-#         expected_id2 = "L5"
-#
-#         matched_genome3 = list1[2].genome_dict["flat_file"]
-#         id3 = matched_genome3.filename
-#         expected_id3 = "D29"
-#
-#         with self.subTest():
-#             self.assertEqual(id1, expected_id1)
-#         with self.subTest():
-#             self.assertEqual(id2, expected_id2)
-#         with self.subTest():
-#             self.assertEqual(id3, expected_id3)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 0)
-#
-#     def test_match_genomes_to_tickets_8(self):
-#         """Verify that two tickets are matched to genomes,
-#         and two tickets are not matched (same identifier), using filename."""
-#
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#
-#         self.bundle2.ticket.phage_id = "L5"
-#         self.bundle2.ticket.match_strategy = "filename"
-#         self.genome2.filename = "L5"
-#
-#         self.bundle3.ticket.phage_id = "D29"
-#         self.bundle3.ticket.match_strategy = "filename"
-#
-#         self.bundle4.ticket.phage_id = "D29"
-#         self.bundle4.ticket.match_strategy = "filename"
-#
-#         list1 = [self.bundle1, self.bundle2,
-#                 self.bundle3, self.bundle4]
-#         list2 = [self.genome1, self.genome2]
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome1 = list1[0].genome_dict["flat_file"]
-#         id1 = matched_genome1.filename
-#         expected_id1 = "Trixie"
-#
-#         matched_genome2 = list1[1].genome_dict["flat_file"]
-#         id2 = matched_genome2.filename
-#         expected_id2 = "L5"
-#
-#         with self.subTest():
-#             self.assertEqual(id1, expected_id1)
-#         with self.subTest():
-#             self.assertEqual(id2, expected_id2)
-#         with self.subTest():
-#             self.assertEqual(len(list1[2].genome_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(len(list1[3].genome_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 1)
-#
-#     def test_match_genomes_to_tickets_9(self):
-#         """Verify that two genomes are matched to tickets,
-#         and two genomes are not matched (same identifier), using filename."""
-#
-#
-#         self.bundle1.ticket.phage_id = "Trixie"
-#         self.bundle1.ticket.match_strategy = "filename"
-#         self.genome1.filename = "Trixie"
-#
-#         self.bundle2.ticket.phage_id = "L5"
-#         self.bundle2.ticket.match_strategy = "filename"
-#         self.genome2.filename = "L5"
-#
-#         self.genome3.filename = "D29"
-#         self.genome4.filename = "D29"
-#
-#         list1 = [self.bundle1, self.bundle2]
-#         list2 = [self.genome1, self.genome2, self.genome3, self.genome4]
-#         eval_list = \
-#             tickets.match_genomes_to_tickets(list1,
-#                                                     list2,
-#                                                     "flat_file")
-#
-#         matched_genome1 = list1[0].genome_dict["flat_file"]
-#         id1 = matched_genome1.filename
-#         expected_id1 = "Trixie"
-#
-#         matched_genome2 = list1[1].genome_dict["flat_file"]
-#         id2 = matched_genome2.filename
-#         expected_id2 = "L5"
-#
-#         with self.subTest():
-#             self.assertEqual(id1, expected_id1)
-#         with self.subTest():
-#             self.assertEqual(id2, expected_id2)
-#         with self.subTest():
-#             self.assertEqual(len(eval_list), 1)
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
+    def test_get_genome_1(self):
+        """Verify no data from ticket is added to genome."""
+        self.tkt1.data_ticket = set([""])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.id, "Trixie")
+        with self.subTest():
+            self.assertEqual(gnm.name, "Trixie_Draft")
+        with self.subTest():
+            self.assertEqual(gnm.type, "add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "")
+        with self.subTest():
+            self.assertEqual(gnm.subcluster, "")
+        with self.subTest():
+            self.assertEqual(gnm.cluster_subcluster, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_status, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_author, -1)
+        with self.subTest():
+            self.assertEqual(gnm.retrieve_record, -1)
+        with self.subTest():
+            self.assertEqual(gnm.accession, "")
 
+    def test_get_genome_2(self):
+        """Verify host_genus data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["host_genus"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "")
 
+    def test_get_genome_3(self):
+        """Verify cluster data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["cluster"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "A")
+        with self.subTest():
+            self.assertEqual(gnm.cluster_subcluster, "A")
 
+    def test_get_genome_4(self):
+        """Verify subcluster data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["subcluster"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.subcluster, "A2")
+        with self.subTest():
+            self.assertEqual(gnm.cluster_subcluster, "A2")
+
+    def test_get_genome_5(self):
+        """Verify annotation_status data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["annotation_status"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_status, "final")
+
+    def test_get_genome_6(self):
+        """Verify annotation_author data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["annotation_author"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.annotation_author, 1)
+
+    def test_get_genome_7(self):
+        """Verify retrieve_record data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["retrieve_record"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.retrieve_record, 1)
+
+    def test_get_genome_8(self):
+        """Verify accession data from ticket is added to genome."""
+        self.tkt1.data_ticket = set(["accession"])
+        gnm = tickets.get_genome(self.tkt1, gnm_type="add")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "")
+        with self.subTest():
+            self.assertEqual(gnm.accession, "ABC123")
 
 if __name__ == '__main__':
     unittest.main()

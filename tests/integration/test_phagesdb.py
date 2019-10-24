@@ -407,5 +407,23 @@ class TestPhagesDBFunctions2(unittest.TestCase):
 
 
 
+    def test_get_genome_1(self):
+        """Check that a genome is successfully retrieved."""
+        gnm = phagesdb.get_genome("Trixie", gnm_type="phagesdb")
+        with self.subTest():
+            self.assertEqual(gnm.id, "Trixie")
+        with self.subTest():
+            self.assertEqual(gnm.host_genus, "Mycobacterium")
+        with self.subTest():
+            self.assertEqual(gnm.cluster, "A")
+        with self.subTest():
+            self.assertEqual(gnm.type, "phagesdb")
+
+    def test_get_genome_2(self):
+        """Check that a genome is not retrieved."""
+        gnm = phagesdb.get_genome("invalid", gnm_type="phagesdb")
+        self.assertIsNone(gnm)
+
+
 if __name__ == '__main__':
     unittest.main()

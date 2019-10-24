@@ -5,6 +5,7 @@ from pdm_utils.constants import constants
 import os
 import csv
 import getpass
+from pathlib import Path
 
 
 def find_expression(expression, list_of_items):
@@ -797,18 +798,21 @@ def get_input(prompt=""):
     return input(prompt)
 
 
-def identify_files(path_to_folder):
+def identify_files(path_to_folder, ignore_set=set()):
     """Create a list of filenames from an indicated directory.
 
     :param path_to_folder: A valid directory path.
-    :type path_to_folder: str
+    :type path_to_folder: Path
+    :param ignore_set:
+        A set of strings representing filenames to ignore.
+    :type ignore_set: set
     :returns: List of valid files in the directory.
     :rtype: list
     """
     files_in_folder = []
-    for item in os.listdir(path_to_folder):
-        item_path = os.path.join(path_to_folder, item)
-        if os.path.isfile(item_path):
+    for item in path_to_folder.iterdir():
+        item_path = Path(path_to_folder, item)
+        if (item_path.is_file() and item.name not in ignore_set):
             files_in_folder.append(item)
     return files_in_folder
 
@@ -869,6 +873,60 @@ def verify_path(filepath, kind=None):
         return False
 
 
+
+def verify_path2(path, kind=None, expect=True):
+    """Confirm validity of path argument.
+
+    :param path: path
+    :type path: Path object
+    """
+    if kind == "file":
+        exists = path.is_file()
+        if (exists and not expect):
+            result = False
+            msg = f"The file {path} already exists."
+        elif (not exists and expect):
+            result = False
+            msg = f"The file {path} does not exist."
+        else:
+            result = True
+            msg = None
+    elif kind == "dir":
+        exists = path.is_dir()
+        if (exists and not expect):
+            result = False
+            msg = f"The directory {path} already exists."
+        elif (not exists and expect):
+            result = False
+            msg = f"The directory {path} does not exist."
+        else:
+            result = True
+            msg = None
+    elif kind == None:
+        exists = path.exists()
+        if (exists and not expect):
+            result = False
+            msg = f"The {path} already exists."
+        elif (not exists and expect):
+            result = False
+            msg = f"The {path} does not exist."
+        else:
+            result = True
+            msg = None
+    else:
+        result = False
+        msg = (f"{kind} is not a valid kind (None, dir, file) "
+              "for this function.")
+
+    return result, msg
+
+
+
+
+
+
+
+
 def make_new_dir(output_dir, new_dir, attempt=1):
     """Make a new directory.
 
@@ -878,32 +936,33 @@ def make_new_dir(output_dir, new_dir, attempt=1):
 
     :param output_dir:
         Full path to the directory where the new directory will be created.
-    :type output_dir: str
+    :type output_dir: Path
     :param new_dir: Name of the new directory to be created.
-    :type new_dir: str
+    :type new_dir: Path
     :param attempt: Number of attempts to create the directory.
     :type attempt: int
     :returns:
-        If successful, the name of the created directory.
-        If unsuccessful, empty string "".
-    :rtype: str
+        If successful, the full path of the created directory.
+        If unsuccessful, None.
+    :rtype: Path, None
     """
     valid = False
     count = 0
     while (not valid and count < attempt):
         if count > 0:
-            new_dir_mod = new_dir + "_" + str(count)
+            new_dir_mod = new_dir.stem + "_" + str(count)
+            new_dir_mod = Path(new_dir_mod)
         else:
             new_dir_mod = new_dir
-        new_path = os.path.join(output_dir, new_dir_mod)
-        if not verify_path(new_path, "dir"):
+        new_path = Path(output_dir, new_dir_mod)
+        if not new_path.is_dir():
             valid = True
-            os.mkdir(new_path)
+            new_path.mkdir()
         count += 1
     if not valid:
-        return ""
+        return None
     else:
-        return new_dir_mod
+        return new_path
 
 
 def parse_flag_file(flag_file):

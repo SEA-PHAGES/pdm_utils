@@ -54,32 +54,6 @@ class Bundle:
 
 
 
-
-
-    # TODO implement.
-    # TODO unit test.
-    def create_sql_statements(self):
-        """Create list of MySQL statements based on the ticket type."""
-
-        if self.ticket.type == "replace" or self.ticket.type == "add":
-            gnm = self.genome_dict["add"]
-            if self.ticket.type == "replace":
-                statement = phamerator.create_delete("phage", "PhageID", gnm.id)
-                self.sql_queries.append(statement)
-            statement = phamerator.create_phage_table_insert(gnm)
-            self.sql_queries.append(statement)
-            for cds_ftr in gnm.cds_features:
-                statement = create_gene_table_insert(cds_ftr)
-                self.sql_queries.append(statement)
-
-
-
-
-
-
-
-
-
     # Evaluations.
 
     def check_ticket(self, eval_id=None):
@@ -115,19 +89,19 @@ class Bundle:
         """
 
         if key in self.genome_dict.keys():
-            result = "The %s genome is present." % key
+            result = f"The {key} genome is present."
             if expect:
                 status = "correct"
             else:
                 status = "error"
         else:
-            result = "The %s genome is not present." % key
+            result = f"The {key} genome is not present."
             if not expect:
                 status = "correct"
             else:
                 status = "error"
 
-        definition = "Check if the %s genome is present." % key
+        definition = f"Check if the {key} genome is present."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -147,19 +121,19 @@ class Bundle:
         """
 
         if key in self.genome_pair_dict.keys():
-            result = "The %s genome_pair is present." % key
+            result = f"The {key} genome_pair is present."
             if expect:
                 status = "correct"
             else:
                 status = "error"
         else:
-            result = "The %s genome_pair is not present." % key
+            result = f"The {key} genome_pair is not present."
             if not expect:
                 status = "correct"
             else:
                 status = "error"
 
-        definition = "Check if the %s genome_pair is present." % key
+        definition = f"Check if the {key} genome_pair is present."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -171,9 +145,10 @@ class Bundle:
             if evl.status == "error":
                 self._errors += 1
 
-        for evl in self.ticket.evaluations:
-            if evl.status == "error":
-                self._errors += 1
+        if self.ticket is not None:
+            for evl in self.ticket.evaluations:
+                if evl.status == "error":
+                    self._errors += 1
 
         for key in self.genome_dict.keys():
             gnm = self.genome_dict[key]

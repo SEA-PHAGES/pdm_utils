@@ -2,30 +2,104 @@
 into PhameratorDB."""
 
 
-import time
-from datetime import datetime
-import csv
-import os
-import sys
 import argparse
+import csv
+from datetime import datetime
+import logging
+import os
 import pathlib
+import shutil
+import sys
+import time
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import bundle
+from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
+from pdm_utils.functions import run_modes
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
+# Add a logger named after this module. Then add a null handler, which
+# suppresses any output statements. This allows other modules that call this
+# module to define the handler and output formats. If this module is the
+# main module being called, the top level main function instantiates
+# the root logger and configuration.
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
-def run_import(unparsed_args_list):
+
+
+
+def main(unparsed_args_list):
+    """Runs the complete import pipeline.
+
+    This is the only function of the pipeline that requires user input.
+    All other functions can be implemented from other scripts."""
+
+    args = parse_args(unparsed_args_list)
+
+    # Validate folders and files.
+    args.input_folder = set_path(args.input_folder, kind="dir", expect=True)
+    args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
+    args.import_table = set_path(args.import_table, kind="file", expect=True)
+    args.log_file = pathlib.Path(args.output_folder, args.log_file)
+    args.log_file = set_path(args.log_file, kind="file", expect=False)
+
+    # Set up root logger.
+    logging.basicConfig(filename=args.log_file, filemode="w",
+                        level=logging.DEBUG)
+    logger.info("Folder and file arguments verified.")
+
+    # Get connection to database.
+    sql_handle = setup_sql_handle(args.database)
+    logger.info("Connected to database.")
+
+    # If everything checks out, pass on args for data input/output:
+    data_io(sql_handle=sql_handle,
+            genome_folder=args.input_folder,
+            import_table_file=args.import_table,
+            genome_id_field=args.genome_id_field, prod_run=args.prod_run,
+            description_field=args.description_field, run_mode=args.run_mode,
+            output_folder=args.output_folder)
+    # input("paused before completion")
+    logger.info("Import complete.")
+
+
+def setup_sql_handle(database):
+    """Connect to a MySQL database."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.open_connection()
+    if (not sql_handle.credential_status or not sql_handle._database_status):
+        print("No connection to the selected database.")
+        sys.exit(1)
+    else:
+        return sql_handle
+
+
+def set_path(path, kind=None, expect=True):
+    """Confirm validity of path argument."""
+    path = path.expanduser()
+    path = path.resolve()
+    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
+    if not result:
+        print(msg)
+        sys.exit(1)
+    else:
+        return path
+
+
+def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
     IMPORT_HELP = ("Pipeline to import new genome data into "
                    "a Phamerator MySQL database.")
     DATABASE_HELP = "Name of the MySQL database to import the genomes."
     INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
+    OUTPUT_FOLDER_HELP = ("Path to the folder containing to store results.")
     IMPORT_GENOME_FOLDER_HELP = """
         Path to the folder containing
         GenBank-formatted flat files
@@ -60,173 +134,220 @@ def run_import(unparsed_args_list):
     DESCRIPTION_FIELD_HELP = \
         ("Indicates the field in CDS features that is expected "
          "to store the gene description.")
+    LOG_FILE_HELP = \
+        ("Indicates the name of the file to log the import results. "
+         "This will be created in the output folder.")
+
     parser = argparse.ArgumentParser(description=IMPORT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("input_folder", type=os.path.abspath,
+    parser.add_argument("input_folder", type=pathlib.Path,
         help=INPUT_FOLDER_HELP)
-    parser.add_argument("import_table", type=os.path.abspath,
+    parser.add_argument("import_table", type=pathlib.Path,
         help=IMPORT_TABLE_HELP)
-    parser.add_argument("-gf", "--genome_id_field", type=str,
+    parser.add_argument("-g", "--genome_id_field", type=str.lower,
         default="organism_name", choices=["organism_name", "filename"],
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-p", "--prod_run", action="store_true", default=False,
         help=PROD_RUN_HELP)
-    parser.add_argument("-rm", "--run_mode", type=str.lower,
-        choices=list(constants.RUN_MODES.keys()), default="phagesdb",
+    parser.add_argument("-r", "--run_mode", type=str.lower,
+        choices=list(run_modes.RUN_MODES.keys()), default="phagesdb",
         help=RUN_MODE_HELP)
-    parser.add_argument("-df", "--description_field", default="product",
-        choices=list(constants.DESCRIPTION_FIELD_SET),
+    parser.add_argument("-d", "--description_field", type=str.lower,
+        default="product", choices=list(constants.DESCRIPTION_FIELD_SET),
         help=DESCRIPTION_FIELD_HELP)
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+        default=pathlib.Path("/tmp/"), help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-l", "--log_file", type=str,
+        default="import.log",
+        help=LOG_FILE_HELP)
+
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
-
-    # Validate args.
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = args.database
-    sql_handle.open_connection()
-    if (not sql_handle.credential_status or not sql_handle._database_status):
-        print("No connection to the selected database.")
-        sys.exit(1)
-
-
-    args.input_folder = pathlib.Path(args.input_folder)
-    args.input_folder.expanduser()
-    args.input_folder.resolve()
-    if not args.input_folder.is_dir():
-        print("Invalid input folder.")
-        sys.exit(1)
-
-    args.import_table = pathlib.Path(args.import_table)
-    args.import_table.expanduser()
-    args.import_table.resolve()
-    if not args.import_table.is_file():
-        print("Invalid import table file.")
-        sys.exit(1)
-
-    # TODO run_mode needs to be improved.
-    # It should be able to receive a filename that can be parsed
-    # into an eval_flag dictionary.
-
-    # If everything checks out, pass args to the main import pipeline:
-    input_output(sql_handle=sql_handle,
-        genome_folder=args.input_folder, import_table_file=args.import_table,
-        genome_id_field=args.genome_id_field, prod_run=args.prod_run,
-        description_field=args.description_field, run_mode=args.run_mode)
+    return args
 
 
 
-
-# TODO unittest.
-def input_output(sql_handle=None, genome_folder="", import_table_file="",
-    genome_id_field="", prod_run=False, description_field="", run_mode=""):
+def data_io(sql_handle=None, genome_folder=pathlib.Path(),
+    import_table_file=pathlib.Path(), genome_id_field="", prod_run=False,
+    description_field="", run_mode="", output_folder=pathlib.Path()):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
+
+    logger.info("Setting up environment.")
     date = time.strftime("%Y%m%d")
-    failed_folder = "%s_failed_upload_files" % date
-    success_folder = "%s_successful_upload_files" % date
-    new_failed_folder = basic.make_new_dir(genome_folder,failed_folder)
-    if new_failed_folder != failed_folder:
-        print("\nUnable to create failed_folder")
-        sys.exit(1)
-    new_success_folder = basic.make_new_dir(genome_folder,success_folder)
-    if new_success_folder != success_folder:
-        print("\nUnable to create success_folder")
+    results_folder = f"{date}_results"
+    results_folder = pathlib.Path(results_folder)
+    results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
+    if results_path is None:
+        logger.info("Unable to create output_folder.")
         sys.exit(1)
 
-    # Identify valid files in folder for evaluation.
-    files_in_folder = basic.identify_files(genome_folder)
+    # Get the files to process.
+    files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
+    if len(files_to_process) == 0:
+        logger.info("There are no flat files to evaluate.")
+        sys.exit(1)
 
-    try:
-        eval_flags = constants.RUN_MODES[run_mode.lower()]
-    except:
-        run_mode = basic.expand_path(run_mode)
-        eval_flags = basic.parse_flag_file(run_mode)
-        symm_set = eval_flags.keys() ^ constants.RUN_MODE_BASE.keys()
-        if len(symm_set) > 0:
-            print("Error with the eval_flag_file")
-            sys.exit(1)
+    # Get the tickets.
+    eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
+    run_mode_eval_dict = {"run_mode": run_mode, "eval_flag_dict": eval_flags}
 
-    ticket_dict = prepare_tickets(import_table_file, eval_flags,
-                                  description_field)
+    required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
+    optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+    keywords = set(["retrieve", "retain", "none"])
+    ticket_dict = prepare_tickets(
+                    import_table_file, run_mode_eval_dict, description_field,
+                    required_keys=required_keys,
+                    optional_keys=optional_keys,
+                    keywords=keywords)
 
-    # Proceed if there is at least one file to process.
-    if len(files_in_folder) > 0:
+    if ticket_dict is None:
+        logger.info("Invalid import table. Unable to evaluate flat files.")
+        sys.exit(1)
 
-        # TODO not sure how many elements (or what types) are returned.
-        # TODO check order of parameters.
-        results = main(ticket_dict, files_in_folder, sql_handle,
-                       prod_run, genome_id_field, filename_flag)
+    # Evaluate files and tickets.
+    results_tuple = process_files_and_tickets(ticket_dict, files_to_process,
+                        sql_handle, prod_run, genome_id_field)
 
-    # Now that all flat files and tickets have been evaluated,
-    # provide summary of results...
+    success_ticket_list = results_tuple[0]
+    failed_ticket_list = results_tuple[1]
+    success_filename_list = results_tuple[2]
+    failed_filename_list = results_tuple[3]
+    evaluation_dict = results_tuple[4]
+
+    # Output data.
+    logger.info("Logging successful tickets and files.")
+    headers = list(required_keys) + list(optional_keys)
+    if (len(success_ticket_list) > 0 or len(success_filename_list) > 0):
+        success_path = pathlib.Path(results_path, "success")
+        success_path.mkdir()
+        if len(success_ticket_list) > 0:
+            success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
+            tickets.export_ticket_data(success_ticket_list, success_tkt_file, headers)
+        if len(success_filename_list) > 0:
+            success_genomes_path = pathlib.Path(success_path, "genomes")
+            success_genomes_path.mkdir()
+            for file in success_filename_list:
+                new_file = pathlib.Path(success_genomes_path, file.name)
+                shutil.move(str(file), str(new_file))
+
+    logger.info("Logging failed tickets and files.")
+    if (len(failed_ticket_list) > 0 or len(failed_filename_list) > 0):
+        failed_path = pathlib.Path(results_path, "fail")
+        failed_path.mkdir()
+        if len(failed_ticket_list) > 0:
+            failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
+            tickets.export_ticket_data(failed_ticket_list, failed_tkt_file, headers)
+        if len(failed_filename_list) > 0:
+            failed_genomes_path = pathlib.Path(failed_path, "genomes")
+            failed_genomes_path.mkdir()
+            for file in failed_filename_list:
+                new_file = pathlib.Path(failed_genomes_path, file.name)
+                shutil.move(str(file), str(new_file))
+
+    logger.info("Logging evaluations.")
+    log_evaluations(evaluation_dict)
+
+def log_evaluations(dict_of_dict_of_lists):
+    """Export evaluations to log.
+
+    Structure of the evaluation dictionary:
+        {1: {"bundle": [eval_object1, ...],
+             "ticket": [eval_object1, ...],
+             "genome": [eval_object1, ...]},
+         2: {...}}
+    """
+    for key1 in dict_of_dict_of_lists:
+        msg1 = f"Evaluations for bundle {key1}:"
+        logger.info(msg1)
+        # print(msg1)
+        dict_of_lists = dict_of_dict_of_lists[key1]
+        for key2 in dict_of_lists:
+            msg2 = f"Evaluations for {key2}:"
+            logger.info(msg2)
+            # print(msg2)
+            evl_list = dict_of_lists[key2]
+            for evl in evl_list:
+                msg3 = (f"Evaluation: {evl.id}. "
+                        f"Status: {evl.status}. "
+                        f"Definition: {evl.definition}. "
+                        f"Result: {evl.result}.")
+                logger.info(msg3)
+                # print(msg3)
 
 
 
-# TODO unittest.
-def prepare_tickets(import_table_file="", eval_flags={}, description_field=""):
+
+def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
+        description_field="", required_keys=set(), optional_keys=set(),
+        keywords=set()):
     """Prepare dictionary of pdm_utils Tickets."""
-    # 1. parse ticket data from table.
-    # 2. set case for all fields.
-    # 3. confirm all tickets have a valid type.
-    # 6. check for duplicated values.
-    # 7. confirm correct fields are populated based on ticket type.
-    ticket_list = []
-    tkt_errors = 0
-    file_data = tickets.retrieve_ticket_data(import_table_file)
-    for dict in file_data:
-        tkt = tickets.parse_import_ticket_data(data_dict=dict)
-        if tkt is not None:
-            ticket_list.append(tkt)
-        else:
-            tkt_errors += 1
-    # Identify duplicated ticket values.
-    tkt_id_dupe_set, phage_id_dupe_set, accession_dupe_set = \
-        tickets.identify_duplicates(ticket_list, null_set=set(["none"]))
+    # 1. Parse ticket data from table.
+    # 2. Set case for certain fields and set default values for missing fields.
+    # 3. Add the eval_flag dictionary and description_field to each ticket
+    #    provided from command line arguments if they are not provided in the
+    #    import table.
+    # 4. Check for duplicated phage_ids and ticket ids.
+    # 5. For each ticket, evaluate the tickets to ensure they are
+    #    structured properly. At this point, the quality of the
+    #    ticket data is not evaluated, just that the ticket contains
+    #    fields populated or empty as expected.
+    # 6. Create a dictionary of tickets based on the phage_id.
 
-    # For each ticket:
-    # 1. Add the eval_flag dictionary and description_field to each ticket.
-    #    Copy eval_flags dictionary. Each ticket may alter some of the flags
-    #    based on ticket type, so copy dictionary to instantiate a
-    #    distinct dictionary.
-    # 2. Evaluate the tickets to ensure they are structured properly.
-    #    At this point, the quality of the ticket data is not evaluated,
-    #    just that the ticket contains fields populated or empty as expected.
-    # 3. Create a dictionary of tickets based on the phage_id.
-    # 4. Check for ticket errors.
+    list_of_tkts = []
+    tkt_errors = 0
+    logger.info("Retrieving ticket data.")
+    list_of_data_dicts = tickets.retrieve_ticket_data(import_table_file)
+
+    logger.info("Constructing tickets.")
+    list_of_tkts = tickets.construct_tickets(list_of_data_dicts, run_mode_eval_dict,
+                    description_field, required_keys, optional_keys,
+                    keywords)
+    if len(list_of_data_dicts) != len(list_of_tkts):
+        tkt_errors += 1
+
+    logger.info("Identifying duplicate tickets.")
+    tkt_id_dupes, phage_id_dupes = tickets.identify_duplicates(list_of_tkts)
+
     ticket_dict = {}
     x = 0
-    while x < len(ticket_list):
-        tkt = ticket_list[x]
-        tkt.description_field = description_field
-        tkt.eval_flags = eval_flags.copy()
+    while x < len(list_of_tkts):
+        tkt = list_of_tkts[x]
+        tkt_summary = (f"ID: {tkt.id}. "
+                       f"Type: {tkt.type}. "
+                       f"PhageID: {tkt.phage_id}.")
+        logger.info(f"Checking ticket structure for: {tkt_summary}.")
         check_ticket(
             tkt,
             type_set=constants.IMPORT_TICKET_TYPE_SET,
             description_field_set=constants.DESCRIPTION_FIELD_SET,
             null_set=constants.EMPTY_SET,
-            run_mode_set=constants.RUN_MODES.keys(),
-            id_dupe_set=tkt_id_dupe_set,
-            phage_id_dupe_set=phage_id_dupe_set,
-            accession_dupe_set=accession_dupe_set)
+            run_mode_set=run_modes.RUN_MODES.keys(),
+            id_dupe_set=tkt_id_dupes,
+            phage_id_dupe_set=phage_id_dupes)
         for evl in tkt.evaluations:
+            evl_summary = (f"Evaluation: {evl.id}. "
+                           f"Status: {evl.status}. "
+                           f"Definition: {evl.definition}. "
+                           f"Result {evl.result}.")
             if evl.status == "error":
                 tkt_errors += 1
+                logger.error(evl_summary)
+            else:
+                logger.info(evl_summary)
         ticket_dict[tkt.phage_id] = tkt
         x += 1
 
-    # TODO handle ticket errors better.
     if tkt_errors > 0:
         print("Error generating tickets from import table.")
         return None
     else:
         return ticket_dict
 
-
-# TODO unittest.
-def main(ticket_dict, files_in_folder, sql_handle=None, prod_run=False,
-         genome_id_field=""):
+def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
+                              prod_run=False, genome_id_field=""):
     """Process GenBank-formatted flat files.
 
     :param ticket_dict:
@@ -255,23 +376,23 @@ def main(ticket_dict, files_in_folder, sql_handle=None, prod_run=False,
     success_filename_list = []
     failed_filename_list = []
     evaluation_dict = {}
-    query_dict = {}
-
 
     # Retrieve data from phagesdb to create sets of
     # valid host genera, clusters, and subclusters.
+    # Cluster "UNK" may or may not already be present, but it is valid.
     phagesdb_host_genera_set = phagesdb.create_host_genus_set()
-    phagesdb_cluster_set, \
-    phagesdb_subcluster_set = phagesdb.create_cluster_subcluster_sets()
+    results_tuple = phagesdb.create_cluster_subcluster_sets()
+    phagesdb_cluster_set = results_tuple[0]
+    phagesdb_subcluster_set = results_tuple[1]
     phagesdb_cluster_set.add("UNK")
-    # TODO add special cluster and subcluster null values to sets
-
 
     # To minimize memory usage, each flat_file is evaluated one by one.
     bundle_count = 1
     for filename in files_in_folder:
-
-        bndl = prepare_bundle(filename, ticket_dict, sql_handle,
+        gnm_type = "flat_file"
+        replace_gnm_pair_key = gnm_type + "_phamerator"
+        bndl = prepare_bundle(filename=str(filename), ticket_dict=ticket_dict,
+                              sql_handle=sql_handle,
                               genome_id_field=genome_id_field, id=bundle_count)
 
         # Create sets of unique values for different data fields.
@@ -281,106 +402,54 @@ def main(ticket_dict, files_in_folder, sql_handle=None, prod_run=False,
         phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
         phamerator_seq_set = phamerator.create_seq_set(sql_handle)
         phamerator_accession_set = phamerator.create_accession_set(sql_handle)
-
-
-
-
-
-        # TODO below create sub-function for the checks? There are a lot of
-        # parameters for the genome checks that the others don't need.
-        check_bundle(bndl)
-        if (bndl.tkt is not None and bndl.tkt.type == "replace"):
-            genome_pair = bndl.genome_pair_dict["flat_file_phamerator"]
-            compare_genomes(genome_pair,
-                check_replace=bndl.tkt.eval_flags["check_replace"])
-
-        if "flat_file" in bndl.genome_dict.keys():
-            ff_gnm = bndl.genome_dict["flat_file"]
-            check_genome(
-                ff_gnm,
-                bndl.tkt,
-                null_set=null_set,
-                accession_set=phamerator_accession_set,
-                phage_id_set=phamerator_phage_id_set,
-                seq_set=phamerator_seq_set,
-                host_genera_set=phagesdb_host_genera_set,
-                cluster_set=phagesdb_cluster_set,
-                subcluster_set=phagesdb_subcluster_set)
-
-            # Check CDS features.
-            x = 0
-            while x < len(ff_gnm.cds_features):
-                check_cds(ff_gnm.cds_features[x],
-                    check_locus_tag=tkt.eval_flags["check_locus_tag"],
-                    check_gene=tkt.eval_flags["check_gene"],
-                    check_description=tkt.eval_flags["check_description"],
-                    check_description_field=tkt.eval_flags["check_description_field"])
-                x += 1
-
-            # Check tRNA features.
-            if tkt.eval_flags["check_trna"]:
-                y = 0
-                while y < len(ff_gnm.trna_features):
-                    check_trna(ff_gnm.trna_features[y])
-                    y += 1
-
-            # Check Source features.
-            z = 0
-            while z < len(ff_gnm.source_features):
-                check_source(ff_gnm.source_features[z],
-                    check_id_typo=tkt.eval_flags["check_id_typo"],
-                    check_host_typo=tkt.eval_flags["check_host_typo"],)
-                z += 1
-
-
-        # Now that all evaluations have been performed,
-        # determine if there are any errors.
-        # TODO confirm that check_for_errors() is implemented.
-        bndl.check_for_errors()
-        ticket_data_dict =  tickets.parse_import_ticket_data(
-                            tkt=bndl.ticket,
-                            direction="ticket_to_dict")
-        # TODO implement the get_evaluations() method.
+        run_checks(bndl,
+                  null_set=set(),
+                  accession_set=phamerator_accession_set,
+                  phage_id_set=phamerator_phage_id_set,
+                  seq_set=phamerator_seq_set,
+                  host_genus_set=phagesdb_host_genera_set,
+                  cluster_set=phagesdb_cluster_set,
+                  subcluster_set=phagesdb_subcluster_set,
+                  gnm_key=gnm_type,
+                  gnm_pair_key=replace_gnm_pair_key)
         evaluation_dict[bndl.id] = bndl.get_evaluations()
-        if errors == 0:
-            # Now import the data into the database if there are no errors and
-            # if it is not a test run.
-            if prod_run:
-                bndl.create_sql_statements()
-                result = sql_handle.execute_transaction(bndl.sql_queries)
-                query_dict[bndl.ticket.phage_id] = bndl.sql_queries
-                if result == 1:
-                    # Log the error, if there was an issue with
-                    # executing the statements.
-                    pass
-            else:
-                pass
-            success_ticket_list.append(ticket_data_dict)
-            success_filename_list.append(bndl.genome_dict["flat_file"].filename)
+        result = import_into_db(bndl, sql_handle=sql_handle,
+                                gnm_key=gnm_type, prod_run=prod_run)
+        if result:
+            success_ticket_list.append(bndl.ticket.data_dict)
+            success_filename_list.append(filename)
         else:
-            failed_ticket_list.append(ticket_data_dict)
-            failed_filename_list.append(bndl.genome_dict["flat_file"].filename)
+            if bndl.ticket is not None:
+                failed_ticket_list.append(bndl.ticket.data_dict)
+            failed_filename_list.append(filename)
         bundle_count += 1
-
 
     # Tickets were popped off the ticket dictionary as they were matched
     # to flat files. If there are any tickets left, errors need to be counted.
-    key_list = list(ticket_dict.keys())
-    for key in key_list:
-        unmatched_ticket = ticket_dict.pop(key)
-        bndl = bundle.Bundle()
-        bndl.id = bundle_count
-        bndl.ticket = unmatched_ticket
-        check_bundle()
-        evaluation_dict[bndl.id] = bndl.get_evaluations()
-        ticket_data_dict =  tickets.parse_import_ticket_data(
-                            unmatched_ticket,
-                            direction="ticket_to_dict")
-        failed_ticket_list.append(ticket_data_dict)
-        bundle_count += 1
+    if len(ticket_dict.keys()) > 0:
+        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
+        phamerator_seq_set = phamerator.create_seq_set(sql_handle)
+        phamerator_accession_set = phamerator.create_accession_set(sql_handle)
+        key_list = list(ticket_dict.keys())
+        for key in key_list:
+            bndl = bundle.Bundle()
+            bndl.ticket = ticket_dict.pop(key)
+            bndl.id = bundle_count
+            run_checks(bndl,
+                      null_set=set(),
+                      accession_set=phamerator_accession_set,
+                      phage_id_set=phamerator_phage_id_set,
+                      seq_set=phamerator_seq_set,
+                      host_genus_set=phagesdb_host_genera_set,
+                      cluster_set=phagesdb_cluster_set,
+                      subcluster_set=phagesdb_subcluster_set,
+                      gnm_key=None, gnm_pair_key=None)
+            evaluation_dict[bndl.id] = bndl.get_evaluations()
+            failed_ticket_list.append(bndl.ticket.data_dict)
+            bundle_count += 1
 
     return (success_ticket_list, failed_ticket_list, success_filename_list,
-            failed_filename_list, evaluation_dict, query_dict)
+            failed_filename_list, evaluation_dict)
 
 
 def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
@@ -424,28 +493,40 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
             # With the flat file parsed and matched
             # to a ticket, use the ticket to populate specific
             # genome-level fields such as host, cluster, subcluster, etc.
-            tickets.copy_ticket_to_genome(bndl)
-            flat_files.copy_data(bndl, "add", "flat_file", flag="ticket")
+            if len(bndl.ticket.data_ticket) > 0:
+                tkt_gnm = tickets.get_genome(bndl.ticket, gnm_type="ticket")
+                bndl.genome_dict[tkt_gnm.type] = tkt_gnm
+
+                # Copy ticket data to flat file. Since the ticket data has been
+                # added to a genome object using genome methods, the data
+                # can be directly passed from one genome object to another.
+                for attr in bndl.ticket.data_ticket:
+                    attr_value = getattr(tkt_gnm, attr)
+                    setattr(ff_gnm, attr, attr_value)
 
             # Check to see if there is any missing data for each genome, and
             # retrieve it from phagesdb.
             # If the ticket genome has fields set to 'retrieve', data is
             # retrieved from PhagesDB and populates a new Genome object.
-            ff_gnm.set_value_flag("retrieve")
-            if ff_gnm._value_flag:
-                phagesdb.copy_data(
-                    bndl, "phagesdb", "flat_file", flag="retrieve")
+            if len(bndl.ticket.data_retrieve) > 0:
+                pdb_gnm = phagesdb.get_genome(bndl.ticket.phage_id,
+                                              gnm_type="phagesdb")
+                bndl.genome_dict[pdb_gnm.type] = pdb_gnm
+
+                for attr in bndl.ticket.data_retrieve:
+                    attr_value = getattr(pdb_gnm, attr)
+                    setattr(ff_gnm, attr, attr_value)
 
             # If the ticket type is 'replace', retrieve data from phamerator.
             # If any attributes in flat_file are set to 'retain', copy data
             # from the phamerator genome.
             if bndl.ticket.type == "replace":
+
                 if sql_handle is None:
-                    print("Ticket %s is a 'replace' ticket but no"
-                          " details about how to connect to the"
-                          " Phamerator database have been provided."
-                          " Unable to retrieve data."
-                          % bndl.ticket.id)
+                    print(f"Ticket {bndl.ticket.id} is a 'replace' ticket but no "
+                          "details about how to connect to the "
+                          "Phamerator database have been provided. "
+                          "Unable to retrieve data.")
                 else:
                     query = "SELECT * FROM phage"
                     pmr_genomes =  phamerator.parse_genome_data(
@@ -456,15 +537,60 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                     if len(pmr_genomes) == 1:
                         pmr_gnm = pmr_genomes[0]
                         bndl.genome_dict[pmr_gnm.type] = pmr_gnm
-                        phamerator.copy_data(
-                            bndl, "phamerator", "flat_file")
+
+                        # The ticket may indicate some data should be retained.
+                        for attr in bndl.ticket.data_retain:
+                            attr_value = getattr(pmr_gnm, attr)
+                            setattr(ff_gnm, attr, attr_value)
+
+                        # Pair the genomes for comparison evaluations.
+                        gnm_pair = genomepair.GenomePair()
+                        bndl.set_genome_pair(gnm_pair, ff_gnm.type, pmr_gnm.type)
                     else:
-                        print("There is no %s genome in the Phamerator"
-                              " database. Unable to retrieve data."
-                              % ff_gnm.id)
+                        print(f"There is no {ff_gnm.id} genome in the Phamerator"
+                              " database. Unable to retrieve data.")
     return bndl
 
 
+def run_checks(bndl, null_set=set(), accession_set=set(), phage_id_set=set(),
+               seq_set=set(), host_genus_set=set(), cluster_set=set(),
+               subcluster_set=set(), gnm_key=None, gnm_pair_key=None):
+    """Run checks on the different elements of a bundle object."""
+    check_bundle(bndl)
+    tkt = bndl.ticket
+    if tkt is not None:
+        eval_flags = tkt.eval_flags
+        if (tkt.type == "replace" and \
+                gnm_pair_key in bndl.genome_pair_dict.keys()):
+            genome_pair = bndl.genome_pair_dict[gnm_pair_key]
+            compare_genomes(genome_pair, eval_flags)
+
+        if gnm_key in bndl.genome_dict.keys():
+            gnm = bndl.genome_dict[gnm_key]
+            check_genome(gnm, tkt.type, eval_flags, null_set=null_set,
+                         accession_set=accession_set, phage_id_set=phage_id_set,
+                         seq_set=seq_set, host_genus_set=host_genus_set,
+                         cluster_set=cluster_set, subcluster_set=subcluster_set)
+
+            # Check CDS features.
+            x = 0
+            while x < len(gnm.cds_features):
+                check_cds(gnm.cds_features[x], eval_flags)
+                x += 1
+
+            # Check tRNA features.
+            if eval_flags["check_trna"]:
+                y = 0
+                while y < len(gnm.trna_features):
+                    check_trna(gnm.trna_features[y], eval_flags)
+                    y += 1
+
+            # Check Source features.
+            z = 0
+            while z < len(gnm.source_features):
+                check_source(gnm.source_features[z], eval_flags)
+                z += 1
+    bndl.check_for_errors()
 
 
 def check_bundle(bndl):
@@ -481,35 +607,27 @@ def check_bundle(bndl):
     bndl.check_ticket(eval_id="BNDL_001")
     if bndl.ticket is not None:
         tkt = bndl.ticket
-        bndl.check_genome_dict("add", eval_id="BNDL_002")
+        if len(tkt.data_ticket) > 0:
+            bndl.check_genome_dict("ticket", eval_id="BNDL_002")
+
         bndl.check_genome_dict("flat_file", eval_id="BNDL_003")
-        bndl.check_genome_pair_dict("flat_file_add", eval_id="BNDL_004")
 
         # There may or may not be data retrieved from PhagesDB.
-        tkt.set_value_flag("retrieve")
-        if tkt._value_flag:
-            bndl.check_genome_dict("phagesdb", eval_id="BNDL_005")
-            bndl.check_genome_pair_dict("flat_file_phagesdb",
-                                        eval_id="BNDL_006")
+        if len(tkt.data_retrieve) > 0:
+            bndl.check_genome_dict("phagesdb", eval_id="BNDL_004")
 
         if tkt.type == "replace":
-            bndl.check_genome_dict("phamerator", eval_id="BNDL_007")
-
-            # There may or may not be a genome_pair to retain some data.
-            tkt.set_value_flag("retain")
-            if tkt._value_flag:
-                bndl.check_genome_pair_dict("add_phamerator",
-                                            eval_id="BNDL_008")
+            bndl.check_genome_dict("phamerator", eval_id="BNDL_005")
 
             # There should be a genome_pair between the current phamerator
             # genome and the new flat_file genome.
             bndl.check_genome_pair_dict("flat_file_phamerator",
-                                        eval_id="BNDL_009")
+                                        eval_id="BNDL_006")
 
 
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
         null_set=set(), run_mode_set=set(), id_dupe_set=set(),
-        phage_id_dupe_set=set(), accession_dupe_set=set()):
+        phage_id_dupe_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket.
@@ -526,8 +644,6 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     :type id_dupe_set: set
     :param phage_id_dupe_set: Predetermined duplicate PhageIDs.
     :type phage_id_dupe_set: set
-    :param accession_dupe_set: Predetermined duplicate accessions.
-    :type accession_dupe_set: set
     """
     # This function simply evaluates whether there is data in the
     # appropriate ticket attributes given the type of ticket.
@@ -540,30 +656,23 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     # Check for duplicated values.
     tkt.check_duplicate_id(id_dupe_set, eval_id="TKT_001")
     tkt.check_duplicate_phage_id(phage_id_dupe_set, eval_id="TKT_002")
-    tkt.check_duplicate_accession(accession_dupe_set, eval_id="TKT_003")
 
     # Check these fields for specific values.
-    tkt.check_type(type_set, True, eval_id="TKT_004")
-    tkt.check_description_field(description_field_set, True, eval_id="TKT_005")
-    tkt.check_run_mode(run_mode_set, True, eval_id="TKT_006")
+    tkt.check_type(type_set, True, eval_id="TKT_003")
+    tkt.check_description_field(description_field_set, True, eval_id="TKT_004")
+    tkt.check_run_mode(run_mode_set, True, eval_id="TKT_005")
+    tkt.check_eval_flags(True, eval_id="TKT_006")
 
     # For these fields, simply check that they are not empty.
     tkt.check_phage_id(null_set, False, eval_id="TKT_007")
-    tkt.check_host_genus(null_set, False, eval_id="TKT_008")
-    tkt.check_cluster(null_set, False, eval_id="TKT_009")
-    tkt.check_annotation_status(null_set, False, eval_id="TKT_010")
-    tkt.check_annotation_author(null_set, False, eval_id="TKT_011")
-    tkt.check_retrieve_record(null_set, False, eval_id="TKT_012")
-
-    # No need to evaluate the Accession and Subcluster fields
-    # since they may or may not be populated.
 
     # Check if certain combinations of fields make sense.
-    tkt.check_compatible_type_and_annotation_status(eval_id="TKT_013")
+    tkt.check_compatible_type_and_annotation_status(eval_id="TKT_008")
+    tkt.check_compatible_type_and_data_retain(eval_id="TKT_009")
 
 
-def check_genome(gnm, tkt, null_set=set(), phage_id_set=set(),
-                 seq_set=set(), host_set=set(),
+def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
+                 seq_set=set(), host_genus_set=set(),
                  cluster_set=set(), subcluster_set=set(),
                  accession_set=set()):
     """Check a Genome object for errors.
@@ -588,7 +697,7 @@ def check_genome(gnm, tkt, null_set=set(), phage_id_set=set(),
     :type accession_set: set
     """
 
-    if tkt.type == "add":
+    if tkt_type == "add":
         gnm.check_id(phage_id_set | null_set, False, eval_id="GNM_001")
         gnm.check_name(phage_id_set | null_set, False, eval_id="GNM_002")
         gnm.check_sequence(seq_set | null_set, False, eval_id="GNM_003")
@@ -626,21 +735,21 @@ def check_genome(gnm, tkt, null_set=set(), phage_id_set=set(),
     gnm.check_subcluster_structure(eval_id="GNM_015")
     gnm.check_cluster_structure(eval_id="GNM_016")
     gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_017")
-    if tkt.eval_flags["check_seq"]:
+    if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,
                               eval_id="GNM_018")
     gnm.check_compatible_status_and_accession(eval_id="GNM_019")
     gnm.check_compatible_status_and_descriptions(eval_id="GNM_020")
-    if tkt.eval_flags["check_id_typo"]:
+    if eval_flags["check_id_typo"]:
         gnm.check_description_name(eval_id="GNM_021")
         gnm.check_source_name(eval_id="GNM_022")
         gnm.check_organism_name(eval_id="GNM_023")
-    if tkt.eval_flags["check_host_typo"]:
-        gnm.check_host_genus(host_set, True, eval_id="GNM_024")
+    if eval_flags["check_host_typo"]:
+        gnm.check_host_genus(host_genus_set, True, eval_id="GNM_024")
         gnm.check_description_host_genus(eval_id="GNM_025")
         gnm.check_source_host_genus(eval_id="GNM_026")
         gnm.check_organism_host_genus(eval_id="GNM_027")
-    if tkt.eval_flags["check_author"]:
+    if eval_flags["check_author"]:
         if gnm.annotation_author == 1:
             gnm.check_authors(check_set=constants.AUTHOR_SET,
                               eval_id="GNM_028")
@@ -651,9 +760,13 @@ def check_genome(gnm, tkt, null_set=set(), phage_id_set=set(),
                               eval_id="GNM_030")
 
     gnm.check_cds_feature_tally(eval_id="GNM_031")
-    gnm.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True,
+
+    # TODO set trna and tmrna to True after they are implemented.
+    gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
                           eval_id="GNM_032")
 
+    # TODO the following checks may no longer be needed, since the
+    # copying functions have been changed.
     # TODO confirm that these check_value_flag() are needed here.
     # Currently all "copy_data" functions run the check method
     # to throw an error if not all data was copied.
@@ -663,44 +776,41 @@ def check_genome(gnm, tkt, null_set=set(), phage_id_set=set(),
     gnm.check_value_flag(eval_id="GNM_034")
 
 
-def check_source(src_ftr, check_id_typo=True, check_host_typo=True):
+def check_source(src_ftr, eval_flags):
     """Check a Source object for errors."""
-    if check_id_typo:
+    if eval_flags["check_id_typo"]:
         src_ftr.check_organism_name(eval_id="SRC_001")
-    if check_host_typo:
+    if eval_flags["check_host_typo"]:
         src_ftr.check_organism_host_genus(eval_id="SRC_002")
         src_ftr.check_host_host_genus(eval_id="SRC_003")
         src_ftr.check_lab_host_host_genus(eval_id="SRC_004")
 
 
-def check_cds(cds_ftr, check_locus_tag=True,
-              check_gene=True, check_description=True,
-              check_description_field=True):
+def check_cds(cds_ftr, eval_flags):
     """Check a Cds object for errors."""
-    cds_ftr.check_amino_acids(eval_id="CDS_001")
+    cds_ftr.check_amino_acids(check_set=constants.PROTEIN_ALPHABET,
+                              eval_id="CDS_001")
     cds_ftr.check_translation(eval_id="CDS_002")
     cds_ftr.check_translation_length(eval_id="CDS_003")
     cds_ftr.check_translation_table(eval_id="CDS_004")
     cds_ftr.check_coordinates(eval_id="CDS_005")
     cds_ftr.check_strand(eval_id="CDS_006")
-
-    # These evaluations vary by genome type, stage of import, etc.
-    if check_locus_tag:
+    if eval_flags["check_locus_tag"]:
         cds_ftr.check_locus_tag_present(eval_id="CDS_007")
         cds_ftr.check_locus_tag_structure(eval_id="CDS_008")
-    if check_gene:
+    if eval_flags["check_gene"]:
         cds_ftr.check_gene_present(eval_id="CDS_009")
         cds_ftr.check_gene_structure(eval_id="CDS_010")
-    if check_locus_tag and check_gene:
+    if (eval_flags["check_locus_tag"] and eval_flags["check_gene"]):
         cds_ftr.check_compatible_gene_and_locus_tag(eval_id="CDS_011")
-    if check_description:
+    if eval_flags["check_description"]:
         cds_ftr.check_generic_data(eval_id="CDS_012")
         cds_ftr.check_valid_description(eval_id="CDS_013")
-    if check_description_field:
+    if eval_flags["check_description_field"]:
         cds_ftr.check_description_field(eval_id="CDS_014")
 
 
-def compare_genomes(genome_pair, check_replace=True):
+def compare_genomes(genome_pair, eval_flags):
     """Compare two genomes to identify discrepancies."""
     genome_pair.compare_genome_sequence(eval_id="GP_001")
     genome_pair.compare_genome_length(eval_id="GP_002")
@@ -709,20 +819,40 @@ def compare_genomes(genome_pair, check_replace=True):
     genome_pair.compare_accession(eval_id="GP_005")
     genome_pair.compare_host_genus(eval_id="GP_006")
     genome_pair.compare_author(eval_id="GP_007")
-    if check_replace:
+    if eval_flags["check_replace"]:
         genome_pair.compare_annotation_status("type","phamerator",
             "flat_file","draft","final", eval_id="GP_008")
 
 
 # TODO implement.
 # TODO unit test.
-def check_trna(trna_obj):
+def check_trna(trna_obj, eval_flags):
     """Check a TrnaFeature object for errors."""
 
     pass
 
 
-
+def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
+    """Import data into the MySQL database."""
+    if bndl._errors == 0:
+        phamerator.create_genome_statements(bndl.genome_dict[gnm_key],
+                                            bndl.ticket.type)
+        if prod_run:
+            result = sql_handle.execute_transaction(bndl.sql_queries)
+            if result == 1:
+                # TODO log any errors.
+                print("Error executing statements to import data.")
+                result = False
+            else:
+                result = True
+                print("Data successfully imported.")
+        else:
+            result = True
+            print("Data can be imported if set to production run.")
+    else:
+        result = False
+        print("Data contains errors, so it will not be imported.")
+    return result
 
 
 

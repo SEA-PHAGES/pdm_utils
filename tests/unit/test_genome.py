@@ -1051,8 +1051,9 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced when author is expected
         and present."""
         check_set = set(["hatfull"])
-        self.gnm.authors = "abcd; efgh; HATFULL; xyz"
+        self.gnm.authors = "abcd; efgh,s,a,s; HATFULL,G.F; xyz"
         self.gnm.check_authors(check_set=check_set, eval_id="eval_id")
+
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
@@ -1090,7 +1091,7 @@ class TestGenomeClass(unittest.TestCase):
         """Check that no warning is produced when author is expected
         and present in a supplied set of multiple authors."""
         check_set = set(["abcd", "efgh", "hatfull"])
-        self.gnm.authors = "hatfull; 1234; xyz"
+        self.gnm.authors = "hatfull,g,f,s; 1234; xyz"
         self.gnm.check_authors(check_set=check_set)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 

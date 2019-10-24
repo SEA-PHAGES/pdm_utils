@@ -55,16 +55,16 @@ class TestPhameratorFunctions1(unittest.TestCase):
         # First, test if a test database already exists within mysql.
         # If there is, delete it so that a fresh test database is installed.
         sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              "WHERE SCHEMA_NAME = '%s'" % self.db
+              f"WHERE SCHEMA_NAME = '{self.db}'"
         cur.execute(sql)
         result = cur.fetchall()
 
         if len(result) != 0:
-            cur.execute("DROP DATABASE %s" % self.db)
+            cur.execute(f"DROP DATABASE {self.db}")
             connection.commit()
 
         # Next, create the database within mysql.
-        cur.execute("CREATE DATABASE %s" % self.db)
+        cur.execute(f"CREATE DATABASE {self.db}")
         connection.commit()
         connection.close()
 
@@ -76,7 +76,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                         self.schema_file)
 
         handle = open(schema_filepath, "r")
-        command_string = "mysql -u %s -p%s %s" % (user, pwd, self.db)
+        command_string = f"mysql -u {user} -p{pwd} {self.db}"
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list, stdin = handle)
         handle.close()
@@ -101,8 +101,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '', 1, 1, 'final', '%s', 1, 1);" % \
-                (id, constants.EMPTY_DATE)
+                f"'{id}', '', '', '', '', 1, 1, 'final', " + \
+                f"'{constants.EMPTY_DATE}', 1, 1);"
+
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -134,8 +135,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '%s', '', '', '', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_accs[0], id_and_accs[1], constants.EMPTY_DATE)
+                f"'{id_and_accs[0]}', '{id_and_accs[1]}', '', '', " + \
+                f"'', 1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -168,8 +169,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -207,8 +208,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -250,8 +251,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -291,8 +292,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -332,8 +333,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -374,8 +375,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -415,8 +416,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -424,8 +425,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+                "1000, '', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -469,8 +470,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -478,8 +479,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+                "1000, '', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -527,8 +528,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -536,8 +537,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+                "1000, '', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -584,12 +585,11 @@ class TestPhameratorFunctions1(unittest.TestCase):
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " \
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 " VALUES (" + \
-                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
-                 % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1);" \
-                % constants.EMPTY_DATE
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
+                f" '{id_and_seq[1]}', " + \
+                f" 1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -597,8 +597,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+                "1000, '', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -650,10 +650,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
-                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
-                 % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1);" \
-                % constants.EMPTY_DATE
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
+                f"'{id_and_seq[1]}', " + \
+                f" 1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -699,10 +698,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
-                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
-                 % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1);" \
-                % constants.EMPTY_DATE
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
+                f"'{id_and_seq[1]}', " + \
+                f"1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -710,8 +708,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+                "'', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -774,10 +772,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
-                "'%s', 'ABC123', '', 'Mycobacterium', '%s', " \
-                 % (id_and_seq[0], id_and_seq[1]) + \
-                " 1, 10.10, 'final', '%s', 1, 1);" \
-                % constants.EMPTY_DATE
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
+                f"'{id_and_seq[1]}', " + \
+                f" 1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -785,8 +782,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+                "'', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -854,8 +851,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
+                f" 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -863,8 +860,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+                "'', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -908,8 +905,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
+                f" 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -917,8 +914,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+                "'', '', 'F', '', '');"
             cur.execute(sql2)
         connection.commit()
         connection.close()
@@ -958,8 +955,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "HostStrain, Sequence, SequenceLength, GC, status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
-                "'%s', '', '', '', '%s', 1, 1, 'final', '%s', 1, 1);" % \
-                (id_and_seq[0], id_and_seq[1], constants.EMPTY_DATE)
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
+                f" 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
@@ -967,8 +964,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
                 "(GeneID, PhageID, Start, Stop, Length, Name, " + \
                 "translation, Orientation, Notes, LocusTag) " + \
                 "VALUES " + \
-                "('%s', '%s', 1, 100, 1000, '', '', 'F', '', '');" % \
-                (cds_data[0], cds_data[1])
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+                "'', '', 'F', '', '');"
             cur.execute(sql2)
 
         connection.commit()
@@ -991,8 +988,6 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
 
-
-    # HERE
     def test_create_phage_table_insert_1(self):
         """Verify phage table INSERT statement is created correctly."""
         # Note: even though this function returns a string and doesn't
@@ -1010,6 +1005,9 @@ class TestPhameratorFunctions1(unittest.TestCase):
         gnm.date = constants.EMPTY_DATE
         gnm.retrieve_record = 1
         gnm.annotation_author = 1
+        gnm.cluster_subcluster = ""
+        gnm.cluster = "singleton"
+        gnm.subcluster = "A2"
         statement = phamerator.create_phage_table_insert(gnm)
         connection = pymysql.connect(host="localhost",
                                      user=user,
@@ -1023,7 +1021,8 @@ class TestPhameratorFunctions1(unittest.TestCase):
         query =  ("SELECT PhageID, Accession, Name, "
                  "HostStrain, Sequence, SequenceLength, GC, status, "
                  "DateLastModified, RetrieveRecord, "
-                 "AnnotationAuthor FROM phage WHERE PhageID = 'L5'")
+                 "AnnotationAuthor, Cluster, Cluster2, Subcluster2 "
+                 "FROM phage WHERE PhageID = 'L5'")
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
@@ -1037,9 +1036,11 @@ class TestPhameratorFunctions1(unittest.TestCase):
         exp = ("INSERT INTO phage "
                "(PhageID, Accession, Name, HostStrain, Sequence, "
                "SequenceLength, GC, status, DateLastModified, RetrieveRecord, "
-               "AnnotationAuthor) "
-               "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', 'ATCG', 4, "
-               "0.5001, 'final', '%s', 1, 1);" % constants.EMPTY_DATE)
+               "AnnotationAuthor, Cluster, Cluster2, Subcluster2) "
+               "VALUES "
+               "('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', 'ATCG', "
+               f"4, 0.5001, 'final', '{constants.EMPTY_DATE}', 1, "
+               "1, NULL, NULL, 'A2');")
         with self.subTest():
             self.assertEqual(statement, exp)
         with self.subTest():
@@ -1064,6 +1065,12 @@ class TestPhameratorFunctions1(unittest.TestCase):
             self.assertEqual(results["RetrieveRecord"], 1)
         with self.subTest():
             self.assertEqual(results["AnnotationAuthor"], 1)
+        with self.subTest():
+            self.assertIsNone(results["Cluster"])
+        with self.subTest():
+            self.assertIsNone(results["Cluster2"])
+        with self.subTest():
+            self.assertEqual(results["Subcluster2"], "A2")
 
 
 
@@ -1075,7 +1082,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        cur.execute("DROP DATABASE %s" % self.db)
+        cur.execute(f"DROP DATABASE {self.db}")
         connection.commit()
         connection.close()
 
@@ -1103,16 +1110,16 @@ class TestPhameratorFunctions2(unittest.TestCase):
         # First, test if a test database already exists within mysql.
         # If there is, delete it so that a fresh test database is installed.
         sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              "WHERE SCHEMA_NAME = '%s'" % self.db
+              f"WHERE SCHEMA_NAME = '{self.db}'"
         cur.execute(sql)
         result = cur.fetchall()
 
         if len(result) != 0:
-            cur.execute("DROP DATABASE %s" % self.db)
+            cur.execute(f"DROP DATABASE {self.db}")
             connection.commit()
 
         # Next, create the database within mysql.
-        cur.execute("CREATE DATABASE %s" % self.db)
+        cur.execute(f"CREATE DATABASE {self.db}")
         connection.commit()
         connection.close()
 
@@ -1124,7 +1131,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
                         self.schema_file)
 
         handle = open(schema_filepath, "r")
-        command_string = "mysql -u %s -p%s %s" % (user, pwd, self.db)
+        command_string = f"mysql -u {user} -p{pwd} {self.db}"
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list, stdin = handle)
         handle.close()
@@ -1136,8 +1143,8 @@ class TestPhameratorFunctions2(unittest.TestCase):
                    "RetrieveRecord, AnnotationAuthor,"
                    "Cluster2, Subcluster2) "
                    "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
-                   "'ATCG', 4, 0.5001, 'final', '%s', 1, 1, 'A', 'A2');"
-                   % constants.EMPTY_DATE)
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1490,7 +1497,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        cur.execute("DROP DATABASE %s" % self.db)
+        cur.execute(f"DROP DATABASE {self.db}")
         connection.commit()
         connection.close()
 
