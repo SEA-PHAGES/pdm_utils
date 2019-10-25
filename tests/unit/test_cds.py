@@ -1041,28 +1041,28 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_check_translation_length_1(self):
+    def test_check_translation_present_1(self):
         """Verify a present translation does not produce an error."""
         self.feature.translation_length = 1
-        self.feature.check_translation_length(eval_id="eval_id")
+        self.feature.check_translation_present(eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
-    def test_check_translation_length_2(self):
+    def test_check_translation_present_2(self):
         """Verify a present translation does not produce an error."""
         self.feature.translation_length = 100
-        self.feature.check_translation_length()
+        self.feature.check_translation_present()
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
         with self.subTest():
             self.assertIsNone(self.feature.evaluations[0].id)
 
-    def test_check_translation_length_3(self):
+    def test_check_translation_present_3(self):
         """Verify that no translation produces an error."""
         self.feature.translation_length = 0
-        self.feature.check_translation_length()
+        self.feature.check_translation_present()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 

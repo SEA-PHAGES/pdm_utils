@@ -10,7 +10,7 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 import re
 from operator import attrgetter
-from pdm_utils.classes import cds, trna
+from pdm_utils.classes import cds, trna, source
 
 
 class Genome:
@@ -470,7 +470,7 @@ class Genome:
 
 
     def set_feature_ids(self, use_type=False, use_cds=False,
-                        use_trna=False, use_tmrna=False):
+                        use_trna=False, use_tmrna=False, use_source=False):
         """Sets the id of each feature.
 
         Lists of features can be added to this method. The method assumes
@@ -505,6 +505,8 @@ class Genome:
         list_to_sort = []
         if use_cds:
             list_to_sort.extend(self.cds_features)
+        if use_source:
+            list_to_sort.extend(self.source_features)
         if use_trna:
             list_to_sort.extend(self.trna_features)
 
@@ -518,8 +520,8 @@ class Genome:
             if use_type:
                 if isinstance(sorted_list[index], cds.Cds):
                     delimiter = "_CDS_"
-
-                # TODO unit test after tRNA class implemented.
+                elif isinstance(sorted_list[index], source.Source):
+                    delimiter = "_SRC_"
                 elif isinstance(sorted_list[index], trna.TrnaFeature):
                     delimiter = "_TRNA_"
 

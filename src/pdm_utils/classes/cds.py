@@ -461,7 +461,7 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    def check_translation_length(self, eval_id=None):
+    def check_translation_present(self, eval_id=None):
         """Confirm that a translation is present.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -558,6 +558,9 @@ class Cds:
         self.evaluations.append(evl)
 
 
+    # TODO this could probably be simplified. Since coordinates in the
+    # database need to be integers, the parsing function no longer allows
+    # fuzzy positions.
     def check_coordinates(self, eval_id=None):
         """Check if coordinates are exact.
 
@@ -678,27 +681,29 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    # TODO is this needed?
+    # TODO is this needed? CDS ids are not directly parsed from file.
+    # They are now automatically generated. So there doesn't seem to be
+    # a need to check that it is spelled correctly.
     # TODO implement.
     # TODO unittest
-    def check_id_typo(self, check_value=None, eval_id=None):
-        """Check if the id contains potential typos."""
-
-        if check_value is None:
-            check_value = self.id
-
-        pattern = re.compile(check_value.lower())
-        search_result = pattern.search(self.id.lower())
-
-        if search_result == None:
-            result = "The id has a typo."
-            status = "error"
-        else:
-            result = "The id is correct."
-            status = "correct"
-        definition = "Check if the id contains a typo."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+    # def check_id_typo(self, check_value=None, eval_id=None):
+    #     """Check if the id contains potential typos."""
+    #
+    #     if check_value is None:
+    #         check_value = self.id
+    #
+    #     pattern = re.compile(check_value.lower())
+    #     search_result = pattern.search(self.id.lower())
+    #
+    #     if search_result == None:
+    #         result = "The id has a typo."
+    #         status = "error"
+    #     else:
+    #         result = "The id is correct."
+    #         status = "correct"
+    #     definition = "Check if the id contains a typo."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
 
 
     def check_gene_present(self, expect=True, eval_id=None):
@@ -862,12 +867,13 @@ class Cds:
 
 
 
-    # TODO implement.
+    # TODO can be implemented once there are pre-defined lists available
+    # of acceptable and non-acceptable gene descriptions.
     # TODO unittest.
-    def check_valid_description(self, check_set=None, attribute=None,
-                                eval_id=None):
-        """Check if the CDS description in the indicated attribute is valid."""
-        pass
+    # def check_valid_description(self, check_set=None, attribute=None,
+    #                             eval_id=None):
+    #     """Check if the CDS description in the indicated attribute is valid."""
+    #     pass
 
 
 

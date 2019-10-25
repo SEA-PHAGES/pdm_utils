@@ -119,8 +119,7 @@ def parse_import_ticket_data(data_dict):
     :returns: A pdm_utils Ticket object.
     :rtype: Ticket
     """
-    ticket_attributes = set(["id", "type", "phage_id",
-                             "description_field", "run_mode"])
+    ticket_attributes = constants.IMPORT_TABLE_VALID_TICKET_FIELDS
     other_attributes = data_dict.keys() - ticket_attributes
 
     tkt = ticket.GenomeTicket()

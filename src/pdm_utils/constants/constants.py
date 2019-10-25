@@ -5,41 +5,38 @@ from Bio.Alphabet import IUPAC
 from datetime import datetime
 from pathlib import Path
 
-IMPORT_TABLE_SIZE = 12
-
-IMPORT_TABLE_REQ_DICT = {
-    "id":"",
-    "type":"",
-    "phage_id":"",
-    }
-
-IMPORT_TABLE_OPT_DICT = {
-    "description_field":"",
-    "run_mode":"",
-    "host_genus":"",
-    "cluster":"",
-    "subcluster":"",
-    "annotation_status":"",
-    "annotation_author":"",
-    "accession":"",
-    "retrieve_record":""
-    }
-
-IMPORT_TABLE_DICT = {
-    "id":"",
-    "type":"",
-    "description_field":"",
-    "run_mode":"",
-    "phage_id":"",
-    "host_genus":"",
-    "cluster":"",
-    "subcluster":"",
-    "annotation_status":"",
-    "annotation_author":"",
-    "accession":"",
-    "retrieve_record":""
-    }
-
+IMPORT_TABLE_REQ_FIELDS = set([
+    "id",
+    "type",
+    "phage_id"])
+IMPORT_TABLE_OPT_FIELDS = set([
+    "description_field",
+    "run_mode",
+    "host_genus",
+    "cluster",
+    "subcluster",
+    "annotation_status",
+    "annotation_author",
+    "accession",
+    "retrieve_record"])
+IMPORT_TABLE_VALID_TICKET_FIELDS = set([
+    "id",
+    "type",
+    "phage_id",
+    "description_field",
+    "run_mode"])
+IMPORT_TABLE_VALID_RETAIN_FIELDS = set([
+    "host_genus",
+    "cluster",
+    "subcluster",
+    "annotation_author",
+    "accession",
+    "retrieve_record"])
+IMPORT_TABLE_VALID_RETRIEVE_FIELDS = set([
+    "host_genus",
+    "cluster",
+    "subcluster",
+    "accession"])
 
 NAME_SUFFIX = "_Draft"
 ANNOTATION_STATUS_SET = set(["draft", "final", "unknown"])

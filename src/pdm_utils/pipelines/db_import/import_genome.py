@@ -57,12 +57,16 @@ def main(unparsed_args_list):
     sql_handle = setup_sql_handle(args.database)
     logger.info("Connected to database.")
 
+    # TODO unittest now that host_genus_field is added.
     # If everything checks out, pass on args for data input/output:
     data_io(sql_handle=sql_handle,
             genome_folder=args.input_folder,
             import_table_file=args.import_table,
-            genome_id_field=args.genome_id_field, prod_run=args.prod_run,
-            description_field=args.description_field, run_mode=args.run_mode,
+            genome_id_field=args.genome_id_field,
+            host_genus_field=args.host_genus_field,
+            prod_run=args.prod_run,
+            description_field=args.description_field,
+            run_mode=args.run_mode,
             output_folder=args.output_folder)
     # input("paused before completion")
     logger.info("Import complete.")
@@ -123,6 +127,10 @@ def parse_args(unparsed_args_list):
         Indicates the flat file field that should be used
         as the unique identifier for the genome during import.
         """
+    HOST_GENUS_FIELD_HELP = """
+        Indicates the flat file field that should be used
+        to identify the host genus for the genome during import.
+        """
     PROD_RUN_HELP = \
         ("Indicates whether the script should make any changes to the database. "
          "If False, the production run will implement all changes in the "
@@ -147,6 +155,9 @@ def parse_args(unparsed_args_list):
     parser.add_argument("-g", "--genome_id_field", type=str.lower,
         default="organism_name", choices=["organism_name", "filename"],
         help=GENOME_ID_FIELD_HELP)
+    parser.add_argument("-hg", "--host_genus_field", type=str.lower,
+        default="organism_host_genus", choices=["organism_host_genus"],
+        help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-p", "--prod_run", action="store_true", default=False,
         help=PROD_RUN_HELP)
     parser.add_argument("-r", "--run_mode", type=str.lower,
@@ -170,8 +181,9 @@ def parse_args(unparsed_args_list):
 
 
 def data_io(sql_handle=None, genome_folder=pathlib.Path(),
-    import_table_file=pathlib.Path(), genome_id_field="", prod_run=False,
-    description_field="", run_mode="", output_folder=pathlib.Path()):
+    import_table_file=pathlib.Path(), genome_id_field="", host_genus_field="",
+    prod_run=False, description_field="", run_mode="",
+    output_folder=pathlib.Path()):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
 
@@ -194,8 +206,8 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
     run_mode_eval_dict = {"run_mode": run_mode, "eval_flag_dict": eval_flags}
 
-    required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
-    optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+    required_keys = constants.IMPORT_TABLE_REQ_FIELDS
+    optional_keys = constants.IMPORT_TABLE_OPT_FIELDS
     keywords = set(["retrieve", "retain", "none"])
     ticket_dict = prepare_tickets(
                     import_table_file, run_mode_eval_dict, description_field,
@@ -209,7 +221,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(ticket_dict, files_to_process,
-                        sql_handle, prod_run, genome_id_field)
+                        sql_handle, prod_run, genome_id_field, host_genus_field)
 
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
@@ -347,7 +359,8 @@ def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
         return ticket_dict
 
 def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
-                              prod_run=False, genome_id_field=""):
+                              prod_run=False, genome_id_field="",
+                              host_genus_field=""):
     """Process GenBank-formatted flat files.
 
     :param ticket_dict:
@@ -393,7 +406,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         replace_gnm_pair_key = gnm_type + "_phamerator"
         bndl = prepare_bundle(filename=str(filename), ticket_dict=ticket_dict,
                               sql_handle=sql_handle,
-                              genome_id_field=genome_id_field, id=bundle_count)
+                              genome_id_field=genome_id_field,
+                              host_genus_field=host_genus_field,
+                              id=bundle_count)
 
         # Create sets of unique values for different data fields.
         # Since data from each parsed flat file is imported into the
@@ -453,7 +468,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
 
 
 def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
-                   genome_id_field="", id=None):
+                   genome_id_field="", host_genus_field="", id=None):
     """Gather all genomic data needed to evaluate the flat file.
 
     :param filename: Name of a GenBank-formatted flat file.
@@ -484,7 +499,9 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                     seqrecord,
                     filepath=filename,
                     genome_id_field=genome_id_field,
-                    gnm_type="flat_file")
+                    gnm_type="flat_file",
+                    host_genus_field=host_genus_field)
+
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
         # Match ticket (if available) to flat file.
@@ -575,7 +592,8 @@ def run_checks(bndl, null_set=set(), accession_set=set(), phage_id_set=set(),
             # Check CDS features.
             x = 0
             while x < len(gnm.cds_features):
-                check_cds(gnm.cds_features[x], eval_flags)
+                check_cds(gnm.cds_features[x], eval_flags,
+                          description_field=tkt.description_field)
                 x += 1
 
             # Check tRNA features.
@@ -593,7 +611,7 @@ def run_checks(bndl, null_set=set(), accession_set=set(), phage_id_set=set(),
     bndl.check_for_errors()
 
 
-def check_bundle(bndl):
+def check_bundle(bndl, tkt_key="", file_key="", retrieve_key="", retain_key=""):
     """Check a Bundle for errors.
 
     Evaluate whether all genomes have been successfully grouped,
@@ -606,28 +624,32 @@ def check_bundle(bndl):
     """
     bndl.check_ticket(eval_id="BNDL_001")
     if bndl.ticket is not None:
+
+        bndl.check_genome_dict(file_key, expect=True, eval_id="BNDL_003")
+        if file_key in bndl.genome_dict.keys():
+            bndl.check_compatible_type_and_annotation_status(file_key, eval_id="BNDL_007")
+
         tkt = bndl.ticket
         if len(tkt.data_ticket) > 0:
-            bndl.check_genome_dict("ticket", eval_id="BNDL_002")
-
-        bndl.check_genome_dict("flat_file", eval_id="BNDL_003")
+            bndl.check_genome_dict(tkt_key, expect=True, eval_id="BNDL_002")
 
         # There may or may not be data retrieved from PhagesDB.
         if len(tkt.data_retrieve) > 0:
-            bndl.check_genome_dict("phagesdb", eval_id="BNDL_004")
+            bndl.check_genome_dict(retrieve_key, expect=True, eval_id="BNDL_004")
 
         if tkt.type == "replace":
-            bndl.check_genome_dict("phamerator", eval_id="BNDL_005")
+            bndl.check_genome_dict(retain_key, expect=True, eval_id="BNDL_005")
 
             # There should be a genome_pair between the current phamerator
             # genome and the new flat_file genome.
-            bndl.check_genome_pair_dict("flat_file_phamerator",
-                                        eval_id="BNDL_006")
+            pair_key = f"{file_key}_{retain_key}"
+            bndl.check_genome_pair_dict(pair_key, eval_id="BNDL_006")
 
 
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
         null_set=set(), run_mode_set=set(), id_dupe_set=set(),
-        phage_id_dupe_set=set()):
+        phage_id_dupe_set=set(), retain_set=set(), retrieve_set=set(),
+        ticket_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket.
@@ -658,17 +680,30 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     tkt.check_duplicate_phage_id(phage_id_dupe_set, eval_id="TKT_002")
 
     # Check these fields for specific values.
-    tkt.check_type(type_set, True, eval_id="TKT_003")
-    tkt.check_description_field(description_field_set, True, eval_id="TKT_004")
-    tkt.check_run_mode(run_mode_set, True, eval_id="TKT_005")
-    tkt.check_eval_flags(True, eval_id="TKT_006")
+    tkt.check_type(type_set, expect=True, eval_id="TKT_003")
+    tkt.check_description_field(description_field_set, expect=True, eval_id="TKT_004")
+    tkt.check_run_mode(run_mode_set, expect=True, eval_id="TKT_005")
+
+    # TODO this method may be refactored so that it accepts a list of
+    # valid flag dict keys. But this has already been verified earlier
+    # in the script, so it could be redundant.
+    tkt.check_eval_flags(expect=True, eval_id="TKT_006")
 
     # For these fields, simply check that they are not empty.
-    tkt.check_phage_id(null_set, False, eval_id="TKT_007")
+    tkt.check_phage_id(null_set, expect=False, eval_id="TKT_007")
 
-    # Check if certain combinations of fields make sense.
-    tkt.check_compatible_type_and_annotation_status(eval_id="TKT_008")
+    # Check how genome attributes will be determined.
     tkt.check_compatible_type_and_data_retain(eval_id="TKT_009")
+    tkt.check_valid_data_source("data_ticket", ticket_set,
+                                eval_id="TKT_010")
+    tkt.check_valid_data_source("data_retain", retain_set,
+                                eval_id="TKT_011")
+    tkt.check_valid_data_source("data_retrieve", retrieve_set,
+                                eval_id="TKT_012")
+
+    # TODO this has been moved to bundle checks.
+    # tkt.check_compatible_type_and_annotation_status(eval_id="TKT_008")
+
 
 
 def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
@@ -702,9 +737,10 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
         gnm.check_name(phage_id_set | null_set, False, eval_id="GNM_002")
         gnm.check_sequence(seq_set | null_set, False, eval_id="GNM_003")
 
+        # This has been moved to the bundle class
         # It is unusual for 'final' status genomes to be on 'add' tickets.
-        gnm.check_annotation_status(check_set=set(["final"]), expect=False,
-                                    eval_id="GNM_004")
+        # gnm.check_annotation_status(check_set=set(["final"]), expect=False,
+        #                             eval_id="GNM_004")
 
         # If the genome is being added, and if it has an accession,
         # no other genome is expected to have an identical accession.
@@ -721,11 +757,15 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
         gnm.check_name(phage_id_set, True, eval_id="GNM_007")
         gnm.check_sequence(seq_set, True, eval_id="GNM_008")
 
-        # It is unusual for 'draft' status genomes to be on 'replace' tickets.
-        gnm.check_annotation_status(check_set=set(["draft"]), expect=False,
-                                    eval_id="GNM_009")
+        # This has been moved to bundle.
+        # # It is unusual for 'draft' status genomes to be on 'replace' tickets.
+        # gnm.check_annotation_status(check_set=set(["draft"]), expect=False,
+        #                             eval_id="GNM_009")
+
     gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
                                 expect=True, eval_id="GNM_010")
+
+
     gnm.check_annotation_author(check_set=constants.ANNOTATION_AUTHOR_SET,
                                 eval_id="GNM_011")
     gnm.check_retrieve_record(check_set=constants.RETRIEVE_RECORD_SET,
@@ -781,35 +821,45 @@ def check_source(src_ftr, eval_flags):
     if eval_flags["check_id_typo"]:
         src_ftr.check_organism_name(eval_id="SRC_001")
     if eval_flags["check_host_typo"]:
-        src_ftr.check_organism_host_genus(eval_id="SRC_002")
-        src_ftr.check_host_host_genus(eval_id="SRC_003")
-        src_ftr.check_lab_host_host_genus(eval_id="SRC_004")
+        # Only evaluate attributes if the field is not empty, since they
+        # are not required to be present.
+        if src_ftr.organism != "":
+            src_ftr.check_organism_host_genus(eval_id="SRC_002")
+        if src_ftr.host != "":
+            src_ftr.check_host_host_genus(eval_id="SRC_003")
+        if src_ftr.lab_host != "":
+            src_ftr.check_lab_host_host_genus(eval_id="SRC_004")
 
 
-def check_cds(cds_ftr, eval_flags):
+def check_cds(cds_ftr, eval_flags, description_field="product"):
     """Check a Cds object for errors."""
     cds_ftr.check_amino_acids(check_set=constants.PROTEIN_ALPHABET,
                               eval_id="CDS_001")
     cds_ftr.check_translation(eval_id="CDS_002")
-    cds_ftr.check_translation_length(eval_id="CDS_003")
-    cds_ftr.check_translation_table(eval_id="CDS_004")
+    cds_ftr.check_translation_present(eval_id="CDS_003")
+    cds_ftr.check_translation_table(check_table=11, eval_id="CDS_004")
     cds_ftr.check_coordinates(eval_id="CDS_005")
-    cds_ftr.check_strand(eval_id="CDS_006")
+    cds_ftr.check_strand(format="fr_short", case=True, eval_id="CDS_006")
     if eval_flags["check_locus_tag"]:
-        cds_ftr.check_locus_tag_present(eval_id="CDS_007")
-        cds_ftr.check_locus_tag_structure(eval_id="CDS_008")
+        cds_ftr.check_locus_tag_present(expect=True, eval_id="CDS_007")
+        cds_ftr.check_locus_tag_structure(check_value=None, only_typo=False,
+            prefix_set=constants.LOCUS_TAG_PREFIX_SET, eval_id="CDS_008")
     if eval_flags["check_gene"]:
-        cds_ftr.check_gene_present(eval_id="CDS_009")
+        cds_ftr.check_gene_present(expect=True, eval_id="CDS_009")
         cds_ftr.check_gene_structure(eval_id="CDS_010")
     if (eval_flags["check_locus_tag"] and eval_flags["check_gene"]):
         cds_ftr.check_compatible_gene_and_locus_tag(eval_id="CDS_011")
-    if eval_flags["check_description"]:
-        cds_ftr.check_generic_data(eval_id="CDS_012")
-        cds_ftr.check_valid_description(eval_id="CDS_013")
+
+    # if eval_flags["check_description"]:
+        # TODO the "check_generic_data" method should be implemented at the genome level.
+        # cds_ftr.check_generic_data(eval_id="CDS_012")
+        # TODO not implemented yet: cds_ftr.check_valid_description(eval_id="CDS_013")
     if eval_flags["check_description_field"]:
-        cds_ftr.check_description_field(eval_id="CDS_014")
+        cds_ftr.check_description_field(attribute=description_field,
+                                        eval_id="CDS_014")
 
 
+# TODO unit test.
 def compare_genomes(genome_pair, eval_flags):
     """Compare two genomes to identify discrepancies."""
     genome_pair.compare_genome_sequence(eval_id="GP_001")
@@ -822,7 +872,8 @@ def compare_genomes(genome_pair, eval_flags):
     if eval_flags["check_replace"]:
         genome_pair.compare_annotation_status("type","phamerator",
             "flat_file","draft","final", eval_id="GP_008")
-
+        genome_pair.compare_date("type", "phamerator", "flat_file",
+                                 expect="newer", eval_id="GP_009")
 
 # TODO implement.
 # TODO unit test.

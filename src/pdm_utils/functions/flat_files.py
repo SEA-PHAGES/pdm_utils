@@ -120,7 +120,7 @@ def parse_coordinates(seqfeature):
     return (left, right, parts)
 
 
-def parse_cds_seqfeature(seqfeature, genome_id=""):
+def parse_cds_seqfeature(seqfeature):
     """Parse data from a Biopython CDS SeqFeature object into a Cds object.
 
     :param seqfeature: Biopython SeqFeature
@@ -135,7 +135,6 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
     :rtype: Cds
     """
     cds_ftr = cds.Cds()
-    cds_ftr.genome_id = genome_id
     cds_ftr.seqfeature = seqfeature
 
     try:
@@ -159,13 +158,12 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
         translation = ""
     translation = Seq(translation, Alphabet.IUPAC.protein)
     cds_ftr.set_translation(translation)
-    # TODO set_nucleotide_sequence() here?
     cds_ftr.set_nucleotide_length()
 
     try:
         translation_table = seqfeature.qualifiers["transl_table"][0]
     except:
-        translation_table = -1
+        translation_table = 0
     cds_ftr.set_translation_table(translation_table)
 
     try:
@@ -198,17 +196,8 @@ def parse_cds_seqfeature(seqfeature, genome_id=""):
     return cds_ftr
 
 
-# TODO remove this function. No longer needed.
-# def create_cds_objects(seqfeature_list):
-#     """Convert all Biopython CDS SeqFeatures to Cds objects."""
-#     cds_list = []
-#     for seqfeature in seqfeature_list:
-#         cds_ftr = parse_cds_seqfeature(seqfeature)
-#         cds_list.append(cds_ftr)
-#     return cds_list
 
-
-def parse_source_seqfeature(seqfeature, genome_id=""):
+def parse_source_seqfeature(seqfeature):
     """Parses a Biopython Source SeqFeature.
 
     :param seqfeature: Biopython SeqFeature
@@ -223,8 +212,10 @@ def parse_source_seqfeature(seqfeature, genome_id=""):
     :rtype: Source
     """
     src_ftr = source.Source()
-    src_ftr.genome_id = genome_id
     src_ftr.seqfeature = seqfeature
+    left, right, parts = parse_coordinates(seqfeature)
+    src_ftr.left = left
+    src_ftr.right = right
 
     try:
         src_ftr.organism = str(seqfeature.qualifiers["organism"][0])
@@ -238,17 +229,12 @@ def parse_source_seqfeature(seqfeature, genome_id=""):
         src_ftr.lab_host = str(seqfeature.qualifiers["lab_host"][0])
     except:
         src_ftr.lab_host = ""
+
+    src_ftr.parse_organism()
+    src_ftr.parse_host()
+    src_ftr.parse_lab_host()
+
     return src_ftr
-
-
-# TODO remove this function.
-# def create_source_objects(seqfeature_list):
-#     """Convert all Biopython Source SeqFeatures to Source objects."""
-#     source_list = []
-#     for seqfeature in seqfeature_list:
-#         src_ftr = parse_source_seqfeature(seqfeature)
-#         source_list.append(src_ftr)
-#     return source_list
 
 
 def create_seqfeature_dictionary(seqfeature_list):
@@ -292,7 +278,8 @@ def create_seqfeature_dictionary(seqfeature_list):
 
 
 def parse_genome_data(seqrecord, filepath="",
-        translation_table=11, genome_id_field="organism_name", gnm_type=""):
+        translation_table=11, genome_id_field="organism_name", gnm_type="",
+        host_genus_field="organism_host_genus"):
     """Parse data from a Biopython SeqRecord object into a Genome object.
 
     All Source, CDS, tRNA, and tmRNA features are parsed into their
@@ -402,8 +389,9 @@ def parse_genome_data(seqrecord, filepath="",
     except:
         gnm.date = basic.convert_empty("", "empty_datetime_obj")
 
-    # Now that record fields are parsed, set the phage_id.
+    # Now that record fields are parsed, set the phage_id and host_genus.
     gnm.set_id(attribute=genome_id_field)
+    gnm.set_host_genus(attribute=host_genus_field)
 
     # Create lists of parsed features.
     # Note: Biopython instantiates the features attribute with
@@ -414,7 +402,8 @@ def parse_genome_data(seqrecord, filepath="",
     cds_list = []
     if "CDS" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["CDS"]:
-            cds_ftr = parse_cds_seqfeature(seqfeature, genome_id=gnm.id)
+            cds_ftr = parse_cds_seqfeature(seqfeature)
+            cds_ftr.genome_id = gnm.id
             cds_ftr.genome_length = gnm.length
             cds_ftr.set_nucleotide_sequence(parent_genome_seq=gnm.seq)
             cds_list.append(cds_ftr)
@@ -422,33 +411,34 @@ def parse_genome_data(seqrecord, filepath="",
     source_list = []
     if "source" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["source"]:
-            src_ftr = parse_source_seqfeature(seqfeature, genome_id=gnm.id)
+            src_ftr = parse_source_seqfeature(seqfeature)
+            src_ftr.genome_id = gnm.id
+            src_ftr.genome_host_genus = gnm.host_genus
             source_list.append(src_ftr)
 
     # TODO unit test after functions are constructed.
     trna_list = []
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
-            trna_ftr = parse_trna_seqfeature(seqfeature, genome_id=gnm.id)
+            trna_ftr = parse_trna_seqfeature(seqfeature)
             trna_list.append(trna_ftr)
 
     # TODO unit test after functions are constructed.
     tmrna_list = []
     if "tmrna" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tmrna"]:
-            tmrna = parse_tmrna_seqfeature(seqfeature, genome_id=gnm.id)
+            tmrna = parse_tmrna_seqfeature(seqfeature)
             tmrna_list.append(tmrna)
 
     gnm.translation_table = translation_table
     gnm.set_cds_features(cds_list)
     gnm.set_source_features(source_list)
-
-
     gnm.set_trna_features(trna_list)
     # gnm.set_tmrna_features(tmrna_list)
 
     # The Cds.id is constructed from the Genome.id and the Cds order.
     gnm.set_feature_ids(use_type=True, use_cds=True)
+    gnm.set_feature_ids(use_type=True, use_source=True)
 
     # TODO set tRNA feature ids.
     #gnm.set_feature_ids(use_type=True, use_trna=True)
@@ -713,7 +703,7 @@ def get_seqrecord_annotations_comments(phage_genome):
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def parse_trna_seqfeature(seqfeature, genome_id=""):
+def parse_trna_seqfeature(seqfeature):
     """Parses a Biopython tRNA SeqFeature.
     """
     trna_ftr = ""
@@ -723,7 +713,7 @@ def parse_trna_seqfeature(seqfeature, genome_id=""):
 
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
-def parse_tmrna_seqfeature(seqfeature, genome_id=""):
+def parse_tmrna_seqfeature(seqfeature):
     """Parses a Biopython tRNA SeqFeature.
     """
     tmrna = ""

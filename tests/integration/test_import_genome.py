@@ -148,7 +148,8 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(filename=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name")
+                    ticket_dict=tkt_dict, id=1, genome_id_field="organism_name",
+                    host_genus_field="organism_host_genus")
         ff_gnm = bndl.genome_dict["flat_file"]
         tkt_gnm = bndl.genome_dict["ticket"]
         bndl_tkt = bndl.ticket
@@ -802,8 +803,8 @@ class TestImportGenomeMain5(unittest.TestCase):
 
         self.run_mode_eval_dict = {"run_mode": "custom_run_mode",
                                    "eval_flag_dict": {"a":1}}
-        self.required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
-        self.optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+        self.required_keys = constants.IMPORT_TABLE_REQ_FIELDS
+        self.optional_keys = constants.IMPORT_TABLE_OPT_FIELDS
         self.keywords = set(["retrieve", "retain", "none"])
 
 

@@ -17,8 +17,8 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
-        self.optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
+        self.required_keys = constants.IMPORT_TABLE_REQ_FIELDS
+        self.optional_keys = constants.IMPORT_TABLE_OPT_FIELDS
         self.keywords = set(["retrieve", "retain", "none"])
 
         self.ticket_dict1 = {}

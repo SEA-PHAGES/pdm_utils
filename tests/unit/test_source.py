@@ -48,17 +48,14 @@ class TestSourceClass(unittest.TestCase):
         self.feature.host = ""
         self.feature.parse_host()
         expected_host_genus = ""
-        self.assertEqual(\
-            self.feature._host_host_genus, expected_host_genus)
+        self.assertEqual(self.feature._host_host_genus, expected_host_genus)
 
     def test_parse_host_2(self):
         """Verify string is parsed correctly."""
-        self.feature.host = "asdf Mycobacterium phage Trixie."
+        self.feature.host = "Mycobacterium smegmatis."
         self.feature.parse_host()
         expected_host_genus = "Mycobacterium"
-        self.assertEqual(\
-            self.feature._host_host_genus, expected_host_genus)
-
+        self.assertEqual(self.feature._host_host_genus, expected_host_genus)
 
 
 
@@ -72,7 +69,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_parse_lab_host_2(self):
         """Verify string is parsed correctly."""
-        self.feature.lab_host = "asdf Mycobacterium phage Trixie."
+        self.feature.lab_host = "Mycobacterium Trixie."
         self.feature.parse_lab_host()
         expected_host_genus = "Mycobacterium"
         self.assertEqual(\
@@ -106,7 +103,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_check_organism_host_genus_1(self):
         """Check that no warning is produced."""
-        self.feature.parent_host_genus = "Mycobacterium"
+        self.feature.genome_host_genus = "Mycobacterium"
         self.feature._organism_host_genus = "Mycobacterium"
         self.feature.check_organism_host_genus(eval_id="eval_id")
         with self.subTest():
@@ -116,7 +113,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_check_organism_host_genus_2(self):
         """Check that a warning is produced."""
-        self.feature.parent_host_genus = "Gordonia"
+        self.feature.genome_host_genus = "Gordonia"
         self.feature._organism_host_genus = "Mycobacterium"
         self.feature.check_organism_host_genus()
         with self.subTest():
@@ -129,7 +126,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_check_host_host_genus_1(self):
         """Check that no warning is produced."""
-        self.feature.parent_host_genus = "Mycobacterium"
+        self.feature.genome_host_genus = "Mycobacterium"
         self.feature._host_host_genus = "Mycobacterium"
         self.feature.check_host_host_genus(eval_id="eval_id")
         with self.subTest():
@@ -139,7 +136,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_check_host_host_genus_2(self):
         """Check that a warning is produced."""
-        self.feature.parent_host_genus = "Gordonia"
+        self.feature.genome_host_genus = "Gordonia"
         self.feature._host_host_genus = "Mycobacterium"
         self.feature.check_host_host_genus()
         with self.subTest():
@@ -152,7 +149,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_check_lab_host_host_genus_1(self):
         """Check that no warning is produced."""
-        self.feature.parent_host_genus = "Mycobacterium"
+        self.feature.genome_host_genus = "Mycobacterium"
         self.feature._lab_host_host_genus = "Mycobacterium"
         self.feature.check_lab_host_host_genus(eval_id="eval_id")
         with self.subTest():
@@ -162,7 +159,7 @@ class TestSourceClass(unittest.TestCase):
 
     def test_check_lab_host_host_genus_2(self):
         """Check that a warning is produced."""
-        self.feature.parent_host_genus = "Gordonia"
+        self.feature.genome_host_genus = "Gordonia"
         self.feature._lab_host_host_genus = "Mycobacterium"
         self.feature.check_lab_host_host_genus()
         with self.subTest():

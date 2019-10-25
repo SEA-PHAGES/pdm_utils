@@ -594,8 +594,71 @@ class GenomePair:
 
 
 
+    # TODO in development.
+    # TODO unittest.
+    def compare_date(self, attribute, ref_name, query_name,
+                     expect="", eval_id=None):
+        """Compare the annotation_status of each genome.
 
+        :param attribute:
+            Indicates the unique value of each
+            genome by which to assign the order of comparison.
+        :type attribute: str
+        :param ref_name:
+            Indicates the attribute value that defines the reference genome.
+        :type ref_name: str
+        :param query_name:
+            Indicates the attribute value that defines the query genome.
+        :type query_name: str
+        :param ref_check_value:
+            Indicates the annotation_status value that is
+            expected in the reference genome.
+        :type ref_check_value: misc.
+        :param query_check_value:
+            Indicates the annotation_status value that is
+            expected in the query genome.
+        :type query_check_value: misc.
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        try:
+            value1 = getattr(self.genome1, attribute)
+            value2 = getattr(self.genome2, attribute)
+        except:
+            value1 = None
+            value2 = None
 
+        if (value1 == ref_name and value2 == query_name):
+            ref_genome = self.genome1
+            query_genome = self.genome2
+        elif (value2 == ref_name and value1 == query_name):
+            ref_genome = self.genome2
+            query_genome = self.genome1
+        else:
+            ref_genome = None
+            query_genome = None
+
+        if (ref_genome is not None and query_genome is not None):
+
+            if query_genome.date > ref_genome.date:
+                actual = "newer"
+            elif query_genome.date == ref_genome.date:
+                actual = "equal"
+            else:
+                actual = "older"
+
+            if actual == expect:
+                result = "The age of the query genome is expected."
+                status = "correct"
+            else:
+                result = "The age of the query genome is not expected."
+                status = "error"
+        else:
+            result = "The age of the query genome was not evaluated."
+            status = "untested"
+        definition = "Compare the age of both genomes."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 

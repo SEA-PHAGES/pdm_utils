@@ -272,39 +272,39 @@ class GenomeTicket:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
-
-    def check_compatible_type_and_annotation_status(self, eval_id=None):
-        """Check if the ticket type and annotation_status are compatible.
-
-        If the ticket type is 'add', then the annotation_status is not
-        expected to be 'final'.
-        If the ticket type is 'replace', then the annotation_status is
-        not expected to be 'draft'.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        try:
-            annotation_status = self.data_dict["annotation_status"]
-        except:
-            annotation_status = ""
-        if (self.type == "add" and annotation_status == "final"):
-            result = ("The ticket type indicates that a genome "
-                     "with 'final' annotation_status will be added, "
-                     "which is not expected.")
-            status = "error"
-        elif (self.type == "replace" and annotation_status == "draft"):
-            result = ("The ticket type indicates that a genome "
-                     "with 'draft' annotation_status will be replaced, "
-                     "which is not expected.")
-            status = "error"
-        else:
-            result = "The ticket type and annotation_status are expected."
-            status = "correct"
-        definition = ("Check if the ticket type and annotation_status "
-                     "are compatible.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+    # TODO this has been moved to bundle, so it may no longer be needed.
+    # def check_compatible_type_and_annotation_status(self, eval_id=None):
+    #     """Check if the ticket type and annotation_status are compatible.
+    #
+    #     If the ticket type is 'add', then the annotation_status is not
+    #     expected to be 'final'.
+    #     If the ticket type is 'replace', then the annotation_status is
+    #     not expected to be 'draft'.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #     try:
+    #         annotation_status = self.data_dict["annotation_status"]
+    #     except:
+    #         annotation_status = ""
+    #     if (self.type == "add" and annotation_status == "final"):
+    #         result = ("The ticket type indicates that a genome "
+    #                  "with 'final' annotation_status will be added, "
+    #                  "which is not expected.")
+    #         status = "error"
+    #     elif (self.type == "replace" and annotation_status == "draft"):
+    #         result = ("The ticket type indicates that a genome "
+    #                  "with 'draft' annotation_status will be replaced, "
+    #                  "which is not expected.")
+    #         status = "error"
+    #     else:
+    #         result = "The ticket type and annotation_status are expected."
+    #         status = "correct"
+    #     definition = ("Check if the ticket type and annotation_status "
+    #                  "are compatible.")
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
 
 
     def check_compatible_type_and_data_retain(self, eval_id=None):
@@ -329,4 +329,40 @@ class GenomeTicket:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
+
+    def check_valid_data_source(self, ref_set_attr, check_set, eval_id=None):
+        """Check that the values in the specified attribute are valid.
+
+        :param ref_set_attr:
+            Name of the data_dict in the ticket to be evaluated
+            (data_ticket, data_retain, data_retrieve)
+        :type ref_set_attr: str
+        :param check_set: Set of valid field names.
+        :type check_set: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        if ref_set_attr == "data_ticket":
+            ref_set = self.data_ticket
+        elif ref_set_attr == "data_retain":
+            ref_set = self.data_retain
+        elif ref_set_attr == "data_retrieve":
+            ref_set = self.data_retrieve
+        else:
+            ref_set = None
+        if ref_set is not None:
+            invalid_values = ref_set - check_set
+            if len(invalid_values) == 0:
+                result = "The field is populated correctly."
+                status = "correct"
+            else:
+                result = "The field is not populated correctly."
+                status = "error"
+        else:
+            result = "Invalid field to be evaluationed."
+            status = "error"
+
+        definition = f"Check if {ref_set_attr} field is correctly populated."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 ###

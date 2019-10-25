@@ -5,12 +5,13 @@ import unittest
 from pdm_utils.constants import constants
 from pdm_utils.classes import genome
 from pdm_utils.classes import cds
+from pdm_utils.classes import trna
+from pdm_utils.classes import source
 from datetime import datetime
 from Bio.Seq import Seq
-from pdm_utils.classes import trna
 
 
-class TestGenomeClass(unittest.TestCase):
+class TestGenomeClass1(unittest.TestCase):
 
 
     def setUp(self):
@@ -1189,166 +1190,6 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_feature_ids_1(self):
-        """Verify that CDS features are sorted in correct order."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.trna2.left = 10
-        self.trna2.right = 17
-
-        #3
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        #4
-        self.cds3.left = 18
-        self.cds3.right = 30
-
-        #5
-        self.cds2.left = 18
-        self.cds2.right = 40
-
-        #6
-        self.trna1.left = 100
-        self.trna1.right = 200
-
-        #7 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
-        self.gnm.set_feature_ids(use_cds=True)
-        with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_4")
-        with self.subTest():
-            self.assertEqual(self.cds2.id, "L5_3")
-        with self.subTest():
-            self.assertEqual(self.cds3.id, "L5_2")
-        with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_1")
-
-
-    def test_set_feature_ids_2(self):
-        """Verify that tRNA features are sorted in correct order."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.trna2.left = 10
-        self.trna2.right = 17
-
-        #3
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        #4
-        self.cds3.left = 18
-        self.cds3.right = 30
-
-        #5
-        self.cds2.left = 18
-        self.cds2.right = 40
-
-        #6
-        self.trna1.left = 100
-        self.trna1.right = 200
-
-        #7 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
-        self.gnm.set_feature_ids(use_trna=True)
-        with self.subTest():
-            self.assertEqual(self.trna1.id, "L5_3")
-        with self.subTest():
-            self.assertEqual(self.trna2.id, "L5_2")
-        with self.subTest():
-            self.assertEqual(self.trna3.id, "L5_1")
-
-
-    def test_set_feature_ids_3(self):
-        """Verify that CDS and tRNA features are sorted in correct order."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.trna2.left = 10
-        self.trna2.right = 17
-
-        #3
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        #4
-        self.cds3.left = 18
-        self.cds3.right = 30
-
-        #5
-        self.cds2.left = 18
-        self.cds2.right = 40
-
-        #6
-        self.trna1.left = 100
-        self.trna1.right = 200
-
-        #7 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
-        self.gnm.set_feature_ids(use_cds=True, use_trna=True)
-        with self.subTest():
-            self.assertEqual(self.trna1.id, "L5_6")
-        with self.subTest():
-            self.assertEqual(self.trna2.id, "L5_2")
-        with self.subTest():
-            self.assertEqual(self.trna3.id, "L5_1")
-        with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_7")
-        with self.subTest():
-            self.assertEqual(self.cds2.id, "L5_5")
-        with self.subTest():
-            self.assertEqual(self.cds3.id, "L5_4")
-        with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_3")
-
-
-    def test_set_feature_ids_4(self):
-        """Verify that CDS and tRNA features are sorted in correct order
-        with type delimiter added."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds4]
-        self.gnm.trna_features = [self.trna3]
-        self.gnm.set_feature_ids(use_type=True, use_cds=True, use_trna=True)
-        with self.subTest():
-            self.assertEqual(self.trna3.id, "L5_TRNA_1")
-        with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_CDS_2")
-
 
 
 
@@ -2284,7 +2125,134 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+class TestGenomeClass2(unittest.TestCase):
 
+    def setUp(self):
+        self.gnm = genome.Genome()
+        self.gnm.id = "L5"
+
+        self.cds1 = cds.Cds()
+        self.cds2 = cds.Cds()
+        self.cds3 = cds.Cds()
+        self.cds4 = cds.Cds()
+
+        self.trna1 = trna.TrnaFeature()
+        self.trna2 = trna.TrnaFeature()
+        self.trna3 = trna.TrnaFeature()
+        self.trna4 = trna.TrnaFeature()
+
+        self.src1 = source.Source()
+        self.src2 = source.Source()
+
+
+        #1
+        self.trna3.left = 10
+        self.trna3.right = 15
+
+        #2
+        self.trna2.left = 10
+        self.trna2.right = 17
+
+        #3
+        self.cds4.left = 10
+        self.cds4.right = 20
+
+        #4
+        self.cds3.left = 18
+        self.cds3.right = 30
+
+        #5
+        self.cds2.left = 18
+        self.cds2.right = 40
+
+        #6
+        self.src2.left = 19
+        self.src2.right = 35
+
+        #7
+        self.trna1.left = 100
+        self.trna1.right = 200
+
+        #8
+        self.src1.left = 101
+        self.src1.right = 300
+
+        #9 Wrap-around feature.
+        self.cds1.left = 400
+        self.cds1.right = 3
+
+        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
+        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.gnm.source_features = [self.src1, self.src2]
+
+
+    def test_set_feature_ids_1(self):
+        """Verify that CDS features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_cds=True)
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_4")
+        with self.subTest():
+            self.assertEqual(self.cds2.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.cds3.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_1")
+
+    def test_set_feature_ids_2(self):
+        """Verify that tRNA features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_trna=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.trna2.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_1")
+
+    def test_set_feature_ids_2(self):
+        """Verify that source features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_source=True)
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_1")
+        with self.subTest():
+            self.assertEqual(self.src1.id, "L5_2")
+
+    def test_set_feature_ids_4(self):
+        """Verify that CDS, tRNA, and source features are sorted
+        in correct order."""
+        self.gnm.set_feature_ids(use_cds=True, use_trna=True, use_source=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_7")
+        with self.subTest():
+            self.assertEqual(self.trna2.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_1")
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_9")
+        with self.subTest():
+            self.assertEqual(self.cds2.id, "L5_5")
+        with self.subTest():
+            self.assertEqual(self.cds3.id, "L5_4")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.src1.id, "L5_8")
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_6")
+
+    def test_set_feature_ids_5(self):
+        """Verify that CDS and tRNA features are sorted in correct order
+        with type delimiter added."""
+        self.gnm.cds_features = [self.cds4]
+        self.gnm.trna_features = [self.trna3]
+        self.gnm.source_features = [self.src2]
+        self.gnm.set_feature_ids(use_type=True, use_cds=True,
+                                 use_trna=True, use_source=True)
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_TRNA_1")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_CDS_2")
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_SRC_3")
 
 
 
