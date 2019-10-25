@@ -5,7 +5,7 @@ then passes all command line arguments to the main pipeline module.
 import argparse
 import sys
 
-from pdm_utils.pipelines.cdd import cdd_pp
+from pdm_utils.pipelines.cdd import cdd
 from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
 from pdm_utils.pipelines.db_compare import compare_databases
 from pdm_utils.pipelines.db_export import export_database
@@ -52,9 +52,9 @@ def main(unparsed_args):
     elif args.pipeline == "import_dev":
         import_genome.main(unparsed_args)
     elif args.pipeline == "cdd":
-        cdd_pp.main(unparsed_args)
+        cdd.main(unparsed_args[unparsed_args.index("cdd") + 1:])
     elif args.pipeline == "phamerate":
-        phamerate.main(unparsed_args[unparsed_args.index("phamerate")+1:])
+        phamerate.main(unparsed_args[unparsed_args.index("phamerate") + 1:])
     elif args.pipeline == "export":
         export_database.main(unparsed_args)
     # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
