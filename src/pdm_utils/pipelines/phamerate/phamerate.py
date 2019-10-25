@@ -36,7 +36,7 @@ def setup_argparser():
                         help="coverage threshold in range [0,100]")
     parser.add_argument("--steps", type=int, default=1,
                         help="number of clustering steps (mmseqs only)")
-    parser.add_argument("--max_seqs", type=int, default=500,
+    parser.add_argument("--max_seqs", type=int, default=1000,
                         help="max number of targets per query per step "
                              "(mmseqs only)")
     parser.add_argument("--verbose", type=int, default=3,
@@ -48,8 +48,6 @@ def setup_argparser():
                         help="coverage mode in range [0, 4] (mmseqs only)")
     parser.add_argument("--clu_mode", type=int, default=0,
                         help="cluster mode in range [0, 3] (mmseqs only)")
-    parser.add_argument("--no_filter_dups", action='store_true', default=False,
-                        help="override filtering of duplicate genes - slower")
     return parser
 
 
