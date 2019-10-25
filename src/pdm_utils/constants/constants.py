@@ -61,7 +61,7 @@ EMPTY_SET = set(["",
                 EMPTY_DATE])
 
 # Path to blastclust binary
-BLASTCLUST_PATH = Path("~/bin/blast-2.2.14/").expanduser()
+BLASTCLUST_PATH = Path("~/bin/blast-2.2.14/bin").expanduser()
 
 
 # Set up dna and protein alphabets to verify sequence integrity
