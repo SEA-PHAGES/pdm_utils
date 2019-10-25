@@ -1,10 +1,8 @@
-"""This script allows user to "phamerate" a MySQL database compliant
-with the current Phamerator database schema using either blastclust OR
-mmseqs2 (default).
-"""
 import argparse
 import sys
 import datetime
+import os
+from shutil import rmtree
 
 try:
     import pymysql as pms
@@ -13,7 +11,7 @@ except ImportError:
     sys.exit(1)
 
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
-from pdm_utils.classes.phameratorhandler import PhameratorHandler
+from pdm_utils.functions.phameration import *
 
 
 def setup_argparser():
@@ -29,8 +27,8 @@ def setup_argparser():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("db", type=str,
                         help="name of database to phamerate")
-    parser.add_argument("--use_blast", action='store_true', default=False,
-                        help="use blastclust instead of MMseqs2")
+    parser.add_argument("--program", type=str, default="mmseqs", choices=[
+        "mmseqs", "blast"], help="which program to use for clustering")
     parser.add_argument("--threads", default=1, help="number of threads to use")
     parser.add_argument("--identity", type=int, default=40,
                         help="percent identity threshold in range [0,100]")
@@ -61,6 +59,7 @@ def main(argument_list):
 
     # Parse arguments
     args = phamerate_parser.parse_args(argument_list)
+    program = args.program
 
     # Initialize MySQLConnectionHandler with database provided at CLI
     mysql_handler = MySQLConnectionHandler()
@@ -81,16 +80,60 @@ def main(argument_list):
     # Record start time
     start = datetime.datetime.now()
 
-    # Initialize PhameratorHandler with our mysql_handler and run main
-    pham_handler = PhameratorHandler(mysql_handler, args)
+    # Refresh temp_dir
+    if os.path.exists("/tmp/phamerate"):
+        try:
+            rmtree("/tmp/phamerate")
+        except OSError:
+            print("Failed to delete existing '/tmp/phamerate'")
+            sys.exit(1)
+    try:
+        os.makedirs("/tmp/phamerate")
+    except OSError:
+        print("Failed to create new '/tmp/phamerate'")
+        sys.exit(1)
 
-    # Filter redundant translations from phameration (insignificant
-    # improvement for MMseqs2 but HUGE improvement for blastclust) - default
-    # is to do it
-    if args.no_filter_dups is True:
-        pham_handler.filter_redundant = False
+    # Get old pham data and un-phamerated genes
+    old_phams, old_colors = read_existing_phams(mysql_handler)
+    unphamerated = read_unphamerated_genes(mysql_handler)
 
-    pham_handler.main()
+    # Get GeneIDs & translations, and translation groups
+    genes_and_trans, trans_groups = get_translations(mysql_handler)
+
+    # Write input fasta file
+    write_fasta(trans_groups)
+
+    # Create clusterdb and perform clustering
+    program_params = get_program_params(program, args)
+    create_clusterdb(program)
+    phamerate(program_params, program)
+
+    # Convert output to parseable (mmseqs) and parse outputs
+    convert_to_parseable(program)
+    new_phams = parse_output(program)
+    new_phams = reintroduce_duplicates(new_phams, trans_groups, genes_and_trans)
+
+    # Preserve old pham names and colors
+    new_phams, new_colors = preserve_phams(old_phams, new_phams, old_colors,
+                                           unphamerated)
+
+    # Early exit if we don't have new phams or new colors - avoids
+    # overwriting the existing pham data with potentially incomplete new data
+    if len(new_phams) == 0 or len(new_colors) == 0:
+        print("Failed to parse new pham/color data... Terminating pipeline")
+        return
+
+    # If we got past the early exit, we are probably safe to truncate the
+    # pham and pham_color tables, and insert the new pham data
+    # Clear old pham data - auto commits at end of transaction
+    commands = ["TRUNCATE TABLE pham", "TRUNCATE TABLE pham_color"]
+    mysql_handler.execute_transaction(commands)
+
+    # Insert new pham/color data
+    reinsert_pham_data(new_phams, new_colors, mysql_handler)
+
+    # Fix miscolored phams/orphams
+    fix_miscolored_phams(mysql_handler)
 
     # Record stop time
     stop = datetime.datetime.now()
