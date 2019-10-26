@@ -862,18 +862,76 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
 # TODO unit test.
 def compare_genomes(genome_pair, eval_flags):
     """Compare two genomes to identify discrepancies."""
-    genome_pair.compare_genome_sequence(eval_id="GP_001")
-    genome_pair.compare_genome_length(eval_id="GP_002")
-    genome_pair.compare_cluster(eval_id="GP_003")
-    genome_pair.compare_subcluster(eval_id="GP_004")
-    genome_pair.compare_accession(eval_id="GP_005")
-    genome_pair.compare_host_genus(eval_id="GP_006")
-    genome_pair.compare_author(eval_id="GP_007")
+    genome_pair.compare_attribute("id",
+        expect_same=True, eval_id="GP_001")
+    genome_pair.compare_attribute("seq",
+        expect_same=True, eval_id="GP_002")
+    genome_pair.compare_attribute("length",
+        expect_same=True, eval_id="GP_003")
+    genome_pair.compare_attribute("cluster",
+        expect_same=True, eval_id="GP_004")
+    genome_pair.compare_attribute("subcluster",
+        expect_same=True, eval_id="GP_005")
+    genome_pair.compare_attribute("accession",
+        expect_same=True, eval_id="GP_006")
+    genome_pair.compare_attribute("host_genus",
+        expect_same=True, eval_id="GP_007")
+    genome_pair.compare_attribute("annotation_author",
+        expect_same=True, eval_id="GP_008")
+    genome_pair.compare_attribute("translation_table",
+        expect_same=True, eval_id="GP_009")
+    genome_pair.compare_attribute("retrieve_record",
+        expect_same=True, eval_id="GP_010")
+
+
+
+
+    # genome_pair.compare_genome_sequence(eval_id="GP_001")
+    # genome_pair.compare_genome_length(eval_id="GP_002")
+    # genome_pair.compare_cluster(eval_id="GP_003")
+    # genome_pair.compare_subcluster(eval_id="GP_004")
+    # genome_pair.compare_accession(eval_id="GP_005")
+    # genome_pair.compare_host_genus(eval_id="GP_006")
+    # genome_pair.compare_annotation_author(eval_id="GP_007")
+
     if eval_flags["check_replace"]:
-        genome_pair.compare_annotation_status("type","phamerator",
-            "flat_file","draft","final", eval_id="GP_008")
-        genome_pair.compare_date("type", "phamerator", "flat_file",
-                                 expect="newer", eval_id="GP_009")
+        # The following checks assume the current genome in Phamerator
+        # is stored in 'genome1' slot.
+        # The current genome annotations in Phamerator is expected to be
+        # older than the new genome annotations.
+        genome_pair.compare_date("older", eval_id="GP_015")
+
+
+        # If current genome in phamerator is "draft" status, then
+        # it is expected that the replacing genome name no longer
+        # retains the "_Draft" suffix, so the name should change.
+        # The status should change to "final".
+        if genome_pair.genome1.annotation_status == "draft":
+            genome_pair.compare_attribute("name",
+                expect_same=False, eval_id="GP_011")
+            genome_pair.compare_attribute("annotation_status",
+                expect_same=False, eval_id="GP_012")
+        else:
+            genome_pair.compare_attribute("name",
+                expect_same=True, eval_id="GP_013")
+            genome_pair.compare_attribute("annotation_status",
+                expect_same=True, eval_id="GP_014")
+
+
+
+        # # Replacing a genome with a version that is dated to be
+        # # older is unexpected.
+        # genome_pair.compare_date(attr, old_key, new_key,
+        #                          expect="newer", eval_id="GP_009")
+        #
+        # # Status changes other than draft-to-final are unexpected.
+        # status1 = genome_pair.genome1.annotation_status
+        # status2 = genome_pair.genome2.annotation_status
+        # if status1 != status2:
+        #     genome_pair.compare_annotation_status(attr, old_key,
+        #         new_key,"draft","final", eval_id="GP_008")
+
+
 
 # TODO implement.
 # TODO unit test.

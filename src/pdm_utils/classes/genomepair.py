@@ -385,155 +385,202 @@ class GenomePair:
 
     # Evaluations
 
-
-    def compare_id(self, eval_id=None):
-        """Compare the id of each genome.
+    def compare_attribute(self, attribute, expect_same=False, eval_id=None):
+        """Compare specified attribute of each genome.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
+        try:
+            value1 = getattr(self.genome1, attribute)
+            value2 = getattr(self.genome2, attribute)
+        except:
+            value1 = None
+            value2 = None
+        if (value1 is not None and value2 is not None):
 
-        if self.genome1.id != self.genome2.id:
-            result = "The two genomes have different ids."
-            status = "error"
+            if value1 == value2:
+                actual_same = True
+            else:
+                actual_same = False
+
+            if actual_same:
+                result = f"The two genomes have idential {attribute} values, "
+            else:
+                result = f"The two genomes have different {attribute} values, "
+
+            if actual_same and expect_same:
+                result = result + "as expected."
+                status = "correct"
+            elif not actual_same and not expect_same:
+                result = result + "as expected."
+                status = "correct"
+            else:
+                result = result + "which is not expected."
+                status = "error"
         else:
-            result = "The two genomes have the same ids."
-            status = "correct"
-
-        definition = "Compare the id of each genome."
+            result = f"The {attribute} was not evaluated."
+            status = "untested"
+        definition = f"Compare the {attribute} attribute of each genome."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def compare_genome_sequence(self, eval_id=None):
-        """Compare the sequence of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        if self.genome1.seq != self.genome2.seq:
-            result = "The two genomes have different sequences."
-            status = "error"
-
-        else:
-            result = "The two sequences are the same."
-            status = "correct"
-
-        definition = "Compare the sequence of each genome."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
 
 
-    def compare_genome_length(self, eval_id=None):
-        """Compare the sequence length of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        if self.genome1.length != self.genome2.length:
-            result = "The two genomes have different sequence lengths."
-            status = "error"
-        else:
-            result = "The two sequences are the same length."
-            status = "correct"
-
-        definition = "Compare the length of both sequences."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
 
 
-    def compare_cluster(self, eval_id=None):
-        """Compare the cluster of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        if self.genome1.cluster != self.genome2.cluster:
-            result = "The two genomes are assigned to different clusters."
-            status = "error"
-        else:
-            result = "The two cluster designations are the same."
-            status = "correct"
-
-        definition = "Compare the cluster of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def compare_subcluster(self, eval_id=None):
-        """Compare the subcluster of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        if self.genome1.subcluster != self.genome2.subcluster:
-            result = "The two genomes are assigned to different subclusters."
-            status = "error"
-        else:
-            result = "The two subcluster designations are the same."
-            status = "correct"
-
-        definition = "Compare the subcluster of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def compare_accession(self, eval_id=None):
-        """Compare the accession of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        if self.genome1.accession != self.genome2.accession:
-            result = "The two genomes have different accessions."
-            status = "error"
-        else:
-            result = "The two accessions are the same."
-            status = "correct"
-
-        definition = "Compare the accession of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def compare_host_genus(self, eval_id=None):
-        """Compare the host_genus of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        if self.genome1.host_genus != self.genome2.host_genus:
-            result = "The two genomes have different hosts."
-            status = "error"
-        else:
-            result = "The two hosts are the same."
-            status = "correct"
-
-        definition = "Compare the host_genus of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    # TODO implement this method.
-    # Authorship is not as straightforward as other fields.
-    def compare_author(self, eval_id=None):
-        """Compare the authorship of each genome.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        result = ""
-        status = ""
-        definition = "Compare the authorship of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+    # TODO these methods are probably no needed now that
+    # compare_attribute is functioning.
+    # def compare_id(self, eval_id=None):
+    #     """Compare the id of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.id != self.genome2.id:
+    #         result = "The two genomes have different ids."
+    #         status = "error"
+    #     else:
+    #         result = "The two genomes have the same ids."
+    #         status = "correct"
+    #
+    #     definition = "Compare the id of each genome."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_genome_sequence(self, eval_id=None):
+    #     """Compare the sequence of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.seq != self.genome2.seq:
+    #         result = "The two genomes have different sequences."
+    #         status = "error"
+    #
+    #     else:
+    #         result = "The two sequences are the same."
+    #         status = "correct"
+    #
+    #     definition = "Compare the sequence of each genome."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_genome_length(self, eval_id=None):
+    #     """Compare the sequence length of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.length != self.genome2.length:
+    #         result = "The two genomes have different sequence lengths."
+    #         status = "error"
+    #     else:
+    #         result = "The two sequences are the same length."
+    #         status = "correct"
+    #
+    #     definition = "Compare the length of both sequences."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_cluster(self, eval_id=None):
+    #     """Compare the cluster of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.cluster != self.genome2.cluster:
+    #         result = "The two genomes are assigned to different clusters."
+    #         status = "error"
+    #     else:
+    #         result = "The two cluster designations are the same."
+    #         status = "correct"
+    #
+    #     definition = "Compare the cluster of both genomes."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_subcluster(self, eval_id=None):
+    #     """Compare the subcluster of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.subcluster != self.genome2.subcluster:
+    #         result = "The two genomes are assigned to different subclusters."
+    #         status = "error"
+    #     else:
+    #         result = "The two subcluster designations are the same."
+    #         status = "correct"
+    #
+    #     definition = "Compare the subcluster of both genomes."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_accession(self, eval_id=None):
+    #     """Compare the accession of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.accession != self.genome2.accession:
+    #         result = "The two genomes have different accessions."
+    #         status = "error"
+    #     else:
+    #         result = "The two accessions are the same."
+    #         status = "correct"
+    #
+    #     definition = "Compare the accession of both genomes."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_host_genus(self, eval_id=None):
+    #     """Compare the host_genus of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #
+    #     if self.genome1.host_genus != self.genome2.host_genus:
+    #         result = "The two genomes have different hosts."
+    #         status = "error"
+    #     else:
+    #         result = "The two hosts are the same."
+    #         status = "correct"
+    #
+    #     definition = "Compare the host_genus of both genomes."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
+    #
+    #
+    # def compare_annotation_author(self, eval_id=None):
+    #     """Compare the authorship of each genome.
+    #
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #     if self.genome1.annotation_author != self.genome2.annotation_author:
+    #         result = "The two genomes have different annotation_author values."
+    #         status = "error"
+    #     else:
+    #         result = "The two annotation_author values are the same."
+    #         status = "correct"
+    #     definition = "Compare the annotation_authorship of both genomes."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
 
 
     def compare_annotation_status(self, attribute, ref_name, query_name,
@@ -593,60 +640,23 @@ class GenomePair:
         self.evaluations.append(evl)
 
 
-
-    # TODO in development.
-    # TODO unittest.
-    def compare_date(self, attribute, ref_name, query_name,
-                     expect="", eval_id=None):
+    def compare_date(self, expect, eval_id=None):
         """Compare the annotation_status of each genome.
 
-        :param attribute:
-            Indicates the unique value of each
-            genome by which to assign the order of comparison.
-        :type attribute: str
-        :param ref_name:
-            Indicates the attribute value that defines the reference genome.
-        :type ref_name: str
-        :param query_name:
-            Indicates the attribute value that defines the query genome.
-        :type query_name: str
-        :param ref_check_value:
-            Indicates the annotation_status value that is
-            expected in the reference genome.
-        :type ref_check_value: misc.
-        :param query_check_value:
-            Indicates the annotation_status value that is
-            expected in the query genome.
-        :type query_check_value: misc.
+        :param expect:
+            Is the first genome expected to be "newer", "equal", or "older"
+            than the second genome.
+        :type expect: str
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        try:
-            value1 = getattr(self.genome1, attribute)
-            value2 = getattr(self.genome2, attribute)
-        except:
-            value1 = None
-            value2 = None
-
-        if (value1 == ref_name and value2 == query_name):
-            ref_genome = self.genome1
-            query_genome = self.genome2
-        elif (value2 == ref_name and value1 == query_name):
-            ref_genome = self.genome2
-            query_genome = self.genome1
+        if self.genome1.date > self.genome2.date:
+            actual = "newer"
+        elif self.genome1.date == self.genome2.date:
+            actual = "equal"
         else:
-            ref_genome = None
-            query_genome = None
-
-        if (ref_genome is not None and query_genome is not None):
-
-            if query_genome.date > ref_genome.date:
-                actual = "newer"
-            elif query_genome.date == ref_genome.date:
-                actual = "equal"
-            else:
-                actual = "older"
-
+            actual = "older"
+        if expect in set(["newer", "equal", "older"]):
             if actual == expect:
                 result = "The age of the query genome is expected."
                 status = "correct"
@@ -654,13 +664,83 @@ class GenomePair:
                 result = "The age of the query genome is not expected."
                 status = "error"
         else:
-            result = "The age of the query genome was not evaluated."
+            result = "An invalid comparison was selected."
             status = "untested"
         definition = "Compare the age of both genomes."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
+
+
+
+    # This version of compare_date() may no longer be needed.
+    # def compare_date(self, attribute, ref_name, query_name,
+    #                  expect, eval_id=None):
+    #     """Compare the annotation_status of each genome.
+    #
+    #     :param attribute:
+    #         Indicates the unique value of each
+    #         genome by which to assign the order of comparison.
+    #     :type attribute: str
+    #     :param ref_name:
+    #         Indicates the attribute value that defines the reference genome.
+    #     :type ref_name: str
+    #     :param query_name:
+    #         Indicates the attribute value that defines the query genome.
+    #     :type query_name: str
+    #     :param ref_check_value:
+    #         Indicates the annotation_status value that is
+    #         expected in the reference genome.
+    #     :type ref_check_value: misc.
+    #     :param query_check_value:
+    #         Indicates the annotation_status value that is
+    #         expected in the query genome.
+    #     :type query_check_value: misc.
+    #     :param eval_id: Unique identifier for the evaluation.
+    #     :type eval_id: str
+    #     """
+    #     try:
+    #         value1 = getattr(self.genome1, attribute)
+    #         value2 = getattr(self.genome2, attribute)
+    #     except:
+    #         value1 = None
+    #         value2 = None
+    #
+    #     if (value1 == ref_name and value2 == query_name):
+    #         ref_genome = self.genome1
+    #         query_genome = self.genome2
+    #     elif (value2 == ref_name and value1 == query_name):
+    #         ref_genome = self.genome2
+    #         query_genome = self.genome1
+    #     else:
+    #         ref_genome = None
+    #         query_genome = None
+    #
+    #     if (ref_genome is not None and query_genome is not None):
+    #
+    #         if query_genome.date > ref_genome.date:
+    #             actual = "newer"
+    #         elif query_genome.date == ref_genome.date:
+    #             actual = "equal"
+    #         else:
+    #             actual = "older"
+    #         if expect in set(["newer", "equal", "older"]):
+    #             if actual == expect:
+    #                 result = "The age of the query genome is expected."
+    #                 status = "correct"
+    #             else:
+    #                 result = "The age of the query genome is not expected."
+    #                 status = "error"
+    #         else:
+    #             result = "An invalid comparison was selected."
+    #             status = "untested"
+    #     else:
+    #         result = "The age of the query genome was not evaluated."
+    #         status = "untested"
+    #     definition = "Compare the age of both genomes."
+    #     evl = eval.Eval(eval_id, definition, result, status)
+    #     self.evaluations.append(evl)
 
 
 ###

@@ -3,6 +3,7 @@ maintain and update SEA-PHAGES phage genomics data.
 """
 
 from pdm_utils.functions import basic
+from pdm_utils.constants import constants
 from pdm_utils.classes import eval
 from datetime import datetime
 from Bio.SeqUtils import GC
@@ -39,7 +40,7 @@ class Genome:
         self.annotation_status = "" # Final, Draft, Unknown version of genome data
         self.annotation_author = -1 # 1 (can be changed), 0 (can not be changed)
         self.retrieve_record = -1 # 1 (auto update), 0 (do not auto update)
-        self.date = "" # Used for the DateLastModified field.
+        self.date = constants.EMPTY_DATE # Used for the DateLastModified field.
 
         # The following attributes are common to
         # GenBank-formatted flat file records.
