@@ -427,7 +427,7 @@ class TestGenomePairClass(unittest.TestCase):
 
 
 
-###
+
     def test_compare_attribute_1(self):
         """Verify no error is produced when both genomes have
         identical ids as expected."""

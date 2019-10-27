@@ -392,12 +392,14 @@ class GenomePair:
         :type eval_id: str
         """
         try:
+            test = True
             value1 = getattr(self.genome1, attribute)
             value2 = getattr(self.genome2, attribute)
         except:
+            test = False
             value1 = None
             value2 = None
-        if (value1 is not None and value2 is not None):
+        if test:
 
             if value1 == value2:
                 actual_same = True
@@ -405,7 +407,7 @@ class GenomePair:
                 actual_same = False
 
             if actual_same:
-                result = f"The two genomes have idential {attribute} values, "
+                result = f"The two genomes have identical {attribute} values, "
             else:
                 result = f"The two genomes have different {attribute} values, "
 

@@ -701,9 +701,6 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     tkt.check_valid_data_source("data_retrieve", retrieve_set,
                                 eval_id="TKT_012")
 
-    # TODO this has been moved to bundle checks.
-    # tkt.check_compatible_type_and_annotation_status(eval_id="TKT_008")
-
 
 
 def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
@@ -731,16 +728,11 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
     :param accession_set: A set of accessions.
     :type accession_set: set
     """
-
     if tkt_type == "add":
-        gnm.check_id(phage_id_set | null_set, False, eval_id="GNM_001")
-        gnm.check_name(phage_id_set | null_set, False, eval_id="GNM_002")
-        gnm.check_sequence(seq_set | null_set, False, eval_id="GNM_003")
+        gnm.check_attribute("id", phage_id_set | null_set, expect=False, eval_id="GNM_001")
+        gnm.check_attribute("name", phage_id_set | null_set, expect=False, eval_id="GNM_002")
+        gnm.check_attribute("seq", seq_set | null_set, expect=False, eval_id="GNM_003")
 
-        # This has been moved to the bundle class
-        # It is unusual for 'final' status genomes to be on 'add' tickets.
-        # gnm.check_annotation_status(check_set=set(["final"]), expect=False,
-        #                             eval_id="GNM_004")
 
         # If the genome is being added, and if it has an accession,
         # no other genome is expected to have an identical accession.
@@ -748,50 +740,69 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
         # the prior version of the genome may or may not have had
         # accession data, so no need to check for 'replace' tickets.
         if gnm.accession != "":
-            gnm.check_accession(check_set=accession_set, expect=False,
-                                eval_id="GNM_005")
+            gnm.check_attribute("accession", accession_set, expect=False, eval_id="GNM_005")
 
     # 'replace' ticket checks.
     else:
-        gnm.check_id(phage_id_set, True, eval_id="GNM_006")
-        gnm.check_name(phage_id_set, True, eval_id="GNM_007")
-        gnm.check_sequence(seq_set, True, eval_id="GNM_008")
+        gnm.check_attribute("id", phage_id_set, expect=True, eval_id="GNM_006")
+        gnm.check_attribute("name", phage_id_set, expect=True, eval_id="GNM_007")
+        gnm.check_attribute("seq", seq_set, expect=True, eval_id="GNM_008")
 
-        # This has been moved to bundle.
-        # # It is unusual for 'draft' status genomes to be on 'replace' tickets.
-        # gnm.check_annotation_status(check_set=set(["draft"]), expect=False,
-        #                             eval_id="GNM_009")
+    # Depending on the annotation_status of the genome,
+    # CDS features are expected to contain or not contain descriptions.
+    # Draft genomes should not have any descriptions.
+    # Final genomes should not have any descriptions.
+    # There are no expectations for other types of genomes.
 
-    gnm.check_annotation_status(check_set=constants.ANNOTATION_STATUS_SET,
-                                expect=True, eval_id="GNM_010")
+    # Also, Draft annotations should not have accession data.
+    if self.annotation_status == "draft":
+        gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0, eval_id="")
+        gnm.check_attribute("accession", null_set, expect=True, eval_id="")
 
+    elif (self.annotation_status == "final":
+        gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0, eval_id="")
+    else:
+        pass
 
-    gnm.check_annotation_author(check_set=constants.ANNOTATION_AUTHOR_SET,
-                                eval_id="GNM_011")
-    gnm.check_retrieve_record(check_set=constants.RETRIEVE_RECORD_SET,
-                              eval_id="GNM_012")
-    gnm.check_cluster(cluster_set, True, eval_id="GNM_013")
-    gnm.check_subcluster(subcluster_set, True, eval_id="GNM_014")
-    gnm.check_subcluster_structure(eval_id="GNM_015")
+    gnm.check_attribute("annotation_status", constants.ANNOTATION_STATUS_SET, expect=True, eval_id="")
+    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET, expect=True, eval_id="")
+    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET, expect=True, eval_id="")
+    gnm.check_attribute("cluster", cluster_set, expect=True, eval_id="")
+    gnm.check_attribute("subcluster", subcluster_set, expect=True, eval_id="")
+    gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set, expect=True, eval_id="")
+    gnm.check_attribute("translation_table", set([11]), expect=True, eval_id="")
+    gnm.check_attribute("host_genus", host_genus_set, expect=True, eval_id="")
     gnm.check_cluster_structure(eval_id="GNM_016")
+    gnm.check_subcluster_structure(eval_id="GNM_015")
     gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_017")
+    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="")
+    gnm.check_magnitude("gc", ">", -0.0001, eval_id="")
+    gnm.check_magnitude("gc", "<", 1.0001, eval_id="")
+    gnm.check_magnitude("length", ">", 0, eval_id="")
+    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="")
+
+    # TODO set trna and tmrna to True after they are implemented.
+    # TODO add source features too?
+    gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
+                          eval_id="GNM_032")
+
     if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,
                               eval_id="GNM_018")
-    gnm.check_compatible_status_and_accession(eval_id="GNM_019")
-    gnm.check_compatible_status_and_descriptions(eval_id="GNM_020")
+
     if eval_flags["check_id_typo"]:
-        gnm.check_description_name(eval_id="GNM_021")
-        gnm.check_source_name(eval_id="GNM_022")
-        gnm.check_organism_name(eval_id="GNM_023")
+        gnm.compare_two_attributes("id", "_description_name", expect_same=True, eval_id="")
+        gnm.compare_two_attributes("id", "_source_name", expect_same=True, eval_id="")
+        gnm.compare_two_attributes("id", "_organism_name", expect_same=True, eval_id="")
+
     if eval_flags["check_host_typo"]:
-        gnm.check_host_genus(host_genus_set, True, eval_id="GNM_024")
-        gnm.check_description_host_genus(eval_id="GNM_025")
-        gnm.check_source_host_genus(eval_id="GNM_026")
-        gnm.check_organism_host_genus(eval_id="GNM_027")
+        gnm.compare_two_attributes("host_genus", "_description_host_genus", expect_same=True, eval_id="")
+        gnm.compare_two_attributes("host_genus", "_source_host_genus", expect_same=True, eval_id="")
+        gnm.compare_two_attributes("host_genus", "_organism_host_genus", expect_same=True, eval_id="")
+
     if eval_flags["check_author"]:
         if gnm.annotation_author == 1:
-            gnm.check_authors(check_set=constants.AUTHOR_SET,
+            gnm.check_authors(check_set=constants.AUTHOR_SET, expect=True,
                               eval_id="GNM_028")
             gnm.check_authors(check_set=set(["lastname", "firstname"]),
                                  expect=False, eval_id="GNM_029")
@@ -799,21 +810,8 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
             gnm.check_authors(check_set=constants.AUTHOR_SET, expect=False,
                               eval_id="GNM_030")
 
-    gnm.check_cds_feature_tally(eval_id="GNM_031")
 
-    # TODO set trna and tmrna to True after they are implemented.
-    gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
-                          eval_id="GNM_032")
 
-    # TODO the following checks may no longer be needed, since the
-    # copying functions have been changed.
-    # TODO confirm that these check_value_flag() are needed here.
-    # Currently all "copy_data" functions run the check method
-    # to throw an error if not all data was copied.
-    gnm.set_value_flag("retrieve")
-    gnm.check_value_flag(eval_id="GNM_033")
-    gnm.set_value_flag("retain")
-    gnm.check_value_flag(eval_id="GNM_034")
 
 
 def check_source(src_ftr, eval_flags):
