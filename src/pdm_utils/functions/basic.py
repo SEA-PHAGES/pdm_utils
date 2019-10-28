@@ -585,8 +585,11 @@ def compare_cluster_subcluster(cluster, subcluster):
     :rtype: bool
     """
     result = True
+    if subcluster == "":
+        subcluster = "none"
+
     # If Singleton or Unknown Cluster, there should be no Subcluster
-    if (cluster.lower() == "singleton" or
+    if (cluster.capitalize() == "Singleton" or
         cluster == "UNK" or
         cluster.lower() == "none"):
         if subcluster != "none":

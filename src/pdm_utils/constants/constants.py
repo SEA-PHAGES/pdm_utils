@@ -2,6 +2,7 @@
 database."""
 
 from Bio.Alphabet import IUPAC
+from Bio.Seq import Seq
 from datetime import datetime
 from pathlib import Path
 
@@ -44,6 +45,8 @@ ANNOTATION_AUTHOR_SET = set([0,1])
 RETRIEVE_RECORD_SET = set([0,1])
 EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')
 LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI", "PHIRE"])
+
+EMPTY_GENOME_SEQ = Seq("", IUPAC.ambiguous_dna)
 
 # Common list of values that represent empty or null values.
 EMPTY_SET = set(["",

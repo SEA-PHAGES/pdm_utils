@@ -373,7 +373,7 @@ def prepare_tickets(ticket_filename):
     #0 = Type of database action to be performed (add, remove, replace, update)
     #1 = New PhageID that will be added to database
     #2 = Host of new phage
-    #3 = Cluster of new phage (singletons should be reported as "singleton")
+    #3 = Cluster of new phage (singletons should be reported as "Singleton")
     #4 = Subcluster of new phage (no subcluster should be reported as "none")
     #5 = Annotation status of new phage
     #6 = Annotation author of the new phage

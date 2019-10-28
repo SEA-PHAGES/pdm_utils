@@ -357,15 +357,15 @@ class TestGenomeClass1(unittest.TestCase):
 
     def test_set_cluster_2(self):
         """Check that 'singleton' string is set appropriately."""
-        cluster = "Singleton"
+        cluster = "singleton"
         self.gnm.set_cluster(cluster)
-        self.assertEqual(self.gnm.cluster, "singleton")
+        self.assertEqual(self.gnm.cluster, "Singleton")
 
     def test_set_cluster_3(self):
         """Check that None is set appropriately."""
         cluster = None
         self.gnm.set_cluster(cluster)
-        self.assertEqual(self.gnm.cluster, "singleton")
+        self.assertEqual(self.gnm.cluster, "Singleton")
 
     def test_set_cluster_4(self):
         """Check that whitespace is removed."""
@@ -421,15 +421,15 @@ class TestGenomeClass1(unittest.TestCase):
         self.gnm.subcluster = ""
         self.gnm.cluster = None
         self.gnm.set_cluster_subcluster()
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_2(self):
         """Check that singleton Cluster is set as
         singleton cluster_subcluster."""
         self.gnm.subcluster = ""
-        self.gnm.cluster = "singleton"
+        self.gnm.cluster = "Singleton"
         self.gnm.set_cluster_subcluster()
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_3(self):
         """Check that Cluster is set as cluster_subcluster."""
@@ -462,13 +462,13 @@ class TestGenomeClass1(unittest.TestCase):
     def test_set_cluster_subcluster_7(self):
         """Check that cluster_subcluster is set when provided value is None."""
         self.gnm.set_cluster_subcluster(None)
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_8(self):
         """Check that cluster_subcluster is set when provided value is
         'Singleton'."""
-        self.gnm.set_cluster_subcluster("Singleton")
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.gnm.set_cluster_subcluster("singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_9(self):
         """Check that cluster_subcluster is set when provided value is
@@ -733,7 +733,7 @@ class TestGenomeClass1(unittest.TestCase):
         subcluster is empty."""
         self.gnm.subcluster = "none"
         self.gnm.check_subcluster_structure()
-        self.assertEqual(self.gnm.evaluations[0].status, "not_evaluated")
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
 
 
 
@@ -763,7 +763,7 @@ class TestGenomeClass1(unittest.TestCase):
         cluster is empty."""
         self.gnm.cluster = "none"
         self.gnm.check_cluster_structure()
-        self.assertEqual(self.gnm.evaluations[0].status, "not_evaluated")
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
 
 
 

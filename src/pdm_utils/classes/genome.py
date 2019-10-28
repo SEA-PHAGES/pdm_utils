@@ -303,12 +303,12 @@ class Genome:
         """
         if isinstance(value, str):
             value = value.strip()
-            if value.lower() == "singleton":
-                self.cluster = value.lower()
+            if value.capitalize() == "Singleton":
+                self.cluster = value.capitalize()
             else:
                 self.cluster = value
         if value is None:
-            self.cluster = "singleton"
+            self.cluster = "Singleton"
 
 
     def set_subcluster(self, value, format="empty_string"):
@@ -338,20 +338,20 @@ class Genome:
             Otherwise, the value is directly used to populate this attribute.
         :type value: misc
         """
-        if value is "internal":
-            if (self.subcluster is None or \
-                self.subcluster.lower() == "none" or \
+        if value == "internal":
+            if (self.subcluster is None or
+                self.subcluster.lower() == "none" or
                 self.subcluster == ""):
                 if self.cluster is None:
-                    self.cluster_subcluster = "singleton"
+                    self.cluster_subcluster = "Singleton"
                 else:
                     self.cluster_subcluster = self.cluster
             else:
                 self.cluster_subcluster = self.subcluster
         elif value is None:
-            self.cluster_subcluster = "singleton"
-        elif value.lower() == "singleton":
-            self.cluster_subcluster = value.lower()
+            self.cluster_subcluster = "Singleton"
+        elif value.capitalize() == "Singleton":
+            self.cluster_subcluster = value.capitalize()
         else:
             self.cluster_subcluster = value
 
@@ -546,6 +546,8 @@ class Genome:
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None):
         """Check that the id is valid.
 
+        :param attribute: Name of the genome object attribute to evaluate.
+        :type attribute: str
         :param check_set:
             Set of reference ids.
         :type check_set: set
@@ -640,7 +642,7 @@ class Genome:
                 status = "correct"
         else:
             result = "Cluster is empty."
-            status = "not_evaluated"
+            status = "untested"
         definition = "Check if cluster attribute is structured correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
@@ -652,7 +654,7 @@ class Genome:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if self.subcluster != "none":
+        if (self.subcluster != "none" and self.subcluster != ""):
             left, right = basic.split_string(self.subcluster)
             if (left.isalpha() == False or right.isdigit() == False):
                 result = "Subcluster is not structured correctly."
@@ -662,7 +664,7 @@ class Genome:
                 status = "correct"
         else:
             result = "Subcluster is empty."
-            status = "not_evaluated"
+            status = "untested"
         definition = "Check if subcluster attribute is structured correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)

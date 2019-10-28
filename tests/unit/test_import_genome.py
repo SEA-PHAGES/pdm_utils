@@ -29,7 +29,7 @@ class TestImportGenomeClass1(unittest.TestCase):
 
     def setUp(self):
 
-        self.null_set = constants.EMPTY_SET
+        # self.null_set = constants.EMPTY_SET
         self.type_set = constants.IMPORT_TICKET_TYPE_SET
         self.run_mode_set = run_modes.RUN_MODES.keys()
         self.description_field_set = constants.DESCRIPTION_FIELD_SET
@@ -68,7 +68,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -84,7 +84,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set([1]), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -97,7 +97,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(["Trixie"]),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -111,7 +111,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -125,7 +125,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -139,7 +139,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -153,7 +153,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -167,7 +167,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -181,7 +181,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -195,7 +195,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -209,7 +209,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -223,7 +223,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            null_set=self.null_set, run_mode_set=self.run_mode_set,
+            run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             ticket_set=self.ticket_set)
@@ -281,13 +281,7 @@ class TestImportGenomeClass2(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-class TestImportGenomeClass30(unittest.TestCase):
+class TestImportGenomeClass3(unittest.TestCase):
 
     def setUp(self):
 
@@ -511,71 +505,757 @@ class TestImportGenomeClass30(unittest.TestCase):
 
 
 
+class TestImportGenomeClass4(unittest.TestCase):
 
-    # TODO fix these tests after fixing check_ticket()
-    # def test_check_genome_1(self):
-    #     """Verify correct number of evaluations are produced using
-    #     'add' ticket and all eval_flags 'True'."""
-    #     import_genome.check_genome(self.gnm, self.tkt.type,
-    #         self.tkt.eval_flags, self.null_set,
-    #         self.id_set, self.seq_set, self.host_set,
-    #         self.cluster_set, self.subcluster_set)
-    #     self.assertEqual(len(self.gnm.evaluations), 29)
-    #
-    # def test_check_genome_2(self):
-    #     """Verify correct number of evaluations are produced using
-    #     'replace' ticket."""
-    #     self.tkt.type = "replace"
-    #     import_genome.check_genome(self.gnm, self.tkt.type,
-    #         self.tkt.eval_flags, self.null_set,
-    #         self.id_set, self.seq_set, self.host_set,
-    #         self.cluster_set, self.subcluster_set)
-    #     self.assertEqual(len(self.gnm.evaluations), 28)
-    #
-    # def test_check_genome_3(self):
-    #     """Verify correct number of evaluations are produced using
-    #     'check_seq' as False."""
-    #     self.tkt.eval_flags["check_seq"] = False
-    #     import_genome.check_genome(self.gnm, self.tkt.type,
-    #         self.tkt.eval_flags, self.null_set,
-    #         self.id_set, self.seq_set, self.host_set,
-    #         self.cluster_set, self.subcluster_set)
-    #     self.assertEqual(len(self.gnm.evaluations), 28)
-    #
-    # def test_check_genome_4(self):
-    #     """Verify correct number of evaluations are produced using
-    #     'check_id_typo' as False."""
-    #     self.tkt.eval_flags["check_id_typo"] = False
-    #     import_genome.check_genome(self.gnm, self.tkt.type,
-    #         self.tkt.eval_flags, self.null_set,
-    #         self.id_set, self.seq_set, self.host_set,
-    #         self.cluster_set, self.subcluster_set)
-    #     self.assertEqual(len(self.gnm.evaluations), 26)
-    #
-    # def test_check_genome_5(self):
-    #     """Verify correct number of evaluations are produced using
-    #     'check_host_typo' as False."""
-    #     self.tkt.eval_flags["check_host_typo"] = False
-    #     import_genome.check_genome(self.gnm, self.tkt.type,
-    #         self.tkt.eval_flags, self.null_set,
-    #         self.id_set, self.seq_set, self.host_set,
-    #         self.cluster_set, self.subcluster_set)
-    #     self.assertEqual(len(self.gnm.evaluations), 25)
-    #
-    # def test_check_genome_6(self):
-    #     """Verify correct number of evaluations are produced using
-    #     'check_author' as False."""
-    #     self.tkt.eval_flags["check_author"] = False
-    #     import_genome.check_genome(self.gnm, self.tkt.type,
-    #         self.tkt.eval_flags, self.null_set,
-    #         self.id_set, self.seq_set, self.host_set,
-    #         self.cluster_set, self.subcluster_set)
-    #     self.assertEqual(len(self.gnm.evaluations), 27)
+    def setUp(self):
+        self.date_jan1 = datetime.strptime('1/1/2000', '%m/%d/%Y')
+
+        self.eval_dict = {"check_replace": True,
+                         "import_locus_tag": True,
+                         "check_locus_tag": True,
+                         "check_description_field": True,
+                         "check_description": True,
+                         "check_trna": True,
+                         "check_id_typo": True,
+                         "check_host_typo": True,
+                         "check_author": True,
+                         "check_gene": True,
+                         "check_seq": True}
+
+        self.tkt = ticket.GenomeTicket()
+        self.tkt.type = "add"
+        self.tkt.phage_id = "Trixie"
+        self.tkt.eval_flags = self.eval_dict
+        self.tkt.description_field = "product"
+
+        self.cds1 = cds.Cds()
+        self.cds1.id = "L5_1"
+        self.cds1.left = 10
+        self.cds1.right = 20
+        self.cds1.coordinate_format = "0_half_open"
+        self.cds1.strand = "F"
+
+        self.cds2 = cds.Cds()
+        self.cds2.id = "L5_2"
+        self.cds2.left = 100
+        self.cds2.right = 200
+        self.cds2.coordinate_format = "0_half_open"
+        self.cds2.strand = "F"
+
+        self.gnm = genome.Genome()
+        self.gnm.type = "flat_file"
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie_Draft"
+        self.gnm.date = self.date_jan1
+        self.gnm.annotation_status = "draft"
+        self.gnm.seq = Seq("AAAA", IUPAC.ambiguous_dna)
+        self.gnm.length = 4
+        self.gnm.gc = 0
+        self.gnm.cluster = "A"
+        self.gnm.subcluster = "A2"
+        self.gnm.cluster_subcluster = "A"
+        self.gnm.accession = ""
+        self.gnm.host_genus = "Mycobacterium"
+        self.gnm.annotation_author = 1
+        self.gnm.retrieve_record = 1
+        self.gnm.translation_table = 11
+        self.gnm._cds_processed_descriptions_tally = 0
+        self.gnm._cds_features_tally = 2
+        self.gnm.description = "Mycobacterium phage Trixie"
+        self.gnm._description_name = "Trixie"
+        self.gnm._description_host_genus = "Mycobacterium"
+        self.gnm.source = "Mycobacterium phage Trixie"
+        self.gnm._source_name = "Trixie"
+        self.gnm._source_host_genus = "Mycobacterium"
+        self.gnm.organism = "Mycobacterium phage Trixie"
+        self.gnm._organism_name = "Trixie"
+        self.gnm._organism_host_genus = "Mycobacterium"
+        self.gnm.authors = "Doe,J., Hatfull,G.F., John;R., Smith; Jones,B."
+        self.gnm.cds_features = [self.cds1, self.cds2]
+
+        self.id_set = set(["L5", "RedRock"])
+        self.seq_set = set([Seq("ATGC", IUPAC.ambiguous_dna),
+                           Seq("TTTT", IUPAC.ambiguous_dna)])
+        self.host_set = set(["Mycobacterium", "Gordonia"])
+        self.cluster_set = set(["A", "B", "C"])
+        self.subcluster_set = set(["A1", "A2", "A3"])
+        self.accession_set = set(["AAAAA", "XYZ123", "JKL123"])
+
+        self.check_sum = 32
+
+    def test_check_genome_1(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        all eval_flags = True,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum)
+
+    def test_check_genome_2(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        all eval_flags = True,
+        'accession' == '', and
+        'annotation_author' = 1."""
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+
+    def test_check_genome_3(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'replace',
+        'annotation_status' = 'draft',
+        all eval_flags = True,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+
+    def test_check_genome_4(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'final',
+        all eval_flags = True,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.gnm.annotation_status = "final"
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+
+    def test_check_genome_5(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'unknown',
+        all eval_flags = True,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.gnm.annotation_status = "unknown"
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+
+    def test_check_genome_6(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        'check_seq' = False,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.eval_dict["check_seq"] = False
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+
+    def test_check_genome_7(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        'check_id_typo' = False,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.eval_dict["check_id_typo"] = False
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
+
+    def test_check_genome_8(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        'check_host_typo' = False,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.eval_dict["check_host_typo"] = False
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
+
+    def test_check_genome_9(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        'check_author' = False,
+        'accession' != '', and
+        'annotation_author' = 1."""
+        self.eval_dict["check_author"] = False
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+
+    def test_check_genome_10(self):
+        """Verify correct number of evaluations are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        all eval_flags = True,
+        'accession' != '', and
+        'annotation_author' = 0."""
+        self.gnm.annotation_author = 0
+        self.gnm.accession = "ABC123"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+
+    def test_check_genome_11(self):
+        """Verify correct number of errors are produced using:
+        ticket type = 'add',
+        'annotation_status' = 'draft',
+        all eval_flags = True,
+        'accession' == '', and
+        'annotation_author' = 1."""
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 0)
+
+    def test_check_genome_12(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type and 'id' in id_set."""
+        self.id_set.add("Trixie")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_13(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type and 'id' == ''."""
+        self.gnm.id = ""
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 4)
+
+    def test_check_genome_14(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type and name' in id_set."""
+        self.gnm.name = "L5"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_15(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type and 'name' == ''."""
+        self.gnm.name = ""
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_16(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type and 'seq' in seq_set."""
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_17(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type and 'seq' == ''."""
+        self.gnm.seq = Seq("", IUPAC.ambiguous_dna)
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_18(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type, 'accession' != '' and not in accession_set."""
+        self.gnm.annotation_status = "unknown"
+        self.gnm.accession = "BBBBB"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 0)
+
+    def test_check_genome_19(self):
+        """Verify correct number of errors are produced using:
+        'add' ticket type, 'accession' != '' and in accession_set."""
+        self.gnm.annotation_status = "unknown"
+        self.gnm.accession = "AAAAA"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_20(self):
+        """Verify correct number of errors are produced using:
+        'replace' ticket type, and 'id' in id_set."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm.name = "Trixie"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 0)
+
+    def test_check_genome_21(self):
+        """Verify correct number of errors are produced using:
+        'replace' ticket type, and 'id' not in id_set."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm.name = "L5"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_22(self):
+        """Verify correct number of errors are produced using:
+        'replace' ticket type, and 'seq' not in seq_set."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm.seq = Seq("GGGG", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_23(self):
+        """Verify correct number of errors are produced using:
+        'draft' annotation_status, and
+        '_cds_processed_descriptions_tally' > 0."""
+        self.gnm._cds_processed_descriptions_tally = 1
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_24(self):
+        """Verify correct number of errors are produced using:
+        'draft' annotation_status, and 'accession' != ''."""
+        self.gnm.accession = "ZZZZ"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_25(self):
+        """Verify correct number of errors are produced using:
+        'final' annotation_status, and
+        '_cds_processed_descriptions_tally' == 0."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_processed_descriptions_tally = 0
+        self.gnm.name = "Trixie"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_26(self):
+        """Verify correct number of errors are produced using:
+        invalid 'annotation_status'."""
+        self.gnm.annotation_status = "invalid"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_27(self):
+        """Verify correct number of errors are produced using:
+        invalid 'annotation_author'."""
+        self.gnm.annotation_author = -1
+        self.gnm.authors = "none"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_28(self):
+        """Verify correct number of errors are produced using:
+        invalid 'retrieve_record'."""
+        self.gnm.retrieve_record = -1
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_29(self):
+        """Verify correct number of errors are produced using:
+        'cluster' not in cluster_set."""
+        self.gnm.cluster = "Z"
+        self.gnm.subcluster = "Z1"
+        self.subcluster_set.add("Z1")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_30(self):
+        """Verify correct number of errors are produced using:
+        'subcluster' not in subcluster_set."""
+        self.gnm.cluster = "Z"
+        self.gnm.subcluster = "Z1"
+        self.cluster_set.add("Z")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_31(self):
+        """Verify correct number of errors are produced using:
+        empty 'subcluster'."""
+        self.gnm.subcluster = ""
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 0)
+
+    def test_check_genome_32(self):
+        """Verify correct number of errors are produced using:
+        'cluster_subcluster' not in cluster_subcluster_set."""
+        self.gnm.cluster_subcluster = "X"
+        self.gnm.cluster = "Z"
+        self.gnm.subcluster = "Z1"
+        self.cluster_set.add("Z")
+        self.subcluster_set.add("Z1")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_33(self):
+        """Verify correct number of errors are produced using:
+        invalid 'translation_table'."""
+        self.gnm.translation_table = 1
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_34(self):
+        """Verify correct number of errors are produced using:
+        'host_genus' not in host_set."""
+        self.host_set = {"Gordonia"}
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_35(self):
+        """Verify correct number of errors are produced using:
+        'cluster' structured incorrectly."""
+        self.gnm.cluster = "Z1"
+        self.gnm.subcluster = "Z1"
+        self.cluster_set.add("Z1")
+        self.subcluster_set.add("Z1")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 2)
+
+    def test_check_genome_36(self):
+        """Verify correct number of errors are produced using:
+        'subcluster' structured incorrectly."""
+        self.gnm.cluster = "Z"
+        self.gnm.subcluster = "Z"
+        self.cluster_set.add("Z")
+        self.subcluster_set.add("Z")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 2)
+
+    def test_check_genome_37(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'cluster' and 'subcluster'."""
+        self.gnm.cluster = "Z"
+        self.gnm.subcluster = "X1"
+        self.cluster_set.add("Z")
+        self.subcluster_set.add("X1")
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_38(self):
+        """Verify correct number of errors are produced using:
+        invalid 'date'."""
+        self.gnm.date = constants.EMPTY_DATE
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_39(self):
+        """Verify correct number of errors are produced using:
+        'gc' < 0."""
+        self.gnm.gc = -1
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_40(self):
+        """Verify correct number of errors are produced using:
+        'gc' > 1."""
+        self.gnm.gc = 2
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_41(self):
+        """Verify correct number of errors are produced using:
+        'length' = 0."""
+        self.gnm.length = 0
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_42(self):
+        """Verify correct number of errors are produced using:
+        '_cds_features_tally' = 0."""
+        self.gnm._cds_features_tally = 0
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_43(self):
+        """Verify correct number of errors are produced using:
+        duplicated feature coordinates."""
+        self.cds2.left = 10
+        self.cds2.right = 20
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_44(self):
+        """Verify correct number of errors are produced using:
+        invalid nucleotides."""
+        self.gnm.seq = Seq("CCCCC-C", IUPAC.ambiguous_dna)
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_45(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'id' and '_description_name'."""
+        self.gnm._description_name = "L5"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_46(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'id' and '_source_name'."""
+        self.gnm._source_name = "L5"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_47(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'id' and '_organism_name'."""
+        self.gnm._organism_name = "L5"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_48(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'host_genus' and '_description_host_genus'."""
+        self.gnm._description_host_genus = "Gordonia"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_49(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'host_genus' and '_source_host_genus'."""
+        self.gnm._source_host_genus = "Gordonia"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_50(self):
+        """Verify correct number of errors are produced using:
+        incompatible 'host_genus' and '_organism_host_genus'."""
+        self.gnm._organism_host_genus = "Gordonia"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_51(self):
+        """Verify correct number of errors are produced using:
+        'annotation_author' = 1 and missing author."""
+        self.gnm.authors = "Doe,J., Hatful,G.F., John;R., Smith;."
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_52(self):
+        """Verify correct number of errors are produced using:
+        'annotation_author' = 1 and invalid 'LASTNAME 'author."""
+        self.gnm.authors = "Doe,J., Hatfull,G.F., LASTNAME, John;R., Smith;."
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
+
+    def test_check_genome_53(self):
+        """Verify correct number of errors are produced using:
+        'annotation_author' = 0 and invalid author."""
+        self.gnm.annotation_author = 0
+        self.gnm.authors = "Doe,J., Hatfull,G.F., John;R., Smith;."
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        errors = get_errors(self.gnm)
+        self.assertEqual(errors, 1)
 
 
 
 
-class TestImportGenomeClass3(unittest.TestCase):
+class TestImportGenomeClass5(unittest.TestCase):
 
     def setUp(self):
         self.tkt = ticket.GenomeTicket()
@@ -607,10 +1287,10 @@ class TestImportGenomeClass3(unittest.TestCase):
     def test_check_bundle_1(self):
         """Verify all check methods are called with no errors."""
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -622,10 +1302,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         with no ticket."""
         self.bndl.ticket = None
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 1)
@@ -636,10 +1316,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify correct number of errors and check methods called
         with incorrect flat_file key."""
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file_x",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file_x",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 6)
@@ -651,10 +1331,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         with incompatible "replace" ticket type and "draft" annotation status."""
         self.gnm2.annotation_status = "draft"
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -666,10 +1346,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         with no data in data_ticket."""
         self.tkt.data_ticket = set()
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 6)
@@ -680,10 +1360,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify correct number of errors and check methods called
         with incorrect ticket key."""
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket_x",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket_x",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -695,10 +1375,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         with no data in data_retrieve."""
         self.tkt.data_retrieve = set()
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 6)
@@ -709,10 +1389,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify correct number of errors and check methods called
         with incorrect retrieve key."""
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb_x",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb_x",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -725,10 +1405,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         self.tkt.type = "add"
         self.gnm2.annotation_status = "draft"
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 5)
@@ -739,10 +1419,10 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify correct number of errors and check methods called
         with incorrect retain key."""
         import_genome.check_bundle(self.bndl,
-                                   tkt_key="ticket",
-                                   file_key="flat_file",
-                                   retrieve_key="phagesdb",
-                                   retain_key="phamerator_x")
+                                   ticket_ref="ticket",
+                                   file_ref="flat_file",
+                                   retrieve_ref="phagesdb",
+                                   retain_ref="phamerator_x")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -752,7 +1432,7 @@ class TestImportGenomeClass3(unittest.TestCase):
 
 
 
-class TestImportGenomeClass4(unittest.TestCase):
+class TestImportGenomeClass6(unittest.TestCase):
 
     def setUp(self):
         self.eval_dict = {"check_replace": True,
@@ -809,192 +1489,185 @@ class TestImportGenomeClass4(unittest.TestCase):
 
     # TODO fix these after done with compare_genomes(), since number of
     # parameters has changed.
-    # def test_run_checks_1(self):
-    #     """Verify run_checks works using a bundle with:
-    #     no ticket, no "flat_file" genome."""
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) == 0)
-    #
-    #
-    # def test_run_checks_2(self):
-    #     """Verify run_checks works using a bundle with:
-    #     'add' ticket, no "flat_file" genome."""
-    #     self.tkt.type = "add"
-    #     self.bndl.ticket = self.tkt
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) == 0)
-    #
-    #
-    # def test_run_checks_3(self):
-    #     """Verify run_checks works using a bundle with:
-    #     'add' ticket, 'flat_file' genome with no features."""
-    #     self.tkt.type = "add"
-    #     self.bndl.ticket = self.tkt
-    #     self.bndl.genome_dict["flat_file"] = self.gnm1
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.cds1.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.cds2.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.src1.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.src2.evaluations) == 0)
-    #
-    #
-    # def test_run_checks_4(self):
-    #     """Verify run_checks works using a bundle with:
-    #     'add' ticket, 'flat_file' genome with two CDS features,
-    #     two Source features, and two tRNA features."""
-    #     self.tkt.type = "add"
-    #     self.bndl.ticket = self.tkt
-    #     self.gnm1.cds_features = [self.cds1, self.cds2]
-    #     self.gnm1.source_features = [self.src1, self.src2]
-    #     self.gnm1.trna_features = [self.trna1, self.trna2]
-    #     self.bndl.genome_dict["flat_file"] = self.gnm1
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.cds1.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.cds2.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.src1.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.src2.evaluations) > 0)
-    #
-    #
-    # def test_run_checks_5(self):
-    #     """Verify run_checks works using a bundle with:
-    #     'add' ticket, no genome, 'flat_file_phamerator' genome_pair."""
-    #     self.tkt.type = "add"
-    #     self.bndl.ticket = self.tkt
-    #     self.bndl.genome_pair_dict["flat_file_phamerator"] = self.genome_pair
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.genome_pair.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) == 0)
-    #
-    #
-    # def test_run_checks_6(self):
-    #     """Verify run_checks works using a bundle with:
-    #     'replace' ticket, no genome, 'flat_file_phamerator' genome_pair."""
-    #     self.tkt.type = "replace"
-    #     self.bndl.ticket = self.tkt
-    #     self.bndl.genome_pair_dict["flat_file_phamerator"] = self.genome_pair
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.genome_pair.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) == 0)
-    #
-    #
-    # def test_run_checks_7(self):
-    #     """Verify run_checks works using a bundle with:
-    #     'replace' ticket, no matching genome, no matching genome_pair."""
-    #     self.tkt.type = "replace"
-    #     self.bndl.ticket = self.tkt
-    #     self.gnm1.cds_features = [self.cds1, self.cds2]
-    #     self.gnm1.source_features = [self.src1, self.src2]
-    #     self.gnm1.trna_features = [self.trna1, self.trna2]
-    #     self.bndl.genome_dict["flat_file_x"] = self.gnm1
-    #     self.bndl.genome_pair_dict["flat_file_phamerator_x"] = self.genome_pair
-    #     import_genome.run_checks(
-    #             self.bndl,
-    #             null_set=self.null_set,
-    #             accession_set=self.accession_set,
-    #             phage_id_set=self.phage_id_set,
-    #             seq_set=self.seq_set, host_genus_set=self.host_genus_set,
-    #             cluster_set=self.cluster_set,
-    #             subcluster_set=self.subcluster_set,
-    #             gnm_key="flat_file",
-    #             gnm_pair_key="flat_file_phamerator")
-    #     with self.subTest():
-    #         self.assertTrue(len(self.bndl.evaluations) > 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.genome_pair.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.gnm1.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.cds1.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.cds2.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.src1.evaluations) == 0)
-    #     with self.subTest():
-    #         self.assertTrue(len(self.src2.evaluations) == 0)
+    def test_run_checks_1(self):
+        """Verify run_checks works using a bundle with:
+        no ticket, no "flat_file" genome."""
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) == 0)
+
+
+    def test_run_checks_2(self):
+        """Verify run_checks works using a bundle with:
+        'add' ticket, no "flat_file" genome."""
+        self.tkt.type = "add"
+        self.bndl.ticket = self.tkt
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) == 0)
+
+
+    def test_run_checks_3(self):
+        """Verify run_checks works using a bundle with:
+        'add' ticket, 'flat_file' genome with no features."""
+        self.tkt.type = "add"
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_dict["flat_file"] = self.gnm1
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.cds1.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.cds2.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.src1.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.src2.evaluations) == 0)
+
+
+    def test_run_checks_4(self):
+        """Verify run_checks works using a bundle with:
+        'add' ticket, 'flat_file' genome with two CDS features,
+        two Source features, and two tRNA features."""
+        self.tkt.type = "add"
+        self.bndl.ticket = self.tkt
+        self.gnm1.cds_features = [self.cds1, self.cds2]
+        self.gnm1.source_features = [self.src1, self.src2]
+        self.gnm1.trna_features = [self.trna1, self.trna2]
+        self.bndl.genome_dict["flat_file"] = self.gnm1
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.cds1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.cds2.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.src1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.src2.evaluations) > 0)
+
+
+    def test_run_checks_5(self):
+        """Verify run_checks works using a bundle with:
+        'add' ticket, no genome, 'flat_file_phamerator' genome_pair."""
+        self.tkt.type = "add"
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_pair_dict["flat_file_phamerator"] = self.genome_pair
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.genome_pair.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) == 0)
+
+
+    def test_run_checks_6(self):
+        """Verify run_checks works using a bundle with:
+        'replace' ticket, no genome, 'flat_file_phamerator' genome_pair."""
+        self.tkt.type = "replace"
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_pair_dict["flat_file_phamerator"] = self.genome_pair
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.genome_pair.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) == 0)
+
+
+    def test_run_checks_7(self):
+        """Verify run_checks works using a bundle with:
+        'replace' ticket, no matching genome, no matching genome_pair."""
+        self.tkt.type = "replace"
+        self.bndl.ticket = self.tkt
+        self.gnm1.cds_features = [self.cds1, self.cds2]
+        self.gnm1.source_features = [self.src1, self.src2]
+        self.gnm1.trna_features = [self.trna1, self.trna2]
+        self.bndl.genome_dict["flat_file_x"] = self.gnm1
+        self.bndl.genome_pair_dict["flat_file_phamerator_x"] = self.genome_pair
+        import_genome.run_checks(
+                self.bndl,
+                accession_set=self.accession_set,
+                phage_id_set=self.phage_id_set,
+                seq_set=self.seq_set, host_genus_set=self.host_genus_set,
+                cluster_set=self.cluster_set,
+                subcluster_set=self.subcluster_set,
+                file_ref="flat_file", ticket_ref="ticket",
+                retrieve_ref="phagesdb", retain_ref="phamerator")
+        with self.subTest():
+            self.assertTrue(len(self.bndl.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.genome_pair.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.gnm1.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.cds1.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.cds2.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.src1.evaluations) == 0)
+        with self.subTest():
+            self.assertTrue(len(self.src2.evaluations) == 0)
 
 
 
@@ -1052,7 +1725,7 @@ class TestImportGenomeClass4(unittest.TestCase):
 
 
 
-class TestImportGenomeClass5(unittest.TestCase):
+class TestImportGenomeClass7(unittest.TestCase):
     def setUp(self):
         self.evl1 = eval.Eval()
         self.evl1.id = "GNM0001"
@@ -1090,7 +1763,7 @@ class TestImportGenomeClass5(unittest.TestCase):
 
 
 
-class TestImportGenomeClass6(unittest.TestCase):
+class TestImportGenomeClass8(unittest.TestCase):
 
 
     def setUp(self):
@@ -1267,7 +1940,7 @@ class TestImportGenomeClass6(unittest.TestCase):
 
 
 
-class TestImportGenomeClass7(unittest.TestCase):
+class TestImportGenomeClass9(unittest.TestCase):
 
 
     def setUp(self):

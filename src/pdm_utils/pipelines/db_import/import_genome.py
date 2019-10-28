@@ -335,7 +335,6 @@ def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
             tkt,
             type_set=constants.IMPORT_TICKET_TYPE_SET,
             description_field_set=constants.DESCRIPTION_FIELD_SET,
-            null_set=constants.EMPTY_SET,
             run_mode_set=run_modes.RUN_MODES.keys(),
             id_dupe_set=tkt_id_dupes,
             phage_id_dupe_set=phage_id_dupes)
@@ -382,6 +381,12 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     :returns:
     :rtype:
     """
+    # Alias for different types of genomes gathered and processed.
+    file_ref = "flat_file"
+    ticket_ref = "ticket"
+    retain_ref = "phamerator"
+    retrieve_ref = "phagesdb"
+
     # Will hold all results data. These can be used by various types of
     # user interfaces to present the summary of import.
     success_ticket_list = []
@@ -393,22 +398,25 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     # Retrieve data from phagesdb to create sets of
     # valid host genera, clusters, and subclusters.
     # Cluster "UNK" may or may not already be present, but it is valid.
+    # If there is no subcluster, value may be empty string or "none".
     phagesdb_host_genera_set = phagesdb.create_host_genus_set()
     results_tuple = phagesdb.create_cluster_subcluster_sets()
     phagesdb_cluster_set = results_tuple[0]
     phagesdb_subcluster_set = results_tuple[1]
     phagesdb_cluster_set.add("UNK")
 
+
     # To minimize memory usage, each flat_file is evaluated one by one.
     bundle_count = 1
     for filename in files_in_folder:
-        gnm_type = "flat_file"
-        replace_gnm_pair_key = gnm_type + "_phamerator"
+        replace_gnm_pair_key = file_ref + "_" + retain_ref
         bndl = prepare_bundle(filename=str(filename), ticket_dict=ticket_dict,
                               sql_handle=sql_handle,
                               genome_id_field=genome_id_field,
                               host_genus_field=host_genus_field,
-                              id=bundle_count)
+                              id=bundle_count,
+                              file_ref=file_ref, ticket_ref=ticket_ref,
+                              retrieve_ref=retrieve_ref, retain_ref=retain_ref)
 
         # Create sets of unique values for different data fields.
         # Since data from each parsed flat file is imported into the
@@ -418,18 +426,18 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         phamerator_seq_set = phamerator.create_seq_set(sql_handle)
         phamerator_accession_set = phamerator.create_accession_set(sql_handle)
         run_checks(bndl,
-                  null_set=set(),
-                  accession_set=phamerator_accession_set,
-                  phage_id_set=phamerator_phage_id_set,
-                  seq_set=phamerator_seq_set,
-                  host_genus_set=phagesdb_host_genera_set,
-                  cluster_set=phagesdb_cluster_set,
-                  subcluster_set=phagesdb_subcluster_set,
-                  gnm_key=gnm_type,
-                  gnm_pair_key=replace_gnm_pair_key)
+                   accession_set=phamerator_accession_set,
+                   phage_id_set=phamerator_phage_id_set,
+                   seq_set=phamerator_seq_set,
+                   host_genus_set=phagesdb_host_genera_set,
+                   cluster_set=phagesdb_cluster_set,
+                   subcluster_set=phagesdb_subcluster_set,
+                   file_ref=file_ref, ticket_ref=ticket_ref,
+                   retrieve_ref=retrieve_ref, retain_ref=retain_ref)
+
         evaluation_dict[bndl.id] = bndl.get_evaluations()
         result = import_into_db(bndl, sql_handle=sql_handle,
-                                gnm_key=gnm_type, prod_run=prod_run)
+                                gnm_key=file_ref, prod_run=prod_run)
         if result:
             success_ticket_list.append(bndl.ticket.data_dict)
             success_filename_list.append(filename)
@@ -451,14 +459,14 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
             bndl.ticket = ticket_dict.pop(key)
             bndl.id = bundle_count
             run_checks(bndl,
-                      null_set=set(),
                       accession_set=phamerator_accession_set,
                       phage_id_set=phamerator_phage_id_set,
                       seq_set=phamerator_seq_set,
                       host_genus_set=phagesdb_host_genera_set,
                       cluster_set=phagesdb_cluster_set,
                       subcluster_set=phagesdb_subcluster_set,
-                      gnm_key=None, gnm_pair_key=None)
+                      file_ref=file_ref, ticket_ref=ticket_ref,
+                      retrieve_ref=retrieve_ref, retain_ref=retain_ref)
             evaluation_dict[bndl.id] = bndl.get_evaluations()
             failed_ticket_list.append(bndl.ticket.data_dict)
             bundle_count += 1
@@ -468,7 +476,8 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
 
 
 def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
-                   genome_id_field="", host_genus_field="", id=None):
+                   genome_id_field="", host_genus_field="", id=None,
+                   file_ref="", ticket_ref="", retrieve_ref="", retain_ref=""):
     """Gather all genomic data needed to evaluate the flat file.
 
     :param filename: Name of a GenBank-formatted flat file.
@@ -499,7 +508,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                     seqrecord,
                     filepath=filename,
                     genome_id_field=genome_id_field,
-                    gnm_type="flat_file",
+                    gnm_type=file_ref,
                     host_genus_field=host_genus_field)
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
@@ -511,7 +520,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
             # to a ticket, use the ticket to populate specific
             # genome-level fields such as host, cluster, subcluster, etc.
             if len(bndl.ticket.data_ticket) > 0:
-                tkt_gnm = tickets.get_genome(bndl.ticket, gnm_type="ticket")
+                tkt_gnm = tickets.get_genome(bndl.ticket, gnm_type=ticket_ref)
                 bndl.genome_dict[tkt_gnm.type] = tkt_gnm
 
                 # Copy ticket data to flat file. Since the ticket data has been
@@ -527,7 +536,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
             # retrieved from PhagesDB and populates a new Genome object.
             if len(bndl.ticket.data_retrieve) > 0:
                 pdb_gnm = phagesdb.get_genome(bndl.ticket.phage_id,
-                                              gnm_type="phagesdb")
+                                              gnm_type=retrieve_ref)
                 bndl.genome_dict[pdb_gnm.type] = pdb_gnm
 
                 for attr in bndl.ticket.data_retrieve:
@@ -550,7 +559,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                                        sql_handle=sql_handle,
                                        phage_id_list=[ff_gnm.id],
                                        phage_query=query,
-                                       gnm_type="phamerator")
+                                       gnm_type=retain_ref)
                     if len(pmr_genomes) == 1:
                         pmr_gnm = pmr_genomes[0]
                         bndl.genome_dict[pmr_gnm.type] = pmr_gnm
@@ -564,27 +573,30 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                         gnm_pair = genomepair.GenomePair()
                         bndl.set_genome_pair(gnm_pair, ff_gnm.type, pmr_gnm.type)
                     else:
-                        print(f"There is no {ff_gnm.id} genome in the Phamerator"
-                              " database. Unable to retrieve data.")
+                        print(f"There is no {ff_gnm.id} genome in the "
+                              "Phamerator database. Unable to retrieve data.")
     return bndl
 
 
-def run_checks(bndl, null_set=set(), accession_set=set(), phage_id_set=set(),
+def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                seq_set=set(), host_genus_set=set(), cluster_set=set(),
-               subcluster_set=set(), gnm_key=None, gnm_pair_key=None):
+               subcluster_set=set(), file_ref="", ticket_ref="",
+               retrieve_ref="", retain_ref=""):
     """Run checks on the different elements of a bundle object."""
-    check_bundle(bndl)
+    check_bundle(bndl, ticket_ref=ticket_ref, file_ref=file_ref,
+                 retrieve_ref=retrieve_ref, retain_ref=retain_ref)
     tkt = bndl.ticket
     if tkt is not None:
         eval_flags = tkt.eval_flags
-        if (tkt.type == "replace" and \
+        gnm_pair_key = file_ref + "_" + retain_ref
+        if (tkt.type == "replace" and
                 gnm_pair_key in bndl.genome_pair_dict.keys()):
             genome_pair = bndl.genome_pair_dict[gnm_pair_key]
             compare_genomes(genome_pair, eval_flags)
 
-        if gnm_key in bndl.genome_dict.keys():
-            gnm = bndl.genome_dict[gnm_key]
-            check_genome(gnm, tkt.type, eval_flags, null_set=null_set,
+        if file_ref in bndl.genome_dict.keys():
+            gnm = bndl.genome_dict[file_ref]
+            check_genome(gnm, tkt.type, eval_flags,
                          accession_set=accession_set, phage_id_set=phage_id_set,
                          seq_set=seq_set, host_genus_set=host_genus_set,
                          cluster_set=cluster_set, subcluster_set=subcluster_set)
@@ -611,7 +623,7 @@ def run_checks(bndl, null_set=set(), accession_set=set(), phage_id_set=set(),
     bndl.check_for_errors()
 
 
-def check_bundle(bndl, tkt_key="", file_key="", retrieve_key="", retain_key=""):
+def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref=""):
     """Check a Bundle for errors.
 
     Evaluate whether all genomes have been successfully grouped,
@@ -625,31 +637,32 @@ def check_bundle(bndl, tkt_key="", file_key="", retrieve_key="", retain_key=""):
     bndl.check_ticket(eval_id="BNDL_001")
     if bndl.ticket is not None:
 
-        bndl.check_genome_dict(file_key, expect=True, eval_id="BNDL_003")
-        if file_key in bndl.genome_dict.keys():
-            bndl.check_compatible_type_and_annotation_status(file_key, eval_id="BNDL_007")
+        bndl.check_genome_dict(file_ref, expect=True, eval_id="BNDL_002")
+        if file_ref in bndl.genome_dict.keys():
+            bndl.check_compatible_type_and_annotation_status(
+                    file_ref, eval_id="BNDL_003")
 
         tkt = bndl.ticket
         if len(tkt.data_ticket) > 0:
-            bndl.check_genome_dict(tkt_key, expect=True, eval_id="BNDL_002")
+            bndl.check_genome_dict(ticket_ref, expect=True, eval_id="BNDL_004")
 
         # There may or may not be data retrieved from PhagesDB.
         if len(tkt.data_retrieve) > 0:
-            bndl.check_genome_dict(retrieve_key, expect=True, eval_id="BNDL_004")
+            bndl.check_genome_dict(retrieve_ref,
+                                   expect=True, eval_id="BNDL_005")
 
         if tkt.type == "replace":
-            bndl.check_genome_dict(retain_key, expect=True, eval_id="BNDL_005")
+            bndl.check_genome_dict(retain_ref, expect=True, eval_id="BNDL_006")
 
             # There should be a genome_pair between the current phamerator
             # genome and the new flat_file genome.
-            pair_key = f"{file_key}_{retain_key}"
-            bndl.check_genome_pair_dict(pair_key, eval_id="BNDL_006")
+            pair_key = f"{file_ref}_{retain_ref}"
+            bndl.check_genome_pair_dict(pair_key, eval_id="BNDL_007")
 
 
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
-        null_set=set(), run_mode_set=set(), id_dupe_set=set(),
-        phage_id_dupe_set=set(), retain_set=set(), retrieve_set=set(),
-        ticket_set=set()):
+        run_mode_set=set(), id_dupe_set=set(), phage_id_dupe_set=set(),
+        retain_set=set(), retrieve_set=set(), ticket_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket.
@@ -658,8 +671,6 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     :type tkt: Ticket
     :param description_field_set: Valid description_field options.
     :type description_field_set: set
-    :param null_set: Values that represent an empty field.
-    :type null_set: set
     :param run_mode_set: Valid run mode options.
     :type run_mode_set: set
     :param id_dupe_set: Predetermined duplicate ticket ids.
@@ -676,13 +687,18 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     # can be checked within Genome objects.
 
     # Check for duplicated values.
-    tkt.check_duplicate_id(id_dupe_set, eval_id="TKT_001")
-    tkt.check_duplicate_phage_id(phage_id_dupe_set, eval_id="TKT_002")
+    tkt.check_attribute("id", id_dupe_set,
+                        expect=False, eval_id="TKT_001")
+    tkt.check_attribute("phage_id", phage_id_dupe_set,
+                        expect=False, eval_id="TKT_002")
 
     # Check these fields for specific values.
-    tkt.check_type(type_set, expect=True, eval_id="TKT_003")
-    tkt.check_description_field(description_field_set, expect=True, eval_id="TKT_004")
-    tkt.check_run_mode(run_mode_set, expect=True, eval_id="TKT_005")
+    tkt.check_attribute("type", type_set,
+                        expect=True, eval_id="TKT_003")
+    tkt.check_attribute("description_field", description_field_set,
+                        expect=True, eval_id="TKT_004")
+    tkt.check_attribute("run_mode", run_mode_set,
+                        expect=True, eval_id="TKT_005")
 
     # TODO this method may be refactored so that it accepts a list of
     # valid flag dict keys. But this has already been verified earlier
@@ -690,7 +706,8 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     tkt.check_eval_flags(expect=True, eval_id="TKT_006")
 
     # For these fields, simply check that they are not empty.
-    tkt.check_phage_id(null_set, expect=False, eval_id="TKT_007")
+    tkt.check_attribute("phage_id", {""},
+                        expect=False, eval_id="TKT_007")
 
     # Check how genome attributes will be determined.
     tkt.check_compatible_type_and_data_retain(eval_id="TKT_009")
@@ -702,8 +719,7 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
                                 eval_id="TKT_012")
 
 
-
-def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
+def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                  seq_set=set(), host_genus_set=set(),
                  cluster_set=set(), subcluster_set=set(),
                  accession_set=set()):
@@ -713,8 +729,6 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
     :type gnm: Genome
     :param tkt: A pdm_utils Ticket object.
     :type tkt: Ticket
-    :param null_set: A set of values representing empty or null data.
-    :type null_set: set
     :param phage_id_set: A set PhageIDs.
     :type phage_id_set: set
     :param seq_set: A set of genome sequences.
@@ -729,9 +743,14 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
     :type accession_set: set
     """
     if tkt_type == "add":
-        gnm.check_attribute("id", phage_id_set | null_set, expect=False, eval_id="GNM_001")
-        gnm.check_attribute("name", phage_id_set | null_set, expect=False, eval_id="GNM_002")
-        gnm.check_attribute("seq", seq_set | null_set, expect=False, eval_id="GNM_003")
+        gnm.check_attribute("id", phage_id_set | {""},
+                            expect=False, eval_id="GNM_001")
+        gnm.check_attribute("name", phage_id_set | {""},
+                            expect=False, eval_id="GNM_002")
+
+        # TODO confirm that seq_set contains Seq objects and not strings.
+        gnm.check_attribute("seq", seq_set | {constants.EMPTY_GENOME_SEQ},
+                            expect=False, eval_id="GNM_003")
 
 
         # If the genome is being added, and if it has an accession,
@@ -740,13 +759,17 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
         # the prior version of the genome may or may not have had
         # accession data, so no need to check for 'replace' tickets.
         if gnm.accession != "":
-            gnm.check_attribute("accession", accession_set, expect=False, eval_id="GNM_005")
+            gnm.check_attribute("accession", accession_set,
+                                expect=False, eval_id="GNM_004")
 
     # 'replace' ticket checks.
     else:
-        gnm.check_attribute("id", phage_id_set, expect=True, eval_id="GNM_006")
-        gnm.check_attribute("name", phage_id_set, expect=True, eval_id="GNM_007")
-        gnm.check_attribute("seq", seq_set, expect=True, eval_id="GNM_008")
+        gnm.check_attribute("id", phage_id_set,
+                            expect=True, eval_id="GNM_005")
+        # gnm.check_attribute("name", phage_id_set,
+        #                     expect=True, eval_id="GNM_006")
+        gnm.check_attribute("seq", seq_set,
+                            expect=True, eval_id="GNM_007")
 
     # Depending on the annotation_status of the genome,
     # CDS features are expected to contain or not contain descriptions.
@@ -755,60 +778,75 @@ def check_genome(gnm, tkt_type, eval_flags, null_set=set(), phage_id_set=set(),
     # There are no expectations for other types of genomes.
 
     # Also, Draft annotations should not have accession data.
-    if self.annotation_status == "draft":
-        gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0, eval_id="")
-        gnm.check_attribute("accession", null_set, expect=True, eval_id="")
+    if gnm.annotation_status == "draft":
+        gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0,
+                            eval_id="GNM_008")
+        gnm.check_attribute("accession", {""}, expect=True, eval_id="GNM_009")
 
-    elif (self.annotation_status == "final":
-        gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0, eval_id="")
+    elif gnm.annotation_status == "final":
+        gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
+                            eval_id="GNM_010")
     else:
         pass
 
-    gnm.check_attribute("annotation_status", constants.ANNOTATION_STATUS_SET, expect=True, eval_id="")
-    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET, expect=True, eval_id="")
-    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET, expect=True, eval_id="")
-    gnm.check_attribute("cluster", cluster_set, expect=True, eval_id="")
-    gnm.check_attribute("subcluster", subcluster_set, expect=True, eval_id="")
-    gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set, expect=True, eval_id="")
-    gnm.check_attribute("translation_table", set([11]), expect=True, eval_id="")
-    gnm.check_attribute("host_genus", host_genus_set, expect=True, eval_id="")
-    gnm.check_cluster_structure(eval_id="GNM_016")
-    gnm.check_subcluster_structure(eval_id="GNM_015")
-    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_017")
-    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="")
-    gnm.check_magnitude("gc", ">", -0.0001, eval_id="")
-    gnm.check_magnitude("gc", "<", 1.0001, eval_id="")
-    gnm.check_magnitude("length", ">", 0, eval_id="")
-    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="")
+    gnm.check_attribute("annotation_status", constants.ANNOTATION_STATUS_SET,
+                        expect=True, eval_id="GNM_011")
+    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET,
+                        expect=True, eval_id="GNM_012")
+    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET,
+                        expect=True, eval_id="GNM_013")
+    gnm.check_attribute("cluster", cluster_set,
+                        expect=True, eval_id="GNM_014")
+    gnm.check_attribute("subcluster", subcluster_set | {"", "none"},
+                        expect=True, eval_id="GNM_015")
+    gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set,
+                        expect=True, eval_id="GNM_016")
+    gnm.check_attribute("translation_table", {11},
+                        expect=True, eval_id="GNM_017")
+    gnm.check_attribute("host_genus", host_genus_set,
+                        expect=True, eval_id="GNM_018")
+    gnm.check_cluster_structure(eval_id="GNM_019")
+    gnm.check_subcluster_structure(eval_id="GNM_020")
+    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_021")
+    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_022")
+    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_023")
+    gnm.check_magnitude("gc", "<", 1.0001, eval_id="GNM_024")
+    gnm.check_magnitude("length", ">", 0, eval_id="GNM_025")
+    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_026")
 
     # TODO set trna and tmrna to True after they are implemented.
-    # TODO add source features too?
     gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
-                          eval_id="GNM_032")
+                          strand=False, eval_id="GNM_027")
 
     if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,
-                              eval_id="GNM_018")
+                              eval_id="GNM_028")
 
     if eval_flags["check_id_typo"]:
-        gnm.compare_two_attributes("id", "_description_name", expect_same=True, eval_id="")
-        gnm.compare_two_attributes("id", "_source_name", expect_same=True, eval_id="")
-        gnm.compare_two_attributes("id", "_organism_name", expect_same=True, eval_id="")
+        gnm.compare_two_attributes("id", "_description_name",
+                                   expect_same=True, eval_id="GNM_029")
+        gnm.compare_two_attributes("id", "_source_name",
+                                   expect_same=True, eval_id="GNM_030")
+        gnm.compare_two_attributes("id", "_organism_name",
+                                   expect_same=True, eval_id="GNM_031")
 
     if eval_flags["check_host_typo"]:
-        gnm.compare_two_attributes("host_genus", "_description_host_genus", expect_same=True, eval_id="")
-        gnm.compare_two_attributes("host_genus", "_source_host_genus", expect_same=True, eval_id="")
-        gnm.compare_two_attributes("host_genus", "_organism_host_genus", expect_same=True, eval_id="")
+        gnm.compare_two_attributes("host_genus", "_description_host_genus",
+                                   expect_same=True, eval_id="GNM_032")
+        gnm.compare_two_attributes("host_genus", "_source_host_genus",
+                                   expect_same=True, eval_id="GNM_033")
+        gnm.compare_two_attributes("host_genus", "_organism_host_genus",
+                                   expect_same=True, eval_id="GNM_034")
 
     if eval_flags["check_author"]:
         if gnm.annotation_author == 1:
-            gnm.check_authors(check_set=constants.AUTHOR_SET, expect=True,
-                              eval_id="GNM_028")
+            gnm.check_authors(check_set=constants.AUTHOR_SET,
+                              expect=True, eval_id="GNM_035")
             gnm.check_authors(check_set=set(["lastname", "firstname"]),
-                                 expect=False, eval_id="GNM_029")
+                              expect=False, eval_id="GNM_036")
         else:
-            gnm.check_authors(check_set=constants.AUTHOR_SET, expect=False,
-                              eval_id="GNM_030")
+            gnm.check_authors(check_set=constants.AUTHOR_SET,
+                              expect=False, eval_id="GNM_037")
 
 
 
@@ -881,17 +919,6 @@ def compare_genomes(genome_pair, eval_flags):
     genome_pair.compare_attribute("retrieve_record",
         expect_same=True, eval_id="GP_010")
 
-
-
-
-    # genome_pair.compare_genome_sequence(eval_id="GP_001")
-    # genome_pair.compare_genome_length(eval_id="GP_002")
-    # genome_pair.compare_cluster(eval_id="GP_003")
-    # genome_pair.compare_subcluster(eval_id="GP_004")
-    # genome_pair.compare_accession(eval_id="GP_005")
-    # genome_pair.compare_host_genus(eval_id="GP_006")
-    # genome_pair.compare_annotation_author(eval_id="GP_007")
-
     if eval_flags["check_replace"]:
         # The following checks assume the current genome in Phamerator
         # is stored in 'genome1' slot.
@@ -915,19 +942,6 @@ def compare_genomes(genome_pair, eval_flags):
             genome_pair.compare_attribute("annotation_status",
                 expect_same=True, eval_id="GP_014")
 
-
-
-        # # Replacing a genome with a version that is dated to be
-        # # older is unexpected.
-        # genome_pair.compare_date(attr, old_key, new_key,
-        #                          expect="newer", eval_id="GP_009")
-        #
-        # # Status changes other than draft-to-final are unexpected.
-        # status1 = genome_pair.genome1.annotation_status
-        # status2 = genome_pair.genome2.annotation_status
-        # if status1 != status2:
-        #     genome_pair.compare_annotation_status(attr, old_key,
-        #         new_key,"draft","final", eval_id="GP_008")
 
 
 
