@@ -140,9 +140,9 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, no phagesdb data."""
-        # Omit cluster to verify that only attributes in the data_ticket set
+        # Omit cluster to verify that only attributes in the data_add set
         # are copied.
-        self.tkt1.data_ticket = set(["host_genus", "subcluster",
+        self.tkt1.data_add = set(["host_genus", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
 
@@ -180,7 +180,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_2(self):
         """Verify bundle is returned from a flat file with:
         no record."""
-        self.tkt1.data_ticket = set(["host_genus", "cluster", "subcluster",
+        self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
@@ -199,7 +199,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_3(self):
         """Verify bundle is returned from a flat file with:
         one record, no ticket."""
-        self.tkt1.data_ticket = set(["host_genus", "cluster", "subcluster",
+        self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
         tkt_dict = {"L5x":self.tkt1, "Trixie":self.tkt2}
@@ -225,8 +225,8 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_100(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'add' ticket, no data_ticket, no phagesdb data."""
-        self.tkt1.data_ticket = set()
+        one record, one 'add' ticket, no data_add, no phagesdb data."""
+        self.tkt1.data_add = set()
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
@@ -249,7 +249,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         one record, one 'add' ticket, with phagesdb data."""
         # Use cluster and host_genus to confirm that only attributes
         # within the data_retrieve set are copied.
-        self.tkt1.data_ticket = set(["cluster", "subcluster",
+        self.tkt1.data_add = set(["cluster", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
         self.tkt1.data_dict["host_genus"] = "retrieve"
@@ -312,7 +312,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
-        self.tkt1.data_ticket = set(["cluster", "subcluster",
+        self.tkt1.data_add = set(["cluster", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
         self.tkt1.data_retain = set(["host_genus"])
@@ -377,7 +377,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
-        self.tkt1.data_ticket = set(["cluster", "subcluster",
+        self.tkt1.data_add = set(["cluster", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
         self.tkt1.data_retain = set(["host_genus"])
@@ -433,7 +433,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
-        self.tkt1.data_ticket = set(["cluster", "subcluster",
+        self.tkt1.data_add = set(["cluster", "subcluster",
                                      "annotation_status", "annotation_author",
                                      "retrieve_record", "accession"])
         self.tkt1.data_retain = set(["host_genus"])
@@ -659,10 +659,6 @@ class TestImportGenomeMain3(unittest.TestCase):
 class TestImportGenomeMain4(unittest.TestCase):
 
     def setUp(self):
-        # self.genome_file1 = \
-        #     os.path.join(os.path.dirname(__file__), \
-        #     "test_files/test_flat_file_1.gb")
-        # self.genome_file1 = Path(self.genome_file1)
 
         self.import_table = \
             os.path.join(os.path.dirname(__file__), \
@@ -829,9 +825,11 @@ class TestImportGenomeMain5(unittest.TestCase):
 
         self.run_mode_eval_dict = {"run_mode": "custom_run_mode",
                                    "eval_flag_dict": {"a":1}}
-        self.required_keys = constants.IMPORT_TABLE_REQ_FIELDS
-        self.optional_keys = constants.IMPORT_TABLE_OPT_FIELDS
-        self.keywords = set(["retrieve", "retain", "none"])
+
+        self.table_structure_dict = constants.IMPORT_TABLE_STRUCTURE
+        # self.required_keys = constants.IMPORT_TABLE_STRUCTURE["required"]
+        # self.optional_keys = constants.IMPORT_TABLE_STRUCTURE["optional"]
+        # self.keywords = constants.IMPORT_TABLE_STRUCTURE["keywords"]
 
 
         self.test_import_table1 = \
@@ -871,9 +869,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                         import_table_file=self.test_import_table1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
-                        required_keys=self.required_keys,
-                        optional_keys=self.optional_keys,
-                        keywords=self.keywords)
+                        table_structure_dict=self.table_structure_dict)
         self.assertEqual(len(tkt_dict.keys()), 2)
 
 
@@ -889,9 +885,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                         import_table_file=self.test_import_table1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
-                        required_keys=self.required_keys,
-                        optional_keys=self.optional_keys,
-                        keywords=self.keywords)
+                        table_structure_dict=self.table_structure_dict)
         self.assertEqual(len(tkt_dict.keys()), 2)
 
 
@@ -906,9 +900,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                         import_table_file=self.test_import_table1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
-                        required_keys=self.required_keys,
-                        optional_keys=self.optional_keys,
-                        keywords=self.keywords)
+                        table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
 
 
@@ -926,9 +918,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                         import_table_file=self.test_import_table1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
-                        required_keys=self.required_keys,
-                        optional_keys=self.optional_keys,
-                        keywords=self.keywords)
+                        table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
 
 
@@ -944,9 +934,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                         import_table_file=self.test_import_table1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
-                        required_keys=self.required_keys,
-                        optional_keys=self.optional_keys,
-                        keywords=self.keywords)
+                        table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
 
 
@@ -1259,279 +1247,278 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
 
-    # TODO fix after fixing check_tickets()
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_1(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io runs correctly when there are no errors."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #
-    #     success_ticket_list = [self.tkt_dict1]
-    #     failed_ticket_list = [self.tkt_dict1, self.tkt_dict2]
-    #     success_filename_list = [self.flat_file1]
-    #     failed_filename_list = [self.flat_file2]
-    #     evaluation_dict = {}
-    #     pft_mock.return_value = (success_ticket_list,
-    #                              failed_ticket_list,
-    #                              success_filename_list,
-    #                              failed_filename_list,
-    #                              evaluation_dict)
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     exp_success_tkts = []
-    #     with open(self.exp_success_tkt_table,'r') as file:
-    #         file_reader = csv.DictReader(file)
-    #         for dict in file_reader:
-    #             exp_success_tkts.append(dict)
-    #
-    #     exp_fail_tkts = []
-    #     with open(self.exp_fail_tkt_table,'r') as file:
-    #         file_reader = csv.DictReader(file)
-    #         for dict in file_reader:
-    #             exp_fail_tkts.append(dict)
-    #
-    #     input_genomes_count = 0
-    #     for item in self.genome_folder.iterdir():
-    #         input_genomes_count += 1
-    #
-    #     success_genomes_count = 0
-    #     for item in self.exp_success_genomes.iterdir():
-    #         success_genomes_count += 1
-    #     fail_genomes_count = 0
-    #     for item in self.exp_fail_genomes.iterdir():
-    #         fail_genomes_count += 1
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertFalse(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
-    #     with self.subTest():
-    #         self.assertEqual(len(exp_success_tkts), 1)
-    #     with self.subTest():
-    #         self.assertEqual(len(exp_success_tkts[0].keys()), 12)
-    #     with self.subTest():
-    #         self.assertEqual(len(exp_fail_tkts), 2)
-    #     with self.subTest():
-    #         self.assertEqual(len(exp_fail_tkts[0].keys()), 12)
-    #     with self.subTest():
-    #         self.assertEqual(input_genomes_count, 0)
-    #     with self.subTest():
-    #         self.assertEqual(success_genomes_count, 1)
-    #     with self.subTest():
-    #         self.assertEqual(fail_genomes_count, 1)
-    #
-    #
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_2(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is successful with
-    #     success tickets but no success files, and
-    #     fail tickets but no fail files."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #
-    #     success_ticket_list = [self.tkt_dict1]
-    #     failed_ticket_list = [self.tkt_dict1, self.tkt_dict2]
-    #     success_filename_list = []
-    #     failed_filename_list = []
-    #     evaluation_dict = {}
-    #     pft_mock.return_value = (success_ticket_list,
-    #                              failed_ticket_list,
-    #                              success_filename_list,
-    #                              failed_filename_list,
-    #                              evaluation_dict)
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertFalse(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(self.exp_success_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertTrue(self.exp_fail_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_success_genomes.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_fail_genomes.exists())
-    #
-    #
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_3(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is successful with
-    #     success files but no success tickets, and
-    #     fail files but no fail tickets."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #     success_ticket_list = []
-    #     failed_ticket_list = []
-    #     success_filename_list = [self.flat_file1]
-    #     failed_filename_list = [self.flat_file2]
-    #     evaluation_dict = {}
-    #     pft_mock.return_value = (success_ticket_list,
-    #                              failed_ticket_list,
-    #                              success_filename_list,
-    #                              failed_filename_list,
-    #                              evaluation_dict)
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertFalse(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_success_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_fail_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertTrue(self.exp_success_genomes.exists())
-    #     with self.subTest():
-    #         self.assertTrue(self.exp_fail_genomes.exists())
-    #
-    #
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_4(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is successful with two previously-existing
-    #     results folders and no items in any output dataset."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #
-    #     self.results_folder1 = Path(self.output_folder, self.results_folder1)
-    #     self.results_folder1.mkdir()
-    #     self.results_folder2 = Path(self.output_folder, self.results_folder2)
-    #     self.results_folder2.mkdir()
-    #     self.results_folder3 = Path(self.output_folder, self.results_folder3)
-    #     pft_mock.return_value = ([], [], [], [], {})
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     input_genomes_count = 0
-    #     for item in self.genome_folder.iterdir():
-    #         input_genomes_count += 1
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertFalse(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(self.results_folder3.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_success_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_fail_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_success_genomes.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_fail_genomes.exists())
-    #     with self.subTest():
-    #         self.assertEqual(input_genomes_count, 2)
-    #
-    #
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_5(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is not successful when results folder is invalid."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #
-    #     self.results_folder1 = Path(self.output_folder, self.results_folder1)
-    #     self.results_folder1.mkdir()
-    #     self.results_folder2 = Path(self.output_folder, self.results_folder2)
-    #     self.results_folder2.mkdir()
-    #     self.results_folder3 = Path(self.output_folder, self.results_folder3)
-    #     self.results_folder3.mkdir()
-    #     pft_mock.return_value = ([], [], [], [], {})
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
-    #
-    #
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_6(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is not successful when there are no files to process."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     pft_mock.return_value = ([], [], [], [], {})
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
-    #
-    #
-    # @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    # def test_data_io_7(self, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is not successful when there are no tickets to process."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #     pft_mock.return_value = ([], [], [], [], {})
-    #     import_genome.data_io(sql_handle=self.sql_handle,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.invalid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(sys_exit_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(log_eval_mock.called)
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_1(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io runs correctly when there are no errors."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        self.flat_file2.touch()
+
+        success_ticket_list = [self.tkt_dict1]
+        failed_ticket_list = [self.tkt_dict1, self.tkt_dict2]
+        success_filename_list = [self.flat_file1]
+        failed_filename_list = [self.flat_file2]
+        evaluation_dict = {}
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        exp_success_tkts = []
+        with open(self.exp_success_tkt_table,'r') as file:
+            file_reader = csv.DictReader(file)
+            for dict in file_reader:
+                exp_success_tkts.append(dict)
+
+        exp_fail_tkts = []
+        with open(self.exp_fail_tkt_table,'r') as file:
+            file_reader = csv.DictReader(file)
+            for dict in file_reader:
+                exp_fail_tkts.append(dict)
+
+        input_genomes_count = 0
+        for item in self.genome_folder.iterdir():
+            input_genomes_count += 1
+
+        success_genomes_count = 0
+        for item in self.exp_success_genomes.iterdir():
+            success_genomes_count += 1
+        fail_genomes_count = 0
+        for item in self.exp_fail_genomes.iterdir():
+            fail_genomes_count += 1
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
+        with self.subTest():
+            self.assertEqual(len(exp_success_tkts), 1)
+        with self.subTest():
+            self.assertEqual(len(exp_success_tkts[0].keys()), 12)
+        with self.subTest():
+            self.assertEqual(len(exp_fail_tkts), 2)
+        with self.subTest():
+            self.assertEqual(len(exp_fail_tkts[0].keys()), 12)
+        with self.subTest():
+            self.assertEqual(input_genomes_count, 0)
+        with self.subTest():
+            self.assertEqual(success_genomes_count, 1)
+        with self.subTest():
+            self.assertEqual(fail_genomes_count, 1)
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_2(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io is successful with
+        success tickets but no success files, and
+        fail tickets but no fail files."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        self.flat_file2.touch()
+
+        success_ticket_list = [self.tkt_dict1]
+        failed_ticket_list = [self.tkt_dict1, self.tkt_dict2]
+        success_filename_list = []
+        failed_filename_list = []
+        evaluation_dict = {}
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
+        with self.subTest():
+            self.assertTrue(self.exp_success_tkt_table.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_fail_tkt_table.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_success_genomes.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_fail_genomes.exists())
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_3(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io is successful with
+        success files but no success tickets, and
+        fail files but no fail tickets."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        self.flat_file2.touch()
+        success_ticket_list = []
+        failed_ticket_list = []
+        success_filename_list = [self.flat_file1]
+        failed_filename_list = [self.flat_file2]
+        evaluation_dict = {}
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
+        with self.subTest():
+            self.assertFalse(self.exp_success_tkt_table.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_fail_tkt_table.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_success_genomes.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_fail_genomes.exists())
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_4(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io is successful with two previously-existing
+        results folders and no items in any output dataset."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        self.flat_file2.touch()
+
+        self.results_folder1 = Path(self.output_folder, self.results_folder1)
+        self.results_folder1.mkdir()
+        self.results_folder2 = Path(self.output_folder, self.results_folder2)
+        self.results_folder2.mkdir()
+        self.results_folder3 = Path(self.output_folder, self.results_folder3)
+        pft_mock.return_value = ([], [], [], [], {})
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        input_genomes_count = 0
+        for item in self.genome_folder.iterdir():
+            input_genomes_count += 1
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
+        with self.subTest():
+            self.assertTrue(self.results_folder3.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_success_tkt_table.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_fail_tkt_table.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_success_genomes.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_fail_genomes.exists())
+        with self.subTest():
+            self.assertEqual(input_genomes_count, 2)
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_5(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io is not successful when results folder is invalid."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        self.flat_file2.touch()
+
+        self.results_folder1 = Path(self.output_folder, self.results_folder1)
+        self.results_folder1.mkdir()
+        self.results_folder2 = Path(self.output_folder, self.results_folder2)
+        self.results_folder2.mkdir()
+        self.results_folder3 = Path(self.output_folder, self.results_folder3)
+        self.results_folder3.mkdir()
+        pft_mock.return_value = ([], [], [], [], {})
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_6(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io is not successful when there are no files to process."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        pft_mock.return_value = ([], [], [], [], {})
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
+
+
+    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    def test_data_io_7(self, pft_mock, sys_exit_mock, log_eval_mock):
+        """Verify data_io is not successful when there are no tickets to process."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        self.flat_file2.touch()
+        pft_mock.return_value = ([], [], [], [], {})
+        import_genome.data_io(sql_handle=self.sql_handle,
+            genome_folder=self.genome_folder,
+            import_table_file=self.invalid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(log_eval_mock.called)
 
 
 

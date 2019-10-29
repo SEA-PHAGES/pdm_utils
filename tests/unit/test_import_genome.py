@@ -34,9 +34,9 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.run_mode_set = run_modes.RUN_MODES.keys()
         self.description_field_set = constants.DESCRIPTION_FIELD_SET
 
-        self.retain_set = constants.IMPORT_TABLE_VALID_RETAIN_FIELDS
-        self.retrieve_set = constants.IMPORT_TABLE_VALID_RETRIEVE_FIELDS
-        self.ticket_set = self.retain_set | self.retrieve_set
+        self.retain_set = constants.IMPORT_TABLE_STRUCTURE["valid_retain"]
+        self.retrieve_set = constants.IMPORT_TABLE_STRUCTURE["valid_retrieve"]
+        self.add_set = constants.IMPORT_TABLE_STRUCTURE["valid_add"]
 
 
         self.data_dict = {
@@ -59,7 +59,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.tkt.eval_flags = {"a":1, "b":2}
         self.tkt.data_retain = set(["host_genus"])
         self.tkt.data_retrieve = set(["cluster"])
-        self.tkt.data_ticket = set(["retrieve_record"])
+        self.tkt.data_add = set(["retrieve_record"])
 
 
     def test_check_ticket_1(self):
@@ -71,7 +71,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         with self.subTest():
             self.assertEqual(len(self.tkt.evaluations), 11)
@@ -87,7 +87,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set([1]), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -100,7 +100,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(["Trixie"]),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -114,7 +114,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -128,7 +128,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -142,7 +142,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -156,7 +156,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -170,7 +170,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -184,7 +184,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -198,7 +198,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -212,21 +212,21 @@ class TestImportGenomeClass1(unittest.TestCase):
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
     def test_check_ticket_12(self):
         """Verify correct number of errors is produced with
-        an data in data_ticket."""
-        self.tkt.data_ticket = set(["invalid"])
+        an data in data_add."""
+        self.tkt.data_add = set(["invalid"])
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
             run_mode_set=self.run_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
-            ticket_set=self.ticket_set)
+            add_set=self.add_set)
         errors = get_errors(self.tkt)
         self.assertEqual(errors, 1)
 
@@ -1263,7 +1263,7 @@ class TestImportGenomeClass5(unittest.TestCase):
         self.tkt.type = "replace"
         self.tkt.data_retrieve = set(["cluster"])
         self.tkt.data_retain = set(["subcluster"])
-        self.tkt.data_ticket = set(["host_genus"])
+        self.tkt.data_add = set(["host_genus"])
 
         self.gnm1 = genome.Genome()
         self.gnm2 = genome.Genome()
@@ -1343,8 +1343,8 @@ class TestImportGenomeClass5(unittest.TestCase):
 
     def test_check_bundle_5(self):
         """Verify correct number of errors and check methods called
-        with no data in data_ticket."""
-        self.tkt.data_ticket = set()
+        with no data in data_add."""
+        self.tkt.data_add = set()
         import_genome.check_bundle(self.bndl,
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
@@ -1487,8 +1487,6 @@ class TestImportGenomeClass6(unittest.TestCase):
 
 
 
-    # TODO fix these after done with compare_genomes(), since number of
-    # parameters has changed.
     def test_run_checks_1(self):
         """Verify run_checks works using a bundle with:
         no ticket, no "flat_file" genome."""

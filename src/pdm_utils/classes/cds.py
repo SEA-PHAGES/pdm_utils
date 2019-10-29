@@ -572,20 +572,20 @@ class Cds:
         """
 
         if not (str(self.left).isdigit() and str(self.right).isdigit()):
-            result = "The feature coordinates are not determined: " \
-                + str((self.left, self.right))
+            result = ("The feature coordinates are not determined: "
+                      + str((self.left, self.right)))
             status = "error"
         elif (self.left == -1 or self.right == -1):
             # TODO unit test this elif clause.
-            result = "The feature coordinates are not determined: " \
-                + str((self.left, self.right))
+            result = ("The feature coordinates are not determined: "
+                      + str((self.left, self.right)))
             status = "error"
         else:
             result = "Feature coordinates are exact."
             status = "correct"
 
-        definition = "Check if the left and right boundary coordinates " + \
-                        "are exact or fuzzy."
+        definition = ("Check if the left and right boundary coordinates "
+                      "are exact or fuzzy.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 

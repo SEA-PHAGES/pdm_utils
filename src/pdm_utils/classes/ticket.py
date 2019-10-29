@@ -24,8 +24,8 @@ class GenomeTicket:
         # 'update', 'add', and 'replace' ticket types.
         self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
         self.data_retain = set() # Data that should be retained from Phamerator.
-        self.data_ticket = set() # Data to be added to genome from ticket.
-        self.data_dict = {} # Original ticket data.
+        self.data_add = set() # Data to be added to genome from ticket.
+        self.data_dict = {} # Original data from import table.
 
         # Used to check the structure of the ticket data.
         self.evaluations = []
@@ -173,15 +173,15 @@ class GenomeTicket:
 
         :param ref_set_attr:
             Name of the data_dict in the ticket to be evaluated
-            (data_ticket, data_retain, data_retrieve)
+            (data_add, data_retain, data_retrieve)
         :type ref_set_attr: str
         :param check_set: Set of valid field names.
         :type check_set: set
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if ref_set_attr == "data_ticket":
-            ref_set = self.data_ticket
+        if ref_set_attr == "data_add":
+            ref_set = self.data_add
         elif ref_set_attr == "data_retain":
             ref_set = self.data_retain
         elif ref_set_attr == "data_retrieve":
@@ -194,10 +194,13 @@ class GenomeTicket:
                 result = "The field is populated correctly."
                 status = "correct"
             else:
-                result = "The field is not populated correctly."
+                result = (
+                    "The field is not populated correctly. The following "
+                    f"values are not permitted in '{ref_set_attr}': "
+                    f"{list(invalid_values)}")
                 status = "error"
         else:
-            result = "Invalid field to be evaluationed."
+            result = "Invalid field to be evaluated."
             status = "error"
 
         definition = f"Check if {ref_set_attr} field is correctly populated."

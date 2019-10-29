@@ -385,7 +385,6 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-
     @patch("pdm_utils.pipelines.db_import.import_genome.setup_sql_handle")
     def test_import_pipeline_1(self, setup_sql_mock):
         """Test pipeline with:

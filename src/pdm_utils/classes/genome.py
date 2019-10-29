@@ -76,7 +76,7 @@ class Genome:
         self.source_features = []
         self._source_features_tally = 0
 
-        # The following attributes are usefule for processing data
+        # The following attributes are useful for processing data
         # from various data sources.
         self.filename = "" # The file name from which the data is derived
         self.type = "" # Identifier to describes how this genome is used
@@ -537,6 +537,35 @@ class Genome:
             sorted_list[index].id = self.id + delimiter + str(index + 1)
             index += 1
 
+
+
+
+    # TODO in development - possible strategy to convert phage name
+    # and host_genus typos within files to corrected values, which can
+    # be stored at multiple locations in the genome record.
+    # def convert_id(self, id_dict):
+    #     """Converts the id in several attributes.
+    #
+    #     :param id_dict:
+    #         Dictionary of genome id conversions.
+    #         The key is the old id, and the value is the new id.
+    #     :type id_dict: dict
+    #     """
+    #     if self.id in id_dict.keys():
+    #         pass
+    #     else:
+    #         pass
+    #
+    #     self.id = ""
+    #     self.name = ""
+    #     self._description_name = ""
+    #     self._source_name = ""
+    #     self._organism_name = ""
+    #
+    #     self._organism_host_genus = ""
+    #     self._source_host_genus = ""
+    #     self._description_host_genus = ""
+    #     self.host_genus = ""
 
 
 

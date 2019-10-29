@@ -195,10 +195,10 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_valid_data_source_1(self):
         """Check that no error is produced if
-        data_ticket is empty and check_set is empty."""
-        self.tkt.data_ticket = set()
+        data_add is empty and check_set is empty."""
+        self.tkt.data_add = set()
         check_set = set()
-        self.tkt.check_valid_data_source("data_ticket", check_set=check_set,
+        self.tkt.check_valid_data_source("data_add", check_set=check_set,
                                          eval_id="test")
         with self.subTest():
             self.assertEqual(self.tkt.evaluations[0].status, "correct")
@@ -207,10 +207,10 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_valid_data_source_2(self):
         """Check that no error is produced if
-        data_ticket is empty and check_set is not empty."""
-        self.tkt.data_ticket = set()
+        data_add is empty and check_set is not empty."""
+        self.tkt.data_add = set()
         check_set = set(["a", "b"])
-        self.tkt.check_valid_data_source("data_ticket", check_set=check_set)
+        self.tkt.check_valid_data_source("data_add", check_set=check_set)
         with self.subTest():
             self.assertEqual(self.tkt.evaluations[0].status, "correct")
         with self.subTest():
@@ -218,18 +218,18 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_check_valid_data_source_3(self):
         """Check that no error is produced if
-        data_ticket is not empty and valid and check_set is not empty."""
-        self.tkt.data_ticket = set(["a"])
+        data_add is not empty and valid and check_set is not empty."""
+        self.tkt.data_add = set(["a"])
         check_set = set(["a", "b"])
-        self.tkt.check_valid_data_source("data_ticket", check_set=check_set)
+        self.tkt.check_valid_data_source("data_add", check_set=check_set)
         self.assertEqual(self.tkt.evaluations[0].status, "correct")
 
     def test_check_valid_data_source_4(self):
         """Check that error is produced if
-        data_ticket is not empty and invalid and check_set is not empty."""
-        self.tkt.data_ticket = set(["a", "c"])
+        data_add is not empty and invalid and check_set is not empty."""
+        self.tkt.data_add = set(["a", "c"])
         check_set = set(["a", "b"])
-        self.tkt.check_valid_data_source("data_ticket", check_set=check_set)
+        self.tkt.check_valid_data_source("data_add", check_set=check_set)
         self.assertEqual(self.tkt.evaluations[0].status, "error")
 
     def test_check_valid_data_source_5(self):
