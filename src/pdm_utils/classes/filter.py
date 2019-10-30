@@ -13,7 +13,7 @@ import cmd, readline, argparse, os, sys
 
 
 class Filter:
-    def __init__(self, database_name, sql_handle, phage_id_list: List[str] = []):
+    def __init__(self, database_name, sql_handle, phage_id_list=[]):
         """Initializes a Filter object used to filter
         results from a SQL database
         """
@@ -31,13 +31,11 @@ class Filter:
         self.history = []
     
         self.phage_attributes = []
-        for column in self.sql_handle.execute_query(query =\
-                "DESCRIBE phage"):
+        for column in self.sql_handle.execute_query(query="DESCRIBE phage"):
             self.phage_attributes.append(column["Field"].lower())
 
         self.gene_attributes = []
-        for column in self.sql_handle.execute_query(query =\
-                "DESCRIBE gene"):
+        for column in self.sql_handle.execute_query(query="DESCRIBE gene"):
             self.gene_attributes.append(column["Field"].lower())
 
     def reset(self):
@@ -59,13 +57,13 @@ class Filter:
 
         if self.phage_filters: 
             self.phage_query = "SELECT Name FROM phage WHERE " +\
-                " and ".join(list(self.phage_filters.values()))
+                               " and ".join(list(self.phage_filters.values()))
         else:
             self.phage_query = "SELECT Name FROM phage"
 
         if self.gene_filters: 
             self.gene_query = "SELECT phageID FROM gene WHERE " +\
-                " and ".join(list(self.gene_filters.values()))
+                              " and ".join(list(self.gene_filters.values()))
         else:
             self.gene_query = "SELECT phageID FROM gene"
 
@@ -97,10 +95,10 @@ class Filter:
        
         self.update()
         if self.phage_filters:
-            phage_results = retrieve_phage_results()
+            phage_results = self.retrieve_phage_results()
         
         if self.gene_filters:
-            gene_results = retrieve_gene_results()
+            gene_results = self.retrieve_gene_results()
 
         if self.phage_filters and self.gene_filters:
             self.results = set(phage_results).intersection(gene_results)
@@ -114,8 +112,8 @@ class Filter:
         """Helper function to retrieve phage table results"""
 
         database_results = [] 
-        for result in phamerator.retrieve_data\
-                    (self.sql_handle, query = self.phage_query):
+        for result in phamerator.retrieve_data(
+                        self.sql_handle, query= self.phage_query):
             database_results.append(result['Name'])
 
         return database_results
@@ -123,8 +121,8 @@ class Filter:
     def retrieve_gene_results(self):
         """Helper function to retrieve gene table results"""
         database_gene_results = []
-        for result in phamerator.retrieve_data\
-                    (self.sql_handle, query = self.gene_query):
+        for result in phamerator.retrieve_data(
+                        self.sql_handle, query = self.gene_query):
             database_gene_results.append(result['phageID'])
 
         database_results = []
@@ -136,16 +134,16 @@ class Filter:
  
     def accession(self, filter_value: str):
         self.phage_filters.update({"accession" :\
-            "Accession = '{}'".format(filter_value)})
+                                   "Accession = '{}'".format(filter_value)})
 
     def name(self, filter_value: str):
 
         self.phage_filters.update({"name" :\
-            "Name = '{}'".format(filter_value)})
+                                   "Name = '{}'".format(filter_value)})
 
     def phageID(self, filter_value: str):
         self.phage_filters.update({"id":\
-            "PhageID = '{}'".format(filter_value)})
+                                   "PhageID = '{}'".format(filter_value)})
 
     def cluster(self, filter_value: str):
         self.phage_filters.update({"cluster":\
@@ -179,15 +177,17 @@ class Filter:
         self.gene_filters.update({"id":\
             "id  = '{}'".format(filter_value)})
 
-    def add_filter(self, filter: str, filter_value: str, gene_selection = False):
+    def add_filter(self, filter, filter_value, gene_selection=False):
 
         if gene_selection == False: 
             if filter.lower() in self.phage_attributes:
-                self.phage_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                self.phage_filters.update(
+                        {filter: "{} = '{}'".format(filter, filter_value)})
                 return True
 
             elif filter.lower() in self.gene_attributes:
-                self.gene_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                self.gene_filters.update(
+                        {filter: "{} = '{}'".format(filter, filter_value)})
                 return True
 
             else:
@@ -195,11 +195,13 @@ class Filter:
 
         else:
             if filter.lower() in self.gene_attributes:
-                self.gene_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                self.gene_filters.update(
+                        {filter: "{} = '{}'".format(filter, filter_value)})
                 return True
 
             elif filter.lower() in self.phage_attributes:
-                self.phage_filters.update({filter: "{} = '{}'".format(filter, filter_value)})
+                self.phage_filters.update(
+                        {filter: "{} = '{}'".format(filter, filter_value)})
                 return True
 
             else:
@@ -208,13 +210,12 @@ class Filter:
 
     def interactive(self, sql_handle = None):
         
-        interactive_filter = \
-                Cmd_Filter(db_filter = self, sql_handle = sql_handle)
+        interactive_filter = Cmd_Filter(db_filter=self, sql_handle=sql_handle)
         interactive_filter.cmdloop()
 
 class Cmd_Filter(cmd.Cmd):
        
-    def __init__(self, db_filter = None, sql_handle = None):
+    def __init__(self, db_filter=None, sql_handle=None):
         super(Cmd_Filter, self).__init__()
         self.filter = db_filter
         self.sql_handle = sql_handle
@@ -228,8 +229,10 @@ class Cmd_Filter(cmd.Cmd):
         
         if self.filter == None:
             if self.sql_handle == None:
-                self.sql_handle = mysqlconnectionhandler = MySQLConnectionHandler()
-                print("---------------------Database Login---------------------")
+                self.sql_handle = \
+                        mysqlconnectionhandler.MySQLConnectionHandler()
+                print(\
+                    "---------------------Database Login---------------------")
                 self.sql_handle.database = input("MySQL database: ")
                 self.sql_handle.get_credentials()
                 try:
@@ -276,23 +279,19 @@ class Cmd_Filter(cmd.Cmd):
         "Function to retrieve the hits for filtering functions"
         hits = self.filter.hits()
         if hits <= 0:
-            print("\
-                    No Database Hits.")
-            print("\
-                    Reloading last filtering options...\n")
+            print("        No Database Hits.")
+            print("        Reloading last filtering options...\n")
             self.filter.undo()
             self.filter.retrieve_results()
         else:
-            print("\
-                    Database Hits: {}\n".format(hits))
+            print("        Database Hits: {}\n".format(hits))
 
     def do_undo(self, *args):
         """Reverts back to queries generated by previous filters
         USAGE: undo
         """
         self.filter.undo()
-        print("\
-                Reloaded last filtering options")
+        print("        Reloaded last filtering options")
             
         self.do_show_filters()
 
@@ -319,16 +318,15 @@ class Cmd_Filter(cmd.Cmd):
         """Shows results for current database filtering
         """
        
-        print("\
-                Results:\n")
+        print("        Results:\n")
         for row in range(0, len(self.filter.results), 3):
             result_row = self.filter.results[row:row+3]
             if len(result_row) == 3:
                 print("%-20s %-20s %s" % \
-                        (result_row[0], result_row[1], result_row[2]))
+                     (result_row[0], result_row[1], result_row[2]))
             elif len(result_row) == 2:
                 print("%-20s %-20s" % \
-                        (result_row[0], result_row[1]))
+                     (result_row[0], result_row[1]))
 
             elif len(result_row) == 1:
                 print("%s" % (result_row[0]))
@@ -339,29 +337,25 @@ class Cmd_Filter(cmd.Cmd):
         """Displays current fitlers
         """
         if self.filter.phage_filters:
-            print("\
-                    Phage table filters:")
+            print("        Phage table filters:")
             for phage_filter in self.filter.phage_filters.values():
                 print("    " + phage_filter)
             print("\n")
 
         if self.filter.gene_filters:
-            print("\
-                    Gene table filters:")
+            print("        Gene table filters:")
             for gene_filter in self.filter.gene_filters.values():
                 print("    " + gene_filter)
             print("\n")
 
         if not self.filter.phage_filters and not self.filter.gene_filters:
-            print("\
-                    No current filters applied.")
+            print("        No current filters applied.")
 
     def do_reset(self, *args):
         """Resets results history and current filters
         USAGE: reset
         """
-        print("\
-                Resetting Filters and Results History...\n")
+        print("        Resetting Filters and Results History...\n")
         self.filter.reset()
 
     def do_clear(self, *args):
@@ -377,8 +371,7 @@ class Cmd_Filter(cmd.Cmd):
         USAGE: return
         """
         
-        print("\
-                Exiting Filtering...\n")
+        print("        Exiting Filtering...\n")
 
         return True
    

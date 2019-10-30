@@ -883,18 +883,14 @@ class TestFlatFileFunctions1(unittest.TestCase):
         record = flat_files.genome_to_seqrecord(self.gnm)
         record_comments = record.annotations["comment"]
 
-        self.assertEqual(record.annotations["date"],\
-                "2019")
-        self.assertEqual(record.annotations["accessions"],\
-                ["gnm12345"])
-        self.assertEqual(record.annotations["source"],\
-                "Mycobacterium phage Trixie")
-        self.assertEqual(record_comments[0],\
-                "Cluster: A; Subcluster: A2")
-        self.assertEqual(record_comments[2],\
-                "Annotation status: 1; Annotation Author: 1")
-        self.assertEqual(record_comments[3],\
-                "RetrieveRecord: 1; AnnotationQC: 1")
+        self.assertEqual(record.annotations["date"], "2019")
+        self.assertEqual(record.annotations["source"], 
+                         "Mycobacterium phage Trixie")
+        self.assertEqual(record_comments[0], "Cluster: A; Subcluster: A2")
+        self.assertEqual(record_comments[2],
+                         "Annotation status: 1; Annotation Author: 1")
+        self.assertEqual(record_comments[3], 
+                         "RetrieveRecord: 1; AnnotationQC: 1")
 
     def test_genome_to_seqrecord_3(self):
         self.gnm = None
@@ -907,6 +903,73 @@ class TestFlatFileFunctions1(unittest.TestCase):
         with self.assertRaises(AttributeError):
             record = flat_files.genome_to_seqrecord(self.gnm)
 
+    def test_get_seqrecord_description(self):
+        """
+        Unittest that tests flat_files.get_seqrecord_description()
+        helper function
+        """
+        self.gnm.seq = Seq("ATA")
+        self.gnm.name = "Trixie"
+        self.gnm.id = "Trixie"
+        self.gnm.cds_features = []
+        self.gnm.host_genus = "Mycobacterium"
+
+        description = flat_files.get_seqrecord_description(self.gnm)  
+        self.assertEqual(description, "Mycobacterium phage Trixie, "
+                                      "complete genome")
+
+    def test_get_seqrecord_annotations(self):
+        """
+        Unittest that tests flat_files.get_seqrecord_annotations()
+        helper function
+        """
+
+        self.gnm.seq = Seq("ATA")
+        self.gnm.date = "2019"
+        self.gnm.accession = "gnm12345"
+        self.gnm.host_genus = "Mycobacterium"
+        self.gnm.id = "Trixie"
+        self.gnm.cluster = "A"
+        self.gnm.subcluster = "A2"
+        self.gnm.annotation_status = "1"
+        self.gnm.annotation_author = "1"
+        self.gnm.retrieve_record = "1"
+        self.gnm.annotation_qc = "1"
+
+        annotations = flat_files.get_seqrecord_annotations(self.gnm)
+        comments = annotations["comment"]
+
+        self.assertEqual(annotations["date"], "2019")
+        self.assertEqual(annotations["source"], 
+                         "Mycobacterium phage Trixie")
+        self.assertEqual(comments[0], "Cluster: A; Subcluster: A2")
+        self.assertEqual(comments[2],
+                         "Annotation status: 1; Annotation Author: 1")
+        self.assertEqual(comments[3], "RetrieveRecord: 1; AnnotationQC: 1")
+
+    def test_get_seqrecord_annotations_comments(self):
+        """
+        Unittest that tests flat_files.get_seqrecord_annotations_comments()
+        helper function
+        """
+        self.gnm.seq = Seq("ATA")
+        self.gnm.date = "2019"
+        self.gnm.accession = "gnm12345"
+        self.gnm.host_genus = "Mycobacterium"
+        self.gnm.id = "Trixie"
+        self.gnm.cluster = "A"
+        self.gnm.subcluster = "A2"
+        self.gnm.annotation_status = "1"
+        self.gnm.annotation_author = "1"
+        self.gnm.retrieve_record = "1"
+        self.gnm.annotation_qc = "1"
+
+        comments = flat_files.get_seqrecord_annotations_comments(self.gnm)
+
+        self.assertEqual(comments[0], "Cluster: A; Subcluster: A2")
+        self.assertEqual(comments[2],
+                         "Annotation status: 1; Annotation Author: 1")
+        self.assertEqual(comments[3], "RetrieveRecord: 1; AnnotationQC: 1")
 
 
 
