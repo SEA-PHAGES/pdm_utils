@@ -67,7 +67,8 @@ def main(unparsed_args_list):
             prod_run=args.prod_run,
             description_field=args.description_field,
             run_mode=args.run_mode,
-            output_folder=args.output_folder)
+            output_folder=args.output_folder,
+            interactive=args.interactive)
     # input("paused before completion")
     logger.info("Import complete.")
 
@@ -147,6 +148,8 @@ def parse_args(unparsed_args_list):
     LOG_FILE_HELP = \
         ("Indicates the name of the file to log the import results. "
          "This will be created in the output folder.")
+    INTERACTIVE_HELP = \
+        ("Indicates whether interactive evaluation of data is permitted.")
 
     parser = argparse.ArgumentParser(description=IMPORT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
@@ -160,8 +163,8 @@ def parse_args(unparsed_args_list):
     parser.add_argument("-hg", "--host_genus_field", type=str.lower,
         default="organism_host_genus", choices=["organism_host_genus"],
         help=GENOME_ID_FIELD_HELP)
-    parser.add_argument("-p", "--prod_run", action="store_true", default=False,
-        help=PROD_RUN_HELP)
+    parser.add_argument("-p", "--prod_run", action="store_true",
+        default=False, help=PROD_RUN_HELP)
     parser.add_argument("-r", "--run_mode", type=str.lower,
         choices=list(run_modes.RUN_MODES.keys()), default="phagesdb",
         help=RUN_MODE_HELP)
@@ -170,9 +173,10 @@ def parse_args(unparsed_args_list):
         help=DESCRIPTION_FIELD_HELP)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
         default=pathlib.Path("/tmp/"), help=OUTPUT_FOLDER_HELP)
-    parser.add_argument("-l", "--log_file", type=str,
-        default="import.log",
+    parser.add_argument("-l", "--log_file", type=str, default="import.log",
         help=LOG_FILE_HELP)
+    parser.add_argument("-i", "--interactive", action="store_true",
+        default=False, help=INTERACTIVE_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -185,7 +189,7 @@ def parse_args(unparsed_args_list):
 def data_io(sql_handle=None, genome_folder=pathlib.Path(),
     import_table_file=pathlib.Path(), genome_id_field="", host_genus_field="",
     prod_run=False, description_field="", run_mode="",
-    output_folder=pathlib.Path()):
+    output_folder=pathlib.Path(), interactive=False):
     """Set up output directories, log files, etc. for import."""
     # Create output directories
 
@@ -218,7 +222,8 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(ticket_dict, files_to_process,
-                        sql_handle, prod_run, genome_id_field, host_genus_field)
+                        sql_handle, prod_run, genome_id_field,
+                        host_genus_field, interactive)
 
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
@@ -362,7 +367,7 @@ def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
 
 def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
                               prod_run=False, genome_id_field="",
-                              host_genus_field=""):
+                              host_genus_field="", interactive=False):
     """Process GenBank-formatted flat files.
 
     :param ticket_dict:
@@ -440,11 +445,13 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
                    file_ref=file_ref, ticket_ref=ticket_ref,
                    retrieve_ref=retrieve_ref, retain_ref=retain_ref)
 
-        # TODO this is where an interactive function should be called.
-        # pass the bundle, interate through each eval in each object,
-        # if it's error status, ask use if it is correct, and upgrade or
-        # downgrade eval as needed. Also provide a mechanism to exit.
-        # evaluation_dict[bndl.id] = get_evaluations(bndl, interactive=False)
+        # If interactive is set to True, interate through each eval
+        # stored in each object in the bundle.
+        # If there is an error status, ask use if it is correct, and
+        # downgrade the status as needed.
+        if interactive:
+            review_evaluations(bndl)
+        bndl.check_for_errors()
         evaluation_dict[bndl.id] = bndl.get_evaluations()
         result = import_into_db(bndl, sql_handle=sql_handle,
                                 gnm_key=file_ref, prod_run=prod_run)
@@ -653,75 +660,60 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
             while z < len(gnm.source_features):
                 check_source(gnm.source_features[z], eval_flags)
                 z += 1
-    bndl.check_for_errors()
 
-# TODO developing.
-# TODO unittest.
-def get_evaluations(bndl, interactive=False):
+
+def review_evaluations(bndl):
     """Iterate through all objects stored in the bundle.
-    If there are errors, provide mechanism to alter status."""
-    ###copied from bundle
-    eval_dict = {}
-    if len(bndl.evaluations) > 0:
-        if interactive:
-            review_evaluations(bndl.evaluations)
-        eval_dict["bundle"] = bndl.evaluations
-    if isinstance(bndl.ticket, ticket.GenomeTicket):
-        if len(bndl.ticket.evaluations) > 0:
-            if interactive:
-                review_evaluations(bndl.ticket.evaluations)
-            eval_dict["ticket"] = bndl.ticket.evaluations
+    If there are errors, review whether status should be changed."""
+    review_evaluation_list(bndl.evaluations)
+    if bndl.ticket is not None:
+        review_evaluation_list(bndl.ticket.evaluations)
     for key in bndl.genome_dict.keys():
         gnm = bndl.genome_dict[key]
-        genome_key = "genome_" + key
-        if len(gnm.evaluations) > 0:
-            if interactive:
-                review_evaluations(gnm.evaluations)
-            eval_dict[genome_key] = gnm.evaluations
-        for cds_ftr in gnm.cds_features:
-            cds_key = "cds_" + cds_ftr.id
-            if len(cds_ftr.evaluations) > 0:
-                if interactive:
-                    review_evaluations(cds_ftr.evaluations)
-                eval_dict[cds_key] = cds_ftr.evaluations
+        review_evaluation_list(gnm.evaluations)
+
+        # Capture the exit status for each CDS feature. If user exits
+        # the review at any point, skip all of the other CDS features.
+        exit = False
+        x = 0
+        while (exit is False and x < len(gnm.cds_features)):
+            cds_ftr = gnm.cds_features[x]
+            exit = review_evaluation_list(cds_ftr.evaluations)
+            x += 1
+
         for source_ftr in gnm.source_features:
-            source_key = "cds_" + source_ftr.id
-            if len(source_ftr.evaluations) > 0:
-                if interactive:
-                    review_evaluations(source_ftr.evaluations)
-                eval_dict[source_key] = source_ftr.evaluations
+            review_evaluation_list(source_ftr.evaluations)
+
+        # TODO implement trna and tmrna features
+
     for key in bndl.genome_pair_dict.keys():
         genome_pair = bndl.genome_pair_dict[key]
-        genome_pair_key = "genome_pair_" + key
-        if len(genome_pair.evaluations) > 0:
-            if interactive:
-                review_evaluations(genome_pair.evaluations)
-            eval_dict[genome_pair_key] = genome_pair.evaluations
-    return eval_dict
+        review_evaluation_list(genome_pair.evaluations)
 
-    ###copied from bundle
-
-# TODO developing.
-# TODO unittest.
-def review_evaluations(evaluation_list):
-    """Iterate through all objects stored in the bundle.
-    If there are errors, provide mechanism to alter status."""
+def review_evaluation_list(evaluation_list):
+    """Iterate through all evaluations and review 'error' results.
+    """
     exit = False
     x = 0
-    while (not exit or x < len(evaluation_list)):
+    while (exit is False and x < len(evaluation_list)):
         evl = evaluation_list[x]
-        print(f"Evaluation ID: {evl.id}.")
-        print(f"Status: {evl.status}.")
-        print(f"Definition: {evl.definition}.")
-        print(f"Result: {evl.result}.")
-        result = input("Should this be downgraded to 'warning'?")
-        if result == "yes":
-            evl.status = "warning"
-            evl.result = evl.result + "Downgraded from 'error' status."
-        elif result == "exit":
-            exit = True
+        if evl.status == "error":
+            print("The following evaluation is set to 'error':")
+            print(f"Evaluation ID: {evl.id}.")
+            print(f"Status: {evl.status}.")
+            print(f"Definition: {evl.definition}.")
+            print(f"Result: {evl.result}.")
+            prompt = "Should this evaluation be downgraded to 'warning'?"
+            result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+            if result is None:
+                exit = True
+            elif result is True:
+                evl.status = "warning"
+                evl.result = evl.result + " Downgraded from 'error' status."
+            else:
+                pass
         x += 1
-
+    return exit
 
 def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref=""):
     """Check a Bundle for errors.

@@ -140,7 +140,7 @@ class Bundle:
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle
         and determine how many errors there are."""
-
+        self._errors = 0
         for evl in self.evaluations:
             if evl.status == "error":
                 self._errors += 1
@@ -181,6 +181,7 @@ class Bundle:
             #             self._errors += 1
 
 
+    # TODO add source feature evaluation list.
     def get_evaluations(self):
         """Iterate through the various objects stored in the Bundle
         object and return a dictionary of evaluation lists.
