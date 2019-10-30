@@ -470,21 +470,33 @@ def write_csv_log(genome_list, export_path, export_dir_name="file_export"):
         log_path = Path(os.path.join(export_path, f"log{logversion}.csv"))
  
     csv_format = []
-    csv_format.append(["Name",
-                       "Host Genus",
+    csv_format.append(["PhageID",
+                       "Accession",
+                       "Name",
+                       "HostStrain",
+                       "SequenceLength",
+                       "DateLastModified",
+                       "Notes",
+                       "GC",
                        "Cluster",
                        "Subcluster",
-                       "Annotation_Status",
-                       "Annotation_Author",
-                       "Accession"])
+                       "Status",
+                       "RetrieveRecord",
+                       "AnnotationQC",])
     for gnm in genome_list:
-        csv_format.append([gnm.name,
+        csv_format.append([gnm.id,
+                           gnm.accession,
+                           gnm.name,
                            gnm.host_genus,
+                           gnm.length,
+                           gnm.date,
+                           gnm.description,
+                           gnm.gc,
                            gnm.cluster,
                            gnm.subcluster,
                            gnm.annotation_status,
-                           gnm.annotation_author,
-                           gnm.accession])
+                           gnm.retrieve_record,
+                           gnm.annotation_author])
     log_path.touch()
     with open(log_path, 'w', newline="") as csv_file:
         logwriter = csv.writer(csv_file, delimiter=",", 
