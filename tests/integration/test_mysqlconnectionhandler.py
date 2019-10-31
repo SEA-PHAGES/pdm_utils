@@ -304,7 +304,10 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         self.handler._database_status = True
         self.handler.open_connection()
         return_list = self.handler.execute_query(self.valid_query)
-        self.assertEqual(return_list[0]["database()"], self.valid_db.lower())
+
+        # returns case-insensitive on mac, returns case-sensitive on ubuntu.
+        self.assertEqual(return_list[0]["database()"].lower(),
+                         self.valid_db.lower())
 
     def test_execute_query_2(self):
         """With a valid connection and invalid query, cursor should be made
@@ -333,8 +336,10 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         with self.subTest():
             self.assertTrue(self.handler.connection_status())
         with self.subTest():
-            self.assertEqual(return_list[0]["database()"],
-                self.valid_db.lower())
+            # returns case-insensitive on mac, returns case-sensitive on ubuntu.
+            self.assertEqual(return_list[0]["database()"].lower(),
+                             self.valid_db.lower())
+
 
     def test_execute_query_4(self):
         """With valid credentials/db but no connection and invalid query,
