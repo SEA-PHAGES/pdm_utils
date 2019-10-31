@@ -48,41 +48,37 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
-    # Using the patch decorator to bypass the user-required input() value.
-    @patch("pdm_utils.functions.basic.get_input", return_value = "yes")
-    def test_get_input(self, input):
-        """Verify the function retrieves input."""
-        value = basic.get_input()
-        self.assertEqual(value, "yes")
-
-
-
-
-    @patch("pdm_utils.functions.basic.get_input", return_value = "YES")
-    def test_ask_yes_no_1(self, input):
-        """Verify user-supplied 'YES' results in True."""
+    @patch("builtins.input", return_value = "YES")
+    def test_ask_yes_no_1(self, input_mock):
+        """Verify output when user answers provides YES response."""
         response = basic.ask_yes_no()
         self.assertTrue(response)
 
-    @patch("pdm_utils.functions.basic.get_input", return_value = "NO")
-    def test_ask_yes_no_2(self, input):
-        """Verify user-supplied 'NO' results in False."""
+    @patch("builtins.input", return_value = "NO")
+    def test_ask_yes_no_2(self, input_mock):
+        """Verify output when user answers provides NO response."""
         response = basic.ask_yes_no()
         self.assertFalse(response)
 
-    @patch("pdm_utils.functions.basic.get_input", return_value = "invalid")
-    def test_ask_yes_no_3(self, input):
-        """Verify invalid user-supplied response results in None response."""
+    @patch("builtins.input", return_value = "EXIT")
+    def test_ask_yes_no_3(self, input_mock):
+        """Verify output when user answers provides exit response."""
+        response = basic.ask_yes_no(response_attempt=3)
+        self.assertIsNone(response)
+
+    @patch("builtins.input", return_value = "invalid")
+    def test_ask_yes_no_4(self, input_mock):
+        """Verify output when user answers provides invalid response."""
         response = basic.ask_yes_no()
         self.assertIsNone(response)
 
-
-
-
-
-
-
-
+    @patch("builtins.input")
+    def test_ask_yes_no_5(self, input_mock):
+        """Verify output when attempts = 3 and
+        user provides valid response on last attempt."""
+        input_mock.side_effect = ["invalid", "invalid", "Y"]
+        response = basic.ask_yes_no(response_attempt=3)
+        self.assertTrue(response)
 
 
 

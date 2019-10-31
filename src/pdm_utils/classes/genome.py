@@ -3,6 +3,7 @@ maintain and update SEA-PHAGES phage genomics data.
 """
 
 from pdm_utils.functions import basic
+from pdm_utils.constants import constants
 from pdm_utils.classes import eval
 from datetime import datetime
 from Bio.SeqUtils import GC
@@ -10,7 +11,7 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 import re
 from operator import attrgetter
-from pdm_utils.classes import cds, trna
+from pdm_utils.classes import cds, trna, source
 
 
 class Genome:
@@ -39,7 +40,7 @@ class Genome:
         self.annotation_status = "" # Final, Draft, Unknown version of genome data
         self.annotation_author = -1 # 1 (can be changed), 0 (can not be changed)
         self.retrieve_record = -1 # 1 (auto update), 0 (do not auto update)
-        self.date = "" # Used for the DateLastModified field.
+        self.date = constants.EMPTY_DATE # Used for the DateLastModified field.
 
         # The following attributes are common to
         # GenBank-formatted flat file records.
@@ -75,7 +76,7 @@ class Genome:
         self.source_features = []
         self._source_features_tally = 0
 
-        # The following attributes are usefule for processing data
+        # The following attributes are useful for processing data
         # from various data sources.
         self.filename = "" # The file name from which the data is derived
         self.type = "" # Identifier to describes how this genome is used
@@ -302,12 +303,12 @@ class Genome:
         """
         if isinstance(value, str):
             value = value.strip()
-            if value.lower() == "singleton":
-                self.cluster = value.lower()
+            if value.capitalize() == "Singleton":
+                self.cluster = value.capitalize()
             else:
                 self.cluster = value
         if value is None:
-            self.cluster = "singleton"
+            self.cluster = "Singleton"
 
 
     def set_subcluster(self, value, format="empty_string"):
@@ -337,20 +338,20 @@ class Genome:
             Otherwise, the value is directly used to populate this attribute.
         :type value: misc
         """
-        if value is "internal":
-            if (self.subcluster is None or \
-                self.subcluster.lower() == "none" or \
+        if value == "internal":
+            if (self.subcluster is None or
+                self.subcluster.lower() == "none" or
                 self.subcluster == ""):
                 if self.cluster is None:
-                    self.cluster_subcluster = "singleton"
+                    self.cluster_subcluster = "Singleton"
                 else:
                     self.cluster_subcluster = self.cluster
             else:
                 self.cluster_subcluster = self.subcluster
         elif value is None:
-            self.cluster_subcluster = "singleton"
-        elif value.lower() == "singleton":
-            self.cluster_subcluster = value.lower()
+            self.cluster_subcluster = "Singleton"
+        elif value.capitalize() == "Singleton":
+            self.cluster_subcluster = value.capitalize()
         else:
             self.cluster_subcluster = value
 
@@ -470,7 +471,7 @@ class Genome:
 
 
     def set_feature_ids(self, use_type=False, use_cds=False,
-                        use_trna=False, use_tmrna=False):
+                        use_trna=False, use_tmrna=False, use_source=False):
         """Sets the id of each feature.
 
         Lists of features can be added to this method. The method assumes
@@ -505,6 +506,8 @@ class Genome:
         list_to_sort = []
         if use_cds:
             list_to_sort.extend(self.cds_features)
+        if use_source:
+            list_to_sort.extend(self.source_features)
         if use_trna:
             list_to_sort.extend(self.trna_features)
 
@@ -518,8 +521,8 @@ class Genome:
             if use_type:
                 if isinstance(sorted_list[index], cds.Cds):
                     delimiter = "_CDS_"
-
-                # TODO unit test after tRNA class implemented.
+                elif isinstance(sorted_list[index], source.Source):
+                    delimiter = "_SRC_"
                 elif isinstance(sorted_list[index], trna.TrnaFeature):
                     delimiter = "_TRNA_"
 
@@ -537,13 +540,43 @@ class Genome:
 
 
 
+    # TODO in development - possible strategy to convert phage name
+    # and host_genus typos within files to corrected values, which can
+    # be stored at multiple locations in the genome record.
+    # def convert_id(self, id_dict):
+    #     """Converts the id in several attributes.
+    #
+    #     :param id_dict:
+    #         Dictionary of genome id conversions.
+    #         The key is the old id, and the value is the new id.
+    #     :type id_dict: dict
+    #     """
+    #     if self.id in id_dict.keys():
+    #         pass
+    #     else:
+    #         pass
+    #
+    #     self.id = ""
+    #     self.name = ""
+    #     self._description_name = ""
+    #     self._source_name = ""
+    #     self._organism_name = ""
+    #
+    #     self._organism_host_genus = ""
+    #     self._source_host_genus = ""
+    #     self._description_host_genus = ""
+    #     self.host_genus = ""
+
+
+
 
 
     # Evaluations.
-
-    def check_id(self, check_set, expect=False, eval_id=None):
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None):
         """Check that the id is valid.
 
+        :param attribute: Name of the genome object attribute to evaluate.
+        :type attribute: str
         :param check_set:
             Set of reference ids.
         :type check_set: set
@@ -555,124 +588,68 @@ class Genome:
             Unique identifier for the evaluation.
         :type eval_id: str
         """
-        value = basic.check_value_expected_in_set(self.id,
-                check_set, expect)
-        if value:
-            result = "The id is valid."
-            status = "correct"
+        try:
+            test = True
+            value1 = getattr(self, attribute)
+        except:
+            test = False
+            value1 = None
+        if test:
+            value2 = basic.check_value_expected_in_set(
+                        value1, check_set, expect)
+            if value2:
+                result = f"The {attribute} is valid."
+                status = "correct"
+            else:
+                result = f"The {attribute} is not valid."
+                status = "error"
         else:
-            result = "The id is not valid."
-            status = "error"
-        definition = "Check that the id is valid."
+            result = f"The {attribute} was not evaluated."
+            status = "untested"
+        definition = f"Check the {attribute} attribute."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_name(self, check_set, expect=False, eval_id=None):
-        """Check that the name is valid.
+    def compare_two_attributes(self, attribute1, attribute2,
+                               expect_same=False, eval_id=None):
+        """Determine if two attributes are the same.
 
-        :param check_set:
-            Set of reference names.
-        :type check_set: set
-        :param expect:
-            Indicates whether the name is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
+        :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        value = basic.check_value_expected_in_set(self.name,
-                check_set, expect)
-        if value:
-            result = "The name is valid."
-            status = "correct"
+        try:
+            test = True
+            value1 = getattr(self, attribute1)
+            value2 = getattr(self, attribute2)
+        except:
+            test = False
+            value1 = None
+            value2 = None
+        if test:
+            if value1 == value2:
+                actual_same = True
+            else:
+                actual_same = False
+
+            if actual_same:
+                result1 = "identical"
+            else:
+                result1 = "different"
+            result = f"The two attributes have {result1} values, "
+            if actual_same and expect_same:
+                result = result + "as expected."
+                status = "correct"
+            elif not actual_same and not expect_same:
+                result = result + "as expected."
+                status = "correct"
+            else:
+                result = result + "which is not expected."
+                status = "error"
         else:
-            result = "The name is not valid."
-            status = "error"
-        definition = "Check that the name is valid."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_annotation_status(
-            self, check_set=set(), expect=False, eval_id=None):
-        """Check that the annotation_status is valid.
-
-        :param check_set:
-            Set of reference annotation_status values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the annotation_status is
-            expected to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        value = basic.check_value_expected_in_set(self.annotation_status,
-                check_set, expect)
-        if value:
-            result = "The annotation status is valid."
-            status = "correct"
-        else:
-            result = "The annotation status is not valid."
-            status = "error"
-        definition = "Check that the annotation status is valid."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_host_genus(self, check_set, expect=False, eval_id=None):
-        """Check that the host_genus is valid.
-
-        :param check_set:
-            Set of reference host_genus values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the host_genus is
-            expected to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        value = basic.check_value_expected_in_set(self.host_genus,
-                check_set, expect)
-        if value:
-            result = "The host_genus is valid."
-            status = "correct"
-        else:
-            result = "The host_genus is not valid."
-            status = "error"
-        definition = "Check that the host_genus is valid."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_cluster(self, check_set, expect=False, eval_id=None):
-        """Check that the cluster is valid.
-
-        :param check_set:
-            Set of reference clusters.
-        :type check_set: set
-        :param expect:
-            Indicates whether the cluster is expected
-            to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        value = basic.check_value_expected_in_set(self.cluster,
-                check_set, expect)
-        if value:
-            result = "The cluster is valid."
-            status = "correct"
-        else:
-            result = "The cluster is not valid."
-            status = "error"
-        definition = "Check that the cluster is valid."
+            result = f"The attribute comparison was not evaluated."
+            status = "untested"
+        definition = f"Compare '{attribute1}' and '{attribute2}' attributes."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -694,35 +671,8 @@ class Genome:
                 status = "correct"
         else:
             result = "Cluster is empty."
-            status = "not_evaluated"
+            status = "untested"
         definition = "Check if cluster attribute is structured correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_subcluster(self, check_set, expect=False, eval_id=None):
-        """Check that the subcluster is valid.
-
-        :param check_set:
-            Set of reference subclusters.
-        :type check_set: set
-        :param expect:
-            Indicates whether the subcluster is expected
-            to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        value = basic.check_value_expected_in_set(self.subcluster,
-                check_set, expect)
-        if value:
-            result = "The subcluster is valid."
-            status = "correct"
-        else:
-            result = "The subcluster is not valid."
-            status = "error"
-        definition = "Check that the subcluster is valid."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -733,7 +683,7 @@ class Genome:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if self.subcluster != "none":
+        if (self.subcluster != "none" and self.subcluster != ""):
             left, right = basic.split_string(self.subcluster)
             if (left.isalpha() == False or right.isdigit() == False):
                 result = "Subcluster is not structured correctly."
@@ -743,7 +693,7 @@ class Genome:
                 status = "correct"
         else:
             result = "Subcluster is empty."
-            status = "not_evaluated"
+            status = "untested"
         definition = "Check if subcluster attribute is structured correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
@@ -763,34 +713,6 @@ class Genome:
             result = "Cluster and Subcluster designations are compatible."
             status = "correct"
         definition = "Check for compatibility between Cluster and Subcluster."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_sequence(self, check_set, expect=False, eval_id=None):
-        """Check that the sequence is valid.
-
-        :param check_set:
-            Set of reference sequences.
-        :type check_set: set
-        :param expect:
-            Indicates whether the sequence is expected
-            to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        value = basic.check_value_expected_in_set(self.seq,
-                check_set, expect)
-        if value:
-            result = "The sequence is valid."
-            status = "correct"
-        else:
-            result = "The sequence is not valid."
-            status = "error"
-
-        definition = "Check that the sequence is valid."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -822,9 +744,8 @@ class Genome:
         nucleotide_error_set = nucleotide_set - check_set
 
         if len(nucleotide_error_set) > 0:
-            result = \
-                "There are unexpected nucleotides in the sequence: " \
-                + str(nucleotide_error_set)
+            result = ("There are unexpected nucleotides in the sequence: "
+                      f"{str(nucleotide_error_set)}")
             status = "error"
 
         else:
@@ -832,33 +753,6 @@ class Genome:
             status = "correct"
 
         definition = "Check if all nucleotides in the sequence are expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_accession(self, check_set=set(), expect=False, eval_id=None):
-        """Check that the accession is valid.
-
-        :param check_set:
-            Set of reference accessions.
-        :type check_set: set
-        :param expect:
-            Indicates whether the accession is expected
-            to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        value = basic.check_value_expected_in_set(self.accession,
-                check_set, expect)
-        if value:
-            result = "The accession is valid."
-            status = "correct"
-        else:
-            result = "The accession is not valid."
-            status = "error"
-        definition = "Check that the accession is valid."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -905,253 +799,44 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_annotation_author(self, check_set=set(), eval_id=None):
-        """Check that the annotation_author is valid.
-
-        :param check_set: Set of reference annotation_author values.
-        :type check_set: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+    def check_magnitude(self, attribute, expect, ref_value, eval_id=None):
         """
-        if self.annotation_author in check_set:
-            result = "The annotation_author is valid."
-            status = "correct"
-        else:
-            result = "The annotation_author is not valid."
-            status = "error"
-        definition = "Check that the annotation_author is valid."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        expect = (>, =, <).
 
-
-    def check_retrieve_record(self, check_set=set(), eval_id=None):
-        """Check that the retrieve_record is valid.
-
-        :param check_set: Set of reference retrieve_record values.
-        :type check_set: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.retrieve_record in check_set:
-            result = "The retrieve_record is valid."
-            status = "correct"
-        else:
-            result = "The retrieve_record is not valid."
-            status = "error"
-        definition = "Check that the retrieve_record is valid."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_filename(self, check_set, expect=False, eval_id=None):
-        """Check that the filename is valid.
-
-        :param check_set:
-            Set of reference filenames.
-        :type check_set: set
-        :param expect:
-            Indicates whether the filename is expected
-            to be present in the check set.
-        :type expect: bool
         :param eval_id:
             Unique identifier for the evaluation.
         :type eval_id: str
         """
-        value = basic.check_value_expected_in_set(self.filename,
-                check_set, expect)
-        if value:
-            result = "The filename is valid."
-            status = "correct"
+        try:
+            test = True
+            query_value = getattr(self, attribute)
+        except:
+            test = False
+            query_value = None
+        if test:
+            result1 = f"The {attribute} value {query_value} is "
+            if query_value > ref_value:
+                compare = ">"
+                result2 = "greater than "
+            elif query_value == ref_value:
+                compare = "="
+                result2 = "equal to "
+            else:
+                compare = "<"
+                result2 = "less than "
+            result = result1 + result2 + f"{ref_value}."
+            if compare == expect:
+                status = "correct"
+            else:
+                status = "error"
         else:
-            result = "The filename is not valid."
-            status = "error"
-        definition = "Check that the filename is valid."
+            result = f"The {attribute} was not evaluated."
+            status = "untested"
+        definition = f"Check that the magnitude of {attribute} is as expected."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_compatible_status_and_accession(self, eval_id=None):
-        """Compare genome annotation_status and accession.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        # Now that the AnnotationAuthor attribute contains authorship data, the
-        # 'unknown' annotation status now reflects an 'unknown' annotation (in
-        # regards to if it was auto-annotated or manually annotated).
-        # So for the annotation_status-accession error,
-        # if the annotation_status is 'unkown',
-        # there is no reason to assume whether there should be an accession
-        # or not. Only for 'final' (manually annotated) genomes should
-        # there be an accession.
-
-        if (self.annotation_status == 'final' and self.accession == ''):
-            result = "The genome is final but does not have an accession. "
-            status = "error"
-        else:
-            result = "No conflict between annotation_status and accession."
-            status = "correct"
-        definition = "Compare the annotation_status and accession."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_compatible_status_and_descriptions(self, eval_id=None):
-        """Compare annotation_status and description tally.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        # Depending on the annotation_status of the genome,
-        # CDS features are expected to contain or not contain descriptions.
-        # Draft genomes should not have any descriptions.
-        # Final genomes should not have any descriptions.
-        # There are no expectations for other types of genomes.
-
-        if (self.annotation_status == 'draft' and \
-                self._cds_processed_descriptions_tally > 0):
-            result = "The genome is draft status " + \
-                     "but contains CDS descriptions."
-            status = "error"
-        elif (self.annotation_status == 'final' and \
-                self._cds_processed_descriptions_tally == 0):
-            result = "The genome is final status " + \
-                     "but does not contain any CDS descriptions."
-            status = "error"
-        else:
-            result = "There is no conflict between status and " + \
-                     "CDS descriptions."
-            status = "correct"
-        definition = "Compare the status and presence of CDS descriptions."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_description_name(self, eval_id=None):
-        """Check genome id spelling in the description attribute.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.id != self._description_name:
-            result = "The name in the description attribute " + \
-                     "does not match the genome's id."
-            status = "error"
-        else:
-            result = "Record descriptions attribute contains the genome id."
-            status = "correct"
-        definition = "Check genome id spelling in the " + \
-                     "description attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_source_name(self, eval_id=None):
-        """Check genome id spelling in the source attribute.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.id != self._source_name:
-            result = "The name in the source attribute " + \
-                     "does not match the genome's id."
-            status = "error"
-        else:
-            result = "The source attribute contains the genome id."
-            status = "correct"
-        definition = "Check genome id spelling in the source attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_organism_name(self, eval_id=None):
-        """Check genome id in the organism attribute.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.id != self._organism_name:
-            result = "The name in the organism attribute " + \
-                     "does not match the genome's id."
-            status = "error"
-        else:
-            result = "The organism attribute contains the genome id."
-            status = "correct"
-        definition = "Check genome id spelling in the organism attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_description_host_genus(self, eval_id=None):
-        """Check host_genus spelling in the description attribute.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.host_genus != self._description_host_genus:
-            result = "The host_genus in the description attribute " + \
-                     "does not match the genome's host_genus."
-            status = "error"
-        else:
-            result = "The description attribute contains the host_genus."
-            status = "correct"
-        definition = "Check host_genus spelling in the description attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_source_host_genus(self, eval_id=None):
-        """Check host_genus spelling in the source attribute.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.host_genus != self._source_host_genus:
-            result = "The host_genus name in the source attribute " + \
-                     "does not match the genome's host_genus."
-            status = "error"
-        else:
-            result = "The source attribute contains the host_genus."
-            status = "correct"
-        definition = "Check host_genus spelling in the source attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_organism_host_genus(self, eval_id=None):
-        """Check host_genus spelling in the organism attribute.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.host_genus != self._organism_host_genus:
-            result = "The host_genus in the organism attribute " + \
-                     "does not match the genome's host_genus."
-            status = "error"
-        else:
-            result = "The organism attribute contains the host_genus."
-            status = "correct"
-        definition = "Check host_genus spelling in the organism attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_cds_feature_tally(self, eval_id=None):
-        """Check to confirm that CDS features have been parsed.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self._cds_features_tally == 0:
-            result = "There are no CDS features for this genome."
-            status = "error"
-        else:
-            result = "CDS features were annotated."
-            status = "correct"
-        definition = "Check if CDS features are annotated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
 
 
     def check_cds_start_end_ids(self, eval_id=None):
@@ -1284,8 +969,8 @@ class Genome:
                 current = sorted_features[index]
                 next = sorted_features[index + 1]
                 if (current.left == next.left and current.right == next.right):
-                    msgs.append("Features contain identical left and " \
-                                + "right coordinates.")
+                    msgs.append("Features contain identical left and "
+                                "right coordinates.")
                 elif (current.left < next.left and current.right > next.right):
                     msgs.append("Features are nested.")
                 elif (current.left == next.left and \
@@ -1309,8 +994,8 @@ class Genome:
         else:
             result = "The feature coordinates are correct."
             status = "correct"
-        definition = "Check if there are any errors with the " \
-                     + "genome's feature coordinates."
+        definition = ("Check if there are any errors with the "
+                      "genome's feature coordinates.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 

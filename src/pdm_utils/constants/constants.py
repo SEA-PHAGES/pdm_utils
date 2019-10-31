@@ -2,44 +2,69 @@
 database."""
 
 from Bio.Alphabet import IUPAC
+from Bio.Seq import Seq
 from datetime import datetime
 from pathlib import Path
 
-IMPORT_TABLE_SIZE = 12
 
-IMPORT_TABLE_REQ_DICT = {
-    "id":"",
-    "type":"",
-    "phage_id":"",
-    }
 
-IMPORT_TABLE_OPT_DICT = {
-    "description_field":"",
-    "run_mode":"",
-    "host_genus":"",
-    "cluster":"",
-    "subcluster":"",
-    "annotation_status":"",
-    "annotation_author":"",
-    "accession":"",
-    "retrieve_record":""
-    }
 
-IMPORT_TABLE_DICT = {
-    "id":"",
-    "type":"",
-    "description_field":"",
-    "run_mode":"",
-    "phage_id":"",
-    "host_genus":"",
-    "cluster":"",
-    "subcluster":"",
-    "annotation_status":"",
-    "annotation_author":"",
-    "accession":"",
-    "retrieve_record":""
-    }
-
+IMPORT_TABLE_STRUCTURE = {
+    "order": [
+                        "id",
+                        "type",
+                        "phage_id",
+                        "description_field",
+                        "run_mode",
+                        "host_genus",
+                        "cluster",
+                        "subcluster",
+                        "accession",
+                        "annotation_author",
+                        "retrieve_record",
+                        "annotation_status"],
+    "required": set([
+                        "id",
+                        "type",
+                        "phage_id"]),
+    "optional": set([
+                        "description_field",
+                        "run_mode",
+                        "host_genus",
+                        "cluster",
+                        "subcluster",
+                        "annotation_status",
+                        "annotation_author",
+                        "accession",
+                        "retrieve_record"]),
+    "valid_ticket": set([
+                        "id",
+                        "type",
+                        "phage_id",
+                        "description_field",
+                        "run_mode"]),
+    "valid_retain": set([
+                        "host_genus",
+                        "cluster",
+                        "subcluster",
+                        "annotation_author",
+                        "accession",
+                        "retrieve_record"]),
+    "valid_retrieve": set([
+                        "host_genus",
+                        "cluster",
+                        "subcluster",
+                        "accession"]),
+    "valid_add": set([
+                        "host_genus",
+                        "cluster",
+                        "subcluster",
+                        "annotation_author",
+                        "annotation_status",
+                        "accession",
+                        "retrieve_record"]),
+    "keywords": set(["retrieve", "retain", "none"])
+}
 
 NAME_SUFFIX = "_Draft"
 ANNOTATION_STATUS_SET = set(["draft", "final", "unknown"])
@@ -47,6 +72,8 @@ ANNOTATION_AUTHOR_SET = set([0,1])
 RETRIEVE_RECORD_SET = set([0,1])
 EMPTY_DATE = datetime.strptime('1/1/0001', '%m/%d/%Y')
 LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI", "PHIRE"])
+
+EMPTY_GENOME_SEQ = Seq("", IUPAC.ambiguous_dna)
 
 # Common list of values that represent empty or null values.
 EMPTY_SET = set(["",
@@ -96,14 +123,6 @@ DESCRIPTION_FIELD_SET = set(["product", "note", "function"])
 AUTHOR_SET = set(["hatfull"])
 
 
-# TODO this is probably no longer needed.
-# # Dictionary for storing authorship info.
-# # 1 = list of authors that should be listed on a genome record.
-# # 0 = 'gbk', representing a genome record that a group does not have
-# # control over.
-# AUTHOR_DICTIONARY = {0:set(['gbk']),1: AUTHOR_SET}
-
-
 # Settings to access data through the PhagesDB API.
 API_PREFIX = "https://phagesdb.org/api/phages/"
 API_SUFFIX = "/?format=json"
@@ -118,10 +137,6 @@ API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/?"
                  f"page={SEQUENCED_PAGE}" \
                  f"&page_size={SEQUENCED_SIZE}")
 
-
-# TODO this is probably no longer needed.
-# # Set of valid file extensions for flat files to be evaluated.
-# ADMISSIBLE_FILE_TYPES = set(["gb","gbf","gbk","txt"])
 
 # Phage name typo correction dictionary.
 # Key = Phage name as it is spelled in the GenBank-formatted record.

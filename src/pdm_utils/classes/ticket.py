@@ -24,13 +24,12 @@ class GenomeTicket:
         # 'update', 'add', and 'replace' ticket types.
         self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
         self.data_retain = set() # Data that should be retained from Phamerator.
-        self.data_ticket = set() # Data to be added to genome from ticket.
-        self.data_dict = {} # Original ticket data.
+        self.data_add = set() # Data to be added to genome from ticket.
+        self.data_dict = {} # Original data from import table.
 
         # Used to check the structure of the ticket data.
         self.evaluations = []
         self._value_flag = False
-
 
 
 
@@ -76,128 +75,44 @@ class GenomeTicket:
             self._value_flag = False
 
 
-    # TODO this may no longer be needed.
-    # def set_field_trackers(self):
-    #     """Assigns ticket dictionary keys to specific sets.
-    #
-    #     Only certain keys can be retrieved or retained."""
-    #
-    #     retrieve_keys = set(["host_genus", "cluster",
-    #                          "subcluster", "accession"])
-    #     retain_keys = retrieve_keys | set(["annotation_author",
-    #                                        "retrieve_record"])
-    #     # TODO unittest improved functionality.
-    #     for key in self.data_dict.keys():
-    #         if (self.data_dict[key] == "retrieve" and key in retrieve_keys):
-    #             self.data_retrieve.add(key)
-    #         elif (self.data_dict[key] == "retain" and key in retain_keys):
-    #             self.data_retain.add(key)
-    #         elif key in retain_keys:
-    #             self.data_ticket.add(key)
-    #         else:
-    #             pass
+
 
     # Evaluations
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None):
+        """Check that the id is valid.
 
-
-
-
-    def check_type(self, check_set, expect=True, eval_id=None):
-        """Check that the type is valid.
-
-        :param check_set: Set of reference types.
+        :param attribute: Name of the ticket object attribute to evaluate.
+        :type attribute: str
+        :param check_set:
+            Set of reference ids.
         :type check_set: set
         :param expect:
-            Indicates whether the type is expected to be present
+            Indicates whether the id is expected to be present
             in the check set.
         :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
+        :param eval_id:
+            Unique identifier for the evaluation.
         :type eval_id: str
         """
-        output = basic.check_value_expected_in_set(
-                    self.type, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
+        try:
+            test = True
+            value1 = getattr(self, attribute)
+        except:
+            test = False
+            value1 = None
+        if test:
+            value2 = basic.check_value_expected_in_set(
+                        value1, check_set, expect)
+            if value2:
+                result = f"The {attribute} is valid."
+                status = "correct"
+            else:
+                result = f"The {attribute} is not valid."
+                status = "error"
         else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if ticket type field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_phage_id(self, check_set, expect=True, eval_id=None):
-        """Check that the phage_id is valid.
-
-        :param check_set: Set of reference phage_ids.
-        :type check_set: set
-        :param expect:
-            Indicates whether the phage_id is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.phage_id, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if phage_id field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_description_field(self, check_set, expect=True, eval_id=None):
-        """Check that the description_field is valid.
-
-        :param check_set: Set of reference description_field values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the description_field is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.description_field, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if description_field field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_run_mode(self, check_set, expect=True, eval_id=None):
-        """Check that the run_mode is valid.
-
-        :param check_set: Set of reference run_mode values.
-        :type check_set: set
-        :param expect:
-            Indicates whether the run_mode is expected to be present
-            in the check set.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        output = basic.check_value_expected_in_set(
-                    self.run_mode, check_set, expect)
-        if output:
-            result = "The field is populated correctly."
-            status = "correct"
-        else:
-            result = "The field is not populated correctly."
-            status = "error"
-        definition = "Check if run_mode field is correctly populated."
+            result = f"The {attribute} was not evaluated."
+            status = "untested"
+        definition = f"Check the {attribute} attribute."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -230,83 +145,6 @@ class GenomeTicket:
         self.evaluations.append(evl)
 
 
-
-
-    def check_duplicate_id(self, set_of_duplicates, eval_id=None):
-        """Check if the id is unique to this ticket by
-        checking if it is found within a list of previously
-        determined duplicate ids.
-
-        :param set_of_duplicates: Set of reference duplicated values.
-        :type set_of_duplicates: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.id in set_of_duplicates:
-            result = "The id is not unique to this ticket."
-            status = "error"
-        else:
-            result = "The id is unique to this ticket"
-            status = "correct"
-        definition = "Check if the id is unique to this ticket."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-    def check_duplicate_phage_id(self, set_of_duplicates, eval_id=None):
-        """Check if the phage_id is unique to this ticket by
-        checking if it is found within a list of previously
-        determined duplicate phage_ids.
-
-        :param set_of_duplicates: Set of reference duplicated values.
-        :type set_of_duplicates: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self.phage_id in set_of_duplicates:
-            result = "The phage_id is not unique to this ticket."
-            status = "error"
-        else:
-            result = "The phage_id is unique to this ticket"
-            status = "correct"
-        definition = "Check if the phage_id is unique to this ticket."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-    def check_compatible_type_and_annotation_status(self, eval_id=None):
-        """Check if the ticket type and annotation_status are compatible.
-
-        If the ticket type is 'add', then the annotation_status is not
-        expected to be 'final'.
-        If the ticket type is 'replace', then the annotation_status is
-        not expected to be 'draft'.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        try:
-            annotation_status = self.data_dict["annotation_status"]
-        except:
-            annotation_status = ""
-        if (self.type == "add" and annotation_status == "final"):
-            result = ("The ticket type indicates that a genome "
-                     "with 'final' annotation_status will be added, "
-                     "which is not expected.")
-            status = "error"
-        elif (self.type == "replace" and annotation_status == "draft"):
-            result = ("The ticket type indicates that a genome "
-                     "with 'draft' annotation_status will be replaced, "
-                     "which is not expected.")
-            status = "error"
-        else:
-            result = "The ticket type and annotation_status are expected."
-            status = "correct"
-        definition = ("Check if the ticket type and annotation_status "
-                     "are compatible.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
     def check_compatible_type_and_data_retain(self, eval_id=None):
         """Check if the ticket type and data_retain are compatible.
 
@@ -329,4 +167,43 @@ class GenomeTicket:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
+
+    def check_valid_data_source(self, ref_set_attr, check_set, eval_id=None):
+        """Check that the values in the specified attribute are valid.
+
+        :param ref_set_attr:
+            Name of the data_dict in the ticket to be evaluated
+            (data_add, data_retain, data_retrieve)
+        :type ref_set_attr: str
+        :param check_set: Set of valid field names.
+        :type check_set: set
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        if ref_set_attr == "data_add":
+            ref_set = self.data_add
+        elif ref_set_attr == "data_retain":
+            ref_set = self.data_retain
+        elif ref_set_attr == "data_retrieve":
+            ref_set = self.data_retrieve
+        else:
+            ref_set = None
+        if ref_set is not None:
+            invalid_values = ref_set - check_set
+            if len(invalid_values) == 0:
+                result = "The field is populated correctly."
+                status = "correct"
+            else:
+                result = (
+                    "The field is not populated correctly. The following "
+                    f"values are not permitted in '{ref_set_attr}': "
+                    f"{list(invalid_values)}")
+                status = "error"
+        else:
+            result = "Invalid field to be evaluated."
+            status = "error"
+
+        definition = f"Check if {ref_set_attr} field is correctly populated."
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 ###

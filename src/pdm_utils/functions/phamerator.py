@@ -376,7 +376,7 @@ def create_accession_set(sql_handle):
 
 def convert_for_sql(value):
     """Convert a value for inserting into MySQL."""
-    if (basic.check_empty(value) == True or value.lower() == "singleton"):
+    if (basic.check_empty(value) == True or value.capitalize() == "Singleton"):
         value = "NULL"
     else:
         value = f"'{value}'"

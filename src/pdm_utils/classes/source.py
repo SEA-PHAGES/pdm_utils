@@ -4,74 +4,52 @@ to maintain and update SEA-PHAGES phage genomics data.
 
 from pdm_utils.functions import basic
 from pdm_utils.classes import eval
-import re
-
-
-
 
 class Source:
 
-    # Initialize all attributes:
     def __init__(self):
 
-        # Initialize all non-calculated attributes:
         self.id = ""
         self.name = ""
-        self.seqfeature = None
-        self.type = ""
-        self.left = -1 # TODO implement this.
-        self.right = -1 # TODO implement this.
+        self.seqfeature = None # Biopython SeqFeature object.
+        self.left = -1
+        self.right = -1
         self.organism = ""
         self.host = ""
         self.lab_host = ""
 
-        # Common to Phamerator.
+        # Data about the parent genome.
         self.genome_id = ""
-        self.parent_host_genus = ""
+        self.genome_host_genus = ""
 
-
-        # Computed data fields.
-        self._organism_name = ""
-        self._organism_host_genus = ""
-        self._host_host_genus = ""
-        self._lab_host_host_genus = ""
-
-        self.evaluations = [] # List of warnings and errors about source feature
-
-
+        self._organism_name = "" # Parsed from organism.
+        self._organism_host_genus = "" # Parsed from organism.
+        self._host_host_genus = "" # Parsed from host.
+        self._lab_host_host_genus = "" # Parsed from lab_host.
+        self.evaluations = [] # List of warnings and errors about source feature.
+        self.type = ""
 
 
     def parse_organism(self):
         """Retrieve the phage and host_genus names from the 'organism' field."""
-        self._organism_name, \
-        self._organism_host_genus = \
-            basic.parse_names_from_record_field(self.organism)
+        output = basic.parse_names_from_record_field(self.organism)
+        self._organism_name = output[0]
+        self._organism_host_genus = output[1]
 
     def parse_host(self):
         """Retrieve the host_genus name from the 'host' field."""
-        name, \
-        self._host_host_genus = \
-            basic.parse_names_from_record_field(self.host)
-        # Note: no need to assign phage name, since this field is only
-        # expected to contain host information.
+        self._host_host_genus = self.host.split(" ")[0]
+        # Note: 'host' field is only expected to contain host information,
+        # so a different strategy than parse_organism is used.
 
     def parse_lab_host(self):
         """Retrieve the host_genus name from the 'lab_host' field."""
-        name, \
-        self._lab_host_host_genus = \
-            basic.parse_names_from_record_field(self.lab_host)
-        # Note: no need to assign phage name, since this field is only
-        # expected to contain host information.
+        self._lab_host_host_genus = self.lab_host.split(" ")[0]
+        # Note: 'host' field is only expected to contain host information,
+        # so a different strategy than parse_organism is used.
 
 
-
-
-
-
-
-    # Evalutions
-
-
+    # Evaluations
     def check_organism_name(self, eval_id=None):
         """Check phage name spelling in the organism field.
 
@@ -80,8 +58,8 @@ class Source:
         """
 
         if self.genome_id != self._organism_name:
-            result = "The phage name in the organism field " + \
-                        "does not match the genome_id."
+            result = ("The phage name in the organism field "
+                        "does not match the genome_id.")
             status = "error"
 
         else:
@@ -100,9 +78,9 @@ class Source:
         :type eval_id: str
         """
 
-        if self.parent_host_genus != self._organism_host_genus:
-            result = "The host_genus name in the organism field " + \
-                        "does not match the parent_host_genus."
+        if self.genome_host_genus != self._organism_host_genus:
+            result = ("The host_genus name in the organism field "
+                        "does not match the genome_host_genus.")
             status = "error"
 
         else:
@@ -121,9 +99,9 @@ class Source:
         :type eval_id: str
         """
 
-        if self.parent_host_genus != self._host_host_genus:
-            result = "The host_genus name in the host field " + \
-                        "does not match the parent_host_genus."
+        if self.genome_host_genus != self._host_host_genus:
+            result = ("The host_genus name in the host field "
+                        "does not match the genome_host_genus.")
             status = "error"
 
         else:
@@ -142,9 +120,9 @@ class Source:
         :type eval_id: str
         """
 
-        if self.parent_host_genus != self._lab_host_host_genus:
-            result = "The host_genus name in the lab_host field " + \
-                        "does not match the parent_host_genus."
+        if self.genome_host_genus != self._lab_host_host_genus:
+            result = ("The host_genus name in the lab_host field "
+                        "does not match the genome_host_genus.")
             status = "error"
 
         else:
@@ -154,34 +132,3 @@ class Source:
         definition = "Check host_genus name spelling in the lab_host field."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###

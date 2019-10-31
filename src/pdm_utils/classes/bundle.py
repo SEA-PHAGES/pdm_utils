@@ -140,7 +140,7 @@ class Bundle:
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle
         and determine how many errors there are."""
-
+        self._errors = 0
         for evl in self.evaluations:
             if evl.status == "error":
                 self._errors += 1
@@ -181,6 +181,7 @@ class Bundle:
             #             self._errors += 1
 
 
+    # TODO add source feature evaluation list.
     def get_evaluations(self):
         """Iterate through the various objects stored in the Bundle
         object and return a dictionary of evaluation lists.
@@ -208,6 +209,38 @@ class Bundle:
         return eval_dict
 
 
+
+
+    def check_compatible_type_and_annotation_status(self, gnm_type, eval_id=None):
+        """Check if the ticket type and annotation_status are compatible.
+
+        If the ticket type is 'add', then the annotation_status is not
+        expected to be 'final'.
+        If the ticket type is 'replace', then the annotation_status is
+        not expected to be 'draft'.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        """
+        annotation_status = self.genome_dict[gnm_type].annotation_status
+        tkt_type = self.ticket.type
+        if (tkt_type == "add" and annotation_status == "final"):
+            result = ("The ticket type indicates that a genome "
+                     "with 'final' annotation_status will be added, "
+                     "which is not expected.")
+            status = "error"
+        elif (tkt_type == "replace" and annotation_status == "draft"):
+            result = ("The ticket type indicates that a genome "
+                     "with 'draft' annotation_status will be replaced, "
+                     "which is not expected.")
+            status = "error"
+        else:
+            result = "The ticket type and annotation_status are expected."
+            status = "correct"
+        definition = ("Check if the ticket type and annotation_status "
+                     "are compatible.")
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
 
 ###

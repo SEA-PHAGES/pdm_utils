@@ -5,12 +5,14 @@ import unittest
 from pdm_utils.constants import constants
 from pdm_utils.classes import genome
 from pdm_utils.classes import cds
+from pdm_utils.classes import trna
+from pdm_utils.classes import source
 from datetime import datetime
 from Bio.Seq import Seq
-from pdm_utils.classes import trna
+from Bio.Alphabet import IUPAC
 
 
-class TestGenomeClass(unittest.TestCase):
+class TestGenomeClass1(unittest.TestCase):
 
 
     def setUp(self):
@@ -72,8 +74,6 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(self.gnm.length, 0)
         with self.subTest():
             self.assertEqual(self.gnm.gc, -1)
-
-
 
 
 
@@ -357,15 +357,15 @@ class TestGenomeClass(unittest.TestCase):
 
     def test_set_cluster_2(self):
         """Check that 'singleton' string is set appropriately."""
-        cluster = "Singleton"
+        cluster = "singleton"
         self.gnm.set_cluster(cluster)
-        self.assertEqual(self.gnm.cluster, "singleton")
+        self.assertEqual(self.gnm.cluster, "Singleton")
 
     def test_set_cluster_3(self):
         """Check that None is set appropriately."""
         cluster = None
         self.gnm.set_cluster(cluster)
-        self.assertEqual(self.gnm.cluster, "singleton")
+        self.assertEqual(self.gnm.cluster, "Singleton")
 
     def test_set_cluster_4(self):
         """Check that whitespace is removed."""
@@ -421,15 +421,15 @@ class TestGenomeClass(unittest.TestCase):
         self.gnm.subcluster = ""
         self.gnm.cluster = None
         self.gnm.set_cluster_subcluster()
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_2(self):
         """Check that singleton Cluster is set as
         singleton cluster_subcluster."""
         self.gnm.subcluster = ""
-        self.gnm.cluster = "singleton"
+        self.gnm.cluster = "Singleton"
         self.gnm.set_cluster_subcluster()
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_3(self):
         """Check that Cluster is set as cluster_subcluster."""
@@ -462,13 +462,13 @@ class TestGenomeClass(unittest.TestCase):
     def test_set_cluster_subcluster_7(self):
         """Check that cluster_subcluster is set when provided value is None."""
         self.gnm.set_cluster_subcluster(None)
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_8(self):
         """Check that cluster_subcluster is set when provided value is
         'Singleton'."""
-        self.gnm.set_cluster_subcluster("Singleton")
-        self.assertEqual(self.gnm.cluster_subcluster, "singleton")
+        self.gnm.set_cluster_subcluster("singleton")
+        self.assertEqual(self.gnm.cluster_subcluster, "Singleton")
 
     def test_set_cluster_subcluster_9(self):
         """Check that cluster_subcluster is set when provided value is
@@ -499,8 +499,7 @@ class TestGenomeClass(unittest.TestCase):
         from None."""
         date1 = None
         date2 = datetime.strptime('1/1/0001', '%m/%d/%Y')
-        self.gnm.set_date(date1, \
-                                            "empty_datetime_obj")
+        self.gnm.set_date(date1, "empty_datetime_obj")
         self.assertEqual(self.gnm.date, date2)
 
     def test_set_date_4(self):
@@ -734,7 +733,7 @@ class TestGenomeClass(unittest.TestCase):
         subcluster is empty."""
         self.gnm.subcluster = "none"
         self.gnm.check_subcluster_structure()
-        self.assertEqual(self.gnm.evaluations[0].status, "not_evaluated")
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
 
 
 
@@ -764,7 +763,7 @@ class TestGenomeClass(unittest.TestCase):
         cluster is empty."""
         self.gnm.cluster = "none"
         self.gnm.check_cluster_structure()
-        self.assertEqual(self.gnm.evaluations[0].status, "not_evaluated")
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
 
 
 
@@ -817,232 +816,69 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_check_compatible_status_and_accession_1(self):
-        """Check final annotation_status with accession."""
-        self.gnm.annotation_status = "final"
-        self.gnm.accession = "ABC123"
-        self.gnm.check_compatible_status_and_accession("eval_id")
+    def test_check_magnitude_1(self):
+        """Verify no error is produced when
+        'length' is greater than 0, as expected."""
+        self.gnm.length = 1000
+        self.gnm.check_magnitude("length", ">", 0, eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
-    def test_check_compatible_status_and_accession_2(self):
-        """Check final annotation_status with no accession."""
-        self.gnm.annotation_status = "final"
-        self.gnm.accession = ""
-        self.gnm.check_compatible_status_and_accession()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_compatible_status_and_accession_3(self):
-        """Check draft annotation_status with no accession."""
-        self.gnm.annotation_status = "draft"
-        self.gnm.accession = ""
-        self.gnm.check_compatible_status_and_accession()
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-
-
-
-
-
-    def test_check_compatible_status_and_descriptions_1(self):
-        """Check that draft genome with no descriptions does not produce
-        an error."""
-        self.gnm.annotation_status = "draft"
-        self.gnm.check_compatible_status_and_descriptions("eval_id")
+    def test_check_magnitude_2(self):
+        """Verify no error is produced when
+        'length' is equal to 0, as expected."""
+        self.gnm.length = 0
+        self.gnm.check_magnitude("length", "=", 0)
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_compatible_status_and_descriptions_2(self):
-        """Check that draft genome with a description produces an error."""
-        self.gnm.annotation_status = "draft"
-        self.gnm._cds_processed_descriptions_tally = 1
-        self.gnm.check_compatible_status_and_descriptions()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
             self.assertIsNone(self.gnm.evaluations[0].id)
 
-    def test_check_compatible_status_and_descriptions_3(self):
-        """Check that final genome with a description does not produce
-        an error."""
-        self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 1
-        self.gnm.check_compatible_status_and_descriptions()
+    def test_check_magnitude_3(self):
+        """Verify no error is produced when
+        'length' is less than 0, as expected."""
+        self.gnm.length = -100
+        self.gnm.check_magnitude("length", "<", 0)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_compatible_status_and_descriptions_4(self):
-        """Check that final genome with no descriptions produces an error."""
-        self.gnm.annotation_status = "final"
-        self.gnm.check_compatible_status_and_descriptions()
+    def test_check_magnitude_4(self):
+        """Verify an error is produced when
+        'length' is greater than 0, unexpectedly."""
+        self.gnm.length = 100
+        self.gnm.check_magnitude("length", "=", 0)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_compatible_status_and_descriptions_5(self):
-        """Check that unknown genome with no descriptions does not produce
-        an error."""
-        self.gnm.annotation_status = "unknown"
-        self.gnm.check_compatible_status_and_descriptions()
+    def test_check_magnitude_5(self):
+        """Verify an error is produced when
+        'length' is less than 0, unexpectedly."""
+        self.gnm.length = -100
+        self.gnm.check_magnitude("length", ">", 0)
+        self.assertEqual(self.gnm.evaluations[0].status, "error")
+
+    def test_check_magnitude_6(self):
+        """Verify an error is produced when
+        'name' is less than ref_name, unexpectedly."""
+        self.gnm.name = "a"
+        self.gnm.check_magnitude("name", "<", "c")
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_compatible_status_and_descriptions_6(self):
-        """Check that unknown genome with descriptions does not produce
-        an error."""
-        self.gnm.annotation_status = "unknown"
-        self.gnm._cds_processed_descriptions_tally = 1
-        self.gnm.check_compatible_status_and_descriptions()
+    def test_check_magnitude_7(self):
+        """Verify an error is produced when
+        'date' is greater than ref_date, unexpectedly."""
+        ref_date =  datetime.strptime('1/1/2000', '%m/%d/%Y')
+        self.gnm.date = datetime.strptime('2/1/2000', '%m/%d/%Y')
+        self.gnm.check_magnitude("date", "<", ref_date)
+        self.assertEqual(self.gnm.evaluations[0].status, "error")
+
+    def test_check_magnitude_8(self):
+        """Verify an error is produced when
+        'date' is equal to ref_date, unexpectedly."""
+        ref_date =  datetime.strptime('2/1/2000', '%m/%d/%Y')
+        self.gnm.date = datetime.strptime('2/1/2000', '%m/%d/%Y')
+        self.gnm.check_magnitude("date", "=", ref_date)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-
-
-
-
-
-
-
-
-
-
-
-    def test_check_description_name_1(self):
-        """Check that no warning is produced."""
-        self.gnm.id = "Trixie"
-        self.gnm._description_name = "Trixie"
-        self.gnm.check_description_name("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_description_name_2(self):
-        """Check that a warning is produced."""
-        self.gnm.id = "L5"
-        self.gnm._description_name = "Trixie"
-        self.gnm.check_description_name()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-
-
-
-    def test_check_source_name_1(self):
-        """Check that no warning is produced."""
-        self.gnm.id = "Trixie"
-        self.gnm._source_name = "Trixie"
-        self.gnm.check_source_name("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_source_name_2(self):
-        """Check that a warning is produced."""
-        self.gnm.id = "L5"
-        self.gnm._source_name = "Trixie"
-        self.gnm.check_source_name()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-
-
-
-    def test_check_organism_name_1(self):
-        """Check that no warning is produced."""
-        self.gnm.id = "Trixie"
-        self.gnm._organism_name = "Trixie"
-        self.gnm.check_organism_name("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_organism_name_2(self):
-        """Check that a warning is produced."""
-        self.gnm.id = "L5"
-        self.gnm._organism_name = "Trixie"
-        self.gnm.check_organism_name()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-
-
-
-    def test_check_description_host_genus_1(self):
-        """Check that no warning is produced."""
-        self.gnm.host_genus = "Mycobacterium"
-        self.gnm._description_host_genus = "Mycobacterium"
-        self.gnm.check_description_host_genus("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_description_host_genus_2(self):
-        """Check that a warning is produced."""
-        self.gnm.host_genus = "Gordonia"
-        self.gnm._description_host_genus = "Mycobacterium"
-        self.gnm.check_description_host_genus()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-
-
-
-    def test_check_source_host_genus_1(self):
-        """Check that no warning is produced."""
-        self.gnm.host_genus = "Mycobacterium"
-        self.gnm._source_host_genus = "Mycobacterium"
-        self.gnm.check_source_host_genus("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_source_host_genus_2(self):
-        """Check that a warning is produced."""
-        self.gnm.host_genus = "Gordonia"
-        self.gnm._source_host_genus = "Mycobacterium"
-        self.gnm.check_source_host_genus()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-
-
-
-    def test_check_organism_host_genus_1(self):
-        """Check that no warning is produced."""
-        self.gnm.host_genus = "Mycobacterium"
-        self.gnm._organism_host_genus = "Mycobacterium"
-        self.gnm.check_organism_host_genus("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_organism_host_genus_2(self):
-        """Check that a warning is produced."""
-        self.gnm.host_genus = "Gordonia"
-        self.gnm._organism_host_genus = "Mycobacterium"
-        self.gnm.check_organism_host_genus()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
 
 
 
@@ -1189,651 +1025,147 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
-    def test_set_feature_ids_1(self):
-        """Verify that CDS features are sorted in correct order."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.trna2.left = 10
-        self.trna2.right = 17
-
-        #3
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        #4
-        self.cds3.left = 18
-        self.cds3.right = 30
-
-        #5
-        self.cds2.left = 18
-        self.cds2.right = 40
-
-        #6
-        self.trna1.left = 100
-        self.trna1.right = 200
-
-        #7 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
-        self.gnm.set_feature_ids(use_cds=True)
-        with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_4")
-        with self.subTest():
-            self.assertEqual(self.cds2.id, "L5_3")
-        with self.subTest():
-            self.assertEqual(self.cds3.id, "L5_2")
-        with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_1")
-
-
-    def test_set_feature_ids_2(self):
-        """Verify that tRNA features are sorted in correct order."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.trna2.left = 10
-        self.trna2.right = 17
-
-        #3
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        #4
-        self.cds3.left = 18
-        self.cds3.right = 30
-
-        #5
-        self.cds2.left = 18
-        self.cds2.right = 40
-
-        #6
-        self.trna1.left = 100
-        self.trna1.right = 200
-
-        #7 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
-        self.gnm.set_feature_ids(use_trna=True)
-        with self.subTest():
-            self.assertEqual(self.trna1.id, "L5_3")
-        with self.subTest():
-            self.assertEqual(self.trna2.id, "L5_2")
-        with self.subTest():
-            self.assertEqual(self.trna3.id, "L5_1")
-
-
-    def test_set_feature_ids_3(self):
-        """Verify that CDS and tRNA features are sorted in correct order."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.trna2.left = 10
-        self.trna2.right = 17
-
-        #3
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        #4
-        self.cds3.left = 18
-        self.cds3.right = 30
-
-        #5
-        self.cds2.left = 18
-        self.cds2.right = 40
-
-        #6
-        self.trna1.left = 100
-        self.trna1.right = 200
-
-        #7 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
-        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
-        self.gnm.set_feature_ids(use_cds=True, use_trna=True)
-        with self.subTest():
-            self.assertEqual(self.trna1.id, "L5_6")
-        with self.subTest():
-            self.assertEqual(self.trna2.id, "L5_2")
-        with self.subTest():
-            self.assertEqual(self.trna3.id, "L5_1")
-        with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_7")
-        with self.subTest():
-            self.assertEqual(self.cds2.id, "L5_5")
-        with self.subTest():
-            self.assertEqual(self.cds3.id, "L5_4")
-        with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_3")
-
-
-    def test_set_feature_ids_4(self):
-        """Verify that CDS and tRNA features are sorted in correct order
-        with type delimiter added."""
-
-        #1
-        self.trna3.left = 10
-        self.trna3.right = 15
-
-        #2
-        self.cds4.left = 10
-        self.cds4.right = 20
-
-        self.gnm.id = "L5"
-        self.gnm.cds_features = [self.cds4]
-        self.gnm.trna_features = [self.trna3]
-        self.gnm.set_feature_ids(use_type=True, use_cds=True, use_trna=True)
-        with self.subTest():
-            self.assertEqual(self.trna3.id, "L5_TRNA_1")
-        with self.subTest():
-            self.assertEqual(self.cds4.id, "L5_CDS_2")
-
-
-
-
-
-
-
-    def test_check_id_1(self):
-        """Verify that no error is produced when the id
-        is in the id_set and is expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
+    def test_check_attribute_1(self):
+        """Verify no error is produced when the id
+        is in the check_set and is expected to be in the set."""
+        check_set = set(["Trixie", "L5"])
         self.gnm.id = "Trixie"
-        self.gnm.check_id(value_set, True, "eval_id")
+        self.gnm.check_attribute("id", check_set, True, "eval_id")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
-
-    def test_check_id_2(self):
-        """Verify that an error is produced when the id
-        is not in the id_set and is expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
+    def test_check_attribute_2(self):
+        """Verify an error is produced when the id
+        is not in the check_set and is expected to be in the set."""
+        check_set = set(["Trixie", "L5"])
         self.gnm.id = "D29"
-        self.gnm.check_id(value_set, True)
+        self.gnm.check_attribute("id", check_set, True)
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "error")
         with self.subTest():
             self.assertIsNone(self.gnm.evaluations[0].id)
 
-
-
-    def test_check_id_3(self):
-        """Verify that no error is produced when the id
-        is not in the id_set and is not expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
+    def test_check_attribute_3(self):
+        """Verify no error is produced when the id
+        is not in the check_set and is not expected to be in the set."""
+        check_set = set(["Trixie", "L5"])
         self.gnm.id = "D29"
-        self.gnm.check_id(value_set, False)
+        self.gnm.check_attribute("id", check_set, False)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_id_4(self):
-        """Verify that an error is produced when the id
-        is in the id_set and is not expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
+    def test_check_attribute_4(self):
+        """Verify an error is produced when the id
+        is in the check_set and is not expected to be in the set."""
+        check_set = set(["Trixie", "L5"])
         self.gnm.id = "Trixie"
-        self.gnm.check_id(value_set, False)
+        self.gnm.check_attribute("id", check_set, False)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-
-
-
-
-    def test_check_name_1(self):
-        """Verify that no error is produced when the name
-        is in the name_set and is expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
-        self.gnm.name = "Trixie"
-        self.gnm.check_name(value_set, True, "eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_name_2(self):
-        """Verify that an error is produced when the name
-        is not in the name_set and is expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
-        self.gnm.name = "D29"
-        self.gnm.check_name(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_name_3(self):
-        """Verify that no error is produced when the name
-        is not in the name_set and is not expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
-        self.gnm.name = "D29"
-        self.gnm.check_name(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_name_4(self):
-        """Verify that an error is produced when the name
-        is in the name_set and is not expected to be in the set."""
-        value_set = set(["Trixie", "L5"])
-        self.gnm.name = "Trixie"
-        self.gnm.check_name(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_annotation_status_1(self):
-        """Verify that no error is produced when the annotation_status
-        is in the status_set and is expected to be in the set."""
-        self.gnm.annotation_status = "draft"
-        self.gnm.check_annotation_status(
-            check_set=constants.ANNOTATION_STATUS_SET,
-            expect=True, eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_annotation_status_2(self):
-        """Verify that an error is produced when the annotation_status
-        is not in the status_set and is expected to be in the set."""
-        self.gnm.annotation_status = "invalid"
-        self.gnm.check_annotation_status(
-            check_set=constants.ANNOTATION_STATUS_SET, expect=True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_annotation_status_3(self):
-        """Verify that no error is produced when the annotation_status
-        is in a non-standard status_set and is expected to be in the set."""
-        check_set = set(["new_status", "final"])
-        self.gnm.annotation_status = "new_status"
-        self.gnm.check_annotation_status(
-            check_set=check_set, expect = True)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_annotation_status_4(self):
-        """Verify that an error is produced when the annotation_status
-        is not a non-standard status_set and is expected to be in the set."""
-        check_set = set(["new_status", "final"])
-        self.gnm.annotation_status = "draft"
-        self.gnm.check_annotation_status(
-            check_set=check_set, expect = True)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-    def test_check_annotation_status_5(self):
-        """Verify that an error is produced when the annotation_status
-        is in the set, and is not expected to be in the set."""
-        check_set = set(["new_status", "final"])
-        self.gnm.annotation_status = "new_status"
-        self.gnm.check_annotation_status(
-            check_set=check_set, expect = False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_host_genus_1(self):
-        """Verify that no error is produced when the host_genus
-        is in the host_set and is expected to be in the set."""
-        value_set = set(["Mycobacterium", "Gordonia"])
+    def test_check_attribute_5(self):
+        """Verify an error is produced when the host_genus
+        is in the check_set and is not expected to be in the set."""
+        check_set = set(["Mycobacterium", "Gordonia"])
         self.gnm.host_genus = "Mycobacterium"
-        self.gnm.check_host_genus(value_set, True, "eval_id")
+        self.gnm.check_attribute("host_genus", check_set, False)
+        self.assertEqual(self.gnm.evaluations[0].status, "error")
+
+    def test_check_attribute_6(self):
+        """Verify an error is produced when the seq
+        is in the check_set and is expected to be in the set."""
+        check_set = set([Seq("AAAA", IUPAC.ambiguous_dna),
+                         Seq("ATAT", IUPAC.ambiguous_dna)])
+        self.gnm.seq = Seq("AAAA", IUPAC.ambiguous_dna)
+        self.gnm.check_attribute("seq", check_set, True)
+        self.assertEqual(self.gnm.evaluations[0].status, "correct")
+
+    def test_check_attribute_7(self):
+        """Verify an error is produced when the retrieve_record
+        is not in the check_set and is expected to be in the set."""
+        check_set = set([1, 0])
+        self.gnm.retrieve_record = -1
+        self.gnm.check_attribute("retrieve_record", check_set, True)
+        self.assertEqual(self.gnm.evaluations[0].status, "error")
+
+    def test_check_attribute_8(self):
+        """Verify no test is performed when the attribute is invalid."""
+        check_set = set([1, 0])
+        self.gnm.check_attribute("invalid", check_set, True)
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
+
+
+
+
+    def test_compare_two_attributes_1(self):
+        """Verify no error is produced when both attributes have
+        identical values as expected."""
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie"
+        self.gnm.compare_two_attributes("id", "name", expect_same=True,
+                                           eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
-    def test_check_host_genus_2(self):
-        """Verify that an error is produced when the host_genus
-        is not in the host_set and is expected to be in the set."""
-        value_set = set(["Mycobacterium", "Gordonia"])
-        self.gnm.host_genus = "invalid"
-        self.gnm.check_host_genus(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_host_genus_3(self):
-        """Verify that no error is produced when the host_genus
-        is not in the host_set and is not expected to be in the set."""
-        value_set = set(["Mycobacterium", "Gordonia"])
-        self.gnm.host_genus = "Arthrobacter"
-        self.gnm.check_host_genus(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_host_genus_4(self):
-        """Verify that an error is produced when the host_genus
-        is in the host_set and is not expected to be in the set."""
-        value_set = set(["Mycobacterium", "Gordonia"])
-        self.gnm.host_genus = "Mycobacterium"
-        self.gnm.check_host_genus(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_cluster_1(self):
-        """Verify that no error is produced when the cluster
-        is in the cluster_set and is expected to be in the set."""
-        value_set = set(["A", "B"])
-        self.gnm.cluster = "A"
-        self.gnm.check_cluster(value_set, True, "eval_id")
+    def test_compare_two_attributes_2(self):
+        """Verify no error is produced when both attributes have
+        different values as expected."""
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie_Draft"
+        self.gnm.compare_two_attributes("id", "name", expect_same=False)
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_cluster_2(self):
-        """Verify that an error is produced when the cluster
-        is not in the cluster_set and is expected to be in the set."""
-        value_set = set(["A", "B"])
-        self.gnm.cluster = "C"
-        self.gnm.check_cluster(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
             self.assertIsNone(self.gnm.evaluations[0].id)
 
-    def test_check_cluster_3(self):
-        """Verify that no error is produced when the cluster
-        is not in the cluster_set and is not expected to be in the set."""
-        value_set = set(["A", "B"])
-        self.gnm.cluster = "C"
-        self.gnm.check_cluster(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_cluster_4(self):
-        """Verify that an error is produced when the cluster
-        is in the cluster_set and is not expected to be in the set."""
-        value_set = set(["A", "B"])
-        self.gnm.cluster = "A"
-        self.gnm.check_cluster(value_set, False)
+    def test_compare_two_attributes_3(self):
+        """Verify an error is produced when both attributes have
+        different values unexpectedly."""
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie_Draft"
+        self.gnm.compare_two_attributes("id", "name", expect_same=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-
-
-
-    def test_check_subcluster_1(self):
-        """Verify that no error is produced when the subcluster
-        is in the subcluster_set and is expected to be in the set."""
-        value_set = set(["A1", "B1"])
-        self.gnm.subcluster = "A1"
-        self.gnm.check_subcluster(value_set, True, "eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_subcluster_2(self):
-        """Verify that an error is produced when the subcluster
-        is not in the subcluster_set and is expected to be in the set."""
-        value_set = set(["A1", "B1"])
-        self.gnm.subcluster = "C1"
-        self.gnm.check_subcluster(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_subcluster_3(self):
-        """Verify that no error is produced when the subcluster
-        is not in the subcluster_set and is not expected to be in the set."""
-        value_set = set(["A1", "B1"])
-        self.gnm.subcluster = "A2"
-        self.gnm.check_subcluster(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_subcluster_4(self):
-        """Verify that an error is produced when the subcluster
-        is in the subcluster_set and is not expected to be in the set."""
-        value_set = set(["A1", "B1"])
-        self.gnm.subcluster = "A1"
-        self.gnm.check_subcluster(value_set, False)
+    def test_compare_two_attributes_4(self):
+        """Verify an error is produced when both attributes have
+        identical values unexpectedly."""
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie"
+        self.gnm.compare_two_attributes("id", "name", expect_same=False)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-
-
-
-    def test_check_sequence_1(self):
-        """Verify that no error is produced when the sequence
-        is in the seq_set and is expected to be in the set."""
-        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.gnm.seq = Seq("ATCG")
-        self.gnm.check_sequence(value_set, True, "eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_sequence_2(self):
-        """Verify that an error is produced when the sequence
-        is not in the seq_set and is expected to be in the set."""
-        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.gnm.seq = Seq("TTTTT")
-        self.gnm.check_sequence(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_sequence_3(self):
-        """Verify that no error is produced when the sequence
-        is not in the seq_set and is not expected to be in the set."""
-        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.gnm.seq = Seq("TTTTT")
-        self.gnm.check_sequence(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_sequence_4(self):
-        """Verify that an error is produced when the sequence
-        is in the seq_set and is not expected to be in the set."""
-        value_set = set([Seq("ATCG"), Seq("AACCGGTT")])
-        self.gnm.seq = Seq("ATCG")
-        self.gnm.check_sequence(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_accession_1(self):
-        """Verify that no error is produced when the accession
-        is in the accession_set and is expected to be in the set."""
-        value_set = set(["ABC123", "XYZ456"])
-        self.gnm.accession = "ABC123"
-        self.gnm.check_accession(value_set, True, "eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_accession_2(self):
-        """Verify that an error is produced when the accession
-        is not in the accession_set and is expected to be in the set."""
-        value_set = set(["ABC123", "XYZ456"])
-        self.gnm.accession = "EFG789"
-        self.gnm.check_accession(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_accession_3(self):
-        """Verify that no error is produced when the accession
-        is not in the accession_set and is not expected to be in the set."""
-        value_set = set(["ABC123", "XYZ456"])
-        self.gnm.accession = "EFG789"
-        self.gnm.check_accession(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_accession_4(self):
-        """Verify that an error is produced when the accession
-        is in the accession_set and is not expected to be in the set."""
-        value_set = set(["ABC123", "XYZ456"])
-        self.gnm.accession = "ABC123"
-        self.gnm.check_accession(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_annotation_author_1(self):
-        """Verify that no error is produced when the annotation_author
-        is valid."""
+    def test_compare_two_attributes_5(self):
+        """Verify no error is produced when both int attributes have
+        different values as expected."""
+        self.gnm.retrieve_record = 1
         self.gnm.annotation_author = 0
-        self.gnm.check_annotation_author(
-            check_set=constants.ANNOTATION_AUTHOR_SET, eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_annotation_author_2(self):
-        """Verify that no error is produced when the annotation_author
-        is valid."""
-        self.gnm.annotation_author = 1
-        self.gnm.check_annotation_author(
-            check_set=constants.ANNOTATION_AUTHOR_SET)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_annotation_author_3(self):
-        """Verify that an error is produced when the annotation_author
-        is not valid."""
-        self.gnm.annotation_author = "1"
-        self.gnm.check_annotation_author(
-            check_set=constants.ANNOTATION_AUTHOR_SET)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-    def test_check_annotation_author_4(self):
-        """Verify that no error is produced when the annotation_author
-        is valid based on a supplied set."""
-        check_set = set(["1", "2"])
-        self.gnm.annotation_author = "1"
-        self.gnm.check_annotation_author(check_set=check_set)
+        self.gnm.compare_two_attributes("retrieve_record",
+                                        "annotation_author", expect_same=False)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_annotation_author_5(self):
-        """Verify that an error is produced when the annotation_author
-        is not valid based on a supplied set."""
-        check_set = set(["1", "2"])
-        self.gnm.annotation_author = 1
-        self.gnm.check_annotation_author(check_set=check_set)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-
-
-
-    def test_check_retrieve_record_1(self):
-        """Verify that no error is produced when the retrieve_record
-        is valid."""
-        self.gnm.retrieve_record = 0
-        self.gnm.check_retrieve_record(
-            check_set=constants.RETRIEVE_RECORD_SET, eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_retrieve_record_2(self):
-        """Verify that no error is produced when the retrieve_record
-        is valid."""
-        self.gnm.retrieve_record = 1
-        self.gnm.check_retrieve_record(
-            check_set=constants.RETRIEVE_RECORD_SET)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_retrieve_record_3(self):
-        """Verify that an error is produced when the retrieve_record
-        is not valid."""
-        self.gnm.retrieve_record = "1"
-        self.gnm.check_retrieve_record(
-            check_set=constants.RETRIEVE_RECORD_SET)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
-
-    def test_check_retrieve_record_4(self):
-        """Verify that no error is produced when the retrieve_record
-        is valid based on a supplied set."""
-        check_set = set(["1", "2"])
-        self.gnm.retrieve_record = "1"
-        self.gnm.check_retrieve_record(check_set=check_set)
+    def test_compare_two_attributes_6(self):
+        """Verify no error is produced when two attributes of
+        different data types have different values as expected."""
+        self.gnm.id = "Trixie"
+        self.gnm.seq = Seq("AAAA", IUPAC.ambiguous_dna)
+        self.gnm.compare_two_attributes("id", "seq", expect_same=False)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_retrieve_record_5(self):
-        """Verify that no error is produced when the retrieve_record
-        is valid based on a supplied set."""
-        check_set = set(["1", "2"])
-        self.gnm.retrieve_record = 1
-        self.gnm.check_retrieve_record(check_set=check_set)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
+    def test_compare_two_attributes_7(self):
+        """Verify no test is performed when the first attribute is invalid."""
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie_Draft"
+        self.gnm.compare_two_attributes("invalid", "id", expect_same=False)
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
 
-
-
-
-    def test_check_filename_1(self):
-        """Verify that no error is produced when the filename
-        is in the filename_set and is expected to be in the set."""
-        value_set = set(["Trixie"])
-        self.gnm.filename = "Trixie"
-        self.gnm.check_filename(value_set, True, "eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_filename_2(self):
-        """Verify that an error is produced when the filename
-        is not in the filename_set and is expected to be in the set."""
-        value_set = set(["Trixie"])
-        self.gnm.filename = "L5"
-        self.gnm.check_filename(value_set, True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_filename_3(self):
-        """Verify that no error is produced when the filename
-        is not in the filename_set and is not expected to be in the set."""
-        value_set = set(["Trixie"])
-        self.gnm.filename = "L5"
-        self.gnm.check_filename(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_filename_4(self):
-        """Verify that an error is produced when the filename
-        is in the filename_set and is not expected to be in the set."""
-        value_set = set(["Trixie"])
-        self.gnm.filename = "Trixie"
-        self.gnm.check_filename(value_set, False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
+    def test_compare_two_attributes_8(self):
+        """Verify no test is performed when the second attribute is invalid."""
+        self.gnm.id = "Trixie"
+        self.gnm.name = "Trixie_Draft"
+        self.gnm.compare_two_attributes("id", "invalid", expect_same=False)
+        self.assertEqual(self.gnm.evaluations[0].status, "untested")
 
 
 
@@ -2042,27 +1374,6 @@ class TestGenomeClass(unittest.TestCase):
             self.assertEqual(self.gnm.cluster, cluster)
         with self.subTest():
             self.assertEqual(self.gnm.subcluster, subcluster)
-
-
-
-
-    def test_check_cds_feature_tally_1(self):
-        """Verify no error is encountered when there is one CDS feature."""
-        self.gnm._cds_features_tally = 1
-        self.gnm.check_cds_feature_tally("eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_cds_feature_tally_2(self):
-        """Verify error is encountered when there is no CDS feature."""
-        self.gnm._cds_features_tally = 0
-        self.gnm.check_cds_feature_tally()
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
 
 
 
@@ -2284,7 +1595,134 @@ class TestGenomeClass(unittest.TestCase):
 
 
 
+class TestGenomeClass2(unittest.TestCase):
 
+    def setUp(self):
+        self.gnm = genome.Genome()
+        self.gnm.id = "L5"
+
+        self.cds1 = cds.Cds()
+        self.cds2 = cds.Cds()
+        self.cds3 = cds.Cds()
+        self.cds4 = cds.Cds()
+
+        self.trna1 = trna.TrnaFeature()
+        self.trna2 = trna.TrnaFeature()
+        self.trna3 = trna.TrnaFeature()
+        self.trna4 = trna.TrnaFeature()
+
+        self.src1 = source.Source()
+        self.src2 = source.Source()
+
+
+        #1
+        self.trna3.left = 10
+        self.trna3.right = 15
+
+        #2
+        self.trna2.left = 10
+        self.trna2.right = 17
+
+        #3
+        self.cds4.left = 10
+        self.cds4.right = 20
+
+        #4
+        self.cds3.left = 18
+        self.cds3.right = 30
+
+        #5
+        self.cds2.left = 18
+        self.cds2.right = 40
+
+        #6
+        self.src2.left = 19
+        self.src2.right = 35
+
+        #7
+        self.trna1.left = 100
+        self.trna1.right = 200
+
+        #8
+        self.src1.left = 101
+        self.src1.right = 300
+
+        #9 Wrap-around feature.
+        self.cds1.left = 400
+        self.cds1.right = 3
+
+        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
+        self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.gnm.source_features = [self.src1, self.src2]
+
+
+    def test_set_feature_ids_1(self):
+        """Verify that CDS features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_cds=True)
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_4")
+        with self.subTest():
+            self.assertEqual(self.cds2.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.cds3.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_1")
+
+    def test_set_feature_ids_2(self):
+        """Verify that tRNA features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_trna=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.trna2.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_1")
+
+    def test_set_feature_ids_2(self):
+        """Verify that source features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_source=True)
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_1")
+        with self.subTest():
+            self.assertEqual(self.src1.id, "L5_2")
+
+    def test_set_feature_ids_4(self):
+        """Verify that CDS, tRNA, and source features are sorted
+        in correct order."""
+        self.gnm.set_feature_ids(use_cds=True, use_trna=True, use_source=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_7")
+        with self.subTest():
+            self.assertEqual(self.trna2.id, "L5_2")
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_1")
+        with self.subTest():
+            self.assertEqual(self.cds1.id, "L5_9")
+        with self.subTest():
+            self.assertEqual(self.cds2.id, "L5_5")
+        with self.subTest():
+            self.assertEqual(self.cds3.id, "L5_4")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_3")
+        with self.subTest():
+            self.assertEqual(self.src1.id, "L5_8")
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_6")
+
+    def test_set_feature_ids_5(self):
+        """Verify that CDS and tRNA features are sorted in correct order
+        with type delimiter added."""
+        self.gnm.cds_features = [self.cds4]
+        self.gnm.trna_features = [self.trna3]
+        self.gnm.source_features = [self.src2]
+        self.gnm.set_feature_ids(use_type=True, use_cds=True,
+                                 use_trna=True, use_source=True)
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "L5_TRNA_1")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "L5_CDS_2")
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_SRC_3")
 
 
 

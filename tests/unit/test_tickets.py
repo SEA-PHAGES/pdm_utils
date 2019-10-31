@@ -17,9 +17,9 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.required_keys = constants.IMPORT_TABLE_REQ_DICT.keys()
-        self.optional_keys = constants.IMPORT_TABLE_OPT_DICT.keys()
-        self.keywords = set(["retrieve", "retain", "none"])
+        self.required_keys = constants.IMPORT_TABLE_STRUCTURE["required"]
+        self.optional_keys = constants.IMPORT_TABLE_STRUCTURE["optional"]
+        self.keywords = constants.IMPORT_TABLE_STRUCTURE["keywords"]
 
         self.ticket_dict1 = {}
         self.ticket_dict1["type"] = "add"
@@ -106,7 +106,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.data_retain, set(["cluster"]))
         with self.subTest():
-            self.assertEqual(tkt.data_ticket, set(["subcluster"]))
+            self.assertEqual(tkt.data_add, set(["subcluster"]))
 
 
 
@@ -610,7 +610,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_1(self):
         """Verify no data from ticket is added to genome."""
-        self.tkt1.data_ticket = set([""])
+        self.tkt1.data_add = set([""])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.id, "Trixie")
@@ -637,7 +637,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_2(self):
         """Verify host_genus data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["host_genus"])
+        self.tkt1.data_add = set(["host_genus"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "Mycobacterium")
@@ -646,7 +646,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_3(self):
         """Verify cluster data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["cluster"])
+        self.tkt1.data_add = set(["cluster"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "")
@@ -657,7 +657,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_4(self):
         """Verify subcluster data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["subcluster"])
+        self.tkt1.data_add = set(["subcluster"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "")
@@ -668,7 +668,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_5(self):
         """Verify annotation_status data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["annotation_status"])
+        self.tkt1.data_add = set(["annotation_status"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "")
@@ -677,7 +677,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_6(self):
         """Verify annotation_author data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["annotation_author"])
+        self.tkt1.data_add = set(["annotation_author"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "")
@@ -686,7 +686,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_7(self):
         """Verify retrieve_record data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["retrieve_record"])
+        self.tkt1.data_add = set(["retrieve_record"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "")
@@ -695,7 +695,7 @@ class TestTicketFunctions5(unittest.TestCase):
 
     def test_get_genome_8(self):
         """Verify accession data from ticket is added to genome."""
-        self.tkt1.data_ticket = set(["accession"])
+        self.tkt1.data_add = set(["accession"])
         gnm = tickets.get_genome(self.tkt1, gnm_type="add")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "")

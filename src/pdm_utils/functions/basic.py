@@ -585,8 +585,11 @@ def compare_cluster_subcluster(cluster, subcluster):
     :rtype: bool
     """
     result = True
+    if subcluster == "":
+        subcluster = "none"
+
     # If Singleton or Unknown Cluster, there should be no Subcluster
-    if (cluster.lower() == "singleton" or
+    if (cluster.capitalize() == "Singleton" or
         cluster == "UNK" or
         cluster.lower() == "none"):
         if subcluster != "none":
@@ -751,7 +754,7 @@ def close_files(list_of_filehandles):
 def ask_yes_no(prompt="", response_attempt=1):
     """Function to get the user's yes/no response to a question.
 
-    Accepts variations of yes/y, true/t, no/n, false/f.
+    Accepts variations of yes/y, true/t, no/n, false/f, exit/quit/q.
 
     :param prompt: the question to ask the user.
     :type prompt: str
@@ -763,16 +766,16 @@ def ask_yes_no(prompt="", response_attempt=1):
     :type response_attempt: int
     :returns:
 
-        default is False (e.g. user hits Enter w/o typing
+        The default is False (e.g. user hits Enter without typing
         anything else), but variations of yes or true responses will return
-        True instead.
+        True instead. If the response is 'exit' or 'quit', the loop is exited
+        and None is returned.
 
     :rtype: bool, None
     """
-    response = None
     response_valid = False
     while response_valid is False and response_attempt > 0:
-        response = get_input(prompt)
+        response = input(prompt)
         response_attempt -= 1
         if response.lower() in set(["yes", "y", "t", "true"]):
             response = True
@@ -780,22 +783,13 @@ def ask_yes_no(prompt="", response_attempt=1):
         elif response.lower() in set(["no", "n", "f", "false", ""]):
             response = False
             response_valid = True
+        elif response.lower() in set(["exit", "quit", "q"]):
+            response = None
+            response_valid = True
         else:
             response = None
-            print("Invalid response.")
+            print("Invalid response. Enter [yes/no/exit].")
     return response
-
-
-# TODO the associated tests can probably be re-factored to not rely on this.
-def get_input(prompt=""):
-    """Wrapper function to improve testing.
-
-    :param prompt: the question to ask the user.
-    :type prompt: str
-    :returns: The response from the user.
-    :rtype: misc.
-    """
-    return input(prompt)
 
 
 def identify_files(path_to_folder, ignore_set=set()):

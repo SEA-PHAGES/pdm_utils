@@ -36,6 +36,9 @@ unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
 schema_file = "test_schema5.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+base_flat_file = "test_flat_file_10.gb"
+base_flat_file_path = Path(unittest_dir, "test_files/", base_flat_file)
+
 
 def create_new_db(schema_file, db, user, pwd):
     """Creates a new, empty database."""
@@ -382,7 +385,6 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-
     @patch("pdm_utils.pipelines.db_import.import_genome.setup_sql_handle")
     def test_import_pipeline_1(self, setup_sql_mock):
         """Test pipeline with:
@@ -409,6 +411,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         # input("pause2")
         # keys = set(["host_genus", "cluster", "subcluster"])
         # l5_ticket_data_retrieve = set_data(l5_ticket_data_complete, keys, "retrieve")
+
 
         list_of_data_dicts = [l5_ticket_data_complete]
         create_import_table(list_of_data_dicts, self.import_table)

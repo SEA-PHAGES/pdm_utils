@@ -119,8 +119,7 @@ def parse_import_ticket_data(data_dict):
     :returns: A pdm_utils Ticket object.
     :rtype: Ticket
     """
-    ticket_attributes = set(["id", "type", "phage_id",
-                             "description_field", "run_mode"])
+    ticket_attributes = constants.IMPORT_TABLE_STRUCTURE["valid_ticket"]
     other_attributes = data_dict.keys() - ticket_attributes
 
     tkt = ticket.GenomeTicket()
@@ -131,7 +130,7 @@ def parse_import_ticket_data(data_dict):
 
     data_retrieve = set()
     data_retain = set()
-    data_ticket = set()
+    data_add = set()
 
     other_attributes = list(other_attributes)
     x = 0
@@ -143,11 +142,11 @@ def parse_import_ticket_data(data_dict):
         elif attr_value == "retain":
             data_retain.add(attr)
         else:
-            data_ticket.add(attr)
+            data_add.add(attr)
         x += 1
     tkt.data_retrieve = data_retrieve
     tkt.data_retain = data_retain
-    tkt.data_ticket = data_ticket
+    tkt.data_add = data_add
     return tkt
 
 
@@ -299,19 +298,19 @@ def get_genome(tkt, gnm_type=""):
     gnm.type = gnm_type
     gnm.set_id(value=tkt.phage_id)
     gnm.name = tkt.phage_id
-    if "host_genus" in tkt.data_ticket:
+    if "host_genus" in tkt.data_add:
         gnm.set_host_genus(tkt.data_dict["host_genus"])
-    if "accession" in tkt.data_ticket:
+    if "accession" in tkt.data_add:
         gnm.set_accession(tkt.data_dict["accession"])
-    if "annotation_status" in tkt.data_ticket:
+    if "annotation_status" in tkt.data_add:
         gnm.annotation_status = tkt.data_dict["annotation_status"]
-    if "cluster" in tkt.data_ticket:
+    if "cluster" in tkt.data_add:
         gnm.set_cluster(tkt.data_dict["cluster"])
-    if "subcluster" in tkt.data_ticket:
+    if "subcluster" in tkt.data_add:
         gnm.set_subcluster(tkt.data_dict["subcluster"])
-    if "annotation_author" in tkt.data_ticket:
+    if "annotation_author" in tkt.data_add:
         gnm.set_annotation_author(tkt.data_dict["annotation_author"])
-    if "retrieve_record" in tkt.data_ticket:
+    if "retrieve_record" in tkt.data_add:
         gnm.set_retrieve_record(tkt.data_dict["retrieve_record"])
     gnm.set_cluster_subcluster()
     return gnm
@@ -374,7 +373,7 @@ def prepare_tickets(ticket_filename):
     #0 = Type of database action to be performed (add, remove, replace, update)
     #1 = New PhageID that will be added to database
     #2 = Host of new phage
-    #3 = Cluster of new phage (singletons should be reported as "singleton")
+    #3 = Cluster of new phage (singletons should be reported as "Singleton")
     #4 = Subcluster of new phage (no subcluster should be reported as "none")
     #5 = Annotation status of new phage
     #6 = Annotation author of the new phage
