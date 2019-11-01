@@ -682,7 +682,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(gnm.name, "XYZ123")
+            self.assertEqual(gnm.name, "KatherineG")
         with self.subTest():
             self.assertEqual(gnm.organism, self.organism)
         with self.subTest():
@@ -798,7 +798,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(gnm.name, "")
+            self.assertEqual(gnm.name, "KatherineG")
         with self.subTest():
             self.assertEqual(gnm.type, "")
 
@@ -1035,7 +1035,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.filename, "")
         with self.subTest():
-            self.assertEqual(gnm.name, "XYZ123")
+            self.assertEqual(gnm.name, "KatherineG")
 
 
     def test_parse_genome_data_17(self):
@@ -1070,8 +1070,8 @@ class TestFlatFileFunctions3(unittest.TestCase):
                             self.record,
                             self.filepath,
                             gnm_type="flat_file",
-                            genome_id_field = "description_name",
-                            host_genus_field = "description_host_genus")
+                            genome_id_field = "_description_name",
+                            host_genus_field = "_description_host_genus")
         with self.subTest():
             self.assertEqual(gnm.filename, "Phage_ZZZ")
         with self.subTest():

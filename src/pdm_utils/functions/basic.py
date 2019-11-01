@@ -998,85 +998,29 @@ def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
     return (username, password)
 
 
-#TODO Unit test below
 
 
 
 
-
-
-#TODO set up and unit test
-# #Print out statements to both the terminal and to the output file
-# #For SQL statements that may be long (>150 characters), don't print
-# # entire statements.
-# def write_out(filename,statement):
-# 	if (statement[:7] == "\nINSERT" or statement[:7] == "\nUPDATE" or statement[:7] == "\nDELETE"):
-# 		if len(statement) > 150:
-# 			print statement[:150] + "...(statement truncated)"
-# 			filename.write(statement[:150] + "...(statement truncated)")
-# 		else:
-# 			print statement
-# 			filename.write(statement)
-# 	else:
-# 		print statement
-# 		filename.write(statement)
-
-
-
-
-
-#TODO set up and unit test
-# #For questionable data, user is requested to clarify if the data is correct or not
-# def question(message):
-# 	number = -1
-# 	while number < 0:
-# 		value = raw_input("Is this correct? (yes or no): ")
-# 		if (value.lower() == "yes" or value.lower() == "y"):
-# 			number = 0
-# 		elif (value.lower() == "no" or value.lower() == "n"):
-# 			write_out(output_file,message)
-# 			number = 1
-# 		else:
-# 			print "Invalid response."
-# 	#This value will be added to the current error total. If 0, no error was encountered. If 1, an error was encountered.
-# 	return number
-
-
-
-#TODO set up and unit test
-# def change_descriptions():
-#
-#
-#     print "These will be ignored, unless this is NOT correct."
-#     print "If it is NOT correct, no error will be generated."
-#     print "Instead, only gene descriptions in this field will be retained."
-
-
-
-#TODO set up and unit test
-# #Allows user to select specific options
-# def select_option(message,valid_response_set):
-#
-# 	response_valid = False
-# 	while response_valid == False:
-# 		response = raw_input(message)
-# 		if response.isdigit():
-# 			response = int(response)
-# 		else:
-# 			response = response.lower()
-#
-# 		if response in valid_response_set:
-# 			response_valid = True
-# 			if response == 'y':
-# 				response  = 'yes'
-# 			elif response == 'n':
-# 				response  = 'no'
-# 		else:
-# 			print 'Invalid response.'
-# 	return response
-#
-
-
+def choose_from_list(options):
+    """Choose a value from a list of values."""
+    exit = False
+    result = False
+    option = None
+    x = 0
+    print(f"These are the options: {options}.")
+    while (exit == False and result is False and x < len(options)):
+        option = options[x]
+        prompt = f"Would you like to select '{option}'?"
+        result = ask_yes_no(prompt=prompt, response_attempt=3)
+        if (result is None or result is True):
+            exit = True
+        else:
+            x += 1
+    if result is True:
+        return option
+    else:
+        return None
 
 
 
@@ -1085,135 +1029,6 @@ def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
 # def close_all_files(file_list):
 #     for file_handle in file_list:
 #         file_handle.close()
-
-
-#TODO unit test - this may no longer be needed
-# def choose_run_type():
-#
-#     run_type_options = [
-#     	'none',\
-#     	'test',\
-#     	'production']
-#     print '\n\nThe following run types are available:\n'
-#     #print '0: ' + run_type_options[0]
-#     # print '1: ' + run_type_options[1]
-#     # print '2: ' + run_type_options[2]
-#     print '1: ' + run_type_options[1] + ' (checks flat files for accuracy, but the database is not changed.)'
-#     print '2: ' + run_type_options[2] + ' (after testing files, the database is updated.)'
-#     run_type = select_option(
-#     	"\nWhich run type do you want? ", \
-#     	set([1,2]))
-#     run_type = run_type_options[run_type]
-
-
-
-#TODO unit test - this may no longer be needed
-# #Output list to file
-# def output_to_file(data_list,filename,genome_status_selected,database_string,genome_author_selected):
-#     filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
-#     filename_writer = csv.writer(filename_fh)
-#     filename_writer.writerow([date + ' Database comparison'])
-#     filename_writer.writerow([database_string])
-#     filename_writer.writerow([genome_author_selected])
-#     filename_writer.writerow([genome_status_selected])
-#     for element in data_list:
-#         filename_writer.writerow([element])
-#     filename_fh.close()
-
-
-
-
-#TODO unit test - this may no longer be needed.
-# #Ensure the output filename is unique
-# def create_unique_filename(filename_directory,filename_base,filename_ext):
-#
-#     file_exists = True
-#     rename_counter = 0
-#     while file_exists == True:
-#
-#         if rename_counter == 0:
-#             unique_filename = filename_base + filename_ext
-#         else:
-#             unique_filename = filename_base + '_' + str(rename_counter) + filename_ext
-#
-#         unique_filename_path = os.path.join(filename_directory,unique_filename)
-#         file_exists = os.path.isfile(unique_filename_path)
-#
-#         if file_exists == True:
-#             print 'Warning: duplicate output file:'
-#             print unique_filename_path
-#             print 'Filename will be modified.'
-#             raw_input('Press ENTER to proceed')
-#             rename_counter += 1
-#
-#     return unique_filename_path
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Functions that Christian has probably created
-
-#TODO unit test - this may have already been set up
-# #Exits MySQL
-# def mdb_exit(message):
-# 	write_out(output_file,"\nError: " + `sys.exc_info()[0]`+ ":" +  `sys.exc_info()[1]` + "at: " + `sys.exc_info()[2]`)
-# 	write_out(output_file,message)
-# 	write_out(output_file,"\nThe import script did not complete.")
-# 	write_out(output_file,"\nExiting MySQL.")
-# 	cur.execute("ROLLBACK")
-# 	cur.execute("SET autocommit = 1")
-# 	cur.close()
-# 	con.close()
-# 	write_out(output_file,"\nExiting import script.")
-# 	output_file.close()
-# 	sys.exit(1)
-
-
-
-
-
-#TODO unit test - this may already have been set up
-#Set up MySQL parameters
-# def setup_mysql():
-#
-#     mysqlhost = 'localhost'
-#     print "\n\n"
-#     username = getpass.getpass(prompt='mySQL username:')
-#     print "\n\n"
-#     password = getpass.getpass(prompt='mySQL password:')
-#     print "\n\n"
-
-
-
-
-
-
-
-
-
-
 
 
 ###

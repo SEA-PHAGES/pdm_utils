@@ -110,24 +110,8 @@ class Genome:
         """
 
         if value is None:
-            if attribute == "name":
-                value = self.name
-            elif attribute == "accession":
-                value = self.accession
-            elif attribute == "description":
-                value = self.description
-            elif attribute == "source":
-                value = self.source
-            elif attribute == "organism":
-                value = self.organism
-            elif attribute == "filename":
-                value = self.filename
-            elif attribute == "description_name":
-                value = self._description_name
-            elif attribute == "source_name":
-                value = self._source_name
-            elif attribute == "organism_name":
-                value = self._organism_name
+            if (attribute is not None and hasattr(self, attribute)):
+                value = getattr(self, attribute)
             else:
                 value = ""
         self.id = basic.edit_suffix(value, "remove")
@@ -152,25 +136,10 @@ class Genome:
         """
 
         if value is None:
-            if attribute == "name":
-                value = self.name
-            elif attribute == "description":
-                value = self.description
-            elif attribute == "source":
-                value = self.source
-            elif attribute == "organism":
-                value = self.organism
-            elif attribute == "filename":
-                value = self.filename
-            elif attribute == "description_host_genus":
-                value = self._description_host_genus
-            elif attribute == "source_host_genus":
-                value = self._source_host_genus
-            elif attribute == "organism_host_genus":
-                value = self._organism_host_genus
+            if (attribute is not None and hasattr(self, attribute)):
+                value = getattr(self, attribute)
             else:
                 value = ""
-
         if isinstance(value, str):
             value = value.strip()
 
@@ -538,34 +507,24 @@ class Genome:
             index += 1
 
 
+    def clear_locus_tags(self):
+        """Resets locus_tags to empty string."""
+        x = 0
+        while x < len(self.cds_features):
+            self.cds_features[x].locus_tag = ""
+            x += 1
 
+        # TODO implement for tRNA and tmRNA feature lists.
+        # y = 0
+        # while y < len(self.trna_features):
+        #     self.trna_features[y].locus_tag = ""
+        #     y += 1
+        #
+        # z = 0
+        # while z < len(self.tmrna_features):
+        #     self.tmrna_features[z].locus_tag = ""
+        #     z += 1
 
-    # TODO in development - possible strategy to convert phage name
-    # and host_genus typos within files to corrected values, which can
-    # be stored at multiple locations in the genome record.
-    # def convert_id(self, id_dict):
-    #     """Converts the id in several attributes.
-    #
-    #     :param id_dict:
-    #         Dictionary of genome id conversions.
-    #         The key is the old id, and the value is the new id.
-    #     :type id_dict: dict
-    #     """
-    #     if self.id in id_dict.keys():
-    #         pass
-    #     else:
-    #         pass
-    #
-    #     self.id = ""
-    #     self.name = ""
-    #     self._description_name = ""
-    #     self._source_name = ""
-    #     self._organism_name = ""
-    #
-    #     self._organism_host_genus = ""
-    #     self._source_host_genus = ""
-    #     self._description_host_genus = ""
-    #     self.host_genus = ""
 
 
 

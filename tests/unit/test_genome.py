@@ -194,63 +194,12 @@ class TestGenomeClass1(unittest.TestCase):
         self.assertEqual(self.gnm.id, "Trixie")
 
     def test_set_id_4(self):
-        """Check that the id is set from the accession attribute."""
-        self.gnm.accession = "Trixie_Draft"
-        self.gnm.set_id(attribute="accession")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_5(self):
-        """Check that the id is set from the description attribute."""
-        self.gnm.description = "Trixie_Draft"
-        self.gnm.set_id(attribute="description")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_6(self):
-        """Check that the id is set from the source attribute."""
-        self.gnm.source = "Trixie_Draft"
-        self.gnm.set_id(attribute="source")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_7(self):
-        """Check that the id is set from the organism attribute."""
-        self.gnm.organism = "Trixie_Draft"
-        self.gnm.set_id(attribute="organism")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_8(self):
-        """Check that the id is set from the filename attribute."""
-        self.gnm.filename = "Trixie_Draft"
-        self.gnm.set_id(attribute="filename")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_9(self):
-        """Check that the id is set from the
-        description_name attribute."""
-        self.gnm._description_name = "Trixie_Draft"
-        self.gnm.set_id(attribute="description_name")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_10(self):
-        """Check that the id is set from the
-        source_name attribute."""
-        self.gnm._source_name = "Trixie_Draft"
-        self.gnm.set_id(attribute="source_name")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_11(self):
-        """Check that the id is set from the
-        organism_name attribute."""
-        self.gnm._organism_name = "Trixie_Draft"
-        self.gnm.set_id(attribute="organism_name")
-        self.assertEqual(self.gnm.id, "Trixie")
-
-    def test_set_id_12(self):
         """Check that the id is empty from an invalid attribute."""
         self.gnm.id = "not empty"
         self.gnm.set_id(attribute="invalid")
         self.assertEqual(self.gnm.id, "")
 
-    def test_set_id_13(self):
+    def test_set_id_5(self):
         """Check that the id is empty from no value or attribute."""
         self.gnm.id = "not empty"
         self.gnm.set_id()
@@ -290,56 +239,18 @@ class TestGenomeClass1(unittest.TestCase):
         self.assertEqual(self.gnm.host_genus, "Mycobacterium")
 
     def test_set_host_genus_6(self):
-        """Check that the host_genus is set from the description attribute."""
-        self.gnm.description = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="description")
-        self.assertEqual(self.gnm.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_7(self):
-        """Check that the host_genus is set from the source attribute."""
-        self.gnm.source = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="source")
-        self.assertEqual(self.gnm.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_8(self):
-        """Check that the host_genus is set from the organism attribute."""
-        self.gnm.organism = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="organism")
-        self.assertEqual(self.gnm.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_9(self):
-        """Check that the host_genus is set from the filename attribute."""
-        self.gnm.filename = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="filename")
-        self.assertEqual(self.gnm.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_10(self):
         """Check that the host_genus is set from the
         description_host_genus attribute."""
         self.gnm._description_host_genus = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="description_host_genus")
+        self.gnm.set_host_genus(attribute="_description_host_genus")
         self.assertEqual(self.gnm.host_genus, "Mycobacterium")
 
-    def test_set_host_genus_11(self):
-        """Check that the host_genus is set from the
-        source_host_genus attribute."""
-        self.gnm._source_host_genus = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="source_host_genus")
-        self.assertEqual(self.gnm.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_12(self):
-        """Check that the host_genus is set from the
-        organism_host_genus attribute."""
-        self.gnm._organism_host_genus = "Mycobacterium smegmatis"
-        self.gnm.set_host_genus(attribute="organism_host_genus")
-        self.assertEqual(self.gnm.host_genus, "Mycobacterium")
-
-    def test_set_host_genus_13(self):
+    def test_set_host_genus_7(self):
         """Check that the host_genus is empty from an invalid attribute."""
         self.gnm.set_host_genus(attribute="invalid")
         self.assertEqual(self.gnm.host_genus, "")
 
-    def test_set_host_genus_14(self):
+    def test_set_host_genus_8(self):
         """Check that the host_genus is empty from an empty value and
         empty attribute."""
         self.gnm.host_genus = "not empty"
@@ -1021,6 +932,26 @@ class TestGenomeClass1(unittest.TestCase):
         self.gnm.cluster = "A"
         self.gnm.set_value_flag("retain")
         self.assertFalse(self.gnm._value_flag)
+
+
+
+
+    def test_clear_locus_tags_1(self):
+        """Verify that each locus tag is cleared."""
+        self.cds1.locus_tag = "L5_1"
+        self.cds2.locus_tag = "L5_2"
+        self.cds3.locus_tag = "L5_3"
+        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3]
+        not_empty = 0
+        for cds_ftr in self.gnm.cds_features:
+            if cds_ftr.locus_tag != "":
+                not_empty += 1
+        self.gnm.clear_locus_tags()
+        empty = 0
+        for cds_ftr in self.gnm.cds_features:
+            if cds_ftr.locus_tag == "":
+                empty += 1
+        self.assertEqual(not_empty, empty)
 
 
 

@@ -276,10 +276,14 @@ def create_seqfeature_dictionary(seqfeature_list):
         seqfeature_dict[type] = sublist
     return seqfeature_dict
 
-
+# TODO this function can be improved. Probably create a more basic
+# parse_flat_file() function - the only parameter is the seqrecord, and
+# there is only minimal parsing and data processing.
+# Then the parse_genome_data() function calls parse_flat_file(),
+# and processes some data in specific ways.
 def parse_genome_data(seqrecord, filepath="",
-        translation_table=11, genome_id_field="organism_name", gnm_type="",
-        host_genus_field="organism_host_genus"):
+        translation_table=11, genome_id_field="_organism_name", gnm_type="",
+        host_genus_field="_organism_host_genus"):
     """Parse data from a Biopython SeqRecord object into a Genome object.
 
     All Source, CDS, tRNA, and tmRNA features are parsed into their
@@ -305,6 +309,8 @@ def parse_genome_data(seqrecord, filepath="",
     gnm.set_filename(filepath)
     gnm.type = gnm_type
 
+    # TODO name is set further below based on the id_field parameter, so
+    # this may no longer be needed.
     try:
         gnm.name = seqrecord.name
         # It appears that if name is not present, Biopython auto-populates
@@ -322,6 +328,8 @@ def parse_genome_data(seqrecord, filepath="",
     # Identifies host and phage name from organism field.
     gnm.parse_organism()
 
+    # TODO id is set further below based on the id_field parameter, so
+    # this may no longer be needed.
     try:
         gnm.id = seqrecord.id
         # It appears that if id is not present, Biopython auto-populates
@@ -389,8 +397,10 @@ def parse_genome_data(seqrecord, filepath="",
     except:
         gnm.date = basic.convert_empty("", "empty_datetime_obj")
 
-    # Now that record fields are parsed, set the phage_id and host_genus.
-    gnm.set_id(attribute=genome_id_field)
+    # Now that record fields are parsed, set the genome name, id,
+    # and host_genus.
+    gnm.name = getattr(gnm, genome_id_field)
+    gnm.set_id(value=gnm.name)
     gnm.set_host_genus(attribute=host_genus_field)
 
     # Create lists of parsed features.

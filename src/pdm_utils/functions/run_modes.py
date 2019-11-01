@@ -66,6 +66,7 @@ def get_eval_flag_dict(run_mode):
         dict["check_replace"] = False
         dict["check_trna"] = False
         dict["check_id_typo"] = False
+        dict["check_host_typo"] = False
         dict["check_author"] = False
         dict["check_description"] = False
         dict["check_gene"] = False

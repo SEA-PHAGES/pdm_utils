@@ -145,7 +145,7 @@ API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/?"
 # The phage name parsed from the GenBank-formatted record gets
 # reassigned this corrected name.
 # Reasons for the exceptions are indicated.
-PHAGE_NAME_DICT = {
+PHAGE_ID_DICT = {
     # PhagesDB is unable to handle underscores.
     'ATCC29399B_C':'ATCC29399BC',
     'ATCC29399B_T':'ATCC29399BT',

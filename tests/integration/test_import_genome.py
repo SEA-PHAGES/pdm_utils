@@ -141,7 +141,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         self.tkt2 = ticket.GenomeTicket()
 
-
+        self.id_dict = constants.PHAGE_ID_DICT
 
 
 
@@ -161,8 +161,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
-                    host_genus_field="organism_host_genus",
+                    genome_id_field="_organism_name",
+                    host_genus_field="_organism_host_genus",
                     file_ref="flat_file",
                     ticket_ref="ticket")
         ff_gnm = bndl.genome_dict["flat_file"]
@@ -198,7 +198,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file2,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name")
+                    genome_id_field="_organism_name")
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 0)
         with self.subTest():
@@ -217,7 +217,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
+                    genome_id_field="_organism_name",
                     file_ref="flat_file")
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
@@ -234,7 +234,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-    def test_prepare_bundle_100(self):
+    def test_prepare_bundle_4(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, no data_add, no phagesdb data."""
         self.tkt1.data_add = set()
@@ -242,7 +242,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
+                    genome_id_field="_organism_name",
                     file_ref="flat_file")
         ff_gnm = bndl.genome_dict["flat_file"]
         bndl_tkt = bndl.ticket
@@ -255,7 +255,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-    def test_prepare_bundle_4(self):
+    def test_prepare_bundle_5(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, with phagesdb data."""
         # Use cluster and host_genus to confirm that only attributes
@@ -269,7 +269,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
+                    genome_id_field="_organism_name",
                     file_ref="flat_file",
                     retrieve_ref="phagesdb")
         ff_gnm = bndl.genome_dict["flat_file"]
@@ -288,7 +288,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-    def test_prepare_bundle_5(self):
+    def test_prepare_bundle_6(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with phamerator data,
         and no phagesdb data."""
@@ -331,7 +331,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
+                    genome_id_field="_organism_name",
                     file_ref="flat_file",
                     retain_ref="phamerator",
                     sql_handle=self.sql_handle)
@@ -354,7 +354,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-    def test_prepare_bundle_6(self):
+    def test_prepare_bundle_7(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, no phamerator data,
         and no phagesdb data."""
@@ -396,7 +396,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
+                    genome_id_field="_organism_name",
                     file_ref="flat_file",
                     sql_handle=self.sql_handle)
         ff_gnm = bndl.genome_dict["flat_file"]
@@ -410,7 +410,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-    def test_prepare_bundle_7(self):
+    def test_prepare_bundle_8(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with phamerator data,
         no MySQL connection handle, and no phagesdb data."""
@@ -452,13 +452,45 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl = import_genome.prepare_bundle(
                     filename=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
-                    genome_id_field="organism_name",
+                    genome_id_field="_organism_name",
                     file_ref="flat_file")
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
         with self.subTest():
             self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
+
+
+
+
+
+    def test_prepare_bundle_9(self):
+        """Verify bundle is returned with the genome id converted using
+        the id dictionary."""
+        self.id_dict["L5"] = "new_id"
+        self.tkt1.phage_id = "new_id"
+        self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
+
+        tkt_dict = {"new_id":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(
+                    filename=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1,
+                    genome_id_field="_organism_name",
+                    host_genus_field="_organism_host_genus",
+                    file_ref="flat_file",
+                    ticket_ref="ticket",
+                    id_conversion_dict = self.id_dict)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        tkt_gnm = bndl.genome_dict["ticket"]
+        bndl_tkt = bndl.ticket
+        with self.subTest():
+            self.assertEqual(ff_gnm.id, "new_id")
+        with self.subTest():
+            self.assertEqual(ff_gnm.name, "L5")
+        with self.subTest():
+            self.assertEqual(bndl_tkt.phage_id, "new_id")
 
 
 
@@ -521,7 +553,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(args.import_table, self.test_filepath1)
         with self.subTest():
-            self.assertEqual(args.genome_id_field, "organism_name")
+            self.assertEqual(args.genome_id_field, "_organism_name")
         with self.subTest():
             self.assertFalse(args.prod_run)
         with self.subTest():
@@ -980,6 +1012,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.eval_flags["check_locus_tag"] = True
         self.eval_flags["check_description"] = True
         self.eval_flags["check_description_field"] = True
+        self.eval_flags["import_locus_tag"] = True
 
         self.data_dict1 = {}
         self.data_dict1["type"] = "replace"
@@ -1026,7 +1059,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         files = []
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=False, genome_id_field="organism_name")
+                            prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
@@ -1056,7 +1089,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         import_into_db_mock.side_effect = [False, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=False, genome_id_field="organism_name")
+                            prod_run=False, genome_id_field="_organism_name")
 
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
@@ -1088,7 +1121,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         import_into_db_mock.side_effect = [True, True]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=False, genome_id_field="organism_name")
+                            prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
@@ -1119,7 +1152,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         import_into_db_mock.side_effect = [False, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=False, genome_id_field="organism_name")
+                            prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
@@ -1146,7 +1179,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         files = []
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=False, genome_id_field="organism_name")
+                            prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
@@ -1178,7 +1211,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         import_into_db_mock.side_effect = [True, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=False, genome_id_field="organism_name")
+                            prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
@@ -1219,7 +1252,7 @@ class TestImportGenomeMain6(unittest.TestCase):
 
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=True, genome_id_field="organism_name",
+                            prod_run=True, genome_id_field="_organism_name",
                             interactive=False)
         evaluation_dict = results_tuple[4]
         errors = get_errors_from_dict(evaluation_dict)
@@ -1247,7 +1280,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=True, genome_id_field="organism_name",
+                            prod_run=True, genome_id_field="_organism_name",
                             interactive=True)
         evaluation_dict = results_tuple[4]
         errors = get_errors_from_dict(evaluation_dict)
@@ -1275,7 +1308,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=True, genome_id_field="organism_name",
+                            prod_run=True, genome_id_field="_organism_name",
                             interactive=True)
         evaluation_dict = results_tuple[4]
         errors = get_errors_from_dict(evaluation_dict)
@@ -1322,7 +1355,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         ask_mock.side_effect = [True, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, sql_handle=self.sql_handle,
-                            prod_run=True, genome_id_field="organism_name",
+                            prod_run=True, genome_id_field="_organism_name",
                             interactive=True)
         with self.subTest():
             self.assertTrue(ask_mock.called)
@@ -1671,7 +1704,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
 
-class TestImportGenomeMain1(unittest.TestCase):
+class TestImportGenomeMain8(unittest.TestCase):
 
 
     def setUp(self):
@@ -1947,6 +1980,75 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
+
+
+class TestImportGenomeMain9(unittest.TestCase):
+
+    def setUp(self):
+
+        self.cds1 = cds.Cds()
+        self.cds1.id = "L5_001"
+        self.cds1.left = 10
+        self.cds1.right = 20
+        self.cds1.strand = "F"
+        self.cds1.processed_product = "int"
+        self.cds1.processed_function = ""
+        self.cds1.processed_note = ""
+
+        self.cds2 = cds.Cds()
+        self.cds2.id = "L5_002"
+        self.cds2.left = 12345
+        self.cds2.right = 12445
+        self.cds2.strand = "F"
+        self.cds2.processed_product = "capsid"
+        self.cds2.processed_function = ""
+        self.cds2.processed_note = "random"
+
+        self.cds3 = cds.Cds()
+        self.cds3.id = "L5_001"
+        self.cds3.left = 150000
+        self.cds3.right = 151000
+        self.cds3.strand = "R"
+        self.cds3.processed_product = "rep"
+        self.cds3.processed_function = "lysB"
+        self.cds3.processed_note = ""
+
+        self.field = "product"
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_1(self, ask_mock):
+        """Verify no change if description_field is correct."""
+        ask_mock.return_value = True
+        features = [self.cds1, self.cds2, self.cds3]
+        new_field = import_genome.review_cds_descriptions(features, self.field)
+        self.assertEqual(new_field, "product")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_2(self, ask_mock):
+        """Verify no change if description_field is not correct,
+        and new field is not selected."""
+        ask_mock.side_effect = [False, None]
+        features = [self.cds1, self.cds2, self.cds3]
+        new_field = import_genome.review_cds_descriptions(features, self.field)
+        self.assertEqual(new_field, "product")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_3(self, ask_mock):
+        """Verify no change if description_field is not correct,
+        and no new field is selected."""
+        ask_mock.side_effect = [False, False, False]
+        features = [self.cds1, self.cds2, self.cds3]
+        new_field = import_genome.review_cds_descriptions(features, self.field)
+        self.assertEqual(new_field, "product")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_4(self, ask_mock):
+        """Verify no change if description_field is not correct,
+        and new field is selected."""
+        ask_mock.side_effect = [False, False, True]
+        features = [self.cds1, self.cds2, self.cds3]
+        new_field = import_genome.review_cds_descriptions(features, self.field)
+        self.assertTrue(new_field in {"function", "note"})
 
 
 

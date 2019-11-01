@@ -419,7 +419,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         unparsed_args = ["run.py", "import_dev", db,
                          str(self.genome_folder),
                          str(self.import_table),
-                         "-g", "organism_name",
+                         "-g", "_organism_name",
                          "-p",
                          "-r", "phagesdb",
                          "-d", "product",

@@ -11,6 +11,7 @@ import pathlib
 import shutil
 import sys
 import time
+from tabulate import tabulate
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
@@ -158,10 +159,10 @@ def parse_args(unparsed_args_list):
     parser.add_argument("import_table", type=pathlib.Path,
         help=IMPORT_TABLE_HELP)
     parser.add_argument("-g", "--genome_id_field", type=str.lower,
-        default="organism_name", choices=["organism_name", "filename"],
+        default="_organism_name", choices=["_organism_name", "filename"],
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-hg", "--host_genus_field", type=str.lower,
-        default="organism_host_genus", choices=["organism_host_genus"],
+        default="_organism_host_genus", choices=["_organism_host_genus"],
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-p", "--prod_run", action="store_true",
         default=False, help=PROD_RUN_HELP)
@@ -497,7 +498,8 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
 
 def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                    genome_id_field="", host_genus_field="", id=None,
-                   file_ref="", ticket_ref="", retrieve_ref="", retain_ref=""):
+                   file_ref="", ticket_ref="", retrieve_ref="", retain_ref="",
+                   id_conversion_dict={}, interactive=False):
     """Gather all genomic data needed to evaluate the flat file.
 
     :param filename: Name of a GenBank-formatted flat file.
@@ -532,10 +534,13 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                     gnm_type=file_ref,
                     host_genus_field=host_genus_field)
 
-        # TODO unittest below.
-        # ff_gnm.convert_id(constants.PHAGE_NAME_DICT)
-        # ff_gnm.convert_host_genus(constants.HOST_GENUS_DICT)
-        # TODO unittest above.
+        # Some phage names in the flat file are spelled differently
+        # than in the database. In order to match the flat file
+        # with the ticket (which presumably contains the name spelling
+        # in the database), the genome ID needs to be changed.
+        # PHAGE_ID_DICT key = incorrect spelling ; value = correct spelling
+        if ff_gnm.id in id_conversion_dict.keys():
+            ff_gnm.id = id_conversion_dict[ff_gnm.id]
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
@@ -548,13 +553,6 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
             # With the flat file parsed and matched
             # to a ticket, use the ticket to populate specific
             # genome-level fields such as host, cluster, subcluster, etc.
-
-            # TODO unittest below.
-            # The ticket indicates where the CDS descriptions are stored.
-            for cds_ftr in ff_gnm.cds_features:
-                cds_ftr.set_description(bndl.ticket.description_field)
-            ff_gnm.tally_descriptions()
-            # TODO unittest test above.
 
             if len(bndl.ticket.data_add) > 0:
                 tkt_gnm = tickets.get_genome(bndl.ticket, gnm_type=ticket_ref)
@@ -614,6 +612,9 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                         logger.info(f"There is no {ff_gnm.id} genome "
                                     "in the Phamerator database. "
                                     "Unable to retrieve data.")
+
+            # TODO unittest.
+            # set_cds_descriptions(ff_gnm, bndl.ticket, interactive)
     return bndl
 
 
@@ -714,6 +715,72 @@ def review_evaluation_list(evaluation_list):
                 pass
         x += 1
     return exit
+
+
+
+
+# #TODO unittest.
+def set_cds_descriptions(gnm, tkt, interactive=False):
+    """Set the primary CDS descriptions.
+    """
+
+    # If interactive is selected, the user can review the CDS descriptions.
+    # The ticket indicates where the CDS descriptions are stored.
+    if interactive:
+        tkt.description_field = review_cds_descriptions(
+                                    gnm.cds_features,
+                                    tkt.description_field)
+
+    # Iterate through the features and set the description.
+    x = 0
+    while x < len(gnm.cds_features):
+        cds_ftr = gnm.cds_features[x]
+        cds_ftr.set_description(tkt.description_field)
+        x += 1
+    gnm.tally_descriptions()
+
+
+
+def review_cds_descriptions(feature_list, description_field):
+    """Iterate through all CDS features and review descriptions.
+    """
+    # Print a table of CDS data for user to review.
+    summary = []
+    for cds in feature_list:
+        dict = {"CDS ID": cds.id,
+                "Start": cds.left,
+                "Stop": cds.right,
+                "Strand": cds.strand,
+                "Product": cds.processed_product,
+                "Function": cds.processed_function,
+                "Note": cds.processed_note
+                }
+        summary.append(dict)
+    print(tabulate(summary, headers="keys"))
+    print(f"Descriptions in the {description_field} field will be imported.")
+    prompt = "Is this correct?"
+    result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+
+    # If the data is not correct, let the user select which description
+    # field is most appropriate.
+    if result == False:
+        field_options = constants.DESCRIPTION_FIELD_SET - {description_field}
+        print("Select the field in which the descriptions are stored.")
+        new_field = basic.choose_from_list(list(field_options))
+        if new_field is None:
+            new_field = description_field
+        else:
+            print(f"The '{new_field}' field was selected")
+    else:
+        new_field = description_field
+
+    # Return either the original or the new description field.
+    return new_field
+
+
+
+
+
 
 def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref=""):
     """Check a Bundle for errors.
@@ -862,10 +929,8 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     else:
         gnm.check_attribute("id", phage_id_set,
                             expect=True, eval_id="GNM_005")
-        # gnm.check_attribute("name", phage_id_set,
-        #                     expect=True, eval_id="GNM_006")
         gnm.check_attribute("seq", seq_set,
-                            expect=True, eval_id="GNM_007")
+                            expect=True, eval_id="GNM_006")
 
     # Depending on the annotation_status of the genome,
     # CDS features are expected to contain or not contain descriptions.
@@ -874,78 +939,86 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     # There are no expectations for other types of genomes.
 
     # Also, Draft annotations should not have accession data.
+
+    check_name = basic.edit_suffix(gnm.name, "add",
+                                   suffix=constants.NAME_SUFFIX)
+
     if gnm.annotation_status == "draft":
+        gnm.check_attribute("name", {check_name}, expect=True, eval_id="GNM_007")
         gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0,
                             eval_id="GNM_008")
         gnm.check_attribute("accession", {""}, expect=True, eval_id="GNM_009")
 
     elif gnm.annotation_status == "final":
+        gnm.check_attribute("name", {check_name}, expect=False, eval_id="GNM_010")
         gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
-                            eval_id="GNM_010")
+                            eval_id="GNM_011")
 
         # TODO insert a check to determine if description fields other
         # than the primary field contain non-generic data?
     else:
         pass
 
+    check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)
+    gnm.check_attribute("id", {check_id}, expect=False, eval_id="GNM_012")
     gnm.check_attribute("annotation_status", constants.ANNOTATION_STATUS_SET,
-                        expect=True, eval_id="GNM_011")
-    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET,
-                        expect=True, eval_id="GNM_012")
-    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET,
                         expect=True, eval_id="GNM_013")
-    gnm.check_attribute("cluster", cluster_set,
+    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET,
                         expect=True, eval_id="GNM_014")
-    gnm.check_attribute("subcluster", subcluster_set | {"", "none"},
+    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET,
                         expect=True, eval_id="GNM_015")
-    gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set,
+    gnm.check_attribute("cluster", cluster_set,
                         expect=True, eval_id="GNM_016")
-    gnm.check_attribute("translation_table", {11},
+    gnm.check_attribute("subcluster", subcluster_set | {"", "none"},
                         expect=True, eval_id="GNM_017")
-    gnm.check_attribute("host_genus", host_genus_set,
+    gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set,
                         expect=True, eval_id="GNM_018")
-    gnm.check_cluster_structure(eval_id="GNM_019")
-    gnm.check_subcluster_structure(eval_id="GNM_020")
-    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_021")
-    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_022")
-    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_023")
-    gnm.check_magnitude("gc", "<", 1.0001, eval_id="GNM_024")
-    gnm.check_magnitude("length", ">", 0, eval_id="GNM_025")
-    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_026")
+    gnm.check_attribute("translation_table", {11},
+                        expect=True, eval_id="GNM_019")
+    gnm.check_attribute("host_genus", host_genus_set,
+                        expect=True, eval_id="GNM_020")
+    gnm.check_cluster_structure(eval_id="GNM_021")
+    gnm.check_subcluster_structure(eval_id="GNM_022")
+    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_023")
+    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_024")
+    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_025")
+    gnm.check_magnitude("gc", "<", 1.0001, eval_id="GNM_026")
+    gnm.check_magnitude("length", ">", 0, eval_id="GNM_027")
+    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_028")
 
     # TODO set trna and tmrna to True after they are implemented.
     gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
-                          strand=False, eval_id="GNM_027")
+                          strand=False, eval_id="GNM_029")
 
     if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,
-                              eval_id="GNM_028")
+                              eval_id="GNM_030")
 
     if eval_flags["check_id_typo"]:
         gnm.compare_two_attributes("id", "_description_name",
-                                   expect_same=True, eval_id="GNM_029")
-        gnm.compare_two_attributes("id", "_source_name",
-                                   expect_same=True, eval_id="GNM_030")
-        gnm.compare_two_attributes("id", "_organism_name",
                                    expect_same=True, eval_id="GNM_031")
+        gnm.compare_two_attributes("id", "_source_name",
+                                   expect_same=True, eval_id="GNM_032")
+        gnm.compare_two_attributes("id", "_organism_name",
+                                   expect_same=True, eval_id="GNM_033")
 
     if eval_flags["check_host_typo"]:
         gnm.compare_two_attributes("host_genus", "_description_host_genus",
-                                   expect_same=True, eval_id="GNM_032")
-        gnm.compare_two_attributes("host_genus", "_source_host_genus",
-                                   expect_same=True, eval_id="GNM_033")
-        gnm.compare_two_attributes("host_genus", "_organism_host_genus",
                                    expect_same=True, eval_id="GNM_034")
+        gnm.compare_two_attributes("host_genus", "_source_host_genus",
+                                   expect_same=True, eval_id="GNM_035")
+        gnm.compare_two_attributes("host_genus", "_organism_host_genus",
+                                   expect_same=True, eval_id="GNM_036")
 
     if eval_flags["check_author"]:
         if gnm.annotation_author == 1:
             gnm.check_authors(check_set=constants.AUTHOR_SET,
-                              expect=True, eval_id="GNM_035")
+                              expect=True, eval_id="GNM_037")
             gnm.check_authors(check_set=set(["lastname", "firstname"]),
-                              expect=False, eval_id="GNM_036")
+                              expect=False, eval_id="GNM_038")
         else:
             gnm.check_authors(check_set=constants.AUTHOR_SET,
-                              expect=False, eval_id="GNM_037")
+                              expect=False, eval_id="GNM_039")
 
 
 
@@ -1062,11 +1135,17 @@ def check_trna(trna_obj, eval_flags):
 
 def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
     """Import data into the MySQL database."""
-
     if bndl._errors == 0:
+        import_gnm = bndl.genome_dict[gnm_key]
         logger.info("Importing data into the database for "
-                    f"genome: {bndl.genome_dict[gnm_key].id}.")
-        phamerator.create_genome_statements(bndl.genome_dict[gnm_key],
+                    f"genome: {import_gnm.id}.")
+
+        # If locus_tag data should not be imported, clear all locus_tag data.
+        if bndl.ticket.eval_flags["import_locus_tag"] is False:
+            logger.info("Clearing locus_tag data for "
+                        f"genome: {import_gnm.id}.")
+            import_gnm.clear_locus_tags()
+        phamerator.create_genome_statements(import_gnm,
                                             bndl.ticket.type)
         if prod_run:
             result = sql_handle.execute_transaction(bndl.sql_queries)

@@ -481,8 +481,60 @@ class TestBasicFunctions3(unittest.TestCase):
 
 
 
+class TestBasicFunctions4(unittest.TestCase):
+
+    def setUp(self):
+        self.options = ["note", "function", "product"]
 
 
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_choose_from_list_1(self, ask_mock):
+        """Verify no choice given with no field_set options."""
+        field = basic.choose_from_list(set())
+        with self.subTest():
+            self.assertFalse(ask_mock.called)
+        with self.subTest():
+            self.assertIsNone(field)
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_choose_from_list_2(self, ask_mock):
+        """Verify first field is selected."""
+        ask_mock.side_effect = [True]
+        field = basic.choose_from_list(self.options)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertEqual(field, "note")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_choose_from_list_3(self, ask_mock):
+        """Verify second field is selected after one "no" response."""
+        ask_mock.side_effect = [False, True]
+        field = basic.choose_from_list(self.options)
+        self.assertEqual(field, "function")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_choose_from_list_4(self, ask_mock):
+        """Verify exit after one "exit" response."""
+        ask_mock.side_effect = [None]
+        field = basic.choose_from_list(self.options)
+        self.assertIsNone(field)
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_choose_from_list_5(self, ask_mock):
+        """Verify exit after one "no" response and one "exit" response."""
+        ask_mock.side_effect = [False, None]
+        field = basic.choose_from_list(self.options)
+        self.assertIsNone(field)
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_choose_from_list_6(self, ask_mock):
+        """Verify exit after three "no" responses."""
+        ask_mock.side_effect = [False, False, False]
+        field = basic.choose_from_list(self.options)
+        self.assertIsNone(field)
 
 if __name__ == '__main__':
     unittest.main()
