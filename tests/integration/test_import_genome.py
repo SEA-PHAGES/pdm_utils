@@ -146,8 +146,6 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-
-
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, no phagesdb data."""
@@ -182,10 +180,11 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.cluster, "")
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "L5")
-
-
-
-
+        with self.subTest():
+            self.assertTrue(ff_gnm._cds_processed_descriptions_tally > 0)
+        with self.subTest():
+            self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
+                             ff_gnm._cds_processed_products_tally)
 
 
     def test_prepare_bundle_2(self):
@@ -203,8 +202,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(bndl.genome_dict.keys()), 0)
         with self.subTest():
             self.assertIsNone(bndl.ticket)
-
-
 
 
     def test_prepare_bundle_3(self):
@@ -230,10 +227,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.retrieve_record, -1)
 
 
-
-
-
-
     def test_prepare_bundle_4(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'add' ticket, no data_add, no phagesdb data."""
@@ -250,9 +243,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(bndl.genome_dict.keys()), 1)
         with self.subTest():
             self.assertEqual(ff_gnm.retrieve_record, -1)
-
-
-
 
 
     def test_prepare_bundle_5(self):
@@ -282,10 +272,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.cluster, "B")
         with self.subTest():
             self.assertEqual(pdb_gnm.cluster, "A")
-
-
-
-
 
 
     def test_prepare_bundle_6(self):
@@ -350,10 +336,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(pmr_gnm.accession, "EFG789")
 
 
-
-
-
-
     def test_prepare_bundle_7(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, no phamerator data,
@@ -404,10 +386,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
         with self.subTest():
             self.assertEqual(ff_gnm.host_genus, "")
-
-
-
-
 
 
     def test_prepare_bundle_8(self):
@@ -461,9 +439,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
 
 
-
-
-
     def test_prepare_bundle_9(self):
         """Verify bundle is returned with the genome id converted using
         the id dictionary."""
@@ -491,6 +466,37 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.name, "L5")
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "new_id")
+
+
+    @patch("pdm_utils.functions.basic.choose_from_list")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_prepare_bundle_10(self, ask_mock, choose_mock):
+        """Verify bundle is returned with the CDS descriptions derived
+        from 'function' instead of 'product', after it is
+        interactively selected using interactive = True."""
+        self.tkt1.data_add = set(["host_genus", "subcluster",
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        ask_mock.side_effect = [False]
+        choose_mock.side_effect = ["function"]
+        bndl = import_genome.prepare_bundle(
+                    filename=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1,
+                    genome_id_field="_organism_name",
+                    host_genus_field="_organism_host_genus",
+                    file_ref="flat_file",
+                    ticket_ref="ticket",
+                    interactive=True)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        tkt_gnm = bndl.genome_dict["ticket"]
+        bndl_tkt = bndl.ticket
+        with self.subTest():
+            self.assertTrue(ff_gnm._cds_processed_descriptions_tally != \
+                            ff_gnm._cds_processed_products_tally)
+        with self.subTest():
+            self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
+                             ff_gnm._cds_processed_functions_tally)
 
 
 
@@ -564,6 +570,8 @@ class TestImportGenomeMain2(unittest.TestCase):
             self.assertEqual(args.output_folder, Path("/tmp/"))
         with self.subTest():
             self.assertEqual(args.log_file, "import.log")
+        with self.subTest():
+            self.assertFalse(args.interactive)
 
 
     @patch("sys.exit")
@@ -584,7 +592,8 @@ class TestImportGenomeMain2(unittest.TestCase):
                                "-r", "PECAAN",
                                "-d", "FUNCTION",
                                "-o", output_folder,
-                               "-l", log_file
+                               "-l", log_file,
+                               "-i"
                                ])
         args = import_genome.parse_args(self.args_list)
         with self.subTest():
@@ -599,6 +608,8 @@ class TestImportGenomeMain2(unittest.TestCase):
             self.assertEqual(args.output_folder, Path(output_folder))
         with self.subTest():
             self.assertEqual(args.log_file, log_file)
+        with self.subTest():
+            self.assertTrue(args.interactive)
 
 
     def test_parse_args_4(self):
@@ -611,7 +622,8 @@ class TestImportGenomeMain2(unittest.TestCase):
                                "--run_mode", "PECAAN",
                                "--description_field", "FUNCTION",
                                "--output_folder", output_folder,
-                               "--log_file", log_file
+                               "--log_file", log_file,
+                               "--interactive"
                                ])
         args = import_genome.parse_args(self.args_list)
         with self.subTest():
@@ -626,6 +638,8 @@ class TestImportGenomeMain2(unittest.TestCase):
             self.assertEqual(args.output_folder, Path(output_folder))
         with self.subTest():
             self.assertEqual(args.log_file, log_file)
+        with self.subTest():
+            self.assertTrue(args.interactive)
 
 
 
@@ -2015,6 +2029,10 @@ class TestImportGenomeMain9(unittest.TestCase):
 
         self.field = "product"
 
+        self.gnm = genome.Genome()
+        self.tkt = ticket.GenomeTicket()
+
+
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_cds_descriptions_1(self, ask_mock):
         """Verify no change if description_field is correct."""
@@ -2051,6 +2069,43 @@ class TestImportGenomeMain9(unittest.TestCase):
         self.assertTrue(new_field in {"function", "note"})
 
 
+
+
+    def test_set_cds_descriptions_1(self):
+        """Verify descriptions are set from product field,
+        with no interactivity."""
+        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3]
+        self.tkt.description_field = "product"
+        import_genome.set_cds_descriptions(self.gnm, self.tkt, interactive=False)
+        with self.subTest():
+            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 3)
+        with self.subTest():
+            self.assertEqual(self.cds1.processed_description, "int")
+        with self.subTest():
+            self.assertEqual(self.cds2.processed_description, "capsid")
+        with self.subTest():
+            self.assertEqual(self.cds3.processed_description, "rep")
+
+    @patch("pdm_utils.functions.basic.choose_from_list")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_set_cds_descriptions_2(self, ask_mock, choose_mock):
+        """Verify descriptions are set from product field,
+        with interactivity = True and user changes description_field."""
+        self.gnm.cds_features = [self.cds1, self.cds2, self.cds3]
+        self.tkt.description_field = "product"
+        ask_mock.side_effect = [False]
+        choose_mock.side_effect = ["function"]
+        import_genome.set_cds_descriptions(self.gnm, self.tkt, interactive=True)
+        with self.subTest():
+            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 1)
+        with self.subTest():
+            self.assertEqual(self.cds1.processed_description, "")
+        with self.subTest():
+            self.assertEqual(self.cds2.processed_description, "")
+        with self.subTest():
+            self.assertEqual(self.cds3.processed_description, "lysB")
+        with self.subTest():
+            self.assertEqual(self.tkt.description_field, "function")
 
 if __name__ == '__main__':
     unittest.main()

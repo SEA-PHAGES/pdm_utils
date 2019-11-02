@@ -5,6 +5,8 @@ from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import cds
 from pdm_utils.functions import basic
+from Bio.Alphabet import IUPAC
+from Bio.Seq import Seq
 
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
@@ -348,7 +350,9 @@ def create_seq_set(sql_handle):
     # "b'AATT", "b'TTCC", etc.
     result_set = set([])
     for dict in result_list:
-        result_set.add(dict["Sequence"].decode("utf-8"))
+        # result_set.add(dict["Sequence"].decode("utf-8"))
+        gnm_seq = dict["Sequence"].decode("utf-8")
+        result_set.add(Seq(gnm_seq, IUPAC.ambiguous_dna))
     return result_set
 
 

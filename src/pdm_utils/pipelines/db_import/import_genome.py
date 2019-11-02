@@ -58,7 +58,6 @@ def main(unparsed_args_list):
     sql_handle = setup_sql_handle(args.database)
     logger.info("Connected to database.")
 
-    # TODO unittest now that host_genus_field is added.
     # If everything checks out, pass on args for data input/output:
     data_io(sql_handle=sql_handle,
             genome_folder=args.input_folder,
@@ -70,7 +69,6 @@ def main(unparsed_args_list):
             run_mode=args.run_mode,
             output_folder=args.output_folder,
             interactive=args.interactive)
-    # input("paused before completion")
     logger.info("Import complete.")
 
 
@@ -222,9 +220,14 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         sys.exit(1)
 
     # Evaluate files and tickets.
-    results_tuple = process_files_and_tickets(ticket_dict, files_to_process,
-                        sql_handle, prod_run, genome_id_field,
-                        host_genus_field, interactive)
+    results_tuple = process_files_and_tickets(
+                        ticket_dict, files_to_process,
+                        sql_handle=sql_handle,
+                        prod_run=prod_run,
+                        genome_id_field=genome_id_field,
+                        host_genus_field=host_genus_field,
+                        interactive=interactive)
+
 
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
@@ -426,7 +429,8 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
                               host_genus_field=host_genus_field,
                               id=bundle_count,
                               file_ref=file_ref, ticket_ref=ticket_ref,
-                              retrieve_ref=retrieve_ref, retain_ref=retain_ref)
+                              retrieve_ref=retrieve_ref, retain_ref=retain_ref,
+                              interactive=interactive)
 
         # Create sets of unique values for different data fields.
         # Since data from each parsed flat file is imported into the
@@ -521,9 +525,6 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
     bndl.id = id
     seqrecord = flat_files.retrieve_genome_data(filename)
     if seqrecord is None:
-        # TODO throw an error of some sort.
-        # Assign some value to the Bundle and break, so that
-        # the rest of this function is not executed.
         logger.info(f"No record was retrieved from the file: {filename}.")
     else:
         logger.info(f"Parsing record from the file: {filename}.")
@@ -612,9 +613,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                         logger.info(f"There is no {ff_gnm.id} genome "
                                     "in the Phamerator database. "
                                     "Unable to retrieve data.")
-
-            # TODO unittest.
-            # set_cds_descriptions(ff_gnm, bndl.ticket, interactive)
+            set_cds_descriptions(ff_gnm, bndl.ticket, interactive=interactive)
     return bndl
 
 
@@ -717,28 +716,17 @@ def review_evaluation_list(evaluation_list):
     return exit
 
 
-
-
-# #TODO unittest.
 def set_cds_descriptions(gnm, tkt, interactive=False):
     """Set the primary CDS descriptions.
     """
-
     # If interactive is selected, the user can review the CDS descriptions.
     # The ticket indicates where the CDS descriptions are stored.
     if interactive:
         tkt.description_field = review_cds_descriptions(
                                     gnm.cds_features,
                                     tkt.description_field)
-
-    # Iterate through the features and set the description.
-    x = 0
-    while x < len(gnm.cds_features):
-        cds_ftr = gnm.cds_features[x]
-        cds_ftr.set_description(tkt.description_field)
-        x += 1
-    gnm.tally_descriptions()
-
+    gnm.set_cds_descriptions(tkt.description_field)
+    gnm.tally_cds_descriptions()
 
 
 def review_cds_descriptions(feature_list, description_field):
@@ -910,8 +898,6 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                             expect=False, eval_id="GNM_001")
         gnm.check_attribute("name", phage_id_set | {""},
                             expect=False, eval_id="GNM_002")
-
-        # TODO confirm that seq_set contains Seq objects and not strings.
         gnm.check_attribute("seq", seq_set | {constants.EMPTY_GENOME_SEQ},
                             expect=False, eval_id="GNM_003")
 
@@ -1162,77 +1148,6 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
         result = False
         logger.info("Data contains errors, so it will not be imported.")
     return result
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO implement.
-# TODO unit test.
-# Cds object now contains a method to reset the primary description based
-# on a user-selected choice.
-#If other CDS fields contain descriptions, they can be chosen to
-#replace the default import_cds_qualifier descriptions.
-#Then provide option to verify changes.
-#This block is skipped if user selects to do so.
-# def check_description_field_choice():
-#
-#     if ignore_description_field_check != 'yes':
-#
-#         changed = ""
-#         if (import_cds_qualifier != "product" and feature_product_tally > 0):
-#            print "\nThere are %s CDS products found." % feature_product_tally
-#            change_descriptions()
-#
-#            if question("\nCDS products will be used for phage %s in file %s." % (phageName,filename)) == 1:
-#                 for feature in all_features_data_list:
-#                     feature[9] = feature[10]
-#                 changed = "product"
-#
-#         if (import_cds_qualifier != "function" and feature_function_tally > 0):
-#             print "\nThere are %s CDS functions found." % feature_function_tally
-#             change_descriptions()
-#
-#             if question("\nCDS functions will be used for phage %s in file %s." % (phageName,filename)) == 1:
-#                 for feature in all_features_data_list:
-#                     feature[9] = feature[11]
-#                 changed = "function"
-#         if (import_cds_qualifier != "note" and feature_note_tally > 0):
-#
-#             print "\nThere are %s CDS notes found." % feature_note_tally
-#             change_descriptions()
-#
-#             if question("\nCDS notes will be used for phage %s in file %s." % (phageName,filename)) == 1:
-#                 for feature in all_features_data_list:
-#                     feature[9] = feature[12]
-#                 changed = "note"
-#
-#         if changed != "":
-#             record_warnings += 1
-#             write_out(output_file,"\nWarning: CDS descriptions only from the %s field will be retained." % changed)
-#             record_errors += question("\nError: problem with CDS descriptions of file %s." % filename)
-
-
 
 
 ###

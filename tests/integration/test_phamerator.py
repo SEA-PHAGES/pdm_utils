@@ -9,13 +9,8 @@ from pdm_utils.constants import constants
 from pdm_utils.classes import mysqlconnectionhandler
 import subprocess, os
 import pymysql
-# import getpass
-# import paramiko
-# paramiko.util.log_to_file("/tmp/paramiko.log")
-
-# user = getpass.getpass(prompt="mysql username: ")
-# pwd = getpass.getpass(prompt="mysql password: ")
-
+from Bio.Alphabet import IUPAC
+from Bio.Seq import Seq
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
@@ -164,13 +159,13 @@ class TestPhameratorFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
-                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostStrain, Sequence, SequenceLength, GC, status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
+                f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);")
             cur.execute(sql)
         connection.commit()
         connection.close()
@@ -183,7 +178,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(result), 3)
         with self.subTest():
-            self.assertTrue("ATCG" in result)
+            self.assertTrue(Seq("ATCG", IUPAC.ambiguous_dna) in result)
 
 
 

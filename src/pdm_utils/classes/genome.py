@@ -394,8 +394,21 @@ class Genome:
             self.retrieve_record = value
 
 
-    def tally_descriptions(self):
+    def set_cds_descriptions(self, value):
+        """Set each CDS processed description as indicated."""
+        x = 0
+        while x < len(self.cds_features):
+            cds_ftr = self.cds_features[x]
+            cds_ftr.set_description(value)
+            x += 1
+
+
+    def tally_cds_descriptions(self):
         """Tally the non-generic CDS descriptions."""
+        self._cds_processed_descriptions_tally = 0
+        self._cds_processed_products_tally = 0
+        self._cds_processed_functions_tally = 0
+        self._cds_processed_notes_tally = 0
         for cds_ftr in self.cds_features:
             if cds_ftr.processed_description != "":
                 self._cds_processed_descriptions_tally += 1

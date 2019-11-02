@@ -5,7 +5,7 @@ GenBank-formatted flat files."""
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from Bio import Alphabet
-from Bio.Alphabet.IUPAC import *
+from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from pdm_utils.classes import genome, cds, trna, source
@@ -577,7 +577,7 @@ def genome_to_seqrecord(phage_genome):
     "Genome object passed is None and not initialized"
     try:
         record = SeqRecord(phage_genome.seq)
-        record.seq.alphabet = IUPACAmbiguousDNA()
+        record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
     except AttributeError:
         print("Genome object failed to be converted to SeqRecord.",
               "Genome valid attribute 'seq' is required to",
