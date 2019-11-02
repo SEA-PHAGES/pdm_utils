@@ -18,6 +18,7 @@ class TestFileExport(unittest.TestCase):
         mch = mysqlconnectionhandler.MySQLConnectionHandler()
         mch._username = "pdm_anon"
         mch._password = "pdm_anon" 
+        mch.database = "test_db"
         self.sql_handle = mch
         #Creates Genome object
         gnm = genome.Genome()
@@ -34,7 +35,6 @@ class TestFileExport(unittest.TestCase):
         gnm.annotation_status = "TestStatus"
         gnm.retrieve_record = "TestRecord"
         gnm.annotation_author = "TestAuthor"
-
         self.genome = gnm
         #Creates SeqRecord object
         seqrecord = SeqRecord(Seq("ATGC"))
@@ -45,7 +45,8 @@ class TestFileExport(unittest.TestCase):
         #Creates working test directory
         self.test_cwd = (Path.cwd()).joinpath("DELETE_ME")
         (self.test_cwd).mkdir() 
-
+        #Creates test database
+        self.sql_handle.execute_query("CREATE DATABASE test_db") 
     def test_convert_path(self):
         """
         Unittest of file_export.convert_path()
@@ -175,9 +176,9 @@ class TestFileExport(unittest.TestCase):
                 #Asserts establish_database_connection functionality
                 MCHMock.return_value = self.sql_handle
                 test_sql_handle = file_export.establish_database_connection(
-                                                            "Actino_Draft")
+                                                            "test_db")
                 self.assertEqual(test_sql_handle, self.sql_handle)
-                GetPasswordMock.assert_called_once()
+                GetPasswordMock.assert_not_called()
                 GetPasswordMock.reset_mock()
         #Sub test to test functionality with an invalid mysqlconnectionhandler
         with self.subTest(valid_mysqlconnectionhandler=False, input_type="Str"):
@@ -192,7 +193,7 @@ class TestFileExport(unittest.TestCase):
                 mch._password = "invalid"
                 MCHMock.return_value = mch
                 #Asserts establish_database_connection() functionality
-                file_export.establish_database_connection("Actino_Draft")
+                file_export.establish_database_connection("test_db")
                 #self.assertEqual(GetPasswordMock.call_count, 4)
                 GetPasswordMock.assert_not_called()
                 GetPasswordMock.reset_mock()
@@ -339,8 +340,9 @@ class TestFileExport(unittest.TestCase):
             csv_path.unlink()
             dir_path.rmdir()
         #Test to test the format of write_csv()
-        file_export.write_csv([self.genome], self.test_cwd, export_dir_name="Test"
-                             ,csv_name="Test")
+        file_export.write_csv([self.genome], self.test_cwd, 
+                              export_dir_name="Test",
+                              csv_name="Test")
         dir_path = (self.test_cwd).joinpath("Test")
         self.assertTrue(dir_path.is_dir())
         csv_path = dir_path.joinpath("Test.csv")
@@ -378,10 +380,35 @@ class TestFileExport(unittest.TestCase):
                                               "TestStatus",
                                               "TestRecord",
                                               "TestAuthor"])
-    
+   
+    def test_write_database(self):
+        """
+        Unittest that tests file_export.write_database()
+            -Tests file writing,
+                -Asserts files are created according to naming conventions
+        """
+        #Create folder and file paths
+        folder_path = (self.test_cwd).joinpath("export")
+        db_path = folder_path.joinpath("test_db_v1.sql")
+        version_path = db_path.with_name("test_db_v1.version")
+        #Assert write_database() correctly created files
+        file_export.write_database(self.sql_handle, 1, self.test_cwd)
+        self.assertTrue(folder_path.exists())
+        self.assertTrue(db_path.exists())
+        self.assertTrue(version_path.exists())
+        test_version = version_path.read_text()
+        self.assertEqual(test_version, "1")
+        #Remove test folder and files
+        version_path.unlink()
+        db_path.unlink()
+        folder_path.rmdir()
+        self.assertFalse(folder_path.exists())
+        self.assertFalse(db_path.exists())
+        self.assertFalse(version_path.exists())
+        
     def tearDown(self):
         #Tears down current working test directory
         shutil.rmtree(str(self.test_cwd))
-
+        self.sql_handle.execute_query("DROP DATABASE test_db")
 if __name__ == "__main__":
     unittest.main()

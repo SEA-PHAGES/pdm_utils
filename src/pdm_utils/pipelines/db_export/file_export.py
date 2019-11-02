@@ -549,6 +549,10 @@ def write_database(sql_handle, version, export_path,
    
     os.system(f"mysqldump -u {sql_handle._username} -p{sql_handle._password} "
               f"--skip-comments {sql_handle.database} > {str(sql_path)}")
+    
+    version_path = sql_path.with_name(f"{sql_handle.database}_v{version}.version")
+    version_path.touch()
+    version_path.write_text(f"{version}")
 
 def main(args):
     """Function to initialize file export"""
