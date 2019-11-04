@@ -1,19 +1,38 @@
 """Tests the functionality of the unique functions in the file_export pipeline"""
 
-from pdm_utils.classes import genome
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import * 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+
+from pdm_utils.classes import genome
 from pdm_utils.pipelines.db_export import file_export
 from pdm_utils.classes import mysqlconnectionhandler
+
 from pathlib import Path
 from unittest.mock import patch, Mock, call
-import os, sys, unittest, shutil, csv
+import os, sys, unittest, shutil, csv, pymysql
 
 class TestFileExport(unittest.TestCase):
-
+   
     def setUp(self):
+
+        #Creates a test database
+        self.connection = pymysql.connect(host="localhost",
+                                     user="pdm_anon",
+                                     password="pdm_anon",
+                                     cursorclass=pymysql.cursors.DictCursor) 
+        cur = (self.connection).cursor()
+        cur.execute("SELECT SCHEMA_NAME FROM "
+                    "INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'test_db'")
+        result = cur.fetchall()
+        if len(result) != 0:
+            cur.execute("DROP DATABASE test_db")
+            (self.connection).commit()
+
+        cur.execute("CREATE DATABASE test_db;")
+        (self.connection).commit()
+        (self.connection).close 
         #Creates valid MySqlConnectionHandler
         mch = mysqlconnectionhandler.MySQLConnectionHandler()
         mch._username = "pdm_anon"
@@ -45,8 +64,7 @@ class TestFileExport(unittest.TestCase):
         #Creates working test directory
         self.test_cwd = (Path.cwd()).joinpath("DELETE_ME")
         (self.test_cwd).mkdir() 
-        #Creates test database
-        self.sql_handle.execute_query("CREATE DATABASE test_db") 
+
     def test_convert_path(self):
         """
         Unittest of file_export.convert_path()
@@ -178,7 +196,7 @@ class TestFileExport(unittest.TestCase):
                 test_sql_handle = file_export.establish_database_connection(
                                                             "test_db")
                 self.assertEqual(test_sql_handle, self.sql_handle)
-                GetPasswordMock.assert_not_called()
+                GetPasswordMock.assert_called_once()
                 GetPasswordMock.reset_mock()
         #Sub test to test functionality with an invalid mysqlconnectionhandler
         with self.subTest(valid_mysqlconnectionhandler=False, input_type="Str"):
@@ -409,6 +427,11 @@ class TestFileExport(unittest.TestCase):
     def tearDown(self):
         #Tears down current working test directory
         shutil.rmtree(str(self.test_cwd))
-        self.sql_handle.execute_query("DROP DATABASE test_db")
+        #Tears down test database
+        cur = (self.connection).cursor()
+        cur.execute("DROP DATABASE test_db;")
+        (self.connection).commit()
+        (self.connection).close()
+        
 if __name__ == "__main__":
     unittest.main()
