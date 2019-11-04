@@ -159,7 +159,7 @@ gene_table_query = (
 
 
 def get_sql_data(db, user, pwd, query):
-    """Get data from the phage table."""
+    """Get data from the database."""
     connection = pymysql.connect(host = "localhost",
                                  user = user,
                                  password = pwd,
@@ -404,10 +404,10 @@ class TestImportGenomeMain1(unittest.TestCase):
         # seq = get_seq(self.test_flat_file1)
         # l5_phage_table_data["sequence"] = seq
         # l5_phage_table_data["sequence_length"] = len(seq)
-        # print(trixie_phage_table_data["sequence"][:25])
-        # print(trixie_phage_table_data["sequence_length"])
+        # print(l5_phage_table_data["sequence"][:25])
+        # print(l5_phage_table_data["sequence_length"])
         # input("pause")
-        # insert_data_into_phage_table(db, user, pwd, trixie_phage_table_data)
+        # insert_data_into_phage_table(db, user, pwd, l5_phage_table_data)
         # input("pause2")
         # keys = set(["host_genus", "cluster", "subcluster"])
         # l5_ticket_data_retrieve = set_data(l5_ticket_data_complete, keys, "retrieve")
@@ -442,7 +442,16 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-
+        #1. insert alice w/1 CDS
+        #2. try to insert alice if already in db
+        #3. try to insert alice if another genome has same seq.
+        #4. use invalid ticket
+        #5. use minimal ticket.
+        #6. fail due to genome-level error
+        #7. fail due to genome-pair error.
+        #8. replace alice genome.
+        #9. fail due to CDS error.
+        #10. fail due to source error.
 
 
 

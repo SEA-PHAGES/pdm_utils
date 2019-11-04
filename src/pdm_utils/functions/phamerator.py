@@ -55,6 +55,7 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
+        # DateLastModified gets returned as a datetime.datetime object.
         gnm.date = data_dict["DateLastModified"]
     except:
         pass
@@ -352,7 +353,8 @@ def create_seq_set(sql_handle):
     for dict in result_list:
         # result_set.add(dict["Sequence"].decode("utf-8"))
         gnm_seq = dict["Sequence"].decode("utf-8")
-        result_set.add(Seq(gnm_seq, IUPAC.ambiguous_dna))
+        gnm_seq = Seq(gnm_seq, IUPAC.ambiguous_dna).upper()
+        result_set.add(gnm_seq)
     return result_set
 
 
