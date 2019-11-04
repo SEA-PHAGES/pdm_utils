@@ -943,8 +943,23 @@ class Genome:
                 if (current.left == next.left and current.right == next.right):
                     msgs.append("Features contain identical left and "
                                 "right coordinates.")
-                elif (current.left < next.left and current.right > next.right):
-                    msgs.append("Features are nested.")
+
+                # TODO unittest to verify added code to handle wrap-around genes.
+                # To identify nested features, the following tests
+                # avoid false errors due to genes that may wrap around the
+                # genome.
+                elif (current.left < next.left and \
+                      current.left < next.right and \
+                      current.right > next.left and \
+                      current.right > next.right):
+                    # msgs.append("Features are nested.")
+                    msgs.append((f"Feature {next.id}, with "
+                                 f"left coordinate: {next.left} and "
+                                 f"right coordinate: {next.right} "
+                                 f"is nested within feature {current.id}, with "
+                                 f"left coordinate: {current.left} and "
+                                 f"right coordinate: {current.right}.")
+                                 )
                 elif (current.left == next.left and \
                         basic.reformat_strand(current.strand,
                             format="fr_short") == "r" and \

@@ -321,7 +321,7 @@ def parse_genome_data(seqrecord, filepath="",
         gnm.name = ""
 
     try:
-        gnm.organism = seqrecord.annotations['organism']
+        gnm.organism = seqrecord.annotations["organism"]
     except:
         gnm.organism = ""
 
@@ -343,7 +343,7 @@ def parse_genome_data(seqrecord, filepath="",
         # Since accessions are stored in a list, there may be more than
         # one accessions associated with this file.
         # The first accession in the list is assumed to be the most recent.
-        accession = seqrecord.annotations['accessions'][0]
+        accession = seqrecord.annotations["accessions"][0]
     except:
         accession = ""
 
@@ -362,7 +362,7 @@ def parse_genome_data(seqrecord, filepath="",
     gnm.parse_description()
 
     try:
-        gnm.source = seqrecord.annotations['source']
+        gnm.source = seqrecord.annotations["source"]
     except:
         gnm.source = ""
 
@@ -371,7 +371,7 @@ def parse_genome_data(seqrecord, filepath="",
 
     try:
         # The retrieved authors can be stored in multiple Reference elements.
-        refs = seqrecord.annotations['references']
+        refs = seqrecord.annotations["references"]
         authors_list = []
         for ref in refs:
             # Note: Reference objects are instantiated with an empty
@@ -381,7 +381,7 @@ def parse_genome_data(seqrecord, filepath="",
             # it is not an empty string.
             if ref.authors != "":
                 authors_list.append(ref.authors)
-        authors_string = ';'.join(authors_list)
+        authors_string = ";".join(authors_list)
         gnm.authors = authors_string
     except:
         gnm.authors = ""
@@ -393,7 +393,7 @@ def parse_genome_data(seqrecord, filepath="",
 
     try:
         date = seqrecord.annotations["date"]
-        gnm.date = datetime.strptime(date,'%d-%b-%Y')
+        gnm.date = datetime.strptime(date, "%d-%b-%Y")
     except:
         gnm.date = basic.convert_empty("", "empty_datetime_obj")
 

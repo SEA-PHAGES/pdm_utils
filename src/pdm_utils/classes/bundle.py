@@ -197,6 +197,13 @@ class Bundle:
             genome_key = "genome_" + key
             if len(gnm.evaluations) > 0:
                 eval_dict[genome_key] = gnm.evaluations
+
+            # TODO unittest source feature block.
+            for src_ftr in gnm.source_features:
+                src_key = "src_" + src_ftr.id
+                if len(src_ftr.evaluations) > 0:
+                    eval_dict[src_key] = src_ftr.evaluations
+
             for cds_ftr in gnm.cds_features:
                 cds_key = "cds_" + cds_ftr.id
                 if len(cds_ftr.evaluations) > 0:

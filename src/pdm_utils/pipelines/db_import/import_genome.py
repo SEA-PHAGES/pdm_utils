@@ -4,13 +4,13 @@ into PhameratorDB."""
 
 import argparse
 import csv
-from datetime import datetime
+from datetime import datetime, date
 import logging
 import os
 import pathlib
 import shutil
 import sys
-import time
+# import time
 from tabulate import tabulate
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
@@ -181,6 +181,7 @@ def parse_args(unparsed_args_list):
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
+
     return args
 
 
@@ -193,8 +194,15 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
     # Create output directories
 
     logger.info("Setting up environment.")
-    date = time.strftime("%Y%m%d")
-    results_folder = f"{date}_results"
+    # CURRENT_DATE = time.strftime("%Y%m%d")
+    CURRENT_DATE = date.today().strftime("%Y%m%d")
+    # IMPORT_DATE = datetime.today().replace(hour=0,
+    #                                        minute=0,
+    #                                        second=0,
+    #                                        microsecond=0)
+
+
+    results_folder = f"{CURRENT_DATE}_results"
     results_folder = pathlib.Path(results_folder)
     results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
     if results_path is None:
@@ -613,6 +621,10 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                         logger.info(f"There is no {ff_gnm.id} genome "
                                     "in the Phamerator database. "
                                     "Unable to retrieve data.")
+
+            # TODO unittest.
+            ff_gnm.set_cluster_subcluster(value="internal")
+
             set_cds_descriptions(ff_gnm, bndl.ticket, interactive=interactive)
     return bndl
 
@@ -967,12 +979,18 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     gnm.check_subcluster_structure(eval_id="GNM_022")
     gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_023")
     gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_024")
+
+    # TODO update unittest test.
     gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_025")
-    gnm.check_magnitude("gc", "<", 1.0001, eval_id="GNM_026")
+    gnm.check_magnitude("gc", "<", 100.0001, eval_id="GNM_026")
+    # TODO update unittest test.
+
+
     gnm.check_magnitude("length", ">", 0, eval_id="GNM_027")
     gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_028")
 
     # TODO set trna and tmrna to True after they are implemented.
+    # TODO rename this method. it is checking coordinates, not feature_ids.
     gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
                           strand=False, eval_id="GNM_029")
 
@@ -1121,6 +1139,11 @@ def check_trna(trna_obj, eval_flags):
 
 def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
     """Import data into the MySQL database."""
+    IMPORT_DATE = datetime.today().replace(hour=0,
+                                           minute=0,
+                                           second=0,
+                                           microsecond=0)
+
     if bndl._errors == 0:
         import_gnm = bndl.genome_dict[gnm_key]
         logger.info("Importing data into the database for "
@@ -1131,8 +1154,12 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
             logger.info("Clearing locus_tag data for "
                         f"genome: {import_gnm.id}.")
             import_gnm.clear_locus_tags()
-        phamerator.create_genome_statements(import_gnm,
-                                            bndl.ticket.type)
+
+        # Update the date field to reflect the day of import.
+        import_gnm.date = IMPORT_DATE
+        # TODO unittest queries got added to bndl.
+        bndl.sql_queries = phamerator.create_genome_statements(
+                                import_gnm, bndl.ticket.type)
         if prod_run:
             result = sql_handle.execute_transaction(bndl.sql_queries)
             if result == 1:
@@ -1141,6 +1168,10 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
             else:
                 result = True
                 logger.info("Data successfully imported.")
+                logger.info("The following SQL statements were executed:")
+                for statement in bndl.sql_queries:
+                    logger.info(statement[:150] + "...")
+
         else:
             result = True
             logger.info("Data can be imported if set to production run.")
