@@ -1147,8 +1147,8 @@ class TestImportGenomeClass4(unittest.TestCase):
 
     def test_check_genome_43(self):
         """Verify correct number of errors are produced using:
-        'gc' > 1."""
-        self.gnm.gc = 2
+        'gc' > 100."""
+        self.gnm.gc = 101
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,

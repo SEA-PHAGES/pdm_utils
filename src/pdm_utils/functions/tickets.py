@@ -47,6 +47,7 @@ def retrieve_ticket_data(filename):
     return list_of_ticket_data
 
 
+# TODO review unittests - are they sufficient?
 def modify_import_data(data_dict, required_keys, optional_keys, keywords):
     """Checks and modifies a data dictionary to conform to requirements
     for a ticket object.
@@ -87,10 +88,13 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
         set_dict_value(data_dict, "host_genus", "retrieve", "retain")
         set_dict_value(data_dict, "cluster", "retrieve", "retain")
         set_dict_value(data_dict, "subcluster", "retrieve", "retain")
-        set_dict_value(data_dict, "accession", "retrieve", "retain")
         set_dict_value(data_dict, "annotation_author", "1", "retain")
         set_dict_value(data_dict, "retrieve_record", "1", "retain")
         set_dict_value(data_dict, "annotation_status", "draft", "final")
+
+        # If status = 'draft', accession can remain "".
+        if data_dict["annotation_status"] != "draft":
+            set_dict_value(data_dict, "accession", "retrieve", "retain")
         return True
     else:
         print(f"The ticket {data_dict} is not formatted correctly.")
@@ -170,7 +174,11 @@ def set_missing_keys(data_dict, expected_keys):
     missing_keys = expected_keys - data_dict.keys()
     for key in missing_keys:
         data_dict[key] = ""
-
+        # print("added key")
+        # print(key)
+        # print(data_dict[key])
+        # print(type(data_dict[key]))
+        # input("check keys")
 
 def set_dict_value(data_dict, key, first, second):
     """Set the value for a specific key based on 'type' key-value.
@@ -183,7 +191,10 @@ def set_dict_value(data_dict, key, first, second):
         else:
             data_dict[key] = second
 
-
+# TODO it probably makes more sense to pass the 'run_mode' and
+# 'description_field' data into modify_import_data() so that they get added
+# to the data_dict. As a result, those values will be exported to the
+# revised import table file when the script completes.
 def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
                       required_keys, optional_keys, keywords):
     """Construct tickets from parsed data dictionaries."""
@@ -204,6 +215,7 @@ def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
             # if they weren't set within the ticket.
             if tkt.description_field == "":
                 tkt.description_field = description_field
+
             if tkt.run_mode == "":
                 tkt.run_mode = input_run_mode
                 tkt.eval_flags = input_eval_flag_dict

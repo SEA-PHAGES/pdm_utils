@@ -12,7 +12,7 @@ from pdm_utils.classes import genome
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqFeature import ExactPosition, Reference
+from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
 from pdm_utils.classes import bundle
 
 class TestFlatFileFunctions1(unittest.TestCase):
@@ -207,6 +207,77 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(output_right, -1)
         with self.subTest():
             self.assertEqual(parts, 0)
+
+    def test_parse_coordinates_9(self):
+        """Verify non-compound location with fuzzy left coordinate
+        is parsed correctly."""
+        seqfeature = SeqFeature(
+                        FeatureLocation(
+                            BeforePosition(2),
+                            ExactPosition(10)),
+                        type = "CDS",
+                        strand = 1)
+        output_left, output_right, parts = \
+            flat_files.parse_coordinates(seqfeature)
+        with self.subTest():
+            self.assertEqual(output_left, -1)
+        with self.subTest():
+            self.assertEqual(output_right, 10)
+        with self.subTest():
+            self.assertEqual(parts, 1)
+
+    def test_parse_coordinates_10(self):
+        """Verify non-compound location with fuzzy right coordinate
+        is parsed correctly."""
+        seqfeature = SeqFeature(
+                        FeatureLocation(
+                            ExactPosition(2),
+                            BeforePosition(10)),
+                        type = "CDS",
+                        strand = 1)
+        output_left, output_right, parts = \
+            flat_files.parse_coordinates(seqfeature)
+        with self.subTest():
+            self.assertEqual(output_left, 2)
+        with self.subTest():
+            self.assertEqual(output_right, -1)
+        with self.subTest():
+            self.assertEqual(parts, 1)
+
+    def test_parse_coordinates_11(self):
+        """Verify 1 strand 2-part compound location with fuzzy left
+        coordinate is parsed correctly."""
+        seqfeature = SeqFeature(CompoundLocation([
+                        FeatureLocation(
+                            BeforePosition(2),
+                            ExactPosition(10),
+                            strand=1),
+                        FeatureLocation(
+                            ExactPosition(8),
+                            ExactPosition(20),
+                            strand=1)],
+                        "join"),
+                        type="CDS",
+                        location_operator="join")
+        output_left, output_right, parts = \
+            flat_files.parse_coordinates(seqfeature)
+        with self.subTest():
+            self.assertEqual(output_left, -1)
+        with self.subTest():
+            self.assertEqual(output_right, 20)
+        with self.subTest():
+            self.assertEqual(parts, 2)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -544,7 +615,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_9(self):
-        """Verify CDS features is parsed with problematic coordinates."""
+        """Verify CDS features is parsed with 3-part compound location."""
         self.seqfeature = SeqFeature(CompoundLocation([
                         FeatureLocation(
                             ExactPosition(2),
@@ -577,6 +648,32 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
             self.assertEqual(cds_ftr.length, 0)
+
+
+    def test_parse_cds_seqfeature_10(self):
+        """Verify CDS features is parsed with fuzzy coordinates."""
+        self.seqfeature = SeqFeature(
+                            FeatureLocation(
+                                BeforePosition(2),
+                                ExactPosition(10)),
+                            type="CDS",
+                            strand=1,
+                            qualifiers=self.qualifier_dict)
+        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
+        with self.subTest():
+            self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
+        with self.subTest():
+            self.assertEqual(cds_ftr.strand, "F")
+        with self.subTest():
+            self.assertEqual(cds_ftr.left, -1)
+        with self.subTest():
+            self.assertEqual(cds_ftr.right, 10)
+        with self.subTest():
+            self.assertEqual(cds_ftr.parts, 1)
+        with self.subTest():
+            self.assertEqual(cds_ftr.coordinate_format, "0_half_open")
+        with self.subTest():
+            self.assertEqual(cds_ftr.length, 11)
 
 
 

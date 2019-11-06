@@ -3,7 +3,7 @@ GenBank-formatted flat files."""
 
 
 from Bio import SeqIO
-from Bio.SeqFeature import CompoundLocation, FeatureLocation
+from Bio.SeqFeature import CompoundLocation, FeatureLocation, ExactPosition
 from Bio import Alphabet
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
@@ -45,16 +45,6 @@ def retrieve_genome_data(filepath):
         return seqrecord
 
 
-
-
-
-
-# TODO this function may need to be improved.
-# The coordinates are
-# returned as integers, but it is possible that coordinates from Biopython
-# SeqFeature object are not integers, so this needs to be accounted for.
-# Also, this function doesn't test to confirm that coordinates are
-# ExactPosition objects (i.e. non-fuzzy coordinates).
 def parse_coordinates(seqfeature):
     """Parse the boundary coordinates from a GenBank-formatted flat file.
 
@@ -80,18 +70,21 @@ def parse_coordinates(seqfeature):
         parts(int) is the number of open reading frames that define
         the feature.
     """
+    left_position = None
+    right_position = None
+    left = -1
+    right = -1
+    parts = 0
 
     if (isinstance(seqfeature.location, FeatureLocation) or \
         isinstance(seqfeature.location, CompoundLocation)):
 
         if seqfeature.strand is None:
-            left = -1
-            right = -1
-            parts = 0
+            pass
         elif isinstance(seqfeature.location, FeatureLocation):
-            left = int(seqfeature.location.start)
-            right = int(seqfeature.location.end)
             parts = 1
+            left_position = seqfeature.location.start
+            right_position = seqfeature.location.end
         elif isinstance(seqfeature.location, CompoundLocation):
             parts = len(seqfeature.location.parts)
 
@@ -101,22 +94,23 @@ def parse_coordinates(seqfeature):
 
                 # Retrieve compound seqfeature positions based on strand.
                 if seqfeature.strand == 1:
-                    left = int(seqfeature.location.parts[0].start)
-                    right = int(seqfeature.location.parts[1].end)
+                    left_position = seqfeature.location.parts[0].start
+                    right_position = seqfeature.location.parts[1].end
                 elif seqfeature.strand == -1:
-                    left = int(seqfeature.location.parts[1].start)
-                    right = int(seqfeature.location.parts[0].end)
+                    left_position = seqfeature.location.parts[1].start
+                    right_position = seqfeature.location.parts[0].end
                 else:
                     pass
             else:
-                left = -1
-                right = -1
+                pass
         else:
             pass
     else:
-        left = -1
-        right = -1
-        parts = 0
+        pass
+    if isinstance(left_position, ExactPosition):
+        left = int(left_position)
+    if isinstance(right_position, ExactPosition):
+        right = int(right_position)
     return (left, right, parts)
 
 

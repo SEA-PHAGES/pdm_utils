@@ -14,11 +14,12 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqFeature import ExactPosition, Reference
+from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
 
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from collections import OrderedDict
 
+import logging
 
 
 # import argparse
@@ -32,6 +33,25 @@ from collections import OrderedDict
 # from Bio.SeqFeature import ExactPosition, Reference
 # from unittest.mock import patch
 # import getpass
+
+
+# Set up a log file to catch all logging for review.
+# Note: this should overwrite logging output file in import_genome pipeline.
+import_pipeline_test_log = Path("~/testing_log.txt")
+import_pipeline_test_log = import_pipeline_test_log.expanduser()
+import_pipeline_test_log = import_pipeline_test_log.resolve()
+logging.basicConfig(filename=import_pipeline_test_log, filemode="w",
+                    level=logging.DEBUG)
+
+
+#
+#
+# def catch_logs(main_log_file, new_log_file):
+#     """Catch all logging statements for all tests into one main file."""
+#     with open(main_log_file, "a") as main_handle:
+#         with open(new_log_file, "r") as new_handle:
+#             main_handle.write(new_handle.read())
+
 
 # Format of the date the script imports into the database.
 current_date = datetime.today().replace(hour=0, minute=0,
@@ -520,6 +540,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def setUp(self):
 
+
         create_new_db(schema_file, db, user, pwd)
 
 
@@ -536,6 +557,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         self.log_file_name = Path("import_log.txt")
         self.log_file = Path(self.output_folder, self.log_file_name)
+
+
+        # Create the file before each test as a work-around to
+        # how the logging module works.
+        # self.log_file.touch()
 
         # self.test_flat_file1 = Path(unittest_dir,
         #                             "test_files/test_flat_file_1.gb")
@@ -823,7 +849,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                                 features = self.alice_feature_list
                                 )
 
-
+        # Used to convert final data to draft data.
         # clear_descriptions(self.alice_record)
         # self.alice_record.annotations["accessions"] = [""]
         # self.alice_record.id = ""
@@ -920,11 +946,14 @@ class TestImportGenomeMain1(unittest.TestCase):
             shutil.rmtree(default_output_path)
 
 
+
+
     @patch("getpass.getpass")
     def test_import_pipeline_1(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
         no data in the database."""
+        logging.info("test_import_pipeline_1")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], self.import_table)
@@ -938,13 +967,15 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertFalse(self.alice_flat_file_path.exists())
         with self.subTest():
-            self.assertTrue(self.log_file.exists())
-        with self.subTest():
             self.assertTrue(self.success_alice_path.exists())
         with self.subTest():
             self.assertTrue(self.success_table_path.exists())
         with self.subTest():
             self.assertFalse(self.fail_path.exists())
+        # Note: testing whether the log file exists is tricky,
+        # due to how the logging module operates.
+        # with self.subTest():
+        #     self.assertTrue(self.log_file.exists())
 
 
     @patch("getpass.getpass")
@@ -952,7 +983,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         """Test pipeline with:
         valid add ticket for draft genome,
         valid flat file,
-        data already in the database."""
+        non-Alice data already in the database."""
+        logging.info("test_import_pipeline_2")
         getpass_mock.side_effect = [user, pwd]
 
         # Export Alice data to flat file.
@@ -1003,11 +1035,13 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds193_errors, 0)
 
+
     @patch("getpass.getpass")
     def test_import_pipeline_3(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
         no data in the database, minimal command line arguments."""
+        logging.info("test_import_pipeline_3")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], self.import_table)
@@ -1025,14 +1059,32 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
+    @patch("getpass.getpass")
+    def test_import_pipeline_4(self, getpass_mock):
+        """Test pipeline with:
+        valid minimal add ticket for draft genome,
+        no data in the database."""
+        logging.info("test_import_pipeline_4")
+        getpass_mock.side_effect = [user, pwd]
+        SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
+        alice_min_ticket = create_min_tkt_dict(self.alice_ticket)
+        create_import_table([alice_min_ticket], self.import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_4(self, getpass_mock):
+    def test_import_pipeline_5(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
         no data in the database,
         no production run."""
+        logging.info("test_import_pipeline_5")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], self.import_table)
@@ -1063,10 +1115,11 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
-    def test_import_pipeline_16(self, getpass_mock, sys_exit_mock, pft_mock):
+    def test_import_pipeline_6(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid run_mode."""
+        logging.info("test_import_pipeline_6")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["run_mode"] = "invalid"
@@ -1087,10 +1140,11 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
-    def test_import_pipeline_17(self, getpass_mock, sys_exit_mock, pft_mock):
+    def test_import_pipeline_7(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid description_field."""
+        logging.info("test_import_pipeline_7")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["description_field"] = "invalid"
@@ -1104,10 +1158,11 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
-    def test_import_pipeline_18(self, getpass_mock, sys_exit_mock, pft_mock):
+    def test_import_pipeline_8(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid ticket type."""
+        logging.info("test_import_pipeline_8")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["type"] = "invalid"
@@ -1126,10 +1181,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     # Run tests that produce bundle check errors.
     @patch("getpass.getpass")
-    def test_import_pipeline_100(self, getpass_mock):
+    def test_import_pipeline_9(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but incompatible annotation_status."""
+        logging.info("test_import_pipeline_9")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["annotation_status"] = "final"
@@ -1144,10 +1200,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_15(self, getpass_mock):
+    def test_import_pipeline_10(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but phage_id is doesn't match the file."""
+        logging.info("test_import_pipeline_10")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["phage_id"] = "Trixie"
@@ -1162,10 +1219,11 @@ class TestImportGenomeMain1(unittest.TestCase):
     # Run tests that produce genome check errors.
 
     @patch("getpass.getpass")
-    def test_import_pipeline_5(self, getpass_mock):
+    def test_import_pipeline_11(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
-        but PhageID is already in database."""
+        but Alice PhageID is already in database."""
+        logging.info("test_import_pipeline_11")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], self.import_table)
@@ -1195,10 +1253,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_6(self, getpass_mock):
+    def test_import_pipeline_12(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
-        but genome sequence is already in database."""
+        but Alice genome sequence is already in database."""
+        logging.info("test_import_pipeline_12")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         insert_data_into_phage_table(db, user, pwd, d29_phage_table_data)
@@ -1217,10 +1276,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_7(self, getpass_mock):
+    def test_import_pipeline_13(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid cluster."""
+        logging.info("test_import_pipeline_13")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["cluster"] = "ABCDE"
@@ -1235,10 +1295,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_8(self, getpass_mock):
+    def test_import_pipeline_14(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid subcluster."""
+        logging.info("test_import_pipeline_14")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["subcluster"] = "A1234"
@@ -1249,10 +1310,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_9(self, getpass_mock):
+    def test_import_pipeline_15(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid host genus."""
+        logging.info("test_import_pipeline_15")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["host_genus"] = "ABCDE"
@@ -1264,10 +1326,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_10(self, getpass_mock):
+    def test_import_pipeline_16(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid string annotation_author."""
+        logging.info("test_import_pipeline_16")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["annotation_author"] = "invalid"
@@ -1278,10 +1341,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_11(self, getpass_mock):
+    def test_import_pipeline_17(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid integer annotation_author."""
+        logging.info("test_import_pipeline_17")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["annotation_author"] = "3"
@@ -1291,10 +1355,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
     @patch("getpass.getpass")
-    def test_import_pipeline_12(self, getpass_mock):
+    def test_import_pipeline_18(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid retrieve_record."""
+        logging.info("test_import_pipeline_18")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["retrieve_record"] = "3"
@@ -1304,10 +1369,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
     @patch("getpass.getpass")
-    def test_import_pipeline_13(self, getpass_mock):
+    def test_import_pipeline_19(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but invalid annotation_status."""
+        logging.info("test_import_pipeline_19")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["annotation_status"] = "invalid"
@@ -1318,10 +1384,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_14(self, getpass_mock):
+    def test_import_pipeline_20(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but accession is present in the ticket."""
+        logging.info("test_import_pipeline_20")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
         self.alice_ticket["accession"] = "ABC123"
@@ -1333,10 +1400,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_200(self, getpass_mock):
+    def test_import_pipeline_21(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but flat file has no CDS features."""
+        logging.info("test_import_pipeline_21")
         getpass_mock.side_effect = [user, pwd]
         self.alice_record.features = [self.alice_source_1,
                                       self.alice_tmrna_169,
@@ -1352,10 +1420,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_201(self, getpass_mock):
+    def test_import_pipeline_22(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but flat file has CDS features with duplicate coordinates."""
+        logging.info("test_import_pipeline_22")
         getpass_mock.side_effect = [user, pwd]
         self.alice_record.features = [self.alice_source_1,
                                       self.alice_tmrna_169,
@@ -1372,10 +1441,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_202(self, getpass_mock):
+    def test_import_pipeline_23(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but flat file has genome with invalid '-' nucleotides."""
+        logging.info("test_import_pipeline_23")
         getpass_mock.side_effect = [user, pwd]
         self.alice_seq = str(get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
@@ -1399,10 +1469,11 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     @patch("getpass.getpass")
-    def test_import_pipeline_203(self, getpass_mock):
+    def test_import_pipeline_24(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
         but flat file has genome with invalid 'Z' nucleotides."""
+        logging.info("test_import_pipeline_24")
         getpass_mock.side_effect = [user, pwd]
         self.alice_seq = str(get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
@@ -1427,70 +1498,123 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-    # TODO in development.
     # Run tests that produce CDS check errors.
     @patch("getpass.getpass")
-    def test_import_pipeline_300(self, getpass_mock):
+    def test_import_pipeline_25(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
-        but flat file has CDS features with incorrect amino acids."""
+        but flat file has CDS feature with incorrect amino acids."""
+        logging.info("test_import_pipeline_25")
+        # Note: the manual amino acid replacement to 'X' should throw at
+        # least two errors: incorrect translation, and invalid amino acids.
         getpass_mock.side_effect = [user, pwd]
-
-
-        print("first")
-        print(self.alice_cds_193_translation[3:7])
         self.alice_cds_193_translation = list(self.alice_cds_193_translation)
         self.alice_cds_193_translation[5] = "X"
         self.alice_cds_193_translation = "".join(self.alice_cds_193_translation)
         self.alice_cds_193_qualifier_dict["translation"] = [self.alice_cds_193_translation]
-
-
-        # self.alice_cds_193_translation = (
-        #     "MGNNRPTTRTLPTGEKATHHPDGRLVLKPKNSLADALSGQLDAQQEASQALTEALV"
-        #     "QTAVTKREAQADGNPVPEDKRVF"
-        #     )
-        # self.alice_cds_193_qualifier_dict = OrderedDict(
-        #     [("gene", ["193"]),
-        #      ("locus_tag", ["ALICE_193"]),
-        #      ("note", ["gp193"]),
-        #      ("codon_start", ["1"]),
-        #      ("transl_table", ["11"]),
-        #      ("product", ["hypothetical protein"]),
-        #      ("protein_id", ["AEJ94419.1"]),
-        #      ("translation", [self.alice_cds_193_translation])])
-
-
-        # self.alice_cds_193 = SeqFeature(
-        #                         FeatureLocation(
-        #                             ExactPosition(110297),
-        #                             ExactPosition(110537),
-        #                             strand=1),
-        #                         type="CDS",
-        #                         qualifiers=self.alice_cds_193_qualifier_dict)
-
         self.alice_record.features = [self.alice_cds_193]
-
-        print("second")
-        print(self.alice_record.features[0].qualifiers["translation"][0][3:7])
-
         SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
-        input("check")
         create_import_table([self.alice_ticket], self.import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
-        #
-        #
-        # self.alice_feature_list = [self.alice_source,
-        #                            self.alice_cds_252, # Wrap around gene
-        #                            self.alice_cds_124, # Compound gene
-        #                            self.alice_cds_139, # Bottom strand normal CDS
-        #                            self.alice_tmrna_169,
-        #                            self.alice_trna_170,
-        #                            self.alice_cds_193 # Top strand normal CDS
-        #                            ]
+
+    @patch("getpass.getpass")
+    def test_import_pipeline_26(self, getpass_mock):
+        """Test pipeline with:
+        add ticket for draft genome
+        but flat file has CDS feature with missing translation."""
+        logging.info("test_import_pipeline_26")
+        # Note: a missing translation should throw at
+        # least two errors: incorrect translation, no translation present.
+        getpass_mock.side_effect = [user, pwd]
+        self.alice_cds_193_qualifier_dict["translation"] = []
+        self.alice_record.features = [self.alice_cds_193]
+        SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
+        create_import_table([self.alice_ticket], self.import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        self.assertEqual(len(phage_table_results), 0)
+
+
+
+
+
+    @patch("getpass.getpass")
+    def test_import_pipeline_27(self, getpass_mock):
+        """Test pipeline with:
+        add ticket for draft genome
+        but flat file has CDS feature with non-exact position."""
+        logging.info("test_import_pipeline_27")
+        getpass_mock.side_effect = [user, pwd]
+
+        # In flat file, coordinates appear as:  "<110298..110537"
+        self.alice_cds_193 = SeqFeature(
+                                FeatureLocation(
+                                    BeforePosition(110297),
+                                    ExactPosition(110537),
+                                    strand=1),
+                                type="CDS",
+                                qualifiers=self.alice_cds_193_qualifier_dict)
+
+        self.alice_record.features = [self.alice_cds_193]
+        SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
+        create_import_table([self.alice_ticket], self.import_table)
+        run.main(self.unparsed_args)
+        # input("check file")
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        self.assertEqual(len(phage_table_results), 0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @patch("getpass.getpass")
+    def test_import_pipeline_100(self, getpass_mock):
+        """Test pipeline with:
+        valid replace ticket for final genome,
+        Alice data in the database."""
+        logging.info("test_import_pipeline_100")
+        getpass_mock.side_effect = [user, pwd]
+
+
+
+
+        SeqIO.write(self.alice_record, self.alice_flat_file_path, "genbank")
+        create_import_table([self.alice_ticket], self.import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
+        with self.subTest():
+            self.assertFalse(self.alice_flat_file_path.exists())
+        with self.subTest():
+            self.assertTrue(self.success_alice_path.exists())
+        with self.subTest():
+            self.assertTrue(self.success_table_path.exists())
+        with self.subTest():
+            self.assertFalse(self.fail_path.exists())
+        # Note: testing whether the log file exists is tricky,
+        # due to how the logging module operates.
+        # with self.subTest():
+        #     self.assertTrue(self.log_file.exists())
+
+
+
         #
         # self.alice_ref1 = Reference()
         # self.alice_ref1.authors = "Hatfull,G.F."
@@ -1548,18 +1672,26 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-
-        # Tests to perform:
+        # Tests completed on Alice 'draft' genome:
         #1. insert alice w/1 CDS
         #2. try to insert alice if already in db
         #3. try to insert alice if another genome has same seq.
         #4. use invalid ticket
         #5. use minimal ticket.
         #6. fail due to genome-level error
+        #7. fail due to CDS error.
+
+        # Tests to perform on Alice 'final' genome:
+        #1. fail trying to insert with no Alice genome in database
+        #2. replace Alice data
+        #3. use invalid ticket
+        #4. use minimal ticket.
+        #6. fail due to genome-level error
+        #7. fail due to CDS error.
         #7. fail due to genome-pair error.
-        #8. replace alice genome.
-        #9. fail due to CDS error.
         #10. fail due to source error.
+        #11. test interactivity
+        #12. test args like description_field
 
 
 

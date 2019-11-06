@@ -225,8 +225,6 @@ class TestPhameratorFunctions1(unittest.TestCase):
             self.assertEqual(len(result_list[0].keys()), 11)
         with self.subTest():
             self.assertEqual(result_list[0]["PhageID"], "L5")
-        print(result_list[0])
-        input("pause")
 
     def test_retrieve_data_2(self):
         """Verify that an empty list is retrieved
