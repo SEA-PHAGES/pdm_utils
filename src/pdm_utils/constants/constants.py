@@ -71,7 +71,9 @@ ANNOTATION_STATUS_SET = set(["draft", "final", "unknown"])
 ANNOTATION_AUTHOR_SET = set([0,1])
 RETRIEVE_RECORD_SET = set([0,1])
 EMPTY_DATE = datetime.strptime("1/1/0001 00:00:00", "%m/%d/%Y %H:%M:%S")
-LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI", "PHIRE"])
+
+# Some locus tags have "PHIRE", but this should not be the case.
+LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI"])
 EMPTY_GENOME_SEQ = Seq("", IUPAC.ambiguous_dna)
 
 # Common list of values that represent empty or null values.

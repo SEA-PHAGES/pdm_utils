@@ -270,14 +270,20 @@ class Genome:
         :param value: Cluster designation of the genome.
         :type value: str
         """
+        singleton = "Singleton"
         if isinstance(value, str):
             value = value.strip()
-            if value.capitalize() == "Singleton":
+            if value.capitalize() == singleton:
                 self.cluster = value.capitalize()
+
+            # TODO unittest.
+            elif (value.lower() == "none" or value == ""):
+                self.cluster = singleton
+
             else:
                 self.cluster = value
         if value is None:
-            self.cluster = "Singleton"
+            self.cluster = singleton
 
 
     def set_subcluster(self, value, format="empty_string"):
@@ -748,6 +754,12 @@ class Genome:
         """
         authors = self.authors.lower()
         authors = authors.replace(";", ",")
+
+        # TODO added this step to accound for e.g. "Hendrix and Hatfull"
+        authors = authors.replace(" ", ",")
+        # TODO added this step to accound for e.g. "Hendrix and Hatfull"
+
+
         authors_list = authors.split(",")
         authors_list = [x.strip() for x in authors_list]
         authors_set = set(authors_list)
