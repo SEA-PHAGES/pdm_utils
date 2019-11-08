@@ -569,7 +569,8 @@ def split_string(string):
             index += 1
     return (left, right)
 
-
+# TODO this function is specific to genome-level data, so should
+# it be move as a Genome class method?
 def compare_cluster_subcluster(cluster, subcluster):
     """Check if a cluster and subcluster designation are compatible.
 
@@ -585,17 +586,15 @@ def compare_cluster_subcluster(cluster, subcluster):
     :rtype: bool
     """
     result = True
-    if subcluster == "":
-        subcluster = "none"
 
-    # If Singleton or Unknown Cluster, there should be no Subcluster
-    if (cluster.capitalize() == "Singleton" or
-        cluster == "UNK" or
-        cluster.lower() == "none"):
+    # If Singleton or Unknown Cluster, there should be no Subcluster.
+    # Subcluster = '' is considered an error since it is the default
+    # attribute value when the Genome class is instantiated.
+    if (cluster.capitalize() == "Singleton" or cluster == "UNK"):
         if subcluster != "none":
             result = False
 
-    # If not Singleton or Unknown or none, then if
+    # If not Singleton or Unknown, then if
     # there is a Subcluster designation, the Cluster should be part
     # of Subcluster data and the remainder should be a digit
     elif subcluster != "none":
@@ -708,20 +707,6 @@ def check_value_in_two_sets(value, set1, set2):
     else:
         result = "neither"
     return result
-
-
-
-# TODO this is probably no longer needed.
-# def convert_author(input_value):
-#     """Converts author string to author integer using the
-#     author dictionary.
-#     """
-#     input_value = input_value.lower()
-#     if input_value in constants.AUTHOR_DICTIONARY[1]:
-#         new_value = 1
-#     else:
-#         new_value = 0
-#     return new_value
 
 
 def lower_case(value):
@@ -859,8 +844,6 @@ def verify_path(filepath, kind=None):
         else:
             return False
     else:
-        # TODO not sure if this should print a statement, or if it
-        # should only return False.
         print("{} is not a valid kind for this function.".format(kind),
               "Please try again",
               "use one of (None, dir, file).")
@@ -1022,13 +1005,12 @@ def choose_from_list(options):
     else:
         return None
 
-
-
-#TODO unit test - this may no longer be needed.
-# #Closes all file handles currently open
-# def close_all_files(file_list):
-#     for file_handle in file_list:
-#         file_handle.close()
-
-
-###
+def get_synonyms(search_value, list_of_synonyms):
+    """Search for a set of values from a list of sets."""
+    syn_set = set()
+    x = 0
+    while x < len(list_of_synonyms):
+        if search_value in list_of_synonyms[x]:
+            syn_set = list_of_synonyms[x]
+        x += 1
+    return syn_set

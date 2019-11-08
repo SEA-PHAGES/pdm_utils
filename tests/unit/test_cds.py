@@ -470,7 +470,7 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_coordinates_2(self):
-        """Test incorrect left boundary."""
+        """Test incorrect left boundary string."""
         self.feature.left = "a"
         self.feature.right = 10
         self.feature.check_coordinates()
@@ -480,11 +480,36 @@ class TestCdsClass(unittest.TestCase):
             self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_coordinates_3(self):
-        """Test incorrect right boundary."""
+        """Test incorrect right boundary string."""
         self.feature.left = 5
         self.feature.right = "a"
         self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_coordinates_4(self):
+        """Test incorrect left boundary int."""
+        self.feature.left = -1
+        self.feature.right = 10
+        self.feature.check_coordinates()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_coordinates_5(self):
+        """Test incorrect right boundary int."""
+        self.feature.left = 5
+        self.feature.right = -1
+        self.feature.check_coordinates()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_coordinates_6(self):
+        """Test incorrect left and right boundary ints."""
+        self.feature.left = -1
+        self.feature.right = -1
+        self.feature.check_coordinates()
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+
+
+
 
 
 

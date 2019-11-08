@@ -289,41 +289,41 @@ class TestImportGenomeClass3(unittest.TestCase):
         self.date_feb1 = datetime.strptime('2/1/2000', '%m/%d/%Y')
         self.date_feb1_b = datetime.strptime('2/1/2000', '%m/%d/%Y')
 
-        self.gnm1 = genome.Genome()
-        self.gnm1.type = "phamerator"
-        self.gnm1.id = "Trixie"
-        self.gnm1.name = "Trixie_Draft"
-        self.gnm1.date = self.date_jan1
-        self.gnm1.annotation_status = "draft"
-        self.gnm1.seq = Seq("AAAA", IUPAC.ambiguous_dna)
-        self.gnm1.length = 4
-        self.gnm1.cluster = "A"
-        self.gnm1.subcluster = "A2"
-        self.gnm1.accession = "ABC123"
-        self.gnm1.host_genus = "Mycobacterium"
-        self.gnm1.annotation_author = 1
-        self.gnm1.retrieve_record = 1
-        self.gnm1.translation_table = 11
+        self.ff_gnm = genome.Genome()
+        self.ff_gnm.type = "flat_file"
+        self.ff_gnm.id = "Trixie"
+        self.ff_gnm.name = "Trixie"
+        self.ff_gnm.date = self.date_feb1
+        self.ff_gnm.annotation_status = "final"
+        self.ff_gnm.seq = Seq("AAAA", IUPAC.ambiguous_dna)
+        self.ff_gnm.length = 4
+        self.ff_gnm.cluster = "A"
+        self.ff_gnm.subcluster = "A2"
+        self.ff_gnm.accession = "ABC123"
+        self.ff_gnm.host_genus = "Mycobacterium"
+        self.ff_gnm.annotation_author = 1
+        self.ff_gnm.retrieve_record = 1
+        self.ff_gnm.translation_table = 11
 
-        self.gnm2 = genome.Genome()
-        self.gnm2.type = "flat_file"
-        self.gnm2.id = "Trixie"
-        self.gnm2.name = "Trixie"
-        self.gnm2.date = self.date_feb1
-        self.gnm2.annotation_status = "final"
-        self.gnm2.seq = Seq("AAAA", IUPAC.ambiguous_dna)
-        self.gnm2.length = 4
-        self.gnm2.cluster = "A"
-        self.gnm2.subcluster = "A2"
-        self.gnm2.accession = "ABC123"
-        self.gnm2.host_genus = "Mycobacterium"
-        self.gnm2.annotation_author = 1
-        self.gnm2.retrieve_record = 1
-        self.gnm2.translation_table = 11
+        self.pmr_gnm = genome.Genome()
+        self.pmr_gnm.type = "phamerator"
+        self.pmr_gnm.id = "Trixie"
+        self.pmr_gnm.name = "Trixie_Draft"
+        self.pmr_gnm.date = self.date_jan1
+        self.pmr_gnm.annotation_status = "draft"
+        self.pmr_gnm.seq = Seq("AAAA", IUPAC.ambiguous_dna)
+        self.pmr_gnm.length = 4
+        self.pmr_gnm.cluster = "A"
+        self.pmr_gnm.subcluster = "A2"
+        self.pmr_gnm.accession = "ABC123"
+        self.pmr_gnm.host_genus = "Mycobacterium"
+        self.pmr_gnm.annotation_author = 1
+        self.pmr_gnm.retrieve_record = 1
+        self.pmr_gnm.translation_table = 11
 
         self.genome_pair = genomepair.GenomePair()
-        self.genome_pair.genome1 = self.gnm1
-        self.genome_pair.genome2 = self.gnm2
+        self.genome_pair.genome1 = self.ff_gnm
+        self.genome_pair.genome2 = self.pmr_gnm
 
         self.eval_flags = {"check_replace": True}
 
@@ -335,7 +335,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         with self.subTest():
-            self.assertEqual(len(self.genome_pair.evaluations), 13)
+            self.assertEqual(len(self.genome_pair.evaluations), 12)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -343,8 +343,8 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify correct number of evaluations are produced and
         the correct number of errors when:
         'check_replace' is True, annotation_status = 'final'."""
-        self.gnm1.annotation_status = "final"
-        self.gnm1.name = "Trixie"
+        self.pmr_gnm.annotation_status = "final"
+        self.pmr_gnm.name = "Trixie"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         with self.subTest():
@@ -360,7 +360,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         with self.subTest():
-            self.assertEqual(len(self.genome_pair.evaluations), 10)
+            self.assertEqual(len(self.genome_pair.evaluations), 9)
         with self.subTest():
             self.assertEqual(errors, 0)
 
@@ -368,7 +368,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'id' values are different."""
-        self.gnm1.id = "L5"
+        self.pmr_gnm.id = "L5"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -377,7 +377,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'seq' values are different."""
-        self.gnm1.seq = Seq("AAAT", IUPAC.ambiguous_dna)
+        self.pmr_gnm.seq = Seq("AAAT", IUPAC.ambiguous_dna)
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -386,7 +386,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'length' values are different."""
-        self.gnm1.length = 5
+        self.pmr_gnm.length = 5
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -395,7 +395,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'cluster' values are different."""
-        self.gnm1.cluster = "B"
+        self.pmr_gnm.cluster = "B"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -404,7 +404,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'subcluster' values are different."""
-        self.gnm1.subcluster = "B2"
+        self.pmr_gnm.subcluster = "B2"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -413,16 +413,16 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'accession' values are different."""
-        self.gnm1.accession = "XYZ456"
+        self.pmr_gnm.accession = "XYZ456"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
-        self.assertEqual(errors, 1)
+        self.assertEqual(errors, 0)
 
     def test_compare_genomes_10(self):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'host_genus' values are different."""
-        self.gnm1.host_genus = "Gordonia"
+        self.pmr_gnm.host_genus = "Gordonia"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -431,7 +431,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'annotation_author' values are different."""
-        self.gnm1.annotation_author = 0
+        self.pmr_gnm.annotation_author = 0
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -440,7 +440,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'translation_table' values are different."""
-        self.gnm1.translation_table = 1
+        self.pmr_gnm.translation_table = 1
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -449,7 +449,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'retrieve_record' values are different."""
-        self.gnm1.retrieve_record = 0
+        self.pmr_gnm.retrieve_record = 0
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -458,8 +458,8 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'date' values are not expected."""
-        self.gnm1.date = self.date_feb1
-        self.gnm2.date = self.date_jan1
+        self.pmr_gnm.date = self.date_feb1
+        self.ff_gnm.date = self.date_jan1
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -468,7 +468,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'annotation_status' values are the same."""
-        self.gnm2.annotation_status = "draft"
+        self.ff_gnm.annotation_status = "draft"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -477,7 +477,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'draft',
         and 'name' values are the same."""
-        self.gnm2.name = "Trixie_Draft"
+        self.ff_gnm.name = "Trixie_Draft"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -486,9 +486,9 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'final',
         and 'annotation_status' values are not the same."""
-        self.gnm1.annotation_status = "final"
-        self.gnm1.name = "Trixie"
-        self.gnm2.annotation_status = "unknown"
+        self.pmr_gnm.annotation_status = "final"
+        self.pmr_gnm.name = "Trixie"
+        self.ff_gnm.annotation_status = "unknown"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -497,7 +497,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         """Verify the correct number of errors when:
         'check_replace' is True, annotation_status = 'final',
         and 'name' values are not the same."""
-        self.gnm1.annotation_status = "final"
+        self.pmr_gnm.annotation_status = "final"
         import_genome.compare_genomes(self.genome_pair, self.eval_flags)
         errors = get_errors(self.genome_pair)
         self.assertEqual(errors, 1)
@@ -1035,8 +1035,8 @@ class TestImportGenomeClass4(unittest.TestCase):
 
     def test_check_genome_34(self):
         """Verify correct number of errors are produced using:
-        empty 'subcluster'."""
-        self.gnm.subcluster = ""
+        'subcluster' = 'none'."""
+        self.gnm.subcluster = "none"
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
@@ -2028,75 +2028,100 @@ class TestImportGenomeClass9(unittest.TestCase):
     def test_check_source_1(self):
         """Verify correct number of evaluations are produced when
         none are False."""
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         self.assertEqual(len(self.src1.evaluations), 4)
 
     def test_check_source_2(self):
         """Verify correct number of evaluations are produced when
         check_id_typo = False."""
         self.eval_flags["check_id_typo"] = False
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         self.assertEqual(len(self.src1.evaluations), 3)
 
     def test_check_source_3(self):
         """Verify correct number of evaluations are produced when
         check_host_typo = False."""
         self.eval_flags["check_host_typo"] = False
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         self.assertEqual(len(self.src1.evaluations), 1)
 
     def test_check_source_4(self):
         """Verify correct number of evaluations are produced when
         organism is empty."""
         self.src1.organism = ""
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         self.assertEqual(len(self.src1.evaluations), 3)
 
     def test_check_source_5(self):
         """Verify correct number of evaluations are produced when
         host is empty."""
         self.src1.host = ""
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         self.assertEqual(len(self.src1.evaluations), 3)
 
     def test_check_source_6(self):
         """Verify correct number of evaluations are produced when
         lab_host is empty."""
         self.src1.lab_host = ""
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         self.assertEqual(len(self.src1.evaluations), 3)
 
     def test_check_source_7(self):
         """Verify correct number of errors with incorrect organism name."""
         self.src1._organism_name = "Trixie"
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         errors = get_errors(self.src1)
         self.assertEqual(errors, 1)
 
     def test_check_source_8(self):
         """Verify correct number of errors with incorrect organism host genus."""
         self.src1._organism_host_genus = "Gordonia"
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         errors = get_errors(self.src1)
         self.assertEqual(errors, 1)
 
     def test_check_source_9(self):
         """Verify correct number of errors with incorrect host host genus."""
         self.src1._host_host_genus = "Gordonia"
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         errors = get_errors(self.src1)
         self.assertEqual(errors, 1)
 
     def test_check_source_10(self):
         """Verify correct number of errors with incorrect lab host host genus."""
         self.src1._lab_host_host_genus = "Gordonia"
-        import_genome.check_source(self.src1, self.eval_flags)
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
         errors = get_errors(self.src1)
         self.assertEqual(errors, 1)
 
+    def test_check_source_11(self):
+        """Verify correct number of errors with permissible synonym
+        in organism host genus."""
+        self.src1._organism_host_genus = "Mycobacterio"
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
+        errors = get_errors(self.src1)
+        self.assertEqual(errors, 0)
 
-
-
+    def test_check_source_12(self):
+        """Verify correct number of errors with permissible synonym
+        in organism host genus but not in lab host host genus."""
+        self.src1._organism_host_genus = "Mycobacterio"
+        self.src1._lab_host_host_genus = "Mycobacterio"
+        import_genome.check_source(self.src1, self.eval_flags,
+                                   host_genus="Mycobacterium")
+        errors = get_errors(self.src1)
+        self.assertEqual(errors, 1)
 
 
 

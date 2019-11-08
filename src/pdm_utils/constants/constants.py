@@ -194,6 +194,16 @@ HOST_GENUS_DICT = {
     "Mycolicibacterium":"Mycobacterium"
     }
 
+
+# List of host_genus synonyms.
+HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
+
+
+
+
+
+
+
 # Phamerator server info
 DB_HOST = "phamerator.webfactional.com"
 DB_HOST_DIR = "/home/phamerator/webapps/htdocs/databases_Hatfull/"

@@ -78,114 +78,144 @@ class TestSourceClass(unittest.TestCase):
 
 
 
-    def test_check_organism_name_1(self):
-        """Check that no warning is produced."""
-        self.feature.genome_id = "Trixie"
-        self.feature._organism_name = "Trixie"
-        self.feature.check_organism_name(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_organism_name_2(self):
-        """Check that a warning is produced."""
-        self.feature.genome_id = "L5"
-        self.feature._organism_name = "Trixie"
-        self.feature.check_organism_name()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-
-
-
-    def test_check_organism_host_genus_1(self):
-        """Check that no warning is produced."""
-        self.feature.genome_host_genus = "Mycobacterium"
+    def test_check_attribute_1(self):
+        """Verify no error is produced when the host_genus
+        is in the check_set and is expected to be in the set."""
+        check_set = set(["Mycobacterium", "Mycobacterio"])
         self.feature._organism_host_genus = "Mycobacterium"
-        self.feature.check_organism_host_genus(eval_id="eval_id")
+        self.feature.check_attribute("_organism_host_genus", check_set, True, "eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
-    def test_check_organism_host_genus_2(self):
-        """Check that a warning is produced."""
-        self.feature.genome_host_genus = "Gordonia"
+    def test_check_attribute_2(self):
+        """Verify an error is produced when the host_genus
+        is not in the check_set and is expected to be in the set."""
+        check_set = set(["Mycobacterium", "Mycobacterio"])
+        self.feature._organism_host_genus = "Gordonia"
+        self.feature.check_attribute("_organism_host_genus", check_set, True)
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
+
+    def test_check_attribute_3(self):
+        """Verify no error is produced when the host_genus
+        is not in the check_set and is not expected to be in the set."""
+        check_set = set(["Mycobacterium", "Mycobacterio"])
+        self.feature._organism_host_genus = "Gordonia"
+        self.feature.check_attribute("_organism_host_genus", check_set, False)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_attribute_4(self):
+        """Verify an error is produced when the host_genus
+        is in the check_set and is not expected to be in the set."""
+        check_set = set(["Mycobacterium", "Mycobacterio"])
         self.feature._organism_host_genus = "Mycobacterium"
-        self.feature.check_organism_host_genus()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
+        self.feature.check_attribute("_organism_host_genus", check_set, False)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_attribute_5(self):
+        """Verify no test is performed when the attribute is invalid."""
+        check_set = set([1, 0])
+        self.feature.check_attribute("invalid", check_set, True)
+        self.assertEqual(self.feature.evaluations[0].status, "untested")
+
+
+
+    # TODO this is probably no longer needed.
+    # def test_check_organism_name_1(self):
+    #     """Check that no warning is produced."""
+    #     self.feature.genome_id = "Trixie"
+    #     self.feature._organism_name = "Trixie"
+    #     self.feature.check_organism_name(eval_id="eval_id")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "correct")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].id, "eval_id")
+    #
+    # def test_check_organism_name_2(self):
+    #     """Check that a warning is produced."""
+    #     self.feature.genome_id = "L5"
+    #     self.feature._organism_name = "Trixie"
+    #     self.feature.check_organism_name()
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "error")
+    #     with self.subTest():
+    #         self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
 
-    def test_check_host_host_genus_1(self):
-        """Check that no warning is produced."""
-        self.feature.genome_host_genus = "Mycobacterium"
-        self.feature._host_host_genus = "Mycobacterium"
-        self.feature.check_host_host_genus(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_host_host_genus_2(self):
-        """Check that a warning is produced."""
-        self.feature.genome_host_genus = "Gordonia"
-        self.feature._host_host_genus = "Mycobacterium"
-        self.feature.check_host_host_genus()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-
-
-
-    def test_check_lab_host_host_genus_1(self):
-        """Check that no warning is produced."""
-        self.feature.genome_host_genus = "Mycobacterium"
-        self.feature._lab_host_host_genus = "Mycobacterium"
-        self.feature.check_lab_host_host_genus(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_lab_host_host_genus_2(self):
-        """Check that a warning is produced."""
-        self.feature.genome_host_genus = "Gordonia"
-        self.feature._lab_host_host_genus = "Mycobacterium"
-        self.feature.check_lab_host_host_genus()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
+    # TODO this is probably no longer needed.
+    # def test_check_organism_host_genus_1(self):
+    #     """Check that no warning is produced."""
+    #     self.feature.genome_host_genus = "Mycobacterium"
+    #     self.feature._organism_host_genus = "Mycobacterium"
+    #     self.feature.check_organism_host_genus(eval_id="eval_id")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "correct")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].id, "eval_id")
+    #
+    # def test_check_organism_host_genus_2(self):
+    #     """Check that a warning is produced."""
+    #     self.feature.genome_host_genus = "Gordonia"
+    #     self.feature._organism_host_genus = "Mycobacterium"
+    #     self.feature.check_organism_host_genus()
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "error")
+    #     with self.subTest():
+    #         self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
 
+    # TODO this is probably no longer needed.
+    # def test_check_host_host_genus_1(self):
+    #     """Check that no warning is produced."""
+    #     self.feature.genome_host_genus = "Mycobacterium"
+    #     self.feature._host_host_genus = "Mycobacterium"
+    #     self.feature.check_host_host_genus(eval_id="eval_id")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "correct")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].id, "eval_id")
+    #
+    # def test_check_host_host_genus_2(self):
+    #     """Check that a warning is produced."""
+    #     self.feature.genome_host_genus = "Gordonia"
+    #     self.feature._host_host_genus = "Mycobacterium"
+    #     self.feature.check_host_host_genus()
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "error")
+    #     with self.subTest():
+    #         self.assertIsNone(self.feature.evaluations[0].id)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+    # TODO this is probably no longer needed.
+    # def test_check_lab_host_host_genus_1(self):
+    #     """Check that no warning is produced."""
+    #     self.feature.genome_host_genus = "Mycobacterium"
+    #     self.feature._lab_host_host_genus = "Mycobacterium"
+    #     self.feature.check_lab_host_host_genus(eval_id="eval_id")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "correct")
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].id, "eval_id")
+    #
+    # def test_check_lab_host_host_genus_2(self):
+    #     """Check that a warning is produced."""
+    #     self.feature.genome_host_genus = "Gordonia"
+    #     self.feature._lab_host_host_genus = "Mycobacterium"
+    #     self.feature.check_lab_host_host_genus()
+    #     with self.subTest():
+    #         self.assertEqual(self.feature.evaluations[0].status, "error")
+    #     with self.subTest():
+    #         self.assertIsNone(self.feature.evaluations[0].id)
 
 
 

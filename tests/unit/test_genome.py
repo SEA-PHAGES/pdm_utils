@@ -290,39 +290,35 @@ class TestGenomeClass1(unittest.TestCase):
     def test_set_subcluster_1(self):
         """Check that standard Subcluster is set appropriately."""
         subcluster = "A2"
-        self.gnm.set_subcluster(subcluster, "none_string")
+        self.gnm.set_subcluster(subcluster)
         self.assertEqual(self.gnm.subcluster, "A2")
 
     def test_set_subcluster_2(self):
         """Check that whitespace is removed."""
         subcluster = "    A2    "
-        self.gnm.set_subcluster(subcluster, "none_string")
+        self.gnm.set_subcluster(subcluster)
         self.assertEqual(self.gnm.subcluster, "A2")
 
     def test_set_subcluster_3(self):
-        """Check that None subcluster is set appropriately from None."""
+        """Check that 'none' subcluster is set appropriately from None."""
         subcluster = None
-        self.gnm.set_subcluster(subcluster, "none_object")
-        self.assertIsNone(self.gnm.subcluster)
-
-    def test_set_subcluster_4(self):
-        """Check that none_string subcluster is set appropriately from None."""
-        subcluster = None
-        self.gnm.set_subcluster(subcluster, "none_string")
+        self.gnm.set_subcluster(subcluster)
         self.assertEqual(self.gnm.subcluster, "none")
 
-    def test_set_subcluster_5(self):
-        """Check that empty_string subcluster is set appropriately from
-        none_string."""
-        subcluster = "none"
-        self.gnm.set_subcluster(subcluster, "empty_string")
-        self.assertEqual(self.gnm.subcluster, "")
 
-    def test_set_subcluster_6(self):
-        """Check that case is accounted for."""
-        subcluster = "NONE"
-        self.gnm.set_subcluster(subcluster, "empty_string")
-        self.assertEqual(self.gnm.subcluster, "")
+    # TODO these are probably no longer needed.
+    # def test_set_subcluster_5(self):
+    #     """Check that empty_string subcluster is set appropriately from
+    #     none_string."""
+    #     subcluster = "none"
+    #     self.gnm.set_subcluster(subcluster)
+    #     self.assertEqual(self.gnm.subcluster, "")
+    #
+    # def test_set_subcluster_6(self):
+    #     """Check that case is accounted for."""
+    #     subcluster = "NONE"
+    #     self.gnm.set_subcluster(subcluster, "empty_string")
+    #     self.assertEqual(self.gnm.subcluster, "")
 
 
 
@@ -812,6 +808,17 @@ class TestGenomeClass1(unittest.TestCase):
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
     def test_check_authors_2(self):
+        """Check that no warning is produced when author is expected
+        and present not separated only by whitespace."""
+        check_set = set(["hatfull"])
+        self.gnm.authors = "abcd; efgh,s,a,s HATFULL djkf,G.F; xyz"
+        self.gnm.check_authors(check_set=check_set, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.gnm.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
+
+    def test_check_authors_3(self):
         """Check that no warning is produced when author is not expected
         and not present."""
         check_set = set(["hatfull"])
@@ -822,7 +829,7 @@ class TestGenomeClass1(unittest.TestCase):
         with self.subTest():
             self.assertIsNone(self.gnm.evaluations[0].id)
 
-    def test_check_authors_3(self):
+    def test_check_authors_4(self):
         """Check that a warning is produced when author is expected
         and not present."""
         check_set = set(["hatfull"])
@@ -830,7 +837,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.gnm.check_authors(check_set=check_set)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_authors_4(self):
+    def test_check_authors_5(self):
         """Check that a warning is produced when author is not expected
         and present."""
         check_set = set(["hatfull"])
@@ -1351,7 +1358,7 @@ class TestGenomeClass1(unittest.TestCase):
 
 
 
-    def test_check_feature_ids_1(self):
+    def test_check_feature_coordinates_1(self):
         """Verify no error is produced by two CDS features on same strand."""
         self.cds1.strand = "F"
         self.cds1.left = 5
@@ -1360,13 +1367,13 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 20
         self.cds2.right = 70
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True,eval_id="eval_id")
+        self.gnm.check_feature_coordinates(cds_ftr=True,eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
-    def test_check_feature_ids_2(self):
+    def test_check_feature_coordinates_2(self):
         """Verify an error is produced by two CDS features on same strand
         with identical left and right coordinates."""
         self.cds1.strand = "F"
@@ -1376,13 +1383,13 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "error")
         with self.subTest():
             self.assertIsNone(self.gnm.evaluations[0].id)
 
-    def test_check_feature_ids_3(self):
+    def test_check_feature_coordinates_3(self):
         """Verify an error is produced by two CDS features on different strand
         with identical left and right coordinates."""
         self.cds1.strand = "R"
@@ -1392,10 +1399,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_ids_4(self):
+    def test_check_feature_coordinates_4(self):
         """Verify no error is produced by two CDS features on different strand
         with identical left and right coordinates when strand is True."""
         self.cds1.strand = "R"
@@ -1405,10 +1412,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True, strand=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True, strand=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_feature_ids_5(self):
+    def test_check_feature_coordinates_5(self):
         """Verify an error is produced by two CDS features on same strand
         when they have nested coordinates."""
         self.cds1.strand = "F"
@@ -1418,10 +1425,11 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_ids_6(self):
+
+    def test_check_feature_coordinates_6(self):
         """Verify no error is produced by two CDS features on "F" strand
         when they have the same left (start) coordinates."""
         self.cds1.strand = "F"
@@ -1431,10 +1439,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 10
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_feature_ids_7(self):
+    def test_check_feature_coordinates_7(self):
         """Verify an error is produced by two CDS features on "F" strand
         when they have the same right (stop) coordinates."""
         self.cds1.strand = "F"
@@ -1444,10 +1452,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_ids_8(self):
+    def test_check_feature_coordinates_8(self):
         """Verify no error is produced by two CDS features on "R" strand
         when they have the same right (start) coordinates."""
         self.cds1.strand = "R"
@@ -1457,10 +1465,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_feature_ids_9(self):
+    def test_check_feature_coordinates_9(self):
         """Verify no error is produced by two CDS features on "R" strand
         when they have the same left (stop) coordinates."""
         self.cds1.strand = "R"
@@ -1470,10 +1478,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.left = 5
         self.cds2.right = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_ids_10(self):
+    def test_check_feature_coordinates_10(self):
         """Verify an error is produced by a CDS and tRNA feature
         when they have the same coordinates."""
         self.cds1.strand = "F"
@@ -1487,10 +1495,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.trna1.strand = "F"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.trna_features = [self.trna1]
-        self.gnm.check_feature_ids(cds_ftr=True, trna_ftr=True)
+        self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_ids_11(self):
+    def test_check_feature_coordinates_11(self):
         """Verify no error is produced by a CDS and tRNA feature
         when they have the same coordinates when CDS is false."""
         self.cds1.strand = "F"
@@ -1504,10 +1512,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.trna1.strand = "F"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.trna_features = [self.trna1]
-        self.gnm.check_feature_ids(trna_ftr=True)
+        self.gnm.check_feature_coordinates(trna_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_feature_ids_12(self):
+    def test_check_feature_coordinates_12(self):
         """Verify an error is produced by a CDS feature stored in the
         CDS features list and a CDS feature stored in a supplementary list
         when they have the same coordinates."""
@@ -1521,14 +1529,28 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds3.left = 5
         self.cds3.right = 20
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_ids(cds_ftr=True, other=[self.cds3])
+        self.gnm.check_feature_coordinates(cds_ftr=True, other=[self.cds3])
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_ids_13(self):
+    def test_check_feature_coordinates_13(self):
         """Verify no error is produced when empty lists are passed through."""
-        self.gnm.check_feature_ids(cds_ftr=True, trna_ftr=True, tmrna=True, other=[])
+        self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True, tmrna=True, other=[])
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
+    def test_check_feature_coordinates_14(self):
+        """Verify no error is produced by two CDS features on same strand
+        when one wraps around the end of the genome."""
+        # For wrap-around genes, the 'left' coordinate is larger than
+        # the 'right' coordinate.
+        self.cds1.strand = "F"
+        self.cds1.left = 50000
+        self.cds1.right = 20
+        self.cds2.strand = "F"
+        self.cds2.left = 5
+        self.cds2.right = 50
+        self.gnm.cds_features = [self.cds1, self.cds2]
+        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
 
 class TestGenomeClass2(unittest.TestCase):

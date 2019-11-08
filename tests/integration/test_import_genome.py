@@ -441,7 +441,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_9(self):
         """Verify bundle is returned with the genome id converted using
-        the id dictionary."""
+        the id dictionary and with the cluster_subcluster set."""
         self.id_dict["L5"] = "new_id"
         self.tkt1.phage_id = "new_id"
         self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
@@ -464,6 +464,12 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.id, "new_id")
         with self.subTest():
             self.assertEqual(ff_gnm.name, "L5")
+        with self.subTest():
+            self.assertEqual(ff_gnm.cluster, "B")
+        with self.subTest():
+            self.assertEqual(ff_gnm.subcluster, "B2")
+        with self.subTest():
+            self.assertEqual(ff_gnm.cluster_subcluster, "B2")
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "new_id")
 

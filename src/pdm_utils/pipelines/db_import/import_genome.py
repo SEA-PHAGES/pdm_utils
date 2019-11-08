@@ -622,9 +622,7 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
                                     "in the Phamerator database. "
                                     "Unable to retrieve data.")
 
-            # TODO unittest.
             ff_gnm.set_cluster_subcluster(value="internal")
-
             set_cds_descriptions(ff_gnm, bndl.ticket, interactive=interactive)
     return bndl
 
@@ -670,7 +668,8 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
             # Check Source features.
             z = 0
             while z < len(gnm.source_features):
-                check_source(gnm.source_features[z], eval_flags)
+                check_source(gnm.source_features[z], eval_flags,
+                             host_genus=gnm.host_genus)
                 z += 1
 
 
@@ -967,7 +966,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                         expect=True, eval_id="GNM_015")
     gnm.check_attribute("cluster", cluster_set,
                         expect=True, eval_id="GNM_016")
-    gnm.check_attribute("subcluster", subcluster_set | {"", "none"},
+    gnm.check_attribute("subcluster", subcluster_set | {"none"},
                         expect=True, eval_id="GNM_017")
     gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set,
                         expect=True, eval_id="GNM_018")
@@ -979,20 +978,14 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     gnm.check_subcluster_structure(eval_id="GNM_022")
     gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_023")
     gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_024")
-
-    # TODO update unittest test.
     gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_025")
     gnm.check_magnitude("gc", "<", 100.0001, eval_id="GNM_026")
-    # TODO update unittest test.
-
-
     gnm.check_magnitude("length", ">", 0, eval_id="GNM_027")
     gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_028")
 
-    # TODO set trna and tmrna to True after they are implemented.
-    # TODO rename this method. it is checking coordinates, not feature_ids.
-    gnm.check_feature_ids(cds_ftr=True, trna_ftr=False, tmrna=False,
-                          strand=False, eval_id="GNM_029")
+    # TODO set trna=True and tmrna=True after they are implemented.
+    gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna=False,
+                                  strand=False, eval_id="GNM_029")
 
     if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,
@@ -1007,6 +1000,10 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                                    expect_same=True, eval_id="GNM_033")
 
     if eval_flags["check_host_typo"]:
+
+        # TODO change these checks in parallel with source feature checks.
+        # Get a set of host genus synonyms and use check_attribute()
+
         gnm.compare_two_attributes("host_genus", "_description_host_genus",
                                    expect_same=True, eval_id="GNM_034")
         gnm.compare_two_attributes("host_genus", "_source_host_genus",
@@ -1027,22 +1024,29 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
 
 
-
-def check_source(src_ftr, eval_flags):
+def check_source(src_ftr, eval_flags, host_genus=""):
     """Check a Source object for errors."""
     logger.info(f"Checking source feature: {src_ftr.id}.")
 
     if eval_flags["check_id_typo"]:
-        src_ftr.check_organism_name(eval_id="SRC_001")
+        src_ftr.check_attribute("_organism_name", {src_ftr.genome_id},
+                                expect=True, eval_id="SRC_002")
+
     if eval_flags["check_host_typo"]:
+        host_genus_synonyms = basic.get_synonyms(
+                                host_genus, constants.HOST_GENUS_SYNONYMS)
+
         # Only evaluate attributes if the field is not empty, since they
         # are not required to be present.
         if src_ftr.organism != "":
-            src_ftr.check_organism_host_genus(eval_id="SRC_002")
+            src_ftr.check_attribute("_organism_host_genus", host_genus_synonyms,
+                                    expect=True, eval_id="SRC_002")
         if src_ftr.host != "":
-            src_ftr.check_host_host_genus(eval_id="SRC_003")
+            src_ftr.check_attribute("_host_host_genus", host_genus,
+                                    expect=True, eval_id="SRC_003")
         if src_ftr.lab_host != "":
-            src_ftr.check_lab_host_host_genus(eval_id="SRC_004")
+            src_ftr.check_attribute("_lab_host_host_genus", host_genus,
+                                    expect=True, eval_id="SRC_004")
 
 
 
@@ -1108,24 +1112,21 @@ def compare_genomes(genome_pair, eval_flags):
         expect_same=True, eval_id="GP_010")
 
     if eval_flags["check_replace"]:
-        # The following checks assume the current genome in Phamerator
-        # is stored in 'genome1' slot.
-        # The current genome annotations in Phamerator is expected to be
-        # older than the new genome annotations.
+        # The following checks assume that:
+        # 'genome1' slot = new genome to be evaluated
+        # 'genome2' slot = the current genome in Phamerator
 
-        # TODO changed from "older" to "newer", so unittests need to be updated.
+        # The new genome to be evaluated is expected to be
+        # newer than the current genome annotations in Phamerator.
         genome_pair.compare_date("newer", eval_id="GP_015")
 
-
-        # If current genome in phamerator is "draft" status, then
-        # it is expected that the replacing genome name no longer
-        # retains the "_Draft" suffix, so the name should change.
-        # The status should change to "final".
-
-        # TODO genome1 changed to genome2, so unittests will need to be updated.
         if genome_pair.genome2.annotation_status == "draft":
+            # It is expected that the replacing genome name no longer
+            # retains the "_Draft" suffix, so the name should change.
             genome_pair.compare_attribute("name",
                 expect_same=False, eval_id="GP_011")
+
+            # The status should change to "final".
             genome_pair.compare_attribute("annotation_status",
                 expect_same=False, eval_id="GP_012")
         else:
@@ -1133,9 +1134,6 @@ def compare_genomes(genome_pair, eval_flags):
                 expect_same=True, eval_id="GP_013")
             genome_pair.compare_attribute("annotation_status",
                 expect_same=True, eval_id="GP_014")
-
-            # TODO this check was moved to be nested in the else clause,
-            # so the tests for the compare_genomes() functions needs to be updated.
             genome_pair.compare_attribute("accession",
                 expect_same=True, eval_id="GP_006")
 
@@ -1170,7 +1168,6 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
 
         # Update the date field to reflect the day of import.
         import_gnm.date = IMPORT_DATE
-        # TODO unittest queries got added to bndl.
         bndl.sql_queries = phamerator.create_genome_statements(
                                 import_gnm, bndl.ticket.type)
         if prod_run:
@@ -1184,7 +1181,6 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
                 logger.info("The following SQL statements were executed:")
                 for statement in bndl.sql_queries:
                     logger.info(statement[:150] + "...")
-
         else:
             result = True
             logger.info("Data can be imported if set to production run.")

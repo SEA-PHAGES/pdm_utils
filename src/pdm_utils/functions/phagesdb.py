@@ -202,7 +202,7 @@ def parse_genome_data(data_dict, gnm_type=""):
 
     #Subcluster
     subcluster = parse_subcluster(data_dict)
-    gnm.set_subcluster(subcluster, "empty_string")
+    gnm.set_subcluster(subcluster)
 
     # Fasta file URL
     fastafile_url = parse_fasta_filename(data_dict)

@@ -273,20 +273,19 @@ class Genome:
         singleton = "Singleton"
         if isinstance(value, str):
             value = value.strip()
+
+            # PhagesDB-output format.
             if value.capitalize() == singleton:
-                self.cluster = value.capitalize()
-
-            # TODO unittest.
-            elif (value.lower() == "none" or value == ""):
                 self.cluster = singleton
-
             else:
                 self.cluster = value
+
+        # Phamerator-output format
         if value is None:
             self.cluster = singleton
 
 
-    def set_subcluster(self, value, format="empty_string"):
+    def set_subcluster(self, value):
         """Set the subcluster.
 
         :param value:
@@ -298,8 +297,11 @@ class Genome:
         :type format: misc
         """
         if isinstance(value, str):
-            value = value.strip()
-        self.subcluster = basic.convert_empty(value, format)
+            self.subcluster = value.strip()
+
+        # Phamerator-output format
+        if value is None:
+            self.subcluster = "none"
 
 
     def set_cluster_subcluster(self, value="internal"):
@@ -754,12 +756,7 @@ class Genome:
         """
         authors = self.authors.lower()
         authors = authors.replace(";", ",")
-
-        # TODO added this step to accound for e.g. "Hendrix and Hatfull"
         authors = authors.replace(" ", ",")
-        # TODO added this step to accound for e.g. "Hendrix and Hatfull"
-
-
         authors_list = authors.split(",")
         authors_list = [x.strip() for x in authors_list]
         authors_set = set(authors_list)
@@ -899,8 +896,8 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_feature_ids(self, cds_ftr=False, trna_ftr=False, tmrna=False,
-                          other=None, strand=False, eval_id=None):
+    def check_feature_coordinates(self, cds_ftr=False, trna_ftr=False,
+                tmrna=False, other=None, strand=False, eval_id=None):
         """Identify overlapping, duplicated, or partially-duplicated
         features.
 
@@ -956,7 +953,6 @@ class Genome:
                     msgs.append("Features contain identical left and "
                                 "right coordinates.")
 
-                # TODO unittest to verify added code to handle wrap-around genes.
                 # To identify nested features, the following tests
                 # avoid false errors due to genes that may wrap around the
                 # genome.
@@ -964,7 +960,6 @@ class Genome:
                       current.left < next.right and \
                       current.right > next.left and \
                       current.right > next.right):
-                    # msgs.append("Features are nested.")
                     msgs.append((f"Feature {next.id}, with "
                                  f"left coordinate: {next.left} and "
                                  f"right coordinate: {next.right} "

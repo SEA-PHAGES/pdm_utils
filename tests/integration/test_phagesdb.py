@@ -111,7 +111,10 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
-        self.assertEqual(self.gnm.cluster, "")
+        with self.subTest():
+            self.assertEqual(self.gnm.name, "Trixie")
+        with self.subTest():
+            self.assertEqual(self.gnm.cluster, "")
 
 
     def test_parse_genome_data_4(self):
@@ -200,7 +203,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
     def test_parse_genome_data_9(self):
         """Verify output when there are multiple errors."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name_x":"Trixie",
+        data_dict = {"phage_name":"Trixie",
                     "pcluster_x": {"cluster": "A"},
                     "psubcluster_x": {"subcluster": "A2"},
                     "isolation_host_x": {"genus": "Mycobacterium"},
@@ -208,9 +211,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "fasta_file_x": url}
         self.gnm = phagesdb.parse_genome_data(data_dict)
         with self.subTest():
-            self.assertEqual(self.gnm.name, "")
+            self.assertEqual(self.gnm.name, "Trixie")
         with self.subTest():
-            self.assertEqual(self.gnm.id, "")
+            self.assertEqual(self.gnm.id, "Trixie")
         with self.subTest():
             self.assertEqual(self.gnm.cluster, "")
         with self.subTest():

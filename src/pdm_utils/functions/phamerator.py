@@ -82,6 +82,9 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     except:
         pass
 
+
+    # Non-subclustered phages are stored in PhameratorDB as NULL, which gets
+    # returned as None.
     try:
         gnm.set_subcluster(data_dict["Subcluster2"])
     except:
@@ -438,9 +441,6 @@ def create_delete(table, field, data):
     return statement
 
 
-# TODO should this function first check datatypes and formats?
-# Strand should be either "F" or "R"
-# Start, stop, length = int
 def create_gene_table_insert(cds_ftr):
     """Create a MySQL gene table INSERT statement.
 
@@ -512,46 +512,44 @@ def create_genome_statements(gnm, tkt_type=""):
     return sql_statements
 
 # TODO this may no longer be needed.
-def copy_data(bndl, from_type, to_type, flag="retain"):
-    """Copy data from a 'phamerator' genome object.
-
-    If a genome object stored in the Bundle object has
-    attributes that are set to be 'retained' from Phamerator,
-    copy any necessary data from the genome with 'type' attribute
-    set to 'phamerator' to the new genome.
-
-    :param bndl: A pdm_utils Bundle object.
-    :type bndl: Bundle
-    :param from_type:
-        Indicates the value of the source genome's 'type',
-        indicating the genome from which data will be copied.
-    :type from_type: str
-    :param to_type:
-        Indicates the value of the target genome's 'type',
-        indicating the genome to which data will be copied.
-    :type to_type: str
-    :param flag:
-        Indicates the value that attributes of the target genome object
-        must have in order be updated from the 'phamerator' genome object.
-    :type flag: str
-    """
-    if to_type in bndl.genome_dict.keys():
-        to_gnm = bndl.genome_dict[to_type]
-        to_gnm.set_value_flag(flag)
-        if to_gnm._value_flag:
-            if from_type in bndl.genome_dict.keys():
-                from_gnm = bndl.genome_dict[from_type]
-
-                # Copy all data that is set to be copied and
-                # add to Bundle object.
-                genome_pair = genomepair.GenomePair()
-                genome_pair.genome1 = to_gnm
-                genome_pair.genome2 = from_gnm
-                genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
-                bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
-        to_gnm.set_value_flag(flag)
-
-
+# def copy_data(bndl, from_type, to_type, flag="retain"):
+#     """Copy data from a 'phamerator' genome object.
+#
+#     If a genome object stored in the Bundle object has
+#     attributes that are set to be 'retained' from Phamerator,
+#     copy any necessary data from the genome with 'type' attribute
+#     set to 'phamerator' to the new genome.
+#
+#     :param bndl: A pdm_utils Bundle object.
+#     :type bndl: Bundle
+#     :param from_type:
+#         Indicates the value of the source genome's 'type',
+#         indicating the genome from which data will be copied.
+#     :type from_type: str
+#     :param to_type:
+#         Indicates the value of the target genome's 'type',
+#         indicating the genome to which data will be copied.
+#     :type to_type: str
+#     :param flag:
+#         Indicates the value that attributes of the target genome object
+#         must have in order be updated from the 'phamerator' genome object.
+#     :type flag: str
+#     """
+#     if to_type in bndl.genome_dict.keys():
+#         to_gnm = bndl.genome_dict[to_type]
+#         to_gnm.set_value_flag(flag)
+#         if to_gnm._value_flag:
+#             if from_type in bndl.genome_dict.keys():
+#                 from_gnm = bndl.genome_dict[from_type]
+#
+#                 # Copy all data that is set to be copied and
+#                 # add to Bundle object.
+#                 genome_pair = genomepair.GenomePair()
+#                 genome_pair.genome1 = to_gnm
+#                 genome_pair.genome2 = from_gnm
+#                 genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
+#                 bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
+#         to_gnm.set_value_flag(flag)
 
 
 
@@ -561,20 +559,6 @@ def copy_data(bndl, from_type, to_type, flag="retain"):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO unit test below.
 
 
 

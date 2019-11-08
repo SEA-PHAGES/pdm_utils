@@ -558,9 +558,6 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    # TODO this could probably be simplified. Since coordinates in the
-    # database need to be integers, the parsing function no longer allows
-    # fuzzy positions.
     def check_coordinates(self, eval_id=None):
         """Check if coordinates are exact.
 
@@ -570,13 +567,11 @@ class Cds:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-
-        if not (str(self.left).isdigit() and str(self.right).isdigit()):
-            result = ("The feature coordinates are not determined: "
+        if not (isinstance(self.left, int) and isinstance(self.right, int)):
+            result = ("The feature coordinates are not integers: "
                       + str((self.left, self.right)))
             status = "error"
         elif (self.left == -1 or self.right == -1):
-            # TODO unit test this elif clause.
             result = ("The feature coordinates are not determined: "
                       + str((self.left, self.right)))
             status = "error"
