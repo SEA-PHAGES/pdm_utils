@@ -413,7 +413,7 @@ def parse_names_from_record_field(description):
         host_genus(str) is the parsed host_genus.
     :rtype: tuple
     """
-    generic_words = set(["complete", "genome", "phage", "unclassified"])
+    generic_words = {"complete", "genome", "sequence", "phage", "unclassified"}
     host_genus = ""
     name = ""
     description = description.strip()

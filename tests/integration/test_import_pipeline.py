@@ -1,5 +1,60 @@
 """Integration tests for the entire import pipeline."""
 
+# Note: The strategy to test the entire import pipeline:
+
+# The primary genome used is the Alice genome. It is a large genome with:
+# 1. a gene that wraps around the genome termini.
+# 2. a tail assembly chaperone gene that is a compound feature.
+# 3. tRNA and tmRNA genes.
+# The true genome sequence is retrieved from the true Alice GenBank
+# flat file. Using the true genome sequence, an artificial Alice flat file is
+# generated, in which every aspect can be controlled and tested.
+# The primary artificial flat file contains 4 CDS features, a tRNA feature,
+# a tmRNA feature, and a source feature.
+
+# Tests are split into two main sections:
+# 1. testing 'add' tickets, where a new Alice genome is
+# added to the database, and usually there is no Alice genome already
+# present in the database.
+# 2. testing 'replace' tickets, where a Alice genome is replacing an Alice
+# genome already, present in the database.
+
+# A substantial amount of code is required to construct an artificial
+# flat file. Since there are only a few things within the
+# flat file that need to be changed when trying to import
+# a new 'draft' genome with an 'add' ticket compared to a
+# 'final' genome with a 'replace' ticket, code to construct different
+# parts of the flat file is constructed as separate functions outside
+# of the Test classes. Within each Test class, the functions can be called,
+# generating a new object with the required data, which can then
+# be modified within each Test class.
+
+# In order to test how data is inserted into the database under different
+# conditions, there is substantial demand to insert and retrieve data
+# from a MySQL database. Therefore, several functions are defined outside
+# of the Test classes that can be used to interact with the database.
+
+# In general, each Test class is structured as follows:
+# 1. In the setup, a new empty database is constructed.
+# 2. The true genome sequence from a true Alice flat file is retrieved.
+# 3. The artificial Alice flat file data is constructed.
+# 4. The data required to construct the import table is constructed.
+# 5. Within each Test function:
+#       1. Data is inserted to the database as needed.
+#       2. Modifications are made to the import table or flat file data,
+#          depending on what is being tested.
+#       3. An artifical flat file is created.
+#       4. An import table is created.
+#       5. The import pipeline is run.
+#       6. The state of the database (usually the number of rows in the
+#          phage table and in the gene table) is evaluated.
+
+
+
+
+
+
+
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
@@ -52,12 +107,8 @@ unittest_dir = unittest_file.parent
 schema_file = "test_schema5.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 
-# The primary genome used for the following integration tests is
+
 # Alice ("test_flat_file_10.gb"),
-# Alice is a large genome with:
-# 1. a gene that wraps around the genome termini.
-# 2. a tail assembly chaperone gene that is a compound feature.
-# 3. tRNA and tmRNA genes.
 base_flat_file = Path("test_flat_file_10.gb")
 base_flat_file_path = Path(unittest_dir, "test_files/", base_flat_file)
 
@@ -1394,7 +1445,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("getpass.getpass")
     def test_import_pipeline_304(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
-        invalid add ticket with retrieve set to retrieve, even
+        invalid add ticket with retrieve_record set to retrieve, even
         though this data cannot be retrieved from PhagesDB."""
         logging.info("test_import_pipeline_304")
         getpass_mock.side_effect = [user, pwd]
@@ -1407,6 +1458,43 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertTrue(sys_exit_mock.called)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
+
+
+
+
+    @patch("getpass.getpass")
+    def test_import_pipeline_3040(self, getpass_mock):
+        """Test pipeline with:
+        invalid add ticket with 'host_genus' set to retrieve,
+        but the phage_id cannot be found in PhagesDB."""
+        logging.info("test_import_pipeline_3040")
+        getpass_mock.side_effect = [user, pwd]
+
+        # SEA-PHAGES doesn't allow phage names that begin with numbers.
+        self.alice_feature_list[0].qualifiers["organism"] = \
+            ["Mycobacterium phage 123Invalid_Draft"]
+        self.alice_record.annotations["organism"] = "Mycobacterium phage 123Invalid_Draft"
+        self.alice_record.annotations["source"] = "Mycobacterium phage 123Invalid_Draft"
+        self.alice_record.description = ("Mycobacterium phage 123Invalid_Draft, "
+                                  "complete sequence")
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        self.alice_ticket["phage_id"] = "123Invalid"
+        self.alice_ticket["host_genus"] = "retrieve"
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 0)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 0)
+
+
+
+
+
+
+    #
 
 
 
@@ -1836,31 +1924,16 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
         # Tests completed on Alice 'draft' genome:
-        #1. insert alice w/1 CDS
-        #2. try to insert alice if already in db
-        #3. try to insert alice if another genome has same seq.
-        #4. use invalid ticket
-        #5. use minimal ticket.
-        #6. fail due to genome-level error
-        #7. fail due to CDS error.
-        #8. test using oddly-strucutred ticket (uppercase, "none", empty, etc.)
+        # 1. insert alice w/1 CDS
+        # 2. try to insert alice if already in db
+        # 3. try to insert alice if another genome has same seq.
+        # 4. use invalid ticket
+        # 5. use minimal ticket.
+        # 6. fail due to genome-level error
+        # 7. fail due to CDS error.
+        # 8. test using oddly-strucutred ticket (uppercase, "none", empty, etc.)
+        # 9. set some ticket fields to 'retrieve', but have PhageID that is not found on PhagesDB.
 
-
-            #
-            # dict = {
-            #     "id": 1,
-            #     "type": "add",
-            #     "phage_id": "Alice",
-            #     "host_genus": "Mycobacterium",
-            #     "cluster": "C",
-            #     "subcluster": "C1",
-            #     "accession": "none",
-            #     "description_field": "product",
-            #     "annotation_status": "draft",
-            #     "annotation_author": 1,
-            #     "retrieve_record": 1,
-            #     "run_mode": "pecaan"
-            #     }
 
 
 
@@ -1984,17 +2057,6 @@ class TestImportGenomeMain2(unittest.TestCase):
         shutil.rmtree(base_dir)
         remove_db(db, user, pwd)
 
-        # # This removes the default output folder in the 'tmp'
-        # # directory, which gets created if no output folder is
-        # # indicated at the command line, which occurs in some tests below.
-        # if default_output_path.exists() == True:
-        #     shutil.rmtree(default_output_path)
-
-
-
-
-
-
 
 
 
@@ -2003,7 +2065,8 @@ class TestImportGenomeMain2(unittest.TestCase):
         """Test pipeline with:
         valid replace ticket for final genome,
         valid flat file,
-        Alice and non-Alice data already in the database."""
+        Alice and non-Alice data already in the database.
+        Also verify CDS data already in the database is completely replaced."""
         logging.info("test_replacement_1")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
@@ -2012,7 +2075,19 @@ class TestImportGenomeMain2(unittest.TestCase):
         insert_data_into_phage_table(db, user, pwd, get_trixie_phage_table_data())
         insert_data_into_gene_table(db, user, pwd, get_trixie_gene_table_data_1())
         insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
-        insert_data_into_gene_table(db, user, pwd, get_alice_cds_139_draft_data_in_db())
+
+        # Modify several values of CDS 139 that is inserted into the database.
+        # Since Alice genome is being replaced, this data
+        # should be completely removed and replaced with the CDS 139 data
+        # from within the flat file.
+        alice_cds_139_mod = get_alice_cds_139_draft_data_in_db()
+        alice_cds_139_mod["GeneID"] = "Alice_CDS_2000"
+        alice_cds_139_mod["Start"] = 100
+        alice_cds_139_mod["Stop"] = 200
+        alice_cds_139_mod["Name"] = "abc123"
+        alice_cds_139_mod["Orientation"] = "F"
+        alice_cds_139_mod["LocusTag"] = "abc123"
+        insert_data_into_gene_table(db, user, pwd, alice_cds_139_mod)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -2032,7 +2107,6 @@ class TestImportGenomeMain2(unittest.TestCase):
         expected_cds252_data = get_alice_cds_252_draft_data_in_db()
         expected_cds124_data = get_alice_cds_124_draft_data_in_db()
         expected_cds139_data = get_alice_cds_139_draft_data_in_db()
-
         expected_cds193_data = get_alice_cds_193_draft_data_in_db()
         expected_cds193_data["Notes"] = "repressor"
 
@@ -2310,17 +2384,132 @@ class TestImportGenomeMain2(unittest.TestCase):
                              self.alice_data_to_insert["DateLastModified"])
 
 
+    @patch("getpass.getpass")
+    def test_replacement_1000(self, getpass_mock):
+        """Test pipeline with:
+        valid replace ticket for final genome,
+        but flat file contains PhageID with "_Draft" suffix."""
+        logging.info("test_replacement_1000")
+        getpass_mock.side_effect = [user, pwd]
+        self.alice_feature_list[0].qualifiers["organism"] = \
+            ["Mycobacterium phage Alice_Draft"]
+        self.alice_record.annotations["organism"] = "Mycobacterium phage Alice_Draft"
+        self.alice_record.annotations["source"] = "Mycobacterium phage Alice_Draft"
+        self.alice_record.description = ("Mycobacterium phage Alice_Draft, "
+                                  "complete sequence")
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        process_phage_table_data(phage_table_results)
+        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 0)
+        with self.subTest():
+            self.assertEqual(output_genome_data["DateLastModified"],
+                             self.alice_data_to_insert["DateLastModified"])
 
-    # TODO genome_pair check - insert test to verify error when PhageID still has _Draft suffix.
-    # TODO genome_pair check - check 'draft' to 'gbk' error
-
-
-    # TODO genome_pair check - check 'final' to 'final' no error
-    # TODO genome_pair check - check 'final' to 'gbk' error
 
 
 
+    @patch("getpass.getpass")
+    def test_replacement_1001(self, getpass_mock):
+        """Test pipeline with:
+        valid replace ticket for final genome,
+        valid flat file,
+        Alice data already in the database,
+        and annotation_status changes from 'draft' to 'unknown'."""
+        logging.info("test_replacement_1001")
+        getpass_mock.side_effect = [user, pwd]
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        self.alice_ticket["annotation_status"] = "unknown"
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        process_phage_table_data(phage_table_results)
+        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        expected_phage_table_data["status"] = "unknown"
+        genome_errors = compare_data(expected_phage_table_data,
+                                     output_genome_data)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
+        with self.subTest():
+            self.assertEqual(genome_errors, 0)
 
+
+
+
+
+    @patch("getpass.getpass")
+    def test_replacement_1002(self, getpass_mock):
+        """Test pipeline with:
+        valid replace ticket for final genome,
+        valid flat file,
+        Alice data already in the database and is 'final',
+        and annotation_status remains 'final'."""
+        logging.info("test_replacement_1002")
+        getpass_mock.side_effect = [user, pwd]
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        self.alice_data_to_insert["Name"] = "Alice"
+        self.alice_data_to_insert["status"] = "final"
+        self.alice_data_to_insert["Accession"] = "JF704092"
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        process_phage_table_data(phage_table_results)
+        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        genome_errors = compare_data(expected_phage_table_data,
+                                     output_genome_data)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
+        with self.subTest():
+            self.assertEqual(genome_errors, 0)
+
+
+
+
+    @patch("getpass.getpass")
+    def test_replacement_1003(self, getpass_mock):
+        """Test pipeline with:
+        valid replace ticket for final genome,
+        valid flat file,
+        Alice data already in the database and is 'final',
+        and annotation_status changes to 'unknown'."""
+        logging.info("test_replacement_1003")
+        getpass_mock.side_effect = [user, pwd]
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        self.alice_data_to_insert["Name"] = "Alice"
+        self.alice_data_to_insert["status"] = "final"
+        self.alice_data_to_insert["Accession"] = "JF704092"
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        self.alice_ticket["annotation_status"] = "unknown"
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        process_phage_table_data(phage_table_results)
+        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 0)
+        with self.subTest():
+            self.assertEqual(output_genome_data["DateLastModified"],
+                             self.alice_data_to_insert["DateLastModified"])
 
 
 
@@ -2602,35 +2791,157 @@ class TestImportGenomeMain2(unittest.TestCase):
 
 
 
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    @patch("getpass.getpass")
+    def test_replacement_22(self, getpass_mock, ask_mock):
+        """Test pipeline with:
+        Same test as in test_replacement_21, except
+        the 'interactive' flag is selected allowing user to review evaluations.
+        The evaluation review is patch, and no errors are downgraded."""
+        logging.info("test_replacement_22")
+        getpass_mock.side_effect = [user, pwd]
+        ask_mock.return_value = False
+        clear_descriptions(self.alice_record)
+        self.alice_record.features[1].qualifiers["product"] = "int"
+        self.alice_record.features[2].qualifiers["function"] = "repressor"
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        create_import_table([self.alice_ticket], import_table)
+        self.unparsed_args.append("-i")
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 0)
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    @patch("getpass.getpass")
+    def test_replacement_23(self, getpass_mock, ask_mock):
+        """Test pipeline with:
+        Same test as in test_replacement_21, except
+        the 'interactive' flag is selected allowing user to review evaluations.
+        The evaluation review is patch, and ALL errors are downgraded."""
+        logging.info("test_replacement_23")
+        getpass_mock.side_effect = [user, pwd]
+        ask_mock.return_value = True
+        clear_descriptions(self.alice_record)
+        self.alice_record.features[1].qualifiers["product"] = "int"
+        self.alice_record.features[2].qualifiers["function"] = "repressor"
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        create_import_table([self.alice_ticket], import_table)
+        self.unparsed_args.append("-i")
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        process_phage_table_data(phage_table_results)
+        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        genome_errors = compare_data(expected_phage_table_data,
+                                     output_genome_data)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
+        with self.subTest():
+            self.assertEqual(genome_errors, 0)
+
+
+
+
+
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    @patch("getpass.getpass")
+    def test_replacement_24(self, getpass_mock, ask_mock):
+        """Test pipeline with:
+        'Final' genome but adding instead of replacing.
+        Use 'interactive' but no errors are downgraded."""
+        logging.info("test_replacement_24")
+        getpass_mock.side_effect = [user, pwd]
+        ask_mock.return_value = False
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        self.alice_ticket["type"] = "add"
+        create_import_table([self.alice_ticket], import_table)
+        self.unparsed_args.append("-i")
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 0)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 0)
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    @patch("getpass.getpass")
+    def test_replacement_25(self, getpass_mock, ask_mock):
+        """Test pipeline with:
+        Same test as in test_replacement_24, but ALL errors are downgraded."""
+        logging.info("test_replacement_25")
+        getpass_mock.side_effect = [user, pwd]
+        ask_mock.return_value = True
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        self.alice_ticket["type"] = "add"
+        create_import_table([self.alice_ticket], import_table)
+        self.unparsed_args.append("-i")
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
+
+
+    @patch("getpass.getpass")
+    def test_replacement_26(self, getpass_mock):
+        """Test pipeline with:
+        Same test as in test_replacement_24, but 'run_mode' = 'misc'."""
+        logging.info("test_replacement_26")
+        getpass_mock.side_effect = [user, pwd]
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        self.alice_ticket["type"] = "add"
+        self.alice_ticket["annotation_status"] = "unknown"
+        self.alice_ticket["run_mode"] = "misc"
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
+
+
+
 
 
         # Tests performed on 'final' genome:
-        #2. replace Alice data
-        #1. fail trying to replace Alice genome when sequences don't match.
+        #1. replace Alice data
+        #2. fail trying to replace Alice genome when sequences don't match.
         #3. fail trying to replace Alice genome when there is no matching PhageID.
-        #3. use invalid ticket
-        #4. use minimal ticket.
-        #13. set some ticket fields to 'retain', but have PhageID that is not found in Phamerator.
-        #14. Date that is not newer.
-        #12. test description_field = function instead of product
-        #12 check id_typo in organism field
-        #12 check host_genus in organism field
-        #6. fail due to genome-level error
-        #10. fail due to source error.
-        #7. fail due to CDS error.
+        #4. use invalid ticket
+        #5. use minimal ticket.
+        #6. set some ticket fields to 'retain', but have PhageID that is not found in Phamerator.
+        #7. Date that is not newer.
+        #8. test description_field = function instead of product
+        #9. check id_typo in organism field
+        #10. check host_genus in organism field
+        #11. fail due to genome-level error
+        #12. fail due to source error.
+        #13. fail due to CDS error.
+        #14. fail due to genome-pair error.
+        #15. verify locus_tags are not imported
+        #16. verify that CDS features are completely replaced - test by inserting diff data at the beginning.
+        #17. test interactivity
+        #18.  Adding 'final' without replacement.
+        #19.  Adding 'unknown' using 'misc' run_mode without replacement.
 
 
 
-        # Tests to perform on Alice 'final' genome:
-        #7. fail due to genome-pair error.
-        #11. test interactivity
-        #12. verify that CDS features are completely replaced - test by inserting diff data at the beginning.
-        #13. verify locus_tags are not imported!
-
-
-
-        # Tests using 'add' ticket:
-        # 1. set some ticket fields to 'retrieve', but have PhageID that is not found on PhagesDB.
 
 
 
@@ -2641,48 +2952,7 @@ class TestImportGenomeMain2(unittest.TestCase):
 
 
 
-        # dict = {
-        #     "id": 1,
-        #     "type": "add",
-        #     "phage_id": "Alice",
-        #     "host_genus": "Mycobacterium",
-        #     "cluster": "C",
-        #     "subcluster": "C1",
-        #     "accession": "none",
-        #     "description_field": "product",
-        #     "annotation_status": "draft",
-        #     "annotation_author": 1,
-        #     "retrieve_record": 1,
-        #     "run_mode": "pecaan",
-        #     }
 
-
-
-        # for cdsftr in gene_table_results:
-        #     print(cdsftr["GeneID"])
-        #     print(cdsftr["Start"])
-        #     print(cdsftr["Stop"])
-
-
-        # input("check log")
-
-        # results = get_sql_data(db, user, pwd, phage_table_query)
-        # print(len(results))
-        # results2 = get_sql_data(db, user, pwd, gene_table_query)
-        # print(len(results2))
-        # input("paused")
-        # seq = get_seq(self.test_flat_file1)
-        # l5_phage_table_data["sequence"] = seq
-        # l5_phage_table_data["SequenceLength"] = len(seq)
-        # print(l5_phage_table_data["sequence"][:25])
-        # print(l5_phage_table_data["SequenceLength"])
-        # input("pause")
-        # insert_data_into_phage_table(db, user, pwd, l5_phage_table_data)
-        # input("pause2")
-        # keys = set(["host_genus", "cluster", "subcluster"])
-        # l5_ticket_data_retrieve = set_data(get_l5_ticket_data_complete(), keys, "retrieve")
-
-        # shutil.copy(self.base_flat_file_path, self.genome_folder)
 
 
 if __name__ == '__main__':

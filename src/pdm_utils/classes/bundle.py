@@ -19,7 +19,7 @@ class Bundle:
 
         # Initialize calculated attributes
         self.evaluations = []
-        self.sql_queries = [] # All SQL data needed to implement ticket.
+        self.sql_statements = [] # All SQL data needed to implement ticket.
 
         self._errors = 0
 

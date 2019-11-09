@@ -581,11 +581,15 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
             if len(bndl.ticket.data_retrieve) > 0:
                 pdb_gnm = phagesdb.get_genome(bndl.ticket.phage_id,
                                               gnm_type=retrieve_ref)
-                bndl.genome_dict[pdb_gnm.type] = pdb_gnm
 
-                for attr in bndl.ticket.data_retrieve:
-                    attr_value = getattr(pdb_gnm, attr)
-                    setattr(ff_gnm, attr, attr_value)
+                # TODO unit test 'is not None' block.
+                # pdb_gnm is None if PhageID not in PhagesDB
+                if pdb_gnm is not None:
+                    bndl.genome_dict[pdb_gnm.type] = pdb_gnm
+
+                    for attr in bndl.ticket.data_retrieve:
+                        attr_value = getattr(pdb_gnm, attr)
+                        setattr(ff_gnm, attr, attr_value)
 
             # If the ticket type is 'replace', retrieve data from phamerator.
             # If any attributes in flat_file are set to 'retain', copy data
@@ -860,7 +864,7 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     tkt.check_attribute("run_mode", run_mode_set,
                         expect=True, eval_id="TKT_005")
 
-    # TODO this method may be refactored so that it accepts a list of
+    # This method may be refactored so that it accepts a list of
     # valid flag dict keys. But this has already been verified earlier
     # in the script, so it could be redundant.
     tkt.check_eval_flags(expect=True, eval_id="TKT_006")
@@ -951,8 +955,6 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
                             eval_id="GNM_011")
 
-        # TODO insert a check to determine if description fields other
-        # than the primary field contain non-generic data?
     else:
         pass
 
@@ -1126,7 +1128,7 @@ def compare_genomes(genome_pair, eval_flags):
             genome_pair.compare_attribute("name",
                 expect_same=False, eval_id="GP_011")
 
-            # The status should change to "final".
+            # The status should change from 'draft'.
             genome_pair.compare_attribute("annotation_status",
                 expect_same=False, eval_id="GP_012")
         else:
@@ -1168,10 +1170,10 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
 
         # Update the date field to reflect the day of import.
         import_gnm.date = IMPORT_DATE
-        bndl.sql_queries = phamerator.create_genome_statements(
+        bndl.sql_statements = phamerator.create_genome_statements(
                                 import_gnm, bndl.ticket.type)
         if prod_run:
-            result = sql_handle.execute_transaction(bndl.sql_queries)
+            result = sql_handle.execute_transaction(bndl.sql_statements)
             if result == 1:
                 logger.info("Error executing statements to import data.")
                 result = False
@@ -1179,7 +1181,7 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
                 result = True
                 logger.info("Data successfully imported.")
                 logger.info("The following SQL statements were executed:")
-                for statement in bndl.sql_queries:
+                for statement in bndl.sql_statements:
                     logger.info(statement[:150] + "...")
         else:
             result = True
