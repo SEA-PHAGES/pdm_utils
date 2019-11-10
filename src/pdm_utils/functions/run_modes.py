@@ -6,19 +6,19 @@ from pdm_utils.functions import basic
 EVAL_FLAGS = {
     # Options that impact how data is processed but are not utilized
     # for evaluation of specific parts of a flat file:
-    "check_replace": "Should unexpected genome replacements be reported?",
-    "import_locus_tag": "Should CDS feature locus_tags be imported?",
+    "check_replace": "Should unexpected genome replacements be reported? ",
+    "import_locus_tag": "Should CDS feature locus_tags be imported? ",
 
     # Options that are utilized during the evaluation stage:
-    "check_locus_tag": "Should the structure of CDS feature locus_tags be checked?",
-    "check_description_field": "Should CDS descriptions in unexpected fields be reported?",
-    "check_description": "Should unexpected CDS descriptions be reported?",
-    "check_trna": "Should tRNA features be evaluated?",
-    "check_id_typo": "Should genome ID typos be reported?",
-    "check_host_typo": "Should host typos be reported?",
-    "check_author": "Should unexpected authors be reported?",
-    "check_gene": "Should the CDS 'gene' qualifier be evaluated?",
-    "check_seq": "Should the nucleotide sequence be evaluated?"
+    "check_locus_tag": "Should the structure of CDS feature locus_tags be checked? ",
+    "check_description_field": "Should CDS descriptions in unexpected fields be reported? ",
+    "check_description": "Should unexpected CDS descriptions be reported? ",
+    "check_trna": "Should tRNA features be evaluated? ",
+    "check_id_typo": "Should genome ID typos be reported? ",
+    "check_host_typo": "Should host typos be reported? ",
+    "check_author": "Should unexpected authors be reported? ",
+    "check_gene": "Should the CDS 'gene' qualifier be evaluated? ",
+    "check_seq": "Should the nucleotide sequence be evaluated? "
     }
 
 # Run mode definitions.
