@@ -1,1 +1,1 @@
-id,type,phage_id,host_genus,cluster,subcluster,accession,description_field,annotation_status,annotation_author,retrieve_record,run_mode1,add,L5,Mycobacterium,A,A2,ABC123,product,draft,1,1,phagesdb2,replace,KatherineG,Gordonia,A,A15,XYZ456,product,final,1,1,phagesdb
+type,phage_id,host_genus,cluster,subcluster,accession,description_field,annotation_status,annotation_author,retrieve_record,run_modeadd,L5,Mycobacterium,A,A2,ABC123,product,draft,1,1,phagesdbreplace,KatherineG,Gordonia,A,A15,XYZ456,product,final,1,1,phagesdb

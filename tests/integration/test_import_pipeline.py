@@ -433,7 +433,6 @@ def create_min_tkt_dict(old_tkt):
 def get_alice_ticket_data_complete():
     """Returns a dictionary of ticket data for Alice."""
     dict = {
-        "id": 1,
         "type": "add",
         "phage_id": "Alice",
         "host_genus": "Mycobacterium",
@@ -1810,7 +1809,6 @@ class TestImportGenomeMain1(unittest.TestCase):
                                   "complete sequence")
         SeqIO.write(self.alice_record, l5_flat_file_path, "genbank")
         l5_ticket = get_alice_ticket_data_complete()
-        l5_ticket["id"] = 2
         l5_ticket["phage_id"] = "L5"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
@@ -1866,7 +1864,6 @@ class TestImportGenomeMain1(unittest.TestCase):
                                   "complete sequence")
         SeqIO.write(self.alice_record, l5_flat_file_path, "genbank")
         l5_ticket = get_alice_ticket_data_complete()
-        l5_ticket["id"] = 2
         l5_ticket["phage_id"] = "L5"
         # By changing run_mode to 'phagesdb',
         # the flat file will fail certain checks.
@@ -2030,7 +2027,6 @@ class TestImportGenomeMain1(unittest.TestCase):
                                   "complete sequence")
         SeqIO.write(self.alice_record, l5_flat_file_path, "genbank")
         l5_ticket = get_alice_ticket_data_complete()
-        l5_ticket["id"] = 2
         l5_ticket["phage_id"] = "L5"
         l5_ticket["run_mode"] = "custom"
         self.alice_ticket["run_mode"] = "custom"

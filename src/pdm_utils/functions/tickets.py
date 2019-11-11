@@ -199,10 +199,10 @@ def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
                       required_keys, optional_keys, keywords):
     """Construct tickets from parsed data dictionaries."""
 
-
+    tkt_id = 0
     list_of_tickets = []
     for dict in list_of_data_dict:
-
+        tkt_id += 1
         # Each ticket should contain a distinct eval_flag dictionary object.
         input_run_mode = run_mode_eval_dict["run_mode"]
         input_eval_flag_dict = run_mode_eval_dict["eval_flag_dict"].copy()
@@ -210,6 +210,7 @@ def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
         result = modify_import_data(dict, required_keys, optional_keys, keywords)
         if result:
             tkt = parse_import_ticket_data(dict)
+            tkt.id = tkt_id
 
             # Only set description_field and run_mode from parameters
             # if they weren't set within the ticket.

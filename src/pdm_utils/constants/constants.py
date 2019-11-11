@@ -11,7 +11,6 @@ from pathlib import Path
 
 IMPORT_TABLE_STRUCTURE = {
     "order": [
-                        "id",
                         "type",
                         "phage_id",
                         "description_field",
@@ -24,7 +23,6 @@ IMPORT_TABLE_STRUCTURE = {
                         "retrieve_record",
                         "annotation_status"],
     "required": set([
-                        "id",
                         "type",
                         "phage_id"]),
     "optional": set([
@@ -38,7 +36,6 @@ IMPORT_TABLE_STRUCTURE = {
                         "accession",
                         "retrieve_record"]),
     "valid_ticket": set([
-                        "id",
                         "type",
                         "phage_id",
                         "description_field",

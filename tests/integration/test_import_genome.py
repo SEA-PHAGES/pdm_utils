@@ -890,11 +890,6 @@ class TestImportGenomeMain5(unittest.TestCase):
                                    "eval_flag_dict": {"a":1}}
 
         self.table_structure_dict = constants.IMPORT_TABLE_STRUCTURE
-        # self.required_keys = constants.IMPORT_TABLE_STRUCTURE["required"]
-        # self.optional_keys = constants.IMPORT_TABLE_STRUCTURE["optional"]
-        # self.keywords = constants.IMPORT_TABLE_STRUCTURE["keywords"]
-
-
         self.test_import_table1 = \
             os.path.join(os.path.dirname(__file__),
             "test_files/test_import_table_1.csv")
@@ -902,7 +897,6 @@ class TestImportGenomeMain5(unittest.TestCase):
         # Valid data dictionary.
         self.data_dict1 = {}
         self.data_dict1["type"] = "replace"
-        self.data_dict1["id"] = 1
         self.data_dict1["phage_id"] = "Trixie"
         self.data_dict1["description_field"] = "product"
         self.data_dict1["run_mode"] = "phagesdb"
@@ -912,7 +906,6 @@ class TestImportGenomeMain5(unittest.TestCase):
         # Valid data dictionary.
         self.data_dict2 = {}
         self.data_dict2["type"] = "replace"
-        self.data_dict2["id"] = 2
         self.data_dict2["phage_id"] = "L5"
         self.data_dict2["description_field"] = "product"
         self.data_dict2["run_mode"] = "phagesdb"
@@ -1036,7 +1029,6 @@ class TestImportGenomeMain6(unittest.TestCase):
 
         self.data_dict1 = {}
         self.data_dict1["type"] = "replace"
-        self.data_dict1["id"] = 1
         self.data_dict1["phage_id"] = "L5"
         self.data_dict1["description_field"] = "product"
         self.data_dict1["run_mode"] = "phagesdb"
@@ -1505,11 +1497,11 @@ class TestImportGenomeMain7(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(exp_success_tkts), 1)
         with self.subTest():
-            self.assertEqual(len(exp_success_tkts[0].keys()), 12)
+            self.assertEqual(len(exp_success_tkts[0].keys()), 11)
         with self.subTest():
             self.assertEqual(len(exp_fail_tkts), 2)
         with self.subTest():
-            self.assertEqual(len(exp_fail_tkts[0].keys()), 12)
+            self.assertEqual(len(exp_fail_tkts[0].keys()), 11)
         with self.subTest():
             self.assertEqual(input_genomes_count, 0)
         with self.subTest():

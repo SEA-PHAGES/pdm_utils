@@ -23,7 +23,6 @@ class TestTicketFunctions1(unittest.TestCase):
 
         self.ticket_dict1 = {}
         self.ticket_dict1["type"] = "add"
-        self.ticket_dict1["id"] = 1
         self.ticket_dict1["phage_id"] = "Trixie"
         self.ticket_dict1["description_field"] = "product"
         self.ticket_dict1["run_mode"] = "phagesdb"
@@ -35,7 +34,6 @@ class TestTicketFunctions1(unittest.TestCase):
 
         self.ticket_dict3 = {}
         self.ticket_dict3["type"] = "ADD"
-        self.ticket_dict3["id"] = 1
         self.ticket_dict3["phage_id"] = "Trixie"
         self.ticket_dict3["description_field"] = "PRODUCT"
         self.ticket_dict3["run_mode"] = "PHAGESDB"
@@ -45,7 +43,6 @@ class TestTicketFunctions1(unittest.TestCase):
 
         self.ticket_dict4 = {}
         self.ticket_dict4["type"] = "ADD"
-        self.ticket_dict4["id"] = 1
         self.ticket_dict4["phage_id"] = "Trixie"
 
 
@@ -85,12 +82,10 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
 
-    #HERE
+
     def test_parse_import_ticket_data_1(self):
         """Verify ticket is generated from correct data dictionary."""
         tkt = tickets.parse_import_ticket_data(self.ticket_dict1)
-        with self.subTest():
-            self.assertEqual(tkt.id, 1)
         with self.subTest():
             self.assertEqual(tkt.type, "add")
         with self.subTest():
@@ -100,7 +95,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.run_mode, "phagesdb")
         with self.subTest():
-            self.assertEqual(len(tkt.data_dict.keys()), 8)
+            self.assertEqual(len(tkt.data_dict.keys()), 7)
         with self.subTest():
             self.assertEqual(tkt.data_retrieve, set(["host_genus"]))
         with self.subTest():
@@ -190,11 +185,15 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(list_of_tickets), 2)
         with self.subTest():
+            self.assertEqual(list_of_tickets[0].id, 1)
+        with self.subTest():
             self.assertEqual(list_of_tickets[0].run_mode, "phagesdb")
         with self.subTest():
             self.assertEqual(list_of_tickets[0].description_field, "product")
         with self.subTest():
             self.assertTrue(list_of_tickets[0].eval_flags["check_locus_tag"])
+        with self.subTest():
+            self.assertEqual(list_of_tickets[1].id, 2)
         with self.subTest():
             self.assertEqual(list_of_tickets[1].run_mode, "custom_run_mode")
         with self.subTest():
@@ -223,26 +222,22 @@ class TestTicketFunctions1(unittest.TestCase):
 
         tkt_dict1 = {}
         tkt_dict1["type"] = "add"
-        tkt_dict1["id"] = 1
         tkt_dict1["phage_id"] = "Trixie"
         tkt_dict1["description_field"] = "product"
         tkt_dict1["run_mode"] = "phagesdb"
 
         tkt_dict2 = {}
         tkt_dict2["type"] = "add"
-        tkt_dict2["id"] = 2
         tkt_dict2["phage_id"] = "L5"
         tkt_dict2["description_field"] = "product"
         tkt_dict2["run_mode"] = "phagesdb"
 
         tkt_dict3 = {}
         tkt_dict3["type"] = "add"
-        tkt_dict3["id"] = 3
         tkt_dict3["phage_id"] = "RedRock"
 
         tkt_dict4 = {}
         tkt_dict4["type"] = "add"
-        tkt_dict4["id"] = 4
         tkt_dict4["phage_id"] = "Bxb1"
 
         dict_list = [tkt_dict1, tkt_dict2, tkt_dict3, tkt_dict4]
