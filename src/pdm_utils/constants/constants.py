@@ -148,41 +148,54 @@ API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/?"
 # Reasons for the exceptions are indicated.
 PHAGE_ID_DICT = {
     # PhagesDB is unable to handle underscores.
-    'ATCC29399B_C':'ATCC29399BC',
-    'ATCC29399B_T':'ATCC29399BT',
+    "ATCC29399B_C": "ATCC29399BC",
+    "ATCC29399B_T": "ATCC29399BT",
 
     # ELB20 was reported as 'ELB20' in the original publication, but spelled
     # 'phiELB20' in the GenBank record.
-    'phiELB20':'ELB20',
+    "phiELB20": "ELB20",
 
     # Names are spelled differently in GenBank record compared to
     # the original publication.
-    'P100_1':'P100.1',
-    'P100_A':'P100A',
+    "P100_1": "P100.1",
+    "P100_A": "P100A",
 
     # 'LeBron' was changed to 'Bron' by ICTV. They won't change it back.
-    'Bron':'LeBron',
+    "Bron": "LeBron",
 
     # Inadvertent typos introduced at some point that GenBank won't
     # correct since ICTV uses the typos.
-    'BBPiebs31':'BPBiebs31',
-    'CaptnMurica':'CapnMurica',
-    'Fionnbarth':'Fionnbharth',
+    "BBPiebs31": "BPBiebs31",
+    "CaptnMurica": "CapnMurica",
+    "Fionnbarth": "Fionnbharth",
 
     # Case changes implemented by ICTV (and now GenBank).
-    'Baka':'BAKA',
-    'CJW1':'Cjw1',
-    'Dlane':'DLane',
-    'Kssjeb':'KSSJEB',
-    'Littlee':'LittleE',
-    'Billknuckles':'BillKnuckles',
-    'Packman':'PackMan',
-    'Mrgordo':'MrGordo',
-    'Ericb':'EricB',
-    'lockley':'Lockley',
-    'Heldan':'HelDan',
-    'Ta17a':'TA17a'
+    "Baka": "BAKA",
+    "Billknuckles": "BillKnuckles",
+    "Crimd": "CrimD",
+    "CJW1": "Cjw1",
+    "Deadp": "DeadP",
+    "Dlane": "DLane",
+    "Dotproduct": "DotProduct",
+    "Ericb": "EricB",
+    "Gumbie": "GUmbie",
+    "Heldan": "HelDan",
+    "Jaws": "JAWS",
+    "Joedirt": "JoeDirt",
+    "Kssjeb": "KSSJEB",
+    "Littlee": "LittleE",
+    "Macncheese": "MacnCheese",
+    "Mrgordo": "MrGordo",
+    "Packman": "PackMan",
+    "lockley": "Lockley",
+    "Rockyhorror": "RockyHorror",
+    "Ta17a": "TA17a"
     }
+
+
+
+
+
 
 # Host genus typo dictionary.
 # Key = Host genus as it is spelled in the GenBank-formatted record.

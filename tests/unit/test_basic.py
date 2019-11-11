@@ -1466,6 +1466,18 @@ class TestBasicFunctions(unittest.TestCase):
 
 
 
+    def test_truncate_value_1(self):
+        """Verify short value is not changed."""
+        input_value = "short"
+        output_value = basic.truncate_value(input_value, 6, "...")
+        self.assertEqual(output_value, input_value)
+
+    def test_truncate_value_2(self):
+        """Verify long value is not changed."""
+        input_value = "abcdefghijkl"
+        output_value = basic.truncate_value(input_value, 6, "...")
+        exp_output_value = "abcdef..."
+        self.assertEqual(output_value, exp_output_value)
 
 
 

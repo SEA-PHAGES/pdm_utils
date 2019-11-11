@@ -56,6 +56,7 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
 
     try:
         # DateLastModified gets returned as a datetime.datetime object.
+        # TODO some phages have no date, so it will be returned NULL.
         gnm.date = data_dict["DateLastModified"]
     except:
         pass

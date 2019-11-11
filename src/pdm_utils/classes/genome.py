@@ -96,7 +96,6 @@ class Genome:
         filename = filename.split('.')[0]
         self.filename = filename
 
-
     def set_id(self, value=None, attribute=None):
         """Set the id from either an input value or an indicated attribute.
 

@@ -157,10 +157,14 @@ def parse_args(unparsed_args_list):
     parser.add_argument("import_table", type=pathlib.Path,
         help=IMPORT_TABLE_HELP)
     parser.add_argument("-g", "--genome_id_field", type=str.lower,
-        default="_organism_name", choices=["_organism_name", "filename"],
+        default="_organism_name",
+        choices=["_organism_name", "_description_name",
+                 "_source_name", "filename"],
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-hg", "--host_genus_field", type=str.lower,
-        default="_organism_host_genus", choices=["_organism_host_genus"],
+        default="_organism_host_genus",
+        choices=["_organism_host_genus", "_description_host_genus",
+                 "_source_host_genus"],
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-p", "--prod_run", action="store_true",
         default=False, help=PROD_RUN_HELP)
@@ -749,14 +753,19 @@ def review_cds_descriptions(feature_list, description_field):
     """
     # Print a table of CDS data for user to review.
     summary = []
+    x = 20
+    y = "..."
     for cds in feature_list:
+        short_product = basic.truncate_value(cds.processed_product, x, y)
+        short_function = basic.truncate_value(cds.processed_function, x, y)
+        short_note = basic.truncate_value(cds.processed_note, x, y)
         dict = {"CDS ID": cds.id,
                 "Start": cds.left,
                 "Stop": cds.right,
                 "Strand": cds.strand,
-                "Product": cds.processed_product,
-                "Function": cds.processed_function,
-                "Note": cds.processed_note
+                "Product": short_product,
+                "Function": short_function,
+                "Note": short_note
                 }
         summary.append(dict)
     print(tabulate(summary, headers="keys"))

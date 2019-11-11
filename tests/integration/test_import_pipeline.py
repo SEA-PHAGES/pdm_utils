@@ -2054,9 +2054,24 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertTrue(ask_mock.called)
 
 
-
-
-
+    @patch("getpass.getpass")
+    def test_add_43(self, getpass_mock):
+        """Test pipeline with:
+        valid add ticket for draft genome,
+        matching by filename."""
+        logging.info("test_add_43")
+        getpass_mock.side_effect = [user, pwd]
+        alice_flat_file_path_mod = Path(genome_folder, "Alice_Draft.gb")
+        SeqIO.write(self.alice_record, alice_flat_file_path_mod, "genbank")
+        create_import_table([self.alice_ticket], import_table)
+        self.unparsed_args[6] = "filename"
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 4)
 
 
 

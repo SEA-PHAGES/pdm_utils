@@ -1014,3 +1014,9 @@ def get_synonyms(search_value, list_of_synonyms):
             syn_set = list_of_synonyms[x]
         x += 1
     return syn_set
+
+def truncate_value(value, length, suffix):
+    """."""
+    if len(value) > length:
+        value = value[:length] + suffix
+    return value
