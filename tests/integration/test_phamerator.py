@@ -1083,6 +1083,42 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
 
+    def test_get_phage_table_count_1(self):
+        """Verify the correct number of phages is returned when
+        the database is empty."""
+        count = phamerator.get_phage_table_count(self.sql_handle)
+        self.assertEqual(count, 0)
+
+
+    def test_get_phage_table_count_2(self):
+        """Verify the correct number of phages is returned when
+        the database contains one genome."""
+
+        # Add the L5 genome to the phage table.
+        insert1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostStrain, Sequence, "
+                   "SequenceLength, GC, status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster2, Subcluster2) "
+                   "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=self.db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(insert1)
+        connection.commit()
+        connection.close()
+        count = phamerator.get_phage_table_count(self.sql_handle)
+        self.assertEqual(count, 1)
+
+
+
+
+
 
 class TestPhameratorFunctions2(unittest.TestCase):
 

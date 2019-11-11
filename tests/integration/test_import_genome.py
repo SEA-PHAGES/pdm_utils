@@ -144,7 +144,20 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.id_dict = constants.PHAGE_ID_DICT
 
 
+    def tearDown(self):
 
+        # Remove all contents in the directory created for the test.
+        shutil.rmtree(self.base_dir)
+
+        # Remove the MySQL database created for the test.
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(f"DROP DATABASE {db}")
+        connection.commit()
+        connection.close()
 
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
@@ -503,25 +516,6 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
                              ff_gnm._cds_processed_functions_tally)
-
-
-
-
-    def tearDown(self):
-
-        # Remove all contents in the directory created for the test.
-        shutil.rmtree(self.base_dir)
-
-        # Remove the MySQL database created for the test.
-        connection = pymysql.connect(host="localhost",
-                                     user=user,
-                                     password=pwd,
-                                     cursorclass=pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
-
 
 
 
@@ -1443,7 +1437,8 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_1(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_1(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io runs correctly when there are no errors."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
@@ -1455,6 +1450,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         success_filename_list = [self.flat_file1]
         failed_filename_list = [self.flat_file2]
         evaluation_dict = {}
+        get_count_mock.return_value = 0
         pft_mock.return_value = (success_ticket_list,
                                  failed_ticket_list,
                                  success_filename_list,
@@ -1513,7 +1509,8 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_2(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_2(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is successful with
         success tickets but no success files, and
         fail tickets but no fail files."""
@@ -1527,6 +1524,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         success_filename_list = []
         failed_filename_list = []
         evaluation_dict = {}
+        get_count_mock.return_value = 0
         pft_mock.return_value = (success_ticket_list,
                                  failed_ticket_list,
                                  success_filename_list,
@@ -1556,7 +1554,8 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_3(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_3(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is successful with
         success files but no success tickets, and
         fail files but no fail tickets."""
@@ -1569,6 +1568,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         success_filename_list = [self.flat_file1]
         failed_filename_list = [self.flat_file2]
         evaluation_dict = {}
+        get_count_mock.return_value = 0
         pft_mock.return_value = (success_ticket_list,
                                  failed_ticket_list,
                                  success_filename_list,
@@ -1598,7 +1598,8 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_4(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_4(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is successful with two previously-existing
         results folders and no items in any output dataset."""
         self.genome_folder.mkdir()
@@ -1611,6 +1612,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.results_folder2 = Path(self.output_folder, self.results_folder2)
         self.results_folder2.mkdir()
         self.results_folder3 = Path(self.output_folder, self.results_folder3)
+        get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
         import_genome.data_io(sql_handle=self.sql_handle,
             genome_folder=self.genome_folder,
@@ -1644,7 +1646,8 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_5(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is not successful when results folder is invalid."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
@@ -1657,6 +1660,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.results_folder2.mkdir()
         self.results_folder3 = Path(self.output_folder, self.results_folder3)
         self.results_folder3.mkdir()
+        get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
         import_genome.data_io(sql_handle=self.sql_handle,
             genome_folder=self.genome_folder,
@@ -1673,10 +1677,12 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_6(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_6(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is not successful when there are no files to process."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
+        get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
         import_genome.data_io(sql_handle=self.sql_handle,
             genome_folder=self.genome_folder,
@@ -1694,12 +1700,14 @@ class TestImportGenomeMain7(unittest.TestCase):
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
-    def test_data_io_7(self, pft_mock, sys_exit_mock, log_eval_mock):
+    @patch("pdm_utils.functions.phamerator.get_phage_table_count")
+    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is not successful when there are no tickets to process."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
         self.flat_file1.touch()
         self.flat_file2.touch()
+        get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
         import_genome.data_io(sql_handle=self.sql_handle,
             genome_folder=self.genome_folder,

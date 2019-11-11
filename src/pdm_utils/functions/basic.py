@@ -994,7 +994,7 @@ def choose_from_list(options):
     print(f"These are the options: {options}.")
     while (exit == False and result is False and x < len(options)):
         option = options[x]
-        prompt = f"Would you like to select '{option}'?"
+        prompt = f"Would you like to select '{option}'? "
         result = ask_yes_no(prompt=prompt, response_attempt=3)
         if (result is None or result is True):
             exit = True
@@ -1007,7 +1007,7 @@ def choose_from_list(options):
 
 def get_synonyms(search_value, list_of_synonyms):
     """Search for a set of values from a list of sets."""
-    syn_set = set()
+    syn_set = set([search_value])
     x = 0
     while x < len(list_of_synonyms):
         if search_value in list_of_synonyms[x]:

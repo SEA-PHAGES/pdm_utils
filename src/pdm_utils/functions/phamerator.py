@@ -512,6 +512,21 @@ def create_genome_statements(gnm, tkt_type=""):
 
     return sql_statements
 
+
+def get_phage_table_count(sql_handle):
+    """Get the current number of genomes in the database."""
+    query = "SELECT COUNT(*) FROM phage"
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    count = result_list[0]["COUNT(*)"]
+    return count
+
+
+
+
+
+
+
 # TODO this may no longer be needed.
 # def copy_data(bndl, from_type, to_type, flag="retain"):
 #     """Copy data from a 'phamerator' genome object.

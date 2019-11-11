@@ -1,1 +1,1 @@
-id,type,phage_id,host_genus,cluster,subcluster,accession,description_field,annotation_status,annotation_author,retrieve_record,run_mode1,,,,,,,,,,,2,,,,,,,,,,,3,,,,,,,,,,,4,,,,,,,,,,,5,,,,,,,,,,,6,,,,,,,,,,,7,,,,,,,,,,,8,,,,,,,,,,,9,,,,,,,,,,,10,,,,,,,,,,,
+type,phage_id,description_field,run_mode,host_genus,cluster,subcluster,accession,annotation_author,retrieve_record,annotation_status

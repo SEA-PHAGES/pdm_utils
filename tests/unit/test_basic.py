@@ -1461,7 +1461,7 @@ class TestBasicFunctions(unittest.TestCase):
         set3 = {"null1", "null2", "null3", "null4"}
         list_of_synonyms = [set3, set2, set1]
         output_value = basic.get_synonyms(search_value, list_of_synonyms)
-        self.assertEqual(len(output_value), 0)
+        self.assertEqual(output_value, {search_value})
 
 
 
