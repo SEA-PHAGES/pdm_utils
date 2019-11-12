@@ -18,7 +18,8 @@ def export_ticket_data(list_of_data_dicts, file_path, headers):
     headers_dict = {}
     for header in headers:
         headers_dict[header] = header
-    with open(file_path, "w") as file_handle:
+    # with open(file_path, "w") as file_handle:
+    with file_path.open("w") as file_handle:
         file_writer = csv.DictWriter(file_handle, headers)
         file_writer.writerow(headers_dict)
         for data_dict in list_of_data_dicts:

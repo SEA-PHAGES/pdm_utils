@@ -8,6 +8,7 @@ import shutil
 import sys
 import time
 from urllib import request, error
+import pathlib
 
 # Import third-party modules
 try:
@@ -19,9 +20,73 @@ except ModuleNotFoundError as err:
     sys.exit(1)
 
 # from misc_functions import ask_yes_no, close_files
+from pdm_utils.constants import constants
 from pdm_utils.functions.basic import ask_yes_no, close_files
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
+from pdm_utils.functions import tickets
+
+
+
+pdm_utils_testing = pathlib.Path("/tmp/pdm_utils_testing/")
+if pdm_utils_testing.exists():
+    shutil.rmtree(pdm_utils_testing)
+pdm_utils_testing.mkdir()
+
+# Column headers for import table - old version:
+# import_table_columns = ["type",
+#                         "phage_id",
+#                         "host_genus",
+#                         "cluster",
+#                         "subcluster",
+#                         "annotation_status",
+#                         "annotation_author",
+#                         "description_field",
+#                         "accession",
+#                         "run_mode",
+#                         "replace_phage_id"]
+
+# TODO Column headers for import table - new version:
+# import_table_columns2 = constants.IMPORT_TABLE_STRUCTURE["order"]
+ # New order in constants table structure:
+ # ["type",
+ # "phage_id",
+ # "description_field",
+ # "run_mode",
+ # "host_genus",
+ # "cluster",
+ # "subcluster",
+ # "accession",
+ # "annotation_author",
+ # "retrieve_record",
+ # "annotation_status"
+ # ]
+
+# The only diff = old version had secondary_phage_id, new version has retrieve_record
+import_table_columns2 = ["type",
+                        "phage_id",
+                        "host_genus",
+                        "cluster",
+                        "subcluster",
+                        "annotation_status",
+                        "annotation_author",
+                        "description_field",
+                        "accession",
+                        "run_mode",
+                        "retrieve_record"]
+
+# Columns for new format for update tickets to match RandomFieldUpdateHandler
+update_columns2 = ["table",
+                  "field",
+                  "value",
+                  "key_name",
+                  "key_value"]
+
+
+
+
+
+
 
 def main(unparsed_args_list):
     # set up argparse to interact with users at the command line interface.
@@ -123,14 +188,33 @@ def main(unparsed_args_list):
             print("Exiting script")
             sys.exit(1)
         # Genomes sub-folder
-        os.mkdir(os.path.join(field_folder, "genomes"))
+        # os.mkdir(os.path.join(field_folder, "genomes"))
 
         # Now make the import table, and add to list of open file handles
-        field_import_table = os.path.join(field_folder, date +
-                                          "_field_updates_import_table.csv")
+
+        field_import_table_filename = "_field_updates_import_table.csv"
+        # field_import_table = os.path.join(field_folder, date +
+        #                                   field_import_table_filename)
+        field_import_table = os.path.join(pdm_utils_testing, date +
+                                          field_import_table_filename)
         field_import_table_handle = open(field_import_table, "w")
         open_file_handles_list.append(field_import_table_handle)
         field_import_table_writer = csv.writer(field_import_table_handle)
+
+        # TODO new dictwriter
+        field_import_table_filename2 = "_field_updates_import_table.csv"
+        # field_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
+        #                                    field_import_table_filename2)
+
+        field_import_table2 = pathlib.Path(field_folder, date +
+                                           field_import_table_filename2)
+        field_import_table2_handle = field_import_table2.open(mode="w")
+        open_file_handles_list.append(field_import_table2_handle)
+        field_import_table_writer2 = csv.writer(field_import_table2_handle)
+        field_import_table_writer2.writerow(update_columns2)
+
+
+
 
     if retrieve_phagesdb_updates is True:
         # Create output folder
@@ -160,11 +244,22 @@ def main(unparsed_args_list):
         os.mkdir(os.path.join(phagesdb_folder, "genomes"))
 
         # Now make the import table, and add to list of open file handles
+        phagesdb_import_table_filename = "_phagesdb_updates_import_table.csv"
         phagesdb_import_table = os.path.join(phagesdb_folder, date +
-                                             "_phagesdb_updates_import_table.csv")
+                                             phagesdb_import_table_filename)
         phagesdb_import_table_handle = open(phagesdb_import_table, "w")
         open_file_handles_list.append(phagesdb_import_table_handle)
         phagesdb_import_table_writer = csv.writer(phagesdb_import_table_handle)
+
+        # TODO new dictwriter
+        phagesdb_import_table_filename2 = "_phagesdb_updates_import_table_new.csv"
+        phagesdb_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
+                                    phagesdb_import_table_filename2)
+        phagesdb_import_table2_handle = phagesdb_import_table2.open(mode="w")
+        open_file_handles_list.append(phagesdb_import_table2_handle)
+        phagesdb_import_table_writer2 = csv.writer(phagesdb_import_table2_handle)
+        phagesdb_import_table_writer2.writerow(import_table_columns2)
+
 
     if retrieve_pecaan_updates is True:
         # Create output folder
@@ -193,11 +288,23 @@ def main(unparsed_args_list):
         os.mkdir(os.path.join(pecaan_folder, "genomes"))
 
         # Now make the import table, and add to list of open file handles
+        pecaan_import_table_filename = "_pecaan_updates_import_table.csv"
         pecaan_import_table = os.path.join(pecaan_folder, date +
-                                           "_pecaan_updates_import_table.csv")
+                                           pecaan_import_table_filename)
         pecaan_import_table_handle = open(pecaan_import_table, "w")
         open_file_handles_list.append(pecaan_import_table_handle)
         pecaan_import_table_writer = csv.writer(pecaan_import_table_handle)
+
+        # TODO new dictwriter
+        pecaan_import_table_filename2 = "_pecaan_updates_import_table_new.csv"
+        pecaan_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
+                                           pecaan_import_table_filename2)
+        pecaan_import_table2_handle = pecaan_import_table2.open(mode="w")
+        open_file_handles_list.append(pecaan_import_table2_handle)
+        pecaan_import_table_writer2 = csv.writer(pecaan_import_table2_handle)
+        pecaan_import_table_writer2.writerow(import_table_columns2)
+
+
 
     if retrieve_ncbi_updates is True:
         # Create output folder
@@ -226,11 +333,24 @@ def main(unparsed_args_list):
         os.mkdir(os.path.join(ncbi_folder, "genomes"))
 
         # Now make the import table, and add to list of open file handles
+
+        ncbi_import_table_filename = "_ncbi_updates_import_table.csv"
+
         ncbi_import_table = os.path.join(ncbi_folder, date +
-                                         "_ncbi_updates_import_table.csv")
+                                         ncbi_import_table_filename)
         ncbi_import_table_handle = open(ncbi_import_table, "w")
         open_file_handles_list.append(ncbi_import_table_handle)
         ncbi_import_table_writer = csv.writer(ncbi_import_table_handle)
+
+        # TODO new dictwriter
+        ncbi_import_table_filename2 = "_ncbi_updates_import_table_new.csv"
+        ncbi_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
+                                           ncbi_import_table_filename2)
+
+        ncbi_import_table2_handle = ncbi_import_table2.open(mode="w")
+        open_file_handles_list.append(ncbi_import_table2_handle)
+        ncbi_import_table_writer2 = csv.writer(ncbi_import_table2_handle)
+        ncbi_import_table_writer2.writerow(import_table_columns2)
 
         # Results file
         ncbi_results_table = os.path.join(ncbi_folder, date + "_ncbi_results.csv")
@@ -593,14 +713,48 @@ def main(unparsed_args_list):
                 if phamerator_cluster != phagesdb_cluster:
                     field_corrections_needed += 1
 
+                    #TODO output row
+                    field_import_table_writer2.writerow(["phage",
+                                                        "Cluster2",
+                                                        phagesdb_cluster,
+                                                        "PhageID",
+                                                        phamerator_id])
+
+                    field_import_table_writer2.writerow(["phage",
+                                                        "Cluster",
+                                                        phagesdb_cluster,
+                                                        "PhageID",
+                                                        phamerator_id])
+
+
                 # Compare Subcluster2
                 if phamerator_subcluster != phagesdb_subcluster:
                     field_corrections_needed += 1
+
+                    #TODO output row
+                    field_import_table_writer2.writerow(["phage",
+                                                        "Subcluster2",
+                                                        phagesdb_subcluster,
+                                                        "PhageID",
+                                                        phamerator_id])
+
+                    if phagesdb_subcluster != "none":
+                        field_import_table_writer2.writerow(["phage",
+                                                            "Cluster",
+                                                            phagesdb_subcluster,
+                                                            "PhageID",
+                                                            phamerator_id])
 
                 # Compare Host genus
                 if phamerator_host != phagesdb_host:
                     field_corrections_needed += 1
 
+                    #TODO output row
+                    field_import_table_writer2.writerow(["phage",
+                                                        "HostStrain",
+                                                        phagesdb_host,
+                                                        "PhageID",
+                                                        phamerator_id])
                 # Compare Accession
                 # If the genome author is "gbk", then don't worry about
                 # updating the accession. This used to be determined with
@@ -610,12 +764,19 @@ def main(unparsed_args_list):
                         phamerator_author == "hatfull":
                     field_corrections_needed += 1
 
+                    #TODO output row
+                    field_import_table_writer2.writerow(["phage",
+                                                        "Accession",
+                                                        phagesdb_accession,
+                                                        "PhageID",
+                                                        phamerator_id])
+
                 # If errors in the Host, Cluster, or Subcluster information
                 # were identified, create an import ticket for the import
                 # script to implement.
                 if field_corrections_needed > 0:
                     field_update_tally += 1
-
+                    # TODO modify output
                     field_import_table_writer.writerow(["update",
                                                         phamerator_id,
                                                         phagesdb_host,
@@ -699,6 +860,8 @@ def main(unparsed_args_list):
                         # file is acquired through phagesdb, both the
                         # Annotation status is expected to be 'final' and
                         # the Annotation author is expected to be 'hatfull'.
+
+                        # TODO modify output
                         phagesdb_import_table_writer.writerow(["replace",
                                                                phage_id_search_name,
                                                                "retrieve",
@@ -710,6 +873,20 @@ def main(unparsed_args_list):
                                                                "retrieve",
                                                                "phagesdb",
                                                                phamerator_id])
+
+
+                        phagesdb_import_table_writer2.writerow(["replace",
+                                                               phage_id_search_name,
+                                                               "retrieve",
+                                                               "retrieve",
+                                                               "retrieve",
+                                                               "final",
+                                                               "1",
+                                                               "product",
+                                                               "retrieve",
+                                                               "phagesdb",
+                                                               "1"])
+
 
                         phagesdb_retrieved_tally += 1
                         phagesdb_retrieved_list.append(phamerator_id)
@@ -957,6 +1134,7 @@ def main(unparsed_args_list):
                 SeqIO.write(retrieved_record, os.path.join(
                     ncbi_folder, "genomes", ncbi_filename), "genbank")
 
+                # TODO modify output
                 ncbi_import_table_writer.writerow(['replace',
                                                    import_table_name,
                                                    phamerator_host,
@@ -968,6 +1146,25 @@ def main(unparsed_args_list):
                                                    phamerator_accession,
                                                    'ncbi_auto',
                                                    phamerator_id])
+
+                # Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
+                if phamerator_author == "hatfull":
+                    phamerator_author = "1"
+                else:
+                    phamerator_author = "0"
+
+                ncbi_import_table_writer2.writerow(["replace",
+                                                   import_table_name,
+                                                   phamerator_host,
+                                                   phamerator_cluster,
+                                                   phamerator_subcluster,
+                                                   phamerator_status,
+                                                   phamerator_author,
+                                                   "product",
+                                                   phamerator_accession,
+                                                   "sea_auto",
+                                                   "1"])
+
 
             else:
                 print("For some reason I retrieved a Genbank record for {} even "
@@ -1032,6 +1229,7 @@ def main(unparsed_args_list):
                 pecaan_file_handle.close()
 
                 # Create the new import ticket
+                # TODO modify output
                 pecaan_import_table_writer.writerow(["add",
                                                      new_phage,
                                                      "retrieve",
@@ -1043,6 +1241,20 @@ def main(unparsed_args_list):
                                                      "none",
                                                      "pecaan",
                                                      "none"])
+
+                pecaan_import_table_writer2.writerow(["add",
+                                                     new_phage,
+                                                     "retrieve",
+                                                     "retrieve",
+                                                     "retrieve",
+                                                     "draft",
+                                                     "1",
+                                                     "product",
+                                                     "none",
+                                                     "pecaan",
+                                                     "1"])
+
+
 
                 print("Retrieved {} from PECAAN.".format(new_phage))
                 pecaan_retrieved_tally += 1

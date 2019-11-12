@@ -14,6 +14,7 @@ from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.db_import import import_phage
 from pdm_utils.pipelines.phamerate import phamerate
 from pdm_utils.pipelines.db_export import file_export
+from pdm_utils.pipelines.db_update import update_field
 
 
 def main(unparsed_args):
@@ -29,6 +30,7 @@ def main(unparsed_args):
     RUN_HELP = "Command line script to call a pdm_utils pipeline."
     VALID_PIPELINES = {
         "retrieve_data",
+        "update",
         "import",
         "import_dev",
         "cdd",
@@ -48,6 +50,8 @@ def main(unparsed_args):
     # Note: import_phage is the legacy import script and will be deprecated.
     # Once import_genome is tested and operational, 'import' will call the
     # 'import_genome' module instead of the 'import_phage' module.
+    elif args.pipeline == "update":
+        update_field.main(unparsed_args[unparsed_args.index("update") + 1:])
     elif args.pipeline == "import":
         import_phage.main(unparsed_args)
     elif args.pipeline == "import_dev":

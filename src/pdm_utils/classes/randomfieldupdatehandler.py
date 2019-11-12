@@ -1,6 +1,8 @@
 import pymysql as pms
+from pdm_utils.functions import phamerator
+from pdm_utils.functions import basic
 
-
+# TODO unittest entire class.
 class RandomFieldUpdateHandler:
     def __init__(self, connection):
         """
@@ -158,16 +160,15 @@ class RandomFieldUpdateHandler:
         if self.valid_ticket is False:
             return 0
         try:
-            print("\nCommand to execute:")
-            print("UPDATE {} SET {} = '{}' WHERE {} = '{}'".format(
-                self.table, self.field, self.value, self.key_name,
-                self.key_value))
-            proceed = input("Do you wish to proceed? (y/n) ")
-            if proceed.lower() in ["yes", "y"]:
+            command = phamerator.create_update(self.table, self.field,
+                        self.value, self.key_name, self.key_value)
+            # print("\nCommand to execute:")
+            # print(command)
+            # prompt = "Do you wish to proceed? (y/n) "
+            # result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+            result = True
+            if result == True:
                 cur = self.connection.cursor()
-                command = "UPDATE {} SET {} = '{}' WHERE {} = '{}'".format(
-                    self.table, self.field, self.value, self.key_name,
-                    self.key_value)
                 cur.execute(command)
                 cur.execute("COMMIT")
                 cur.close()
