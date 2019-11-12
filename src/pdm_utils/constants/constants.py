@@ -217,3 +217,4 @@ HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
 # Phamerator server info
 DB_HOST = "phamerator.webfactional.com"
 DB_HOST_DIR = "/home/phamerator/webapps/htdocs/databases_Hatfull/"
+DB_WEBSITE = "http://phamerator.webfactional.com/databases_Hatfull/"
