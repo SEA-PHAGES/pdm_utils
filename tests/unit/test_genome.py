@@ -10,7 +10,7 @@ from pdm_utils.classes import source
 from datetime import datetime
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
-
+import pathlib
 
 class TestGenomeClass1(unittest.TestCase):
 
@@ -43,7 +43,7 @@ class TestGenomeClass1(unittest.TestCase):
 
     def test_set_filename_1(self):
         """Confirm file path is split appropriately."""
-        filepath = "/path/to/folder/Trixie.gbk"
+        filepath = pathlib.Path("/path/to/folder/Trixie.gbk")
         self.gnm.set_filename(filepath)
         self.assertEqual(self.gnm.filename, "Trixie")
 

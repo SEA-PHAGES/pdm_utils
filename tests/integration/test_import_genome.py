@@ -71,10 +71,10 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         # Now import the empty schema from file.
         # Seems like pymysql has trouble with this step, so use subprocess.
-        schema_filepath = \
-            os.path.join(os.path.dirname(__file__),
-                        "test_files/",
-                        self.schema_file)
+        self.unittest_file = Path(__file__)
+        self.unittest_dir = self.unittest_file.parent
+        self.test_files_path = Path(self.unittest_dir, "test_files")
+        schema_filepath = Path(self.test_files_path, self.schema_file)
 
         handle = open(schema_filepath, "r")
         command_string = f"mysql -u {user} -p{pwd} {db}"
@@ -84,24 +84,14 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
+        self.base_dir = Path(self.unittest_dir,"test_wd/test_import")
+        self.base_dir.mkdir()
 
+        self.genome_folder = Path(self.base_dir,"genome_folder")
+        self.genome_folder.mkdir()
 
-        self.base_dir = \
-            os.path.join(os.path.dirname(__file__),
-            "test_wd/test_import")
-        os.mkdir(self.base_dir)
-
-        self.genome_folder = \
-            os.path.join(self.base_dir, "genome_folder")
-        os.mkdir(self.genome_folder)
-
-        self.test_flat_file1 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_flat_file_1.gb")
-
-        self.test_flat_file2 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_flat_file_2.gb")
+        self.test_flat_file1 = Path(self.test_files_path, "test_flat_file_1.gb")
+        self.test_flat_file2 = Path(self.test_files_path, "test_flat_file_2.gb")
 
         self.sql_handle = mch.MySQLConnectionHandler()
         self.sql_handle.database = db
@@ -170,7 +160,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     host_genus_field="_organism_host_genus",
@@ -208,7 +198,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                                      "retrieve_record", "accession"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file2,
+                    filepath=self.test_flat_file2,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name")
         with self.subTest():
@@ -225,7 +215,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                                      "retrieve_record", "accession"])
         tkt_dict = {"L5x":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file")
@@ -246,7 +236,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.data_add = set()
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file")
@@ -270,7 +260,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.data_retrieve = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file",
@@ -328,7 +318,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.data_retain = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file",
@@ -389,7 +379,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.data_retain = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file",
@@ -441,7 +431,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.data_retain = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file")
@@ -463,7 +453,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         tkt_dict = {"new_id":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     host_genus_field="_organism_host_genus",
@@ -500,7 +490,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         ask_mock.side_effect = [False]
         choose_mock.side_effect = ["function"]
         bndl = import_genome.prepare_bundle(
-                    filename=self.test_flat_file1,
+                    filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     host_genus_field="_organism_host_genus",
@@ -884,9 +874,11 @@ class TestImportGenomeMain5(unittest.TestCase):
                                    "eval_flag_dict": {"a":1}}
 
         self.table_structure_dict = constants.IMPORT_TABLE_STRUCTURE
-        self.test_import_table1 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_import_table_1.csv")
+
+        self.unittest_file = Path(__file__)
+        self.unittest_dir = self.unittest_file.parent
+        self.test_import_table_1 = Path(self.unittest_dir,
+                                     "test_files/test_import_table_1.csv")
 
         # Valid data dictionary.
         self.data_dict1 = {}
@@ -916,7 +908,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         """Verify dictionary is returned from a correct import table file."""
 
         tkt_dict = import_genome.prepare_tickets(
-                        import_table_file=self.test_import_table1,
+                        import_table_file=self.test_import_table_1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
@@ -932,7 +924,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
-                        import_table_file=self.test_import_table1,
+                        import_table_file=self.test_import_table_1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
@@ -947,7 +939,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2.pop("phage_id")
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
-                        import_table_file=self.test_import_table1,
+                        import_table_file=self.test_import_table_1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
@@ -965,7 +957,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2["phage_id"] = "Trixie"
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
-                        import_table_file=self.test_import_table1,
+                        import_table_file=self.test_import_table_1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
@@ -981,7 +973,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2["type"] = "invalid"
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
-                        import_table_file=self.test_import_table1,
+                        import_table_file=self.test_import_table_1,
                         run_mode_eval_dict=self.run_mode_eval_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
@@ -1433,7 +1425,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         shutil.rmtree(self.base_dir)
 
 
-
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1488,8 +1480,8 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertEqual(len(exp_success_tkts), 1)
         with self.subTest():
@@ -1506,6 +1498,7 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertEqual(fail_genomes_count, 1)
 
 
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1539,8 +1532,8 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertTrue(self.exp_success_tkt_table.exists())
         with self.subTest():
@@ -1551,6 +1544,7 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertFalse(self.exp_fail_genomes.exists())
 
 
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1583,8 +1577,8 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertFalse(self.exp_success_tkt_table.exists())
         with self.subTest():
@@ -1595,6 +1589,7 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(self.exp_fail_genomes.exists())
 
 
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1627,8 +1622,8 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertTrue(self.results_folder3.exists())
         with self.subTest():
@@ -1643,6 +1638,7 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertEqual(input_genomes_count, 2)
 
 
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1670,10 +1666,11 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
 
 
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1693,10 +1690,11 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
 
 
+    # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
@@ -1718,8 +1716,8 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
-        with self.subTest():
-            self.assertTrue(log_eval_mock.called)
+        # with self.subTest():
+        #     self.assertTrue(log_eval_mock.called)
 
 
 

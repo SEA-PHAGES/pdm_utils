@@ -2,6 +2,7 @@
 GenBank-formatted flat files."""
 
 
+import pathlib
 import unittest
 from datetime import datetime
 from pdm_utils.functions import basic
@@ -768,9 +769,8 @@ class TestFlatFileFunctions3(unittest.TestCase):
                                 features = self.feature_list
                                 )
 
-        self.filepath = "/path/to/file/Phage_ZZZ.gb"
+        self.filepath = pathlib.Path("/path/to/file/Phage_ZZZ.gb")
         self.exp_date = datetime.strptime(self.date,'%d-%b-%Y')
-
 
     def test_parse_genome_data_1(self):
         """Verify retrieved flat file data is parsed correctly."""

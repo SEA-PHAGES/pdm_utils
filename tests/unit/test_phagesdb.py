@@ -3,7 +3,7 @@
 from pdm_utils.functions import phagesdb
 from pdm_utils.constants import constants
 import unittest
-
+import pathlib
 
 
 class TestPhagesDBFunctions(unittest.TestCase):
@@ -133,8 +133,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"fasta_file": url}
         filename = phagesdb.parse_fasta_filename(data_dict)
-        expected_filename = url
-        self.assertEqual(filename, expected_filename)
+        expected_filename = pathlib.Path(url)
+        self.assertEqual(filename, url)
 
     def test_parse_fasta_filename_2(self):
         """Verify fasta filename is not retrieved and an error is produced."""
@@ -142,8 +142,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         data_dict = {"fasta_file_x": url}
         filename = phagesdb.parse_fasta_filename(data_dict)
-        expected_filename = ""
-        self.assertEqual(filename, expected_filename)
+        expected_filename = pathlib.Path("")
+        self.assertEqual(filename, "")
 
 
 

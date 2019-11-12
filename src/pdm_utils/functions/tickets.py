@@ -25,13 +25,13 @@ def export_ticket_data(list_of_data_dicts, file_path, headers):
             file_writer.writerow(data_dict)
 
 
-def retrieve_ticket_data(filename):
+def retrieve_ticket_data(filepath):
     """Open file and retrieve the ticket data.
 
     :param filename:
         Path to file containing import ticket data, where
         each row is assumed to contain column names.
-    :type filename: str
+    :type filename: Path
     :returns:
         A list of elements, where each element is a dictionary
         representing one row of data.
@@ -40,7 +40,8 @@ def retrieve_ticket_data(filename):
     :rtype: list
     """
     list_of_ticket_data = []
-    with open(filename,'r') as file:
+    # with open(filename,'r') as file:
+    with filepath.open(mode='r') as file:
         file_reader = csv.DictReader(file)
         for dict in file_reader:
             list_of_ticket_data.append(dict)

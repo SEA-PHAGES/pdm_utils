@@ -1,7 +1,7 @@
 """Functions to interact with, use, and parse genomic data from
 GenBank-formatted flat files."""
 
-
+import pathlib
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, ExactPosition
 from Bio import Alphabet
@@ -22,7 +22,7 @@ def retrieve_genome_data(filepath):
     :param filepath:
         Path to GenBank-formatted flat file that will be parsed
         using Biopython.
-    :type filepath: str
+    :type filepath: Path
     :returns:
         If there is only one record, a Biopython SeqRecord of parsed data.
         If the file cannot be parsed, or if there are multiple records,
@@ -33,12 +33,12 @@ def retrieve_genome_data(filepath):
         seqrecords = list(SeqIO.parse(filepath, "genbank"))
     except:
         seqrecords = []
-    filename = filepath.split("/")[-1]
+    # filename = filepath.split("/")[-1]
     if len(seqrecords) == 0:
-        print(f"There are no records in {filename}.")
+        print(f"There are no records in {filepath.name}.")
         seqrecord = None
     elif len(seqrecords) > 1:
-        print(f"There are multiple records in {filename}." )
+        print(f"There are multiple records in {filepath.name}." )
         seqrecord = None
     else:
         seqrecord = seqrecords[0]
@@ -275,7 +275,7 @@ def create_seqfeature_dictionary(seqfeature_list):
 # there is only minimal parsing and data processing.
 # Then the parse_genome_data() function calls parse_flat_file(),
 # and processes some data in specific ways.
-def parse_genome_data(seqrecord, filepath="",
+def parse_genome_data(seqrecord, filepath=pathlib.Path(),
         translation_table=11, genome_id_field="_organism_name", gnm_type="",
         host_genus_field="_organism_host_genus"):
     """Parse data from a Biopython SeqRecord object into a Genome object.
@@ -286,7 +286,7 @@ def parse_genome_data(seqrecord, filepath="",
     :param seqrecord: A Biopython SeqRecord object.
     :type seqrecord: SeqRecord
     :param filepath: A filename associated with the returned Genome object.
-    :type filepath: str
+    :type filepath: Path
     :param translation_table:
         The applicable translation table for the genome's CDS features.
     :type translation_table: int

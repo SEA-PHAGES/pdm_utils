@@ -7,7 +7,7 @@ from pdm_utils.constants import constants
 import urllib.request
 import json
 from pdm_utils.functions import misc
-
+import pathlib
 
 def parse_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB.
@@ -206,11 +206,12 @@ def parse_genome_data(data_dict, gnm_type=""):
 
     # Fasta file URL
     fastafile_url = parse_fasta_filename(data_dict)
-    gnm.filename = fastafile_url
+    fastafile_url_path = pathlib.Path(fastafile_url)
+    gnm.set_filename(fastafile_url_path)
 
     # Fasta file record
-    if gnm.filename != "":
-        fasta_file = retrieve_fasta_data(gnm.filename)
+    if fastafile_url != "":
+        fasta_file = retrieve_fasta_data(fastafile_url)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
@@ -251,48 +252,50 @@ def construct_phage_url(phage_name):
     return phage_url
 
 
-def copy_data(bndl, from_type, to_type, flag="retrieve"):
-    """Copy data from a 'phagesdb' genome object.
 
-    If a genome object stored in a bundle object has
-    attributes that are set to be 'retrieved' and auto-filled,
-    retrieve the data from PhagesDB to complete the genome.
-
-    :param bndl:
-        A pdm_utils bundle object containing at least two genome
-        objects.
-    :type bndl: bundle
-    :param from_type:
-        Indicates the value assigned to the source genome's 'type'.
-    :type from_type: str
-    :param to_type:
-        Indicates the type of genome that may need
-        to be populated from PhagesDB.
-    :type to_type: str
-    :param flag:
-        The attribute value that indicates that attribute needs to
-        be copied from PhagesDB.
-    :type flag: str
-    """
-    if to_type in bndl.genome_dict.keys():
-        to_gnm = bndl.genome_dict[to_type]
-        to_gnm.set_value_flag(flag)
-        if to_gnm._value_flag:
-            phage_url = construct_phage_url(to_gnm.id)
-            data_dict = retrieve_genome_data(phage_url)
-
-            # If there was an error with retrieving data from PhagesDB,
-            # an empty dictionary is returned.
-            if len(data_dict.keys()) != 0:
-                from_gnm = parse_genome_data(data_dict, gnm_type=from_type)
-                bndl.genome_dict[from_gnm.type] = from_gnm
-                # Copy all retrieved data and add to Bundle object.
-                genome_pair = genomepair.GenomePair()
-                genome_pair.genome1 = to_gnm
-                genome_pair.genome2 = from_gnm
-                genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
-                bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
-        to_gnm.set_value_flag(flag)
+# TODO this is probably no longer needed.
+# def copy_data(bndl, from_type, to_type, flag="retrieve"):
+#     """Copy data from a 'phagesdb' genome object.
+#
+#     If a genome object stored in a bundle object has
+#     attributes that are set to be 'retrieved' and auto-filled,
+#     retrieve the data from PhagesDB to complete the genome.
+#
+#     :param bndl:
+#         A pdm_utils bundle object containing at least two genome
+#         objects.
+#     :type bndl: bundle
+#     :param from_type:
+#         Indicates the value assigned to the source genome's 'type'.
+#     :type from_type: str
+#     :param to_type:
+#         Indicates the type of genome that may need
+#         to be populated from PhagesDB.
+#     :type to_type: str
+#     :param flag:
+#         The attribute value that indicates that attribute needs to
+#         be copied from PhagesDB.
+#     :type flag: str
+#     """
+#     if to_type in bndl.genome_dict.keys():
+#         to_gnm = bndl.genome_dict[to_type]
+#         to_gnm.set_value_flag(flag)
+#         if to_gnm._value_flag:
+#             phage_url = construct_phage_url(to_gnm.id)
+#             data_dict = retrieve_genome_data(phage_url)
+#
+#             # If there was an error with retrieving data from PhagesDB,
+#             # an empty dictionary is returned.
+#             if len(data_dict.keys()) != 0:
+#                 from_gnm = parse_genome_data(data_dict, gnm_type=from_type)
+#                 bndl.genome_dict[from_gnm.type] = from_gnm
+#                 # Copy all retrieved data and add to Bundle object.
+#                 genome_pair = genomepair.GenomePair()
+#                 genome_pair.genome1 = to_gnm
+#                 genome_pair.genome2 = from_gnm
+#                 genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
+#                 bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
+#         to_gnm.set_value_flag(flag)
 
 # TODO this will probably replace copy_data()
 def get_genome(phage_id, gnm_type=""):

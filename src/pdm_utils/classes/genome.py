@@ -2,6 +2,7 @@
 maintain and update SEA-PHAGES phage genomics data.
 """
 
+import pathlib
 from pdm_utils.functions import basic
 from pdm_utils.constants import constants
 from pdm_utils.classes import eval
@@ -85,16 +86,17 @@ class Genome:
         self._value_flag = False
 
 
-    def set_filename(self, value):
+    def set_filename(self, filepath):
         """Set the filename. Discard the path and file extension.
 
         :param value: name of the file reference.
-        :type value: str
+        :type value: Path
         """
-        split_filepath = value.split('/')
-        filename = split_filepath[-1]
-        filename = filename.split('.')[0]
-        self.filename = filename
+        self.filename = filepath.stem
+        # split_filepath = value.split('/')
+        # filename = split_filepath[-1]
+        # filename = filename.split('.')[0]
+        # self.filename = filename
 
     def set_id(self, value=None, attribute=None):
         """Set the id from either an input value or an indicated attribute.

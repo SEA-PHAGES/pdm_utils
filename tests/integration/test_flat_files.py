@@ -2,6 +2,7 @@
 GenBank-formatted flat files."""
 
 
+from pathlib import Path
 import unittest
 from pdm_utils.functions import flat_files
 from pdm_utils.classes import genome
@@ -13,18 +14,12 @@ class TestFlatFileFunctions(unittest.TestCase):
 
     def setUp(self):
 
-        self.test_filepath1 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_flat_file_1.gb")
-
-        self.test_filepath2 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_flat_file_2.gb")
-
-        self.test_filepath3 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_files/test_flat_file_5.gb")
-
+        self.unittest_file = Path(__file__)
+        self.unittest_dir = self.unittest_file.parent
+        self.base_dir = Path(self.unittest_dir,"test_files")
+        self.test_filepath1 = Path(self.base_dir, "test_flat_file_1.gb")
+        self.test_filepath2 = Path(self.base_dir, "test_flat_file_2.gb")
+        self.test_filepath3 = Path(self.base_dir, "test_flat_file_5.gb")
 
 
 
@@ -48,7 +43,7 @@ class TestFlatFileFunctions(unittest.TestCase):
 
 
 
-
+    # TODO this may no longer be needed.
     # def test_parse_files_1(self):
     #     """Verify file with one GenBank-formatted flat file
     #     record is correctly parsed."""

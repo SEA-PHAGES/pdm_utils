@@ -11,13 +11,12 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def setUp(self):
-        self.test_import_table_1 = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_import_table_1.csv")
 
-        self.base_dir = os.path.join(os.path.dirname(__file__),
-                            "test_wd/test_tickets")
-        self.base_dir = Path(self.base_dir)
+        self.unittest_file = Path(__file__)
+        self.unittest_dir = self.unittest_file.parent
+        self.test_import_table_1 = Path(self.unittest_dir,
+                                     "test_files/test_import_table_1.csv")
+        self.base_dir = Path(self.unittest_dir, "test_files/test_tickets")
         self.base_dir.mkdir()
 
         self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}

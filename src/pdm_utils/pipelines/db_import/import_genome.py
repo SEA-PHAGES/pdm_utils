@@ -241,37 +241,37 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
 
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
-    success_filename_list = results_tuple[2]
-    failed_filename_list = results_tuple[3]
+    success_filepath_list = results_tuple[2]
+    failed_filepath_list = results_tuple[3]
     evaluation_dict = results_tuple[4]
 
     # Output data.
     logger.info("Logging successful tickets and files.")
     headers = constants.IMPORT_TABLE_STRUCTURE["order"]
-    if (len(success_ticket_list) > 0 or len(success_filename_list) > 0):
+    if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
         success_path = pathlib.Path(results_path, "success")
         success_path.mkdir()
         if len(success_ticket_list) > 0:
             success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
             tickets.export_ticket_data(success_ticket_list, success_tkt_file, headers)
-        if len(success_filename_list) > 0:
+        if len(success_filepath_list) > 0:
             success_genomes_path = pathlib.Path(success_path, "genomes")
             success_genomes_path.mkdir()
-            for file in success_filename_list:
+            for file in success_filepath_list:
                 new_file = pathlib.Path(success_genomes_path, file.name)
                 shutil.move(str(file), str(new_file))
 
     logger.info("Logging failed tickets and files.")
-    if (len(failed_ticket_list) > 0 or len(failed_filename_list) > 0):
+    if (len(failed_ticket_list) > 0 or len(failed_filepath_list) > 0):
         failed_path = pathlib.Path(results_path, "fail")
         failed_path.mkdir()
         if len(failed_ticket_list) > 0:
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
             tickets.export_ticket_data(failed_ticket_list, failed_tkt_file, headers)
-        if len(failed_filename_list) > 0:
+        if len(failed_filepath_list) > 0:
             failed_genomes_path = pathlib.Path(failed_path, "genomes")
             failed_genomes_path.mkdir()
-            for file in failed_filename_list:
+            for file in failed_filepath_list:
                 new_file = pathlib.Path(failed_genomes_path, file.name)
                 shutil.move(str(file), str(new_file))
 
@@ -284,8 +284,8 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         f"\n{final_count} genome(s) in the database after import. "
         f"\n{len(success_ticket_list)} ticket(s) successfully processed. "
         f"\n{len(failed_ticket_list)} ticket(s) NOT processed. "
-        f"\n{len(success_filename_list)} genome(s) successfully imported. "
-        f"\n{len(failed_filename_list)} genome(s) NOT imported. ")
+        f"\n{len(success_filepath_list)} genome(s) successfully imported. "
+        f"\n{len(failed_filepath_list)} genome(s) NOT imported. ")
         )
 
 
@@ -321,7 +321,7 @@ def log_evaluations(dict_of_dict_of_lists):
 
 
 
-def prepare_tickets(import_table_file="", run_mode_eval_dict=None,
+def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         description_field="", table_structure_dict={}):
     """Prepare dictionary of pdm_utils Tickets."""
     # 1. Parse ticket data from table.
@@ -405,7 +405,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         key (str) = The ticket's phage_id
         value (Ticket) = The ticket
     :type ticket_dict: dict
-    :param files_in_folder: A list of filenames to be parsed.
+    :param files_in_folder: A list of filepaths to be parsed.
     :type files_in_folder: list
     :param sql_handle:
         A pdm_utils MySQLConnectionHandler object containing
@@ -428,10 +428,14 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     # user interfaces to present the summary of import.
     success_ticket_list = []
     failed_ticket_list = []
-    success_filename_list = []
-    failed_filename_list = []
+    success_filepath_list = []
+    failed_filepath_list = []
     evaluation_dict = {}
 
+
+    # TODO should add some sort of flag to set default empty values
+    # for phagesdb sets to account for creation of databases that
+    # do not rely on phagesdb?
     # Retrieve data from phagesdb to create sets of
     # valid host genera, clusters, and subclusters.
     # Cluster "UNK" may or may not already be present, but it is valid.
@@ -445,10 +449,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
 
     # To minimize memory usage, each flat_file is evaluated one by one.
     bundle_count = 1
-    for filename in files_in_folder:
+    for filepath in files_in_folder:
         replace_gnm_pair_key = file_ref + "_" + retain_ref
-        logger.info(f"Preparing data for file: {filename.name}.")
-        bndl = prepare_bundle(filename=str(filename), ticket_dict=ticket_dict,
+        logger.info(f"Preparing data for file: {filepath.name}.")
+        bndl = prepare_bundle(filepath=filepath, ticket_dict=ticket_dict,
                               sql_handle=sql_handle,
                               genome_id_field=genome_id_field,
                               host_genus_field=host_genus_field,
@@ -464,7 +468,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
         phamerator_seq_set = phamerator.create_seq_set(sql_handle)
         phamerator_accession_set = phamerator.create_accession_set(sql_handle)
-        logger.info(f"Checking file: {filename.name}.")
+        logger.info(f"Checking file: {filepath.name}.")
         run_checks(bndl,
                    accession_set=phamerator_accession_set,
                    phage_id_set=phamerator_phage_id_set,
@@ -483,11 +487,8 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
             review_evaluations(bndl)
         bndl.check_for_errors()
 
-        # TODO evaluations should be logged before importing.
-        #HERE
-        dict_of_eval_lists = bndl.get_evaluations()
-
         logger.info("Logging evaluations.")
+        dict_of_eval_lists = bndl.get_evaluations()
         log_evaluations({bndl.id: dict_of_eval_lists})
         evaluation_dict[bndl.id] = dict_of_eval_lists
         # evaluation_dict[bndl.id] = bndl.get_evaluations()
@@ -497,11 +498,11 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
                                 gnm_key=file_ref, prod_run=prod_run)
         if result:
             success_ticket_list.append(bndl.ticket.data_dict)
-            success_filename_list.append(filename)
+            success_filepath_list.append(filepath)
         else:
             if bndl.ticket is not None:
                 failed_ticket_list.append(bndl.ticket.data_dict)
-            failed_filename_list.append(filename)
+            failed_filepath_list.append(filepath)
         bundle_count += 1
 
     # Tickets were popped off the ticket dictionary as they were matched
@@ -531,18 +532,18 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
             failed_ticket_list.append(bndl.ticket.data_dict)
             bundle_count += 1
 
-    return (success_ticket_list, failed_ticket_list, success_filename_list,
-            failed_filename_list, evaluation_dict)
+    return (success_ticket_list, failed_ticket_list, success_filepath_list,
+            failed_filepath_list, evaluation_dict)
 
-# TODO convert filename parameter to Path object.
-def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
+
+def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
                    genome_id_field="", host_genus_field="", id=None,
                    file_ref="", ticket_ref="", retrieve_ref="", retain_ref="",
                    id_conversion_dict={}, interactive=False):
     """Gather all genomic data needed to evaluate the flat file.
 
-    :param filename: Name of a GenBank-formatted flat file.
-    :type filename: str
+    :param filepath: Name of a GenBank-formatted flat file.
+    :type filepath: Path
     :param ticket_dict: A dictionary of Tickets.
     :type ticket_dict: dict
     :param sql_handle:
@@ -558,14 +559,14 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
     """
     bndl = bundle.Bundle()
     bndl.id = id
-    seqrecord = flat_files.retrieve_genome_data(filename)
+    seqrecord = flat_files.retrieve_genome_data(filepath)
     if seqrecord is None:
-        logger.info(f"No record was retrieved from the file: {filename}.")
+        logger.info(f"No record was retrieved from the file: {filepath.name}.")
     else:
-        logger.info(f"Parsing record from the file: {filename}.")
+        logger.info(f"Parsing record from the file: {filepath.name}.")
         ff_gnm = flat_files.parse_genome_data(
                     seqrecord,
-                    filepath=filename,
+                    filepath=filepath,
                     genome_id_field=genome_id_field,
                     gnm_type=file_ref,
                     host_genus_field=host_genus_field)
@@ -583,9 +584,9 @@ def prepare_bundle(filename="", ticket_dict={}, sql_handle=None,
         # Match ticket (if available) to flat file.
         bndl.ticket = ticket_dict.pop(ff_gnm.id, None)
         if bndl.ticket is None:
-            logger.info(f"No matched ticket for file: {filename}.")
+            logger.info(f"No matched ticket for file: {filepath.name}.")
         else:
-            logger.info(f"Preparing ticket data for file: {filename}.")
+            logger.info(f"Preparing ticket data for file: {filepath.name}.")
             # With the flat file parsed and matched
             # to a ticket, use the ticket to populate specific
             # genome-level fields such as host, cluster, subcluster, etc.
