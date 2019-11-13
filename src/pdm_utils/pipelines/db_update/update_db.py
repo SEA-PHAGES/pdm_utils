@@ -1,15 +1,13 @@
 """Pipeline to check for new versions of the database from the server."""
 
 import argparse
+import os
 import pathlib
 import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
-
-
-
 
 # TODO not tested, but identical function in import_genome.py tested.
 def setup_sql_handle(database):
@@ -45,35 +43,75 @@ def main(unparsed_args_list):
     """Run the get_db pipeline."""
     args = parse_args(unparsed_args_list)
     args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
-    # sql_handle = setup_sql_handle(args.database)
 
-    download_folder = pathlib.Path(args.output_folder, "db_download")
-    download_folder.mkdir()
-
+    if args.output_folder.exists() == False:
+        print("The output ")
     # curl website > output_file
     # Version file
     version_filename = args.database + ".version"
     version_url = constants.DB_WEBSITE + version_filename
-    version_filepath = pathlib.Path(download_folder, version_url)
-    command_string = f"curl {version_url}"
-    command_list = command_string.split(" ")
-    try:
-        with version_filepath.open("w") as version_handle:
-            proc = subprocess.check_call(command_list,stdout=version_handle)
-    except:
-        print(f"Unable to download {version_filename} from server.")
+    version_filepath = pathlib.Path(args.output_folder, version_filename)
+    if args.download == True:
+        if version_filepath.exists() == True:
+            print(f"The file {version_filename} already exists.")
+        else:
+            command_string = f"curl {version_url}"
+            command_list = command_string.split(" ")
+            with version_filepath.open("w") as version_handle:
+                try:
+                    print("Downloading version file.")
+                    subprocess.check_call(command_list, stdout=version_handle)
+                except:
+                    print(f"Unable to download {version_filename} from server.")
 
     # Database file
     db_filename = args.database + ".sql"
     db_url = constants.DB_WEBSITE + db_filename
-    db_filepath = pathlib.Path(download_folder, db_filename)
-    command_string2 = f"curl {db_url}"
-    command_list2 = command_string2.split(" ")
-    try:
-        with db_filepath.open("w") as db_handle:
-            proc = subprocess.check_call(command_list2,stdout=db_handle)
-    except:
-        print(f"Unable to download {db_filename} from server.")
+    db_filepath = pathlib.Path(args.output_folder, db_filename)
+    if args.download == True:
+        if db_filepath.exists() == True:
+            print(f"The file {db_filename} already exists.")
+        else:
+            command_string2 = f"curl {db_url}"
+            command_list2 = command_string2.split(" ")
+            status = False
+            with db_filepath.open("w") as db_handle:
+                try:
+                    print("Downloading sql file.")
+                    subprocess.check_call(command_list2, stdout=db_handle)
+                    status = True
+                except:
+                    print(f"Unable to download {db_filename} from server.")
+
+    # Install new database
+    # TODO this should first check if the database exists in MySQL.
+    # If not, it should create the database.
+    if args.install == True:
+        result = basic.verify_path2(db_filepath, kind="file", expect=True)
+        if result[0] == False:
+            print("Unable to locate database file to install.")
+            print(result[1])
+        else:
+            # TODO currently there really is no need to set up a sql_handle object.
+            # But it will be used once the pipeline is improved.
+            sql_handle = setup_sql_handle(args.database)
+            command_string3 = (f"mysql -u {sql_handle.username} "
+                               f"-p{sql_handle.password} {sql_handle.database}")
+            command_list3 = command_string3.split(" ")
+            with db_filepath.open("r") as db_handle:
+                try:
+                    print("Installing database...")
+                    subprocess.check_call(command_list3, stdin=db_handle)
+                    print("Installation complete.")
+                except:
+                    print(f"Unable to install {db_filename} in MySQL.")
+
+    if args.remove == True:
+        print("Removing downloaded data.")
+        if version_filepath.exists() == True:
+            os.remove(version_filepath)
+        if db_filepath.exists() == True:
+            os.remove(db_filepath)
 
 
 
@@ -98,16 +136,18 @@ def parse_args(unparsed_args_list):
 
     parser = argparse.ArgumentParser(description=UPDATE_DB_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
-        default=pathlib.Path("/tmp/"), help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("output_folder", type=pathlib.Path,
+        help=OUTPUT_FOLDER_HELP)
     parser.add_argument("-d", "--download", action="store_true",
         default=False, help=DOWNLOAD_HELP)
     parser.add_argument("-i", "--install", action="store_true",
         default=False, help=INSTALL_HELP)
-    parser.add_argument("-f", "--force_update", action="store_true",
-        default=False, help=FORCE_INSTALL_HELP)
     parser.add_argument("-r", "--remove", action="store_true",
         default=False, help=REMOVE_HELP)
+
+    # TODO implement this option.
+    # parser.add_argument("-f", "--force_update", action="store_true",
+    #     default=False, help=FORCE_INSTALL_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
