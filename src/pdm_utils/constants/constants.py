@@ -131,9 +131,17 @@ API_CLUSTERS = "https://phagesdb.org/api/clusters/"
 # 1 page at length 100000 will return everything.
 SEQUENCED_PAGE = 1
 SEQUENCED_SIZE = 100000
-API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/?"
-                 f"page={SEQUENCED_PAGE}" \
+API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/"
+                 f"?page={SEQUENCED_PAGE}"
                  f"&page_size={SEQUENCED_SIZE}")
+
+
+
+UNPHAMERATED_PHAGE_LIST = "https://phagesdb.org/data/unphameratedlist"
+
+
+# Auto-annotations from PECAAN
+PECAAN_PREFIX = "https://discoverdev.kbrinsgd.org/phameratoroutput/phage/"
 
 
 # Phage name typo correction dictionary.

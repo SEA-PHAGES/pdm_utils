@@ -4,34 +4,23 @@ import datetime
 import getpass
 import json
 import os
+import pathlib
 import shutil
 import sys
 import time
 from urllib import request, error
-import pathlib
 
-# Import third-party modules
-try:
-    import pymysql as pms
-    import Bio
-    from Bio import SeqIO
-except ModuleNotFoundError as err:
-    print(err)
-    sys.exit(1)
+# Third-party modules
+import pymysql as pms
+from Bio import SeqIO
 
-# from misc_functions import ask_yes_no, close_files
 from pdm_utils.constants import constants
-from pdm_utils.functions.basic import ask_yes_no, close_files
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
+from pdm_utils.functions import phamerator
 from pdm_utils.functions import tickets
+from pdm_utils.classes import mysqlconnectionhandler as mch
 
-
-
-pdm_utils_testing = pathlib.Path("/tmp/pdm_utils_testing/")
-if pdm_utils_testing.exists():
-    shutil.rmtree(pdm_utils_testing)
-pdm_utils_testing.mkdir()
 
 # Column headers for import table - old version:
 # import_table_columns = ["type",
@@ -87,399 +76,708 @@ update_columns2 = ["table",
 
 
 
+# TODO unittest.
+def parse_args(unparsed_args_list):
+    """Verify the correct arguments are selected for getting updates."""
 
-def main(unparsed_args_list):
-    # set up argparse to interact with users at the command line interface.
-    script_description = "Retrieve Phamerator database updates from " \
-                         " phagesdb, PECAAN, and Genbank."
+    RETRIEVE_HELP = ("Pipeline to retrieve new data to import into a "
+                            "MySQL Phamerator database.")
+    DATABASE_HELP = "Name of the MySQL database."
+    OUTPUT_FOLDER_HELP = ("Path to the directory where updates will be stored.")
+    UPDATES_HELP = ("Retrieve updates to HostStrain, Cluster, "
+                           "Subcluster, and Accession field data from PhagesDB.")
+    DRAFT_HELP = ("Retrieve auto-annotated 'draft' genomes from PECAAN.")
+    FINAL_HELP = ("Retrieve new manually-annotated 'final' "
+                         "genomes from PhagesDB.")
+    GENBANK_HELP = ("Retrieve revised annotated genomes from GenBank.")
+    parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser.add_argument("output_folder", type=pathlib.Path,
+        help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-u", "--updates", action="store_true",
+        default=False, help=UPDATES_HELP)
+    parser.add_argument("-d", "--draft", action="store_true",
+        default=False, help=DRAFT_HELP)
+    parser.add_argument("-f", "--final", action="store_true",
+        default=False, help=FINAL_HELP)
+    parser.add_argument("-g", "--genbank", action="store_true",
+        default=False, help=GENBANK_HELP)
 
-    parser = argparse.ArgumentParser(description=script_description)
-
-    parser.add_argument("database", metavar="db", type=str, nargs=1,
-                        help="name of the Phamerator database to find updates for")
-    parser.add_argument("working_dir", metavar="wd", type=str, nargs=1,
-                        help="path to the directory where updates will be stored")
-
-    # Parse command line arguments
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils.run <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
-    database = args.database[0]
-    working_dir = os.path.abspath(args.working_dir[0])
-    print(database, working_dir)
 
-    # Check if the working directory is real. If it isn't, kill the script.
-    if not os.path.exists(working_dir):
-        print("Invalid working directory '{}'".format(working_dir))
+    return args
+
+
+# TODO not tested, but identical function in import_genome.py tested.
+def set_path(path, kind=None, expect=True):
+    """Confirm validity of path argument."""
+    path = path.expanduser()
+    path = path.resolve()
+    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
+    if not result:
+        print(msg)
         sys.exit(1)
+    else:
+        return path
 
-    # Get username and password for MySQL
-    username = getpass.getpass(prompt="MySQL username: ")
-    password = getpass.getpass(prompt="MySQL password: ")
 
-    # Connect to MySQL database
-    try:
-        con = pms.connect("localhost", username, password, database)
-    except pms.err.Error as err:
-        print("Error connecting to MySQL database")
-        print("Error {}: {}".format(err.args[0], err.args[1]))
+
+# TODO not tested, but identical function in import_genome.py tested.
+def setup_sql_handle(database):
+    """Connect to a MySQL database."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.open_connection()
+    if (not sql_handle.credential_status or not sql_handle._database_status):
+        print(f"No connection to the {database} database. "
+            f"Valid credentials: {sql_handle.credential_status}. "
+            f"Valid database: {sql_handle._database_status}")
         sys.exit(1)
+    else:
+        return sql_handle
 
-    # Set up other variables to be used later in the script
+
+
+# TODO unittest.
+def main(unparsed_args_list):
+    """Run main retrieve_updates pipeline."""
+    # Parse command line arguments
+    args = parse_args(unparsed_args_list)
     date = time.strftime("%Y%m%d")
-    phagesdb_unphamerated_url = "https://phagesdb.org/data/unphameratedlist"
-    pecaan_prefix = "https://discoverdev.kbrinsgd.org/phameratoroutput/phage/"
-    open_file_handles_list = []
 
-    # API at phagesdb has you specify how many results to return. 1 page at
-    # length 100000 will return everything.
-    sequenced_phages_url = "https://phagesdb.org/api/sequenced_phages/?page=1" \
-                           "&page_size=100000"
+    args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
 
-    # Get user input with respect to which updates to look for.
-    retrieve_field_updates = ask_yes_no("\nDo you want to retrieve Host, "
-                                        "Cluster, Subcluster, and Accession "
-                                        "updates? (yes or no) ")
-    retrieve_phagesdb_updates = ask_yes_no("\nDo you want to retrieve manually "
-                                           "annotated genomes from phagesdb? ("
-                                           "yes or no) ")
-    retrieve_pecaan_updates = ask_yes_no("\nDo you want to retrieve "
-                                         "auto-annotated genomes from PECAAN? ("
-                                         "yes or no) ")
-    retrieve_ncbi_updates = ask_yes_no("\nDo you want to retrieve updated NCBI "
-                                       "records? (yes or no) ")
+    working_dir = pathlib.Path(f"{date}_db_updates")
+    working_path = basic.make_new_dir(args.output_folder, working_dir, attempt=10)
 
-    # More setup variables if NCBI updates are desired.  NCBI Bookshelf resource
-    # "The E-utilities In-Depth: Parameters, Syntax and More", by Dr. Eric
-    # Sayers, recommends that a single request not contain more than about 200
-    # UIDS so we will use that as our batch size, and all Entrez requests must
-    # include the user's email address and tool name.
-    if retrieve_ncbi_updates is True:
-        batch_size = 200
-        email = input("\nPlease provide email address for NCBI: ")
-        ncbi.set_entrez_credentials(
-            tool="NCBIRecordRetrievalScript",
-            email=email,
-            api_key="3b6b113d973599ce1b30c2f94a38508c5908")
-
-    # Create appropriate output directories.  Each update type gets its own
-    # directory in working_dir, as well as a sub-directory for genomes and a
-    # file for the import table.  NCBI updates get an additional file to log the
-    # status of each genome.
-    if retrieve_field_updates is True:
-        # Create output folder
-        field_folder = os.path.join(working_dir, "{}_field_updates".format(date))
-        try:
-            exists = os.path.exists(field_folder)
-            if exists is False:
-                os.mkdir(field_folder)
-            else:
-                print("'{}' already exists.".format(field_folder))
-                overwrite = ask_yes_no("Do you want to overwrite the contents of "
-                                       "this folder? ")
-                if overwrite is True:
-                    try:
-                        shutil.rmtree(field_folder)
-                        os.mkdir(field_folder)
-                    except OSError:
-                        print("Failed to overwrite '{}'".format(field_folder))
-                        print("Exiting script")
-                        sys.exit(1)
-        except OSError:
-            print("Couldn't create '{}'".format(field_folder))
-            print("Exiting script")
-            sys.exit(1)
-        # Genomes sub-folder
-        # os.mkdir(os.path.join(field_folder, "genomes"))
-
-        # Now make the import table, and add to list of open file handles
-
-        field_import_table_filename = "_field_updates_import_table.csv"
-        # field_import_table = os.path.join(field_folder, date +
-        #                                   field_import_table_filename)
-        field_import_table = os.path.join(pdm_utils_testing, date +
-                                          field_import_table_filename)
-        field_import_table_handle = open(field_import_table, "w")
-        open_file_handles_list.append(field_import_table_handle)
-        field_import_table_writer = csv.writer(field_import_table_handle)
-
-        # TODO new dictwriter
-        field_import_table_filename2 = "_field_updates_import_table.csv"
-        # field_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
-        #                                    field_import_table_filename2)
-
-        field_import_table2 = pathlib.Path(field_folder, date +
-                                           field_import_table_filename2)
-        field_import_table2_handle = field_import_table2.open(mode="w")
-        open_file_handles_list.append(field_import_table2_handle)
-        field_import_table_writer2 = csv.writer(field_import_table2_handle)
-        field_import_table_writer2.writerow(update_columns2)
+    if working_path is None:
+        print(f"Invalid working directory '{working_dir}'")
+        sys.exit(1)
 
 
+    # Create data sets
+    print("Preparing genome data sets from the phamerator database...")
+    sql_handle = setup_sql_handle(args.database)
+
+    # Parse existing Phamerator genome data to assess what needs to be updated.
+    query = (
+        "SELECT PhageID, Name, HostStrain, status, Cluster2, "
+        "DateLastModified, Accession, RetrieveRecord, Subcluster2, "
+        "AnnotationAuthor FROM phage")
+
+    # Returns a list of elements.
+    # Each element is a dictionary from each row in the phage table.
+    # Each key is the column name.
+    current_genome_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+
+    # Initialize set variables
+    phamerator_id_set = set()
+
+    # Initialize data processing variables
+    modified_genome_data_list = []
+
+    for genome_dict in current_genome_list:
+        phamerator_id = genome_dict["PhageID"]
+        phamerator_name = genome_dict["Name"]
+        phamerator_host = genome_dict["HostStrain"]
+        phamerator_status = genome_dict["status"]
+        phamerator_cluster = genome_dict["Cluster2"]
+        phamerator_date = genome_dict["DateLastModified"]
+        phamerator_accession = genome_dict["Accession"]
+        phamerator_retrieve = genome_dict["RetrieveRecord"]
+        phamerator_subcluster = genome_dict["Subcluster2"]
+        phamerator_author = genome_dict["AnnotationAuthor"]
+
+        # In Phamerator, Singleton Clusters are recorded as '\N', but in
+        # phagesdb they are recorded as "Singleton".
+        if phamerator_cluster is None:
+            phamerator_cluster = 'Singleton'
+
+        # In Phamerator, if Subcluster has not been assigned,
+        # Subcluster2 is recorded as '\N'.
+        if phamerator_subcluster is None:
+            phamerator_subcluster = "none"
+
+        # Accession data may have version number (e.g. XY12345.1)
+        if phamerator_accession is None:
+            phamerator_accession = "none"
+
+        elif phamerator_accession.strip() == "":
+            phamerator_accession = "none"
+
+        if phamerator_accession != "none":
+            phamerator_accession = phamerator_accession.split(".")[0]
+
+        # Make sure there is a date in the DateLastModified field
+        if phamerator_date is None:
+            phamerator_date = datetime.datetime.strptime(
+                "1/1/1900", "%m/%d/%Y")
+
+        # Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
+        if phamerator_author == 1:
+            phamerator_author = "hatfull"
+        else:
+            phamerator_author = "gbk"
+
+        phamerator_id_set.add(phamerator_id)
+
+        # Output modified genome data
+        # 0 = PhageID
+        # 1 = PhageName
+        # 2 = Host
+        # 3 = Status
+        # 4 = Cluster2
+        # 5 = DateLastModified
+        # 6 = Accession
+        # 7 = RetrieveRecord
+        # 8 = Subcluster2
+        # 9 = AnnotationAuthor
+        modified_genome_data_list.append([phamerator_id,
+                                          phamerator_name,
+                                          phamerator_host,
+                                          phamerator_status,
+                                          phamerator_cluster,
+                                          phamerator_date,
+                                          phamerator_accession,
+                                          phamerator_retrieve,
+                                          phamerator_subcluster,
+                                          phamerator_author])
+
+    # Get data from PhagesDB
+    if (args.updates or args.final or args.draft) is True:
+
+        phagesdb_data_dict = get_phagesdb_data(constants.API_SEQUENCED)
+        # Returns a list of tuples.
+        matched_genomes = match_genomes(modified_genome_data_list, phagesdb_data_dict)
 
 
-    if retrieve_phagesdb_updates is True:
-        # Create output folder
-        phagesdb_folder = os.path.join(working_dir,
-                                       "{}_phagesdb_updates".format(date))
-        try:
-            exists = os.path.exists(phagesdb_folder)
-            if exists is False:
-                os.mkdir(phagesdb_folder)
-            else:
-                print("'{}' already exists.".format(phagesdb_folder))
-                overwrite = ask_yes_no("Do you want to overwrite the contents"
-                                       "of this folder? ")
-                if overwrite is True:
-                    try:
-                        shutil.rmtree(phagesdb_folder)
-                        os.mkdir(phagesdb_folder)
-                    except OSError:
-                        print("Failed to overwrite '{}'".format(phagesdb_folder))
-                        print("Exiting script")
-                        sys.exit(1)
-        except OSError:
-            print("Couldn't create '{}'".format(phagesdb_folder))
-            print("Exiting script")
-            sys.exit(1)
-        # Genomes sub-folder
-        os.mkdir(os.path.join(phagesdb_folder, "genomes"))
+    # Option 1: Determine if any fields need to be updated
+    if args.updates is True:
+        get_update_data(working_path, matched_genomes)
 
-        # Now make the import table, and add to list of open file handles
-        phagesdb_import_table_filename = "_phagesdb_updates_import_table.csv"
-        phagesdb_import_table = os.path.join(phagesdb_folder, date +
-                                             phagesdb_import_table_filename)
-        phagesdb_import_table_handle = open(phagesdb_import_table, "w")
-        open_file_handles_list.append(phagesdb_import_table_handle)
-        phagesdb_import_table_writer = csv.writer(phagesdb_import_table_handle)
+    # Option 2: Determine if any new manually annotated genomes are available.
+    if args.final is True:
+        get_final_data(working_path, matched_genomes)
 
-        # TODO new dictwriter
-        phagesdb_import_table_filename2 = "_phagesdb_updates_import_table_new.csv"
-        phagesdb_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
-                                    phagesdb_import_table_filename2)
-        phagesdb_import_table2_handle = phagesdb_import_table2.open(mode="w")
-        open_file_handles_list.append(phagesdb_import_table2_handle)
-        phagesdb_import_table_writer2 = csv.writer(phagesdb_import_table2_handle)
-        phagesdb_import_table_writer2.writerow(import_table_columns2)
+    # Option 3: Retrieve updated records from NCBI
+    if args.genbank is True:
+        get_genbank_data(working_path, modified_genome_data_list)
 
+    # Option 4: Retrieve auto-annotated genomes from PECAAN
+    if args.draft is True:
+        get_draft_data(working_path)
 
-    if retrieve_pecaan_updates is True:
-        # Create output folder
-        pecaan_folder = os.path.join(working_dir, "{}_pecaan_updates".format(date))
-        try:
-            exists = os.path.exists(pecaan_folder)
-            if exists is False:
-                os.mkdir(pecaan_folder)
-            else:
-                print("'{}' already exists.".format(pecaan_folder))
-                overwrite = ask_yes_no("Do you want to overwrite the contents "
-                                       "of this folder? ")
-                if overwrite is True:
-                    try:
-                        shutil.rmtree(pecaan_folder)
-                        os.mkdir(pecaan_folder)
-                    except OSError:
-                        print("Failed to overwrite '{}'".format(pecaan_folder))
-                        print("Exiting script")
-                        sys.exit(1)
-        except OSError:
-            print("Couldn't create '{}'".format(pecaan_folder))
-            print("Exiting script")
-            sys.exit(1)
-        # Genomes sub-folder
-        os.mkdir(os.path.join(pecaan_folder, "genomes"))
-
-        # Now make the import table, and add to list of open file handles
-        pecaan_import_table_filename = "_pecaan_updates_import_table.csv"
-        pecaan_import_table = os.path.join(pecaan_folder, date +
-                                           pecaan_import_table_filename)
-        pecaan_import_table_handle = open(pecaan_import_table, "w")
-        open_file_handles_list.append(pecaan_import_table_handle)
-        pecaan_import_table_writer = csv.writer(pecaan_import_table_handle)
-
-        # TODO new dictwriter
-        pecaan_import_table_filename2 = "_pecaan_updates_import_table_new.csv"
-        pecaan_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
-                                           pecaan_import_table_filename2)
-        pecaan_import_table2_handle = pecaan_import_table2.open(mode="w")
-        open_file_handles_list.append(pecaan_import_table2_handle)
-        pecaan_import_table_writer2 = csv.writer(pecaan_import_table2_handle)
-        pecaan_import_table_writer2.writerow(import_table_columns2)
+    print("\n\n\nRetrieve updates script completed.")
 
 
 
-    if retrieve_ncbi_updates is True:
-        # Create output folder
-        ncbi_folder = os.path.join(working_dir, "{}_ncbi_updates".format(date))
-        try:
-            exists = os.path.exists(ncbi_folder)
-            if exists is False:
-                os.mkdir(ncbi_folder)
-            else:
-                print("'{}' already exists.".format(ncbi_folder))
-                overwrite = ask_yes_no("Do you want to overwrite the contents "
-                                       "of this folder? ")
-                if overwrite is True:
-                    try:
-                        shutil.rmtree(ncbi_folder)
-                        os.mkdir(ncbi_folder)
-                    except OSError:
-                        print("Failed to overwrite '{}'".format(ncbi_folder))
-                        print("Exiting script")
-                        sys.exit(1)
-        except OSError:
-            print("Couldn't create '{}'".format(ncbi_folder))
-            print("Exiting script")
-            sys.exit(1)
-        # Genomes sub-folder
-        os.mkdir(os.path.join(ncbi_folder, "genomes"))
 
-        # Now make the import table, and add to list of open file handles
+# TODO unittest.
+def match_genomes(modified_genome_data_list, phagesdb_data_dict):
+    """Match Phamerator genome data to PhagesDB genome data."""
+    matched_count = 0
+    unmatched_count = 0
+    unmatched_hatfull_count = 0
+    unmatched_phage_id_list = []
+    unmatched_hatfull_phage_id_list = []
 
-        ncbi_import_table_filename = "_ncbi_updates_import_table.csv"
+    # Match Phamerator data to PhagesDB data.
+    # Iterate through each phage in Phamerator
+    matched_genomes = []
+    for genome_data in modified_genome_data_list:
+        phamerator_id = genome_data[0]
+        phamerator_name = genome_data[1]
+        phamerator_author = genome_data[9]
 
-        ncbi_import_table = os.path.join(ncbi_folder, date +
-                                         ncbi_import_table_filename)
-        ncbi_import_table_handle = open(ncbi_import_table, "w")
-        open_file_handles_list.append(ncbi_import_table_handle)
-        ncbi_import_table_writer = csv.writer(ncbi_import_table_handle)
+        # First try to match up the phageID, and if that doesn't work,
+        # try to match up the phageName
+        if phamerator_id in phagesdb_data_dict.keys():
+            matched_phagesdb_data = phagesdb_data_dict[phamerator_id]
+            matched_count += 1
+            matched_genomes.append((genome_data, matched_phagesdb_data))
 
-        # TODO new dictwriter
-        ncbi_import_table_filename2 = "_ncbi_updates_import_table_new.csv"
-        ncbi_import_table2 = pathlib.Path(pdm_utils_testing, "dev_" + date +
-                                           ncbi_import_table_filename2)
+        else:
+            unmatched_count += 1
+            unmatched_phage_id_list.append(phamerator_id)
 
-        ncbi_import_table2_handle = ncbi_import_table2.open(mode="w")
-        open_file_handles_list.append(ncbi_import_table2_handle)
-        ncbi_import_table_writer2 = csv.writer(ncbi_import_table2_handle)
-        ncbi_import_table_writer2.writerow(import_table_columns2)
+            # Only add Hatfull-author unmatched phages to list
+            if phamerator_author == 'hatfull':
+                unmatched_hatfull_count += 1
+                unmatched_hatfull_phage_id_list.append(phamerator_id)
 
-        # Results file
-        ncbi_results_table = os.path.join(ncbi_folder, date + "_ncbi_results.csv")
-        ncbi_results_handle = open(ncbi_results_table, "w")
-        open_file_handles_list.append(ncbi_results_handle)
-        ncbi_results_writer = csv.writer(ncbi_results_handle)
-        ncbi_results_header = ["PhageID", "PhageName", "Accession", "Status",
-                               "PhameratorDate", "GenbankDate", "Result"]
-        ncbi_results_writer.writerow(ncbi_results_header)
 
-    # Parse existing Phamerator genome data so we can compare them to phagesdb
-    # or NCBI records.
-    if (retrieve_field_updates or retrieve_phagesdb_updates or
-        retrieve_ncbi_updates) is True:
-        try:
-            cur = con.cursor()
-            cur.execute(
-                "SELECT PhageID, Name, HostStrain, status, Cluster2, "
-                "DateLastModified, Accession, RetrieveRecord, Subcluster2, "
-                "AnnotationAuthor FROM phage")
-            current_genome_tuples = cur.fetchall()
-            cur.close()
-        except pms.err.Error as err:
-            print("Error {}: {}".format(err.args[0], err.args[1]))
-            con.close()
-            sys.exit(1)
+    print(f"\nPhamerator-PhagesDB matched phage tally: {matched_count}.")
+    print(f"\nPhamerator-PhagesDB unmatched phage tally: {unmatched_count}.")
+    # Only print out Hatfull-author unmatched phages.
+    if unmatched_hatfull_count > 0:
+        print("\nPhamerator-PhagesDB Hatfull-author unmatched phages:")
+        for element in unmatched_hatfull_phage_id_list:
+            print(element)
 
-        # Initialize phagesdb field updates variables
-        field_update_tally = 0
+    return matched_genomes
 
-        # Initialize phagesdb retrieval variables
-        phagesdb_retrieved_tally = 0
-        phagesdb_failed_tally = 0
-        phagesdb_retrieved_list = []
-        phagesdb_failed_list = []
 
-        # Initialize tally variables
-        tally_total = len(current_genome_tuples)
-        tally_not_auto_updated = 0
-        tally_no_accession = 0
-        tally_retrieved_not_new = 0
-        tally_retrieved_for_update = 0
 
-        # Initialize variables to match Phamerator and phagesdb data
-        matched_count = 0
-        unmatched_count = 0
-        unmatched_hatfull_count = 0
-        unmatched_phage_id_list = []
-        unmatched_hatfull_phage_id_list = []
 
-        # Initialize set variables
-        phamerator_id_set = set()
-        phamerator_name_set = set()
-        phamerator_host_set = set()
-        phamerator_status_set = set()
-        phamerator_cluster_set = set()
-        phamerator_accession_set = set()
-        phamerator_subcluster_set = set()
 
-        # Initialize data processing variables
-        modified_genome_data_list = []
-        phamerator_duplicate_accessions = []
-        phamerator_duplicate_phage_names = []
-        unique_accession_dict = {}
 
-        # Create data sets
-        print("Preparing genome data sets from the phamerator database...")
-        for genome_tuple in current_genome_tuples:
+# TODO unittest.
+def get_phagesdb_data(url):
+    """Retrieve all sequence genome data from PhagesDB."""
+    print("Retrieving data from phagesdb...")
+    sequenced_phages_json = request.urlopen(url)
+    # Response is a bytes object that json.loads can't read without first
+    # being decoded to a UTF-8 string.
+    sequenced_phages_dict = json.loads(sequenced_phages_json.read().decode(
+        'utf-8'))
+    sequenced_phages_json.close()
 
-            phamerator_id = genome_tuple[0]
-            phamerator_name = genome_tuple[1]
-            phamerator_host = genome_tuple[2]
-            phamerator_status = genome_tuple[3]
-            phamerator_cluster = genome_tuple[4]
-            phamerator_date = genome_tuple[5]
-            phamerator_accession = genome_tuple[6]
-            phamerator_retrieve = genome_tuple[7]
-            phamerator_subcluster = genome_tuple[8]
-            phamerator_author = genome_tuple[9]
+    # Data for each phage is stored in a dictionary per phage, and all
+    # dictionaries are stored in a list under "results"
+    phagesdb_data_dict = {}
+    for element_dict in sequenced_phages_dict["results"]:
+        phagesdb_data_dict[element_dict["phage_name"]] = element_dict
 
-            # In Phamerator, Singleton Clusters are recorded as '\N', but in
-            # phagesdb they are recorded as "Singleton".
-            if phamerator_cluster is None:
-                phamerator_cluster = 'Singleton'
+    # Make sure all PhagesDB data was retrieved.
+    exp_count = len(sequenced_phages_dict["results"])
+    diff1 = exp_count - sequenced_phages_dict["count"]
+    diff2 = exp_count - len(phagesdb_data_dict)
+    if (diff1 != 0 or diff2 != 0):
+        print("\nUnable to retrieve all phage data from PhagesDB due to "
+              "default parameters.")
+        sys.exit(1)
 
-            # In Phamerator, if Subcluster has not been assigned,
-            # Subcluster2 is recorded as '\N'.
-            if phamerator_subcluster is None:
-                phamerator_subcluster = 'none'
+    # Standardize genome data for matching.
+    for key in phagesdb_data_dict.keys():
+        genome_dict = phagesdb_data_dict[key]
 
-            # Accession data may have version number (e.g. XY12345.1)
-            if phamerator_accession is None:
-                phamerator_accession = 'none'
+        # Accession
+        # Sometimes accession data from phagesdb have
+        # whitespace characters and version suffix.
+        phagesdb_accession = genome_dict["genbank_accession"]
+        if phagesdb_accession.strip() != "":
+            phagesdb_accession = phagesdb_accession.strip()
+            phagesdb_accession = phagesdb_accession.split('.')[0]
+        else:
+            phagesdb_accession = "none"
+        genome_dict["accession_mod"] = phagesdb_accession
 
-            elif phamerator_accession.strip() == "":
-                phamerator_accession = 'none'
+        # Cluster
+        # Sometimes cluster information is not present. In the
+        # phagesdb database, it is is recorded as NULL. When phages
+        # data is downloaded from phagesdb, NULL cluster data is
+        # converted to "Unclustered". In these cases, leaving the
+        # cluster as NULL in phamerator won't work, because NULL
+        # means Singleton. Therefore, the phamerator cluster is
+        # listed as 'UNK' (Unknown).
+        if genome_dict["pcluster"] is None:
+            phagesdb_cluster = "UNK"
+        else:
+            phagesdb_cluster = genome_dict["pcluster"]["cluster"]
+        genome_dict["cluster_mod"] = phagesdb_cluster
 
-            if phamerator_accession != 'none':
-                phamerator_accession = phamerator_accession.split('.')[0]
+        # Subcluster
+        # If a phage has a cluster, but not a subcluster,
+        # set subcluster to 'none'
+        if genome_dict["psubcluster"] is None:
+            phagesdb_subcluster = "none"
+        else:
+            phagesdb_subcluster = genome_dict["psubcluster"]["subcluster"]
+        genome_dict["subcluster_mod"] = phagesdb_subcluster
+        phagesdb_data_dict[key] = genome_dict
+    else:
+        return phagesdb_data_dict
 
-                # Check for accession duplicates
-                if phamerator_accession in phamerator_accession_set:
-                    phamerator_duplicate_accessions.append(phamerator_accession)
-                else:
-                    phamerator_accession_set.add(phamerator_accession)
 
-            # Check for phage name duplicates
-            if phamerator_name in phamerator_name_set:
-                phamerator_duplicate_phage_names.append(phamerator_name)
-            else:
-                phamerator_name_set.add(phamerator_name)
 
-            # Make sure there is a date in the DateLastModified field
-            if phamerator_date is None:
-                phamerator_date = datetime.datetime.strptime(
-                    '1/1/1900', '%m/%d/%Y')
+# TODO unittest
+def get_update_data(output_folder, matched_genomes):
+    """Run sub-pipeline to retrieve field updates from PhagesDB."""
 
-            # Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
-            if phamerator_author == 1:
-                phamerator_author = 'hatfull'
-            else:
-                phamerator_author = 'gbk'
+    field_update_list = []
 
-            phamerator_id_set.add(phamerator_id)
-            phamerator_host_set.add(phamerator_host)
-            phamerator_cluster_set.add(phamerator_cluster)
-            phamerator_subcluster_set.add(phamerator_subcluster)
+    # Iterate through each pair of matched genomes.
+    for matched_genome_tuple in matched_genomes:
+        genome_data = matched_genome_tuple[0]
+        matched_phagesdb_data = matched_genome_tuple[1]
 
-            # Output modified genome data
+        phamerator_id = genome_data[0]
+        phamerator_name = genome_data[1]
+        phamerator_host = genome_data[2]
+        phamerator_status = genome_data[3]
+        phamerator_cluster = genome_data[4]
+        phamerator_date = genome_data[5]
+        phamerator_accession = genome_data[6]
+        phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
+
+        # Matched data
+        phagesdb_name = matched_phagesdb_data['phage_name']
+        phagesdb_host = matched_phagesdb_data['isolation_host']['genus']
+        phagesdb_accession = matched_phagesdb_data["accession_mod"]
+        phagesdb_cluster = matched_phagesdb_data["cluster_mod"]
+        phagesdb_subcluster = matched_phagesdb_data["subcluster_mod"]
+
+        # Compare Cluster2
+        if phamerator_cluster != phagesdb_cluster:
+            result1 = ["phage",
+                       "Cluster2",
+                       phagesdb_cluster,
+                       "PhageID",
+                       phamerator_id]
+            field_update_list.append(result1)
+            result2 = ["phage",
+                       "Cluster",
+                       phagesdb_cluster,
+                       "PhageID",
+                       phamerator_id]
+            field_update_list.append(result2)
+
+
+
+        # Compare Subcluster2
+        if phamerator_subcluster != phagesdb_subcluster:
+            result3 = ["phage",
+                       "Subcluster2",
+                       phagesdb_subcluster,
+                       "PhageID",
+                       phamerator_id]
+            field_update_list.append(result3)
+
+
+            if phagesdb_subcluster != "none":
+                result4 = ["phage",
+                           "Cluster",
+                           phagesdb_subcluster,
+                           "PhageID",
+                           phamerator_id]
+                field_update_list.append(result4)
+
+        # Compare Host genus
+        if phamerator_host != phagesdb_host:
+            result5 = ["phage",
+                       "HostStrain",
+                       phagesdb_host,
+                       "PhageID",
+                       phamerator_id]
+            field_update_list.append(result5)
+
+        # Compare Accession
+        # If the genome author is "gbk", then don't worry about
+        # updating the accession. This used to be determined with
+        # the status field, but now it is determined with the
+        # AnnotationAuthor field.
+        if phamerator_accession != phagesdb_accession and \
+                phamerator_author == "hatfull":
+            result6 = ["phage",
+                       "Accession",
+                       phagesdb_accession,
+                       "PhageID",
+                       phamerator_id]
+            field_update_list.append(result6)
+
+
+    # Field updates
+    if len(field_update_list) > 0:
+        print("\n\nNew field updates are available.")
+        field_folder = pathlib.Path(output_folder, f"field_updates")
+        field_folder.mkdir()
+        filename2 = f"field_updates_import_table.csv"
+        filepath2 = pathlib.Path(field_folder, filename2)
+        with filepath2.open("w") as fh:
+            writer = csv.writer(fh)
+            writer.writerow(update_columns2)
+            writer.writerows(field_update_list)
+    else:
+        print("\n\nNo field updates found.")
+
+
+
+
+
+
+# TODO unittest
+def get_final_data(output_folder, matched_genomes):
+    """Run sub-pipeline to retrieve 'final' genomes from PhagesDB."""
+
+    phagesdb_folder = pathlib.Path(output_folder, f"phagesdb_updates")
+    phagesdb_folder.mkdir()
+    phagesdb_genome_folder = pathlib.Path(phagesdb_folder, "genomes")
+    phagesdb_genome_folder.mkdir()
+
+
+    # Initialize phagesdb retrieval variables - Final updates
+    phagesdb_ticket_list = []
+    phagesdb_ticket_list2 = [] # TODO for updated import pipeline
+    phagesdb_retrieved_tally = 0
+    phagesdb_failed_tally = 0
+    phagesdb_retrieved_list = []
+    phagesdb_failed_list = []
+
+    # Iterate through each phage in Phamerator
+    for matched_genome_tuple in matched_genomes:
+        genome_data = matched_genome_tuple[0]
+        matched_phagesdb_data = matched_genome_tuple[1]
+
+        phamerator_id = genome_data[0]
+        phamerator_name = genome_data[1]
+        phamerator_host = genome_data[2]
+        phamerator_status = genome_data[3]
+        phamerator_cluster = genome_data[4]
+        phamerator_date = genome_data[5]
+        phamerator_accession = genome_data[6]
+        phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
+
+        # Matched data
+        phagesdb_name = matched_phagesdb_data['phage_name']
+        phagesdb_host = matched_phagesdb_data['isolation_host']['genus']
+        phagesdb_accession = matched_phagesdb_data["accession_mod"]
+        phagesdb_cluster = matched_phagesdb_data["cluster_mod"]
+        phagesdb_subcluster = matched_phagesdb_data["subcluster_mod"]
+
+        # Retrieve the qced_genbank_file_date data and properly
+        # format it. Some phages may have a file but no associated
+        # date tagged with that file (since date tagging has only
+        # recently been implemented). If there is a date, it is
+        # formatted as: '2017-02-15T10:37:21Z'. If there is no date,
+        # it is Null, but change this to 1/1/1900.
+        phagesdb_flatfile_date = \
+            matched_phagesdb_data["qced_genbank_file_date"]
+
+        if phagesdb_flatfile_date is None:
+            phagesdb_flatfile_date = datetime.datetime.strptime(
+                "1/1/1900", "%m/%d/%Y")
+        else:
+            phagesdb_flatfile_date = phagesdb_flatfile_date.split("T")[0]
+            phagesdb_flatfile_date = datetime.datetime.strptime(
+                phagesdb_flatfile_date, "%Y-%m-%d")
+
+        # Not all phages have associated Genbank-formatted files
+        # available on phagesdb. Check to see if there is a flatfile for
+        # this phage. Download the flatfile only if there is a date tag,
+        # and only if that date is more recent than the date stored in
+        # Phamerator for that genome. The tagged date only reflects when
+        # the file was uploaded into phagesdb. The date the actual
+        # Genbank record was created is stored within the file,
+        # and this too could be less recent than the current version in
+        # Phamerator; however, this part gets checked during the import
+        # stage.
+        if (matched_phagesdb_data['qced_genbank_file'] is None or \
+                phagesdb_flatfile_date < phamerator_date):
+            phagesdb_failed_tally += 1
+            phagesdb_failed_list.append(phamerator_id)
+        else:
+            # Save the file on the hard drive with the same name as
+            # stored on phagesdb
+            phagesdb_flatfile_url = \
+                matched_phagesdb_data["qced_genbank_file"]
+
+            try:
+                response5 = request.urlopen(
+                    phagesdb_flatfile_url)
+                # response comes back as a byte string that won't be
+                # processed correctly without being decoded to UTF-8
+                response5_str = response5.read().decode("utf-8")
+                response5.close()
+            except error:  # urllib has 2 main errors, HTTP or URL error
+                print("Error: unable to retrieve or read flatfile for "
+                      f"phageID {phamerator_id}.")
+                phagesdb_failed_tally += 1
+                phagesdb_failed_list.append(phamerator_id)
+                response5_str = None
+
+            if response5_str is not None:
+                phagesdb_filename = phagesdb_flatfile_url.split("/")[-1]
+                flatfile_path = pathlib.Path(phagesdb_genome_folder,
+                                             phagesdb_filename)
+                with flatfile_path.open("w") as fh:
+                    fh.write(response5_str)
+                # Create the new import ticket
+                # Since the phagesdb phage has been matched to
+                # the phamerator phage, the AnnotationAuthor field
+                # could be assigned from the current phamerator_author
+                # variable. However, since this genbank-formatted
+                # file is acquired through phagesdb, both the
+                # Annotation status is expected to be 'final' and
+                # the Annotation author is expected to be 'hatfull'.
+                result7 = ["replace",
+                           phamerator_id,
+                           "retrieve",
+                           "retrieve",
+                           "retrieve",
+                           "final",
+                           "hatfull",
+                           "product",
+                           "retrieve",
+                           "phagesdb",
+                           phamerator_id]
+                phagesdb_ticket_list.append(result7)
+
+                result8 = ["replace",
+                           phamerator_id,
+                           "retrieve",
+                           "retrieve",
+                           "retrieve",
+                           "final",
+                           "1",
+                           "product",
+                           "retrieve",
+                           "phagesdb",
+                           "1"]
+                phagesdb_ticket_list2.append(result8)
+                phagesdb_retrieved_tally += 1
+                phagesdb_retrieved_list.append(phamerator_id)
+
+
+    count1 = len(phagesdb_ticket_list)
+    if count1 > 0:
+        print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
+        filename3 = "phagesdb_updates_import_table.csv"
+        filepath3 = pathlib.Path(phagesdb_folder, filename3)
+        with filepath3.open("w") as fh:
+            writer = csv.writer(fh)
+            writer.writerows(phagesdb_ticket_list)
+
+    # TODO new dictwriter. Use this block instead of above once the
+    # new import script is functioning.
+    # count2 = len(phagesdb_ticket_list)
+    # if count2 > 0:
+    #     print(f"\n\n{count2} phage(s) were retrieved from PhagesDB.")
+    #     filename3 = "dev_phagesdb_updates_import_table_new.csv"
+    #     filepath3 = pathlib.Path(phagesdb_folder, filename3)
+    #     with filepath3.open("w") as fh:
+    #         writer = csv.writer(fh)
+    #         writer.writerow(import_table_columns2)
+    #         writer.writerows(phagesdb_ticket_list)
+
+    else:
+        print("\n\nNo new phages were retrieved from PhagesDB.")
+
+    input("\n\nPress ENTER to continue.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO unittest.
+def get_genbank_data(output_folder, list_of_genomes):
+    """Run sub-pipeline to retrieve genomes from GenBank."""
+
+    # Flow of the NCBI record retrieval process:
+    # 1 Create list of phages to check for updates at NCBI (completed above)
+    # 2 Using esearch, verify which accessions are valid
+    # 3 Using esummary, get update date for each valid accession
+    # 4 Using efetch, retrieve flat files for NCBI records newer than
+    # phamerator date
+    # 5 Save new records in a folder and create an import table for them
+
+    # Create output folder
+    ncbi_folder = pathlib.Path(output_folder, f"ncbi_updates")
+    ncbi_folder.mkdir()
+    genome_folder = pathlib.Path(ncbi_folder, "genomes")
+    genome_folder.mkdir()
+
+    # Results file
+    ncbi_results_list = []
+
+    tally_total = len(list_of_genomes)
+    tally_not_auto_updated = 0
+    tally_no_accession = 0
+    tally_retrieved_not_new = 0
+    tally_retrieved_for_update = 0
+    tally_duplicate_accession = 0
+
+
+    import_ticket_lists = []
+    import_ticket_lists2 = [] # New ticket format
+
+    phamerator_accession_set = set()
+    phamerator_duplicate_accessions = []
+    unique_accession_dict = {}
+
+    # Determine if any accessions are duplicated.
+    for genome_data in list_of_genomes:
+        phamerator_accession = genome_data[6]
+
+        # Check for accession duplicates
+        if phamerator_accession in phamerator_accession_set:
+            phamerator_duplicate_accessions.append(phamerator_accession)
+        else:
+            phamerator_accession_set.add(phamerator_accession)
+
+    # Iterate through each phage in Phamerator
+    for genome_data in list_of_genomes:
+        phamerator_id = genome_data[0]
+        phamerator_name = genome_data[1]
+        phamerator_host = genome_data[2]
+        phamerator_status = genome_data[3]
+        phamerator_cluster = genome_data[4]
+        phamerator_date = genome_data[5]
+        phamerator_accession = genome_data[6]
+        phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
+
+        # For NCBI retrieval, add to dictionary if
+        # 1) the genome is set to be automatically updated and
+        # 2) if there is an accession number
+        if phamerator_retrieve != 1:
+            tally_not_auto_updated += 1
+            results = [phamerator_id,
+                       phamerator_name,
+                       phamerator_accession,
+                       phamerator_status,
+                       phamerator_date,
+                       "NA",
+                       "no automatic update"]
+            ncbi_results_list.append(results)
+
+        elif (phamerator_accession == "none" or phamerator_accession is None):
+            tally_no_accession += 1
+            results = [phamerator_id,
+                       phamerator_name,
+                       phamerator_accession,
+                       phamerator_status,
+                       phamerator_date,
+                       "NA",
+                       "no accession"]
+            ncbi_results_list.append(results)
+
+        elif phamerator_accession in phamerator_duplicate_accessions:
+            tally_duplicate_accession += 1
+            results = [phamerator_id,
+                       phamerator_name,
+                       phamerator_accession,
+                       phamerator_status,
+                       phamerator_date,
+                       "NA",
+                       "duplicate accession"]
+            ncbi_results_list.append(results)
+
+        else:
+            # Dictionary of phage data based on unique accessions
+            # Key = accession
+            # Value = phage data list
             # 0 = PhageID
             # 1 = PhageName
             # 2 = Host
@@ -490,801 +788,461 @@ def main(unparsed_args_list):
             # 7 = RetrieveRecord
             # 8 = Subcluster2
             # 9 = AnnotationAuthor
-            modified_genome_data_list.append([phamerator_id,
-                                              phamerator_name,
-                                              phamerator_host,
-                                              phamerator_status,
-                                              phamerator_cluster,
-                                              phamerator_date,
-                                              phamerator_accession,
-                                              phamerator_retrieve,
-                                              phamerator_subcluster,
-                                              phamerator_author])
+            unique_accession_dict[phamerator_accession] = [
+                phamerator_id, phamerator_name, phamerator_host,
+                phamerator_status, phamerator_cluster, phamerator_date,
+                phamerator_accession, phamerator_retrieve,
+                phamerator_subcluster, phamerator_author]
 
-        # phagesdb relies on the phageName, and not the phageID.
-        # But Phamerator does not require phageName values to be unique.
-        # Check if there are any phageName duplications. If there are,
-        # they will not be able to be compared to phagesdb data.
-        if len(phamerator_duplicate_phage_names) > 0:
-            print("Error: Data is not able to be matched to phagesdb because "
-                  "of the following non-unique phage Names in phamerator:")
-            for element in phamerator_duplicate_phage_names:
-                print(element)
-            retrieve_field_updates = "no"
-            retrieve_phagesdb_genomes = "no"
-            input("\n\nPress ENTER to proceed")
 
-        if len(phamerator_duplicate_accessions) > 0:
-            print("Error: There are duplicate accessions in Phamerator. Unable "
-                  "to proceed with NCBI record retrieval.")
-            for accession in phamerator_duplicate_accessions:
-                print(accession)
-            retrieve_ncbi_genomes = "no"
-            input("\n\nPress ENTER to proceed")
 
-        # Retrieve a list of all sequenced phages listed on phagesdb
-        print("Retrieving data from phagesdb...")
-        sequenced_phages_json = request.urlopen(sequenced_phages_url)
-        # Response is a bytes object that json.loads can't read without first
-        # being decoded to a UTF-8 string.
-        sequenced_phages_dict = json.loads(sequenced_phages_json.read().decode(
-            'utf-8'))
-        sequenced_phages_json.close()
+    batch_size = 200
 
-        # Data for each phage is stored in a dictionary per phage, and all
-        # dictionaries are stored in a list under "results"
-        phagesdb_data_dict = {}
-        for element_dict in sequenced_phages_dict["results"]:
-            phagesdb_data_dict[element_dict["phage_name"]] = element_dict
 
-        if len(sequenced_phages_dict["results"]) != sequenced_phages_dict[
-            "count"]:
-            print("\nUnable to retrieve all phage data from phagesdb due to "
-                  "default parameters.")
-            print("Unable to retrieve field updates or manually-annotated "
-                  "flatfiles from phagesdb.")
-            print("Update parameters in script to enable these functions.")
-            retrieve_field_updates = "no"
-            retrieve_phagesdb_genomes = "no"
-            input("\n\nPress ENTER to proceed")
+    # More setup variables if NCBI updates are desired.  NCBI Bookshelf resource
+    # "The E-utilities In-Depth: Parameters, Syntax and More", by Dr. Eric
+    # Sayers, recommends that a single request not contain more than about 200
+    # UIDS so we will use that as our batch size, and all Entrez requests must
+    # include the user's email address and tool name.
+    email = input("\nPlease provide email address for NCBI: ")
+    ncbi.set_entrez_credentials(
+        tool="NCBIRecordRetrievalScript",
+        email=email,
+        api_key="3b6b113d973599ce1b30c2f94a38508c5908")
 
-        elif len(sequenced_phages_dict["results"]) != len(phagesdb_data_dict):
-            print("\nUnable to retrieve all phage data from phagesdb due to "
-                  "default parameters.")
-            print("Unable to retrieve field updates or manually-annotated "
-                  "flatfiles from phagesdb.")
-            print("Update parameters in script to enable these functions.")
-            retrieve_field_updates = "no"
-            retrieve_phagesdb_genomes = "no"
-            input("\n\nPress ENTER to proceed")
 
-        # Iterate through each phage in Phamerator
-        for genome_data in modified_genome_data_list:
-            field_corrections_needed = 0
 
-            phamerator_id = genome_data[0]
-            phamerator_name = genome_data[1]
-            phamerator_host = genome_data[2]
-            phamerator_status = genome_data[3]
-            phamerator_cluster = genome_data[4]
+
+    print("\n\nRetrieving updated records from NCBI")
+
+    # Use esearch to verify the accessions are valid and efetch to retrieve
+    # the record
+    # Create batches of accessions
+    unique_accession_list = list(unique_accession_dict.keys())
+
+    # Add [ACCN] field to each accession number
+    appended_accessions = \
+        [accession + "[ACCN]" for accession in unique_accession_list]
+
+    # Keep track of specific records
+    retrieved_record_list = []
+    retrieval_error_list = []
+
+    # When retrieving in batch sizes, first create the list of values
+    # indicating which indices of the unique_accession_list should be used
+    # to create each batch.
+    # For instace, if there are five accessions, batch size of two produces
+    # indices = 0,2,4
+    batch_indices = basic.create_indices(unique_accession_list, batch_size)
+    for indices in batch_indices:
+        batch_index_start = indices[0]
+        batch_index_stop = indices[1]
+        print("retrieving batch: ", batch_index_start, batch_index_stop)
+        current_batch_size = batch_index_stop - batch_index_start
+        delimiter = " | "
+        esearch_term = delimiter.join(appended_accessions[
+                                      batch_index_start:batch_index_stop])
+
+        # Use esearch for each accession
+        search_record = ncbi.run_esearch(db="nucleotide", term=esearch_term,
+                            usehistory="y")
+        search_count = int(search_record["Count"])
+        search_webenv = search_record["WebEnv"]
+        search_query_key = search_record["QueryKey"]
+
+
+        # Keep track of the accessions that failed to be located in NCBI
+        if search_count < current_batch_size:
+            search_accession_failure = search_record["ErrorList"][
+                "PhraseNotFound"]
+
+            # Each element in this list is formatted "accession[ACCN]"
+            for element in search_accession_failure:
+                # print(element, element[:-6])
+                retrieval_error_list.append(element[:-6])
+
+        # Now get summaries for these records using esummary
+        accessions_to_retrieve = []
+        summary_records = ncbi.get_summaries(db="nucleotide",
+                                             query_key=search_query_key,
+                                             webenv=search_webenv)
+
+        for doc_sum in summary_records:
+            doc_sum_name = doc_sum["Title"]
+            doc_sum_accession = doc_sum["Caption"]
+            doc_sum_date = datetime.datetime.strptime(doc_sum["UpdateDate"],
+                                                      "%Y/%m/%d")
+            genome_data = unique_accession_dict[doc_sum_accession]
             phamerator_date = genome_data[5]
-            phamerator_accession = genome_data[6]
-            phamerator_retrieve = genome_data[7]
-            phamerator_subcluster = genome_data[8]
-            phamerator_author = genome_data[9]
+            phamerator_status = genome_data[3]
 
-            # For NCBI retrieval, add to dictionary if
-            # 1) the genome is set to be automatically updated and
-            # 2) if there is an accession number
-            if retrieve_ncbi_updates is True:
+            # If Document Summary date is newer than the phamerator date,
+            # or if the genome being evaluated is currently draft status but
+            # we were able to retrieve a Genbank record (i.e. it's not a
+            # draft anymore), append the accession to the list of accessions
+            # from this batch to retrieve.
+            if doc_sum_date > phamerator_date or phamerator_status == "draft":
+                accessions_to_retrieve.append(doc_sum_accession)
+            # Otherwise, if the phamerator date is newer or the phamerator
+            # status isn't draft, mark down in the ncbi_results file that
+            # the record in Genbank isn't new.
+            else:
+                # We need more information about the phamerator data for
+                # this genome
 
-                if phamerator_retrieve != 1:
-                    # print "PhageID %s is not set to be automatically updated
-                    # by NCBI record." %phamerator_id
-                    tally_not_auto_updated += 1
-                    ncbi_results_writer.writerow([phamerator_id,
-                                                  phamerator_name,
-                                                  phamerator_accession,
-                                                  phamerator_status,
-                                                  phamerator_date,
-                                                  'NA',
-                                                  'no automatic update'])
+                phamerator_id = genome_data[0]
+                phamerator_name = genome_data[1]
+                phamerator_host = genome_data[2]
+                phamerator_cluster = genome_data[4]
+                phamerator_accession = genome_data[6]
+                phamerator_retrieve = genome_data[7]
+                phamerator_subcluster = genome_data[8]
+                phamerator_author = genome_data[9]
 
-                elif phamerator_accession == "none" or \
-                        phamerator_accession is None:
-                    # print "PhageID %s is set to be automatically updated,
-                    # but it does not have an accession number." %phamerator_id
-                    tally_no_accession += 1
-                    ncbi_results_writer.writerow([phamerator_id,
-                                                  phamerator_name,
-                                                  phamerator_accession,
-                                                  phamerator_status,
-                                                  phamerator_date,
-                                                  'NA',
-                                                  'no accession'])
+                tally_retrieved_not_new += 1
+                results = [phamerator_id,
+                           phamerator_name,
+                           phamerator_accession,
+                           phamerator_status,
+                           phamerator_date,
+                           doc_sum_date,
+                           "record not new"]
+                ncbi_results_list.append(results)
 
-                else:
-                    # Dictionary of phage data based on unique accessions
-                    # Key = accession
-                    # Value = phage data list
-                    # 0 = PhageID
-                    # 1 = PhageName
-                    # 2 = Host
-                    # 3 = Status
-                    # 4 = Cluster2
-                    # 5 = DateLastModified
-                    # 6 = Accession
-                    # 7 = RetrieveRecord
-                    # 8 = Subcluster2
-                    # 9 = AnnotationAuthor
-                    unique_accession_dict[phamerator_accession] = [
-                        phamerator_id, phamerator_name, phamerator_host,
-                        phamerator_status, phamerator_cluster, phamerator_date,
-                        phamerator_accession, phamerator_retrieve,
-                        phamerator_subcluster, phamerator_author]
-
-            # The next code block is only applicable if all phage data was
-            # successfully retrieved from phagesdb. If incomplete data was
-            # retrieved from phagesdb, the retrieve_field_updates and
-            # retrieve_phagesdb_genomes flags should have been set to "no"
-            if retrieve_field_updates is True or \
-                    retrieve_phagesdb_updates is True:
-
-                # Ensure the phageID does not have Draft appended
-                if phamerator_id[-6:].lower() == "_draft":
-                    phage_id_search_name = phamerator_id[:-6]
-                else:
-                    phage_id_search_name = phamerator_id
-
-                # Ensure the phage name does not have Draft appended
-                if phamerator_name[-6:].lower() == "_draft":
-                    phage_name_search_name = phamerator_name[:-6]
-                else:
-                    phage_name_search_name = phamerator_name
-
-                # First try to match up the phageID, and if that doesn't work,
-                # try to match up the phageName
-                if phage_id_search_name in phagesdb_data_dict.keys():
-                    matched_phagesdb_data = phagesdb_data_dict[
-                        phage_id_search_name]
-                    matched_count += 1
-
-                elif phage_name_search_name in phagesdb_data_dict.keys():
-                    matched_phagesdb_data = phagesdb_data_dict[
-                        phage_name_search_name]
-                    matched_count += 1
-
-                else:
-                    matched_phagesdb_data = ""
-                    unmatched_count += 1
-                    unmatched_phage_id_list.append(phamerator_id)
-
-                    # Only add Hatfull-author unmatched phages to list
-                    if phamerator_author == 'hatfull':
-                        unmatched_hatfull_count += 1
-                        unmatched_hatfull_phage_id_list.append(phamerator_id)
-
-                    continue
-
-                # Matched name and host
-                phagesdb_name = matched_phagesdb_data['phage_name']
-                phagesdb_host = matched_phagesdb_data['isolation_host']['genus']
-
-                # Matched accession
-                phagesdb_accession = matched_phagesdb_data['genbank_accession']
-                if phagesdb_accession.strip() != "":
-                    # Sometimes accession data from phagesdb have
-                    # whitespace characters
-                    phagesdb_accession = phagesdb_accession.strip()
-                    # Sometimes accession data from phagesdb have
-                    #version suffix
-                    phagesdb_accession = phagesdb_accession.split('.')[0]
-                else:
-                    phagesdb_accession = "none"
-
-                # Matched cluster
-                if matched_phagesdb_data['pcluster'] is None:
-                    # Sometimes cluster information is not present. In the
-                    # phagesdb database, it is is recorded as NULL. When phages
-                    # data is downloaded from phagesdb, NULL cluster data is
-                    # converted to "Unclustered". In these cases, leaving the
-                    # cluster as NULL in phamerator won't work, because NULL
-                    # means Singleton. Therefore, the phamerator cluster is
-                    # listed as 'UNK' (Unknown).
-                    phagesdb_cluster = 'UNK'
-
-                else:
-                    phagesdb_cluster = matched_phagesdb_data['pcluster']['cluster']
-
-                # Matched subcluster
-                if matched_phagesdb_data['psubcluster'] is None:
-                    # If a phage has a cluster, but not a subcluster,
-                    # set subcluster to 'none'
-                    phagesdb_subcluster = 'none'
-
-                else:
-                    phagesdb_subcluster = matched_phagesdb_data['psubcluster'][
-                        'subcluster']
-
-            # Determine if any fields need updated
-            if retrieve_field_updates is True:
-
-                # Compare Cluster2
-                if phamerator_cluster != phagesdb_cluster:
-                    field_corrections_needed += 1
-
-                    #TODO output row
-                    field_import_table_writer2.writerow(["phage",
-                                                        "Cluster2",
-                                                        phagesdb_cluster,
-                                                        "PhageID",
-                                                        phamerator_id])
-
-                    field_import_table_writer2.writerow(["phage",
-                                                        "Cluster",
-                                                        phagesdb_cluster,
-                                                        "PhageID",
-                                                        phamerator_id])
+        if len(accessions_to_retrieve) > 0:
+            output_list = ncbi.get_records(accessions_to_retrieve,
+                                           db="nucleotide",
+                                           rettype="gb",
+                                           retmode="text")
+            retrieved_record_list.extend(output_list)
 
 
-                # Compare Subcluster2
-                if phamerator_subcluster != phagesdb_subcluster:
-                    field_corrections_needed += 1
 
-                    #TODO output row
-                    field_import_table_writer2.writerow(["phage",
-                                                        "Subcluster2",
-                                                        phagesdb_subcluster,
-                                                        "PhageID",
-                                                        phamerator_id])
+    # Report the genomes that could not be retrieved.
+    tally_retrieval_failure = len(retrieval_error_list)
+    for retrieval_error_accession in retrieval_error_list:
+        genome_data = unique_accession_dict[retrieval_error_accession]
+        phamerator_id = genome_data[0]
+        phamerator_name = genome_data[1]
+        phamerator_host = genome_data[2]
+        phamerator_status = genome_data[3]
+        phamerator_cluster = genome_data[4]
+        phamerator_date = genome_data[5]
+        phamerator_accession = genome_data[6]
+        phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
+        results = [phamerator_id,
+                   phamerator_name,
+                   phamerator_accession,
+                   phamerator_status,
+                   phamerator_date,
+                   "NA",
+                   "retrieval failure"]
+        ncbi_results_list.append(results)
 
-                    if phagesdb_subcluster != "none":
-                        field_import_table_writer2.writerow(["phage",
-                                                            "Cluster",
-                                                            phagesdb_subcluster,
-                                                            "PhageID",
-                                                            phamerator_id])
+    # For any records that were retrieved, mark their data in the NCBI
+    # results file, and save their records as Genbank files, and create
+    # import table entries for them.
+    for retrieved_record in retrieved_record_list:
 
-                # Compare Host genus
-                if phamerator_host != phagesdb_host:
-                    field_corrections_needed += 1
+        # Pull out the accession to get the matched Phamerator data
+        retrieved_record_accession = retrieved_record.name
+        retrieved_record_accession = retrieved_record_accession.split('.')[0]
 
-                    #TODO output row
-                    field_import_table_writer2.writerow(["phage",
-                                                        "HostStrain",
-                                                        phagesdb_host,
-                                                        "PhageID",
-                                                        phamerator_id])
-                # Compare Accession
-                # If the genome author is "gbk", then don't worry about
-                # updating the accession. This used to be determined with
-                # the status field, but now it is determined with the
-                # AnnotationAuthor field.
-                if phamerator_accession != phagesdb_accession and \
-                        phamerator_author == "hatfull":
-                    field_corrections_needed += 1
+        # Convert date to datetime object
+        retrieved_record_date = retrieved_record.annotations["date"]
+        retrieved_record_date = datetime.datetime.strptime(
+            retrieved_record_date, '%d-%b-%Y')
 
-                    #TODO output row
-                    field_import_table_writer2.writerow(["phage",
-                                                        "Accession",
-                                                        phagesdb_accession,
-                                                        "PhageID",
-                                                        phamerator_id])
+        # MySQL outputs the DateLastModified as a datetime object
+        genome_data = unique_accession_dict[retrieved_record_accession]
+        phamerator_id = genome_data[0]
+        phamerator_name = genome_data[1]
+        phamerator_host = genome_data[2]
+        phamerator_status = genome_data[3]
+        phamerator_cluster = genome_data[4]
+        phamerator_date = genome_data[5]
+        phamerator_accession = genome_data[6]
+        phamerator_retrieve = genome_data[7]
+        phamerator_subcluster = genome_data[8]
+        phamerator_author = genome_data[9]
 
-                # If errors in the Host, Cluster, or Subcluster information
-                # were identified, create an import ticket for the import
-                # script to implement.
-                if field_corrections_needed > 0:
-                    field_update_tally += 1
-                    # TODO modify output
-                    field_import_table_writer.writerow(["update",
-                                                        phamerator_id,
-                                                        phagesdb_host,
-                                                        phagesdb_cluster,
-                                                        phagesdb_subcluster,
-                                                        phamerator_status,
-                                                        phamerator_author,
-                                                        "none",
-                                                        phagesdb_accession,
-                                                        "none",
-                                                        "none"])
+        # Save new records in a folder and create an import table row
+        # for them. If the genome is currently a draft annotation, create
+        # an import ticket for replacement regardless of the date in
+        # the Genbank record. This ensures that if a user fails to
+        # upload a manual annotation to phagesdb, once the Genbank
+        # accession becomes active Phamerator will get the new version.
+        # This should always happen, since we've only retrieved new records.
+        if retrieved_record_date > phamerator_date or \
+                phamerator_status == 'draft':
+            tally_retrieved_for_update += 1
+            results = [phamerator_id,
+                       phamerator_name,
+                       phamerator_accession,
+                       phamerator_status,
+                       phamerator_date,
+                       retrieved_record_date,
+                       "record retrieved for import"]
+            ncbi_results_list.append(results)
 
-            # Determine if any new Genbank-formatted files are available
-            if retrieve_phagesdb_updates is True:
+            # Remove the "_Draft" suffix if it is present.
+            if phamerator_id[-6:].lower() == '_draft':
+                import_table_name = phamerator_id[:-6]
+            else:
+                import_table_name = phamerator_id
 
-                # Retrieve the qced_genbank_file_date data and properly
-                # format it. Some phages may have a file but no associated
-                # date tagged with that file (since date tagging has only
-                # recently been implemented). If there is a date, it is
-                # formatted as: '2017-02-15T10:37:21Z'. If there is no date,
-                # it is Null, but change this to 1/1/1900.
-                phagesdb_flatfile_date = matched_phagesdb_data[
-                    'qced_genbank_file_date']
+            # Determine what the status of the genome will be.
+            # If the genome in Phamerator was already 'final' or 'unknown',
+            # then keep the status unchanged. If the genome in Phamerator
+            # was 'draft', the status should be changed to 'final'.
+            if phamerator_status == 'draft':
+                phamerator_status = 'final'
 
-                if phagesdb_flatfile_date is None:
+            # Now output the file and create the import ticket.
+            ncbi_filename = (f"{phamerator_name.lower()}__"
+                            f"{retrieved_record_accession}.gb")
 
-                    phagesdb_flatfile_date = datetime.datetime.strptime(
-                        '1/1/1900', '%m/%d/%Y')
+            flatfile_path = pathlib.Path(genome_folder, ncbi_filename)
+            SeqIO.write(retrieved_record, str(flatfile_path), "genbank")
 
-                else:
+            # TODO modify output
+            import_ticket_data = ["replace",
+                                   import_table_name,
+                                   phamerator_host,
+                                   phamerator_cluster,
+                                   phamerator_subcluster,
+                                   phamerator_status,
+                                   phamerator_author,
+                                   'product',
+                                   phamerator_accession,
+                                   'ncbi_auto',
+                                   phamerator_id]
+            import_ticket_lists.append(import_ticket_data)
 
-                    phagesdb_flatfile_date = phagesdb_flatfile_date.split('T')[0]
-                    phagesdb_flatfile_date = datetime.datetime.strptime(
-                        phagesdb_flatfile_date, '%Y-%m-%d')
+            # TODO the following code block should replace above once
+            # new import pipeline is functioning.
+            # Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
+            if phamerator_author == "hatfull":
+                phamerator_author = "1"
+            else:
+                phamerator_author = "0"
+            import_ticket_data2 = ["replace",
+                                   import_table_name,
+                                   phamerator_host,
+                                   phamerator_cluster,
+                                   phamerator_subcluster,
+                                   phamerator_status,
+                                   phamerator_author,
+                                   "product",
+                                   phamerator_accession,
+                                   "sea_auto",
+                                   "1"]
+            import_ticket_lists2.append(import_ticket_data2)
 
-                # Not all phages have associated Genbank-formatted files
-                # available on phagesdb. Check to see if there is a flatfile for
-                # this phage. Download the flatfile only if there is a date tag,
-                # and only if that date is more recent than the date stored in
-                # Phamerator for that genome. The tagged date only reflects when
-                # the file was uploaded into phagesdb. The date the actual
-                # Genbank record was created is stored within the file,
-                # and this too could be less recent than the current version in
-                # Phamerator; however, this part gets checked during the import
-                # stage.
-                if matched_phagesdb_data['qced_genbank_file'] is None or \
-                        phagesdb_flatfile_date < phamerator_date:
-
-                    # print "No flatfile is available that is more recent than
-                    # current phamerator version for phageID %s." % phamerator_id
-                    phagesdb_failed_tally += 1
-                    phagesdb_failed_list.append(phamerator_id)
-
-                else:
-
-                    # Save the file on the hard drive with the same name as
-                    # stored on phagesdb
-                    phagesdb_flatfile_url = matched_phagesdb_data[
-                        'qced_genbank_file']
-                    phagesdb_filename = phagesdb_flatfile_url.split('/')[-1]
-
-                    try:
-                        phagesdb_flatfile_response = request.urlopen(
-                            phagesdb_flatfile_url)
-                        phagesdb_file_handle = open(os.path.join(phagesdb_folder,
-                                                                 "genomes",
-                                                                 phagesdb_filename),
-                                                    'w')
-                        # response comes back as a byte string that won't be
-                        # processed correctly without being decoded to UTF-8
-                        phagesdb_file_handle.write(
-                            phagesdb_flatfile_response.read().decode('utf-8'))
-                        phagesdb_flatfile_response.close()
-                        phagesdb_file_handle.close()
-
-                        # Create the new import ticket
-                        # Since the phagesdb phage has been matched to
-                        # the phamerator phage, the AnnotationAuthor field
-                        # could be assigned from the current phamerator_author
-                        # variable. However, since this genbank-formatted
-                        # file is acquired through phagesdb, both the
-                        # Annotation status is expected to be 'final' and
-                        # the Annotation author is expected to be 'hatfull'.
-
-                        # TODO modify output
-                        phagesdb_import_table_writer.writerow(["replace",
-                                                               phage_id_search_name,
-                                                               "retrieve",
-                                                               "retrieve",
-                                                               "retrieve",
-                                                               "final",
-                                                               "hatfull",
-                                                               "product",
-                                                               "retrieve",
-                                                               "phagesdb",
-                                                               phamerator_id])
-
-
-                        phagesdb_import_table_writer2.writerow(["replace",
-                                                               phage_id_search_name,
-                                                               "retrieve",
-                                                               "retrieve",
-                                                               "retrieve",
-                                                               "final",
-                                                               "1",
-                                                               "product",
-                                                               "retrieve",
-                                                               "phagesdb",
-                                                               "1"])
-
-
-                        phagesdb_retrieved_tally += 1
-                        phagesdb_retrieved_list.append(phamerator_id)
-
-                    except error:  # urllib has 2 main errors, HTTP or URL error
-                        print("Error: unable to retrieve or read flatfile for "
-                              "phageID {}.".format(phamerator_id))
-                        phagesdb_failed_tally += 1
-                        phagesdb_failed_list.append(phamerator_id)
-
-        # At this point all genomes in Phamerator have been iterated through and
-        # matched to phagesdb data
-        # All field updates and manually-annotated flatfiles have been retrieved
-        # from phagesdb.
-        # Report retrieval results.
-
-        print("\nPhamerator-phagesdb matched phage tally: {}.".format(
-            matched_count))
-        print("\nPhamerator-phagesdb unmatched phage tally: {}.".format(
-            unmatched_count))
-        # Only print out Hatfull-author unmatched phages.
-        if unmatched_hatfull_count > 0:
-            print("\nPhamerator-phagesdb Hatfull-author unmatched phages:")
-            for element in unmatched_hatfull_phage_id_list:
-                print(element)
-
-        # Field updates
-        if field_update_tally > 0:
-            print("\n\nNew field updates are available.")
         else:
-            print("\n\nNo field updates found.")
-
-        # New flatfiles
-        if retrieve_phagesdb_updates is True:
-
-            if phagesdb_retrieved_tally > 0:
-                print("\n\n{} phage(s) were retrieved from phagesdb.".format(
-                    phagesdb_retrieved_tally))
-            # print "\n\n%s phage(s) failed to be retrieved from phagesdb:"
-            # %phagesdb_failed_tally
-            # for element in phagesdb_failed_list:
-            #     print element
-            else:
-                print("\n\nNo new phages were retrieved from phagesdb.")
-
-        input("\n\nPress ENTER to continue.")
-
-    # Option 3: Retrieve updated records from NCBI
-    if retrieve_ncbi_updates is True:
-        # Flow of the NCBI record retrieval process:
-        # 1 Create list of phages to check for updates at NCBI (completed above)
-        # 2 Using esearch, verify which accessions are valid
-        # 3 Using esummary, get update date for each valid accession
-        # 4 Using efetch, retrieve flat files for NCBI records newer than
-        # phamerator date
-        # 5 Save new records in a folder and create an import table for them
-
-        print("\n\nRetrieving updated records from NCBI")
-
-        # Use esearch to verify the accessions are valid and efetch to retrieve
-        # the record
-        # Create batches of accessions
-        unique_accession_list = list(unique_accession_dict.keys())
-
-        # Add [ACCN] field to each accession number
-        appended_accessions = \
-            [accession + "[ACCN]" for accession in unique_accession_list]
-
-        # Keep track of specific records
-        retrieved_record_list = []
-        retrieval_error_list = []
-
-        # When retrieving in batch sizes, first create the list of values
-        # indicating which indices of the unique_accession_list should be used
-        # to create each batch.
-        # For instace, if there are five accessions, batch size of two produces
-        # indices = 0,2,4
-        batch_indices = basic.create_indices(unique_accession_list, batch_size)
-        for indices in batch_indices:
-            batch_index_start = indices[0]
-            batch_index_stop = indices[1]
-            print("retrieving batch: ", batch_index_start, batch_index_stop)
-            current_batch_size = batch_index_stop - batch_index_start
-            delimiter = " | "
-            esearch_term = delimiter.join(appended_accessions[
-                                          batch_index_start:batch_index_stop])
-
-            # Use esearch for each accession
-            search_record = ncbi.run_esearch(db="nucleotide", term=esearch_term,
-                                usehistory="y")
-            search_count = int(search_record["Count"])
-            search_webenv = search_record["WebEnv"]
-            search_query_key = search_record["QueryKey"]
+            print("For some reason a Genbank record was retrieved "
+                  f"for {phamerator_id} even though it wasn't new")
 
 
-            # Keep track of the accessions that failed to be located in NCBI
-            if search_count < current_batch_size:
-                search_accession_failure = search_record["ErrorList"][
-                    "PhraseNotFound"]
-
-                # Each element in this list is formatted "accession[ACCN]"
-                for element in search_accession_failure:
-                    # print(element, element[:-6])
-                    retrieval_error_list.append(element[:-6])
-
-            # Now get summaries for these records using esummary
-            accessions_to_retrieve = []
-            summary_records = ncbi.get_summaries(db="nucleotide",
-                                                 query_key=search_query_key,
-                                                 webenv=search_webenv)
-
-            for doc_sum in summary_records:
-                doc_sum_name = doc_sum["Title"]
-                doc_sum_accession = doc_sum["Caption"]
-                doc_sum_date = datetime.datetime.strptime(doc_sum["UpdateDate"],
-                                                          "%Y/%m/%d")
-                genome_data = unique_accession_dict[doc_sum_accession]
-                phamerator_date = genome_data[5]
-                phamerator_status = genome_data[3]
-
-                # If Document Summary date is newer than the phamerator date,
-                # or if the genome being evaluated is currently draft status but
-                # we were able to retrieve a Genbank record (i.e. it's not a
-                # draft anymore), append the accession to the list of accessions
-                # from this batch to retrieve.
-                if doc_sum_date > phamerator_date or phamerator_status == "draft":
-                    accessions_to_retrieve.append(doc_sum_accession)
-                # Otherwise, if the phamerator date is newer or the phamerator
-                # status isn't draft, mark down in the ncbi_results file that
-                # the record in Genbank isn't new.
-                else:
-                    # We need more information about the phamerator data for
-                    # this genome
-
-                    phamerator_id = genome_data[0]
-                    phamerator_name = genome_data[1]
-                    phamerator_host = genome_data[2]
-                    phamerator_cluster = genome_data[4]
-                    phamerator_accession = genome_data[6]
-                    phamerator_retrieve = genome_data[7]
-                    phamerator_subcluster = genome_data[8]
-                    phamerator_author = genome_data[9]
-
-                    tally_retrieved_not_new += 1
-                    ncbi_results_writer.writerow([phamerator_id, phamerator_name,
-                                                  phamerator_accession,
-                                                  phamerator_status,
-                                                  phamerator_date,
-                                                  doc_sum_date,
-                                                  'record not new'])
+    # Now make the import table.
+    if len(import_ticket_lists) > 0:
+        filename1 = f"ncbi_updates_import_table.csv"
+        filepath1 = pathlib.Path(ncbi_folder, filename1)
+        with filepath1.open("w") as fh:
+            writer = csv.writer(fh)
+            writer.writerows(import_ticket_lists)
 
 
-            if len(accessions_to_retrieve) > 0:
-                output_list = ncbi.get_records(accessions_to_retrieve,
-                                               db="nucleotide",
-                                               rettype="gb",
-                                               retmode="text")
-                retrieved_record_list.extend(output_list)
+    # TODO new dictwriter. Use this block instead of above once the
+    # new import script is functioning.
+    # if len(import_ticket_lists2) > 0:
+    #     filename2 = f"dev_ncbi_updates_import_table_new.csv"
+    #     filepath2 = pathlib.Path(ncbi_folder, filename1)
+    #     with filepath1.open("w") as fh:
+    #         writer = csv.writer(fh)
+    #         writer.writerow(import_table_columns2)
+    #         writer.writerows(import_ticket_lists2)
 
 
 
-        # Report the genomes that could not be retrieved.
-        tally_retrieval_failure = len(retrieval_error_list)
-        for retrieval_error_accession in retrieval_error_list:
-            genome_data = unique_accession_dict[retrieval_error_accession]
-            phamerator_id = genome_data[0]
-            phamerator_name = genome_data[1]
-            phamerator_host = genome_data[2]
-            phamerator_status = genome_data[3]
-            phamerator_cluster = genome_data[4]
-            phamerator_date = genome_data[5]
-            phamerator_accession = genome_data[6]
-            phamerator_retrieve = genome_data[7]
-            phamerator_subcluster = genome_data[8]
-            phamerator_author = genome_data[9]
+    # Record all results.
 
-            # ncbi_results_headers = 'PhageID','PhageName','Accession','Status',
-            # 'PhameratorDate','RetrievedRecordDate','Result'
-            ncbi_results_writer.writerow([phamerator_id, phamerator_name,
-                                          phamerator_accession, phamerator_status,
-                                          phamerator_date, 'NA', 'retrieval '
-                                                                 'failure'])
-
-        # For any records that were retrieved, mark their data in the NCBI
-        # results file, and save their records as Genbank files, and create
-        # import table entries for them.
-        for retrieved_record in retrieved_record_list:
-
-            # Pull out the accession to get the matched Phamerator data
-            retrieved_record_accession = retrieved_record.name
-            retrieved_record_accession = retrieved_record_accession.split('.')[0]
-
-            # Convert date to datetime object
-            retrieved_record_date = retrieved_record.annotations["date"]
-            retrieved_record_date = datetime.datetime.strptime(
-                retrieved_record_date, '%d-%b-%Y')
-
-            # MySQL outputs the DateLastModified as a datetime object
-            genome_data = unique_accession_dict[retrieved_record_accession]
-            phamerator_id = genome_data[0]
-            phamerator_name = genome_data[1]
-            phamerator_host = genome_data[2]
-            phamerator_status = genome_data[3]
-            phamerator_cluster = genome_data[4]
-            phamerator_date = genome_data[5]
-            phamerator_accession = genome_data[6]
-            phamerator_retrieve = genome_data[7]
-            phamerator_subcluster = genome_data[8]
-            phamerator_author = genome_data[9]
-
-            # Save new records in a folder and create an import table row
-            # for them. If the genome is currently a draft annotation, create
-            # an import ticket for replacement regardless of the date in
-            # the Genbank record. This ensures that if a user fails to
-            # upload a manual annotation to phagesdb, once the Genbank
-            # accession becomes active Phamerator will get the new version.
-            # This should always happen, since we've only retrieved new records.
-            if retrieved_record_date > phamerator_date or \
-                    phamerator_status == 'draft':
-                tally_retrieved_for_update += 1
-                ncbi_results_writer.writerow([phamerator_id,
-                                              phamerator_name,
-                                              phamerator_accession,
-                                              phamerator_status,
-                                              phamerator_date,
-                                              retrieved_record_date,
-                                              'record retrieved for import'])
-
-                # Remove the "_Draft" suffix if it is present.
-                if phamerator_id[-6:].lower() == '_draft':
-                    import_table_name = phamerator_id[:-6]
-                else:
-                    import_table_name = phamerator_id
-
-                # Determine what the status of the genome will be.
-                # If the genome in Phamerator was already 'final' or 'unknown',
-                # then keep the status unchanged. If the genome in Phamerator
-                # was 'draft', the status should be changed to 'final'.
-                if phamerator_status == 'draft':
-                    phamerator_status = 'final'
-
-                # Now output the file and create the import ticket.
-                ncbi_filename = phamerator_name.lower() + "__" + \
-                                retrieved_record_accession + ".gb"
-                SeqIO.write(retrieved_record, os.path.join(
-                    ncbi_folder, "genomes", ncbi_filename), "genbank")
-
-                # TODO modify output
-                ncbi_import_table_writer.writerow(['replace',
-                                                   import_table_name,
-                                                   phamerator_host,
-                                                   phamerator_cluster,
-                                                   phamerator_subcluster,
-                                                   phamerator_status,
-                                                   phamerator_author,
-                                                   'product',
-                                                   phamerator_accession,
-                                                   'ncbi_auto',
-                                                   phamerator_id])
-
-                # Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
-                if phamerator_author == "hatfull":
-                    phamerator_author = "1"
-                else:
-                    phamerator_author = "0"
-
-                ncbi_import_table_writer2.writerow(["replace",
-                                                   import_table_name,
-                                                   phamerator_host,
-                                                   phamerator_cluster,
-                                                   phamerator_subcluster,
-                                                   phamerator_status,
-                                                   phamerator_author,
-                                                   "product",
-                                                   phamerator_accession,
-                                                   "sea_auto",
-                                                   "1"])
-
-
-            else:
-                print("For some reason I retrieved a Genbank record for {} even "
-                      "though it wasn't new...".format(phamerator_id))
-
-        # Print summary of script
-        print("Number of genomes in Phamerator: {}".format(tally_total))
-        print("Number of genomes that are NOT set to be updated: {}".format(
-            tally_not_auto_updated))
-        print("Number of auto-updated genomes with no accession: {}".format(
-            tally_no_accession))
-        print("Number of records that failed to be retrieved: {}".format(
-            tally_retrieval_failure))
-        print("Number of records retrieved that are NOT more recent than "
-              "Phamerator record: {}".format(tally_retrieved_not_new))
-        print("Number of records retrieved that should be updated in " \
-              "Phamerator: {}".format(tally_retrieved_for_update))
-        input("\n\nPress ENTER to continue.")
-
-    # Option 4: Retrieve auto-annotated genomes from PECAAN
-    if retrieve_pecaan_updates is True:
-
-        print("\n\nRetrieving new phages from PECAAN")
-
-        # Keep track of how many genomes were retrieved from PECAAN
-        pecaan_retrieved_tally = 0
-        pecaan_failed_tally = 0
-        pecaan_retrieved_list = []
-        pecaan_failed_list = []
-
-        # Retrieve list of unphamerated genomes
-        # Retrieved file should be tab-delimited text file, each row is a newly
-        # sequenced phage
-        phagesdb_new_phages_response = request.urlopen(phagesdb_unphamerated_url)
-
-        # Iterate through each row in the file
-        for new_phage in phagesdb_new_phages_response:
-
-            # PECAAN should be able to generate any phage that is listed on
-            # phagesdb
-            new_phage = new_phage.strip()  # Remove \t at end of each row
-            new_phage = new_phage.decode("utf-8")  # convert bytes object to str
-            pecaan_link = pecaan_prefix + new_phage
-
-            pecaan_filename = new_phage + ".txt"
-
-            try:
-                # gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) ==> required for
-                # urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]
-                # certificate verify failed (_ssl.c:590)> ==> creating new TLS
-                # context tells urllib2 to ignore certificate chain
-                # NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
-
-                pecaan_response = request.urlopen(pecaan_link)
-
-                pecaan_file_handle = open(os.path.join(
-                    pecaan_folder, "genomes", pecaan_filename), 'w')
-                pecaan_file_handle.write(str(pecaan_response.read().decode(
-                    "utf-8")))
-
-                pecaan_response.close()
-                pecaan_file_handle.close()
-
-                # Create the new import ticket
-                # TODO modify output
-                pecaan_import_table_writer.writerow(["add",
-                                                     new_phage,
-                                                     "retrieve",
-                                                     "retrieve",
-                                                     "retrieve",
-                                                     "draft",
-                                                     "hatfull",
-                                                     "product",
-                                                     "none",
-                                                     "pecaan",
-                                                     "none"])
-
-                pecaan_import_table_writer2.writerow(["add",
-                                                     new_phage,
-                                                     "retrieve",
-                                                     "retrieve",
-                                                     "retrieve",
-                                                     "draft",
-                                                     "1",
-                                                     "product",
-                                                     "none",
-                                                     "pecaan",
-                                                     "1"])
+    filename3 = "ncbi_results.csv"
+    filepath3 = pathlib.Path(ncbi_folder, filename3)
+    with filepath3.open("w") as fh:
+        writer = csv.writer(fh)
+        ncbi_results_header = ["PhageID", "PhageName", "Accession", "Status",
+                                "PhameratorDate", "GenbankDate", "Result"]
+        writer.writerow(ncbi_results_header)
+        writer.writerows(ncbi_results_list)
 
 
 
-                print("Retrieved {} from PECAAN.".format(new_phage))
-                pecaan_retrieved_tally += 1
-                pecaan_retrieved_list.append(new_phage)
 
-            except error:
-                print("Error: unable to retrieve {} draft genome.".format(
-                    new_phage))
-                pecaan_failed_tally += 1
-                pecaan_failed_list.append(new_phage)
+    # Print summary of script
+    print(f"Number of genomes in Phamerator: {tally_total}")
+    print("Number of genomes that are NOT set to be updated: "
+          f"{tally_not_auto_updated}")
+    print("Number of auto-updated genomes with no accession: "
+          f"{tally_no_accession}")
+    print("Number of auto-updated genomes with a duplicated accession: "
+          f"{tally_duplicate_accession}")
+    print("Number of records that failed to be retrieved: "
+          f"{tally_retrieval_failure}")
+    print("Number of records retrieved that are NOT more recent than "
+          f"Phamerator record: {tally_retrieved_not_new}")
+    print("Number of records retrieved that should be updated in "
+          f"Phamerator: {tally_retrieved_for_update}")
+    input("\n\nPress ENTER to continue.")
 
-        phagesdb_new_phages_response.close()
 
-        # Report results
-        if pecaan_retrieved_tally > 0:
-            print("{} phage(s) were successfully retrieved".format(
-                pecaan_retrieved_tally))
 
-        if pecaan_failed_tally > 0:
-            print("The following {} phage(s) failed to be retrieved:".format(
-                pecaan_failed_tally))
-            for element in pecaan_failed_list:
-                print(element)
 
-        input("\n\nPress ENTER to continue.")
 
-    # Close script.
-    print("Closing {} open file handle(s).".format(len(open_file_handles_list)))
-    close_files(open_file_handles_list)
-    print("\n\n\nRetrieve updates script completed.")
+
+
+
+
+
+# TODO unittest.
+def get_draft_data(output_path):
+    """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
+    # Create output folder
+    pecaan_folder = pathlib.Path(output_path, f"pecaan_updates")
+    pecaan_folder.mkdir()
+    phagesdb_new_phages_list = \
+        get_unphamerated_phage_list(constants.UNPHAMERATED_PHAGE_LIST)
+    if len(phagesdb_new_phages_list) > 0:
+        retrieve_drafts(pecaan_folder, phagesdb_new_phages_list)
+    else:
+        print("No new 'draft' genomes available.")
+
+# TODO unittest.
+def get_unphamerated_phage_list(url):
+    """Retreive list of unphamerated phages from PhagesDB.
+
+    Retrieved file is a tab-delimited text file.
+    Each row is a newly-sequenced phage.
+    """
+    response = request.urlopen(url)
+    processed_list = []
+    for new_phage in response:
+        new_phage = new_phage.strip()  # Remove \t at end of each row
+        new_phage = new_phage.decode("utf-8")  # convert bytes object to str
+        processed_list.append(new_phage)
+    return processed_list
+
+
+
+
+# TODO unittest.
+def retrieve_drafts(output_folder, phage_list):
+    """Retrieve auto-annotated 'draft' genomes from PECAAN."""
+
+    print("\n\nRetrieving new phages from PECAAN")
+
+    pecaan_genome_folder = pathlib.Path(output_folder, "genomes")
+    pecaan_genome_folder.mkdir()
+
+    # Keep track of how many genomes were retrieved from PECAAN
+    pecaan_retrieved_tally = 0
+    pecaan_failed_tally = 0
+    pecaan_retrieved_list = []
+    pecaan_failed_list = []
+    import_ticket_lists = []
+    import_ticket_lists2 = [] # New ticket format
+
+    # Iterate through each row in the file
+    for new_phage in phage_list:
+        pecaan_link = constants.PECAAN_PREFIX + new_phage
+        try:
+            # gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) ==> required for
+            # urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]
+            # certificate verify failed (_ssl.c:590)> ==> creating new TLS
+            # context tells urllib2 to ignore certificate chain
+            # NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
+            response = request.urlopen(pecaan_link)
+            response_str = str(response.read().decode("utf-8"))
+            response.close()
+
+        except:
+            print(f"Error: unable to retrieve {new_phage} draft genome.")
+            print(pecaan_link)
+            pecaan_failed_tally += 1
+            pecaan_failed_list.append(new_phage)
+            response_str = None
+
+        if response_str is not None:
+            pecaan_filename = f"{new_phage}.txt"
+            pecaan_filepath = pathlib.Path(pecaan_genome_folder, pecaan_filename)
+            with pecaan_filepath.open("w") as fh:
+                fh.write(response_str)
+
+            # Create the new import ticket
+            import_ticket_data = ["add",
+                                  new_phage,
+                                  "retrieve",
+                                  "retrieve",
+                                  "retrieve",
+                                  "draft",
+                                  "hatfull",
+                                  "product",
+                                  "none",
+                                  "pecaan",
+                                  "none"]
+            import_ticket_lists.append(import_ticket_data)
+
+            # TODO modified output for new import pipeline.
+            import_ticket_data2 = ["add",
+                                   new_phage,
+                                   "retrieve",
+                                   "retrieve",
+                                   "retrieve",
+                                   "draft",
+                                   "1",
+                                   "product",
+                                   "none",
+                                   "pecaan",
+                                   "1"]
+            import_ticket_lists2.append(import_ticket_data2)
+            print(f"{new_phage} retrieved from PECAAN.")
+            pecaan_retrieved_tally += 1
+            pecaan_retrieved_list.append(new_phage)
+
+    # Now make the import table.
+    if len(import_ticket_lists) > 0:
+        filename1 = f"pecaan_updates_import_table.csv"
+        filepath1 = pathlib.Path(output_folder, filename1)
+        with filepath1.open("w") as fh:
+            writer = csv.writer(fh)
+            writer.writerows(import_ticket_lists)
+
+    # TODO new dictwriter. Use this block instead of above once the
+    # new import script is functioning.
+    # if len(import_ticket_lists2) > 0:
+    #     filename2 = f"dev_pecaan_updates_import_table_new.csv"
+    #     filepath2 = pathlib.Path(output_folder, filename2)
+    #     with filepath2.open("w") as fh:
+    #         writer = csv.writer(fh)
+    #         writer.writerow(import_table_columns2)
+    #         writer.writerows(import_ticket_lists2)
+
+
+    # Report results
+    if pecaan_retrieved_tally > 0:
+        print(f"{pecaan_retrieved_tally} phage(s) were successfully retrieved")
+
+    if pecaan_failed_tally > 0:
+        print(f"{pecaan_failed_tally} phage(s) failed to be retrieved:")
+        for element in pecaan_failed_list:
+            print(element)
+
+    input("\n\nPress ENTER to continue.")
+
+
+
 
 if __name__ == "__main__":
     main(sys.argv.insert(0, "empty"))
