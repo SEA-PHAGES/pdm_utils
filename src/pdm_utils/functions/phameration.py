@@ -42,17 +42,17 @@ def read_existing_phams(mysql_handler):
     old_phams = dict()
     old_colors = dict()
 
-    query = "SELECT * FROM (SELECT a.name, a.GeneID, b.color FROM pham AS a " \
-            "INNER JOIN pham_color AS b on a.name = b.name) AS c ORDER BY " \
-            "c.name ASC"
+    query = "SELECT * FROM (SELECT a.Name, a.GeneID, b.Color FROM pham AS a " \
+            "INNER JOIN pham_color AS b on a.Name = b.Name) AS c ORDER BY " \
+            "c.Name ASC"
     results = mysql_handler.execute_query(query)
 
     print("{} old genes".format(len(results)))
 
     for dictionary in results:
-        name = dictionary["name"]
+        name = dictionary["Name"]
         geneid = dictionary["GeneID"]
-        color = dictionary["color"]
+        color = dictionary["Color"]
         if name in old_phams.keys():
             old_phams[name] = old_phams[name] | {geneid}
         else:
@@ -97,14 +97,14 @@ def get_translations(mysql_handler):
     geneids_to_translations = dict()
     translation_groups = dict()
 
-    query = "SELECT GeneID, translation FROM gene"
+    query = "SELECT GeneID, Translation FROM gene"
     results = mysql_handler.execute_query(query)
 
     print(f"{len(results)} genes in the database")
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
-        translation = dictionary["translation"]
+        translation = dictionary["Translation"]
         # map each geneid to its translation
         geneids_to_translations[geneid] = translation
 
@@ -385,14 +385,14 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
     commands = []
     for key in new_phams.keys():
         for gene in new_phams[key]:
-            commands.append(f"INSERT INTO pham (GeneID, name) VALUES ('"
+            commands.append(f"INSERT INTO pham (GeneID, Name) VALUES ('"
                             f"{gene}', {key})")
 
     mysql_handler.execute_transaction(commands)
 
     commands = []
     for key in new_colors.keys():
-        commands.append(f"INSERT INTO pham_color (name, color) VALUES ({key}, "
+        commands.append(f"INSERT INTO pham_color (Name, Color) VALUES ({key}, "
                         f"'{new_colors[key]}')")
 
     mysql_handler.execute_transaction(commands)
@@ -401,10 +401,10 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
 def fix_miscolored_phams(mysql_handler):
     print("Phixing Phalsely Hued Phams...")
 
-    query = "SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count, " \
-            "a.name, b.color FROM pham AS a INNER JOIN pham_color AS " \
-            "b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE " \
-            "color = '#FFFFFF' AND count > 1"
+    query = "SELECT * FROM (SELECT b.ID, COUNT(GeneID) AS count, " \
+            "a.Name, b.Color FROM pham AS a INNER JOIN pham_color AS " \
+            "b ON a.Name = b.Name GROUP BY a.Name, b.ID) AS c WHERE " \
+            "Color = '#FFFFFF' AND count > 1"
 
     results = mysql_handler.execute_query(query)
 
@@ -412,10 +412,10 @@ def fix_miscolored_phams(mysql_handler):
 
     commands = []
     for dictionary in results:
-        pham_id = dictionary["id"]
+        pham_id = dictionary["ID"]
         count = dictionary["count"]
-        name = dictionary["name"]
-        color = dictionary["color"]
+        name = dictionary["Name"]
+        color = dictionary["Color"]
         h = s = v = 0
         while h <= 0:
             h = random.random()
@@ -429,17 +429,17 @@ def fix_miscolored_phams(mysql_handler):
                                               int(rgb[2]))
         new_color = hexrgb
 
-        commands.append("UPDATE pham_color SET color = '{}' WHERE "
-                        "id = '{}'".format(new_color, pham_id))
+        commands.append("UPDATE pham_color SET Color = '{}' WHERE "
+                        "ID = '{}'".format(new_color, pham_id))
 
     mysql_handler.execute_transaction(commands)
 
     print("Phixing Phalsely Phlagged Orphams...")
 
-    query = "SELECT * FROM (SELECT b.id, COUNT(GeneID) AS count," \
-            "a.name, b.color FROM pham AS a INNER JOIN pham_color AS " \
-            "b ON a.name = b.name GROUP BY a.name, b.id) AS c WHERE " \
-            "color != '#FFFFFF' AND count = 1"
+    query = "SELECT * FROM (SELECT b.ID, COUNT(GeneID) AS count," \
+            "a.Name, b.Color FROM pham AS a INNER JOIN pham_color AS " \
+            "b ON a.Name = b.Name GROUP BY a.Name, b.ID) AS c WHERE " \
+            "Color != '#FFFFFF' AND count = 1"
 
     results = mysql_handler.execute_query(query)
 
@@ -447,13 +447,13 @@ def fix_miscolored_phams(mysql_handler):
 
     commands = []
     for dictionary in results:
-        pham_id = dictionary["id"]
+        pham_id = dictionary["ID"]
         count = dictionary["count"]
-        name = dictionary["name"]
-        color = dictionary["color"]
+        name = dictionary["Name"]
+        color = dictionary["Color"]
         new_color = "#FFFFFF"
 
-        commands.append("UPDATE pham_color SET color = '{}' WHERE "
-                        "id = '{}'".format(new_color, pham_id))
+        commands.append("UPDATE pham_color SET Color = '{}' WHERE "
+                        "ID = '{}'".format(new_color, pham_id))
 
     mysql_handler.execute_transaction(commands)

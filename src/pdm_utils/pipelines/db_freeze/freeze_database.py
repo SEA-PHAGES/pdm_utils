@@ -160,7 +160,7 @@ def main(unparsed_args_list):
     #Retrieve the number of non-draft phages in the database
     try:
         cur.execute("START TRANSACTION")
-        cur.execute("SELECT count(*) FROM phage WHERE status != 'draft'")
+        cur.execute("SELECT count(*) FROM phage WHERE Status != 'draft'")
         phage_count = str(cur.fetchone()[0])
         cur.execute("COMMIT")
         cur.close()
@@ -261,10 +261,10 @@ def main(unparsed_args_list):
     #Now delete all draft genomes
     try:
         cur.execute("START TRANSACTION")
-        cur.execute("DELETE FROM phage WHERE status = 'draft'")
+        cur.execute("DELETE FROM phage WHERE Status = 'draft'")
 
         #Set version to 0 to indicate that the database needs re-phamerated
-        cur.execute("UPDATE version SET version = 0")
+        cur.execute("UPDATE version SET Version = 0")
 
         #Close MySQL connection
         cur.execute("COMMIT")

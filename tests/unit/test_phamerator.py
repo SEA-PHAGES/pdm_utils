@@ -39,7 +39,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                      "Cluster":"B",
                      "Cluster2":"A",
                      "Subcluster2":"A2",
-                     "status":"final",
+                     "Status":"final",
                      "RetrieveRecord":1,
                      "AnnotationAuthor":1}
 
@@ -130,7 +130,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                      "Stop":100,
                      "Length":1000,
                      "Name":"1",
-                     "translation":"AGGPT",
+                     "Translation":"AGGPT",
                      "Orientation":"F",
                      "Notes":"description".encode("utf-8"),
                      "LocusTag":"SEA_L5_001"}

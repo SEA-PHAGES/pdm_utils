@@ -2070,10 +2070,10 @@ def main(unparsed_args_list):
 
     try:
         cur.execute("START TRANSACTION")
-        cur.execute("SELECT version FROM version")
+        cur.execute("SELECT Version FROM version")
         ph_version = str(cur.fetchone()[0])
         cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,\
-                            status,Cluster,Accession,RetrieveRecord,\
+                            Status,Cluster,Accession,RetrieveRecord,\
                             DateLastModified,AnnotationAuthor FROM phage")
         ph_genome_data_tuples = cur.fetchall()
         cur.execute("SELECT PhageID,GeneID,Name,Start,Stop,Orientation,Translation,Notes from gene")

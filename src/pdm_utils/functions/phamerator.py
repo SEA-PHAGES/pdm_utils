@@ -92,7 +92,7 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
-        gnm.annotation_status = data_dict["status"]
+        gnm.annotation_status = data_dict["Status"]
     except:
         pass
 
@@ -159,7 +159,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr.set_translation(data_dict["translation"])
+        cds_ftr.set_translation(data_dict["Translation"])
     except:
         pass
 
@@ -435,7 +435,7 @@ def create_delete(table, field, data):
     :type field: str
     :param data: The value of 'field' upon which the statement is conditioned.
     :type data: str
-    :returns: A MySQL UPDATE statement.
+    :returns: A MySQL DELETE statement.
     :rtype: str
     """
     statement = f"DELETE FROM {table} WHERE {field} = '{data}';"
@@ -454,7 +454,7 @@ def create_gene_table_insert(cds_ftr):
     """
     statement = ("INSERT INTO gene "
                  "(GeneID, PhageID, Start, Stop, Length, Name, "
-                 "translation, Orientation, Notes, LocusTag) "
+                 "Translation, Orientation, Notes, LocusTag) "
                  "VALUES "
                  f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.left}, "
                  f"{cds_ftr.right}, {cds_ftr.translation_length}, "
@@ -481,7 +481,7 @@ def create_phage_table_insert(gnm):
 
     statement = ("INSERT INTO phage "
                  "(PhageID, Accession, Name, HostStrain, Sequence, "
-                 "SequenceLength, GC, status, DateLastModified, "
+                 "SequenceLength, GC, Status, DateLastModified, "
                  "RetrieveRecord, AnnotationAuthor, "
                  "Cluster, Cluster2, Subcluster2) "
                  "VALUES "

@@ -54,7 +54,7 @@ class TestFileExport(unittest.TestCase):
         seqrecord.annotations.update({"comment" : ()})
         self.test_seqrecord = seqrecord
         self.test_version_dictionary = \
-                {"version" : "Test", "schema_version": "Test"}
+                {"Version" : "Test", "SchemaVersion": "Test"}
 
     @patch("pdm_utils.pipelines.db_export.file_export.print")
     @patch("pdm_utils.pipelines.db_export.file_export.Cmd_Export")
@@ -62,7 +62,7 @@ class TestFileExport(unittest.TestCase):
     @patch(
     "pdm_utils.pipelines.db_export.file_export.establish_database_connection")
     @patch("pdm_utils.pipelines.db_export.file_export.parse_phage_list_input")
-    def test_run_file_export(self, ParsePhageInputMock,   EstablishDBMock, 
+    def test_run_file_export(self, ParsePhageInputMock,   EstablishDBMock,
                              ExecuteFileExportMock, InteractiveMockClass,
                              PrintMock):
         """
@@ -73,7 +73,7 @@ class TestFileExport(unittest.TestCase):
             -Patches file_export.execute_file_export()
             -Patches file_export.Cmd_Export
             -Patches file_export.parse_file_export_args() in context
-                -Within sub tests, a MagicMock object has predefined 
+                -Within sub tests, a MagicMock object has predefined
                  attributes that test the functionality of run_file_export()
                  to successfully branch on input options, verbose and
                  interactivity options, and export options.
@@ -91,7 +91,7 @@ class TestFileExport(unittest.TestCase):
                                             PropertyMock(return_value=False)
                 type(ParseArgsMock.return_value).verbose = \
                                             PropertyMock(return_value=False)
-                # 
+                #
                 #Asserts branching through MagicMock object calls
                 file_export.run_file_export("Test")
                 PrintMock.assert_not_called()
@@ -161,7 +161,7 @@ class TestFileExport(unittest.TestCase):
         ParseArgsMock.reset_mock()
         ParsePhageInputMock.reset_mock()
         ExecuteFileExportMock.reset_mock()
-        InteractiveMockClass.reset_mock()                                            
+        InteractiveMockClass.reset_mock()
         #
         #Sub test that isolates the verbosity option
         with patch(
@@ -188,7 +188,7 @@ class TestFileExport(unittest.TestCase):
                 ParsePhageInputMock.assert_not_called()
                 ExecuteFileExportMock.assert_called_once()
                 InteractiveMockClass.assert_not_called()
- 
+
     @patch("pdm_utils.pipelines.db_export.file_export.write_csv_log")
     @patch(
     "pdm_utils.pipelines.db_export.file_export.phamerator.parse_genome_data")
@@ -204,7 +204,7 @@ class TestFileExport(unittest.TestCase):
                                  RetrieveDBVersionMock, AppendDBVersionMock,
                                  SetCdsMock, GenomeToSeqRecordMock,
                                  ParseGenomeMock, CsvLogMock):
-        """ 
+        """
         Unittest for file_export.run_file_export
             -Patches print()
             -Patches file_export.seqrecord_to_file()
@@ -216,24 +216,24 @@ class TestFileExport(unittest.TestCase):
             -Patches phamerator.parse_genome_data()
             -Executes file_export.execute_file_export() with test parameters
                 -Within sub tests, execute_file_export() is called
-                 with varying test parameters that test handling and 
+                 with varying test parameters that test handling and
                  helper function calling depending on file format,
                  filter list, directory path, and directory name export inputs
                  while also testing for verbose and csv log optional
                  functionality.
 
-        """    
+        """
         #Establishes MagicMock return values
         ParseGenomeMock.return_value = self.genomes
         GenomeToSeqRecordMock.return_value = "Test"
         #
         #Sub test that tests for full export control inputs
         with self.subTest(verbose=False, csv_log=False):
-            file_export.execute_file_export("gb", self.sql_handle, 
-                                            ["test_filter_list"], 
+            file_export.execute_file_export("gb", self.sql_handle,
+                                            ["test_filter_list"],
                                             "test_path",
-                                            "test_folder_name", 
-                                            verbose=False, 
+                                            "test_folder_name",
+                                            verbose=False,
                                             csv_log=False)
             #Asserts helper function calls MagicMock object calls
             PrintMock.assert_not_called()
@@ -256,11 +256,11 @@ class TestFileExport(unittest.TestCase):
         #
         #Sub test that tests for full export control inputs and verbose option
         with self.subTest(verbose=True, csv_log=False):
-            file_export.execute_file_export("gb", self.sql_handle, 
-                                            ["test_filter_list"], 
+            file_export.execute_file_export("gb", self.sql_handle,
+                                            ["test_filter_list"],
                                             "test_path",
                                             "test_folder_name",
-                                            verbose=True, 
+                                            verbose=True,
                                             csv_log=False)
             #Asserts helper function calls through MagicMock object calls
             PrintMock.assert_has_calls(
@@ -276,10 +276,10 @@ class TestFileExport(unittest.TestCase):
             AppendDBVersionMock.assert_called()
             SetCdsMock.assert_has_calls([call(self.genomes[0]),
                                          call(self.genomes[1]),
-                                         call(self.genomes[2])]) 
+                                         call(self.genomes[2])])
             ParseGenomeMock.assert_called_once()
             CsvLogMock.assert_not_called()
-        #Resets MagicMock object calls 
+        #Resets MagicMock object calls
         PrintMock.reset_mock()
         SeqRecordToFileMock.reset_mock()
         RetrieveDBVersionMock.reset_mock()
@@ -290,20 +290,20 @@ class TestFileExport(unittest.TestCase):
         #Sub test that tests for full export control inputs as well as
         #verbose and interactivty options
         with self.subTest(verbose=True, csv_log=True):
-            file_export.execute_file_export("gb", self.sql_handle, 
-                                            ["test_filter_list"], 
+            file_export.execute_file_export("gb", self.sql_handle,
+                                            ["test_filter_list"],
                                             "test_path",
                                             "test_folder_name",
-                                            verbose=True, 
+                                            verbose=True,
                                             csv_log=True)
             #Asserts helper function calls through MagicMock object calls
             PrintMock.assert_has_calls(
-                [call("Retrieving genomic data from Test..."), 
+                [call("Retrieving genomic data from Test..."),
                  call("Converting genomic data to SeqRecord format..."),
                  call("Converting TestPhage_1"),
                  call("Converting TestPhage_2"),
                  call("Converting TestPhage_3"),
-                 call("Retrieving database version..."), 
+                 call("Retrieving database version..."),
                  call("Appending database version..."),
                  call("Writing csv log...")], any_order=True)
             SeqRecordToFileMock.assert_called_once()
@@ -322,14 +322,14 @@ class TestFileExport(unittest.TestCase):
         SetCdsMock.reset_mock()
         ParseGenomeMock.reset_mock()
         CsvLogMock.reset_mock()
-        #Sub test that tests for full export control inputs and 
+        #Sub test that tests for full export control inputs and
         #interactive option
         with self.subTest(verbose=False, csv_log=True):
-            file_export.execute_file_export("gb", self.sql_handle, 
-                                            ["test_filter_list"], 
+            file_export.execute_file_export("gb", self.sql_handle,
+                                            ["test_filter_list"],
                                             "test_path",
                                             "test_folder_name",
-                                            verbose=False, 
+                                            verbose=False,
                                             csv_log=True)
             #Asserts helper function calls through MagicMock object calls
             PrintMock.assert_not_called()
@@ -343,11 +343,11 @@ class TestFileExport(unittest.TestCase):
             CsvLogMock.assert_called_once()
 
     def test_parse_file_export_args(self):
-        """ 
+        """
         Unittest for file_export.run_file_export()
             -Tests parse_file_export_args() for argparse attribute creation
              depending on various command line inputs for:
-                -database 
+                -database
                 -file_format
                 -import_table
                 -single_genomes
@@ -357,7 +357,7 @@ class TestFileExport(unittest.TestCase):
                 -export_directory
                 -folder_name
                 -csv_log
-        """         
+        """
         #Sub test that tests attribute population with all default options
         with self.subTest(database=None, file_format=None, import_table=None,
                           single_genomes=None, all=False, verbose=False,
@@ -381,10 +381,10 @@ class TestFileExport(unittest.TestCase):
         with patch(
         "pdm_utils.pipelines.db_export.file_export.convert_file_path")\
                                                         as ConvertFilePathMock:
-            with self.subTest(database=None, file_format=None, 
-                              import_table="Test", single_genomes=None, 
-                              all=False, verbose=False, interactive=False, 
-                              export_directory=None, folder_name=None, 
+            with self.subTest(database=None, file_format=None,
+                              import_table="Test", single_genomes=None,
+                              all=False, verbose=False, interactive=False,
+                              export_directory=None, folder_name=None,
                               csv_log=False):
                 #Creates and parses argument list
                 unparsed_args = ["blank", "blank",
@@ -409,13 +409,13 @@ class TestFileExport(unittest.TestCase):
         "pdm_utils.pipelines.db_export.file_export.convert_dir_path")\
                                                         as ConvertDirPathMock:
             with self.subTest(database="Test", file_format="fasta",
-                              import_table=None, single_genomes="Test", 
+                              import_table=None, single_genomes="Test",
                               all=False, verbose=True, interactive=True,
-                              export_directory=os.getcwd(), 
+                              export_directory=os.getcwd(),
                               folder_name="Test", csv_log=True):
                 #Creates and parses argument list
                 unparsed_args = ["blank", "blank",
-                                 "--database", "Test", "--file_format", 
+                                 "--database", "Test", "--file_format",
                                  "fasta", "--single_genomes", "Test",
                                  "--verbose", "--interactive",
                                  "--export_directory", os.getcwd(),
@@ -458,7 +458,7 @@ class TestFileExport(unittest.TestCase):
         with self.subTest(database=None, file_format=None,
                           import_table=None, single_genomes="Test", all=False,
                           verbose=True, interactive=True,
-                          export_directory=os.getcwd(), 
+                          export_directory=os.getcwd(),
                           folder_name="Test", csv_log=True):
             #Creates and parses argument list
             unparsed_args = ["blank", "blank", "--all"]
@@ -489,7 +489,7 @@ class TestFileExport(unittest.TestCase):
             self.assertEqual(args.folder_name, "file_export")
             self.assertFalse(args.csv_log)
 
-    def parse_phage_list_input(self): 
+    def parse_phage_list_input(self):
         """
         Unittest for file_export.parse_phage_list_input()
             -Tests for single dispatch handling of list parameter type
@@ -502,12 +502,12 @@ class TestFileExport(unittest.TestCase):
         #Sub test that tests for single dispatch handling of
         with self.subTest(input_type=None):
             with self.assertRaises(TypeError):
-                phage_list = parse_phage_list_input(None)          
+                phage_list = parse_phage_list_input(None)
 
     def test_set_cds_seqfeatures(self):
         """
         Unittest for file_export.parse_set_cds_seqfeatures()
-            -Tests for ability to order cds_features of a given 
+            -Tests for ability to order cds_features of a given
              Genome object.
             -Tests for None parameter error handling.
         """
@@ -540,7 +540,7 @@ class TestFileExport(unittest.TestCase):
         #Sub test that tests for appending a formatted database version comment
         with self.subTest(test_seqrecord = "Valid Seqrecord",
                           test_version_dictionary = "Valid Dictionary"):
-            file_export.append_database_version(self.test_seqrecord, 
+            file_export.append_database_version(self.test_seqrecord,
                                                 self.test_version_dictionary)
             self.assertEqual((self.test_seqrecord.annotations["comment"])[0],
                              "Database Version: Test; Schema Version: Test")

@@ -24,7 +24,7 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         self.invalid_query = "INVALID"
         self.valid_transaction = ["SELECT COUNT(PhageID) FROM phage",
                                   "SELECT COUNT(GeneID) FROM gene",
-                                  "SELECT COUNT(name) FROM pham"]
+                                  "SELECT COUNT(Name) FROM pham"]
         self.invalid_transaction = ["SELECT COUNT(PhageID) FROM phage",
                                     "SELECT COUNT(GeneID) FROM gene",
                                     "SELECT COUNT(GeneID) FROM phage"]

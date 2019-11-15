@@ -98,7 +98,7 @@ pwd = "pdm_anon"
 db = "test_db"
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
-schema_file = "test_schema5.sql"
+schema_file = "test_schema6.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 
 # Alice ("test_flat_file_10.gb"),
@@ -185,14 +185,14 @@ def insert_data_into_phage_table(db, user, pwd, data_dict):
     sql = (
         "INSERT INTO phage "
         "(PhageID, Accession, Name, "
-        "HostStrain, Sequence, SequenceLength, GC, status, "
+        "HostStrain, Sequence, SequenceLength, GC, Status, "
         "DateLastModified, RetrieveRecord, AnnotationAuthor, "
         "Cluster, Cluster2, Subcluster2) "
         "VALUES ("
         f"'{data_dict['PhageID']}', '{data_dict['Accession']}', "
         f"'{data_dict['Name']}', '{data_dict['HostStrain']}', "
         f"'{data_dict['Sequence']}', {data_dict['SequenceLength']}, "
-        f"{data_dict['GC']}, '{data_dict['status']}', "
+        f"{data_dict['GC']}, '{data_dict['Status']}', "
         f"'{data_dict['DateLastModified']}', "
         f"{data_dict['RetrieveRecord']}, "
         f"{data_dict['AnnotationAuthor']}, '{data_dict['Cluster']}', "
@@ -214,12 +214,12 @@ def insert_data_into_gene_table(db, user, pwd, data_dict):
     sql = (
         "INSERT INTO gene "
         "(GeneID, PhageID, Start, Stop, Length, Name, "
-        "translation, Orientation, Notes, LocusTag) "
+        "Translation, Orientation, Notes, LocusTag) "
         "VALUES ("
         f"'{data_dict['GeneID']}', '{data_dict['PhageID']}', "
         f"{data_dict['Start']}, {data_dict['Stop']}, "
         f"{data_dict['Length']}, '{data_dict['Name']}', "
-        f"'{data_dict['translation']}', '{data_dict['Orientation']}', "
+        f"'{data_dict['Translation']}', '{data_dict['Orientation']}', "
         f"'{data_dict['Notes']}', '{data_dict['LocusTag']}');"
         )
     cur.execute(sql)
@@ -230,7 +230,7 @@ def insert_data_into_gene_table(db, user, pwd, data_dict):
 phage_table_query = (
     "SELECT "
     "PhageID, Accession, Name, "
-    "HostStrain, Sequence, SequenceLength, GC, status, "
+    "HostStrain, Sequence, SequenceLength, GC, Status, "
     "DateLastModified, RetrieveRecord, AnnotationAuthor, "
     "Cluster, Cluster2, Subcluster2 "
     "FROM phage;")
@@ -238,7 +238,7 @@ phage_table_query = (
 gene_table_query = (
     "SELECT "
     "GeneID, PhageID, Start, Stop, Length, Name, "
-    "translation, Orientation, Notes, LocusTag "
+    "Translation, Orientation, Notes, LocusTag "
     "FROM gene;")
 
 
@@ -326,10 +326,10 @@ def compare_data(ref_dict, query_dict):
         query_value = query_dict[key]
         if exp_value != query_value:
             errors += 1
-            print(key)
-            print(exp_value)
-            print(query_value)
-            input("check value")
+            # print(key)
+            # print(exp_value)
+            # print(query_value)
+            # input("check value")
     return errors
 
 
@@ -350,7 +350,7 @@ def get_trixie_phage_table_data():
         "Sequence": "GGGGGGGGGGGGGGGGGGGG",
         "SequenceLength": 20,
         "GC": 1,
-        "status": "final",
+        "Status": "final",
         "DateLastModified": datetime.strptime('1/1/2000', '%m/%d/%Y'),
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
@@ -371,7 +371,7 @@ def get_redrock_phage_table_data():
         "Sequence": "CCCCCCCCCCCCCCC",
         "SequenceLength": 15,
         "GC": 1,
-        "status": "draft",
+        "Status": "draft",
         "DateLastModified": datetime.strptime('1/1/2010', '%m/%d/%Y'),
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
@@ -392,7 +392,7 @@ def get_d29_phage_table_data():
         "Sequence": "ATGCATGCATGCATGC",
         "SequenceLength": 16,
         "GC": 0.5,
-        "status": "unknown",
+        "Status": "unknown",
         "DateLastModified": datetime.strptime('1/1/0001', '%m/%d/%Y'),
         "RetrieveRecord": 0,
         "AnnotationAuthor": 0,
@@ -412,7 +412,7 @@ def get_trixie_gene_table_data_1():
         "Stop": 1100,
         "Length": 1000,
         "Name": "1",
-        "translation": "ACTGC",
+        "Translation": "ACTGC",
         "Orientation": "F",
         "Notes": "int",
         "LocusTag": "SEA_TRIXIE_0001"
@@ -491,7 +491,7 @@ def get_alice_genome_draft_data_in_db():
         "Sequence": genome_seq,
         "SequenceLength": 153401,
         "GC": 64.6808,
-        "status": "draft",
+        "Status": "draft",
         "DateLastModified": current_date,
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
@@ -507,7 +507,7 @@ def get_alice_genome_final_data_in_db():
     data_dict = get_alice_genome_draft_data_in_db()
     data_dict["Name"] = "Alice"
     data_dict["Accession"] = "JF704092"
-    data_dict["status"] = "final"
+    data_dict["Status"] = "final"
     data_dict["DateLastModified"] = current_date
     return data_dict
 
@@ -550,7 +550,7 @@ def get_alice_cds_252_draft_data_in_db(translation=alice_cds_252_translation):
         "Stop": 4,
         "Length": 191,
         "Name": "252",
-        "translation": translation,
+        "Translation": translation,
         "Orientation": "F",
         "Notes": "",
         "LocusTag": ""
@@ -583,7 +583,7 @@ def get_alice_cds_124_draft_data_in_db(translation=alice_cds_124_translation):
         "Stop": 71285,
         "Length": 303,
         "Name": "124",
-        "translation": translation,
+        "Translation": translation,
         "Orientation": "F",
         "Notes": "",
         "LocusTag": ""
@@ -614,7 +614,7 @@ def get_alice_cds_139_draft_data_in_db(translation=alice_cds_139_translation):
         "Stop": 88447,
         "Length": 108,
         "Name": "139",
-        "translation": translation,
+        "Translation": translation,
         "Orientation": "R",
         "Notes": "",
         "LocusTag": ""
@@ -643,7 +643,7 @@ def get_alice_cds_193_draft_data_in_db(translation=alice_cds_193_translation):
         "Stop": 110537,
         "Length": 79,
         "Name": "193",
-        "translation": translation,
+        "Translation": translation,
         "Orientation": "F",
         "Notes": "",
         "LocusTag": ""
@@ -2586,7 +2586,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         process_phage_table_data(phage_table_results)
         output_genome_data = filter_genome_data(phage_table_results, "Alice")
         expected_phage_table_data = get_alice_genome_final_data_in_db()
-        expected_phage_table_data["status"] = "unknown"
+        expected_phage_table_data["Status"] = "unknown"
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
         gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
@@ -2609,7 +2609,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_data_to_insert["Name"] = "Alice"
-        self.alice_data_to_insert["status"] = "final"
+        self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
         insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
@@ -2640,7 +2640,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_data_to_insert["Name"] = "Alice"
-        self.alice_data_to_insert["status"] = "final"
+        self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
         insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
         self.alice_ticket["annotation_status"] = "unknown"

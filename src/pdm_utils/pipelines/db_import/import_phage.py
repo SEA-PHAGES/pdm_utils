@@ -623,9 +623,9 @@ def main(unparsed_args_list):
     try:
 
         cur.execute("START TRANSACTION")
-        cur.execute("SELECT version FROM version")
+        cur.execute("SELECT Version FROM version")
         db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,Sequence,status,\
+        cur.execute("SELECT PhageID,Name,HostStrain,Sequence,Status,\
                             Cluster2,DateLastModified,Accession,\
                             Subcluster2,AnnotationAuthor,\
                             RetrieveRecord FROM phage")
@@ -1664,7 +1664,7 @@ def main(unparsed_args_list):
 
         #HostStrain, status, Accession, Author updates.
         update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
-        update_statements.append("UPDATE phage SET status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
+        update_statements.append("UPDATE phage SET Status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
         update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
         update_statements.append("UPDATE phage SET AnnotationAuthor = '" + genome_data[9] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
@@ -2196,7 +2196,7 @@ def main(unparsed_args_list):
             cur = con.cursor()
             try:
                 cur.execute("START TRANSACTION")
-                cur.execute("""SELECT PhageID,status FROM phage WHERE Sequence = "%s" """ % phageSeq)
+                cur.execute("""SELECT PhageID,Status FROM phage WHERE Sequence = "%s" """ % phageSeq)
                 query_results = cur.fetchall()
                 cur.execute("SELECT GeneID,PhageID FROM gene")
                 current_gene_data_tuples = cur.fetchall()
@@ -2557,7 +2557,7 @@ def main(unparsed_args_list):
             phage_data_list.append(annotation_qc) #[10] No longer imported though.
             phage_data_list.append(import_author) #[11]
 
-            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC,status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
+            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, Status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
                                             % (phage_data_list[0],\
                                             phage_data_list[1],\
                                             phage_data_list[2],\
@@ -3364,7 +3364,7 @@ def main(unparsed_args_list):
             #Add all updated gene feature data to the add_replace_statements list
             # element [6] = 'typeID', which is no longer valid for db schema 5
             for feature in all_features_data_list:
-                add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" \
+                add_replace_statements.append("""INSERT INTO gene (GeneID, PhageID, Start, Stop, Length, Name, Translation, Orientation, Notes, LocusTag) VALUES ("%s","%s",%s,%s,%s,"%s","%s","%s","%s","%s");""" \
                                         % (feature[0],\
                                         feature[1],\
                                         feature[2],\

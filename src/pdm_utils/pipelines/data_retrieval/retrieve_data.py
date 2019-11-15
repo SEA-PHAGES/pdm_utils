@@ -148,7 +148,7 @@ def main(unparsed_args_list):
 
     # Parse existing Phamerator genome data to assess what needs to be updated.
     query = (
-        "SELECT PhageID, Name, HostStrain, status, Cluster2, "
+        "SELECT PhageID, Name, HostStrain, Status, Cluster2, "
         "DateLastModified, Accession, RetrieveRecord, Subcluster2, "
         "AnnotationAuthor FROM phage")
 
@@ -198,7 +198,7 @@ def modify_phamerator_data(input_list):
         phamerator_id = genome_dict["PhageID"]
         phamerator_name = genome_dict["Name"]
         phamerator_host = genome_dict["HostStrain"]
-        phamerator_status = genome_dict["status"]
+        phamerator_status = genome_dict["Status"]
         phamerator_cluster = genome_dict["Cluster2"]
         phamerator_date = genome_dict["DateLastModified"]
         phamerator_accession = genome_dict["Accession"]
@@ -1038,7 +1038,7 @@ def get_genbank_data(output_folder, list_of_genomes):
     with filepath3.open("w") as fh:
         writer = csv.writer(fh)
         ncbi_results_header = ["PhageID", "PhageName", "Accession", "Status",
-                                "PhameratorDate", "GenbankDate", "Result"]
+                                "PhameratorDate", "GenBankDate", "Result"]
         writer.writerow(ncbi_results_header)
         writer.writerows(ncbi_results_list)
 

@@ -369,7 +369,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                          "Mycobacterium phage Trixie")
         self.assertEqual(record_comments[0], "Cluster: A; Subcluster: A2")
         self.assertEqual(record_comments[2],
-                         "Annotation status: 1; Annotation Author: 1")
+                         "Annotation Status: 1; Annotation Author: 1")
         self.assertEqual(record_comments[3],
                          "RetrieveRecord: 1")
 
@@ -426,7 +426,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
                          "Mycobacterium phage Trixie")
         self.assertEqual(comments[0], "Cluster: A; Subcluster: A2")
         self.assertEqual(comments[2],
-                         "Annotation status: 1; Annotation Author: 1")
+                         "Annotation Status: 1; Annotation Author: 1")
         self.assertEqual(comments[3], "RetrieveRecord: 1")
 
     def test_get_seqrecord_annotations_comments(self):
@@ -449,7 +449,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
         self.assertEqual(comments[0], "Cluster: A; Subcluster: A2")
         self.assertEqual(comments[2],
-                         "Annotation status: 1; Annotation Author: 1")
+                         "Annotation Status: 1; Annotation Author: 1")
         self.assertEqual(comments[3], "RetrieveRecord: 1")
 
 

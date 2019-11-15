@@ -16,13 +16,13 @@ RPSBLAST_BINARY = "/usr/bin/rpsblast+"
 TMP_DIR = "/tmp/cdd"
 
 # SQL QUERIES
-GET_GENES_FOR_CDD = "SELECT GeneID, translation FROM gene WHERE cdd_status = 0"
-GET_UNIQUE_HIT_IDS = "SELECT hit_id FROM domain"
+GET_GENES_FOR_CDD = "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0"
+GET_UNIQUE_HIT_IDS = "SELECT HitID FROM domain"
 
 # SQL COMMANDS
-INSERT_INTO_DOMAIN = """INSERT IGNORE INTO domain (hit_id, DomainID, Name, description) VALUES ("{}", "{}", "{}", "{}")"""
-INSERT_INTO_GENE_DOMAIN = """INSERT IGNORE INTO gene_domain (GeneID, hit_id, expect, query_start, query_end) VALUES ("{}", "{}", {}, {}, {})"""
-UPDATE_GENE = "UPDATE gene SET cdd_status = 1 WHERE GeneID = '{}'"
+INSERT_INTO_DOMAIN = """INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ("{}", "{}", "{}", "{}")"""
+INSERT_INTO_GENE_DOMAIN = """INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
+UPDATE_GENE = "UPDATE gene SET DomainStatus = 1 WHERE GeneID = '{}'"
 
 
 def setup_argparser():
@@ -71,14 +71,14 @@ def search_and_process(datum, database, evalue,
     """
     Uses blast to search indicated gene against the indicated database
     :param database: path to target database
-    :param datum: dictionary containing GeneID and translation for the
+    :param datum: dictionary containing GeneID and Translation for the
     gene being processed
     :param evalue: evalue cutoff for rpsblast hits
     :param domain_queue: Queue to store 'insert ignore into domain'
     statements
     :param gene_domain_queue: Queue to store 'insert into gene domain'
     statements
-    :param gene_queue: Queue to store 'update gene set cdd_status'
+    :param gene_queue: Queue to store 'update gene set DomainStatus'
     statements
     :param tmp: path to directory where I/O files will be stored
     :return:
@@ -89,7 +89,7 @@ def search_and_process(datum, database, evalue,
 
     # Write the input file
     f = open(i, "w")
-    f.write(">{}\n{}".format(datum["GeneID"], datum["translation"]))
+    f.write(">{}\n{}".format(datum["GeneID"], datum["Translation"]))
     f.close()
 
     # Setup and run the rpsblast command
@@ -136,7 +136,7 @@ def search_and_process(datum, database, evalue,
                                     float(hsp.expect), int(hsp.query_start),
                                     int(hsp.query_end)))
 
-    # Update this gene's cdd_status to 1
+    # Update this gene's DomainStatus to 1
     gene_queue.put(UPDATE_GENE.format(datum["GeneID"]))
 
 

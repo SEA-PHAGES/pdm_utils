@@ -205,7 +205,7 @@ def main(unparsed_args_list):
         #Retrieve database version and change if requested
         try:
             cur.execute("START TRANSACTION")
-            cur.execute("SELECT version FROM version")
+            cur.execute("SELECT Version FROM version")
             version_current = str(cur.fetchone()[0])
             print("Old database version: " + version_current)
 
@@ -215,7 +215,7 @@ def main(unparsed_args_list):
                 version_new_int = int(version_current) + 1
                 version_current = str(version_new_int)
                 print("New database version: " + version_current)
-                statement = """UPDATE version SET version = %s;""" % version_new_int
+                statement = """UPDATE version SET Version = %s;""" % version_new_int
                 cur.execute(statement)
                 cur.execute("COMMIT")
                 print("Database version has been updated.")
@@ -340,7 +340,7 @@ def main(unparsed_args_list):
         #If connection was successfull, retrieve the database version
         try:
             cur.execute("START TRANSACTION")
-            cur.execute("SELECT version FROM version")
+            cur.execute("SELECT Version FROM version")
             version_export = str(cur.fetchone()[0])
             cur.execute("COMMIT")
         except:
@@ -367,7 +367,7 @@ def main(unparsed_args_list):
             print("Exporting genome data...")
             filename1 = "%s_%s_v%s_genomes.csv" % (date,database,version_export)
             statement1 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.Cluster2, phage.Subcluster2,
-                        phage.status, phage.SequenceLength, phage.Accession, phage.DateLastModified, phage.AnnotationAuthor
+                        phage.Status, phage.SequenceLength, phage.Accession, phage.DateLastModified, phage.AnnotationAuthor
                         FROM phage INTO OUTFILE '%s/%s' FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" \
                         % (mysql_query_default_dir,filename1)
             cur.execute(statement1)
@@ -381,7 +381,7 @@ def main(unparsed_args_list):
             print("Exporting gene data...")
             filename2 = "%s_%s_v%s_genes.csv" % (date,database,version_export)
             statement2 = """SELECT phage.PhageID, phage.Name, phage.HostStrain, phage.Cluster, phage.Cluster2, phage.Subcluster2, \
-                        phage.status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.name \
+                        phage.Status, gene.GeneID, gene.Name, gene.Orientation, gene.Start, gene.Stop, gene.Notes, pham.Name \
                         FROM gene JOIN phage on gene.PhageID = phage.PhageID JOIN pham on gene.GeneID = pham.GeneID INTO OUTFILE '%s/%s' \
                         FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'""" % (mysql_query_default_dir,filename2)
             cur.execute(statement2)

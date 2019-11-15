@@ -1,4 +1,4 @@
-"""Object to provide a formatted filtering query 
+"""Object to provide a formatted filtering query
 for retrieving data from a SQL database."""
 
 from Bio.Seq import Seq
@@ -21,15 +21,15 @@ class Filter:
         self.sql_handle = sql_handle
 
         self.phage_query = "SELECT Name FROM phage"
-        self.gene_query = "SELECT phageID FROM gene"
-       
+        self.gene_query = "SELECT PhageID FROM gene"
+
         self.results = []
-                
+
         self.phage_filters = {}
         self.gene_filters = {}
 
         self.history = []
-    
+
         self.phage_attributes = []
         for column in self.sql_handle.execute_query(query="DESCRIBE phage"):
             self.phage_attributes.append(column["Field"].lower())
@@ -39,35 +39,35 @@ class Filter:
             self.gene_attributes.append(column["Field"].lower())
 
     def reset(self):
-        """Resets created queries and filters 
+        """Resets created queries and filters
         for the Filter object"""
 
         self.phage_query = "SELECT Name FROM phage"
-        self.gene_query = "SELECT phageID FROM gene"
-        
+        self.gene_query = "SELECT PhageID FROM gene"
+
         self.results = []
-                
+
         self.phage_filters = {}
         self.gene_filters = {}
 
         self.history = []
-         
+
     def update(self):
         """Resets created queries for the Filter object"""
 
-        if self.phage_filters: 
+        if self.phage_filters:
             self.phage_query = "SELECT Name FROM phage WHERE " +\
                                " and ".join(list(self.phage_filters.values()))
         else:
             self.phage_query = "SELECT Name FROM phage"
 
-        if self.gene_filters: 
-            self.gene_query = "SELECT phageID FROM gene WHERE " +\
+        if self.gene_filters:
+            self.gene_query = "SELECT PhageID FROM gene WHERE " +\
                               " and ".join(list(self.gene_filters.values()))
         else:
-            self.gene_query = "SELECT phageID FROM gene"
+            self.gene_query = "SELECT PhageID FROM gene"
 
-        if self.phage_filters or self.gene_filters: 
+        if self.phage_filters or self.gene_filters:
             self.history.append((self.phage_filters, self.gene_filters))
 
     def undo(self):
@@ -75,7 +75,7 @@ class Filter:
 
         if self.history:
             dead_filters = self.history.pop()
-        
+
         if self.history:
             last_filters = self.history.pop()
 
@@ -84,19 +84,19 @@ class Filter:
             self.gene_filters = last_filters[1]
 
         else:
-            self.reset() 
+            self.reset()
 
-    def hits(self): 
+    def hits(self):
 
         self.retrieve_results()
         return len(self.results)
 
     def retrieve_results(self, verbose = False):
-       
+
         self.update()
         if self.phage_filters:
             phage_results = self.retrieve_phage_results()
-        
+
         if self.gene_filters:
             gene_results = self.retrieve_gene_results()
 
@@ -107,11 +107,11 @@ class Filter:
 
         elif self.gene_filters:
             self.results = gene_results
-            
+
     def retrieve_phage_results(self):
         """Helper function to retrieve phage table results"""
 
-        database_results = [] 
+        database_results = []
         for result in phamerator.retrieve_data(
                         self.sql_handle, query= self.phage_query):
             database_results.append(result['Name'])
@@ -123,7 +123,7 @@ class Filter:
         database_gene_results = []
         for result in phamerator.retrieve_data(
                         self.sql_handle, query = self.gene_query):
-            database_gene_results.append(result['phageID'])
+            database_gene_results.append(result['PhageID'])
 
         database_results = []
         for gene_result in database_gene_results:
@@ -131,7 +131,7 @@ class Filter:
                 database_results.append(gene_result)
 
         return database_results
- 
+
     def accession(self, filter_value: str):
         self.phage_filters.update({"accession" :\
                                    "Accession = '{}'".format(filter_value)})
@@ -147,7 +147,7 @@ class Filter:
 
     def cluster(self, filter_value: str):
         self.phage_filters.update({"cluster":\
-            "Cluster2 = '{}'".format(filter_value)}) 
+            "Cluster2 = '{}'".format(filter_value)})
 
     def subcluster(self, filter_value: str):
         self.phage_filters.update({"subcluster":\
@@ -155,7 +155,7 @@ class Filter:
 
     def status(self, filter_value: str):
         self.phage_filters.update({"status":\
-            "status = '{}'".format(filter_value)})
+            "Status = '{}'".format(filter_value)})
 
     def retrieve_record(self, filter_value: str):
         self.phage_filters.update({"retrieve":\
@@ -179,7 +179,7 @@ class Filter:
 
     def add_filter(self, filter, filter_value, gene_selection=False):
 
-        if gene_selection == False: 
+        if gene_selection == False:
             if filter.lower() in self.phage_attributes:
                 self.phage_filters.update(
                         {filter: "{} = '{}'".format(filter, filter_value)})
@@ -209,12 +209,12 @@ class Filter:
 
 
     def interactive(self, sql_handle = None):
-        
+
         interactive_filter = Cmd_Filter(db_filter=self, sql_handle=sql_handle)
         interactive_filter.cmdloop()
 
 class Cmd_Filter(cmd.Cmd):
-       
+
     def __init__(self, db_filter=None, sql_handle=None):
         super(Cmd_Filter, self).__init__()
         self.filter = db_filter
@@ -226,7 +226,7 @@ class Cmd_Filter(cmd.Cmd):
         self.data = None
 
     def preloop(self):
-        
+
         if self.filter == None:
             if self.sql_handle == None:
                 self.sql_handle = \
@@ -239,13 +239,13 @@ class Cmd_Filter(cmd.Cmd):
                     self.sql_handle.validate_credentials()
                 except:
                     print("Unable to create a mysql connection.")
-                    exit(1) 
+                    exit(1)
             self.filter = Filter(self.sql_handle.database, self.sql_handle)
 
         self.prompt = "({}) (export){}@localhost: ".\
                 format(self.sql_handle.database, self.sql_handle._username)
-            
-        
+
+
 
     def do_filter(self, *unparsed_args):
         """
@@ -254,7 +254,7 @@ class Cmd_Filter(cmd.Cmd):
         Subcluster, Annotation_Status, Retrieve_Record,
         Annotation_QC, Annotation_Author, Notes, GeneID
         """
-        
+
         filter = unparsed_args[0]
 
         if filter == "":
@@ -266,11 +266,11 @@ class Cmd_Filter(cmd.Cmd):
 
         elif not (filter.lower() in self.filter.phage_attributes\
                 or filter.lower() in self.filter.gene_attributes):
-            
+
             print("Attribute not in database.\n ")
 
         else:
-            
+
             filter_value = input("Enter {} value: ".format(filter))
             self.filter.add_filter(filter, filter_value)
             self.retrieve_hits()
@@ -292,7 +292,7 @@ class Cmd_Filter(cmd.Cmd):
         """
         self.filter.undo()
         print("        Reloaded last filtering options")
-            
+
         self.do_show_filters()
 
     def do_show(self,*args):
@@ -317,7 +317,7 @@ class Cmd_Filter(cmd.Cmd):
     def show_results(self):
         """Shows results for current database filtering
         """
-       
+
         print("        Results:\n")
         for row in range(0, len(self.filter.results), 3):
             result_row = self.filter.results[row:row+3]
@@ -370,11 +370,11 @@ class Cmd_Filter(cmd.Cmd):
         """Finish quering and return results
         USAGE: return
         """
-        
+
         print("        Exiting Filtering...\n")
 
         return True
-   
+
     def do_exit(self, *args):
         """Exits program entirely without returning values
         USAGE: exit
@@ -387,5 +387,5 @@ class Cmd_Filter(cmd.Cmd):
         self.data = self.filter.results
 
 if __name__ == "__main__":
-    mainloop = Cmd_Filter() 
+    mainloop = Cmd_Filter()
     mainloop.cmdloop()

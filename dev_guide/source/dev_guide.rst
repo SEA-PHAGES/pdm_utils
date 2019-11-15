@@ -240,8 +240,8 @@ As the structure of the database changes, perform the following:
 
     1. In MySQL, update the schema number and version number::
 
-        mysql> UPDATE version SET schema_version = <new schema int>
-        mysql> UPDATE version SET version = <new version int>
+        mysql> UPDATE version SET SchemaVersion = <new schema int>
+        mysql> UPDATE version SET Version = <new version int>
 
 
     2. In bash, create an empty schema::

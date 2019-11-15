@@ -47,7 +47,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
     def setUp(self):
-        self.schema_file = "test_schema5.sql"
+        self.schema_file = "test_schema6.sql"
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
@@ -299,7 +299,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         for data in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
@@ -360,7 +360,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         for data in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
@@ -412,7 +412,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         for data in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, status, " + \
+                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{data[0]}', '{data[1]}', '{data[2]}', " + \

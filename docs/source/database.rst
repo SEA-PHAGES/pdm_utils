@@ -60,8 +60,6 @@ This table contains information that pertains to the entire phage genome, such a
 
 **Status** This field indicates whether the gene annotations have automatically (draft) or manually (final) annotated, or whether the annotation strategy is unknown (gbk).
 
-**AnnotationQC** This field facilitates downstream analyses of annotation data. Since PhameratorDB stores annotations of varying degrees of quality, this field reflects a simple, binary metric of confidence in the annotation data, so that tools (such as Starterator) can rely more heavily on some types of annotations than others. This field is set to 1 for reliable annotations and set to 0 for unreliable annotations. Initially, this field is indirectly determined by Status. For genomes being replaced or newly added, if the genome’s Status = final, AnnotationQC is set to 1, otherwise it is set to 0. However, if this field is manually changed outside of the normal update pipeline, the new value is retained during this step.
-
 
 gene
 ----
@@ -89,7 +87,7 @@ This table contains information that pertains to individual genes, including coo
 
 **Notes** This field contains data on the gene function, and is derived from one of several fields of the GenBank feature. [Add more info on how it is parsed here?]
 
-**Cdd_status** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to PhameratorDB, the Cdd_Status field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with cdd_status < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the Cdd_Status field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
+**DomainStatus** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to PhameratorDB, the DomainStatus field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with DomainStatus < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the DomainStatus field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
 
 
 
@@ -103,15 +101,15 @@ This table stores the positions of NCBI-defined conserved domains within each CD
     :file: images/database_structure/gene_domain_table.csv
 
 
-**Id** Auto-incrementing values. This is the primary key.
+**ID** Auto-incrementing values. This is the primary key.
 
 **GeneID** Unique gene identifier matching GeneID in the *gene* table.
 
-**Hit_id** Identifier to match location of conserved domain in this table to conserved domain data, stored in the *domain* table.
+**HitID** Identifier to match location of conserved domain in this table to conserved domain data, stored in the *domain* table.
 
-**Query_Start** First amino acid position within the conserved domain.
+**QueryStart** First amino acid position within the conserved domain.
 
-**Query_end** Last amino acid position within the conserved domain.
+**QueryEnd** Last amino acid position within the conserved domain.
 
 **Expect** E-value reflecting significance of the domain hit.
 
@@ -126,9 +124,9 @@ This table stores information about NCBI-defined conserved domains relevant to C
 .. csv-table::
     :file: images/database_structure/domain_table.csv
 
-**Id** Auto-incrementing values. This is the primary key.
+**ID** Auto-incrementing values. This is the primary key.
 
-**Hit_id** Identifier to match conserved domain data in this table to location of conserved domain in the gene, stored in the *gene_domain* table.
+**HitID** Identifier to match conserved domain data in this table to location of conserved domain in the gene, stored in the *gene_domain* table.
 
 **Description** Description of the conserved domain.
 
@@ -164,7 +162,7 @@ This table contains a list of color codes for each unique pham.
     :file: images/database_structure/pham_color_table.csv
 
 
-**Id** The primary key of the table. Auto-incrementing values.
+**ID** The primary key of the table. Auto-incrementing values.
 
 **Name** Unique identifier for each hexrgb color code.
 
@@ -184,4 +182,4 @@ This table keeps track of the database version and is updated every time the dat
 
 **Version** This field reflects the current version of the database. Every time changes are made to the database, this integer is incremented by 1.
 
-**Schema_version** This field indicates the current version of the database structure, or schema and enhances version control of scripts that directly communicate with PhameratorDB. As the structure of the database changes, such as by the addition or removal of tables or fields, the database schema number can be incremented to reflect that changes have been made. This does not occur often, and needs to be manually changed.
+**SchemaVersion** This field indicates the current version of the database structure, or schema and enhances version control of scripts that directly communicate with PhameratorDB. As the structure of the database changes, such as by the addition or removal of tables or fields, the database schema number can be incremented to reflect that changes have been made. This does not occur often, and needs to be manually changed.

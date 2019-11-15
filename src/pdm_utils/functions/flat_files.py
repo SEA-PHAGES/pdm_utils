@@ -685,7 +685,7 @@ def get_seqrecord_annotations_comments(phage_genome):
     auto_generated_comment =\
             "Auto-generated genome record from Phamerator database"
     annotation_status_comment =\
-            "Annotation status: {}; Annotation Author: {}".format\
+            "Annotation Status: {}; Annotation Author: {}".format\
             (phage_genome.annotation_status,\
             phage_genome.annotation_author)
     retrieval_value = \

@@ -1,1 +1,1 @@
-Field,Data Type,Data originid,int(10) unsigned,MySQL auto-incrementhit_id,varchar(25),cdd_pp scriptdescription,blob,cdd_pp scriptDomainID,varchar(10),cdd_pp scriptName,varchar(25),cdd_pp script
+Field,Data Type,Data originID,int(10) unsigned,MySQL auto-incrementHitID,varchar(25),cdd_pp scriptDescription,blob,cdd_pp scriptDomainID,varchar(10),cdd_pp scriptName,varchar(25),cdd_pp script
