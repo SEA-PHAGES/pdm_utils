@@ -6,7 +6,7 @@ import argparse
 import sys
 
 from pdm_utils.pipelines.cdd import cdd
-from pdm_utils.pipelines.data_retrieval import retrieve_database_updates
+from pdm_utils.pipelines.data_retrieval import retrieve_data
 from pdm_utils.pipelines.db_compare import compare_databases
 from pdm_utils.pipelines.db_export import export_database
 from pdm_utils.pipelines.db_freeze import freeze_database
@@ -47,7 +47,7 @@ def main(unparsed_args):
                         help=PIPELINE_HELP)
     args = pipe_parser.parse_args(unparsed_args[1:2])
     if args.pipeline == "retrieve_data":
-        retrieve_database_updates.main(unparsed_args)
+        retrieve_data.main(unparsed_args)
     # Note: import_phage is the legacy import script and will be deprecated.
     # Once import_genome is tested and operational, 'import' will call the
     # 'import_genome' module instead of the 'import_phage' module.

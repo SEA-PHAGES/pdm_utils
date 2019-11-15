@@ -3,7 +3,7 @@ Data retrieval
 
 
 
-The first step to update PhameratorDB requires gathering all new genome data (new sequences or annotations), creating corresponding tickets, and systematically staging them in a local directory in preparation for evaluation and import into PhameratorDB. This is accomplished using the retrieve_database_updates.py script, which requires two arguments [Table 3].
+The first step to update PhameratorDB requires gathering all new genome data (new sequences or annotations), creating corresponding tickets, and systematically staging them in a local directory in preparation for evaluation and import into PhameratorDB. This is accomplished using the retrieve_data.py script, which requires two arguments [Table 3].
 
 .. TODO insert table describing how to use script
 

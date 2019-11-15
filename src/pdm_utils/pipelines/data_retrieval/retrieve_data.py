@@ -1,11 +1,11 @@
+"""Pipeline to gather new data to be imported into PhameratorDB."""
+
+
 import argparse
 import csv
 import datetime
-import getpass
 import json
-import os
 import pathlib
-import shutil
 import sys
 import time
 from urllib import request, error
@@ -21,19 +21,6 @@ from pdm_utils.functions import phamerator
 from pdm_utils.functions import tickets
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
-
-# Column headers for import table - old version:
-# import_table_columns = ["type",
-#                         "phage_id",
-#                         "host_genus",
-#                         "cluster",
-#                         "subcluster",
-#                         "annotation_status",
-#                         "annotation_author",
-#                         "description_field",
-#                         "accession",
-#                         "run_mode",
-#                         "replace_phage_id"]
 
 # TODO Column headers for import table - new version:
 # import_table_columns2 = constants.IMPORT_TABLE_STRUCTURE["order"]
@@ -51,7 +38,8 @@ from pdm_utils.classes import mysqlconnectionhandler as mch
  # "annotation_status"
  # ]
 
-# The only diff = old version had secondary_phage_id, new version has retrieve_record
+# The only diff = old version had secondary_phage_id,
+# new version has retrieve_record
 import_table_columns2 = ["type",
                         "phage_id",
                         "host_genus",
@@ -70,10 +58,6 @@ update_columns2 = ["table",
                   "value",
                   "key_name",
                   "key_value"]
-
-
-
-
 
 
 # TODO unittest.
@@ -173,14 +157,44 @@ def main(unparsed_args_list):
     # Each key is the column name.
     current_genome_list = sql_handle.execute_query(query)
     sql_handle.close_connection()
+    modified_genome_data_list = modify_phamerator_data(current_genome_list)
 
-    # Initialize set variables
-    phamerator_id_set = set()
+    # Get data from PhagesDB
+    if (args.updates or args.final or args.draft) is True:
 
-    # Initialize data processing variables
-    modified_genome_data_list = []
+        phagesdb_data_dict = get_phagesdb_data(constants.API_SEQUENCED)
+        # Returns a list of tuples.
+        matched_genomes = match_genomes(modified_genome_data_list, phagesdb_data_dict)
 
-    for genome_dict in current_genome_list:
+
+    # Option 1: Determine if any fields need to be updated
+    if args.updates is True:
+        get_update_data(working_path, matched_genomes)
+
+    # Option 2: Determine if any new manually annotated genomes are available.
+    if args.final is True:
+        get_final_data(working_path, matched_genomes)
+
+    # Option 3: Retrieve updated records from NCBI
+    if args.genbank is True:
+        get_genbank_data(working_path, modified_genome_data_list)
+
+    # Option 4: Retrieve auto-annotated genomes from PECAAN
+    if args.draft is True:
+        get_draft_data(working_path)
+
+    print("\n\n\nRetrieve updates script completed.")
+
+
+
+
+
+
+
+def modify_phamerator_data(input_list):
+    """Modify certain types of data retrieved from Phamerator."""
+    mod_list = []
+    for genome_dict in input_list:
         phamerator_id = genome_dict["PhageID"]
         phamerator_name = genome_dict["Name"]
         phamerator_host = genome_dict["HostStrain"]
@@ -223,7 +237,6 @@ def main(unparsed_args_list):
         else:
             phamerator_author = "gbk"
 
-        phamerator_id_set.add(phamerator_id)
 
         # Output modified genome data
         # 0 = PhageID
@@ -236,42 +249,19 @@ def main(unparsed_args_list):
         # 7 = RetrieveRecord
         # 8 = Subcluster2
         # 9 = AnnotationAuthor
-        modified_genome_data_list.append([phamerator_id,
-                                          phamerator_name,
-                                          phamerator_host,
-                                          phamerator_status,
-                                          phamerator_cluster,
-                                          phamerator_date,
-                                          phamerator_accession,
-                                          phamerator_retrieve,
-                                          phamerator_subcluster,
-                                          phamerator_author])
-
-    # Get data from PhagesDB
-    if (args.updates or args.final or args.draft) is True:
-
-        phagesdb_data_dict = get_phagesdb_data(constants.API_SEQUENCED)
-        # Returns a list of tuples.
-        matched_genomes = match_genomes(modified_genome_data_list, phagesdb_data_dict)
+        mod_list.append([phamerator_id,
+                          phamerator_name,
+                          phamerator_host,
+                          phamerator_status,
+                          phamerator_cluster,
+                          phamerator_date,
+                          phamerator_accession,
+                          phamerator_retrieve,
+                          phamerator_subcluster,
+                          phamerator_author])
+    return mod_list
 
 
-    # Option 1: Determine if any fields need to be updated
-    if args.updates is True:
-        get_update_data(working_path, matched_genomes)
-
-    # Option 2: Determine if any new manually annotated genomes are available.
-    if args.final is True:
-        get_final_data(working_path, matched_genomes)
-
-    # Option 3: Retrieve updated records from NCBI
-    if args.genbank is True:
-        get_genbank_data(working_path, modified_genome_data_list)
-
-    # Option 4: Retrieve auto-annotated genomes from PECAAN
-    if args.draft is True:
-        get_draft_data(working_path)
-
-    print("\n\n\nRetrieve updates script completed.")
 
 
 
@@ -319,9 +309,6 @@ def match_genomes(modified_genome_data_list, phagesdb_data_dict):
             print(element)
 
     return matched_genomes
-
-
-
 
 
 
@@ -393,7 +380,6 @@ def get_phagesdb_data(url):
         return phagesdb_data_dict
 
 
-
 # TODO unittest
 def get_update_data(output_folder, matched_genomes):
     """Run sub-pipeline to retrieve field updates from PhagesDB."""
@@ -437,7 +423,6 @@ def get_update_data(output_folder, matched_genomes):
                        "PhageID",
                        phamerator_id]
             field_update_list.append(result2)
-
 
 
         # Compare Subcluster2
@@ -495,9 +480,6 @@ def get_update_data(output_folder, matched_genomes):
             writer.writerows(field_update_list)
     else:
         print("\n\nNo field updates found.")
-
-
-
 
 
 
@@ -663,22 +645,6 @@ def get_final_data(output_folder, matched_genomes):
     input("\n\nPress ENTER to continue.")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # TODO unittest.
 def get_genbank_data(output_folder, list_of_genomes):
     """Run sub-pipeline to retrieve genomes from GenBank."""
@@ -793,8 +759,6 @@ def get_genbank_data(output_folder, list_of_genomes):
                 phamerator_status, phamerator_cluster, phamerator_date,
                 phamerator_accession, phamerator_retrieve,
                 phamerator_subcluster, phamerator_author]
-
-
 
     batch_size = 200
 
@@ -1099,13 +1063,6 @@ def get_genbank_data(output_folder, list_of_genomes):
 
 
 
-
-
-
-
-
-
-
 # TODO unittest.
 def get_draft_data(output_path):
     """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
@@ -1240,9 +1197,3 @@ def retrieve_drafts(output_folder, phage_list):
             print(element)
 
     input("\n\nPress ENTER to continue.")
-
-
-
-
-if __name__ == "__main__":
-    main(sys.argv.insert(0, "empty"))
