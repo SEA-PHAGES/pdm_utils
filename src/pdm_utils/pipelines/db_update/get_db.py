@@ -134,6 +134,10 @@ def parse_args(unparsed_args_list):
     REMOVE_HELP = \
         ("Indicates if the downloaded file should be removed after installation.")
 
+    ALL_HELP = \
+        ("Indicates if the entire pipeline should run: "
+         "download, install, and then remove the temp files.")
+
     parser = argparse.ArgumentParser(description=UPDATE_DB_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("output_folder", type=pathlib.Path,
@@ -144,6 +148,8 @@ def parse_args(unparsed_args_list):
         default=False, help=INSTALL_HELP)
     parser.add_argument("-r", "--remove", action="store_true",
         default=False, help=REMOVE_HELP)
+    parser.add_argument("-a", "--all_steps", action="store_true",
+        default=False, help=ALL_HELP)
 
     # TODO implement this option.
     # parser.add_argument("-f", "--force_update", action="store_true",
@@ -153,5 +159,11 @@ def parse_args(unparsed_args_list):
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
+
+    if args.all_steps == True:
+        args.download = True
+        args.install = True
+        args.remove = True
+
 
     return args

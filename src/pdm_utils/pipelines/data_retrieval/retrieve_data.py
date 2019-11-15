@@ -74,6 +74,8 @@ def parse_args(unparsed_args_list):
     FINAL_HELP = ("Retrieve new manually-annotated 'final' "
                          "genomes from PhagesDB.")
     GENBANK_HELP = ("Retrieve revised annotated genomes from GenBank.")
+    ALL_HELP = ("Retrieve all types of new data.")
+
     parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("output_folder", type=pathlib.Path,
@@ -86,11 +88,19 @@ def parse_args(unparsed_args_list):
         default=False, help=FINAL_HELP)
     parser.add_argument("-g", "--genbank", action="store_true",
         default=False, help=GENBANK_HELP)
+    parser.add_argument("-a", "--all_data", action="store_true",
+        default=False, help=ALL_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
+
+    if args.all_data == True:
+        args.updates = True
+        args.draft = True
+        args.final = True
+        args.genbank = True
 
     return args
 
