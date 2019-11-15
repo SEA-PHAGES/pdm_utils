@@ -14,7 +14,7 @@ from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.db_import import import_phage
 from pdm_utils.pipelines.phamerate import phamerate
 from pdm_utils.pipelines.db_export import file_export
-from pdm_utils.pipelines.db_update import update_field, update_db
+from pdm_utils.pipelines.db_update import update_field, get_db
 
 
 def main(unparsed_args):
@@ -52,7 +52,7 @@ def main(unparsed_args):
     # Once import_genome is tested and operational, 'import' will call the
     # 'import_genome' module instead of the 'import_phage' module.
     elif args.pipeline == "get_db":
-        update_db.main(unparsed_args)
+        get_db.main(unparsed_args)
     elif args.pipeline == "update":
         update_field.main(unparsed_args[unparsed_args.index("update") + 1:])
     elif args.pipeline == "import":
