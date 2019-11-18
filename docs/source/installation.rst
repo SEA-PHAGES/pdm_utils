@@ -187,8 +187,8 @@ Some of the python dependencies themselves have python or binary dependencies. A
     1. Install Conda locally through the :anaconda:`Anaconda <>` package.
     2. After installing Conda, create an environment to be able to install and use ``pdm_utils``::
 
-        > conda create --name pdm_utils-user python pip biopython pymysql paramiko tabulate
-        > source activate pdm_utils-user
+        > conda create --name pdm_utils python pip biopython pymysql paramiko tabulate
+        > source activate pdm_utils
 
 
 

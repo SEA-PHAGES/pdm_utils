@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pdm_utils",
-    version="0.0.6",
+    version="0.0.9",
     author="Travis Mavrich",
     author_email="trm53@pitt.edu",
     description="Phamerator database management utilities",

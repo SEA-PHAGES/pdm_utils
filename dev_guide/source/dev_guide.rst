@@ -183,7 +183,7 @@ Follow the steps below to push a new version of the ``pdm_utils`` package to PyP
 
 
     .. warning::
-        The version number must be unique within the ``pdm_utils`` version history in TestPyPI and PyPI databases. Even if the package release is removed from these databases, PyPI stores its version number, and a subsequent package release cannot have the same version number, if it is had been deleted.
+        The version number must be unique within the ``pdm_utils`` version history in TestPyPI and PyPI databases. Even if the package release is removed from these databases, PyPI stores its version number, and a subsequent package release cannot have the same version number, even if it has been deleted.
 
     2. By default, the working directory is outside of top-level pdm_utils, but the location can be specified within setup.py using the 'package_dir' and 'packages' parameters. Run the setup script from the working directory::
 

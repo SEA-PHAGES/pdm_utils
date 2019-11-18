@@ -639,20 +639,20 @@ def get_final_data(output_folder, matched_genomes):
 
     # TODO new dictwriter. Use this block instead of above once the
     # new import script is functioning.
-    # count2 = len(phagesdb_ticket_list)
-    # if count2 > 0:
-    #     print(f"\n\n{count2} phage(s) were retrieved from PhagesDB.")
-    #     filename3 = "dev_phagesdb_updates_import_table_new.csv"
-    #     filepath3 = pathlib.Path(phagesdb_folder, filename3)
-    #     with filepath3.open("w") as fh:
-    #         writer = csv.writer(fh)
-    #         writer.writerow(import_table_columns2)
-    #         writer.writerows(phagesdb_ticket_list)
+    count2 = len(phagesdb_ticket_list2)
+    if count2 > 0:
+        print(f"\n\n{count2} phage(s) were retrieved from PhagesDB.")
+        filename4 = "dev_phagesdb_updates_import_table.csv"
+        filepath4 = pathlib.Path(phagesdb_folder, filename4)
+        # with filepath4.open("w") as fh:
+        #     writer = csv.writer(fh)
+        #     writer.writerow(import_table_columns2)
+        #     writer.writerows(phagesdb_ticket_list2)
 
     else:
         print("\n\nNo new phages were retrieved from PhagesDB.")
 
-    input("\n\nPress ENTER to continue.")
+    # input("\n\nPress ENTER to continue.")
 
 
 # TODO unittest.
@@ -1031,13 +1031,13 @@ def get_genbank_data(output_folder, list_of_genomes):
 
     # TODO new dictwriter. Use this block instead of above once the
     # new import script is functioning.
-    # if len(import_ticket_lists2) > 0:
-    #     filename2 = f"dev_ncbi_updates_import_table_new.csv"
-    #     filepath2 = pathlib.Path(ncbi_folder, filename1)
-    #     with filepath1.open("w") as fh:
-    #         writer = csv.writer(fh)
-    #         writer.writerow(import_table_columns2)
-    #         writer.writerows(import_ticket_lists2)
+    if len(import_ticket_lists2) > 0:
+        filename2 = "dev_ncbi_updates_import_table.csv"
+        filepath2 = pathlib.Path(ncbi_folder, filename2)
+        # with filepath2.open("w") as fh:
+        #     writer = csv.writer(fh)
+        #     writer.writerow(import_table_columns2)
+        #     writer.writerows(import_ticket_lists2)
 
 
 
@@ -1069,7 +1069,7 @@ def get_genbank_data(output_folder, list_of_genomes):
           f"Phamerator record: {tally_retrieved_not_new}")
     print("Number of records retrieved that should be updated in "
           f"Phamerator: {tally_retrieved_for_update}")
-    input("\n\nPress ENTER to continue.")
+    # input("\n\nPress ENTER to continue.")
 
 
 
@@ -1077,11 +1077,11 @@ def get_genbank_data(output_folder, list_of_genomes):
 def get_draft_data(output_path):
     """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
     # Create output folder
-    pecaan_folder = pathlib.Path(output_path, f"pecaan_updates")
-    pecaan_folder.mkdir()
     phagesdb_new_phages_list = \
         get_unphamerated_phage_list(constants.UNPHAMERATED_PHAGE_LIST)
     if len(phagesdb_new_phages_list) > 0:
+        pecaan_folder = pathlib.Path(output_path, f"pecaan_updates")
+        pecaan_folder.mkdir()
         retrieve_drafts(pecaan_folder, phagesdb_new_phages_list)
     else:
         print("No new 'draft' genomes available.")
@@ -1109,7 +1109,6 @@ def retrieve_drafts(output_folder, phage_list):
     """Retrieve auto-annotated 'draft' genomes from PECAAN."""
 
     print("\n\nRetrieving new phages from PECAAN")
-
     pecaan_genome_folder = pathlib.Path(output_folder, "genomes")
     pecaan_genome_folder.mkdir()
 
@@ -1180,7 +1179,7 @@ def retrieve_drafts(output_folder, phage_list):
 
     # Now make the import table.
     if len(import_ticket_lists) > 0:
-        filename1 = f"pecaan_updates_import_table.csv"
+        filename1 = "pecaan_updates_import_table.csv"
         filepath1 = pathlib.Path(output_folder, filename1)
         with filepath1.open("w") as fh:
             writer = csv.writer(fh)
@@ -1188,13 +1187,13 @@ def retrieve_drafts(output_folder, phage_list):
 
     # TODO new dictwriter. Use this block instead of above once the
     # new import script is functioning.
-    # if len(import_ticket_lists2) > 0:
-    #     filename2 = f"dev_pecaan_updates_import_table_new.csv"
-    #     filepath2 = pathlib.Path(output_folder, filename2)
-    #     with filepath2.open("w") as fh:
-    #         writer = csv.writer(fh)
-    #         writer.writerow(import_table_columns2)
-    #         writer.writerows(import_ticket_lists2)
+    if len(import_ticket_lists2) > 0:
+        filename2 = "dev_pecaan_updates_import_table.csv"
+        filepath2 = pathlib.Path(output_folder, filename2)
+        # with filepath2.open("w") as fh:
+        #     writer = csv.writer(fh)
+        #     writer.writerow(import_table_columns2)
+        #     writer.writerows(import_ticket_lists2)
 
 
     # Report results
@@ -1205,5 +1204,4 @@ def retrieve_drafts(output_folder, phage_list):
         print(f"{pecaan_failed_tally} phage(s) failed to be retrieved:")
         for element in pecaan_failed_list:
             print(element)
-
-    input("\n\nPress ENTER to continue.")
+        input("\n\nPress ENTER to continue.")

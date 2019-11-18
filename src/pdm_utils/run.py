@@ -28,6 +28,7 @@ def main(unparsed_args):
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     RUN_HELP = "Command line script to call a pdm_utils pipeline."
+    USAGE = "python3 -m pdm_utils <pipeline>"
     VALID_PIPELINES = {
         "retrieve_data",
         "get_db",
@@ -41,7 +42,7 @@ def main(unparsed_args):
         "file_export",
         "freeze"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
-    pipe_parser = argparse.ArgumentParser(description=RUN_HELP)
+    pipe_parser = argparse.ArgumentParser(description=RUN_HELP, usage=USAGE)
     pipe_parser.add_argument("pipeline", type=str,
                         choices=list(VALID_PIPELINES),
                         help=PIPELINE_HELP)
@@ -75,5 +76,5 @@ def main(unparsed_args):
     print("Pipeline completed")
 
 
-if __name__ == "__main__":
-    main(sys.argv)
+# if __name__ == "__main__":
+#     main(sys.argv)
