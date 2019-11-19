@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
-from pdm_utils.functions import basic
+from pdm_utils.functions import basic, phamerator
 
 
 

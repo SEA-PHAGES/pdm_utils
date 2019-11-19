@@ -633,14 +633,14 @@ class TestImportGenomeMain3(unittest.TestCase):
 
     def setUp(self):
 
+        self.import_table = Path(test_files_path, "test_import_table_1.csv")
         self.base_dir = Path(unittest_dir, "test_wd/test_folder")
         self.base_dir.mkdir()
 
         self.input_folder = Path(self.base_dir, "input_folder")
         self.output_folder = Path(self.base_dir, "output_folder")
         self.log_file = Path(self.base_dir, "test_log.txt")
-        #HERE
-        self.import_table
+
         self.sql_handle_1 = mch.MySQLConnectionHandler()
         self.sql_handle_1.database = "Actino_Draft"
         self.sql_handle_1.username = user
@@ -668,6 +668,8 @@ class TestImportGenomeMain3(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
+
+
 
 
     @patch("pdm_utils.functions.phamerator.setup_sql_handle")

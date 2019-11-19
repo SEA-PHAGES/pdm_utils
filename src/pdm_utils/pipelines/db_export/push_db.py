@@ -1,7 +1,6 @@
 """Pipeline to push data to the server."""
 import argparse
 import pathlib
-import sys
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import server
@@ -13,13 +12,15 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
 
     file_list = []
-    if args.directory_input is not None:
-        args.directory_input = basic.set_path(args.directory_input, kind="dir", expect=True)
-        folder_files = basic.identify_files(args.directory_input, set([".DS_Store"]))
+    if args.directory is not None:
+        args.directory = basic.set_path(args.directory,
+                                              kind="dir", expect=True)
+        folder_files = basic.identify_files(args.directory,
+                                            set([".DS_Store"]))
         file_list.extend(folder_files)
-    if args.file_input is not None:
-        args.file_input = basic.set_path(args.file_input, kind="file", expect=True)
-        file_list.append(args.file_input)
+    if args.file is not None:
+        args.file = basic.set_path(args.file, kind="file", expect=True)
+        file_list.append(args.file)
 
     status = True
     if len(file_list) == 0:
@@ -64,13 +65,13 @@ def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for uploading to the server."""
     PUSH_DB_HELP = ("Pipeline to upload a new version of "
                    "a Phamerator MySQL database to the server.")
-    DIRECTORY_INPUT_HELP = ("Path to the folder containing files for upload.")
-    FILE_INPUT_HELP = ("Path to the file for upload.")
+    DIRECTORY_HELP = ("Path to the folder containing files for upload.")
+    FILE_HELP = ("Path to the file for upload.")
     parser = argparse.ArgumentParser(description=PUSH_DB_HELP)
-    parser.add_argument("-d", "--directory_input", type=pathlib.Path,
-        help=DIRECTORY_INPUT_HELP)
-    parser.add_argument("-f", "--file_input", type=pathlib.Path,
-        help=FILE_INPUT_HELP)
+    parser.add_argument("-d", "--directory", type=pathlib.Path,
+        help=DIRECTORY_HELP)
+    parser.add_argument("-f", "--file", type=pathlib.Path,
+        help=FILE_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

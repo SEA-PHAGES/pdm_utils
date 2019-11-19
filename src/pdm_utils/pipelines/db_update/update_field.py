@@ -5,19 +5,15 @@ import csv
 import pathlib
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.classes.randomfieldupdatehandler import RandomFieldUpdateHandler
-from pdm_utils.functions import basic
+from pdm_utils.functions import basic, phamerator
 
 
-# TODO not tested, but identical function in import_genome.py tested.
-def setup_sql_handle(database):
+# TODO not tested, but nearly identical function in import_genome.py tested.
+def connect_to_db(database):
     """Connect to a MySQL database."""
-    sql_handle = MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.open_connection()
-    if (not sql_handle.credential_status or not sql_handle._database_status):
-        logger.info(f"No connection to the {database} database. "
-                    f"Valid credentials: {sql_handle.credential_status}. "
-                    f"Valid database: {sql_handle._database_status}")
+    sql_handle, msg = phamerator.setup_sql_handle(database)
+    if sql_handle is None:
+        print(msg)
         sys.exit(1)
     else:
         return sql_handle
@@ -46,7 +42,7 @@ def main(unparsed_args):
     update_table_path = basic.set_path(update_table, kind="file", expect=True)
 
     # Establish the database connection using the MySQLConnectionHandler object
-    mysql_handler = setup_sql_handle(database)
+    mysql_handler = connect_to_db(database)
 
     # Iterate through the tickets and process them sequentially.
     list_of_update_tickets = []
