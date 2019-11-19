@@ -10,26 +10,13 @@ from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
 
-# TODO not tested, but identical function in import_genome.py tested.
-def set_path(path, kind=None, expect=True):
-    """Confirm validity of path argument."""
-    path = path.expanduser()
-    path = path.resolve()
-    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
-    if not result:
-        print(msg)
-        sys.exit(1)
-    else:
-        return path
 
 # TODO unittest.
 def main(unparsed_args_list):
     """Run the get_db pipeline."""
     args = parse_args(unparsed_args_list)
-    args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
+    args.output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
 
-    if args.output_folder.exists() == False:
-        print("The output ")
     # curl website > output_file
     # Version file
     if args.filename is None:

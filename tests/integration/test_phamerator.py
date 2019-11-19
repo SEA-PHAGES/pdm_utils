@@ -11,16 +11,24 @@ import subprocess, os
 import pymysql
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
+from pathlib import Path
+from unittest.mock import patch, Mock
+import shutil
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
 user = "pdm_anon"
 pwd = "pdm_anon"
+db = "test_db"
+
+unittest_file = Path(__file__)
+unittest_dir = unittest_file.parent
+schema_file = "test_schema6.sql"
+schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+
 
 
 class TestPhameratorFunctions1(unittest.TestCase):
-
-
 
     def setUp(self):
         """In order to test MySQL database-related functions, create a
@@ -28,17 +36,12 @@ class TestPhameratorFunctions1(unittest.TestCase):
         same schema as in PhameratorDB.
         Each unittest will populate the empty database as needed."""
 
-        # self.db = "test_schema5"
-        # self.schema_file = self.db + ".sql"
-
-        self.db = "test_db"
-        self.schema_file = "test_schema6.sql"
 
 
         self.sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         self.sql_handle.username = user
         self.sql_handle.password = pwd
-        self.sql_handle.database = self.db
+        self.sql_handle.database = db
 
 
         connection = pymysql.connect(host = "localhost",
@@ -50,28 +53,23 @@ class TestPhameratorFunctions1(unittest.TestCase):
         # First, test if a test database already exists within mysql.
         # If there is, delete it so that a fresh test database is installed.
         sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              f"WHERE SCHEMA_NAME = '{self.db}'"
+              f"WHERE SCHEMA_NAME = '{db}'"
         cur.execute(sql)
         result = cur.fetchall()
 
         if len(result) != 0:
-            cur.execute(f"DROP DATABASE {self.db}")
+            cur.execute(f"DROP DATABASE {db}")
             connection.commit()
 
         # Next, create the database within mysql.
-        cur.execute(f"CREATE DATABASE {self.db}")
+        cur.execute(f"CREATE DATABASE {db}")
         connection.commit()
         connection.close()
 
         # Now import the empty schema from file.
         # Seems like pymysql has trouble with this step, so use subprocess.
-        schema_filepath = \
-            os.path.join(os.path.dirname(__file__),
-                        "test_files/",
-                        self.schema_file)
-
         handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {self.db}"
+        command_string = f"mysql -u {user} -p{pwd} {db}"
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list, stdin = handle)
         handle.close()
@@ -87,7 +85,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id in input_phage_ids:
@@ -106,7 +104,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result = phamerator.create_phage_id_set(sql_handle)
         self.assertEqual(len(result), 3)
 
@@ -121,7 +119,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_accs in input_phage_ids_and_accs:
@@ -138,7 +136,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result = phamerator.create_accession_set(sql_handle)
         self.assertEqual(len(result), 3)
 
@@ -155,7 +153,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -173,7 +171,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result = phamerator.create_seq_set(sql_handle)
         with self.subTest():
             self.assertEqual(len(result), 3)
@@ -194,7 +192,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -217,7 +215,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5"], query=query)
@@ -236,7 +234,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -259,7 +257,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["EagleEye"], query=query)
@@ -277,7 +275,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -300,7 +298,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5","Trixie"], query=query)
@@ -318,7 +316,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -341,7 +339,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5","Trixie","EagleEye","D29"],
@@ -360,7 +358,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -383,7 +381,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, query=query)
         self.assertEqual(len(result_list), 3)
@@ -401,7 +399,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -434,7 +432,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5"], query=query)
@@ -455,7 +453,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -488,7 +486,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["Trixie"], query=query)
@@ -511,7 +509,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
 
@@ -546,7 +544,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         result_list = phamerator.retrieve_data(
                         sql_handle, query=query)
         self.assertEqual(len(result_list), 5)
@@ -572,7 +570,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -606,7 +604,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         genome_list = phamerator.parse_genome_data(sql_handle,
                         phage_id_list=["L5"], phage_query=phage_query,
                         gnm_type="phamerator")
@@ -635,7 +633,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -659,7 +657,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         genome_list = phamerator.parse_genome_data(
                           sql_handle, phage_id_list=["EagleEye"],
                           phage_query=phage_query)
@@ -683,7 +681,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -720,7 +718,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         genome_list = phamerator.parse_genome_data(
                         sql_handle, phage_id_list=["L5"], phage_query=phage_query,
                         gene_query=gene_query)
@@ -757,7 +755,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -794,7 +792,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         genome_list = phamerator.parse_genome_data(
                         sql_handle, phage_query=phage_query,
                         gene_query=gene_query)
@@ -836,7 +834,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -869,7 +867,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         cds_list = phamerator.parse_cds_data(sql_handle, column="PhageID",
                                              phage_id_list=["L5"], query=query)
         with self.subTest():
@@ -890,7 +888,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
-                                        database = self.db,
+                                        database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -922,7 +920,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         cds_list = phamerator.parse_cds_data(sql_handle,
                                              column="PhageID",
                                              phage_id_list=["Trixie"],
@@ -940,7 +938,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
-                                     database = self.db,
+                                     database = db,
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
@@ -973,7 +971,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
         sql_handle.username = user
         sql_handle.password = pwd
-        sql_handle.database = self.db
+        sql_handle.database = db
         cds_list = phamerator.parse_cds_data(sql_handle, query=query)
 
         with self.subTest():
@@ -1006,7 +1004,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
-                                     database=self.db,
+                                     database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
@@ -1020,7 +1018,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
-                                     database = self.db,
+                                     database = db,
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(query)
@@ -1076,7 +1074,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {self.db}")
+        cur.execute(f"DROP DATABASE {db}")
         connection.commit()
         connection.close()
 
@@ -1106,7 +1104,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
-                                     database=self.db,
+                                     database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(insert1)
@@ -1128,8 +1126,6 @@ class TestPhameratorFunctions2(unittest.TestCase):
         same schema as in PhameratorDB.
         Each unittest will populate the empty database as needed."""
 
-        self.db = "test_db"
-        self.schema_file = "test_schema6.sql"
 
         connection = pymysql.connect(host = "localhost",
                                         user = user,
@@ -1140,28 +1136,23 @@ class TestPhameratorFunctions2(unittest.TestCase):
         # First, test if a test database already exists within mysql.
         # If there is, delete it so that a fresh test database is installed.
         sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              f"WHERE SCHEMA_NAME = '{self.db}'"
+              f"WHERE SCHEMA_NAME = '{db}'"
         cur.execute(sql)
         result = cur.fetchall()
 
         if len(result) != 0:
-            cur.execute(f"DROP DATABASE {self.db}")
+            cur.execute(f"DROP DATABASE {db}")
             connection.commit()
 
         # Next, create the database within mysql.
-        cur.execute(f"CREATE DATABASE {self.db}")
+        cur.execute(f"CREATE DATABASE {db}")
         connection.commit()
         connection.close()
 
         # Now import the empty schema from file.
         # Seems like pymysql has trouble with this step, so use subprocess.
-        schema_filepath = \
-            os.path.join(os.path.dirname(__file__),
-                        "test_files/",
-                        self.schema_file)
-
         handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {self.db}"
+        command_string = f"mysql -u {user} -p{pwd} {db}"
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list, stdin = handle)
         handle.close()
@@ -1178,7 +1169,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
-                                     database=self.db,
+                                     database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(insert1)
@@ -1219,7 +1210,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
-                                     database=self.db,
+                                     database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(insert2)
@@ -1228,7 +1219,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         connection = pymysql.connect(host = "localhost",
                                      user = user,
                                      password = pwd,
-                                     database = self.db,
+                                     database = db,
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_cds_query)
@@ -1272,14 +1263,14 @@ class TestPhameratorFunctions2(unittest.TestCase):
         statement = phamerator.create_update(
             "phage", "Cluster2", "B", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
         connection.commit()
         connection.close()
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_phage_query)
@@ -1297,14 +1288,14 @@ class TestPhameratorFunctions2(unittest.TestCase):
         statement = phamerator.create_update(
             "phage", "Cluster2", "SINGLETON", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
         connection.commit()
         connection.close()
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_phage_query)
@@ -1323,14 +1314,14 @@ class TestPhameratorFunctions2(unittest.TestCase):
         statement = phamerator.create_update(
             "phage", "Subcluster2", "A2", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
         connection.commit()
         connection.close()
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_phage_query)
@@ -1353,7 +1344,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
                "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
                "'ACKLG', 'F', 'integrase', 'TAG1');")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(input)
@@ -1364,7 +1355,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         statement = phamerator.create_update(
             "gene", "Notes", "Repressor", "GeneID", "SEA_L5_123")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
@@ -1373,7 +1364,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         # Third, retrieve the current state of the gene table.
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_cds_query)
@@ -1394,7 +1385,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         for a PhageID in the phage table."""
         # First, retrieve the current state of the phage table.
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_phage_query)
@@ -1408,7 +1399,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         # Second, execute the DELETE statement.
         statement = phamerator.create_delete("phage", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
@@ -1417,7 +1408,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         # Third, retrieve the current state of the phage table.
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_phage_query)
@@ -1459,7 +1450,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
                   "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
                   "'ACKLG', 'F', 'integrase', 'TAG123');")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(input1)
@@ -1469,7 +1460,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         # Second, retrieve the current state of the gene table.
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_cds_query)
@@ -1485,7 +1476,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         # Third, execute the DELETE statement.
         statement = phamerator.create_delete("gene", "GeneID", "SEA_L5_1")
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(statement)
@@ -1494,7 +1485,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
         # Fourth, retrieve the current state of the gene table.
         connection = pymysql.connect(host="localhost",user=user,
-                                     password=pwd, database=self.db,
+                                     password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
         cur = connection.cursor()
         cur.execute(self.std_cds_query)
@@ -1527,14 +1518,109 @@ class TestPhameratorFunctions2(unittest.TestCase):
                                         password = pwd,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {self.db}")
+        cur.execute(f"DROP DATABASE {db}")
         connection.commit()
         connection.close()
 
 
 
 
+class TestPhameratorFunctions3(unittest.TestCase):
+    def setUp(self):
+        self.database = "Actino_Draft"
 
+    # setup_sql_handle() calls MySQLConnectionHandler.open_connection(),
+    # which uses getpass.getpass() to get the username and password.
+    @patch("getpass.getpass")
+    def test_setup_sql_handle_1(self, getpass_mock):
+        """Verify that handle returned with valid info
+        when database is provided."""
+        getpass_mock.side_effect = [user, pwd]
+        sql_handle, msg = phamerator.setup_sql_handle("Actino_Draft")
+        with self.subTest():
+            self.assertTrue(getpass_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(sql_handle)
+        with self.subTest():
+            self.assertTrue(sql_handle.credential_status)
+        with self.subTest():
+            self.assertTrue(sql_handle._database_status)
+
+    # setup_sql_handle() calls MySQLConnectionHandler.open_connection(),
+    # which uses getpass.getpass() to get the username and password.
+    @patch("getpass.getpass")
+    def test_setup_sql_handle_2(self, getpass_mock):
+        """Verify that handle returned with valid info
+        when database is not provided."""
+        getpass_mock.side_effect = [user, pwd]
+        sql_handle, msg = phamerator.setup_sql_handle()
+        with self.subTest():
+            self.assertTrue(getpass_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(sql_handle)
+        with self.subTest():
+            self.assertTrue(sql_handle.credential_status)
+        with self.subTest():
+            self.assertTrue(sql_handle._database_status)
+
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_setup_sql_handle_3(self, mch_mock):
+        """Verify that no handle is returned when database is provided and
+        credential_status = False."""
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = self.database
+        sql_handle_mock.credential_status = False
+        sql_handle_mock._database_status = True
+        mch_mock.return_value = sql_handle_mock
+        sql_handle, msg = phamerator.setup_sql_handle(self.database)
+        with self.subTest():
+            self.assertTrue(mch_mock.called)
+        with self.subTest():
+            self.assertIsNone(sql_handle)
+
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_setup_sql_handle_4(self, mch_mock):
+        """Verify that no handle is returned when database is provided and
+        _database_status = False."""
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = self.database
+        sql_handle_mock.credential_status = True
+        sql_handle_mock._database_status = False
+        mch_mock.return_value = sql_handle_mock
+        sql_handle, msg = phamerator.setup_sql_handle(self.database)
+        with self.subTest():
+            self.assertTrue(mch_mock.called)
+        with self.subTest():
+            self.assertIsNone(sql_handle)
+
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_setup_sql_handle_5(self, mch_mock):
+        """Verify that no handle is returned when database is provided and
+        credential_status = False and _database_status = False."""
+        sql_handle_mock = Mock()
+        sql_handle_mock.database = self.database
+        sql_handle_mock.credential_status = False
+        sql_handle_mock._database_status = False
+        mch_mock.return_value = sql_handle_mock
+        sql_handle, msg = phamerator.setup_sql_handle(self.database)
+        with self.subTest():
+            self.assertTrue(mch_mock.called)
+        with self.subTest():
+            self.assertIsNone(sql_handle)
+
+    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
+    def test_setup_sql_handle_6(self, mch_mock):
+        """Verify that no handle is returned when database is not provided and
+        credential_status = False and _database_status = False."""
+        sql_handle_mock = Mock()
+        sql_handle_mock.credential_status = False
+        sql_handle_mock._database_status = True
+        mch_mock.return_value = sql_handle_mock
+        sql_handle, msg = phamerator.setup_sql_handle()
+        with self.subTest():
+            self.assertTrue(mch_mock.called)
+        with self.subTest():
+            self.assertIsNone(sql_handle)
 
 
 if __name__ == '__main__':

@@ -23,19 +23,6 @@ def setup_sql_handle(database):
         return sql_handle
 
 
-
-# TODO not tested, but identical function in import_genome.py tested.
-def set_path(path, kind=None, expect=True):
-    """Confirm validity of path argument."""
-    path = path.expanduser()
-    path = path.resolve()
-    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
-    if not result:
-        print(msg)
-        sys.exit(1)
-    else:
-        return path
-
 # TODO unittest.
 def main(unparsed_args):
     """Runs the complete update pipeline."""
@@ -56,7 +43,7 @@ def main(unparsed_args):
     database = args.database_name[0].split("=")[-1]
     # update_table = args.ticket_file[0].split("=")[-1]
     update_table = args.ticket_file[0]
-    update_table_path = set_path(update_table, kind="file", expect=True)
+    update_table_path = basic.set_path(update_table, kind="file", expect=True)
 
     # Establish the database connection using the MySQLConnectionHandler object
     mysql_handler = setup_sql_handle(database)

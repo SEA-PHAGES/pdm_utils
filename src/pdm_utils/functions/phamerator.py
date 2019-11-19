@@ -7,6 +7,7 @@ from pdm_utils.classes import cds
 from pdm_utils.functions import basic
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
+from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
@@ -522,7 +523,24 @@ def get_phage_table_count(sql_handle):
     return count
 
 
-
+def setup_sql_handle(database=None):
+    """Connect to a MySQL database."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.open_connection()
+    msg = "Setting up MySQL connection. "
+    status = True
+    if sql_handle.credential_status == False:
+        msg = msg + "Invalid username or password. "
+        status = False
+    if sql_handle._database_status == False:
+        msg = msg + f"Invalid database: {database}."
+        status = False
+    if status == True:
+        msg = msg + f"Connected to the database: {database}."
+    else:
+        sql_handle = None
+    return (sql_handle, msg)
 
 
 

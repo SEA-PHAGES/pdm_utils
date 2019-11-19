@@ -1,71 +1,79 @@
 """Pipeline to push data to the server."""
 import argparse
-import os
 import pathlib
-import subprocess
 import sys
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import server
 
 
-
 # TODO unittest.
 def main(unparsed_args_list):
-    """Run the get_db pipeline."""
+    """Run the push_db pipeline."""
     args = parse_args(unparsed_args_list)
-    args.input_folder = set_path(args.input_folder, kind="dir", expect=True)
-    sql_handle = setup_sql_handle(args.database)
 
+    file_list = []
+    if args.directory_input is not None:
+        args.directory_input = basic.set_path(args.directory_input, kind="dir", expect=True)
+        folder_files = basic.identify_files(args.directory_input, set([".DS_Store"]))
+        file_list.extend(folder_files)
+    if args.file_input is not None:
+        args.file_input = basic.set_path(args.file_input, kind="file", expect=True)
+        file_list.append(args.file_input)
 
+    status = True
+    if len(file_list) == 0:
+        print("There are no files to upload.")
+        status = False
 
+    if status == True:
+        server.set_log_file("/tmp/paramiko.log")
+        transport = server.get_transport(constants.DB_HOST)
+        if transport is None:
+            status = False
+
+    if status == True:
+        sftp = server.setup_sftp_conn(transport, attempts=3)
+        if sftp is None:
+            status = False
+
+    success = []
+    fail = []
+    if status == True:
+        for local_filepath in file_list:
+            print(f"Uploading {local_filepath.name}...")
+            remote_filepath = pathlib.Path(constants.DB_HOST_DIR,
+                                           local_filepath.name)
+            result = server.upload_file(sftp, str(local_filepath),
+                                        str(remote_filepath))
+            if result:
+                success.append(local_filepath.name)
+            else:
+                fail.append(local_filepath.name)
+        sftp.close()
+        transport.close()
+
+    if len(fail) > 0:
+        print("The following files were not uploaded:")
+        for file in fail:
+            print(file)
 
 
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for uploading to the server."""
-    PUSH_DB_HELP = ("Pipeline to retrieve and install a new version of "
-                   "a Phamerator MySQL database.")
-    DATABASE_HELP = "Name of the MySQL database."
-    INPUT_FOLDER_HELP = ("Path to the folder containing files for upload.")
+    PUSH_DB_HELP = ("Pipeline to upload a new version of "
+                   "a Phamerator MySQL database to the server.")
+    DIRECTORY_INPUT_HELP = ("Path to the folder containing files for upload.")
+    FILE_INPUT_HELP = ("Path to the file for upload.")
     parser = argparse.ArgumentParser(description=PUSH_DB_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("input_folder", type=pathlib.Path,
-        help=INPUT_FOLDER_HELP)
+    parser.add_argument("-d", "--directory_input", type=pathlib.Path,
+        help=DIRECTORY_INPUT_HELP)
+    parser.add_argument("-f", "--file_input", type=pathlib.Path,
+        help=FILE_INPUT_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
     return args
-
-
-# TODO not tested, but identical function in import_genome.py tested.
-def setup_sql_handle(database):
-    """Connect to a MySQL database."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.open_connection()
-    if (not sql_handle.credential_status or not sql_handle._database_status):
-        print(f"No connection to the {database} database. "
-            f"Valid credentials: {sql_handle.credential_status}. "
-            f"Valid database: {sql_handle._database_status}")
-        sys.exit(1)
-    else:
-        return sql_handle
-
-
-# TODO not tested, but identical function in import_genome.py tested.
-def set_path(path, kind=None, expect=True):
-    """Confirm validity of path argument."""
-    path = path.expanduser()
-    path = path.resolve()
-    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
-    if not result:
-        print(msg)
-        sys.exit(1)
-    else:
-        return path
-
-###

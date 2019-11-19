@@ -43,11 +43,14 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
 
     # Validate folders and files.
-    args.input_folder = set_path(args.input_folder, kind="dir", expect=True)
-    args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
-    args.import_table = set_path(args.import_table, kind="file", expect=True)
+    args.input_folder = basic.set_path(args.input_folder, kind="dir",
+                                       expect=True)
+    args.output_folder = basic.set_path(args.output_folder, kind="dir",
+                                        expect=True)
+    args.import_table = basic.set_path(args.import_table, kind="file",
+                                       expect=True)
     args.log_file = pathlib.Path(args.output_folder, args.log_file)
-    args.log_file = set_path(args.log_file, kind="file", expect=False)
+    args.log_file = basic.set_path(args.log_file, kind="file", expect=False)
 
     # Set up root logger.
     logging.basicConfig(filename=args.log_file, filemode="w",
@@ -56,7 +59,7 @@ def main(unparsed_args_list):
     logger.info("Folder and file arguments verified.")
 
     # Get connection to database.
-    sql_handle = setup_sql_handle(args.database)
+    sql_handle = connect_to_db(args.database)
     logger.info(f"Connected to database: {args.database}.")
 
     # If everything checks out, pass on args for data input/output:
@@ -73,30 +76,14 @@ def main(unparsed_args_list):
     logger.info("Import complete.")
 
 
-def setup_sql_handle(database):
+def connect_to_db(database):
     """Connect to a MySQL database."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.open_connection()
-    if (not sql_handle.credential_status or not sql_handle._database_status):
-        logger.info(f"No connection to the {database} database. "
-                    f"Valid credentials: {sql_handle.credential_status}. "
-                    f"Valid database: {sql_handle._database_status}")
+    sql_handle, msg = phamerator.setup_sql_handle(database)
+    if sql_handle is None:
+        logger.info(msg)
         sys.exit(1)
     else:
         return sql_handle
-
-
-def set_path(path, kind=None, expect=True):
-    """Confirm validity of path argument."""
-    path = path.expanduser()
-    path = path.resolve()
-    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
-    if not result:
-        print(msg)
-        sys.exit(1)
-    else:
-        return path
 
 
 def parse_args(unparsed_args_list):

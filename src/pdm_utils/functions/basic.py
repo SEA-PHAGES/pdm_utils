@@ -2,6 +2,7 @@
 modules in this package to prevent circular imports."""
 
 from pdm_utils.constants import constants
+import sys
 import os
 import csv
 import getpass
@@ -898,7 +899,16 @@ def verify_path2(path, kind=None, expect=True):
     return result, msg
 
 
-
+def set_path(path, kind=None, expect=True):
+    """Confirm validity of path argument."""
+    path = path.expanduser()
+    path = path.resolve()
+    result, msg = verify_path2(path, kind=kind, expect=expect)
+    if not result:
+        print(msg)
+        sys.exit(1)
+    else:
+        return path
 
 
 

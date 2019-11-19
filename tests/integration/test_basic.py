@@ -1,6 +1,6 @@
 """Integration tests for general functions."""
 
-
+import argparse
 from pdm_utils.functions import basic
 from datetime import datetime
 import unittest
@@ -535,6 +535,90 @@ class TestBasicFunctions4(unittest.TestCase):
         ask_mock.side_effect = [False, False, False]
         field = basic.choose_from_list(self.options)
         self.assertIsNone(field)
+
+
+
+
+
+
+
+
+# TODO moved from import_genome.
+class TestBasicFunctions5(unittest.TestCase):
+
+    def setUp(self):
+        self.test_directory1 = \
+            os.path.join(os.path.dirname(__file__),
+            "test_wd/test_dir")
+        os.mkdir(self.test_directory1)
+        self.file = Path(self.test_directory1, "new_file.txt")
+        self.dir = Path(self.test_directory1, "new_dir")
+        self.parser = argparse.ArgumentParser()
+
+
+    def tearDown(self):
+        shutil.rmtree(self.test_directory1)
+
+
+    def test_set_path_1(self):
+        """Verify output when file exists and is expected to exist."""
+        self.file.touch()
+        output = basic.set_path(self.file, kind="file", expect=True)
+        with self.subTest():
+            self.assertIsInstance(output, Path)
+        with self.subTest():
+            self.assertEqual(str(self.file), str(output))
+
+    @patch("sys.exit")
+    def test_set_path_2(self, sys_exit_mock):
+        """Verify script exits when file does not exist,
+        and is not expected to exist."""
+        output = basic.set_path(self.file, kind="file", expect=True)
+        self.assertTrue(sys_exit_mock.called)
+
+
+    @patch("pdm_utils.functions.basic.verify_path2")
+    def test_set_path_3(self, verify_path2_mock):
+        """Verify home directory expansion."""
+        home = Path("~")
+        home = home.expanduser()
+        test_file = Path("~/path/to/file.txt")
+        verify_path2_mock.return_value = (True, None)
+        output = basic.set_path(test_file, kind="file", expect=True)
+        exp = Path(home, "path/to/file.txt")
+        self.assertEqual(output, exp)
+
+
+    @patch("pdm_utils.functions.basic.verify_path2")
+    def test_set_path_4(self, verify_path2_mock):
+        """Verify '..' directory resolution."""
+        test_file = Path("/dir1/dir2/../file.txt")
+        verify_path2_mock.return_value = (True, None)
+        output = basic.set_path(test_file, kind="file", expect=True)
+        exp = Path("/dir1/file.txt")
+        self.assertEqual(output, exp)
+
+
+    @patch("pdm_utils.functions.basic.verify_path2")
+    def test_set_path_5(self, verify_path2_mock):
+        """Verify home directory expansion and '..' directory resolution."""
+        home = Path("~")
+        home = home.expanduser()
+        test_file = Path("~/dir1/dir2/../file.txt")
+        verify_path2_mock.return_value = (True, None)
+        output = basic.set_path(test_file, kind="file", expect=True)
+        exp = Path(home, "dir1/file.txt")
+        self.assertEqual(output, exp)
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

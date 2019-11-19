@@ -13,7 +13,7 @@ from pdm_utils.pipelines.db_freeze import freeze_database
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.db_import import import_phage
 from pdm_utils.pipelines.phamerate import phamerate
-from pdm_utils.pipelines.db_export import file_export
+from pdm_utils.pipelines.db_export import file_export, push_db
 from pdm_utils.pipelines.db_update import update_field, get_db
 
 
@@ -40,7 +40,8 @@ def main(unparsed_args):
         "export",
         "compare",
         "file_export",
-        "freeze"}
+        "freeze",
+        "push_db"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP, usage=USAGE)
     pipe_parser.add_argument("pipeline", type=str,
@@ -69,12 +70,10 @@ def main(unparsed_args):
     # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
     elif args.pipeline == "file_export":
         file_export.main(unparsed_args)
+    elif args.pipeline == "push_db":
+        push_db.main(unparsed_args)
     elif args.pipeline == "freeze":
         freeze_database.main(unparsed_args)
     else:
         compare_databases.main(unparsed_args)
     print("Pipeline completed")
-
-
-# if __name__ == "__main__":
-#     main(sys.argv)

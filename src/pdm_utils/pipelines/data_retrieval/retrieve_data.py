@@ -105,19 +105,6 @@ def parse_args(unparsed_args_list):
     return args
 
 
-# TODO not tested, but identical function in import_genome.py tested.
-def set_path(path, kind=None, expect=True):
-    """Confirm validity of path argument."""
-    path = path.expanduser()
-    path = path.resolve()
-    result, msg = basic.verify_path2(path, kind=kind, expect=expect)
-    if not result:
-        print(msg)
-        sys.exit(1)
-    else:
-        return path
-
-
 
 # TODO not tested, but identical function in import_genome.py tested.
 def setup_sql_handle(database):
@@ -142,10 +129,12 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
     date = time.strftime("%Y%m%d")
 
-    args.output_folder = set_path(args.output_folder, kind="dir", expect=True)
+    args.output_folder = basic.set_path(args.output_folder, kind="dir",
+                                        expect=True)
 
     working_dir = pathlib.Path(f"{date}_db_updates")
-    working_path = basic.make_new_dir(args.output_folder, working_dir, attempt=10)
+    working_path = basic.make_new_dir(args.output_folder, working_dir,
+                                      attempt=10)
 
     if working_path is None:
         print(f"Invalid working directory '{working_dir}'")
@@ -808,10 +797,11 @@ def get_genbank_data(output_folder, list_of_genomes):
     # For instace, if there are five accessions, batch size of two produces
     # indices = 0,2,4
     batch_indices = basic.create_indices(unique_accession_list, batch_size)
+    print(f"There are {len(unique_accession_list)} GenBank files to check.")
     for indices in batch_indices:
         batch_index_start = indices[0]
         batch_index_stop = indices[1]
-        print("retrieving batch: ", batch_index_start, batch_index_stop)
+        print(f"Checking files {batch_index_start} to {batch_index_stop}...")
         current_batch_size = batch_index_stop - batch_index_start
         delimiter = " | "
         esearch_term = delimiter.join(appended_accessions[
