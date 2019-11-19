@@ -543,6 +543,16 @@ def setup_sql_handle(database=None):
     return (sql_handle, msg)
 
 
+def change_version(sql_handle, amount=1):
+    """Change the database version number."""
+    query = ("SELECT Version from version")
+    result = sql_handle.execute_query(query)
+    current = result[0]["Version"]
+    new = current + amount
+    print(f"Updating version from {current} to {new}.")
+    statement = (f"UPDATE version SET Version = {new}")
+    sql_handle.execute_transaction([statement])
+
 
 
 # TODO this may no longer be needed.

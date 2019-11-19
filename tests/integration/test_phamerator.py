@@ -75,7 +75,15 @@ class TestPhameratorFunctions1(unittest.TestCase):
         handle.close()
 
 
-
+    def tearDown(self):
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(f"DROP DATABASE {db}")
+        connection.commit()
+        connection.close()
 
 
     def test_create_phage_id_set_1(self):
@@ -1067,20 +1075,6 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
 
-
-    def tearDown(self):
-        connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
-
-
-
-
     def test_get_phage_table_count_1(self):
         """Verify the correct number of phages is returned when
         the database is empty."""
@@ -1114,6 +1108,88 @@ class TestPhameratorFunctions1(unittest.TestCase):
         self.assertEqual(count, 1)
 
 
+
+
+    def test_change_version_1(self):
+        """Verify the version is incremented by 1."""
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        statement = ("INSERT INTO version (Version, SchemaVersion) "
+                    "VALUES (10, 0);")
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        phamerator.change_version(self.sql_handle)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        query = "SELECT Version from version;"
+        cur.execute(query)
+        result = cur.fetchall()
+        connection.close()
+        output_value = result[0]["Version"]
+        self.assertEqual(output_value, 11)
+
+    def test_change_version_2(self):
+        """Verify the version is incremented by 5."""
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        statement = ("INSERT INTO version (Version, SchemaVersion) "
+                    "VALUES (10, 0);")
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        phamerator.change_version(self.sql_handle, amount=5)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        query = "SELECT Version from version;"
+        cur.execute(query)
+        result = cur.fetchall()
+        connection.close()
+        output_value = result[0]["Version"]
+        self.assertEqual(output_value, 15)
+
+    def test_change_version_3(self):
+        """Verify the version is decremented by 5."""
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        statement = ("INSERT INTO version (Version, SchemaVersion) "
+                    "VALUES (10, 0);")
+        cur.execute(statement)
+        connection.commit()
+        connection.close()
+        phamerator.change_version(self.sql_handle, amount=-5)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        query = "SELECT Version from version;"
+        cur.execute(query)
+        result = cur.fetchall()
+        connection.close()
+        output_value = result[0]["Version"]
+        self.assertEqual(output_value, 5)
 
 
 
@@ -1187,6 +1263,19 @@ class TestPhameratorFunctions2(unittest.TestCase):
             ("SELECT GeneID, PhageID, Start, Stop, Length, Name, "
              "Translation, Orientation, Notes, LocusTag FROM gene "
              "WHERE PhageID = 'L5'")
+
+
+    def tearDown(self):
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(f"DROP DATABASE {db}")
+        connection.commit()
+        connection.close()
+
+
 
 
     def test_create_gene_table_insert_1(self):
@@ -1509,18 +1598,6 @@ class TestPhameratorFunctions2(unittest.TestCase):
             self.assertEqual(len(results2_phageids), 1)
         with self.subTest():
             self.assertEqual(len(results2_geneids), 1)
-
-
-
-    def tearDown(self):
-        connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
 
 
 
