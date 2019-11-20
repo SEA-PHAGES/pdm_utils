@@ -1,6 +1,5 @@
 """Pipeline to gather new data to be imported into PhameratorDB."""
 
-
 import argparse
 import csv
 import datetime
@@ -9,11 +8,7 @@ import pathlib
 import sys
 import time
 from urllib import request, error
-
-# Third-party modules
-import pymysql as pms
 from Bio import SeqIO
-
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
@@ -126,7 +121,7 @@ def main(unparsed_args_list):
     args.output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
 
-    working_dir = pathlib.Path(f"{date}_db_updates")
+    working_dir = pathlib.Path(f"{date}_new_data")
     working_path = basic.make_new_dir(args.output_folder, working_dir,
                                       attempt=10)
 
@@ -157,8 +152,9 @@ def main(unparsed_args_list):
 
         phagesdb_data_dict = get_phagesdb_data(constants.API_SEQUENCED)
         # Returns a list of tuples.
-        matched_genomes = match_genomes(modified_genome_data_list, phagesdb_data_dict)
-
+        match_output = match_genomes(modified_genome_data_list, phagesdb_data_dict)
+        matched_genomes = match_output[0]
+        unmatched_phagesdb_ids = match_output[1]
 
     # Option 1: Determine if any fields need to be updated
     if args.updates is True:
@@ -174,13 +170,9 @@ def main(unparsed_args_list):
 
     # Option 4: Retrieve auto-annotated genomes from PECAAN
     if args.draft is True:
-        get_draft_data(working_path)
+        get_draft_data(working_path, unmatched_phagesdb_ids)
 
     print("\n\n\nRetrieve updates script completed.")
-
-
-
-
 
 
 
@@ -255,54 +247,48 @@ def modify_phamerator_data(input_list):
     return mod_list
 
 
-
-
-
-
 # TODO unittest.
 def match_genomes(modified_genome_data_list, phagesdb_data_dict):
     """Match Phamerator genome data to PhagesDB genome data."""
-    matched_count = 0
-    unmatched_count = 0
     unmatched_hatfull_count = 0
     unmatched_phage_id_list = []
     unmatched_hatfull_phage_id_list = []
+
+    # Generate phage_id sets and match sets.
+    phagesdb_ids = phagesdb_data_dict.keys()
+    phamerator_ids = set()
+    for genome_data in modified_genome_data_list:
+        phamerator_ids.add(genome_data[0])
+    matched_ids = phamerator_ids & phagesdb_ids
+    unmatched_phamerator_ids = phamerator_ids - phagesdb_ids
+    unmatched_phagesdb_ids = phagesdb_ids - phamerator_ids
+
 
     # Match Phamerator data to PhagesDB data.
     # Iterate through each phage in Phamerator
     matched_genomes = []
     for genome_data in modified_genome_data_list:
         phamerator_id = genome_data[0]
-        phamerator_name = genome_data[1]
         phamerator_author = genome_data[9]
-
-        # First try to match up the phageID, and if that doesn't work,
-        # try to match up the phageName
-        if phamerator_id in phagesdb_data_dict.keys():
+        if phamerator_id in matched_ids:
             matched_phagesdb_data = phagesdb_data_dict[phamerator_id]
-            matched_count += 1
             matched_genomes.append((genome_data, matched_phagesdb_data))
-
         else:
-            unmatched_count += 1
-            unmatched_phage_id_list.append(phamerator_id)
-
-            # Only add Hatfull-author unmatched phages to list
             if phamerator_author == 'hatfull':
                 unmatched_hatfull_count += 1
                 unmatched_hatfull_phage_id_list.append(phamerator_id)
 
-
-    print(f"\nPhamerator-PhagesDB matched phage tally: {matched_count}.")
-    print(f"\nPhamerator-PhagesDB unmatched phage tally: {unmatched_count}.")
-    # Only print out Hatfull-author unmatched phages.
+    print("\nSummary of genomes matched between PhameratorDB and PhagesDB.")
+    print(f"{len(matched_ids)} genomes matched.")
+    print(f"{len(unmatched_phamerator_ids)} Phamerator genomes not matched.")
+    print(f"{len(unmatched_phagesdb_ids)} PhagesDB genomes not matched.")
     if unmatched_hatfull_count > 0:
-        print("\nPhamerator-PhagesDB Hatfull-author unmatched phages:")
+        print(f"{unmatched_hatfull_count} Hatfull-authored "
+              "unmatched PhameratorDB genomes:")
         for element in unmatched_hatfull_phage_id_list:
             print(element)
 
-    return matched_genomes
-
+    return (matched_genomes, unmatched_phagesdb_ids)
 
 
 # TODO unittest.
@@ -463,9 +449,9 @@ def get_update_data(output_folder, matched_genomes):
     # Field updates
     if len(field_update_list) > 0:
         print("\n\nNew field updates are available.")
-        field_folder = pathlib.Path(output_folder, f"field_updates")
+        field_folder = pathlib.Path(output_folder, "updates")
         field_folder.mkdir()
-        filename2 = f"field_updates_import_table.csv"
+        filename2 = "import_table.csv"
         filepath2 = pathlib.Path(field_folder, filename2)
         with filepath2.open("w") as fh:
             writer = csv.writer(fh)
@@ -480,7 +466,7 @@ def get_update_data(output_folder, matched_genomes):
 def get_final_data(output_folder, matched_genomes):
     """Run sub-pipeline to retrieve 'final' genomes from PhagesDB."""
 
-    phagesdb_folder = pathlib.Path(output_folder, f"phagesdb_updates")
+    phagesdb_folder = pathlib.Path(output_folder, "phagesdb")
     phagesdb_folder.mkdir()
     phagesdb_genome_folder = pathlib.Path(phagesdb_folder, "genomes")
     phagesdb_genome_folder.mkdir()
@@ -614,7 +600,7 @@ def get_final_data(output_folder, matched_genomes):
     count1 = len(phagesdb_ticket_list)
     if count1 > 0:
         print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
-        filename3 = "phagesdb_updates_import_table.csv"
+        filename3 = "import_table.csv"
         filepath3 = pathlib.Path(phagesdb_folder, filename3)
         with filepath3.open("w") as fh:
             writer = csv.writer(fh)
@@ -625,7 +611,7 @@ def get_final_data(output_folder, matched_genomes):
     count2 = len(phagesdb_ticket_list2)
     if count2 > 0:
         print(f"\n\n{count2} phage(s) were retrieved from PhagesDB.")
-        filename4 = "dev_phagesdb_updates_import_table.csv"
+        filename4 = "dev_import_table.csv"
         filepath4 = pathlib.Path(phagesdb_folder, filename4)
         # with filepath4.open("w") as fh:
         #     writer = csv.writer(fh)
@@ -651,7 +637,7 @@ def get_genbank_data(output_folder, list_of_genomes):
     # 5 Save new records in a folder and create an import table for them
 
     # Create output folder
-    ncbi_folder = pathlib.Path(output_folder, f"ncbi_updates")
+    ncbi_folder = pathlib.Path(output_folder, f"genbank")
     ncbi_folder.mkdir()
     genome_folder = pathlib.Path(ncbi_folder, "genomes")
     genome_folder.mkdir()
@@ -791,11 +777,12 @@ def get_genbank_data(output_folder, list_of_genomes):
     # For instace, if there are five accessions, batch size of two produces
     # indices = 0,2,4
     batch_indices = basic.create_indices(unique_accession_list, batch_size)
-    print(f"There are {len(unique_accession_list)} GenBank files to check.")
+    print(f"There are {len(unique_accession_list)} GenBank accessions to check.")
     for indices in batch_indices:
         batch_index_start = indices[0]
         batch_index_stop = indices[1]
-        print(f"Checking files {batch_index_start} to {batch_index_stop}...")
+        print("Checking accessions "
+              f"{batch_index_start + 1} to {batch_index_stop}...")
         current_batch_size = batch_index_stop - batch_index_start
         delimiter = " | "
         esearch_term = delimiter.join(appended_accessions[
@@ -1006,7 +993,7 @@ def get_genbank_data(output_folder, list_of_genomes):
 
     # Now make the import table.
     if len(import_ticket_lists) > 0:
-        filename1 = f"ncbi_updates_import_table.csv"
+        filename1 = f"import_table.csv"
         filepath1 = pathlib.Path(ncbi_folder, filename1)
         with filepath1.open("w") as fh:
             writer = csv.writer(fh)
@@ -1058,13 +1045,17 @@ def get_genbank_data(output_folder, list_of_genomes):
 
 
 # TODO unittest.
-def get_draft_data(output_path):
+def get_draft_data(output_path, unmatched_phagesdb_ids):
     """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
-    # Create output folder
-    phagesdb_new_phages_list = \
-        get_unphamerated_phage_list(constants.UNPHAMERATED_PHAGE_LIST)
-    if len(phagesdb_new_phages_list) > 0:
-        pecaan_folder = pathlib.Path(output_path, f"pecaan_updates")
+    # Note: the 'unphamerated_phage_list' generated by PhagesDB only
+    # reflects new genomes relative to the most current version of the
+    # Actino_Draft database.
+    # phagesdb_new_phages_list = \
+    #     get_unphamerated_phage_list(constants.UNPHAMERATED_PHAGE_LIST)
+
+    if len(unmatched_phagesdb_ids) > 0:
+        phagesdb_new_phages_list = list(unmatched_phagesdb_ids)
+        pecaan_folder = pathlib.Path(output_path, f"pecaan")
         pecaan_folder.mkdir()
         retrieve_drafts(pecaan_folder, phagesdb_new_phages_list)
     else:
@@ -1163,7 +1154,7 @@ def retrieve_drafts(output_folder, phage_list):
 
     # Now make the import table.
     if len(import_ticket_lists) > 0:
-        filename1 = "pecaan_updates_import_table.csv"
+        filename1 = "import_table.csv"
         filepath1 = pathlib.Path(output_folder, filename1)
         with filepath1.open("w") as fh:
             writer = csv.writer(fh)
@@ -1172,7 +1163,7 @@ def retrieve_drafts(output_folder, phage_list):
     # TODO new dictwriter. Use this block instead of above once the
     # new import script is functioning.
     if len(import_ticket_lists2) > 0:
-        filename2 = "dev_pecaan_updates_import_table.csv"
+        filename2 = "dev_import_table.csv"
         filepath2 = pathlib.Path(output_folder, filename2)
         # with filepath2.open("w") as fh:
         #     writer = csv.writer(fh)
