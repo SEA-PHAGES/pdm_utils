@@ -1030,3 +1030,26 @@ def truncate_value(value, length, suffix):
     if len(value) > length:
         value = value[:length] + suffix
     return value
+
+
+# TODO this needs to be improved.
+# TODO unittest.
+def select_option(prompt, valid_response_set):
+    """Select a specific option from a list."""
+    response_valid = False
+    while response_valid == False:
+        response = input(prompt)
+        if response.isdigit():
+            response = int(response)
+        else:
+            response = response.lower()
+
+        if response in valid_response_set:
+            response_valid = True
+            if response == "y":
+                response  = "yes"
+            elif response == "n":
+                response  = "no"
+        else:
+            print("Invalid response.")
+    return response
