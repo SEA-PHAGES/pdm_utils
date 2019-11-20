@@ -73,12 +73,25 @@ class Filter:
                 f"Table '{table}' requested to be filtered "
                 f"is not in '{self.database}'")
 
+    def refresh(self):
+        """
+        Refreshes phageIDs
+        """
+        query = ("SELECT PhageID FROM phage WHERE PhageID IN " + \
+                 "('" + "','".join(self.phageIDs) + "')")
+        results_dicts = self.sql_handle.execute_query(query)
+        results = []
+        for result in results_dicts:
+            results.append(result["PhageID"])
+
+        self.phageIDs = results
+
     def update(self, verbose=False, sort=None):
         """
         Updates results list for the Filter object
         """
         query_results = self.phageIDs
-       
+      
         queries = []
         for table in self.filters.keys():
             for field in self.filters[table].keys():
@@ -174,127 +187,53 @@ class Filter:
         PhageIDs from the results list of PhageIDs
         separated by a characteristic.
         """
-        switch =       {"cluster"    : self.group_cluster,
-                        "subcluster" : self.group_subcluster,
-                        "status"     : self.group_status,
-                        "host"       : self.group_host,
-                        "author"     : self.group_author,
-                        "record"     : self.group_record}
+        qual_switch =       {"cluster"    : "Cluster2",
+                             "subcluster" : "Subcluster2",
+                             "status"     : "status",
+                             "host"       : "HostStrain"}
 
-        if group.lower() in switch.keys():
+        qual_int_switch =   {"author"     : self.group_author,
+                             "record"     : self.group_record}
+
+        if group.lower() in qual_switch.keys():
             if verbose:
                 print(f"Grouping by {group}...")
-            return switch[group.lower()]()
+            return self.group_str_qualitative(qual_switch[group.lower()])
         
         else:
             if verbose:
                 print(f"Group key '{group}' not supported.")
-            return []
-     
-    def group_cluster(self):
+            return {}
+    
+    def group_str_qualitative(self, field_name):
         """
-        Helper fuction that gorups PhageIDs by genome
-        cluster into a two-dimensional array
+        Helper function that groups PhageIDs by phage
+        field name into a two-dimensional array
         """
-        cluster_dicts = self.sql_handle.execute_query(
-            "SELECT DISTINCT Cluster2 FROM phage")
-        cluster_set = []
+        group_dicts = self.sql_handle.execute_query(
+            f"SELECT DISTINCT {field_name} FROM phage")
+        group_set = []
+        for group_dict in group_dicts:
+            group_set.append(group_dict[f"{field_name}"])
 
-        for cluster_dict in cluster_dicts:
-            cluster_set.append(cluster_dict["Cluster2"])
+        groups = dict.fromkeys(group_set, [])
 
-        cluster_groups = dict.fromkeys(cluster_set, [])
-        for cluster in cluster_set:
-            query = f"SELECT PhageID FROM phage WHERE Cluster2='{cluster}'" + \
+        phage_list = self.phageIDs 
+        for group in group_set:
+            query = f"SELECT PhageID FROM phage WHERE {field_name}='{group}'" + \
                      " and PhageID IN " + "('" + \
-                     "','".join(self.phageIDs) + "')"
+                     "','".join(phage_list) + "')"
             results_dicts = self.sql_handle.execute_query(query)
             if results_dicts != ():
                 results_list = []
                 for result_dict in results_dicts:
                      results_list.append(result_dict["PhageID"])
-                cluster_groups[cluster] = results_list
-
-        return cluster_groups
-
-    def group_subcluster(self):
-        """
-        Helper function that groups PhageIDs by genome
-        subcluster into a two-dimensional array
-        """
-        subcluster_dicts = self.sql_handle.execute_query(
-            "SELECT DISTINCT Subcluster2 FROM phage")
-        subcluster_set = []
-
-        for subcluster_dict in subcluster_dicts:
-            subcluster_set.append(subcluster_dict["Subcluster2"])
-
-        subcluster_groups = dict.fromkeys(subcluster_set, [])
-        for subcluster in subcluster_set:
-            query = f"SELECT PhageID FROM phage WHERE Subcluster2='{subcluster}'" + \
-                     " and PhageID IN " + "('" + \
-                     "','".join(self.phageIDs) + "')"
-            results_dicts = self.sql_handle.execute_query(query)
-            if results_dicts != ():
-                results_list = []
-                for result_dict in results_dicts:
-                     results_list.append(result_dict["PhageID"])
-                subcluster_groups[subcluster] = results_list
-
-        return subcluster_groups
-
-    def group_status(self):
-        """
-        Helper function that groups PhageIDs by genome
-        status into a two-dimensional array
-        """
-        status_dicts = self.sql_handle.execute_query(
-            "SELECT DISTINCT status FROM phage")
-        status_set = []
-
-        for status_dict in status_dicts:
-            status_set.append(status_dict["status"])
-
-        status_groups = dict.fromkeys(status_set, [])
-        for status in status_set:
-            query = f"SELECT PhageID FROM phage WHERE status='{status}'" + \
-                     " and PhageID IN " + "('" + \
-                     "','".join(self.phageIDs) + "')"
-            results_dicts = self.sql_handle.execute_query(query)
-            if results_dicts != ():
-                results_list = []
-                for result_dict in results_dicts:
-                     results_list.append(result_dict["PhageID"])
-                status_groups[status] = results_list
-        
-        return status_groups
-
-    def group_host(self):
-        """
-        Helper function that groups PhageIDs by genome
-        host into a two-dimensional array
-        """
-        host_dicts = self.sql_handle.execute_query(
-            "SELECT DISTINCT HostStrain FROM phage")
-        host_set = []
-
-        for host_dict in host_dicts:
-            host_set.append(host_dict["HostStrain"])
-
-        host_groups = dict.fromkeys(host_set, [])
-        for host in host_set:
-            query = f"SELECT PhageID FROM phage WHERE HostStrain='{host}'" + \
-                     " and PhageID IN " + "('" + \
-                     "','".join(self.phageIDs) + "')"
-            results_dicts = self.sql_handle.execute_query(query)
-            if results_dicts != ():
-                results_list = []
-                for result_dict in results_dicts:
-                     results_list.append(result_dict["PhageID"])
-                host_groups[host] = results_list
-        
-        return host_groups
+                     phage_list.remove(result_dict["PhageID"])
+                groups[group] = results_list
        
+        groups.update({"other": phage_list})
+        return groups
+
     def group_author(self):
         """
         Helper function that groups PhageIDs by genome
@@ -308,17 +247,20 @@ class Filter:
             author_set.append(author_dict["AnnotationAuthor"])
 
         author_groups = dict.fromkeys(author_set, [])
+        phage_list = self.phageIDs.copy()
         for author in author_set:
             query = f"SELECT PhageID FROM phage WHERE AnnotationAuthor='{author}'" + \
                      " and PhageID IN " + "('" + \
-                     "','".join(self.phageIDs) + "')"
+                     "','".join(phage_list) + "')"
             results_dicts = self.sql_handle.execute_query(query)
             if results_dicts != ():
                 results_list = []
                 for result_dict in results_dicts:
                      results_list.append(result_dict["PhageID"])
+                     phage_list.remove(result_dict["PhageID"])
                 author_groups[author] = results_list
-        
+
+        author_groups.update({"other": phage_list})
         return author_groups
 
     def group_record(self):
@@ -334,6 +276,8 @@ class Filter:
             record_set.append(record_dict["RetrieveRecord"])
 
         record_groups = dict.fromkeys(record_set, [])
+
+        phage_list = self.phageIDs.copy()
         for record in record_set:
             query = f"SELECT PhageID FROM phage WHERE RetrieveRecord='{record}'" + \
                      " and PhageID IN " + "('" + \
@@ -343,8 +287,10 @@ class Filter:
                 results_list = []
                 for result_dict in results_dicts:
                      results_list.append(result_dict["PhageID"])
+                     phage_list.remove(result_dict["PhageID"])
                 record_groups[record] = results_list
-        
+       
+        record_groups.update({"other": phage_list})
         return record_groups
 
     def interactive(self, sql_handle = None):

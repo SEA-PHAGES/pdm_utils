@@ -13,7 +13,7 @@ from functools import singledispatch
 from typing import List, Dict
 from pathlib import Path
 from contextlib import contextmanager
-import cmd, readline, os, sys, typing, argparse, csv
+import cmd, readline, os, sys, typing, argparse, csv, re
 
 
 #Global file constant
@@ -22,164 +22,54 @@ file_format_choices = ["gb", "fasta", "clustal", "embl",
                        "fastq-illumina","ig", "igmt", "nexus", 
                        "phd", "phylip", "pir", "seqxml","sff", 
                        "stockholm", "tab", "qual"]
-
 def run_file_export(unparsed_args_list):
-    """Uses parsed args to run the entirety of the file export pipeline
+    """
+    Uses parsed args to run the entirety of the file export pipeline
+    :param unparsed_args_list:
+        Input a list of command line args.
+    :type unparsed_args_list: List[str]
     """ 
+    args = parse_file_export(unparsed_args_list)
+    if args.verbose:
+        print("Please input database credentials:")
+    sql_handle = establish_database_connection(args.database)
 
-    selection_args = parse_export_select(unparsed_args_list) 
-    sql_handle = establish_database_connection(selection_args.database)
+    phage_list = parse_phage_list_input(args.input)
+    filters = parse_filters(args.filters)
+    csvx=False
+    ffx=None
+    dbx=False
+    ix=False
+    if args.export == "csvx":
+        csvx = True
+    elif args.export == "ffx":
+        ffx = args.file_format
+    elif args.export == "dbx":
+        dbx = True
+    elif args.export == "ix":
+        ix = True
 
-    if not selection_args.interactive:
-        if selection_args.csv_export:
-            args = parse_csvx(unparsed_args_list) 
-
-            filter_list = parse_phage_list_input(args.list_input)
-
-            execute_file_export(sql_handle, args.export_path, args.folder_name,
-                                phage_filter_list=filter_list,
-                                verbose=args.verbose, csv_export=True)
-
-        elif selection_args.db_export:
-            args = parse_dbx(unparsed_args_list)
-
-            if args.folder_name == None:
-                args.folder_name = selection_args.database
-
-            execute_file_export(sql_handle, args.export_path, args.folder_name,
-                                verbose=args.verbose, db_export=True)
-  
-        elif selection_args.ffile_export:
-            args = parse_ffx(unparsed_args_list)
-
-            if args.folder_name == None:
-                args.folder_name = selection_args.database
-
-            filter_list = parse_phage_list_input(args.list_input)
-
-            execute_file_export(sql_handle, args.export_path, args.folder_name,
-                                phage_filter_list=filter_list,
-                                verbose=args.verbose,
-                                ffile_export=args.file_format)
-
-        elif selection_args.multi_export:
-            args = parse_multix(unparsed_args_list)
-
-            if args.folder_name == None:
-                args.folder_name = selection_args.database
-
-            filter_list = parse_phage_list_input(args.list_input)
-
-            execute_file_export(sql_handle, args.export_path, args.folder_name,
-                                phage_filter_list=filter_list,
-                                verbose=args.verbose, 
-                                ffile_export=args.ffile_export,
-                                csv_export=args.csv_export, 
-                                db_export=args.db_export)
-
+    if not ix:
+        execute_file_export(sql_handle, args.folder_path, args.folder_name, 
+                            phage_filter_list=phage_list, verbose=args.verbose, 
+                            csv_export=csvx, ffile_export=ffx, db_export=dbx,
+                            filters=filters, groups=args.groups)
     else:
         pass
- 
-def execute_file_export(sql_handle, export_path, folder_name, 
-                        phage_filter_list=[], verbose=False, 
-                        csv_export=False, ffile_export=None, db_export=False):
-    """Executes the entirety of the file export pipeline by calling its
-       various functions
 
-       :param file_format:
-            Input a recognized SeqIO file format.
-       :type file_format: str:
-       :param database:
-            Input the name of the local phameratory database.
-       :type database: str:
-       :param phage_filter_list:
-            Input a list of names of phages.
-       :type phage_filter_list: List[str]
-       :param export_directory_path:
-            Input the path for the created directory.
-       :type export_path: Path:
-       :param folder_name:
-            Input the name for the created directory.
-       :type export_directory_name: str:
-       :param verbose:
-            Input a toggle for optional printed statements.
-       :type verbose: Boolean:
-       :param csv_log:
-            Input a toggle for an optional csv log.
-       :type csv_log: Boolean:
-       """
- 
-    if verbose:
-        print("Retrieving database version...")
-    db_version = retrieve_database_version(sql_handle)
-
-    if db_export:
-        if verbose:
-            print("Writing SQL database file...")
-        write_database(sql_handle, db_version["version"],
-                        export_path, export_dir_name=folder_name)
-
-    if csv_export:
-        if verbose:
-            print(f"Retrieving genomic data from {sql_handle.database}...")
-        genomes = phamerator.parse_genome_data(
-                          sql_handle,
-                          phage_id_list=phage_filter_list,
-                          phage_query="SELECT * FROM phage",
-                          gene_query="SELECT * FROM gene")
-
-        if verbose:
-                print("Writing csv file...")
-        write_csv(genomes, export_path, export_dir_name=folder_name, 
-                      csv_name=f"{sql_handle.database}_v{db_version['version']}")
-
-    if ffile_export != None:
-        if verbose:
-            print(f"Retrieving genomic data from {sql_handle.database}...")
-        genomes = phamerator.parse_genome_data(
-                                sql_handle,
-                                phage_id_list=phage_filter_list,
-                                phage_query="SELECT * FROM phage",
-                                gene_query="SELECT * FROM gene")
-
-        if verbose:
-            print("Converting genomic data to SeqRecord format...")
-        seqrecords = []
-        for gnm in genomes:
-            set_cds_seqfeatures(gnm)
-            if verbose:
-                print(f"Converting {gnm.name}")
-            seqrecords.append(flat_files.genome_to_seqrecord(gnm))
-        if verbose:
-            print("Appending database version...")
-        for record in seqrecords:
-            append_database_version(record, db_version)
-
-        write_seqrecord(seqrecords, 
-                        ffile_export, 
-                        export_path, 
-                        export_dir_name=folder_name,
-                        verbose=verbose)
-             
-def parse_export_select(unparsed_args_list):
+def parse_file_export(unparsed_args_list):
     """
-    Verifies the correct arguments are selected 
-    and parses arguments to select pipeline of export.
+    Parses file_export arguments and stores them with an argparse object
     :param unparsed_args_list:
-        Input a series of unparsed args
-    :type unparsed_args_list: list[str]: 
-    :return parsed_args:
-        Returns an Argument Parser object
-        containing attributes with the
-        parsed arguments
-    :type parsed_args: ArgumentParser:
-    """ 
+        Input a list of command line args.
+    :type unparsed_args_list: List[str]
+    """
     EXPORT_SELECT_HELP = """
         Select a export pipeline option to export genomic data:
-            -csv_export (-csvx)
-            -ffile_export (-ffx)
-            -db_export (-dbx)
-            -multi_export (-multix)
+            -csv export (csv)
+            -formatted file export (ffx)
+            -database export (dbx)
+            -interactive export (I)
         """
     DATABASE_HELP = "Name of the MySQL database to export from."
     CSV_EXPORT_HELP = """
@@ -194,55 +84,8 @@ def parse_export_select(unparsed_args_list):
             Export option to export formatted files containing
             information about individual genomes.
             """ 
-    MULTIPLE_EXPORT_HELP = """
-            Powerful export option that allows for 
-            export of more than one or all export options.
-            """
     INTERACTIVE_HELP = """
         Export option that enables full interactive walkthrough export.
-        """
- 
-    export_select = argparse.ArgumentParser(description = EXPORT_SELECT_HELP)
-    export_select.add_argument("database", type=str,
-                               help=DATABASE_HELP, default=None)
-                                
-    export_options = export_select.add_mutually_exclusive_group(required=True)
-    export_options.add_argument("-csvx", "--csv_export",
-                                help=CSV_EXPORT_HELP, 
-                                action="store_true")
-    export_options.add_argument("-dbx", "--db_export", 
-                                help=DATABASE_EXPORT_HELP,
-                                action="store_true")
-    export_options.add_argument("-ffx", "--ffile_export", 
-                                help=FORMATTED_FILE_EXPORT_HELP,
-                                action="store_true")
-    export_options.add_argument("-multix", "--multi_export",
-                                help=MULTIPLE_EXPORT_HELP,
-                                action="store_true")
-    export_options.add_argument("-i", "--interactive",
-                                 default=False,
-                                 help=INTERACTIVE_HELP,
-                                 action='store_true')
-
-    parsed_args = export_select.parse_args(unparsed_args_list[2:4])
-    return parsed_args
-
-def parse_multix(unparsed_args_list):
-    """
-    Verifies the correct arguments are selected 
-    and parses arguments for multiple pipeline export.
-    :param unparsed_args_list:
-        Input a series of unparsed args
-    :type unparsed_args_list: list[str]: 
-    :return parsed_args:
-        Returns an Argument Parser object
-        containing attributes with the
-        parsed arguments
-    :type parsed_args: ArgumentParser:
-    """
-    MULTIPLE_EXPORT_HELP = """
-        Powerful export option that allows for 
-        export of more than one or all export options.
         """
     IMPORT_TABLE_HELP = """
         Genome selection input option that imports genomes from a csv file.
@@ -254,14 +97,21 @@ def parse_multix(unparsed_args_list):
             Follow selection argument with space separated
             names of genomes in the database.
         """
-    ALL_HELP = """
-        Genome selection input option that selects all genomes.
-            Set as default option.
+    FILTERS_HELP = """
+        Genome selection option that constructs genome list from 
+        inputted filters.
+            Follow selection argument with formatted filter request:
+                Table/Field/Value
+        """
+    GROUPS_HELP = """
+        Genome selection option that groups genome list from
+        inputted groups.
+            Follow selection argument with supported grouping option.
         """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
         """
-    EXPORT_DIRECTORY_HELP = """
+    FOLDER_PATH_HELP = """
         Export option to change the path 
         of the directory where the exported files are stored.
             Follow selection argument with the path to the
@@ -272,268 +122,314 @@ def parse_multix(unparsed_args_list):
         of the directory where the exported files are stored.
             Follow selection argument with the desired name.
         """
-    CSV_EXPORT_HELP = """
-        Export option to export a csv file 
-        containing information about selected genomes.
-        """
-    FORMATTED_FILE_EXPORT_HELP = """
-        Export option to export formatted files containing
-        information about individual genomes.
-        """ 
-    DATABASE_EXPORT_HELP = """
-        Export option to dump the current database
-        into a .sql file and its version into a .version file.
-        """
-
-    multix_parser = argparse.ArgumentParser(description = MULTIPLE_EXPORT_HELP)
-
-    phage_list = multix_parser.add_mutually_exclusive_group()
-    phage_list.add_argument("-tin", "--import_table",
-                                       nargs=1, type=convert_file_path,
-                                       dest="list_input",
-                                       help=IMPORT_TABLE_HELP)
-    phage_list.add_argument("-sgin", "--single_genomes",
-                                       nargs='+', type=str,
-                                       dest="list_input",
-                                       help=SINGLE_GENOMES_HELP)
-    phage_list.add_argument("-a", "--all",
-                                       action ='store_const',
-                                       dest="list_input", const=[],
-                                       help=ALL_HELP)
-
-    multix_parser.add_argument("-v", "--verbose",
-                               default=False,
-                               help=VERBOSE_HELP,
-                               action='store_true')
-    multix_parser.add_argument("-pth", "--export_path",
-                        default=Path.cwd(), type=convert_dir_path,
-                        help=EXPORT_DIRECTORY_HELP) 
-    multix_parser.add_argument("-name", "--folder_name",
-                        default="Export", type=str, 
-                        help=FOLDER_NAME_HELP)
-
-    multix_parser.add_argument("-ffx", "--ffile_export", type=str,
-                        default=None, choices=file_format_choices,
-                        help=FORMATTED_FILE_EXPORT_HELP)
-    multix_parser.add_argument("-csvx", "--csv_export",
-                        help=CSV_EXPORT_HELP, action="store_true")
-    multix_parser.add_argument("-dbx", "--db_export", 
-                        help=DATABASE_EXPORT_HELP, action="store_true")
-
-    parsed_args = multix_parser.parse_args(unparsed_args_list[4:])
-    return parsed_args
-
-def parse_csvx(unparsed_args_list):
-    """
-    Verifies the correct arguments are selected 
-    and parses arguments for csv export.
-    :param unparsed_args_list:
-        Input a series of unparsed args
-    :type unparsed_args_list: list[str]: 
-    :return parsed_args:
-        Returns an Argument Parser object
-        containing attributes with the
-        parsed arguments
-    :type parsed_args: ArgumentParser:
-    """
-    CSV_EXPORT_HELP = """
-        Export option to export a csv file 
-        containing information about selected genomes.
-        """ 
-    IMPORT_TABLE_HELP = """
-        Genome selection input option that imports genomes from a csv file.
-            Follow selection argument with path to the 
-            csv file containing the names of each genome in the first column.
-        """
-    SINGLE_GENOMES_HELP = """
-        Genome selection input option that imports genomes from cmd line input.
-            Follow selection argument with space separated
-            names of genomes in the database.
-        """
-    ALL_HELP = """
-        Genome selection input option that selects all genomes.
-            Set as default option.
-        """
-    VERBOSE_HELP = """
-        Export option that enables progress print statements.
-        """
-    EXPORT_DIRECTORY_HELP = """
-        Export option to change the path 
-        of the directory where the exported files are stored.
-            Follow selection argument with the path to the
-            desired export directory.
-        """
-    FOLDER_NAME_HELP = """
-        Export option to change the name 
-        of the directory where the exported files are stored.
-            Follow selection argument with the desired name.
-        """
-    csvx_parser = argparse.ArgumentParser(description=CSV_EXPORT_HELP)
-
-    phage_list = csvx_parser.add_mutually_exclusive_group()
-    phage_list.add_argument("-tin", "--import_table",
-                                       nargs=1, type=convert_file_path,
-                                       dest="list_input",
-                                       help=IMPORT_TABLE_HELP)
-    phage_list.add_argument("-sgin", "--single_genomes",
-                                       nargs='+', type=str,
-                                       dest="list_input",
-                                       help=SINGLE_GENOMES_HELP)
-    phage_list.add_argument("-a", "--all",
-                                       action ='store_const',
-                                       dest="list_input", const=[],
-                                       help=ALL_HELP)
-
-    csvx_parser.add_argument("-v", "--verbose",
-                        default=False,
-                        help=VERBOSE_HELP,
-                        action='store_true') 
-    csvx_parser.add_argument("-pth", "--export_path",
-                        default=Path.cwd(), type=convert_dir_path,
-                        help=EXPORT_DIRECTORY_HELP) 
-    csvx_parser.add_argument("-name", "--folder_name",
-                             default="Export", type=str, 
-                             help=FOLDER_NAME_HELP)
-    
-    parsed_args = csvx_parser.parse_args(unparsed_args_list[4:])
-    return parsed_args
-
-def parse_dbx(unparsed_args_list):
-    """
-    Verifies the correct arguments are selected 
-    and parses arguments for database export.
-    :param unparsed_args_list:
-        Input a series of unparsed args
-    :type unparsed_args_list: list[str]: 
-    :return parsed_args:
-        Returns an Argument Parser object
-        containing attributes with the
-        parsed arguments
-    :type parsed_args: ArgumentParser:
-    """
-    DATABASE_EXPORT_HELP = """
-        Export option to dump the current database
-        into a .sql file and its version into a .version file.
-        """
-    VERBOSE_HELP = """
-        Export option that enables progress print statements.
-        """
-    INTERACTIVE_HELP = """
-        Export option that enables full interactive walkthrough export.
-        """
-    EXPORT_DIRECTORY_HELP = """
-        Export option to change the path 
-        of the directory where the exported files are stored.
-            Follow selection argument with the path to the
-            desired export directory.
-        """
-    FOLDER_NAME_HELP = """
-        Export option to change the name 
-        of the directory where the exported files are stored.
-            Follow selection argument with the desired name.
-        """
-    dbx_parser = argparse.ArgumentParser(description = DATABASE_EXPORT_HELP)
-  
-    dbx_parser.add_argument("-v", "--verbose",
-                        default=False,
-                        help=VERBOSE_HELP,
-                        action='store_true')
-    dbx_parser.add_argument("-pth", "--export_path",
-                        default=Path.cwd(), type=convert_dir_path,
-                        help=EXPORT_DIRECTORY_HELP) 
-    dbx_parser.add_argument("-name", "--folder_name",
-                        default="Export", type=str, 
-                        help=FOLDER_NAME_HELP)
-    
-    parsed_args = dbx_parser.parse_args(unparsed_args_list[4:])
-    return parsed_args
-    
-def parse_ffx(unparsed_args_list):
-    """
-    Verifies the correct arguments are selected 
-    and parses arguments for formatted file export.
-    :param unparsed_args_list:
-        Input a series of unparsed args
-    :type unparsed_args_list: list[str]: 
-    :return parsed_args:
-        Returns an Argument Parser object
-        containing attributes with the
-        parsed arguments
-    :type parsed_args: ArgumentParser:
-    """
-    FORMATTED_FILE_EXPORT_HELP = """
-        Export option to export formatted files containing
-        information about individual genomes.
-        """   
     FILE_FORMAT_HELP = """
         Positional argument specifying the format of the file to export
         """
-        
-    IMPORT_TABLE_HELP = """
-        Genome selection input option that imports genomes from a csv file.
-            Follow selection argument with path to the 
-            csv file containing the names of each genome in the first column.
-        """
-    SINGLE_GENOMES_HELP = """
-        Genome selection input option that imports genomes from cmd line input.
-            Follow selection argument with space separated
-            names of genomes in the database.
-        """
-    ALL_HELP = """
-        Genome selection input option that selects all genomes.
-            Set as default option.
-        """
-    VERBOSE_HELP = """
-        Export option that enables progress print statements.
-        """
-    INTERACTIVE_HELP = """
-        Export option that enables full interactive walkthrough export.
-        """
-    EXPORT_DIRECTORY_HELP = """
-        Export option to change the path 
-        of the directory where the exported files are stored.
-            Follow selection argument with the path to the
-            desired export directory.
-        """
-    FOLDER_NAME_HELP = """
-        Export option to change the name 
-        of the directory where the exported files are stored.
-            Follow selection argument with the desired name.
-        """
 
-    ffx_parser = argparse.ArgumentParser(
-                            description=FORMATTED_FILE_EXPORT_HELP)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
 
-    ffx_parser.add_argument("file_format", help=FILE_FORMAT_HELP, 
+    parser.add_argument("-o", "--folder_name", type=str, help=FOLDER_NAME_HELP)
+    parser.add_argument("-mv", "--folder_path", type=convert_dir_path,
+                        help=FOLDER_PATH_HELP)
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help=VERBOSE_HELP)
+
+    subparser = parser.add_subparsers(help=EXPORT_SELECT_HELP, dest="export")
+    subparser.required = True
+
+    csv_parser = subparser.add_parser("csvx", help=CSV_EXPORT_HELP)
+    csv_parser.add_argument("-tin", "--import_table", type=convert_file_path,
+                            help=IMPORT_TABLE_HELP, dest="input",
+                            default=[])
+    csv_parser.add_argument("-sgin", "--single_genomes", nargs="?",
+                            help=SINGLE_GENOMES_HELP, dest="input",
+                            action="append", default=[])
+    csv_parser.add_argument("-f", "--filter", nargs="*",
+                            help=FILTERS_HELP,
+                            dest="filters", default=[])
+    csv_parser.add_argument("-g", "--groups", choices=filter.group_options,
+                            help=GROUPS_HELP, nargs="*",
+                            dest="groups", default=[])
+
+    db_parser = subparser.add_parser("dbx", help=DATABASE_EXPORT_HELP)
+
+    ff_parser = subparser.add_parser("ffx", help=FORMATTED_FILE_EXPORT_HELP)
+    ff_parser.add_argument("file_format", help=FILE_FORMAT_HELP,
                             choices=file_format_choices)
-    phage_list = ffx_parser.add_mutually_exclusive_group()
-    phage_list.add_argument("-tin", "--import_table",
-                                       nargs=1, type=convert_file_path,
-                                       dest="list_input",
-                                       help=IMPORT_TABLE_HELP)
-    phage_list.add_argument("-sgin", "--single_genomes",
-                                       nargs='+', type=str,
-                                       dest="list_input",
-                                       help=SINGLE_GENOMES_HELP)
-    phage_list.add_argument("-a", "--all",
-                                       action ='store_const',
-                                       dest="list_input", const=[],
-                                       help=ALL_HELP)
+    ff_parser.add_argument("-tin", "--import_table", type=convert_file_path,
+                            help=IMPORT_TABLE_HELP, dest="input",
+                            default=[])
+    ff_parser.add_argument("-sgin", "--single_genomes", nargs="?",
+                            help=SINGLE_GENOMES_HELP, dest="input",
+                            action="append", default=[])
+    ff_parser.add_argument("-f", "--filter", nargs="*",
+                            help=FILTERS_HELP, 
+                            dest="filters", default=[])
+    ff_parser.add_argument("-g", "--groups", choices=filter.group_options,
+                            help=GROUPS_HELP, nargs="*",
+                            dest="groups", default=[])
 
-    ffx_parser.add_argument("-v", "--verbose",
-                        default=False,
-                        help=VERBOSE_HELP,
-                        action='store_true') 
-    ffx_parser.add_argument("-pth", "--export_path",
-                        default=Path.cwd(), type=convert_dir_path,
-                        help=EXPORT_DIRECTORY_HELP) 
-    ffx_parser.add_argument("-name", "--folder_name",
-                        default="Export", type=str, 
-                        help=FOLDER_NAME_HELP)
-    
-    parsed_args = ffx_parser.parse_args(unparsed_args_list[4:])
+    i_parser = subparser.add_parser("ix", help=INTERACTIVE_HELP)
+
+    parser.set_defaults(folder_name="pdm_export", folder_path=Path.cwd(), 
+                        verbose=False, input=[], file_format=None,
+                        filters=[], groups=[],
+                        ix=False, csvx=False, dbx=False, ffx=False)
+
+    parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
+def execute_file_export(sql_handle, export_path, folder_name, 
+                        phage_filter_list=[], verbose=False, 
+                        csv_export=False, ffile_export=None, db_export=False,
+                        filters=[], groups=[]):
+    """
+    Executes the entirety of the file export pipeline by calling its
+    various functions
+        :param sql_handle:
+            Input a valid MySqlConnectionHandler object.
+        :type sql_handle: MySqlConnectionHandler:
+        :param export_path:
+            Input a valid path to place export folder.
+        :type export_path: Path
+        :param folder_name:
+            Input a name for the export folder.
+        :type folder_name: str
+        :param phage_filter_list:
+            Input a list of phageIDs.
+        :type phage_filter_list: List[str]
+        :param verbose:
+            Input a boolean value for verbose option.
+        :type verbose: boolean
+        :param csv_export:
+            Input a boolean value to toggle csv_export.
+        :type csv_export: boolean
+        :param ffile_export:
+            Input a SeqIO supported file format to toggle ffile_export.
+        :type ffile_export: str
+        :param db_export:
+            Input a boolean value to toggle db_export.
+        :type db_export: boolean
+        :param filters:
+            Input a list of lists with filter values
+        :type filters: List[List[str]]
+        :param groups:
+            Input a list of supported group values.
+        :type groups: List[str] 
+    """
+ 
+    if verbose:
+        print("Retrieving database version...")
+    db_version = retrieve_database_version(sql_handle)
+     
+    if db_export:
+        if verbose:
+            print("Writing SQL database file...")
+        write_database(sql_handle, db_version["version"],
+                        export_path, export_dir_name=folder_name)
+
+    if csv_export or ffile_export:
+        db_filter = filter.Filter(sql_handle.database, sql_handle, 
+                               phage_id_list=phage_filter_list)
+        for filter_list in filters:
+            db_filter.add_filter(filter_list[0], filter_list[1], 
+                                 filter_list[2], verbose=verbose)
+        db_filter.refresh()
+        db_filter.update(verbose=verbose)
+        if db_filter.hits(verbose=verbose) == 0:
+            print("Database returned no results.")
+            exit(1)
+
+        if csv_export:
+            if groups:
+                folder_path = export_path.joinpath(folder_name)
+                folder_path.mkdir(exist_ok=True)
+                csvx_grouping(sql_handle, folder_path, groups, db_filter, 
+                              verbose=verbose)
+            else:
+                execute_csvx_export(sql_handle, db_filter, export_path, 
+                                    folder_name, db_version, 
+                                    verbose=verbose, data_name=db_version)
+           
+        if ffile_export != None:
+            if groups:
+                folder_path = export_path.joinpath(folder_name)
+                folder_path.mkdir(exist_ok=True)
+                ffx_grouping(sql_handle, folder_path, groups, db_filter,
+                             db_version, ffile_export, verbose=verbose)
+            else:
+                execute_ffx_export(sql_handle, db_filter, ffile_export, 
+                                   export_path, folder_name, db_version, 
+                                   verbose=verbose, data_name=db_version)
+                
+def execute_ffx_export(sql_handle, db_filter, file_format, 
+                       export_path, folder_name, db_version,
+                       verbose=False, data_name="database"):
+    """
+    Executes the ffx export  pipeline by calling its
+    various functions
+
+        :param sql_handle:
+            Input a valid MySqlConnectionHandler object.
+        :type sql_handle: MySqlConnectionHandler
+        :param db_filter:
+            Input a db_filter with a loaded list of phageIDs.
+        :type db_filter: Filter
+        :param file_format:
+            Input a SeqIO supported file format.
+        :type file_format: str
+        :param export_path:
+            Input a valid path to place export folder.
+        :type export_path: Path
+        :param folder_name:
+            Input a name for the export folder.
+        :type folder_name: str
+        :param db_version:
+            Input a db_version dictionary.
+        :type db_version: dict
+        :param verbose:
+            Input a boolean value for verbose option.
+        :type verbose: boolean
+        :param data_name:
+            Input a name for the file export name option.
+        :type data_name: str
+    """
+
+    if verbose:
+        print(
+          f"Retrieving {data_name} data from {sql_handle.database}...")
+    genomes = phamerator.parse_genome_data(
+                            sql_handle,
+                            phage_id_list=db_filter.results(
+                                            verbose=verbose),
+                            phage_query="SELECT * FROM phage",
+                            gene_query="SELECT * FROM gene")
+
+    if verbose:
+        print(f"Converting {data_name} data to SeqRecord format...")
+    seqrecords = []
+    for gnm in genomes:
+        set_cds_seqfeatures(gnm)
+        if verbose:
+            print(f"Converting {gnm.name}...")
+        seqrecords.append(flat_files.genome_to_seqrecord(gnm))
+    if verbose:
+        print("Appending database version...")
+    for record in seqrecords:
+        append_database_version(record, db_version)
+
+    write_seqrecord(seqrecords, 
+                    file_format, 
+                    export_path, 
+                    export_dir_name=folder_name,
+                    verbose=verbose)
+
+def execute_csvx_export(sql_handle, db_filter, 
+                        export_path, folder_name, db_version, 
+                        verbose=False, data_name="database"):
+    """
+    Executes the ffx export  pipeline by calling its
+    various functions
+
+    :param sql_handle:
+            Input a valid MySqlConnectionHandler object.
+        :type sql_handle: MySqlConnectionHandler
+        :param db_filter:
+            Input a db_filter with a loaded list of phageIDs.
+        :type db_filter: Filter
+        :param file_format:
+            Input a SeqIO supported file format.
+        :type file_format: str
+        :param export_path:
+            Input a valid path to place export folder.
+        :type export_path: Path
+        :param folder_name:
+            Input a name for the export folder.
+        :type folder_name: str
+        :param db_version:
+            Input a db_version dictionary.
+        :type db_version: dict
+        :param verbose:
+            Input a boolean value for verbose option.
+        :type verbose: boolean
+        :param data_name:
+            Input a name for the file export name option.
+        :type data_name: str
+    """
+    if verbose:
+        print(
+          f"Retrieving {data_name} data from {sql_handle.database}...")
+
+    genomes = phamerator.parse_genome_data(
+                      sql_handle,
+                      phage_id_list=db_filter.results(
+                                            verbose=verbose),
+                      phage_query="SELECT * FROM phage",
+                      gene_query="SELECT * FROM gene")
+
+    if verbose:
+            print("Writing csv file...")
+    write_csv(genomes, export_path, export_dir_name=folder_name, 
+              csv_name=\
+                 f"{sql_handle.database}_{data_name}")
+
+def csvx_grouping(sql_handle, group_path, group_list, db_filter, 
+                  verbose=False):
+    """
+    Recursive helper function that handles grouping
+    for csvx
+
+    """
+    current_group_list = group_list.copy()
+    current_group = current_group_list.pop(0)
+    group_dict = db_filter.group(current_group)
+    for group in group_dict.keys(): 
+        if group_dict[group]:
+            print(f"Grouped {group}...")
+            grouped_path = group_path.joinpath(group)
+            grouped_path.mkdir(exist_ok=True)
+            if current_group_list:
+                csvx_grouping(sql_handle, grouped_path, current_group_list,
+                              filter.Filter(sql_handle.database, 
+                                            sql_handle, 
+                                            group_dict[group]),
+                              verbose=verbose)
+            else:
+                db_filter.phageIDs = group_dict[group]
+                execute_csvx_export(sql_handle, db_filter, grouped_path, 
+                                    group, db_version, 
+                                    verbose=verbose, data_name=group)
+
+def ffx_grouping(sql_handle, group_path, group_list, db_filter, 
+                 db_version, file_format, verbose=False):
+    """
+    Recursive helper function that handles grouping
+    for ffx
+    """
+    current_group_list = group_list.copy()
+    current_group = current_group_list.pop(0)
+    group_dict = db_filter.group(current_group)
+    for group in group_dict.keys(): 
+        if group_dict[group]:
+            if verbose:
+                print(f"Grouped {group}...")
+            grouped_path = group_path.joinpath(group)
+            grouped_path.mkdir(exist_ok=True)
+            if current_group_list:
+                ffx_grouping(sql_handle, grouped_path, current_group_list,
+                              filter.Filter(sql_handle.database, 
+                                            sql_handle, 
+                                            group_dict[group]),
+                             db_version, file_format,
+                             verbose=verbose)
+
+            else: 
+                db_filter.phageIDs = group_dict[group]     
+                execute_ffx_export(sql_handle, db_filter, file_format, 
+                                   grouped_path, group, db_version, 
+                                   verbose=verbose, data_name=group)
+                     
 def convert_path(path: str):
     """
     Function to convert a string to a working Path object
@@ -594,6 +490,21 @@ def convert_file_path(path: str):
     else:
         print("Path input does not direct to a file")
         raise ValueError
+
+def parse_filters(unparsed_filters, verbose=False):
+    """
+    Helper function to return a two-dimensional 
+    array of filter parameters
+    """
+    filter_format = re.compile("\w*.\w*=\w*", re.IGNORECASE)
+    filters = []
+    for filter in unparsed_filters:
+        if re.match(filter_format, filter) != None:
+            filters.append(re.split("\W+", filter))
+        else:
+            if verbose:
+                print(f"Unsupported filtering format: '{filter}'")
+    return filters
 
 @singledispatch
 def parse_phage_list_input(phage_list_input): 
