@@ -24,31 +24,31 @@ def main(unparsed_args):
     checks on the arguments. Then they are passed to sub-functions to
     specifically validate the arguments based on the selected pipeline.
     """
-    # Assumed command line arg structure:
-    # python3 -m pdm_utils.run <pipeline> <additional args...>
-    # sys.argv:      [0]            [1]         [2...]
     RUN_HELP = "Command line script to call a pdm_utils pipeline."
-    USAGE = "python3 -m pdm_utils <pipeline>"
+    USAGE = "python3 -m pdm_utils [pipeline]"
     VALID_PIPELINES = {
-        "retrieve_data",
         "get_db",
+        "get_data",
         "update",
         "import",
         "import_dev",
         "cdd",
         "phamerate",
         "export",
-        "compare",
         "file_export",
         "freeze",
-        "push_db"}
+        "compare",
+        "push"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP, usage=USAGE)
     pipe_parser.add_argument("pipeline", type=str,
-                        choices=list(VALID_PIPELINES),
-                        help=PIPELINE_HELP)
+        choices=list(VALID_PIPELINES), help=PIPELINE_HELP)
+
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils.run <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
     args = pipe_parser.parse_args(unparsed_args[1:2])
-    if args.pipeline == "retrieve_data":
+    if args.pipeline == "get_data":
         retrieve_data.main(unparsed_args)
     # Note: import_phage is the legacy import script and will be deprecated.
     # Once import_genome is tested and operational, 'import' will call the
@@ -70,7 +70,7 @@ def main(unparsed_args):
     # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
     elif args.pipeline == "file_export":
         file_export.main(unparsed_args)
-    elif args.pipeline == "push_db":
+    elif args.pipeline == "push":
         push_db.main(unparsed_args)
     elif args.pipeline == "freeze":
         freeze_database.main(unparsed_args)
