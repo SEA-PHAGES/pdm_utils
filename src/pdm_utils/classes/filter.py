@@ -1,4 +1,4 @@
-"""Object to provide a formatted filtering query 
+"""Object to provide a formatted filtering query
 for retrieving data from a SQL database."""
 
 from Bio.Seq import Seq
@@ -33,19 +33,19 @@ class Filter:
             column_list = []
             for column_dict in column_dicts:
                 column_list.append((column_dict["Field"]).lower())
-            tables.update({table.lower(): column_list}) 
+            tables.update({table.lower(): column_list})
 
         self.tables = tables
-        
+
         if phage_id_list == []:
             results = list(phamerator.create_phage_id_set(self.sql_handle))
         else:
             results = phage_id_list
 
-        self.history = [] 
+        self.history = []
         self.filters = {}
         self.phageIDs = results
- 
+
     def add_filter(self, table, field, value, verbose=False):
         """
         Adds a filter to database queries
@@ -91,7 +91,7 @@ class Filter:
         Updates results list for the Filter object
         """
         query_results = self.phageIDs
-      
+
         queries = []
         for table in self.filters.keys():
             for field in self.filters[table].keys():
@@ -108,7 +108,7 @@ class Filter:
             query_results=[]
             for result in self.sql_handle.execute_query(query):
                 query_results.append(result["PhageID"])
-            queries = []        
+            queries = []
 
 
         if sort != None and sort.lower() in self.tables["phage"]:
@@ -165,15 +165,15 @@ class Filter:
 
     def reset(self, verbose=False):
         """
-        Resets created queries and filters 
+        Resets created queries and filters
         for the Filter object
-        """ 
+        """
         self.phageIDs = list(phamerator.create_phage_id_set(self.sql_handle))
         self.history = []
         if verbose:
             print("Results and results history cleared.")
 
-    def hits(self, verbose=False): 
+    def hits(self, verbose=False):
         """
         Returns length of current results
         """
@@ -183,13 +183,13 @@ class Filter:
 
     def group(self, group, verbose=False):
         """
-        Function that creates a two-dimensional array of 
+        Function that creates a two-dimensional array of
         PhageIDs from the results list of PhageIDs
         separated by a characteristic.
         """
         qual_switch =       {"cluster"    : "Cluster2",
                              "subcluster" : "Subcluster2",
-                             "status"     : "status",
+                             "status"     : "Status",
                              "host"       : "HostStrain"}
 
         qual_int_switch =   {"author"     : self.group_author,
@@ -199,12 +199,12 @@ class Filter:
             if verbose:
                 print(f"Grouping by {group}...")
             return self.group_str_qualitative(qual_switch[group.lower()])
-        
+
         else:
             if verbose:
                 print(f"Group key '{group}' not supported.")
             return {}
-    
+
     def group_str_qualitative(self, field_name):
         """
         Helper function that groups PhageIDs by phage
@@ -218,7 +218,7 @@ class Filter:
 
         groups = dict.fromkeys(group_set, [])
 
-        phage_list = self.phageIDs 
+        phage_list = self.phageIDs
         for group in group_set:
             query = f"SELECT PhageID FROM phage WHERE {field_name}='{group}'" + \
                      " and PhageID IN " + "('" + \
@@ -230,7 +230,7 @@ class Filter:
                      results_list.append(result_dict["PhageID"])
                      phage_list.remove(result_dict["PhageID"])
                 groups[group] = results_list
-       
+
         groups.update({"other": phage_list})
         return groups
 
@@ -289,17 +289,17 @@ class Filter:
                      results_list.append(result_dict["PhageID"])
                      phage_list.remove(result_dict["PhageID"])
                 record_groups[record] = results_list
-       
+
         record_groups.update({"other": phage_list})
         return record_groups
 
     def interactive(self, sql_handle = None):
         """
-        Function to start interactive filtering. 
+        Function to start interactive filtering.
         """
         pass
 
-class Cmd_Filter(cmd.Cmd):  
+class Cmd_Filter(cmd.Cmd):
     def __init__(self, db_filter=None, sql_handle=None):
         super(Cmd_Filter, self).__init__()
         self.filter = db_filter
@@ -311,7 +311,7 @@ class Cmd_Filter(cmd.Cmd):
         self.data = None
 
     def preloop(self):
-        
+
         if self.filter == None:
             if self.sql_handle == None:
                 self.sql_handle = \
@@ -324,11 +324,11 @@ class Cmd_Filter(cmd.Cmd):
                     self.sql_handle.validate_credentials()
                 except:
                     print("Unable to create a mysql connection.")
-                    exit(1) 
+                    exit(1)
             self.filter = Filter(self.sql_handle.database, self.sql_handle)
 
         self.prompt = "({}) (export){}@localhost: ".\
-                format(self.sql_handle.database, self.sql_handle._username)        
+                format(self.sql_handle.database, self.sql_handle._username)
 
     def do_filter(self, *unparsed_args):
         """
@@ -337,7 +337,7 @@ class Cmd_Filter(cmd.Cmd):
         Subcluster, Annotation_Status, Retrieve_Record,
         Annotation_QC, Annotation_Author, Notes, GeneID
         """
-        
+
         filter = unparsed_args[0]
 
         if filter == "":
@@ -349,11 +349,11 @@ class Cmd_Filter(cmd.Cmd):
 
         elif not (filter.lower() in self.filter.phage_attributes\
                 or filter.lower() in self.filter.gene_attributes):
-            
+
             print("Attribute not in database.\n ")
 
         else:
-            
+
             filter_value = input("Enter {} value: ".format(filter))
             self.filter.add_filter(filter, filter_value)
             self.retrieve_hits()
@@ -375,7 +375,7 @@ class Cmd_Filter(cmd.Cmd):
         """
         self.filter.undo()
         print("        Reloaded last filtering options")
-            
+
         self.do_show_filters()
 
     def do_show(self,*args):
@@ -400,7 +400,7 @@ class Cmd_Filter(cmd.Cmd):
     def show_results(self):
         """Shows results for current database filtering
         """
-       
+
         print("        Results:\n")
         for row in range(0, len(self.filter.results), 3):
             result_row = self.filter.results[row:row+3]
@@ -453,11 +453,11 @@ class Cmd_Filter(cmd.Cmd):
         """Finish quering and return results
         USAGE: return
         """
-        
+
         print("        Exiting Filtering...\n")
 
         return True
-   
+
     def do_exit(self, *args):
         """Exits program entirely without returning values
         USAGE: exit

@@ -60,8 +60,8 @@ class TestFileExport(unittest.TestCase):
         seqrecord.annotations.update({"comment" : ()})
         self.test_seqrecord = seqrecord
         self.test_version_dictionary = \
-                {"version" : "Test", "schema_version": "Test"}
-    
+                {"Version" : "Test", "SchemaVersion": "Test"}
+
     @patch("pdm_utils.pipelines.db_export.file_export.execute_file_export")
     @patch("pdm_utils.pipelines.db_export.file_export.parse_filters")
     @patch("pdm_utils.pipelines.db_export.file_export.parse_phage_list_input")
@@ -121,7 +121,7 @@ class TestFileExport(unittest.TestCase):
         """
         pass
 
-    def test_parse_phage_list_input(self): 
+    def test_parse_phage_list_input(self):
         """
         Unittest for file_export.parse_phage_list_input()
             -Tests for single dispatch handling of list parameter type
@@ -135,12 +135,12 @@ class TestFileExport(unittest.TestCase):
         #Sub test that tests for single dispatch handling of
         with self.subTest(input_type=None):
             with self.assertRaises(TypeError):
-                phage_list = file_export.parse_phage_list_input(None)          
+                phage_list = file_export.parse_phage_list_input(None)
 
     def test_set_cds_seqfeatures(self):
         """
         Unittest for file_export.parse_set_cds_seqfeatures()
-            -Tests for ability to order cds_features of a given 
+            -Tests for ability to order cds_features of a given
              Genome object.
             -Tests for None parameter error handling.
         """
@@ -173,7 +173,7 @@ class TestFileExport(unittest.TestCase):
         #Sub test that tests for appending a formatted database version comment
         with self.subTest(test_seqrecord = "Valid Seqrecord",
                           test_version_dictionary = "Valid Dictionary"):
-            file_export.append_database_version(self.test_seqrecord, 
+            file_export.append_database_version(self.test_seqrecord,
                                                 self.test_version_dictionary)
             self.assertEqual((self.test_seqrecord.annotations["comment"])[0],
                              "Database Version: Test; Schema Version: Test")
