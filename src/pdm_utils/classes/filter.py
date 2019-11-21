@@ -1,4 +1,4 @@
-"""Object to provide a formatted filtering query
+"""Object to provide a formatted filtering query 
 for retrieving data from a SQL database."""
 
 from Bio.Seq import Seq
@@ -6,10 +6,12 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from typing import List
-import cmd, readline, argparse, os, sys
-
+import cmd, readline, argparse, os, sys, re, string
 
 #Global file constants
+group_options = ["cluster", "subcluster",
+                 "status",  "host",
+                 "author", "record"]
 
 
 class Filter:
@@ -19,202 +21,285 @@ class Filter:
         """
         self.database = database_name
         self.sql_handle = sql_handle
+        #Returns information about the database
+        table_dicts = sql_handle.execute_query(
+            "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+            "WHERE COLUMN_NAME IN ('PhageID') AND "
+            f"TABLE_SCHEMA='{self.database}'")
+        tables = {}
+        for data_dict in table_dicts:
+            table = data_dict["TABLE_NAME"]
+            column_dicts = sql_handle.execute_query(f"SHOW columns IN {table}")
+            column_list = []
+            for column_dict in column_dicts:
+                column_list.append((column_dict["Field"]).lower())
+            tables.update({table.lower(): column_list}) 
 
-        self.phage_query = "SELECT Name FROM phage"
-        self.gene_query = "SELECT PhageID FROM gene"
-
-        self.results = []
-
-        self.phage_filters = {}
-        self.gene_filters = {}
-
-        self.history = []
-
-        self.phage_attributes = []
-        for column in self.sql_handle.execute_query(query="DESCRIBE phage"):
-            self.phage_attributes.append(column["Field"].lower())
-
-        self.gene_attributes = []
-        for column in self.sql_handle.execute_query(query="DESCRIBE gene"):
-            self.gene_attributes.append(column["Field"].lower())
-
-    def reset(self):
-        """Resets created queries and filters
-        for the Filter object"""
-
-        self.phage_query = "SELECT Name FROM phage"
-        self.gene_query = "SELECT PhageID FROM gene"
-
-        self.results = []
-
-        self.phage_filters = {}
-        self.gene_filters = {}
-
-        self.history = []
-
-    def update(self):
-        """Resets created queries for the Filter object"""
-
-        if self.phage_filters:
-            self.phage_query = "SELECT Name FROM phage WHERE " +\
-                               " and ".join(list(self.phage_filters.values()))
+        self.tables = tables
+        
+        if phage_id_list == []:
+            results = list(phamerator.create_phage_id_set(self.sql_handle))
         else:
-            self.phage_query = "SELECT Name FROM phage"
+            results = phage_id_list
 
-        if self.gene_filters:
-            self.gene_query = "SELECT PhageID FROM gene WHERE " +\
-                              " and ".join(list(self.gene_filters.values()))
-        else:
-            self.gene_query = "SELECT PhageID FROM gene"
-
-        if self.phage_filters or self.gene_filters:
-            self.history.append((self.phage_filters, self.gene_filters))
-
-    def undo(self):
-        """Undos last filter option"""
-
-        if self.history:
-            dead_filters = self.history.pop()
-
-        if self.history:
-            last_filters = self.history.pop()
-
-            self.phage_filters = last_filters[0]
-
-            self.gene_filters = last_filters[1]
-
-        else:
-            self.reset()
-
-    def hits(self):
-
-        self.retrieve_results()
-        return len(self.results)
-
-    def retrieve_results(self, verbose = False):
-
-        self.update()
-        if self.phage_filters:
-            phage_results = self.retrieve_phage_results()
-
-        if self.gene_filters:
-            gene_results = self.retrieve_gene_results()
-
-        if self.phage_filters and self.gene_filters:
-            self.results = set(phage_results).intersection(gene_results)
-        elif self.phage_filters:
-            self.results = phage_results
-
-        elif self.gene_filters:
-            self.results = gene_results
-
-    def retrieve_phage_results(self):
-        """Helper function to retrieve phage table results"""
-
-        database_results = []
-        for result in phamerator.retrieve_data(
-                        self.sql_handle, query= self.phage_query):
-            database_results.append(result['Name'])
-
-        return database_results
-
-    def retrieve_gene_results(self):
-        """Helper function to retrieve gene table results"""
-        database_gene_results = []
-        for result in phamerator.retrieve_data(
-                        self.sql_handle, query = self.gene_query):
-            database_gene_results.append(result['PhageID'])
-
-        database_results = []
-        for gene_result in database_gene_results:
-            if gene_result not in database_results:
-                database_results.append(gene_result)
-
-        return database_results
-
-    def accession(self, filter_value: str):
-        self.phage_filters.update({"accession" :\
-                                   "Accession = '{}'".format(filter_value)})
-
-    def name(self, filter_value: str):
-
-        self.phage_filters.update({"name" :\
-                                   "Name = '{}'".format(filter_value)})
-
-    def phageID(self, filter_value: str):
-        self.phage_filters.update({"id":\
-                                   "PhageID = '{}'".format(filter_value)})
-
-    def cluster(self, filter_value: str):
-        self.phage_filters.update({"cluster":\
-            "Cluster2 = '{}'".format(filter_value)})
-
-    def subcluster(self, filter_value: str):
-        self.phage_filters.update({"subcluster":\
-            "Subcluster2 = '{}'".format(filter_value)})
-
-    def status(self, filter_value: str):
-        self.phage_filters.update({"status":\
-            "Status = '{}'".format(filter_value)})
-
-    def retrieve_record(self, filter_value: str):
-        self.phage_filters.update({"retrieve":\
-            "RetrieveRecord = '{}'".format(filter_value)})
-
-    def annotation_qc(self, filter_value: str):
-        self.phage_filters.update({"annotation_qc":\
-            "AnnotationQC = '{}'".format(filter_value)})
-
-    def annotation_author(self, filter_value: str):
-        self.phage_filters.update({"annotation_author":\
-            "AnnotationAuthor = '{}'".format(filter_value)})
-
-    def gene_product(self, filter_value: str):
-        self.gene_filters.update({"product":\
-            "Notes = '{}'".format(filter_value)})
-
-    def gene_id(self, filter_value: str):
-        self.gene_filters.update({"id":\
-            "id  = '{}'".format(filter_value)})
-
-    def add_filter(self, filter, filter_value, gene_selection=False):
-
-        if gene_selection == False:
-            if filter.lower() in self.phage_attributes:
-                self.phage_filters.update(
-                        {filter: "{} = '{}'".format(filter, filter_value)})
-                return True
-
-            elif filter.lower() in self.gene_attributes:
-                self.gene_filters.update(
-                        {filter: "{} = '{}'".format(filter, filter_value)})
-                return True
-
+        self.history = [] 
+        self.filters = {}
+        self.phageIDs = results
+ 
+    def add_filter(self, table, field, value, verbose=False):
+        """
+        Adds a filter to database queries
+        """
+        if field == "PhageID":
+            if verbose:
+                print("PhageID cannot be a field requested for filtering")
+        elif table.lower() in (self.tables).keys():
+            if field.lower() in self.tables[table]:
+                if table.lower() in self.filters.keys():
+                    if field.lower() in (self.filters[table]).keys():
+                        (self.filters[table])[field].append(value)
+                    else:
+                        (self.filters[table])[field] = [value]
+                else:
+                    self.filters.update({table: {field: [value]}})
             else:
-                return False
-
+                if verbose:
+                    print(
+                    f"Field '{field}' requested to be filtered"
+                    f" is not in table '{table}'")
         else:
-            if filter.lower() in self.gene_attributes:
-                self.gene_filters.update(
-                        {filter: "{} = '{}'".format(filter, filter_value)})
-                return True
+            if verbose:
+                print(
+                f"Table '{table}' requested to be filtered "
+                f"is not in '{self.database}'")
 
-            elif filter.lower() in self.phage_attributes:
-                self.phage_filters.update(
-                        {filter: "{} = '{}'".format(filter, filter_value)})
-                return True
+    def refresh(self):
+        """
+        Refreshes phageIDs
+        """
+        query = ("SELECT PhageID FROM phage WHERE PhageID IN " + \
+                 "('" + "','".join(self.phageIDs) + "')")
+        results_dicts = self.sql_handle.execute_query(query)
+        results = []
+        for result in results_dicts:
+            results.append(result["PhageID"])
 
-            else:
-                return False
+        self.phageIDs = results
 
+    def update(self, verbose=False, sort=None):
+        """
+        Updates results list for the Filter object
+        """
+        query_results = self.phageIDs
+      
+        queries = []
+        for table in self.filters.keys():
+            for field in self.filters[table].keys():
+                queries.append(
+                    f"{field}='"+ \
+                            "','".join((self.filters[table])[field]) + "'")
+            query = (f"SELECT PhageID FROM {table} WHERE " +\
+                    " and ".join(queries) + \
+                    " and PhageID IN " + "('" + \
+                            "','".join(query_results) + "')")
+            if verbose:
+                print(f"Filtering {table} in {self.database} for " +\
+                       " and ".join(queries) + "...")
+            query_results=[]
+            for result in self.sql_handle.execute_query(query):
+                query_results.append(result["PhageID"])
+            queries = []        
+
+
+        if sort != None and sort.lower() in self.tables["phage"]:
+            if verbose:
+                print(f"Sorting by '{sort}'...")
+            query = ("SELECT PhageID FROM phage "
+                     "WHERE PhageID IN " + "('" + \
+                            "','".join(query_results) + "') "
+                    f"ORDER BY {sort}")
+            query_results = []
+            for result in self.sql_handle.execute_query(query):
+                query_results.append(result["PhageID"])
+
+        elif sort != None:
+            if verbose:
+                print(f"Sort key '{sort}' not supported.")
+
+        self.phageIDs = query_results
+        if len(self.phageIDs) > 0:
+            self.history.append(query_results)
+
+    def results(self, verbose=False):
+        """
+        Sets results according to current filters
+        """
+        if verbose:
+            print("Results:")
+            for row in range(0, len(self.phageIDs), 3):
+                result_row = self.phageIDs[row:row+3]
+                if len(result_row) == 3:
+                    print("%-20s %-20s %s" % \
+                         (result_row[0], result_row[1], result_row[2]))
+                elif len(result_row) == 2:
+                    print("%-20s %-20s" % \
+                         (result_row[0], result_row[1]))
+
+                elif len(result_row) == 1:
+                    print("%s" % (result_row[0]))
+
+        return self.phageIDs
+
+    def undo(self, verbose=False):
+        """
+        Undos last filter option
+        """
+        if len(self.history) == 1:
+            if verbose:
+                print("No results history.")
+        else:
+            current = self.history.pop()
+            self.phageIDs = self.history.pop()
+            if verbose:
+                print("Returned last valid results.")
+
+    def reset(self, verbose=False):
+        """
+        Resets created queries and filters 
+        for the Filter object
+        """ 
+        self.phageIDs = list(phamerator.create_phage_id_set(self.sql_handle))
+        self.history = []
+        if verbose:
+            print("Results and results history cleared.")
+
+    def hits(self, verbose=False): 
+        """
+        Returns length of current results
+        """
+        if verbose:
+            print(f"Database hits: {len(self.phageIDs)}")
+        return len(self.phageIDs)
+
+    def group(self, group, verbose=False):
+        """
+        Function that creates a two-dimensional array of 
+        PhageIDs from the results list of PhageIDs
+        separated by a characteristic.
+        """
+        qual_switch =       {"cluster"    : "Cluster2",
+                             "subcluster" : "Subcluster2",
+                             "status"     : "status",
+                             "host"       : "HostStrain"}
+
+        qual_int_switch =   {"author"     : self.group_author,
+                             "record"     : self.group_record}
+
+        if group.lower() in qual_switch.keys():
+            if verbose:
+                print(f"Grouping by {group}...")
+            return self.group_str_qualitative(qual_switch[group.lower()])
+        
+        else:
+            if verbose:
+                print(f"Group key '{group}' not supported.")
+            return {}
+    
+    def group_str_qualitative(self, field_name):
+        """
+        Helper function that groups PhageIDs by phage
+        field name into a two-dimensional array
+        """
+        group_dicts = self.sql_handle.execute_query(
+            f"SELECT DISTINCT {field_name} FROM phage")
+        group_set = []
+        for group_dict in group_dicts:
+            group_set.append(group_dict[f"{field_name}"])
+
+        groups = dict.fromkeys(group_set, [])
+
+        phage_list = self.phageIDs 
+        for group in group_set:
+            query = f"SELECT PhageID FROM phage WHERE {field_name}='{group}'" + \
+                     " and PhageID IN " + "('" + \
+                     "','".join(phage_list) + "')"
+            results_dicts = self.sql_handle.execute_query(query)
+            if results_dicts != ():
+                results_list = []
+                for result_dict in results_dicts:
+                     results_list.append(result_dict["PhageID"])
+                     phage_list.remove(result_dict["PhageID"])
+                groups[group] = results_list
+       
+        groups.update({"other": phage_list})
+        return groups
+
+    def group_author(self):
+        """
+        Helper function that groups PhageIDs by genome
+        AnnotationAuthor value into a two-dimensional array
+        """
+        author_dicts = self.sql_handle.execute_query(
+            "SELECT DISTINCT AnnotationAuthor FROM phage")
+        author_set = []
+
+        for author_dict in author_dicts:
+            author_set.append(author_dict["AnnotationAuthor"])
+
+        author_groups = dict.fromkeys(author_set, [])
+        phage_list = self.phageIDs.copy()
+        for author in author_set:
+            query = f"SELECT PhageID FROM phage WHERE AnnotationAuthor='{author}'" + \
+                     " and PhageID IN " + "('" + \
+                     "','".join(phage_list) + "')"
+            results_dicts = self.sql_handle.execute_query(query)
+            if results_dicts != ():
+                results_list = []
+                for result_dict in results_dicts:
+                     results_list.append(result_dict["PhageID"])
+                     phage_list.remove(result_dict["PhageID"])
+                author_groups[author] = results_list
+
+        author_groups.update({"other": phage_list})
+        return author_groups
+
+    def group_record(self):
+        """
+        Helper function that groups PhageIDs by genome
+        RetrieveRecord value into a two-dimensional array
+        """
+        record_dicts = self.sql_handle.execute_query(
+            "SELECT DISTINCT RetrieveRecord FROM phage")
+        record_set = []
+
+        for record_dict in record_dicts:
+            record_set.append(record_dict["RetrieveRecord"])
+
+        record_groups = dict.fromkeys(record_set, [])
+
+        phage_list = self.phageIDs.copy()
+        for record in record_set:
+            query = f"SELECT PhageID FROM phage WHERE RetrieveRecord='{record}'" + \
+                     " and PhageID IN " + "('" + \
+                     "','".join(self.phageIDs) + "')"
+            results_dicts = self.sql_handle.execute_query(query)
+            if results_dicts != ():
+                results_list = []
+                for result_dict in results_dicts:
+                     results_list.append(result_dict["PhageID"])
+                     phage_list.remove(result_dict["PhageID"])
+                record_groups[record] = results_list
+       
+        record_groups.update({"other": phage_list})
+        return record_groups
 
     def interactive(self, sql_handle = None):
+        """
+        Function to start interactive filtering. 
+        """
+        pass
 
-        interactive_filter = Cmd_Filter(db_filter=self, sql_handle=sql_handle)
-        interactive_filter.cmdloop()
-
-class Cmd_Filter(cmd.Cmd):
-
+class Cmd_Filter(cmd.Cmd):  
     def __init__(self, db_filter=None, sql_handle=None):
         super(Cmd_Filter, self).__init__()
         self.filter = db_filter
@@ -226,7 +311,7 @@ class Cmd_Filter(cmd.Cmd):
         self.data = None
 
     def preloop(self):
-
+        
         if self.filter == None:
             if self.sql_handle == None:
                 self.sql_handle = \
@@ -239,13 +324,11 @@ class Cmd_Filter(cmd.Cmd):
                     self.sql_handle.validate_credentials()
                 except:
                     print("Unable to create a mysql connection.")
-                    exit(1)
+                    exit(1) 
             self.filter = Filter(self.sql_handle.database, self.sql_handle)
 
         self.prompt = "({}) (export){}@localhost: ".\
-                format(self.sql_handle.database, self.sql_handle._username)
-
-
+                format(self.sql_handle.database, self.sql_handle._username)        
 
     def do_filter(self, *unparsed_args):
         """
@@ -254,7 +337,7 @@ class Cmd_Filter(cmd.Cmd):
         Subcluster, Annotation_Status, Retrieve_Record,
         Annotation_QC, Annotation_Author, Notes, GeneID
         """
-
+        
         filter = unparsed_args[0]
 
         if filter == "":
@@ -266,11 +349,11 @@ class Cmd_Filter(cmd.Cmd):
 
         elif not (filter.lower() in self.filter.phage_attributes\
                 or filter.lower() in self.filter.gene_attributes):
-
+            
             print("Attribute not in database.\n ")
 
         else:
-
+            
             filter_value = input("Enter {} value: ".format(filter))
             self.filter.add_filter(filter, filter_value)
             self.retrieve_hits()
@@ -292,7 +375,7 @@ class Cmd_Filter(cmd.Cmd):
         """
         self.filter.undo()
         print("        Reloaded last filtering options")
-
+            
         self.do_show_filters()
 
     def do_show(self,*args):
@@ -317,7 +400,7 @@ class Cmd_Filter(cmd.Cmd):
     def show_results(self):
         """Shows results for current database filtering
         """
-
+       
         print("        Results:\n")
         for row in range(0, len(self.filter.results), 3):
             result_row = self.filter.results[row:row+3]
@@ -370,11 +453,11 @@ class Cmd_Filter(cmd.Cmd):
         """Finish quering and return results
         USAGE: return
         """
-
+        
         print("        Exiting Filtering...\n")
 
         return True
-
+   
     def do_exit(self, *args):
         """Exits program entirely without returning values
         USAGE: exit
@@ -387,5 +470,11 @@ class Cmd_Filter(cmd.Cmd):
         self.data = self.filter.results
 
 if __name__ == "__main__":
-    mainloop = Cmd_Filter()
-    mainloop.cmdloop()
+    sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
+    sql_handle._username = "root"
+    sql_handle._password = "phage"
+    sql_handle.database = "Actino_Draft"
+    filter = Filter(sql_handle.database, sql_handle)
+    filter.add_filter("gene", "Notes", "antirepressor")
+    filter.add_filter("phage", "cluster2", "F")
+    filter.update()
