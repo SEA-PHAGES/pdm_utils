@@ -6,9 +6,9 @@ import argparse
 import sys
 
 from pdm_utils.pipelines.cdd import cdd
-from pdm_utils.pipelines.data_retrieval import retrieve_data
-from pdm_utils.pipelines.db_compare import compare_databases
-from pdm_utils.pipelines.db_freeze import freeze_database
+from pdm_utils.pipelines.data_retrieval import get_data
+from pdm_utils.pipelines.db_compare import compare_db
+from pdm_utils.pipelines.db_freeze import freeze_db
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.db_import import import_phage
 from pdm_utils.pipelines.phamerate import phamerate
@@ -47,18 +47,16 @@ def main(unparsed_args):
     # sys.argv:      [0]            [1]         [2...]
     args = pipe_parser.parse_args(unparsed_args[1:2])
     if args.pipeline == "get_data":
-        retrieve_data.main(unparsed_args)
-    # Note: import_phage is the legacy import script and will be deprecated.
-    # Once import_genome is tested and operational, 'import' will call the
-    # 'import_genome' module instead of the 'import_phage' module.
+        get_data.main(unparsed_args)
     elif args.pipeline == "get_db":
         get_db.main(unparsed_args)
     elif args.pipeline == "update":
         update_field.main(unparsed_args[unparsed_args.index("update") + 1:])
+    # Note: import_phage is the legacy import script and will be deprecated.
+    # Once import_genome is tested and operational, 'import' will call the
+    # 'import_genome' module instead of the 'import_phage' module.
     elif args.pipeline == "import":
         import_phage.main(unparsed_args)
-    # The 'import_genome' pipeline is in development and will
-    # eventually replace the 'import_phage' pipeline.
     elif args.pipeline == "import_dev":
         import_genome.main(unparsed_args)
     elif args.pipeline == "cdd":
@@ -70,9 +68,9 @@ def main(unparsed_args):
     elif args.pipeline == "push":
         push_db.main(unparsed_args)
     elif args.pipeline == "freeze":
-        freeze_database.main(unparsed_args)
+        freeze_db.main(unparsed_args)
     elif args.pipeline == "compare":
-        compare_databases.main(unparsed_args)
+        compare_db.main(unparsed_args)
     else:
         print("Invalid pipeline selection.")
     print("Pipeline completed")
