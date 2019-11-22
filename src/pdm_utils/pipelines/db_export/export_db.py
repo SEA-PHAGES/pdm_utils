@@ -59,7 +59,7 @@ def run_file_export(unparsed_args_list):
 
 def parse_file_export(unparsed_args_list):
     """
-    Parses file_export arguments and stores them with an argparse object
+    Parses export_db arguments and stores them with an argparse object
     :param unparsed_args_list:
         Input a list of command line args.
     :type unparsed_args_list: List[str]
@@ -756,7 +756,7 @@ class Cmd_Export(cmd.Cmd):
 
     def __init__(self, file_format="gb",database=None,
                  phage_filter_list=[], sql_handle=None,
-                 export_directory_name="file_export",
+                 export_directory_name="export_db",
                  export_directory_path = Path.cwd()):
 
         super(Cmd_Export, self).__init__()

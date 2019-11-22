@@ -8,12 +8,11 @@ import sys
 from pdm_utils.pipelines.cdd import cdd
 from pdm_utils.pipelines.data_retrieval import retrieve_data
 from pdm_utils.pipelines.db_compare import compare_databases
-from pdm_utils.pipelines.db_export import export_database
 from pdm_utils.pipelines.db_freeze import freeze_database
 from pdm_utils.pipelines.db_import import import_genome
 from pdm_utils.pipelines.db_import import import_phage
 from pdm_utils.pipelines.phamerate import phamerate
-from pdm_utils.pipelines.db_export import file_export, push_db
+from pdm_utils.pipelines.db_export import export_db, push_db
 from pdm_utils.pipelines.db_update import update_field, get_db
 
 
@@ -35,7 +34,6 @@ def main(unparsed_args):
         "cdd",
         "phamerate",
         "export",
-        "file_export",
         "freeze",
         "compare",
         "push"}
@@ -59,6 +57,8 @@ def main(unparsed_args):
         update_field.main(unparsed_args[unparsed_args.index("update") + 1:])
     elif args.pipeline == "import":
         import_phage.main(unparsed_args)
+    # The 'import_genome' pipeline is in development and will
+    # eventually replace the 'import_phage' pipeline.
     elif args.pipeline == "import_dev":
         import_genome.main(unparsed_args)
     elif args.pipeline == "cdd":
@@ -66,14 +66,13 @@ def main(unparsed_args):
     elif args.pipeline == "phamerate":
         phamerate.main(unparsed_args[unparsed_args.index("phamerate") + 1:])
     elif args.pipeline == "export":
-        export_database.main(unparsed_args)
-    # TODO eventually 'database_to_file' will be merged into 'export' pipeline.
-    elif args.pipeline == "file_export":
-        file_export.main(unparsed_args)
+        export_db.main(unparsed_args)
     elif args.pipeline == "push":
         push_db.main(unparsed_args)
     elif args.pipeline == "freeze":
         freeze_database.main(unparsed_args)
-    else:
+    elif args.pipeline == "compare":
         compare_databases.main(unparsed_args)
+    else:
+        print("Invalid pipeline selection.")
     print("Pipeline completed")

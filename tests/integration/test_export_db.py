@@ -1,12 +1,12 @@
-"""Tests the functionality of the unique functions in the file_export pipeline"""
+"""Tests the functionality of the unique functions in the export_db pipeline"""
 
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from Bio.Alphabet.IUPAC import * 
+from Bio.Alphabet.IUPAC import *
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
 from pdm_utils.classes import genome
-from pdm_utils.pipelines.db_export import file_export
+from pdm_utils.pipelines.db_export import export_db
 from pdm_utils.classes import mysqlconnectionhandler
 
 from pathlib import Path
@@ -14,14 +14,14 @@ from unittest.mock import patch, Mock, call
 import os, sys, unittest, shutil, csv, pymysql
 
 class TestFileExport(unittest.TestCase):
-   
+
     def setUp(self):
 
         #Creates a test database
         self.connection = pymysql.connect(host="localhost",
                                      user="pdm_anon",
                                      password="pdm_anon",
-                                     cursorclass=pymysql.cursors.DictCursor) 
+                                     cursorclass=pymysql.cursors.DictCursor)
         cur = (self.connection).cursor()
         cur.execute("SELECT SCHEMA_NAME FROM "
                     "INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'test_db'")
@@ -32,11 +32,11 @@ class TestFileExport(unittest.TestCase):
 
         cur.execute("CREATE DATABASE test_db;")
         (self.connection).commit()
-        (self.connection).close 
+        (self.connection).close
         #Creates valid MySqlConnectionHandler
         mch = mysqlconnectionhandler.MySQLConnectionHandler()
         mch._username = "pdm_anon"
-        mch._password = "pdm_anon" 
+        mch._password = "pdm_anon"
         mch.database = "test_db"
         self.sql_handle = mch
         #Creates Genome object
@@ -63,11 +63,11 @@ class TestFileExport(unittest.TestCase):
         self.test_record = seqrecord
         #Creates working test directory
         self.test_cwd = (Path.cwd()).joinpath("DELETE_ME")
-        (self.test_cwd).mkdir() 
+        (self.test_cwd).mkdir()
 
     def test_convert_path(self):
         """
-        Unittest of file_export.convert_path()
+        Unittest of export_db.convert_path()
             -Tests for functionality with valid
              and invalid path inputs
         """
@@ -79,23 +79,23 @@ class TestFileExport(unittest.TestCase):
             #Creates string path to test directory
             input_path = str(self.test_cwd)
             input_path = os.path.join(input_path, "test")
-            returned_path = file_export.convert_path(input_path)
+            returned_path = export_db.convert_path(input_path)
             #Asserts that convert_path() functions as expected
             self.assertEqual(returned_path, test_path)
             #Breaks down test_directory
             test_path.rmdir()
-        #Sub test to test functionality with an invalid path input 
+        #Sub test to test functionality with an invalid path input
         with self.subTest(input_path="invalid"):
             #Creates path to invalid directory
             input_path = str(self.test_cwd)
             input_path = os.path.join(input_path, "iNvAlId_dIrEcToRy")
             #Asserts that convert_path() raises an exception
             with self.assertRaises(ValueError):
-                file_export.convert_path(input_path)
- 
+                export_db.convert_path(input_path)
+
     def test_convert_file_path(self):
         """
-        Unittest to test file_export.convert_file_path() helper function
+        Unittest to test export_db.convert_file_path() helper function
             -Tests for paths to a current or nonexisting file
         """
         #Sub test to test functionality with an existing file path input
@@ -105,7 +105,7 @@ class TestFileExport(unittest.TestCase):
             file_path.touch()
             #Asserts that convert_file_path() correctly converted input path
             input_path = os.path.join(str(self.test_cwd), "test_file")
-            returned_path = file_export.convert_file_path(input_path)
+            returned_path = export_db.convert_file_path(input_path)
             self.assertEqual(returned_path, file_path)
             #Removes created file
             file_path.unlink()
@@ -118,14 +118,14 @@ class TestFileExport(unittest.TestCase):
             #Asserts that convert_file_path() raises an exception
             input_path = os.path.join(str(self.test_cwd), "test_file")
             with self.assertRaises(ValueError):
-                file_export.convert_file_path(input_path)
+                export_db.convert_file_path(input_path)
             #Removes created directory
             file_path.rmdir()
             self.assertFalse(file_path.exists())
-            
+
     def test_convert_dir_path(self):
         """
-        Unittest to test file_export.convert_file_path() helper function
+        Unittest to test export_db.convert_file_path() helper function
             -Tests for paths to a current or nonexisting file
         """
         #Sub test to test functionality with an existing directory path input
@@ -135,12 +135,12 @@ class TestFileExport(unittest.TestCase):
             dir_path.mkdir()
             #Asserts that convert_file_path() correctly converted input path
             input_path = os.path.join(str(self.test_cwd), "test_dir")
-            returned_path = file_export.convert_dir_path(input_path)
+            returned_path = export_db.convert_dir_path(input_path)
             self.assertEqual(returned_path, dir_path)
             #Removes created directory
             dir_path.rmdir()
             self.assertFalse(dir_path.exists())
-        #Sub test to test functionality with an invalid directory path input 
+        #Sub test to test functionality with an invalid directory path input
         with self.subTest(dir_path=False):
             #Creates a path to a file
             dir_path = (self.test_cwd).joinpath("test_dir")
@@ -148,7 +148,7 @@ class TestFileExport(unittest.TestCase):
             #Asserts that convert_file_path() raises exception
             input_path = os.path.join(str(self.test_cwd), "test_dir")
             with self.assertRaises(ValueError):
-                file_export.convert_dir_path(input_path)
+                export_db.convert_dir_path(input_path)
             #Removes created file
             dir_path.unlink()
             self.assertFalse(dir_path.exists())
@@ -158,7 +158,7 @@ class TestFileExport(unittest.TestCase):
     #Tests Path singledispatch type
     def test_parse_phage_list_input(self):
         """
-        Unittest that tests file_export.parse_phage_list_input()
+        Unittest that tests export_db.parse_phage_list_input()
             -Tests for Path object single dispatch handling
             and csv reader functionality
         """
@@ -167,7 +167,7 @@ class TestFileExport(unittest.TestCase):
         csv_path.touch()
         csv_path.write_text("Test, NotSeen, NotSeen")
         #Asserts that parse_phage_list_input correctly read csv
-        test_phage_list = file_export.parse_phage_list_input(csv_path)
+        test_phage_list = export_db.parse_phage_list_input(csv_path)
         self.assertEqual(test_phage_list[0], "Test")
         #Removes test csv file
         csv_path.unlink()
@@ -181,19 +181,19 @@ class TestFileExport(unittest.TestCase):
                                                 "ask_username_and_password")
     def test_establish_database_connection(self, GetPasswordMock):
         """
-        Unittest that tests file_export.establish_connection()
+        Unittest that tests export_db.establish_connection()
             -Tests for valid and invalid mysqlconnectionhandler objects
         """
         #Sub test to test functionality with a valid mysqlconnectionhandler
         with self.subTest(valid_mysqlconnectionhandler=True, input_type="Str"):
             #Patches mysqlconnectionhandler in context to return a valid
             #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.db_export.file_export."
+            with patch("pdm_utils.pipelines.db_export.export_db."
                        "mysqlconnectionhandler.MySQLConnectionHandler") \
                                                         as MCHMock:
                 #Asserts establish_database_connection functionality
                 MCHMock.return_value = self.sql_handle
-                test_sql_handle = file_export.establish_database_connection(
+                test_sql_handle = export_db.establish_database_connection(
                                                             "test_db")
                 self.assertEqual(test_sql_handle, self.sql_handle)
                 GetPasswordMock.assert_called_once()
@@ -202,7 +202,7 @@ class TestFileExport(unittest.TestCase):
         with self.subTest(valid_mysqlconnectionhandler=False, input_type="Str"):
             #Patches mysqlconnectionhandler in context to return an invalid
             #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.db_export.file_export."
+            with patch("pdm_utils.pipelines.db_export.export_db."
                        "mysqlconnectionhandler.MySQLConnectionHandler") \
                                                         as MCHMock:
                 #Creates faulty MySQLConnectionHandler object
@@ -211,7 +211,7 @@ class TestFileExport(unittest.TestCase):
                 mch._password = "invalid"
                 MCHMock.return_value = mch
                 #Asserts establish_database_connection() functionality
-                file_export.establish_database_connection("test_db")
+                export_db.establish_database_connection("test_db")
                 #self.assertEqual(GetPasswordMock.call_count, 4)
                 GetPasswordMock.assert_not_called()
                 GetPasswordMock.reset_mock()
@@ -219,22 +219,22 @@ class TestFileExport(unittest.TestCase):
         with self.subTest(valid_mysqlconnectionhandler=True, input_type=None):
             #Patches mysqlconnectionhandler in context to return an invalid
             #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.db_export.file_export."
+            with patch("pdm_utils.pipelines.db_export.export_db."
                        "mysqlconnectionhandler.MySQLConnectionHandler") \
                                                         as MCHMock:
                 #Creates valid MySQLConnectionHandler object
                 MCHMock.return_value = self.sql_handle
                 #Asserts establish_database_connection() raises exception
                 with self.assertRaises(TypeError):
-                    file_export.establish_database_connection(None)
+                    export_db.establish_database_connection(None)
                 GetPasswordMock.assert_not_called()
                 GetPasswordMock.reset_mock()
- 
 
-    @patch("pdm_utils.pipelines.db_export.file_export.print")
+
+    @patch("pdm_utils.pipelines.db_export.export_db.print")
     def test_write_seqrecord(self, PrintMock):
         """
-        Unittest that tests file_export.write_seqrecord()
+        Unittest that tests export_db.write_seqrecord()
             -Patches print
             -Tests input error handling, file writing,
              and printing functionalities
@@ -245,10 +245,10 @@ class TestFileExport(unittest.TestCase):
         """
         #Sub test to test the writing functionalities of write_seqrecord()
         with self.subTest(seqrecord_list=["test_record"], file_format="gb",
-                          export_path=self.test_cwd, 
-                          export_directory_name="file_export", verbose=False):
+                          export_path=self.test_cwd,
+                          export_directory_name="export_db", verbose=False):
             #Assert write_seqrecord() correctly creates directory and file
-            file_export.write_seqrecord([self.test_record], "gb",
+            export_db.write_seqrecord([self.test_record], "gb",
                                           self.test_cwd)
             test_path = (self.test_cwd).joinpath("export")
             self.assertTrue(test_path.is_dir())
@@ -262,27 +262,27 @@ class TestFileExport(unittest.TestCase):
         #Sub test to test the functionality of optional directory parameters
         with self.subTest(seqrecord_list=["test_record"], file_format="fasta",
                           export_path=self.test_cwd,
-                          export_directory_name="test_folder", verbose=False): 
+                          export_directory_name="test_folder", verbose=False):
             #Assert write_seqrecord() correctly creates directly and file
-            file_export.write_seqrecord([self.test_record], "fasta",
+            export_db.write_seqrecord([self.test_record], "fasta",
                                           self.test_cwd,
-                                          export_dir_name="test_folder") 
+                                          export_dir_name="test_folder")
             test_path = (self.test_cwd).joinpath("test_folder")
             self.assertTrue(test_path.is_dir())
             file_path = test_path.joinpath("Test.fasta")
             self.assertTrue(file_path.is_file())
             PrintMock.assert_not_called()
-            #Remove test file and directory and reset MagicMock object 
+            #Remove test file and directory and reset MagicMock object
             PrintMock.reset_mock()
             file_path.unlink()
             test_path.rmdir()
         #Sub test to test error handling of write_seqrecord()
-        with self.subTest(seqrecord_list=[], file_format="gb", 
+        with self.subTest(seqrecord_list=[], file_format="gb",
                           export_path=Path("~/iNvAlId_dIrEcToRy"),
-                          export_directory_name="file_export", verbose=False):
+                          export_directory_name="export_db", verbose=False):
             #Asserts write_seqrecord() raises exception
             with self.assertRaises(ValueError):
-                file_export.write_seqrecord([], "gb", 
+                export_db.write_seqrecord([], "gb",
                                               Path("~/iNvAlId_dIrEcToRy"))
             PrintMock.assert_called_once()
             #Reset MagicMock object
@@ -292,7 +292,7 @@ class TestFileExport(unittest.TestCase):
                           export_path=self.test_cwd,
                           export_dir_name="export", verbose=True):
             #Assert write_seqrecord() correctly creates directly and file
-            file_export.write_seqrecord([self.test_record], "gb",
+            export_db.write_seqrecord([self.test_record], "gb",
                                           self.test_cwd, verbose=True)
             test_path = (self.test_cwd).joinpath("export")
             self.assertTrue(test_path.is_dir())
@@ -310,7 +310,7 @@ class TestFileExport(unittest.TestCase):
 
     def test_write_csv(self):
         """
-        Unittest that tests file_export.write_csv()
+        Unittest that tests export_db.write_csv()
             -Patches print
             -Tests file writing functionality
                 -Asserts print statement calls with MagicMock object calls
@@ -319,16 +319,16 @@ class TestFileExport(unittest.TestCase):
                 -Asserts files are created according to naming conventions
         """
         #Sub test to test the writing functionalities of write_csv()
-        with self.subTest(export_directory_name="export", 
+        with self.subTest(export_directory_name="export",
                           csv_file_name="database"):
             #Asserts write_csv correctly creates directory and file
-            file_export.write_csv([self.genome], self.test_cwd)
+            export_db.write_csv([self.genome], self.test_cwd)
             dir_path = (self.test_cwd).joinpath("export")
             self.assertTrue(dir_path.is_dir())
             csv_path = dir_path.joinpath("database.csv")
             self.assertTrue(csv_path.is_file())
             #Asserts write_csv correctly recognizes existing log
-            file_export.write_csv([self.genome], self.test_cwd)
+            export_db.write_csv([self.genome], self.test_cwd)
             second_csv_path = csv_path.with_name("database2.csv")
             self.assertTrue(second_csv_path.is_file())
             #Removes test files and directory
@@ -337,18 +337,18 @@ class TestFileExport(unittest.TestCase):
             dir_path.rmdir()
         #Sub test to test the directory and file naming functionality
         #of write_csv()
-        with self.subTest(export_directory_name="test_directory", 
+        with self.subTest(export_directory_name="test_directory",
                           csv_file_name="log"):
             #Asserts write_csv correctly creates directory and file
-            file_export.write_csv([self.genome], self.test_cwd,
-                                      export_dir_name="test_directory", 
+            export_db.write_csv([self.genome], self.test_cwd,
+                                      export_dir_name="test_directory",
                                       csv_name="log")
             dir_path = (self.test_cwd).joinpath("test_directory")
             self.assertTrue(dir_path.is_dir())
             csv_path = dir_path.joinpath("log.csv")
             self.assertTrue(csv_path.is_file())
             #Asserts write_csv correctly recognizes existing log
-            file_export.write_csv([self.genome], self.test_cwd,
+            export_db.write_csv([self.genome], self.test_cwd,
                                       export_dir_name="test_directory",
                                       csv_name="log")
             second_csv_path = csv_path.with_name("log2.csv")
@@ -358,7 +358,7 @@ class TestFileExport(unittest.TestCase):
             csv_path.unlink()
             dir_path.rmdir()
         #Test to test the format of write_csv()
-        file_export.write_csv([self.genome], self.test_cwd, 
+        export_db.write_csv([self.genome], self.test_cwd,
                               export_dir_name="Test",
                               csv_name="Test")
         dir_path = (self.test_cwd).joinpath("Test")
@@ -398,10 +398,10 @@ class TestFileExport(unittest.TestCase):
                                               "TestStatus",
                                               "TestRecord",
                                               "TestAuthor"])
-   
+
     def test_write_database(self):
         """
-        Unittest that tests file_export.write_database()
+        Unittest that tests export_db.write_database()
             -Tests file writing,
                 -Asserts files are created according to naming conventions
         """
@@ -410,7 +410,7 @@ class TestFileExport(unittest.TestCase):
         db_path = folder_path.joinpath("test_db_v1.sql")
         version_path = db_path.with_name("test_db_v1.version")
         #Assert write_database() correctly created files
-        file_export.write_database(self.sql_handle, 1, self.test_cwd)
+        export_db.write_database(self.sql_handle, 1, self.test_cwd)
         self.assertTrue(folder_path.exists())
         self.assertTrue(db_path.exists())
         self.assertTrue(version_path.exists())
@@ -423,7 +423,7 @@ class TestFileExport(unittest.TestCase):
         self.assertFalse(folder_path.exists())
         self.assertFalse(db_path.exists())
         self.assertFalse(version_path.exists())
-        
+
     def tearDown(self):
         #Tears down current working test directory
         shutil.rmtree(str(self.test_cwd))
@@ -432,6 +432,6 @@ class TestFileExport(unittest.TestCase):
         cur.execute("DROP DATABASE test_db;")
         (self.connection).commit()
         (self.connection).close()
-        
+
 if __name__ == "__main__":
     unittest.main()
