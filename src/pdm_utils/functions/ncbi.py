@@ -41,3 +41,13 @@ def get_records(accession_list, db="nucleotide", rettype="gb", retmode="text"):
         retrieved_records.append(record)
     fetch_handle.close()
     return retrieved_records
+
+
+
+
+
+
+
+
+
+###

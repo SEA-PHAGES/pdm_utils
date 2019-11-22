@@ -811,7 +811,6 @@ def get_genbank_data(output_folder, list_of_genomes):
         summary_records = ncbi.get_summaries(db="nucleotide",
                                              query_key=search_query_key,
                                              webenv=search_webenv)
-
         for doc_sum in summary_records:
             doc_sum_name = doc_sum["Title"]
             doc_sum_accession = doc_sum["Caption"]

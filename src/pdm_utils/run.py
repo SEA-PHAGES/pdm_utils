@@ -6,7 +6,7 @@ import argparse
 import sys
 
 from pdm_utils.pipelines.cdd import cdd
-from pdm_utils.pipelines.data_retrieval import get_data
+from pdm_utils.pipelines.data_retrieval import get_data, get_gb_records
 from pdm_utils.pipelines.db_compare import compare_db
 from pdm_utils.pipelines.db_freeze import freeze_db
 from pdm_utils.pipelines.db_import import import_genome
@@ -28,6 +28,7 @@ def main(unparsed_args):
     VALID_PIPELINES = {
         "get_db",
         "get_data",
+        "get_gb_records",
         "update",
         "import",
         "import_dev",
@@ -71,6 +72,8 @@ def main(unparsed_args):
         freeze_db.main(unparsed_args)
     elif args.pipeline == "compare":
         compare_db.main(unparsed_args)
+    elif args.pipeline == "get_gb_records":
+        get_gb_records.main(unparsed_args)
     else:
         print("Invalid pipeline selection.")
     print("Pipeline completed")
