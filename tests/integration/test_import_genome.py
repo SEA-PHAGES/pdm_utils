@@ -20,7 +20,7 @@ from pdm_utils.classes import bundle, genome, genomepair, ticket, eval, cds, sou
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
-from pdm_utils.pipelines.db_import import import_genome
+from pdm_utils.pipelines import import_genome
 
 
 def get_errors_from_dict(dict):
@@ -696,8 +696,8 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
-    @patch("pdm_utils.pipelines.db_import.import_genome.connect_to_db")
+    @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("pdm_utils.pipelines.import_genome.connect_to_db")
     def test_main_1(self, setup_sql_mock, data_io_mock):
         """Verify that correct args calls data_io."""
         self.input_folder.mkdir()
@@ -707,8 +707,8 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.assertTrue(data_io_mock.called)
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
-    @patch("pdm_utils.pipelines.db_import.import_genome.connect_to_db")
+    @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("pdm_utils.pipelines.import_genome.connect_to_db")
     @patch("sys.exit")
     def test_main_2(self, sys_exit_mock, setup_sql_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
@@ -718,8 +718,8 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.assertTrue(sys_exit_mock.called)
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
-    @patch("pdm_utils.pipelines.db_import.import_genome.connect_to_db")
+    @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("pdm_utils.pipelines.import_genome.connect_to_db")
     @patch("sys.exit")
     def test_main_3(self, sys_exit_mock, setup_sql_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""
@@ -731,7 +731,7 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.assertTrue(sys_exit_mock.called)
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.data_io")
+    @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_main_4(self, getpass_mock, sys_exit_mock, data_io_mock):
@@ -949,7 +949,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    @patch("pdm_utils.pipelines.import_genome.import_into_db")
     def test_process_files_and_tickets_2(self, import_into_db_mock):
         """Verify correct output using:
         two files with no tickets,
@@ -980,7 +980,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    @patch("pdm_utils.pipelines.import_genome.import_into_db")
     def test_process_files_and_tickets_3(self, import_into_db_mock):
         """Verify correct output using:
         two files with matched tickets,
@@ -1011,7 +1011,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    @patch("pdm_utils.pipelines.import_genome.import_into_db")
     def test_process_files_and_tickets_4(self, import_into_db_mock):
         """Verify correct output using:
         two files with matched tickets,
@@ -1069,7 +1069,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.pipelines.db_import.import_genome.import_into_db")
+    @patch("pdm_utils.pipelines.import_genome.import_into_db")
     def test_process_files_and_tickets_6(self, import_into_db_mock):
         """Verify correct output using:
         one file matched to ticket with successful import,
@@ -1194,8 +1194,8 @@ class TestImportGenomeMain5(unittest.TestCase):
     # Patching so avoid an attempt to add data to the database.
     @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("pdm_utils.pipelines.db_import.import_genome.run_checks")
-    @patch("pdm_utils.pipelines.db_import.import_genome.prepare_bundle")
+    @patch("pdm_utils.pipelines.import_genome.run_checks")
+    @patch("pdm_utils.pipelines.import_genome.prepare_bundle")
     def test_process_files_and_tickets_10(self, prep_mock, run_checks_mock,
                                           ask_mock, execute_mock):
         """Verify correct output using:
@@ -1293,9 +1293,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_1(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io runs correctly when there are no errors."""
@@ -1366,9 +1366,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_2(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is successful with
@@ -1412,9 +1412,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_3(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is successful with
@@ -1457,9 +1457,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_4(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is successful with two previously-existing
@@ -1506,9 +1506,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is not successful when results folder is invalid."""
@@ -1538,9 +1538,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_6(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is not successful when there are no files to process."""
@@ -1562,9 +1562,9 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.db_import.import_genome.log_evaluations")
+    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.phamerator.get_phage_table_count")
     def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
         """Verify data_io is not successful when there are no tickets to process."""

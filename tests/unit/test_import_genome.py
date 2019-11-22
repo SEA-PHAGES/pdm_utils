@@ -8,7 +8,7 @@ from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
-from pdm_utils.pipelines.db_import import import_genome
+from pdm_utils.pipelines import import_genome
 from pdm_utils.classes import ticket, eval
 import unittest
 from Bio.Seq import Seq

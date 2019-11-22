@@ -7,7 +7,7 @@ from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from pdm_utils.pipelines.db_export import export_db
+from pdm_utils.pipelines import export_db
 from pdm_utils.functions import flat_files
 from pathlib import Path
 
@@ -62,13 +62,13 @@ class TestFileExport(unittest.TestCase):
         self.test_version_dictionary = \
                 {"Version" : "Test", "SchemaVersion": "Test"}
 
-    @patch("pdm_utils.pipelines.db_export.export_db.execute_file_export")
-    @patch("pdm_utils.pipelines.db_export.export_db.parse_filters")
-    @patch("pdm_utils.pipelines.db_export.export_db.parse_phage_list_input")
+    @patch("pdm_utils.pipelines.export_db.execute_file_export")
+    @patch("pdm_utils.pipelines.export_db.parse_filters")
+    @patch("pdm_utils.pipelines.export_db.parse_phage_list_input")
     @patch(
-    "pdm_utils.pipelines.db_export.export_db.establish_database_connection")
-    @patch("pdm_utils.pipelines.db_export.export_db.print")
-    @patch("pdm_utils.pipelines.db_export.export_db.parse_file_export")
+    "pdm_utils.pipelines.export_db.establish_database_connection")
+    @patch("pdm_utils.pipelines.export_db.print")
+    @patch("pdm_utils.pipelines.export_db.parse_file_export")
     def test_run_file_export(self, ArgParseMock, PrintMock, EstablishDBMock,
                              ParsePhageListMock, ParseFiltersMock,
                              ExecuteExportMock):

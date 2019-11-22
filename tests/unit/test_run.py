@@ -6,7 +6,7 @@ from pdm_utils import run
 
 class TestRunFunctions1(unittest.TestCase):
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.main")
+    @patch("pdm_utils.pipelines.import_genome.main")
     def test_main_1(self, run_pipeline_mock):
         """Verify that main runs correctly with:
         valid pipeline and valid default options."""

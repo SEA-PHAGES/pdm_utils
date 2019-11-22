@@ -5,15 +5,18 @@ then passes all command line arguments to the main pipeline module.
 import argparse
 import sys
 
-from pdm_utils.pipelines.cdd import cdd
-from pdm_utils.pipelines.data_retrieval import get_data, get_gb_records
-from pdm_utils.pipelines.db_compare import compare_db
-from pdm_utils.pipelines.db_freeze import freeze_db
-from pdm_utils.pipelines.db_import import import_genome
-from pdm_utils.pipelines.db_import import import_phage
-from pdm_utils.pipelines.phamerate import phamerate
-from pdm_utils.pipelines.db_export import export_db, push_db
-from pdm_utils.pipelines.db_update import update_field, get_db
+from pdm_utils.pipelines import cdd
+from pdm_utils.pipelines import compare_db
+from pdm_utils.pipelines import export_db
+from pdm_utils.pipelines import freeze_db
+from pdm_utils.pipelines import get_db
+from pdm_utils.pipelines import get_data
+from pdm_utils.pipelines import get_gb_records
+from pdm_utils.pipelines import import_genome
+from pdm_utils.pipelines import import_phage
+from pdm_utils.pipelines import phamerate
+from pdm_utils.pipelines import push_db
+from pdm_utils.pipelines import update_field
 
 
 def main(unparsed_args):

@@ -1235,7 +1235,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     # Run tests using tickets structured incorrectly.
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_add_9(self, getpass_mock, sys_exit_mock, pft_mock):
@@ -1260,7 +1260,7 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertFalse(fail_path.exists())
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_add_10(self, getpass_mock, sys_exit_mock, pft_mock):
@@ -1278,7 +1278,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_add_11(self, getpass_mock, sys_exit_mock, pft_mock):
@@ -1296,7 +1296,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_add_12(self, getpass_mock, sys_exit_mock, pft_mock):
@@ -1316,7 +1316,7 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_add_13(self, getpass_mock, sys_exit_mock, pft_mock):
@@ -2354,7 +2354,7 @@ class TestImportGenomeMain2(unittest.TestCase):
 
     # Run tests using tickets structured incorrectly.
 
-    @patch("pdm_utils.pipelines.db_import.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
     @patch("getpass.getpass")
     def test_replacement_4(self, getpass_mock, sys_exit_mock, pft_mock):

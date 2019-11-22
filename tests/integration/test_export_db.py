@@ -6,7 +6,7 @@ from Bio.Alphabet.IUPAC import *
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
 from pdm_utils.classes import genome
-from pdm_utils.pipelines.db_export import export_db
+from pdm_utils.pipelines import export_db
 from pdm_utils.classes import mysqlconnectionhandler
 
 from pathlib import Path
@@ -188,7 +188,7 @@ class TestFileExport(unittest.TestCase):
         with self.subTest(valid_mysqlconnectionhandler=True, input_type="Str"):
             #Patches mysqlconnectionhandler in context to return a valid
             #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.db_export.export_db."
+            with patch("pdm_utils.pipelines.export_db."
                        "mysqlconnectionhandler.MySQLConnectionHandler") \
                                                         as MCHMock:
                 #Asserts establish_database_connection functionality
@@ -202,7 +202,7 @@ class TestFileExport(unittest.TestCase):
         with self.subTest(valid_mysqlconnectionhandler=False, input_type="Str"):
             #Patches mysqlconnectionhandler in context to return an invalid
             #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.db_export.export_db."
+            with patch("pdm_utils.pipelines.export_db."
                        "mysqlconnectionhandler.MySQLConnectionHandler") \
                                                         as MCHMock:
                 #Creates faulty MySQLConnectionHandler object
@@ -219,7 +219,7 @@ class TestFileExport(unittest.TestCase):
         with self.subTest(valid_mysqlconnectionhandler=True, input_type=None):
             #Patches mysqlconnectionhandler in context to return an invalid
             #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.db_export.export_db."
+            with patch("pdm_utils.pipelines.export_db."
                        "mysqlconnectionhandler.MySQLConnectionHandler") \
                                                         as MCHMock:
                 #Creates valid MySQLConnectionHandler object
@@ -231,7 +231,7 @@ class TestFileExport(unittest.TestCase):
                 GetPasswordMock.reset_mock()
 
 
-    @patch("pdm_utils.pipelines.db_export.export_db.print")
+    @patch("pdm_utils.pipelines.export_db.print")
     def test_write_seqrecord(self, PrintMock):
         """
         Unittest that tests export_db.write_seqrecord()
