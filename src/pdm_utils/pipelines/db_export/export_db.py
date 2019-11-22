@@ -1,27 +1,39 @@
-"""Functions for converting a local SQL database query for a selction of phages
-to formatted files"""
 """Pipeline for converting a database, filtered for some phages, and writing
 appropriate output files"""
 
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
-from pdm_utils.functions import flat_files, phamerator, basic
+# import readline
+# import typing
+# from contextlib import contextmanager
+# from Bio.Seq import Seq
+
+import argparse
+import cmd
+import csv
 from functools import singledispatch
-from typing import List, Dict
+import os
 from pathlib import Path
-from contextlib import contextmanager
-import cmd, readline, os, sys, typing, argparse, csv, re
+import re
+import sys
+import time
+from typing import List, Dict
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
+from Bio.SeqFeature import SeqFeature #, FeatureLocation, CompoundLocation
+from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
+from pdm_utils.functions import flat_files, phamerator #, basic
 
+# Valid file formats using Biopython
+BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
+                       "phylip", "pir", "stockholm", "tab"]
+# Valid Biopython formats that crash the script due to specific values in
+# some genomes that can probably be fixed relatively easily and implemented.
+# BIOPYTHON_CHOICES_FIXABLE = ["embl", "imgt", "seqxml"]
+# Biopython formats that are not applicable.
+# BIOPYTHON_CHOICES_INVALID = ["fastq", "fastq-solexa", "fastq-illumina",
+#                              "phd", "sff", "qual"]
+# Biopython formats that are not writable
+# BIOPYTHON_CHOICES_NOT_WRITABLE = ["ig"]
 
-#Global file constant
-file_format_choices = ["gb", "fasta", "clustal", "embl",
-                       "fasta-2line", "fastq", "fastq-solexa",
-                       "fastq-illumina","ig", "igmt", "nexus",
-                       "phd", "phylip", "pir", "seqxml","sff",
-                       "stockholm", "tab", "qual"]
 def run_file_export(unparsed_args_list):
     """
     Uses parsed args to run the entirety of the file export pipeline
@@ -40,11 +52,11 @@ def run_file_export(unparsed_args_list):
     ffx=None
     dbx=False
     ix=False
-    if args.export == "csvx":
+    if args.export == "csv":
         csvx = True
     elif args.export == "ffx":
         ffx = args.file_format
-    elif args.export == "dbx":
+    elif args.export == "sql":
         dbx = True
     elif args.export == "ix":
         ix = True
@@ -68,7 +80,7 @@ def parse_file_export(unparsed_args_list):
         Select a export pipeline option to export genomic data:
             -csv export (csv)
             -formatted file export (ffx)
-            -database export (dbx)
+            -database export (sql)
             -interactive export (I)
         """
     DATABASE_HELP = "Name of the MySQL database to export from."
@@ -87,8 +99,8 @@ def parse_file_export(unparsed_args_list):
     INTERACTIVE_HELP = """
         Export option that enables full interactive walkthrough export.
         """
-    IMPORT_TABLE_HELP = """
-        Genome selection input option that imports genomes from a csv file.
+    TABLE_HELP = """
+        Genome selection input option that imports phage names from a csv file.
             Follow selection argument with path to the
             csv file containing the names of each genome in the first column.
         """
@@ -101,7 +113,7 @@ def parse_file_export(unparsed_args_list):
         Genome selection option that constructs genome list from
         inputted filters.
             Follow selection argument with formatted filter request:
-                Table/Field/Value
+                Table.Field=Value
         """
     GROUPS_HELP = """
         Genome selection option that groups genome list from
@@ -138,11 +150,11 @@ def parse_file_export(unparsed_args_list):
     subparser = parser.add_subparsers(help=EXPORT_SELECT_HELP, dest="export")
     subparser.required = True
 
-    csv_parser = subparser.add_parser("csvx", help=CSV_EXPORT_HELP)
-    csv_parser.add_argument("-tin", "--import_table", type=convert_file_path,
-                            help=IMPORT_TABLE_HELP, dest="input",
+    csv_parser = subparser.add_parser("csv", help=CSV_EXPORT_HELP)
+    csv_parser.add_argument("-t", "--table", type=convert_file_path,
+                            help=TABLE_HELP, dest="input",
                             default=[])
-    csv_parser.add_argument("-sgin", "--single_genomes", nargs="?",
+    csv_parser.add_argument("-n", "--genome_names", nargs="?",
                             help=SINGLE_GENOMES_HELP, dest="input",
                             action="append", default=[])
     csv_parser.add_argument("-f", "--filter", nargs="*",
@@ -152,15 +164,15 @@ def parse_file_export(unparsed_args_list):
                             help=GROUPS_HELP, nargs="*",
                             dest="groups", default=[])
 
-    db_parser = subparser.add_parser("dbx", help=DATABASE_EXPORT_HELP)
+    db_parser = subparser.add_parser("sql", help=DATABASE_EXPORT_HELP)
 
     ff_parser = subparser.add_parser("ffx", help=FORMATTED_FILE_EXPORT_HELP)
     ff_parser.add_argument("file_format", help=FILE_FORMAT_HELP,
-                            choices=file_format_choices)
-    ff_parser.add_argument("-tin", "--import_table", type=convert_file_path,
-                            help=IMPORT_TABLE_HELP, dest="input",
+                            choices=BIOPYTHON_CHOICES)
+    ff_parser.add_argument("-t", "--table", type=convert_file_path,
+                            help=TABLE_HELP, dest="input",
                             default=[])
-    ff_parser.add_argument("-sgin", "--single_genomes", nargs="?",
+    ff_parser.add_argument("-n", "--genome_names", nargs="?",
                             help=SINGLE_GENOMES_HELP, dest="input",
                             action="append", default=[])
     ff_parser.add_argument("-f", "--filter", nargs="*",
@@ -172,7 +184,9 @@ def parse_file_export(unparsed_args_list):
 
     i_parser = subparser.add_parser("ix", help=INTERACTIVE_HELP)
 
-    parser.set_defaults(folder_name="pdm_export", folder_path=Path.cwd(),
+    date = time.strftime("%Y%m%d")
+    default_folder_name = f"{date}_export"
+    parser.set_defaults(folder_name=default_folder_name, folder_path=Path.cwd(),
                         verbose=False, input=[], file_format=None,
                         filters=[], groups=[],
                         ix=False, csvx=False, dbx=False, ffx=False)
@@ -370,9 +384,9 @@ def execute_csvx_export(sql_handle, db_filter,
 
     if verbose:
             print("Writing csv file...")
+    file_name = f"{sql_handle.database}_v{data_name['Version']}_genomes"
     write_csv(genomes, export_path, export_dir_name=folder_name,
-              csv_name=\
-                 f"{sql_handle.database}_{data_name}")
+              csv_name=file_name)
 
 def csvx_grouping(sql_handle, group_path, group_list, db_filter,
                   verbose=False):
@@ -739,14 +753,23 @@ def write_database(sql_handle, version, export_path,
     if not export_path.exists():
         export_path.mkdir()
 
-    sql_path = export_path.joinpath(f"{sql_handle.database}_v{version}.sql")
+    # TODO this is probably the long term preferred code:
+    # sql_path = export_path.joinpath(f"{sql_handle.database}_v{version}.sql")
+    # os.system(f"mysqldump -u {sql_handle._username} -p{sql_handle._password} "
+    #           f"--skip-comments {sql_handle.database} > {str(sql_path)}")
+    # version_path = sql_path.with_name(f"{sql_handle.database}_v{version}.version")
+    # version_path.touch()
+    # version_path.write_text(f"{version}")
 
+    # TODO this is a current temporary fix.
+    sql_path = export_path.joinpath(f"{sql_handle.database}.sql")
     os.system(f"mysqldump -u {sql_handle._username} -p{sql_handle._password} "
               f"--skip-comments {sql_handle.database} > {str(sql_path)}")
-
-    version_path = sql_path.with_name(f"{sql_handle.database}_v{version}.version")
+    version_path = sql_path.with_name(f"{sql_handle.database}.version")
     version_path.touch()
     version_path.write_text(f"{version}")
+
+
 
 def main(args):
     """Function to initialize file export"""

@@ -407,8 +407,14 @@ class TestFileExport(unittest.TestCase):
         """
         #Create folder and file paths
         folder_path = (self.test_cwd).joinpath("export")
-        db_path = folder_path.joinpath("test_db_v1.sql")
-        version_path = db_path.with_name("test_db_v1.version")
+        # TODO how the preferred output will be.
+        # db_path = folder_path.joinpath("test_db_v1.sql")
+        # version_path = db_path.with_name("test_db_v1.version")
+
+        # TODO how the temporary output is formatted.
+        db_path = folder_path.joinpath("test_db.sql")
+        version_path = db_path.with_name("test_db.version")
+
         #Assert write_database() correctly created files
         export_db.write_database(self.sql_handle, 1, self.test_cwd)
         self.assertTrue(folder_path.exists())
