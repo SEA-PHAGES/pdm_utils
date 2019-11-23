@@ -260,13 +260,7 @@ def execute_export(sql_handle, export_path, folder_name,
             exit(1)
 
         if csv_export:
-            if groups:
-                folder_path = export_path.joinpath(folder_name)
-                folder_path.mkdir(exist_ok=True)
-                csvx_grouping(sql_handle, folder_path, groups, db_filter,
-                              verbose=verbose)
-            else:
-                execute_csvx_export(sql_handle, db_filter, export_path,
+            execute_csvx_export(sql_handle, db_filter, export_path,
                                     folder_name, db_version,
                                     verbose=verbose, data_name=db_version)
 
@@ -392,33 +386,6 @@ def execute_csvx_export(sql_handle, db_filter,
     write_csv(genomes, export_path, export_dir_name=folder_name,
               csv_name=file_name)
 
-def csvx_grouping(sql_handle, group_path, group_list, db_filter,
-                  verbose=False):
-    """
-    Recursive helper function that handles grouping
-    for csvx
-
-    """
-    current_group_list = group_list.copy()
-    current_group = current_group_list.pop(0)
-    group_dict = db_filter.group(current_group)
-    for group in group_dict.keys():
-        if group_dict[group]:
-            print(f"Grouped {group}...")
-            grouped_path = group_path.joinpath(group)
-            grouped_path.mkdir(exist_ok=True)
-            if current_group_list:
-                csvx_grouping(sql_handle, grouped_path, current_group_list,
-                              filter.Filter(sql_handle.database,
-                                            sql_handle,
-                                            group_dict[group]),
-                              verbose=verbose)
-            else:
-                db_filter.phageIDs = group_dict[group]
-                execute_csvx_export(sql_handle, db_filter, grouped_path,
-                                    group, db_version,
-                                    verbose=verbose, data_name=group)
-
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                  db_version, file_format, verbose=False):
     """
@@ -445,7 +412,7 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
             else:
                 db_filter.phageIDs = group_dict[group]
                 execute_ffx_export(sql_handle, db_filter, file_format,
-                                   grouped_path, group, db_version,
+                                   group_path, group, db_version,
                                    verbose=verbose, data_name=group)
 
 def convert_path(path: str):

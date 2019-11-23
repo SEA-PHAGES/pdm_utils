@@ -216,22 +216,34 @@ class Filter:
         for group_dict in group_dicts:
             group_set.append(group_dict[f"{field_name}"])
 
-        groups = dict.fromkeys(group_set, [])
+        groups = {}
+        for key in group_set:
+            groups.update({key: []})
 
-        phage_list = self.phageIDs
         for group in group_set:
             query = f"SELECT PhageID FROM phage WHERE {field_name}='{group}'" + \
                      " and PhageID IN " + "('" + \
-                     "','".join(phage_list) + "')"
+                     "','".join(self.phageIDs) + "')"
             results_dicts = self.sql_handle.execute_query(query)
             if results_dicts != ():
                 results_list = []
                 for result_dict in results_dicts:
                      results_list.append(result_dict["PhageID"])
-                     phage_list.remove(result_dict["PhageID"])
                 groups[group] = results_list
 
-        groups.update({"other": phage_list})
+
+        groups.update({"None": []})
+
+        query = f"SELECT PhageID FROM phage WHERE {field_name} is NULL " + \
+                 "and PhageID IN" + "('" + \
+                 "','".join(self.phageIDs) + "')"
+        results_dicts = self.sql_handle.execute_query(query)
+        if results_dicts != ():
+            results_list = []
+            for result_dict in results_dicts:
+                results_list.append(result_dict["PhageID"])
+            groups["None"] = results_list
+
         return groups
 
     def group_author(self):
