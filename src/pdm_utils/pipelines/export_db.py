@@ -260,9 +260,11 @@ def execute_export(sql_handle, export_path, folder_name,
             exit(1)
 
         if csv_export:
-            execute_csvx_export(sql_handle, db_filter, "phage",  
-                                export_path, folder_name, db_version,
-                                    verbose=verbose, data_name=db_version)
+            file_name = \
+                f"{sql_handle.database}_v{db_version['Version']}_genomes"
+            write_csv("phage", db_filter, sql_handle, 
+              export_path, export_dir_name=folder_name, csv_name=file_name,
+              verbose=verbose)
 
         if ffile_export != None:
             if groups:
@@ -336,55 +338,6 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
                     export_path,
                     export_dir_name=folder_name,
                     verbose=verbose)
-
-def execute_csvx_export(sql_handle, db_filter, table,
-                        export_path, folder_name, db_version,
-                        verbose=False, data_name="database"):
-    """
-    Executes the ffx export  pipeline by calling its
-    various functions
-
-    :param sql_handle:
-            Input a valid MySqlConnectionHandler object.
-        :type sql_handle: MySqlConnectionHandler
-        :param db_filter:
-            Input a db_filter with a loaded list of phageIDs.
-        :type db_filter: Filter
-        :param file_format:
-            Input a SeqIO supported file format.
-        :type file_format: str
-        :param export_path:
-            Input a valid path to place export folder.
-        :type export_path: Path
-        :param folder_name:
-            Input a name for the export folder.
-        :type folder_name: str
-        :param db_version:
-            Input a db_version dictionary.
-        :type db_version: dict
-        :param verbose:
-            Input a boolean value for verbose option.
-        :type verbose: boolean
-        :param data_name:
-            Input a name for the file export name option.
-        :type data_name: str
-    """
-    if verbose:
-        print(
-          f"Retrieving {data_name} data from {sql_handle.database}...")
-
-    genomes = phamerator.parse_genome_data(
-                      sql_handle,
-                      phage_id_list=db_filter.results(
-                                            verbose=verbose),
-                      phage_query="SELECT * FROM phage",
-                      gene_query="SELECT * FROM gene")
-
-    if verbose:
-            print("Writing {data_name} csv file...")
-    file_name = f"{sql_handle.database}_v{data_name['Version']}_genomes"
-    write_csv(table, db_filter, sql_handle, 
-              export_path, export_dir_name=folder_name, csv_name=file_name)
 
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                  db_version, file_format, verbose=False):
@@ -663,13 +616,13 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
         SeqIO.write(record, output_handle, file_format)
         output_handle.close()
 
-def write_csv(table, db_filter, sql_handle, export_path, export_dir_name="export",
-                                        csv_name="database"):
+def write_csv(table, db_filter, sql_handle, export_path, 
+              export_dir_name="export",csv_name="database",
+              verbose=False):
     """Writes a formatted csv file from genome objects"""
 
     remove_fields = {"phage": ["sequence"]}
     
-
     valid_fields = db_filter.tables[table].copy()
 
     for unwanted_field in remove_fields[table]:
@@ -687,7 +640,10 @@ def write_csv(table, db_filter, sql_handle, export_path, export_dir_name="export
         csv_version += 1
         csv_path = export_path.joinpath(f"{csv_name}{csv_version}.csv")
 
-    csv_path.touch()
+    if verbose:
+        print(
+          f"Retrieving {csv_name} data from {sql_handle.database}...")
+ 
 
     csv_request = ("SELECT " + ",".join(valid_fields) +\
                  f" FROM {table} WHERE PhageID IN ('" + \
@@ -704,6 +660,9 @@ def write_csv(table, db_filter, sql_handle, export_path, export_dir_name="export
         csv_data.append(row_data)
         row_data = []
 
+    if verbose:
+            print("Writing {csv_name}.csv...")
+ 
     csv_path.touch()
     with open(csv_path, 'w', newline="") as csv_file:
         csvwriter=csv.writer(csv_file, delimiter=",",
