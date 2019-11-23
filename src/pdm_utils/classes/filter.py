@@ -44,6 +44,7 @@ class Filter:
 
         self.history = []
         self.filters = {}
+
         self.phageIDs = results
 
     def add_filter(self, table, field, value, verbose=False):

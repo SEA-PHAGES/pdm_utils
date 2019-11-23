@@ -173,9 +173,9 @@ def parse_export(unparsed_args_list):
         parser.add_argument("-t", "--table", type=convert_file_path,
                                 help=TABLE_HELP, dest="input",
                                 default=[])
-        parser.add_argument("-n", "--genome_names", nargs="?",
+        parser.add_argument("-n", "--genome_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input",
-                                action="append", default=[])
+                                default=[])
         parser.add_argument("-f", "--filter", nargs="*",
                                 help=FILTERS_HELP,
                                 dest="filters", default=[])
@@ -260,8 +260,8 @@ def execute_export(sql_handle, export_path, folder_name,
             exit(1)
 
         if csv_export:
-            execute_csvx_export(sql_handle, db_filter, export_path,
-                                    folder_name, db_version,
+            execute_csvx_export(sql_handle, db_filter, "phage",  
+                                export_path, folder_name, db_version,
                                     verbose=verbose, data_name=db_version)
 
         if ffile_export != None:
@@ -337,7 +337,7 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
                     export_dir_name=folder_name,
                     verbose=verbose)
 
-def execute_csvx_export(sql_handle, db_filter,
+def execute_csvx_export(sql_handle, db_filter, table,
                         export_path, folder_name, db_version,
                         verbose=False, data_name="database"):
     """
@@ -381,10 +381,10 @@ def execute_csvx_export(sql_handle, db_filter,
                       gene_query="SELECT * FROM gene")
 
     if verbose:
-            print("Writing csv file...")
+            print("Writing {data_name} csv file...")
     file_name = f"{sql_handle.database}_v{data_name['Version']}_genomes"
-    write_csv(genomes, export_path, export_dir_name=folder_name,
-              csv_name=file_name)
+    write_csv(table, db_filter, sql_handle, 
+              export_path, export_dir_name=folder_name, csv_name=file_name)
 
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                  db_version, file_format, verbose=False):
@@ -663,9 +663,17 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
         SeqIO.write(record, output_handle, file_format)
         output_handle.close()
 
-def write_csv(genome_list, export_path, export_dir_name="export",
+def write_csv(table, db_filter, sql_handle, export_path, export_dir_name="export",
                                         csv_name="database"):
     """Writes a formatted csv file from genome objects"""
+
+    remove_fields = {"phage": ["sequence"]}
+    
+
+    valid_fields = db_filter.tables[table].copy()
+
+    for unwanted_field in remove_fields[table]:
+        valid_fields.remove(unwanted_field)
 
     export_path = export_path.joinpath(export_dir_name)
 
@@ -679,41 +687,31 @@ def write_csv(genome_list, export_path, export_dir_name="export",
         csv_version += 1
         csv_path = export_path.joinpath(f"{csv_name}{csv_version}.csv")
 
+    csv_path.touch()
+
+    csv_request = ("SELECT " + ",".join(valid_fields) +\
+                 f" FROM {table} WHERE PhageID IN ('" + \
+                  "','".join(db_filter.phageIDs) + "')")
+    sql_data = sql_handle.execute_query(csv_request)
+
     csv_data = []
-    csv_data.append(   ["PhageID",
-                        "Accession",
-                        "Name",
-                        "HostStrain",
-                        "SequenceLength",
-                        "DateLastModified",
-                        "Notes",
-                        "GC",
-                        "Cluster",
-                        "Subcluster",
-                        "Status",
-                        "RetrieveRecord",
-                        "AnnotationAuthor",])
-    for gnm in genome_list:
-        csv_data.append([gnm.id,
-                         gnm.accession,
-                         gnm.name,
-                         gnm.host_genus,
-                         gnm.length,
-                         gnm.date,
-                         gnm.description,
-                         gnm.gc,
-                         gnm.cluster,
-                         gnm.subcluster,
-                         gnm.annotation_status,
-                         gnm.retrieve_record,
-                         gnm.annotation_author])
+    csv_data.append(sql_data[0].keys())
+
+    row_data = []
+    for sql_dict in sql_data:
+        for key in sql_dict.keys():
+            row_data.append(sql_dict[key])
+        csv_data.append(row_data)
+        row_data = []
+
     csv_path.touch()
     with open(csv_path, 'w', newline="") as csv_file:
-        csvwriter = csv.writer(csv_file, delimiter=",",
-                               quotechar = "|",
-                               quoting = csv.QUOTE_MINIMAL)
+        csvwriter=csv.writer(csv_file, delimiter=",",
+                             quotechar="|",
+                             quoting=csv.QUOTE_MINIMAL)
         for row in csv_data:
             csvwriter.writerow(row)
+
 
 def write_database(sql_handle, version, export_path,
                     export_dir_name="export"):
