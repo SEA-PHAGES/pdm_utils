@@ -34,47 +34,61 @@ BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
 # Biopython formats that are not writable
 # BIOPYTHON_CHOICES_NOT_WRITABLE = ["ig"]
 
-def run_file_export(unparsed_args_list):
+def run_export(unparsed_args_list):
     """
     Uses parsed args to run the entirety of the file export pipeline
     :param unparsed_args_list:
         Input a list of command line args.
     :type unparsed_args_list: List[str]
     """
-    args = parse_file_export(unparsed_args_list)
+    args_tuple = parse_export(unparsed_args_list)
+    export = args_tuple[0]
+    args = args_tuple[1]
+
     if args.verbose:
         print("Please input database credentials:")
     sql_handle = establish_database_connection(args.database)
 
-    phage_list = parse_phage_list_input(args.input)
-    filters = parse_filters(args.filters)
-    csvx=False
-    ffx=None
-    dbx=False
-    ix=False
-    if args.export == "csv":
-        csvx = True
-    elif args.export == "ffx":
-        ffx = args.file_format
-    elif args.export == "sql":
+   
+    csvx = False
+    ffx = None
+    dbx = False
+    ix = False
+
+    if export in BIOPYTHON_CHOICES+["csv"]:
+        phage_list = parse_phage_list_input(args.input)
+        filters = parse_filters(args.filters)
+
+        if export == "csv":
+            csvx = True
+        else:
+            ffx = export
+    elif export == "sql":
         dbx = True
-    elif args.export == "ix":
+    elif export == "I":
         ix = True
+    else:
+        print("ERROR: Export pipeline option discrepency.\n"
+              "Pipeline parsed from command line args is not supported")
+        raise ValueError
 
     if not ix:
-        execute_file_export(sql_handle, args.folder_path, args.folder_name,
+        execute_export(sql_handle, args.folder_path, args.folder_name,
                             phage_filter_list=phage_list, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
                             filters=filters, groups=args.groups)
     else:
         pass
 
-def parse_file_export(unparsed_args_list):
+def parse_export(unparsed_args_list):
     """
     Parses export_db arguments and stores them with an argparse object
     :param unparsed_args_list:
         Input a list of command line args.
     :type unparsed_args_list: List[str]
+    :returns tuple(export.pipeline, parsed_args):
+        Return a tuple of the export pipeline and a parsed args object.
+    :type tuple(export.pipeline, parsed_args): (str, Namespace)
     """
     EXPORT_SELECT_HELP = """
         Select a export pipeline option to export genomic data:
@@ -137,7 +151,15 @@ def parse_file_export(unparsed_args_list):
     FILE_FORMAT_HELP = """
         Positional argument specifying the format of the file to export
         """
-
+    export_options = BIOPYTHON_CHOICES + ["csv", "sql"]
+    
+    selection_parser = argparse.ArgumentParser()
+    selection_parser.add_argument("pipeline", type=str,
+                                  choices=export_options,
+                                  nargs="?", default="I",
+                                  help=EXPORT_SELECT_HELP)
+    export = selection_parser.parse_args([unparsed_args_list[2]])
+ 
     parser = argparse.ArgumentParser()
     parser.add_argument("database", type=str, help=DATABASE_HELP)
 
@@ -147,54 +169,36 @@ def parse_file_export(unparsed_args_list):
     parser.add_argument("-v", "--verbose", action="store_true",
                         help=VERBOSE_HELP)
 
-    subparser = parser.add_subparsers(help=EXPORT_SELECT_HELP, dest="export")
-    subparser.required = True
-
-    csv_parser = subparser.add_parser("csv", help=CSV_EXPORT_HELP)
-    csv_parser.add_argument("-t", "--table", type=convert_file_path,
-                            help=TABLE_HELP, dest="input",
-                            default=[])
-    csv_parser.add_argument("-n", "--genome_names", nargs="?",
-                            help=SINGLE_GENOMES_HELP, dest="input",
-                            action="append", default=[])
-    csv_parser.add_argument("-f", "--filter", nargs="*",
-                            help=FILTERS_HELP,
-                            dest="filters", default=[])
-    csv_parser.add_argument("-g", "--groups", choices=filter.group_options,
+    if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
+        parser.add_argument("-t", "--table", type=convert_file_path,
+                                help=TABLE_HELP, dest="input",
+                                default=[])
+        parser.add_argument("-n", "--genome_names", nargs="?",
+                                help=SINGLE_GENOMES_HELP, dest="input",
+                                action="append", default=[])
+        parser.add_argument("-f", "--filter", nargs="*",
+                                help=FILTERS_HELP,
+                                dest="filters", default=[])
+        
+        if export.pipeline != "csv":
+            parser.add_argument("-g", "--groups", choices=filter.group_options,
                             help=GROUPS_HELP, nargs="*",
                             dest="groups", default=[])
-
-    db_parser = subparser.add_parser("sql", help=DATABASE_EXPORT_HELP)
-
-    ff_parser = subparser.add_parser("ffx", help=FORMATTED_FILE_EXPORT_HELP)
-    ff_parser.add_argument("file_format", help=FILE_FORMAT_HELP,
-                            choices=BIOPYTHON_CHOICES)
-    ff_parser.add_argument("-t", "--table", type=convert_file_path,
-                            help=TABLE_HELP, dest="input",
-                            default=[])
-    ff_parser.add_argument("-n", "--genome_names", nargs="?",
-                            help=SINGLE_GENOMES_HELP, dest="input",
-                            action="append", default=[])
-    ff_parser.add_argument("-f", "--filter", nargs="*",
-                            help=FILTERS_HELP,
-                            dest="filters", default=[])
-    ff_parser.add_argument("-g", "--groups", choices=filter.group_options,
-                            help=GROUPS_HELP, nargs="*",
-                            dest="groups", default=[])
-
-    i_parser = subparser.add_parser("ix", help=INTERACTIVE_HELP)
 
     date = time.strftime("%Y%m%d")
     default_folder_name = f"{date}_export"
-    parser.set_defaults(folder_name=default_folder_name, folder_path=Path.cwd(),
+    default_folder_path = Path.cwd()
+
+    parser.set_defaults(folder_name=default_folder_name, 
+                        folder_path=default_folder_path,
                         verbose=False, input=[], file_format=None,
                         filters=[], groups=[],
                         ix=False, csvx=False, dbx=False, ffx=False)
 
-    parsed_args = parser.parse_args(unparsed_args_list[2:])
-    return parsed_args
+    parsed_args = parser.parse_args(unparsed_args_list[3:])
+    return (export.pipeline, parsed_args)
 
-def execute_file_export(sql_handle, export_path, folder_name,
+def execute_export(sql_handle, export_path, folder_name,
                         phage_filter_list=[], verbose=False,
                         csv_export=False, ffile_export=None, db_export=False,
                         filters=[], groups=[]):
@@ -620,11 +624,10 @@ def append_database_version(genome_seqrecord: SeqRecord, version_data: Dict):
         Input a version data dictionary parsed from a SQL database.
     :type version_data: dictionary
     """
-
-    if len(version_data) < 2:
-        print("Version data dictionary "
-        "containing SQL database version "
-        "data does not contain enough values")
+    version_keys = version_data.keys()
+    if "Version" not in version_keys or "SchemaVersion" not in version_keys:
+        print("Version of selected database "
+        "is outdated.\nVersion data is incompatable")
         raise ValueError
     try:
         genome_seqrecord.annotations["comment"] =\
@@ -773,7 +776,7 @@ def write_database(sql_handle, version, export_path,
 
 def main(args):
     """Function to initialize file export"""
-    run_file_export(args)
+    run_export(args)
 
 class Cmd_Export(cmd.Cmd):
 
@@ -886,7 +889,7 @@ class Cmd_Export(cmd.Cmd):
         """
         print("\
                 Initiating Export...\n")
-        execute_file_export(self.file_format, self.sql_handle,
+        execute_export(self.file_format, self.sql_handle,
                                 self.phage_filter_list, self.directory_path,
                                 self.directory_name,
                                 verbose=False, csv_log=False)
