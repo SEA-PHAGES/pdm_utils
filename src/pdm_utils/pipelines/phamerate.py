@@ -138,7 +138,3 @@ def main(argument_list):
 
     # Report phameration elapsed time
     print("Elapsed time: {}".format(str(stop - start)))
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])

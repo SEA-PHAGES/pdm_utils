@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import argparse
 import sys
 import os
@@ -207,7 +205,3 @@ def main(argument_list):
             mysql_handler.execute_transaction([gene_queue.get()])
 
     return
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
