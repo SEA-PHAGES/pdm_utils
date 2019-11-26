@@ -17,7 +17,7 @@
 # Created by: Travis Mavrich
 # Database derived from: Actinobacteriophage_789
 # No statement record.
-# Contains CASCADE settings.
+# Added CASCADE settings.
 
 
 # Schema version: 2
@@ -25,7 +25,8 @@
 # Created: 20180620
 # Created by: Travis Mavrich
 # Database derived from: Actinobacteriophage_1060
-# No statement record.
+# These improvements were implement over several versions instead of in a
+# single step.
 # Added phage.RetrieveRecord
 # Added phage.AnnotationQC
 # Added phage.Program
@@ -37,7 +38,8 @@
 # Created: 20180620
 # Created by: Travis Mavrich
 # Database derived from: Actino_Draft
-# No statement record.
+# These improvements were implement over several versions instead of in a
+# single step.
 # Added version.schema_version
 # Added phage.Cluster2
 # Added phage.Subcluster2
