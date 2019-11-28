@@ -9,9 +9,12 @@ from typing import List
 import cmd, readline, argparse, os, sys, re, string
 
 #Global file constants
-group_options = ["cluster", "subcluster",
-                 "status",  "host",
-                 "author", "record"]
+GROUP_OPTIONS = ["Cluster2", "Subcluster2",
+                 "status",  "HostStrain"]
+
+GROUP_OPTIONS_DICT = {"phage" : ["Cluster2", "Subcluster2",
+                                 "Status",  "HostStrain"], 
+                      "gene"  : []}
 
 def build_tables(sql_handle):
     query = (
@@ -124,7 +127,7 @@ class Filter:
         self.history = []
         self.filters = {}
 
-    def translate_field(self, raw_field):
+    def translate_field(self, raw_field, verbose=False):
         for table in self.tables.keys():
             for field in self.tables[table]:
                 if field.lower() == raw_field.lower():
@@ -332,20 +335,25 @@ class Filter:
             print(f"Database hits: {len(self.values)}")
         return len(self.values)
 
-    def group(self, group, verbose=False):
+    def group(self, field, verbose=False):
         """
         Function that creates a two-dimensional array of
         values from the results list
         separated by a characteristic.
         """
-
+        if field in GROUP_OPTIONS_DICT[self.table]:
+            return self.group_str_qualitative(field)
+        else:
+            if verbose:
+                print(f"Grouping option by {field} is not supported.")
+        
     def group_str_qualitative(self, field_name):
         """
         Helper function that groups qualitative
         values into a two-dimensional array
         """
         group_dicts = self.sql_handle.execute_query(
-            f"SELECT DISTINCT {field_name} FROM phage")
+            f"SELECT DISTINCT {field_name} FROM {self.table}")
         group_set = []
         for group_dict in group_dicts:
             group_set.append(group_dict[f"{field_name}"])
@@ -355,29 +363,30 @@ class Filter:
             groups.update({key: []})
 
         for group in group_set:
-            query = f"SELECT PhageID FROM phage WHERE {field_name}='{group}'" + \
-                     " and PhageID IN " + "('" + \
-                     "','".join(self.values) + "')"
+            query =(f"SELECT {self.key} FROM {self.table} "
+                    f"WHERE {field_name}='{group}'"+\
+                    f" and {self.key} IN " + "('" + \
+                     "','".join(self.values) + "')")
             results_dicts = self.sql_handle.execute_query(query)
             if results_dicts != ():
                 results_list = []
                 for result_dict in results_dicts:
-                     results_list.append(result_dict["PhageID"])
+                     results_list.append(result_dict[self.key])
                 groups[group] = results_list
-
 
         groups.update({"None": []})
 
-        query = f"SELECT PhageID FROM phage WHERE {field_name} is NULL " + \
-                 "and PhageID IN" + "('" + \
-                 "','".join(self.values) + "')"
+        query =(f"SELECT {self.key} FROM {self.table} "
+                f"WHERE {field_name} is NULL "
+                f"and {self.key} IN" + "('" + \
+                 "','".join(self.values) + "')")
         results_dicts = self.sql_handle.execute_query(query)
         if results_dicts != ():
             results_list = []
             for result_dict in results_dicts:
-                results_list.append(result_dict["PhageID"])
+                results_list.append(result_dict[self.key])
             groups["None"] = results_list
-
+    
         return groups
     
     def interactive(self, sql_handle = None):
@@ -651,10 +660,10 @@ if __name__ == "__main__":
     #db_filter.sort("PhageID")
     #db_filter.results(verbose=True)
 
-    db_filter = Filter(sql_handle, table="gene")
-    db_filter.add_filter("gene", "notes", "antirepressor",verbose=True)
-    db_filter.add_filter("phage", "hoststrain", "gordonia", verbose=True)
-    db_filter.update()
-    db_filter.sort("GeneID", verbose=True)
-    db_filter.results(verbose=True)
+    #db_filter = Filter(sql_handle, table="gene")
+    #db_filter.add_filter("gene", "notes", "antirepressor",verbose=True)
+    #db_filter.add_filter("phage", "hoststrain", "gordonia", verbose=True)
+    #db_filter.update()
+    #db_filter.sort("GeneID", verbose=True)
+    #db_filter.results(verbose=True)
 

@@ -55,7 +55,7 @@ def run_export(unparsed_args_list):
 
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values_list = parse_value_list_input(args.input)
-        filters = parse_filters(args.filters)
+        filters = parse_filters(args.filters, verbose=args.verbose)
 
         if args.pipeline == "csv":
             csvx = True
@@ -74,7 +74,8 @@ def run_export(unparsed_args_list):
         execute_export(sql_handle, args.output_path, args.output_name,
                             values_list=values_list, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
-                            table=args.table, filters=filters, groups=args.groups)
+                            table=args.table, 
+                            filters=filters, groups=args.groups)
     else:
         pass
 
@@ -188,12 +189,12 @@ def parse_export(unparsed_args_list):
                                 default=[])
         parser.add_argument("-f", "--filter", nargs="*",
                                 help=FILTERS_HELP,
-                                dest="filters", default=[])
+                                dest="filters")
         
         if export.pipeline != "csv":
-            parser.add_argument("-g", "--groups", choices=filter.group_options,
+            parser.add_argument("-g", "--groups", choices=filter.GROUP_OPTIONS,
                             help=GROUPS_HELP, nargs="*",
-                            dest="groups", default=[])
+                            dest="groups")
 
     date = time.strftime("%Y%m%d")
     default_folder_name = f"{date}_export"
@@ -208,7 +209,7 @@ def parse_export(unparsed_args_list):
 
     parsed_args = parser.parse_args(unparsed_args_list[3:])
     return parsed_args
-
+  
 def execute_export(sql_handle, output_path, output_name,
                         values_list=[], verbose=False,
                         csv_export=False, ffile_export=None, db_export=False,
@@ -260,7 +261,7 @@ def execute_export(sql_handle, output_path, output_name,
 
     if csv_export or ffile_export:
         db_filter = filter.Filter(sql_handle,
-                               values_list=values_list, table=table)
+                                  values_list=values_list, table=table)
         for filter_list in filters:
             db_filter.add_filter(filter_list[0], filter_list[1],
                                  filter_list[2], verbose=verbose)
@@ -280,7 +281,7 @@ def execute_export(sql_handle, output_path, output_name,
 
         if ffile_export != None:
             if groups:
-                folder_path = output_path.joinpath(folder_name)
+                folder_path = output_path.joinpath(output_name)
                 folder_path.mkdir(exist_ok=True)
                 ffx_grouping(sql_handle, folder_path, groups, db_filter,
                              db_version, ffile_export, verbose=verbose)
@@ -290,7 +291,7 @@ def execute_export(sql_handle, output_path, output_name,
                                    verbose=verbose, data_name=db_version)
 
 def execute_ffx_export(sql_handle, db_filter, file_format,
-                       export_path, folder_name, db_version,
+                       output_path, output_name, db_version,
                        verbose=False, data_name="database"):
     """
     Executes the ffx export  pipeline by calling its
@@ -347,8 +348,8 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
 
     write_seqrecord(seqrecords,
                     file_format,
-                    export_path,
-                    export_dir_name=folder_name,
+                    output_path,
+                    export_dir_name=output_name,
                     verbose=verbose)
 
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
@@ -374,7 +375,7 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                              verbose=verbose)
 
             else:
-                db_filter.phageIDs = group_dict[group]
+                db_filter.values = group_dict[group]
                 execute_ffx_export(sql_handle, db_filter, file_format,
                                    group_path, group, db_version,
                                    verbose=verbose, data_name=group)
@@ -680,7 +681,7 @@ def write_csv(table, db_filter, sql_handle, output_path,
         row_data = []
 
     if verbose:
-            print("Writing {csv_name}.csv...")
+            print(f"Writing {csv_name}.csv...")
  
     csv_path.touch()
     with open(csv_path, 'w', newline="") as csv_file:
