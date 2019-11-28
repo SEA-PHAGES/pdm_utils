@@ -9,11 +9,11 @@ from typing import List
 import cmd, readline, argparse, os, sys, re, string
 
 #Global file constants
-GROUP_OPTIONS = ["Cluster2", "Subcluster2",
-                 "status",  "HostStrain"]
+GROUP_OPTIONS = ["cluster2", "subcluster2",
+                 "status",  "hoststrain"]
 
-GROUP_OPTIONS_DICT = {"phage" : ["Cluster2", "Subcluster2",
-                                 "Status",  "HostStrain"], 
+GROUP_OPTIONS_DICT = {"phage" : ["cluster2", "subcluster2",
+                                 "status",  "hoststrain"], 
                       "gene"  : []}
 
 def build_tables(sql_handle):

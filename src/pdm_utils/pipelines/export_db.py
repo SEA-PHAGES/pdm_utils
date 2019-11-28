@@ -6,6 +6,10 @@ appropriate output files"""
 # from contextlib import contextmanager
 # from Bio.Seq import Seq
 
+#for (to be moved) cds_to_seqrecord dependancy
+from Bio.Alphabet import IUPAC
+
+
 import argparse
 import cmd
 import csv
@@ -174,7 +178,7 @@ def parse_export(unparsed_args_list):
 
     
     if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
-        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage, gene"])
+        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage", "gene"])
         table_choices.update({"csv": ["domain", "gene", "gene_domain",
                                        "phage", "pham", "pham_color",
                                        "tmrna", "trna", "trna_structures"]})
@@ -192,7 +196,8 @@ def parse_export(unparsed_args_list):
                                 dest="filters")
         
         if export.pipeline != "csv":
-            parser.add_argument("-g", "--groups", choices=filter.GROUP_OPTIONS,
+            parser.add_argument("-g", "--groups", type=str.lower,
+                            choices=filter.GROUP_OPTIONS,
                             help=GROUPS_HELP, nargs="*",
                             dest="groups")
 
@@ -284,15 +289,17 @@ def execute_export(sql_handle, output_path, output_name,
                 folder_path = output_path.joinpath(output_name)
                 folder_path.mkdir(exist_ok=True)
                 ffx_grouping(sql_handle, folder_path, groups, db_filter,
-                             db_version, ffile_export, verbose=verbose)
+                             db_version, ffile_export, 
+                             table=table, verbose=verbose)
             else:
                 execute_ffx_export(sql_handle, db_filter, ffile_export,
                                    output_path, output_name, db_version,
-                                   verbose=verbose, data_name=db_version)
+                                   verbose=verbose, data_name=db_version,
+                                   table=table)
 
 def execute_ffx_export(sql_handle, db_filter, file_format,
                        output_path, output_name, db_version,
-                       verbose=False, data_name="database"):
+                       verbose=False, data_name="database", table="phage"):
     """
     Executes the ffx export  pipeline by calling its
     various functions
@@ -326,25 +333,35 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
     if verbose:
         print(
           f"Retrieving {data_name} data from {sql_handle.database}...")
-    genomes = phamerator.parse_genome_data(
-                            sql_handle,
-                            phage_id_list=db_filter.results(
-                                            verbose=verbose),
-                            phage_query="SELECT * FROM phage",
-                            gene_query="SELECT * FROM gene")
-
+    if table == "phage": 
+        genomes = phamerator.parse_genome_data(
+                                sql_handle,
+                                phage_id_list=db_filter.results(
+                                                verbose=verbose),
+                                phage_query="SELECT * FROM phage",
+                                gene_query="SELECT * FROM gene")
+    else:
+        cds_list = parse_cds_data_from_geneid(
+                sql_handle, db_filter.results(verbose=verbose))
+        
     if verbose:
         print(f"Converting {data_name} data to SeqRecord format...")
     seqrecords = []
-    for gnm in genomes:
-        set_cds_seqfeatures(gnm)
+
+    if table == "phage":
+        for gnm in genomes:
+            set_cds_seqfeatures(gnm)
+            if verbose:
+                print(f"Converting {gnm.name}...")
+            seqrecords.append(flat_files.genome_to_seqrecord(gnm))
         if verbose:
-            print(f"Converting {gnm.name}...")
-        seqrecords.append(flat_files.genome_to_seqrecord(gnm))
-    if verbose:
-        print("Appending database version...")
-    for record in seqrecords:
-        append_database_version(record, db_version)
+            print("Appending database version...")
+        for record in seqrecords:
+            append_database_version(record, db_version)
+
+    else:
+        for cds in cds_list:
+            seqrecords.append(cds_to_seqrecord(cds))
 
     write_seqrecord(seqrecords,
                     file_format,
@@ -353,14 +370,14 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
                     verbose=verbose)
 
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
-                 db_version, file_format, verbose=False):
+                 db_version, file_format, table="phage", verbose=False):
     """
     Recursive helper function that handles grouping
     for ffx
     """
     current_group_list = group_list.copy()
     current_group = current_group_list.pop(0)
-    group_dict = db_filter.group(current_group)
+    group_dict = db_filter.group(current_group, verbose=verbose)
     for group in group_dict.keys():
         if group_dict[group]:
             if verbose:
@@ -371,14 +388,15 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                 ffx_grouping(sql_handle, grouped_path, current_group_list,
                               filter.Filter(sql_handle,
                                             group_dict[group]),
-                             db_version, file_format,
+                             db_version, file_format, table=table,
                              verbose=verbose)
 
             else:
                 db_filter.values = group_dict[group]
                 execute_ffx_export(sql_handle, db_filter, file_format,
                                    group_path, group, db_version,
-                                   verbose=verbose, data_name=group)
+                                   verbose=verbose, data_name=group,
+                                   table=table)
 
 def convert_path(path: str):
     """
@@ -850,6 +868,54 @@ class Cmd_Export(cmd.Cmd):
         print("       Exiting...\n")
 
         sys.exit(1)
+
+def cds_to_seqrecord(cds):
+    try:
+        record = SeqRecord(cds.translation)
+        record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
+    except AttributeError:
+        print("Genome object failed to be converted to SeqRecord\n."
+              "Genome valid attribute 'seq' is required to "
+              "convert to SeqRecord object.")
+
+    record.name = cds.id
+    if cds.locus_tag != "":
+        record.id = cds.locus_tag
+    cds.set_seqfeature()
+    record.features = [cds.seqfeature]
+    record.description = f"Single gene {cds.id}"
+    record.annotations = get_cds_seqrecord_annotations(cds)
+
+    return record
+
+def get_cds_seqrecord_annotations(cds):
+
+    annotations = {"molecule type": "DNA",
+                   "topology" : "linear",
+                   "data_file_division" : "PHG",
+                   "date" : "",
+                   "accessions" : [],
+                   "sequence_version" : "1",
+                   "keyword" : [],
+                   "source" : "",
+                   "organism" : "",
+                   "taxonomy" : [],
+                   "comment" : ()}
+    return annotations
+
+def parse_cds_data_from_geneid(sql_handle, geneid_list):
+    if not geneid_list:
+        return []
+
+    query = (f"SELECT * FROM gene WHERE GeneID IN ('" + \
+              "','".join(geneid_list) + "')")
+    result_list = sql_handle.execute_query(query)
+
+    cds_list = []
+    for data_dict in result_list:
+        cds_list.append(phamerator.parse_gene_table_data(data_dict)) 
+
+    return cds_list
 
 if __name__ == "__main__":
 
