@@ -41,10 +41,8 @@ def run_export(unparsed_args_list):
         Input a list of command line args.
     :type unparsed_args_list: List[str]
     """
-    args_tuple = parse_export(unparsed_args_list)
-    export = args_tuple[0]
-    args = args_tuple[1]
 
+    args = parse_export(unparsed_args_list)
     if args.verbose:
         print("Please input database credentials:")
     sql_handle = establish_database_connection(args.database)
@@ -55,17 +53,17 @@ def run_export(unparsed_args_list):
     dbx = False
     ix = False
 
-    if export in BIOPYTHON_CHOICES+["csv"]:
-        phage_list = parse_phage_list_input(args.input)
+    if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
+        values_list = parse_value_list_input(args.input)
         filters = parse_filters(args.filters)
 
-        if export == "csv":
+        if args.pipeline == "csv":
             csvx = True
         else:
-            ffx = export
-    elif export == "sql":
+            ffx = args.pipeline
+    elif args.pipeline == "sql":
         dbx = True
-    elif export == "I":
+    elif args.pipeline == "I":
         ix = True
     else:
         print("ERROR: Export pipeline option discrepency.\n"
@@ -73,10 +71,10 @@ def run_export(unparsed_args_list):
         raise ValueError
 
     if not ix:
-        execute_export(sql_handle, args.folder_path, args.folder_name,
-                            phage_filter_list=phage_list, verbose=args.verbose,
+        execute_export(sql_handle, args.output_path, args.output_name,
+                            values_list=values_list, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
-                            filters=filters, groups=args.groups)
+                            table=args.table, filters=filters, groups=args.groups)
     else:
         pass
 
@@ -99,51 +97,55 @@ def parse_export(unparsed_args_list):
         """
     DATABASE_HELP = "Name of the MySQL database to export from."
     CSV_EXPORT_HELP = """
-            Export option to export a csv file
-            containing information about selected genomes.
+        Export option to export a csv file
+        containing information about selected genomes.
             """
     DATABASE_EXPORT_HELP = """
-            Export option to dump the current database
-            into a .sql file and its version into a .version file.
+        Export option to dump the current database
+        into a .sql file and its version into a .version file.
             """
     FORMATTED_FILE_EXPORT_HELP = """
-            Export option to export formatted files containing
-            information about individual genomes.
+        Export option to export formatted files containing
+        information about individual genomes.
             """
     INTERACTIVE_HELP = """
         Export option that enables full interactive walkthrough export.
         """
-    TABLE_HELP = """
-        Genome selection input option that imports phage names from a csv file.
+    IMPORT_FILE_HELP = """
+        Selection input option that imports values from a csv file.
             Follow selection argument with path to the
             csv file containing the names of each genome in the first column.
         """
     SINGLE_GENOMES_HELP = """
-        Genome selection input option that imports genomes from cmd line input.
+        Selection input option that imports values from cmd line input.
             Follow selection argument with space separated
             names of genomes in the database.
         """
+    TABLE_HELP = """
+        Selection option that changes the table in the database selected from.
+            Follow selection argument with a valid table from the database.
+        """
     FILTERS_HELP = """
-        Genome selection option that constructs genome list from
+        Genome selection option that constructs primary attributes list from
         inputted filters.
             Follow selection argument with formatted filter request:
                 Table.Field=Value
         """
     GROUPS_HELP = """
-        Genome selection option that groups genome list from
+        Genome selection option that groups primary attributes list list from
         inputted groups.
             Follow selection argument with supported grouping option.
         """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
         """
-    FOLDER_PATH_HELP = """
+    OUTPUT_PATH_HELP = """
         Export option to change the path
         of the directory where the exported files are stored.
             Follow selection argument with the path to the
             desired export directory.
         """
-    FOLDER_NAME_HELP = """
+    OUTPUT_NAME_HELP = """
         Export option to change the name
         of the directory where the exported files are stored.
             Follow selection argument with the desired name.
@@ -163,17 +165,25 @@ def parse_export(unparsed_args_list):
     parser = argparse.ArgumentParser()
     parser.add_argument("database", type=str, help=DATABASE_HELP)
 
-    parser.add_argument("-o", "--folder_name", type=str, help=FOLDER_NAME_HELP)
-    parser.add_argument("-mv", "--folder_path", type=convert_dir_path,
-                        help=FOLDER_PATH_HELP)
+    parser.add_argument("-o", "--output_name", type=str, help=OUTPUT_NAME_HELP)
+    parser.add_argument("-p", "--output_path", type=convert_dir_path,
+                        help=OUTPUT_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true",
                         help=VERBOSE_HELP)
 
+    
     if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
-        parser.add_argument("-t", "--table", type=convert_file_path,
-                                help=TABLE_HELP, dest="input",
+        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage, gene"])
+        table_choices.update({"csv": ["domain", "gene", "gene_domain",
+                                       "phage", "pham", "pham_color",
+                                       "tmrna", "trna", "trna_structures"]})
+        parser.add_argument("-t", "--table", help=TABLE_HELP,
+                            choices=table_choices[export.pipeline])
+
+        parser.add_argument("-if", "--import_file", type=convert_file_path,
+                                help=IMPORT_FILE_HELP, dest="input",
                                 default=[])
-        parser.add_argument("-n", "--genome_names", nargs="*",
+        parser.add_argument("-in", "--import_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input",
                                 default=[])
         parser.add_argument("-f", "--filter", nargs="*",
@@ -189,19 +199,20 @@ def parse_export(unparsed_args_list):
     default_folder_name = f"{date}_export"
     default_folder_path = Path.cwd()
 
-    parser.set_defaults(folder_name=default_folder_name, 
-                        folder_path=default_folder_path,
-                        verbose=False, input=[], file_format=None,
-                        filters=[], groups=[],
+    parser.set_defaults(output_name=default_folder_name, 
+                        output_path=default_folder_path,
+                        verbose=False, input=[], 
+                        pipeline=export.pipeline,
+                        table="phage", filters=[], groups=[],
                         ix=False, csvx=False, dbx=False, ffx=False)
 
     parsed_args = parser.parse_args(unparsed_args_list[3:])
-    return (export.pipeline, parsed_args)
+    return parsed_args
 
-def execute_export(sql_handle, export_path, folder_name,
-                        phage_filter_list=[], verbose=False,
+def execute_export(sql_handle, output_path, output_name,
+                        values_list=[], verbose=False,
                         csv_export=False, ffile_export=None, db_export=False,
-                        filters=[], groups=[]):
+                        table="phage", filters=[], groups=[]):
     """
     Executes the entirety of the file export pipeline by calling its
     various functions
@@ -248,8 +259,8 @@ def execute_export(sql_handle, export_path, folder_name,
                         export_path, export_dir_name=folder_name)
 
     if csv_export or ffile_export:
-        db_filter = filter.Filter(sql_handle.database, sql_handle,
-                               phage_id_list=phage_filter_list)
+        db_filter = filter.Filter(sql_handle,
+                               values_list=values_list, table=table)
         for filter_list in filters:
             db_filter.add_filter(filter_list[0], filter_list[1],
                                  filter_list[2], verbose=verbose)
@@ -258,23 +269,24 @@ def execute_export(sql_handle, export_path, folder_name,
         if db_filter.hits(verbose=verbose) == 0:
             print("Database returned no results.")
             exit(1)
+        db_filter.sort(db_filter.key)
 
         if csv_export:
             file_name = \
-                f"{sql_handle.database}_v{db_version['Version']}_genomes"
-            write_csv("phage", db_filter, sql_handle, 
-              export_path, export_dir_name=folder_name, csv_name=file_name,
+                f"{sql_handle.database}_v{db_version['Version']}_{table}"
+            write_csv(table, db_filter, sql_handle, 
+              output_path, output_name=output_name, csv_name=file_name,
               verbose=verbose)
 
         if ffile_export != None:
             if groups:
-                folder_path = export_path.joinpath(folder_name)
+                folder_path = output_path.joinpath(folder_name)
                 folder_path.mkdir(exist_ok=True)
                 ffx_grouping(sql_handle, folder_path, groups, db_filter,
                              db_version, ffile_export, verbose=verbose)
             else:
                 execute_ffx_export(sql_handle, db_filter, ffile_export,
-                                   export_path, folder_name, db_version,
+                                   output_path, output_name, db_version,
                                    verbose=verbose, data_name=db_version)
 
 def execute_ffx_export(sql_handle, db_filter, file_format,
@@ -356,8 +368,7 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
             grouped_path.mkdir(exist_ok=True)
             if current_group_list:
                 ffx_grouping(sql_handle, grouped_path, current_group_list,
-                              filter.Filter(sql_handle.database,
-                                            sql_handle,
+                              filter.Filter(sql_handle,
                                             group_dict[group]),
                              db_version, file_format,
                              verbose=verbose)
@@ -445,28 +456,28 @@ def parse_filters(unparsed_filters, verbose=False):
     return filters
 
 @singledispatch
-def parse_phage_list_input(phage_list_input):
+def parse_value_list_input(value_list_input):
     """Helper function to populate the filter list for a SQL query
     :param phage_list_input:
         Input a list of phage names.
-    :type phage_list_input: list[str]
+    :type value_list_input: list[str]
     """
 
     print("Phage list input for database query is not a supported type")
     raise TypeError
 
-@parse_phage_list_input.register(Path)
-def _(phage_list_input):
-    phage_list = []
+@parse_value_list_input.register(Path)
+def _(value_list_input):
+    value_list = []
     with open(phage_list_input, newline = '') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter = ",", quotechar = '|')
         for name in csv_reader:
             phage_list.append(name[0])
-    return phage_list
+    return value_list
 
-@parse_phage_list_input.register(list)
-def _(phage_list_input):
-    return phage_list_input
+@parse_value_list_input.register(list)
+def _(value_list_input):
+    return value_list_input
 
 def establish_database_connection(database_name: str):
     """Creates a mysqlconnectionhandler object
@@ -616,19 +627,27 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
         SeqIO.write(record, output_handle, file_format)
         output_handle.close()
 
-def write_csv(table, db_filter, sql_handle, export_path, 
-              export_dir_name="export",csv_name="database",
+def write_csv(table, db_filter, sql_handle, output_path, 
+              output_name="export",csv_name="database",
               verbose=False):
     """Writes a formatted csv file from genome objects"""
 
-    remove_fields = {"phage": ["sequence"]}
-    
+    remove_fields = {"phage"           : ["Sequence"],
+                     "gene"            : ["Translation"],
+                     "domain"          : [],
+                     "gene_domain"     : [],
+                     "pham"            : [],
+                     "pham_color"      : [],
+                     "trna"            : ["Sequence"],
+                     "tmrna"           : [],
+                     "trna_structures" : []}
+         
     valid_fields = db_filter.tables[table].copy()
 
     for unwanted_field in remove_fields[table]:
         valid_fields.remove(unwanted_field)
 
-    export_path = export_path.joinpath(export_dir_name)
+    export_path = output_path.joinpath(output_name)
 
     if not export_path.exists():
         export_path.mkdir()
@@ -643,11 +662,11 @@ def write_csv(table, db_filter, sql_handle, export_path,
     if verbose:
         print(
           f"Retrieving {csv_name} data from {sql_handle.database}...")
- 
-
+    
     csv_request = ("SELECT " + ",".join(valid_fields) +\
-                 f" FROM {table} WHERE PhageID IN ('" + \
-                  "','".join(db_filter.phageIDs) + "')")
+                 f" FROM {table} WHERE {db_filter.key} IN ('" + \
+                  "','".join(db_filter.values) + "')")
+
     sql_data = sql_handle.execute_query(csv_request)
 
     csv_data = []
@@ -670,7 +689,6 @@ def write_csv(table, db_filter, sql_handle, export_path,
                              quoting=csv.QUOTE_MINIMAL)
         for row in csv_data:
             csvwriter.writerow(row)
-
 
 def write_database(sql_handle, version, export_path,
                     export_dir_name="export"):
@@ -695,8 +713,6 @@ def write_database(sql_handle, version, export_path,
     version_path = sql_path.with_name(f"{sql_handle.database}.version")
     version_path.touch()
     version_path.write_text(f"{version}")
-
-
 
 def main(args):
     """Function to initialize file export"""
@@ -741,7 +757,7 @@ class Cmd_Export(cmd.Cmd):
     def do_search(self, *args):
         """Filters and queries database for genomes.
         """
-        db_filter = filter.Filter(self.database, self.sql_handle)
+        db_filter = filter.Filter(self.sql_handle)
         interactive_filter = filter.Cmd_Filter(
                 db_filter=db_filter, sql_handle=self.sql_handle)
         interactive_filter.cmdloop()
@@ -814,7 +830,7 @@ class Cmd_Export(cmd.Cmd):
         print("\
                 Initiating Export...\n")
         execute_export(self.file_format, self.sql_handle,
-                                self.phage_filter_list, self.directory_path,
+                                self.values_list, self.directory_path,
                                 self.directory_name,
                                 verbose=False, csv_log=False)
 
