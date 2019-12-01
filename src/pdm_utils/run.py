@@ -7,6 +7,7 @@ import sys
 
 from pdm_utils.pipelines import cdd
 from pdm_utils.pipelines import compare_db
+from pdm_utils.pipelines import convert_db
 from pdm_utils.pipelines import export_db
 from pdm_utils.pipelines import freeze_db
 from pdm_utils.pipelines import get_db
@@ -40,6 +41,7 @@ def main(unparsed_args):
         "export",
         "freeze",
         "compare",
+        "convert",
         "push"}
     PIPELINE_HELP = "Name of the pdm_utils pipeline to run."
     pipe_parser = argparse.ArgumentParser(description=RUN_HELP, usage=USAGE)
@@ -77,6 +79,8 @@ def main(unparsed_args):
         compare_db.main(unparsed_args)
     elif args.pipeline == "get_gb_records":
         get_gb_records.main(unparsed_args)
+    elif args.pipeline == "convert":
+        convert_db.main(unparsed_args)
     else:
         print("Invalid pipeline selection.")
     print("Pipeline completed")
