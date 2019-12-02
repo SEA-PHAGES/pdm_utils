@@ -4,41 +4,34 @@ import argparse
 import pkgutil
 from pdm_utils.functions import phamerator
 
-
 # The schema version wasn't formally tracked until schema version = 3.
 MIN_VERSION = 3
 MAX_VERSION = 7
 VERSIONS = list(range(MIN_VERSION, MAX_VERSION + 1))
-CHOICES = set([str(i) for i in VERSIONS]) | {"current"}
+CHOICES = set(VERSIONS)
+MODULE = "pdm_utils"
+SQL_SCRIPT_DIR = "sql_scripts/"
 
 
-
-CONVERSION_DICT = {
-    "none":{},
-    "upgrade":{
-                2:"upgrade_1_to_2.sql",
-                3:"upgrade_2_to_3.sql",
-                4:"upgrade_3_to_4.sql",
-                5:"upgrade_4_to_5.sql",
-                6:"upgrade_5_to_6.sql",
-                7:"upgrade_6_to_7.sql"
-                },
-    "downgrade":{
-                1:"downgrade_2_to_1.sql",
-                2:"downgrade_3_to_2.sql",
-                3:"downgrade_4_to_3.sql",
-                4:"downgrade_5_to_4.sql",
-                5:"downgrade_6_to_5.sql",
-                6:"downgrade_7_to_6.sql"
-                }
-    }
-
+# TODO unittest.
+def get_script_filename(dir, step):
+    """Generates the name of the script conversion filename."""
+    if dir == "upgrade":
+        first = step - 1
+        second = step
+    elif dir == "downgrade":
+        first = step + 1
+        second = step
+    else:
+        first = step
+        second = step
+    filename = f"{dir}_{first}_to_{second}.sql"
+    return filename
 
 
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for converting database."""
-
     CONVERT_HELP = ("Pipeline to upgrade or downgrade the "
                     "schema of a Phamerator database.")
     DATABASE_HELP = "Name of the MySQL database."
@@ -46,10 +39,9 @@ def parse_args(unparsed_args_list):
                            "the database should be converted.")
     parser = argparse.ArgumentParser(description=CONVERT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("-s", "--schema_version", type=str.lower,
-        choices=list(CHOICES), default="current",
+    parser.add_argument("-s", "--schema_version", type=int,
+        choices=list(CHOICES), default=MAX_VERSION,
         help=SCHEMA_VERSION_HELP)
-
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -82,11 +74,9 @@ def retrieve_database_version(sql_handle):
         of size 2 that contains values tied to keys
         "Version" and "SchemaVersion"
     """
-
-    database_versions_list = phamerator.retrieve_data(
-            sql_handle, query='SELECT * FROM version')
-    return database_versions_list[0]
-
+    result = phamerator.retrieve_data(sql_handle,
+                                      query="SELECT * FROM version")
+    return result[0]
 
 
 # TODO unittest.
@@ -118,10 +108,37 @@ def main(unparsed_args_list):
     sql_handle = connect_to_db(args.database)
     version_data = retrieve_database_version(sql_handle)
 
-    # Get the schema versions.
+    # Get the schema versions and determine what conversions are needed.
     target = int(args.schema_version)
     actual = get_schema_version(version_data)
+    steps, dir = get_conversion_direction(actual, target)
 
+    # # Compare actual version to desired selection to get list of versions.
+    # if actual == target:
+    #     steps = []
+    #     dir = "none"
+    # elif actual < target:
+    #     dir = "upgrade"
+    #     steps = list(range(actual + 1, target + 1))
+    # else:
+    #     steps = list(reversed(range(target, actual)))
+    #     dir = "downgrade"
+
+    # Iterate through list of versions and implement SQL files.
+    if dir == "none":
+        print("No schema conversion is needed.")
+    else:
+        stop_step = convert_schema(sql_handle, actual, dir, steps)
+        if stop_step == target:
+            print(f"The database schema conversion was successful.")
+        else:
+            print(f"The database schema conversion was unsuccessful. "
+                  f"Unable to proceed past schema version {stop_step}.")
+
+
+# TODO unittest.
+def get_conversion_direction(actual, target):
+    """Determine needed conversion direction and steps."""
     # Compare actual version to desired selection to get list of versions.
     if actual == target:
         steps = []
@@ -132,30 +149,31 @@ def main(unparsed_args_list):
     else:
         steps = list(reversed(range(target, actual)))
         dir = "downgrade"
+    return steps, dir
 
-    # Get the list of sql scripts needed.
-    script_dict = CONVERSION_DICT[dir]
-
-    # Iterate through list of versions and implement SQL files.
-    if dir == "none":
-        print("No schema conversion is needed.")
-    else:
-        index = 0
-        convert = True
-        while (index < len(steps) and convert == True):
-            step = steps[index]
-            script = script_dict[step]
-            print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
-            data = pkgutil.get_data("pdm_utils", "sql_scripts/" + script).decode()
-            commands = data.split(";")
-            commands = [i for i in commands if i != ""]
-            commands = [i for i in commands if i != "\n"]
-            # Try to convert the schema.
-            try:
-                sql_handle.execute_transaction(commands)
-            except:
-                convert = False
-            index += 1
-
-
-###
+# TODO unittest.
+def convert_schema(sql_handle, actual, dir, steps):
+    """Iterate through conversion steps and convert database schema."""
+    index = 0
+    convert = True
+    stop_step = actual
+    while (index < len(steps) and convert == True):
+        step = steps[index]
+        script = get_script_filename(dir, step)
+        print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
+        script_path = SQL_SCRIPT_DIR + script
+        data = pkgutil.get_data(MODULE, script_path).decode()
+        commands = data.split(";")
+        commands = [i for i in commands if i != ""]
+        commands = [i for i in commands if i != "\n"]
+        # Try to convert the schema.
+        result = sql_handle.execute_transaction(commands)
+        if result == 1:
+            convert = False
+            print("Error encountered while executing MySQL statements.")
+        if convert == False:
+            print(f"Unable to {dir} schema to version {step}.")
+        else:
+            stop_step = step
+        index += 1
+    return stop_step

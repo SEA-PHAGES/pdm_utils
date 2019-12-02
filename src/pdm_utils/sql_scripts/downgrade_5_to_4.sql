@@ -1,4 +1,5 @@
 # MySQL script to downgrade Phamerator database schema from version 5 to 4.
+# Note: Data in several newly-created columns will not be accurate.
 ALTER TABLE phage MODIFY status varchar(7) DEFAULT NULL;
 UPDATE phage SET status = 'gbk' WHERE status = 'unknown';
 ALTER TABLE phage MODIFY status varchar(5) DEFAULT NULL;
