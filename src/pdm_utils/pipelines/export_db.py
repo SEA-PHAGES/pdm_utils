@@ -258,11 +258,25 @@ def execute_export(sql_handle, output_path, output_name,
         print("Retrieving database version...")
     db_version = retrieve_database_version(sql_handle)
 
+    if verbose:
+        print("Creating export folder...")
+    output_path = output_path.joinpath(output_name) 
+    output_path.mkdir(exist_ok=True)
+   
+    output_name = sql_handle.database
+    output_version = 1
+    inner_folder_path = output_path.joinpath(output_name)
+
+    while(inner_folder_path.is_dir()):
+        output_version += 1
+        output_name = f"{sql_handle.database}_{output_version}"
+        inner_folder_path = output_path.joinpath(output_name)
+
     if db_export:
         if verbose:
             print("Writing SQL database file...")
         write_database(sql_handle, db_version["Version"],
-                        export_path, export_dir_name=folder_name)
+                        output_path, output_name=output_name)
 
     if csv_export or ffile_export:
         if verbose:
@@ -713,8 +727,8 @@ def write_csv(table, db_filter, sql_handle, output_path,
         for row in csv_data:
             csvwriter.writerow(row)
 
-def write_database(sql_handle, version, export_path,
-                    export_dir_name="export"):
+def write_database(sql_handle, version, output_path,
+                    output_name="export"):
 
     export_path = export_path.joinpath(export_dir_name)
 
