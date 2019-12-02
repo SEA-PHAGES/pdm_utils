@@ -30,9 +30,9 @@ def setup_argparser():
     parser.add_argument("--program", type=str, default="mmseqs", choices=[
         "mmseqs", "blast"], help="which program to use for clustering")
     parser.add_argument("--threads", default=1, help="number of threads to use")
-    parser.add_argument("--identity", type=int, default=40,
+    parser.add_argument("--identity", type=float, default=32.5,
                         help="percent identity threshold in range [0,100]")
-    parser.add_argument("--coverage", type=int, default=80,
+    parser.add_argument("--coverage", type=float, default=65,
                         help="coverage threshold in range [0,100]")
     parser.add_argument("--steps", type=int, default=1,
                         help="number of clustering steps (mmseqs only)")
