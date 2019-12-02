@@ -178,7 +178,7 @@ def parse_export(unparsed_args_list):
 
     
     if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
-        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage", "gene"])
+        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage"])
         table_choices.update({"csv": ["domain", "gene", "gene_domain",
                                        "phage", "pham", "pham_color",
                                        "tmrna", "trna", "trna_structures"]})
@@ -265,6 +265,8 @@ def execute_export(sql_handle, output_path, output_name,
                         export_path, export_dir_name=folder_name)
 
     if csv_export or ffile_export:
+        if verbose:
+            print("Building SQL data handlers...")
         db_filter = filter.Filter(sql_handle,
                                   values_list=values_list, table=table)
         for filter_list in filters:
@@ -294,7 +296,8 @@ def execute_export(sql_handle, output_path, output_name,
             else:
                 execute_ffx_export(sql_handle, db_filter, ffile_export,
                                    output_path, output_name, db_version,
-                                   verbose=verbose, data_name=db_version,
+                                   verbose=verbose, 
+                                   data_name=db_version["Version"],
                                    table=table)
 
 def execute_ffx_export(sql_handle, db_filter, file_format,
@@ -637,6 +640,7 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
 
     if verbose:
         print("Writing selected data to files...")
+
     for record in seqrecord_list:
         if verbose:
             print(f"Writing {record.name}")
@@ -869,9 +873,10 @@ class Cmd_Export(cmd.Cmd):
 
         sys.exit(1)
 
+#PROTOTYPE FUNCTIONS
 def cds_to_seqrecord(cds):
     try:
-        record = SeqRecord(cds.translation)
+        record = SeqRecord(cds.seq)
         record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
     except AttributeError:
         print("Genome object failed to be converted to SeqRecord\n."
@@ -889,7 +894,6 @@ def cds_to_seqrecord(cds):
     return record
 
 def get_cds_seqrecord_annotations(cds):
-
     annotations = {"molecule type": "DNA",
                    "topology" : "linear",
                    "data_file_division" : "PHG",
