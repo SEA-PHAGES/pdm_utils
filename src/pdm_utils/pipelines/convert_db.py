@@ -10,7 +10,7 @@ MAX_VERSION = 7
 VERSIONS = list(range(MIN_VERSION, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
 MODULE = "pdm_utils"
-SQL_SCRIPT_DIR = "sql_scripts/"
+SQL_SCRIPT_DIR = "resources/sql_scripts/"
 
 
 # TODO unittest.
@@ -102,27 +102,11 @@ def main(unparsed_args_list):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
-
-    if args.schema_version == "current":
-        args.schema_version = MAX_VERSION
     sql_handle = connect_to_db(args.database)
     version_data = retrieve_database_version(sql_handle)
-
-    # Get the schema versions and determine what conversions are needed.
-    target = int(args.schema_version)
+    target = args.schema_version
     actual = get_schema_version(version_data)
     steps, dir = get_conversion_direction(actual, target)
-
-    # # Compare actual version to desired selection to get list of versions.
-    # if actual == target:
-    #     steps = []
-    #     dir = "none"
-    # elif actual < target:
-    #     dir = "upgrade"
-    #     steps = list(range(actual + 1, target + 1))
-    # else:
-    #     steps = list(reversed(range(target, actual)))
-    #     dir = "downgrade"
 
     # Iterate through list of versions and implement SQL files.
     if dir == "none":

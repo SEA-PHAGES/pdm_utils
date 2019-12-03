@@ -37,4 +37,6 @@ CREATE TABLE trna_structures (
   PRIMARY KEY (Sequence)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+ALTER TABLE gene MODIFY translation VARCHAR(5000) DEFAULT NULL;
+
 UPDATE version SET schema_version = 4;
