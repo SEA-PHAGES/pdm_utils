@@ -2,10 +2,11 @@
 
 import argparse
 import pkgutil
+import re
 from pdm_utils.functions import phamerator
 
 # The schema version wasn't formally tracked until schema version = 3.
-MIN_VERSION = 3
+MIN_VERSION = 0
 MAX_VERSION = 7
 VERSIONS = list(range(MIN_VERSION, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
@@ -61,6 +62,71 @@ def connect_to_db(database):
         return sql_handle
 
 
+# TODO unittest.
+def get_schema_version(sql_handle):
+    """Identify the schema version of the database_versions_list."""
+    # If version table does not exist, schema_version = 0.
+    # If no schema_version or SchemaVersion field,
+    # it is either schema_version = 1 or 2.
+    # If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
+    # columns are in phage table, schema_version = 2.
+    db_tables = get_db_tables(sql_handle)
+    if "version" in db_tables:
+        version_table = True
+    else:
+        version_table = False
+
+    if version_table == True:
+        version_columns = retrieve_database_version(sql_handle)
+        if "schema_version" in version_columns.keys():
+            schema_version = version_columns["schema_version"]
+        elif "SchemaVersion" in version_columns.keys():
+            schema_version = version_columns["SchemaVersion"]
+        else:
+            phage_columns = get_phage_table_columns(sql_handle)
+            expected = {"AnnotationAuthor", "Program",
+                        "AnnotationQC", "RetrieveRecord"}
+            diff = expected - phage_columns
+            if len(diff) == 0:
+                schema_version = 2
+            else:
+                schema_version = 1
+    else:
+        schema_version = 0
+    return schema_version
+
+
+# TODO unittest.
+def get_db_tables(sql_handle):
+    """Retrieve tables names from the database.
+
+    Returns a set of table names."""
+    query = ("SELECT table_name FROM information_schema.tables "
+             f"WHERE table_schema = '{sql_handle.database}'")
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    db_tables = set()
+    for dict in result_list:
+        table = set(dict.values())
+        db_tables = db_tables | table
+    return db_tables
+
+
+# TODO this should be abstracted to retrieve column names from any table.
+# TODO unittest.
+def get_phage_table_columns(sql_handle):
+    """Retrieve columns names from the phage table.
+
+    Returns a set of column names."""
+    query = ("SELECT column_name FROM information_schema.columns WHERE "
+              "table_schema = 'Actino_Draft' AND table_name = 'phage'")
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    columns = set()
+    for result in result_list:
+        columns = columns | set(result.values())
+    return columns
+
 # TODO not unittested, but identical to function in export_db.
 def retrieve_database_version(sql_handle):
     """Helper function that queries a SQL database
@@ -80,32 +146,13 @@ def retrieve_database_version(sql_handle):
 
 
 # TODO unittest.
-def get_schema_version(dict):
-    """Attempt to retrieve the schema version."""
-    if "schema_version" in dict.keys():
-        schema_version = dict["schema_version"]
-    elif "SchemaVersion" in dict.keys():
-        schema_version = dict["SchemaVersion"]
-    else:
-        schema_version = None
-
-    if schema_version is None:
-        print("Database does not have a schema version. "
-              "Unable to proceed with schema conversion.")
-        sys.exit(1)
-    else:
-        return schema_version
-
-
-# TODO unittest.
 def main(unparsed_args_list):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
     sql_handle = connect_to_db(args.database)
-    version_data = retrieve_database_version(sql_handle)
     target = args.schema_version
-    actual = get_schema_version(version_data)
+    actual = get_schema_version(sql_handle)
     steps, dir = get_conversion_direction(actual, target)
 
     # Iterate through list of versions and implement SQL files.
@@ -147,7 +194,10 @@ def convert_schema(sql_handle, actual, dir, steps):
         print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
         script_path = SQL_SCRIPT_DIR + script
         data = pkgutil.get_data(MODULE, script_path).decode()
-        commands = data.split(";")
+        if (dir == "upgrade" and step == 3):
+            commands = get_upgrade_2_to_3_commands(data)
+        else:
+            commands = data.split(";")
         commands = [i for i in commands if i != ""]
         commands = [i for i in commands if i != "\n"]
         # Try to convert the schema.
@@ -161,3 +211,23 @@ def convert_schema(sql_handle, actual, dir, steps):
             stop_step = step
         index += 1
     return stop_step
+
+
+# TODO unittest.
+def get_upgrade_2_to_3_commands(data):
+    """Parse commands to upgrade from 2 to 3."""
+    # This upgrade step involves creating a stored procedure, which
+    # needs to be parsed in a specific way.
+    commands_step1 = data.split("DELIMITER //")
+
+    # All statements prior to defined procedure.
+    commands = commands_step1[0].split(";")
+
+    # The statement defining the procedure.
+    commands_step2 = commands_step1[1].split("DELIMITER;")
+    commands_step3 = commands_step2[0].split("//")
+    commands.append(commands_step3[0])
+
+    # All statements following the defined procedure.
+    commands.extend(commands_step2[1].split(";"))
+    return commands

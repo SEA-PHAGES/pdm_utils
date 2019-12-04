@@ -4,4 +4,5 @@
 ALTER TABLE `phage` ADD COLUMN `Program` varchar(10) DEFAULT NULL AFTER `AnnotationQC`;
 ALTER TABLE `phage` DROP COLUMN `Cluster2`;
 ALTER TABLE `phage` DROP COLUMN `Subcluster2`;
+ALTER TABLE `gene` DROP COLUMN `LocusTag`;
 ALTER TABLE `version` DROP COLUMN `schema_version`;
