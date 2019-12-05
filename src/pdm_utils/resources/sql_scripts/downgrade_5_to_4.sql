@@ -84,3 +84,22 @@ CREATE TABLE `node` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 UPDATE `version` SET `schema_version` = 4;
+
+###
+# Unreliable columns:
+# pham.orderAdded
+# gene.blast_status
+# gene.clustalw_status
+# gene.RightNeighbor
+# gene.LeftNeighbor
+# gene.GC
+# gene.GC3
+# gene.GC2
+# gene.GC1
+# gene.StopCodon
+# gene.StartCodon
+# phage.AnnotationQC
+# phage.DateLastSearched
+# phage.ProphageOffset
+# phage.Prophage
+# phage.Isolated

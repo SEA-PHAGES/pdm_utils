@@ -283,9 +283,10 @@ def copy_db(sql_handle, new_database):
         print("Copying database...")
 
         # Per subprocess documentation:
-        # For pipes, use Popen instead of check_call, and
-        # call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits,
-        # which gets called when used as a context manager.
+        # 1. For pipes, use Popen instead of check_call.
+        # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
+        #    which gets called when used as a context manager.
+        # communicate() waits for the process to complete.
         with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
             with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
                 p2.communicate()
