@@ -252,13 +252,16 @@ class MySQLConnectionHandler:
         """
         # Integration tests (some tests joint with close_connection) passed
         if self.connection is not None:
+            # If there's a connection object, ask it whether it's open or not
             return self.connection.open
         else:
+            # If there's no connection object, it can't be open - return False
             return False
 
-    def open_connection(self):
+    def open_connection(self, autocommit=False):
         """
-        If connection status is False, open a new connection.
+        If connection status is False, open a new connection. By
+        default set autocommit false - user can override if they want.
         :return:
         """
         # Integration tests passed
@@ -272,10 +275,11 @@ class MySQLConnectionHandler:
                 # If database is valid
                 if self._database_status is True:
                     # Create connection
-                    self.connection = pms.connect("localhost",
-                                                  self.username,
-                                                  self.password,
-                                                  self.database)
+                    self.connection = pms.connect(host="localhost",
+                                                  user=self.username,
+                                                  password=self.password,
+                                                  database=self.database,
+                                                  autocommit=autocommit)
                 # If database is invalid
                 else:
                     # Print bad database message
@@ -296,10 +300,11 @@ class MySQLConnectionHandler:
                     # If database is valid
                     if self._database_status is True:
                         # Create connection
-                        self.connection = pms.connect("localhost",
-                                                      self.username,
-                                                      self.password,
-                                                      self.database)
+                        self.connection = pms.connect(host="localhost",
+                                                      user=self.username,
+                                                      password=self.password,
+                                                      database=self.database,
+                                                      autocommit=autocommit)
                     # If database is invalid
                     else:
                         # Print bad database message
@@ -325,33 +330,23 @@ class MySQLConnectionHandler:
         :return: results list if available, None otherwise
         """
         # Integration tests passed
-        if self.connection_status() is True:
-            try:
-                cursor = self.connection.cursor(pms.cursors.DictCursor)
-                cursor.execute(query)
-                results = cursor.fetchall()
-                cursor.close()
-                return results
-            except pms.err.Error as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                return
-        else:
+        if self.connection_status() is False:
             self.open_connection()
-            if self.connection_status() is True:
-                try:
-                    cursor = self.connection.cursor(pms.cursors.DictCursor)
-                    cursor.execute(query)
-                    results = cursor.fetchall()
-                    cursor.close()
-                    return results
-                except pms.err.Error as err:
-                    print("Error {}: {}".format(err.args[0], err.args[1]))
-                    return
-            else:
+            if self.connection_status() is False:
                 print(self.messages["no connection"])
                 return
 
-    def execute_transaction(self, statement_list=[]):
+        try:
+            cursor = self.connection.cursor(pms.cursors.DictCursor)
+            cursor.execute(query)
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except pms.err.Error as err:
+            print("Error {}: {}".format(err.args[0], err.args[1]))
+            return
+
+    def execute_transaction(self, statement_list=list()):
         """
         If connection exists and is open, attempts to attach a cursor to
         the connection and execute the commands in the input list. If
@@ -362,51 +357,27 @@ class MySQLConnectionHandler:
         :return: 0 or 1 status code. 0 means no problems, 1 means problems
         """
         # TODO: integration tests
-        if self.connection_status() is True:
-            try:
-                cursor = self.connection.cursor()
-                cursor.execute("START TRANSACTION")
-                for statement in statement_list:
-                    try:
-                        print(statement)
-                        cursor.execute(statement)
-                    except pms.err.ProgrammingError:
-                        print(self.messages["invalid syntax"].format(
-                            statement))
-                        cursor.execute("ROLLBACK")
-                        cursor.close()
-                        return 1
-                cursor.execute("COMMIT")
-                cursor.close()
-                return 0
-            except pms.err.Error as err:
-                print("Error {}: {}".format(err.args[0], err.args[1]))
-                return 1
-        else:
+        if self.connection_status() is False:
             self.open_connection()
-            if self.connection_status() is True:
-                try:
-                    cursor = self.connection.cursor()
-                    cursor.execute("START TRANSACTION")
-                    for statement in statement_list:
-                        try:
-                            print(statement)
-                            cursor.execute(statement)
-                        except pms.err.ProgrammingError:
-                            print(self.messages["invalid syntax"].format(
-                                statement))
-                            cursor.execute("ROLLBACK")
-                            cursor.close()
-                            return 1
-                    cursor.execute("COMMIT")
-                    cursor.close()
-                    return 0
-                except pms.err.Error as err:
-                    print("Error {}: {}".format(err.args[0], err.args[1]))
-                    return 1
-            else:
+            if self.connection_status() is False:
                 print(self.messages["no connection"])
                 return 1
+
+        cursor = self.connection.cursor()
+        cursor.execute("START TRANSACTION")
+        for statement in statement_list:
+            try:
+                print(statement)
+                cursor.execute(statement)
+            except pms.err.Error as err:
+                print("Error {}: {}".format(err.args[0], err.args[1]))
+                print("Rolling back transaction...")
+                cursor.execute("ROLLBACK")
+                cursor.close()
+                return 1
+        cursor.execute("COMMIT")
+        cursor.close()
+        return 0
 
     def close_connection(self):
         """
