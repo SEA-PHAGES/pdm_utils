@@ -1,5 +1,5 @@
 # MySQL script to upgrade Phamerator database schema from version 0 to 1.
-
+# Note: Data in newly-created gene.cdd_status will not be accurate.
 CREATE TABLE `version` (
   `version` int(11) unsigned NOT NULL,
   PRIMARY KEY (`version`)
