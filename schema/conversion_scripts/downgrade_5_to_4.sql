@@ -1,5 +1,4 @@
 # MySQL script to downgrade Phamerator database schema from version 5 to 4.
-# Note: Data in several newly-created columns will not be accurate.
 ALTER TABLE `phage` MODIFY `status` varchar(7) DEFAULT NULL;
 UPDATE `phage` SET `status` = 'gbk' WHERE `status` = 'unknown';
 ALTER TABLE `phage` MODIFY `status` varchar(5) DEFAULT NULL;
@@ -85,21 +84,20 @@ CREATE TABLE `node` (
 
 UPDATE `version` SET `schema_version` = 4;
 
-###
-# Unreliable columns:
-# pham.orderAdded
-# gene.blast_status
-# gene.clustalw_status
-# gene.RightNeighbor
-# gene.LeftNeighbor
-# gene.GC
-# gene.GC3
-# gene.GC2
-# gene.GC1
-# gene.StopCodon
-# gene.StartCodon
-# phage.AnnotationQC
-# phage.DateLastSearched
-# phage.ProphageOffset
-# phage.Prophage
-# phage.Isolated
+### DATA_LOSS_SUMMARY
+# INACCURATE_COLUMN:pham.orderAdded
+# INACCURATE_COLUMN:gene.blast_status
+# INACCURATE_COLUMN:gene.clustalw_status
+# INACCURATE_COLUMN:gene.RightNeighbor
+# INACCURATE_COLUMN:gene.LeftNeighbor
+# INACCURATE_COLUMN:gene.GC
+# INACCURATE_COLUMN:gene.GC3
+# INACCURATE_COLUMN:gene.GC2
+# INACCURATE_COLUMN:gene.GC1
+# INACCURATE_COLUMN:gene.StopCodon
+# INACCURATE_COLUMN:gene.StartCodon
+# INACCURATE_COLUMN:phage.AnnotationQC
+# INACCURATE_COLUMN:phage.DateLastSearched
+# INACCURATE_COLUMN:phage.ProphageOffset
+# INACCURATE_COLUMN:phage.Prophage
+# INACCURATE_COLUMN:phage.Isolated

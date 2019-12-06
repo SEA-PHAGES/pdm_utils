@@ -2,7 +2,6 @@
 
 import argparse
 import pathlib
-# import pkgutil
 import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
@@ -13,9 +12,6 @@ MAX_VERSION = 7
 CURRENT_VERSION = 6
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
-# MODULE = "pdm_utils"
-# SQL_SCRIPT_DIR = "resources/sql_scripts/"
-
 
 # TODO unittest.
 def get_script_filename(dir, step):
@@ -29,7 +25,7 @@ def get_script_filename(dir, step):
     else:
         first = step
         second = step
-    filename = f"{dir}_{first}_to_{second}.sql"
+    filename = pathlib.Path(f"{dir}_{first}_to_{second}.sql")
     return filename
 
 
@@ -158,24 +154,9 @@ def get_values_from_dict_list(list_of_dicts):
     return output_set
 
 
-
-
-
-
-
-
 # TODO not unittested, but identical to function in export_db.
 def retrieve_database_version(sql_handle):
-    """Helper function that queries a SQL database
-    for the database version and schema version
-
-    :param sql_database_handle:
-        Input a mysqlconnectionhandler object.
-    :type sql_database_handle: mysqlconnectionhandler
-    :returns:
-        database_versions_list(dictionary) is a dictionary
-        of size 2 that contains values tied to keys
-        "Version" and "SchemaVersion"
+    """Gets the database version and schema version.
     """
     result = phamerator.retrieve_data(sql_handle,
                                       query="SELECT * FROM version")
@@ -202,7 +183,6 @@ def main(unparsed_args_list):
         convert = True
 
     if convert == True:
-        # TODO add step to copy to new database if selected by user.
         if (args.new_database_name is not None and
                 args.new_database_name != args.database):
             result = create_new_db(sql_handle1, args.new_database_name)
@@ -224,15 +204,15 @@ def main(unparsed_args_list):
             sql_handle2 = sql_handle1
 
         if convert == True:
-            stop_step = convert_schema(sql_handle2,
+            stop_step, summary = convert_schema(sql_handle2,
                                        args.conversion_scripts_folder,
                                        actual, dir, steps)
             if stop_step == target:
-                print(f"The database schema conversion was successful.")
+                print("\n\nThe database schema conversion was successful.")
             else:
-                print("The database schema conversion was unsuccessful. "
+                print("\n\nThe database schema conversion was not successful. "
                       f"Unable to proceed past schema version {stop_step}.")
-
+            print_summary(summary)
 
 # TODO unittest.
 def get_conversion_direction(actual, target):
@@ -310,6 +290,7 @@ def copy_db(sql_handle, new_database):
 # TODO unittest.
 def convert_schema(sql_handle, conversion_folder, actual, dir, steps):
     """Iterate through conversion steps and convert database schema."""
+    summary = {} #Key = conversion step. Value = summary dictionary.
     index = 0
     convert = True
     stop_step = actual
@@ -318,11 +299,7 @@ def convert_schema(sql_handle, conversion_folder, actual, dir, steps):
         script = get_script_filename(dir, step)
         print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
         data = get_script_data(conversion_folder, script)
-
-        # script_path = SQL_SCRIPT_DIR + script
-        # data = pkgutil.get_data(MODULE, script_path).decode()
-
-
+        step_summary_dict = get_script_summary(data)
         if (dir == "upgrade" and step == 3):
             commands = get_upgrade_2_to_3_commands(data)
         else:
@@ -338,8 +315,9 @@ def convert_schema(sql_handle, conversion_folder, actual, dir, steps):
             print(f"Unable to {dir} schema to version {step}.")
         else:
             stop_step = step
+            summary[script] = step_summary_dict
         index += 1
-    return stop_step
+    return stop_step, summary
 
 # TODO unittest.
 def get_script_data(conversion_folder, script):
@@ -374,3 +352,57 @@ def get_upgrade_2_to_3_commands(data):
     # All statements following the defined procedure.
     commands.extend(commands_step2[1].split(";"))
     return commands
+
+
+# TODO unittest.
+def get_script_summary(data):
+    """Retrieve summary of which data could be lost or inaccurate."""
+    summary_dict = {}
+    split_data = data.split("### DATA_LOSS_SUMMARY")
+    if len(split_data) == 2:
+        summaries_string = split_data[1]
+        summaries_list = summaries_string.split("\n")
+        summaries_list = [i[2:].split(":") for i in summaries_list]
+        summaries_list = [i for i in summaries_list if i != [""]]
+        summaries_list = [i for i in summaries_list if i != ["\n"]]
+        keys = set()
+        for summary in summaries_list:
+            keys.add(summary[0])
+        for key in keys:
+            new_list = []
+            for summary in summaries_list:
+                if summary[0] == key:
+                    new_list.append(summary[1])
+            summary_dict[key] = new_list
+    return summary_dict
+
+
+
+# TODO unittest.
+def print_summary(summary):
+    """Print summary of data that could be lost or inaccurate."""
+    keys = summary.keys()
+    if len(keys) > 0:
+        for key in keys:
+            step = summary[key]
+            step_keys = step.keys()
+            if len(step_keys) > 0:
+                print(f"\n\n\nConversion step: {key.stem}")
+            if "LOST_TABLE" in step_keys:
+                print("\nWarning: data in the following tables have been lost:")
+                for item in step["LOST_TABLE"]:
+                    print(item)
+            if "LOST_COLUMN" in step_keys:
+                print("\nWarning: data in the following columns have been lost:")
+                for item in step["LOST_COLUMN"]:
+                    print(item)
+            if "LOST_DATA" in step_keys:
+                print("\nWarning: a subset of data in the "
+                      "following columns have been lost:")
+                for item in step["LOST_DATA"]:
+                    print(item)
+            if "INACCURATE_COLUMN" in step_keys:
+                print("\nWarning: data in the following columns have "
+                       "been auto-populated and may be inaccurate:")
+                for item in step["INACCURATE_COLUMN"]:
+                    print(item)

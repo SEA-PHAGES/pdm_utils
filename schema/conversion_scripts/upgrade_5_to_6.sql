@@ -1,5 +1,4 @@
 # MySQL script to upgrade Phamerator database schema from version 5 to 6.
-# No loss in data.
 ALTER TABLE `domain` CHANGE `id` `ID` int(10) unsigned NOT NULL AUTO_INCREMENT;
 ALTER TABLE `domain` CHANGE `description` `Description` blob;
 ALTER TABLE `gene_domain` CHANGE `id` `ID` int(10) unsigned NOT NULL AUTO_INCREMENT;

@@ -1,5 +1,4 @@
 # MySQL script to upgrade Phamerator database schema from version 2 to 3.
-# Note: Data in Program column will be lost.
 ALTER TABLE `version` ADD COLUMN `schema_version` int(11) unsigned NOT NULL AFTER `version`;
 ALTER TABLE `phage` ADD COLUMN `Subcluster2` varchar(5) DEFAULT NULL AFTER `AnnotationAuthor`;
 ALTER TABLE `phage` ADD COLUMN `Cluster2` varchar(5) DEFAULT NULL AFTER `AnnotationAuthor`;
@@ -24,3 +23,7 @@ ALTER TABLE `phage` DROP COLUMN `TempCluster2`;
 ALTER TABLE `phage` DROP COLUMN `Program`;
 ALTER TABLE `gene` ADD COLUMN `LocusTag` varchar(50) DEFAULT NULL AFTER `cdd_status`;
 UPDATE `version` SET `schema_version` = 3;
+
+### DATA_LOSS_SUMMARY
+# LOST_COLUMN:phage.Program
+# INACCURATE_COLUMN:gene.LocusTag

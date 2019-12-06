@@ -1,5 +1,4 @@
 # MySQL script to downgrade Phamerator database schema from version 6 to 5.
-# No loss in data.
 ALTER TABLE `gene_domain` CHANGE `QueryEnd` `query_end` int(10) unsigned NOT NULL;
 ALTER TABLE `gene_domain` CHANGE `QueryStart` `query_start` int(10) unsigned NOT NULL;
 ALTER TABLE `gene_domain` CHANGE `HitID` `hit_id` varchar(25) NOT NULL;

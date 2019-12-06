@@ -1,5 +1,4 @@
 # MySQL script to upgrade Phamerator database schema from version 4 to 5.
-# Note: Data in several columns and tables will be lost.
 DROP TABLE `node`;
 DROP TABLE `host_range`;
 DROP TABLE `host`;
@@ -27,3 +26,28 @@ ALTER TABLE `phage` MODIFY `status` varchar(7);
 UPDATE `phage` SET `status` = 'unknown' WHERE `status` = 'gbk';
 ALTER TABLE `phage` MODIFY `status` enum('unknown','draft','final');
 UPDATE `version` SET `schema_version` = 5;
+
+### DATA_LOSS_SUMMARY
+# LOST_TABLE:node
+# LOST_TABLE:host_range
+# LOST_TABLE:host
+# LOST_TABLE:pham_history
+# LOST_TABLE:pham_old
+# LOST_TABLE:scores_summary
+# LOST_COLUMN:phage.Prophage
+# LOST_COLUMN:phage.Isolated
+# LOST_COLUMN:phage.ProphageOffset
+# LOST_COLUMN:phage.DateLastSearched
+# LOST_COLUMN:phage.AnnotationQC
+# LOST_COLUMN:gene.StartCodon
+# LOST_COLUMN:gene.StopCodon
+# LOST_COLUMN:gene.GC1
+# LOST_COLUMN:gene.GC2
+# LOST_COLUMN:gene.GC3
+# LOST_COLUMN:gene.GC
+# LOST_COLUMN:gene.LeftNeighbor
+# LOST_COLUMN:gene.RightNeighbor
+# LOST_COLUMN:gene.clustalw_status
+# LOST_COLUMN:gene.blast_status
+# LOST_COLUMN:gene.TypeID
+# LOST_COLUMN:pham.orderAdded

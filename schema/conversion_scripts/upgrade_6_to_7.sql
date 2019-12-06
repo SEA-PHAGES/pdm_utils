@@ -1,5 +1,4 @@
 # MySQL script to upgrade Phamerator database schema from version 6 to 7.
-# No loss in data.
 ALTER TABLE `phage` CHANGE `HostStrain` `HostGenus` varchar(50) DEFAULT NULL;
 ALTER TABLE `phage` DROP COLUMN `Cluster`;
 ALTER TABLE `phage` CHANGE `Cluster2` `Cluster` varchar(5) DEFAULT NULL;

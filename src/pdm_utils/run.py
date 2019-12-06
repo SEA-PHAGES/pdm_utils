@@ -83,4 +83,4 @@ def main(unparsed_args):
         convert_db.main(unparsed_args)
     else:
         print("Invalid pipeline selection.")
-    print("Pipeline completed")
+    print("\n\n\nPipeline completed")
