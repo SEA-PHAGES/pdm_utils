@@ -2,13 +2,13 @@
 
 import argparse
 import pkgutil
-import re
 import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.functions import phamerator
 
 MAX_VERSION = 7
+CURRENT_VERSION = 6
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
 MODULE = "pdm_utils"
@@ -44,7 +44,7 @@ def parse_args(unparsed_args_list):
     parser = argparse.ArgumentParser(description=CONVERT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("-s", "--schema_version", type=int,
-        choices=list(CHOICES), default=MAX_VERSION,
+        choices=list(CHOICES), default=CURRENT_VERSION,
         help=SCHEMA_VERSION_HELP)
     parser.add_argument("-n", "--new_database_name", type=str,
         help=NEW_DATABASE_NAME_HELP)
