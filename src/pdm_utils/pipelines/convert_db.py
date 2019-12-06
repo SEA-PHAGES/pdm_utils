@@ -1,18 +1,20 @@
 """Pipeline to upgrade or downgrade the schema of a Phamerator database."""
 
 import argparse
-import pkgutil
+import pathlib
+# import pkgutil
 import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
+from pdm_utils.functions import basic
 from pdm_utils.functions import phamerator
 
 MAX_VERSION = 7
 CURRENT_VERSION = 6
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
-MODULE = "pdm_utils"
-SQL_SCRIPT_DIR = "resources/sql_scripts/"
+# MODULE = "pdm_utils"
+# SQL_SCRIPT_DIR = "resources/sql_scripts/"
 
 
 # TODO unittest.
@@ -37,12 +39,16 @@ def parse_args(unparsed_args_list):
     CONVERT_HELP = ("Pipeline to upgrade or downgrade the "
                     "schema of a Phamerator database.")
     DATABASE_HELP = "Name of the MySQL database."
+    CONVERSION_SCRIPTS_FOLDER_HELP = \
+        ("Path to the folder containing conversion SQL scripts.")
     SCHEMA_VERSION_HELP = ("Database schema version to which "
                            "the database should be converted.")
     NEW_DATABASE_NAME_HELP = ("The new name of the converted database"
                               "if different from the original database name.")
     parser = argparse.ArgumentParser(description=CONVERT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser.add_argument("conversion_scripts_folder", type=pathlib.Path,
+        help=CONVERSION_SCRIPTS_FOLDER_HELP)
     parser.add_argument("-s", "--schema_version", type=int,
         choices=list(CHOICES), default=CURRENT_VERSION,
         help=SCHEMA_VERSION_HELP)
@@ -181,6 +187,8 @@ def main(unparsed_args_list):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
+    args.conversion_scripts_folder = \
+        basic.set_path(args.conversion_scripts_folder, kind="dir", expect=True)
     sql_handle1 = connect_to_db(args.database)
     target = args.schema_version
     actual = get_schema_version(sql_handle1)
@@ -216,7 +224,9 @@ def main(unparsed_args_list):
             sql_handle2 = sql_handle1
 
         if convert == True:
-            stop_step = convert_schema(sql_handle2, actual, dir, steps)
+            stop_step = convert_schema(sql_handle2,
+                                       args.conversion_scripts_folder,
+                                       actual, dir, steps)
             if stop_step == target:
                 print(f"The database schema conversion was successful.")
             else:
@@ -298,7 +308,7 @@ def copy_db(sql_handle, new_database):
     return result
 
 # TODO unittest.
-def convert_schema(sql_handle, actual, dir, steps):
+def convert_schema(sql_handle, conversion_folder, actual, dir, steps):
     """Iterate through conversion steps and convert database schema."""
     index = 0
     convert = True
@@ -307,8 +317,12 @@ def convert_schema(sql_handle, actual, dir, steps):
         step = steps[index]
         script = get_script_filename(dir, step)
         print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
-        script_path = SQL_SCRIPT_DIR + script
-        data = pkgutil.get_data(MODULE, script_path).decode()
+        data = get_script_data(conversion_folder, script)
+
+        # script_path = SQL_SCRIPT_DIR + script
+        # data = pkgutil.get_data(MODULE, script_path).decode()
+
+
         if (dir == "upgrade" and step == 3):
             commands = get_upgrade_2_to_3_commands(data)
         else:
@@ -326,6 +340,20 @@ def convert_schema(sql_handle, actual, dir, steps):
             stop_step = step
         index += 1
     return stop_step
+
+# TODO unittest.
+def get_script_data(conversion_folder, script):
+    """Confirm path to SQL conversion script is correct."""
+    script_path = pathlib.Path(conversion_folder, script)
+    result, msg = basic.verify_path2(script_path, kind="file", expect=True)
+    if not result:
+        print(msg)
+        print("Unable to proceed with database conversion.")
+        sys.exit(1)
+    else:
+        with open(script_path, "r") as fh:
+            data = fh.read()
+        return data
 
 
 # TODO unittest.
