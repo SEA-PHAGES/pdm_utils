@@ -96,39 +96,46 @@ Many ``pdm_utils`` modules and pipelines require access to a specifically struct
 The Actino_Draft database
 +++++++++++++++++++++++++
 
-Installing the primary, actinobacteriophage, database instance (Actino_Draft) for the first time can be performed as follows.
+Installing the primary, actinobacteriophage, database instance (Actino_Draft) for the first time can be performed two ways.
 
-    1. Open a Terminal window.
-    2. Create an empty database (enter your password when prompted)::
+    1. Using ``pdm_utils``: refer to the 'get_db' installation management pipeline user page.
+    2. Manually:
 
-        > mysql -u root -p --execute "CREATE DATABASE Actino_Draft"
+        1. Open a Terminal window.
+        2. Create an empty database (enter your password when prompted)::
 
-    3. Download the current version of the database from the Hatfull lab server::
+            > mysql -u root -p --execute "CREATE DATABASE Actino_Draft"
 
-        > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.sql > ./Actino_Draft.sql
+        3. Retrieve the current version of the database::
 
-    4. Import the database into MySQL (enter your password when prompted)::
+            > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.sql > ./Actino_Draft.sql
 
-        > mysql -u root -p Actino_Draft < Actino_Draft.sql
+        4. Import the database into MySQL (enter your password when prompted)::
 
-    5. The database is now set up for use.
+            > mysql -u root -p Actino_Draft < Actino_Draft.sql
 
-This database is always being updated. Keeping the local database up-to-date can be performed as follows.
 
-    1. Log in to MySQL (enter your password when prompted)::
 
-        > mysql -u root -p
+This database is always being updated. As with the initial installation, keeping the local database up-to-date can be performed using the 'get_db' tool or manually.
 
-    2. Execute the following query to get the current version::
+    1. Using ``pdm_utils``: refer to the 'get_db' installation management pipeline user page.
+    2. Manually:
 
-        mysql> SELECT Version FROM version;
-        mysql> exit
+        1. Log in to MySQL (enter your password when prompted)::
 
-    3. Download the current version file from the Hatfull lab server::
+            > mysql -u root -p
 
-        > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.version > ./Actino_Draft.version
+        2. Execute the following query to get the current version::
 
-    4. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'installing a new Actino_Draft database' section.
+            mysql> SELECT Version FROM version;
+            mysql> exit
+
+        3. Download the current version file from the Hatfull lab server::
+
+            > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.version > ./Actino_Draft.version
+
+        4. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'installing a new Actino_Draft database' section.
+
 
 
 Frozen Phamerator databases
@@ -192,14 +199,28 @@ Some of the python dependencies themselves have python or binary dependencies. A
 
 
 
+7. ``pdm_utils`` source code repository
+***************************************
+
+This project is maintained using git and is available on :pdmutils:`GitHub <>`. Some files stored in the repository are required for ``pdm_utils`` tools but are not installed directly with the Python package. Instead, the repository can be downloaded two ways:
+
+    1. Using git on the command line::
+
+        > git clone https://github.com/SEA-PHAGES/pdm_utils.git
+
+    2. Manually through GitHub using the link provided above.
+
+
+
+
 The ``pdm_utils`` package
 _________________________
 
 
-    1. ``pdm_utils`` cannot yet be installed through Conda. With the Conda environment activated, execute the following command::
+    1. With the Conda environment activated, execute the following command::
 
-        (pdm_utils-user)> pip install pdm_utils
+        (pdm_utils)> pip install pdm_utils
 
     2. Update the version::
 
-        (pdm_utils-user)> pip install --upgrade pdm_utils
+        (pdm_utils)> pip install --upgrade pdm_utils

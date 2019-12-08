@@ -3,7 +3,7 @@
 Phamerator database structure
 =============================
 
-The current database schema (schema 5) contains 10 tables:
+The current database schema (schema version 6) contains 10 tables:
 
     1.  phage
     2.  gene
@@ -11,16 +11,23 @@ The current database schema (schema 5) contains 10 tables:
     4.  gene_domain
     5.  pham
     6.  pham_color
-    7.  trna
-    8.  tmrna
-    9.  scores_summary
-    10. version
+    7.  version
+    8.  trna (in development)
+    9.  trna_structures (in development)
+    10. tmrna (in development)
 
-.. TODO probably could insert image showing how tables are connected.
-.. TODO should this be generated from MySQL Workbench?
+
+.. _figschema:
+
+.. figure:: /images/database_structure/schema6_map.jpg
+
+    Map of the Phamerator database schema (schema version 6).
+
 .. .. csv-table::
-..     :file: images/database_structure/database.csv
-..     :widths: 10, 10
+    :file: images/database_structure/database.csv
+
+
+.. :widths: 10, 10
 
 
 phage
@@ -58,7 +65,7 @@ This table contains information that pertains to the entire phage genome, such a
 
 **RetrieveRecord** This field facilitates automatic updates from GenBank records. Most SEA-PHAGES genomes are expected to be automatically updated from GenBank once they are assigned a unique GenBank accession. However, some genomes, such as those generated from non-SEA-PHAGES researchers, may not need to be automatically updated. This field is set to 1 for genomes that are to be automatically updated and set to 0 for those genomes that are not to be automatically updated. Initially, this field is indirectly determined by the AnnotationAuthor field. For newly added genomes, if AnnotationAuthor = hatfull in the import ticket, this field is set to 1, otherwise it is set to 0. For genomes being replaced (by automatic updates from GenBank or by the creation of manual tickets), the value in this field is retained. Note: this field will be either 0 or 1.
 
-**Status** This field indicates whether the gene annotations have automatically (draft) or manually (final) annotated, or whether the annotation strategy is unknown (gbk).
+**Status** This field indicates whether the gene annotations have automatically (draft) or manually (final) annotated, or whether the annotation strategy is unknown (unknown).
 
 
 gene
@@ -183,3 +190,17 @@ This table keeps track of the database version and is updated every time the dat
 **Version** This field reflects the current version of the database. Every time changes are made to the database, this integer is incremented by 1.
 
 **SchemaVersion** This field indicates the current version of the database structure, or schema and enhances version control of scripts that directly communicate with PhameratorDB. As the structure of the database changes, such as by the addition or removal of tables or fields, the database schema number can be incremented to reflect that changes have been made. This does not occur often, and needs to be manually changed.
+
+
+
+trna (in development)
+---------------------
+This table contains information that pertains to individual tRNA features.
+
+trna_structures (in development)
+--------------------------------
+This table contains information that pertains to tRNA secondary structure.
+
+tmrna (in development)
+----------------------
+This table contains information that pertains to individual tmRNA features.

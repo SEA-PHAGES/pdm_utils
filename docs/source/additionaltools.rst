@@ -10,3 +10,4 @@ contains to further analyze and manipulate data within a Phamerator database.
 
    Create custom databases <./additional_tools/customization>
    Create flat files <./additional_tools/create_flat_files>
+   Convert database schema <./additional_tools/convert_database>
