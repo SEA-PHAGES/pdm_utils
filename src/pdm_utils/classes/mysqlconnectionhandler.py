@@ -64,7 +64,7 @@ class MySQLConnectionHandler:
 
         # Flag to track whether the database has been validated
         self._database_status = False
-        
+
     @property
     def username(self):
         """
@@ -128,7 +128,7 @@ class MySQLConnectionHandler:
             self._database_status = False
         else:
             print(self.messages["database change"].format(value))
-        
+
     def validate_database_access(self):
         """
         Tries to connect to the specified database using the verified
@@ -367,7 +367,7 @@ class MySQLConnectionHandler:
         cursor.execute("START TRANSACTION")
         for statement in statement_list:
             try:
-                print(statement)
+                # print(statement)
                 cursor.execute(statement)
             except pms.err.Error as err:
                 print("Error {}: {}".format(err.args[0], err.args[1]))
