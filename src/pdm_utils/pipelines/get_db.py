@@ -10,7 +10,11 @@ from pdm_utils.constants import constants
 from pdm_utils.functions import basic, phamerator
 
 
-
+# TODO currently the 'output_folder' argument is not directly attached to
+# other arguments. This causes a problem sometimes - if installing a database
+# from a .sql file, the 'filename' argument points to the path to the file,
+# so the 'output_folder' path is redundant. Further, if the 'output_folder'
+# path is not the same as the 'filename' path, then an error is encountered.
 # TODO unittest.
 def main(unparsed_args_list):
     """Run the get_db pipeline."""
@@ -22,7 +26,7 @@ def main(unparsed_args_list):
     if args.filename is None:
         version_filename = args.database + ".version"
     else:
-        version_filename = args.filename + ".version"
+        version_filename = args.filename.stem + ".version"
     version_url = constants.DB_WEBSITE + version_filename
     version_filepath = pathlib.Path(args.output_folder, version_filename)
     if args.download == True:
@@ -42,7 +46,7 @@ def main(unparsed_args_list):
     if args.filename is None:
         db_filename = args.database + ".sql"
     else:
-        db_filename = args.filename + ".sql"
+        db_filename = args.filename.name
     db_url = constants.DB_WEBSITE + db_filename
     db_filepath = pathlib.Path(args.output_folder, db_filename)
     if args.download == True:
@@ -137,7 +141,7 @@ def parse_args(unparsed_args_list):
         default=False, help=REMOVE_HELP)
     parser.add_argument("-a", "--all_steps", action="store_true",
         default=False, help=ALL_HELP)
-    parser.add_argument("-f", "--filename", type=str,
+    parser.add_argument("-f", "--filename", type=pathlib.Path,
         help=FILENAME_HELP)
 
 
