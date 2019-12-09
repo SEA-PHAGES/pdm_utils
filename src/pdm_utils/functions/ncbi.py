@@ -11,7 +11,6 @@ def set_entrez_credentials(tool=None, email=None, api_key=None):
     if api_key is not None:
         Entrez.api_key = api_key
 
-
 # TODO unittest.
 def run_esearch(db="", term="", usehistory=""):
     """Run esearch."""
