@@ -1,8 +1,3 @@
--- MySQL dump 10.13  Distrib 5.5.53, for debian-linux-gnu (x86_64)
---
--- Host: localhost    Database: Actinobacteriophage_789
--- ------------------------------------------------------
--- Server version	5.5.53-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,11 +9,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `domain`
---
-
 DROP TABLE IF EXISTS `domain`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -30,13 +20,8 @@ CREATE TABLE `domain` (
   `Name` varchar(25) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `hit_id` (`hit_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=901966 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2186092 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `gene`
---
-
 DROP TABLE IF EXISTS `gene`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -48,7 +33,7 @@ CREATE TABLE `gene` (
   `Length` mediumint(9) NOT NULL,
   `Name` varchar(50) NOT NULL,
   `TypeID` varchar(10) DEFAULT NULL,
-  `translation` varchar(4000) DEFAULT NULL,
+  `translation` varchar(5000) DEFAULT NULL,
   `StartCodon` enum('ATG','GTG','TTG') DEFAULT NULL,
   `StopCodon` enum('TAA','TAG','TGA') DEFAULT NULL,
   `Orientation` enum('F','R') DEFAULT NULL,
@@ -63,17 +48,13 @@ CREATE TABLE `gene` (
   `clustalw_status` enum('avail','pending','stale','done') NOT NULL DEFAULT 'avail',
   `blast_status` enum('avail','pending','stale','done') NOT NULL DEFAULT 'avail',
   `cdd_status` tinyint(1) NOT NULL DEFAULT '0',
+  `LocusTag` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`GeneID`),
   KEY `PhageID` (`PhageID`),
   KEY `id` (`id`),
   CONSTRAINT `gene_ibfk_2` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=231370 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1148013 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `gene_domain`
---
-
 DROP TABLE IF EXISTS `gene_domain`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -89,13 +70,8 @@ CREATE TABLE `gene_domain` (
   KEY `hit_id` (`hit_id`),
   CONSTRAINT `gene_domain_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `gene_domain_ibfk_2` FOREIGN KEY (`hit_id`) REFERENCES `domain` (`hit_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1094204 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1395804 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `host`
---
-
 DROP TABLE IF EXISTS `host`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -104,13 +80,8 @@ CREATE TABLE `host` (
   `Name` varchar(50) NOT NULL,
   `Accession` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `host_range`
---
-
 DROP TABLE IF EXISTS `host_range`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -125,11 +96,6 @@ CREATE TABLE `host_range` (
   CONSTRAINT `host_range_ibfk_2` FOREIGN KEY (`host_id`) REFERENCES `host` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `node`
---
-
 DROP TABLE IF EXISTS `node`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -138,14 +104,9 @@ CREATE TABLE `node` (
   `platform` varchar(15) DEFAULT NULL,
   `hostname` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `hostname_index` (`hostname`)
-) ENGINE=InnoDB AUTO_INCREMENT=2536 DEFAULT CHARSET=latin1;
+  KEY `hostname` (`hostname`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `phage`
---
-
 DROP TABLE IF EXISTS `phage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -165,14 +126,14 @@ CREATE TABLE `phage` (
   `GC` float DEFAULT NULL,
   `Cluster` varchar(5) DEFAULT NULL,
   `status` varchar(5) DEFAULT NULL,
+  `RetrieveRecord` tinyint(1) NOT NULL DEFAULT '0',
+  `AnnotationQC` tinyint(1) NOT NULL DEFAULT '0',
+  `AnnotationAuthor` tinyint(1) NOT NULL DEFAULT '0',
+  `Cluster2` varchar(5) DEFAULT NULL,
+  `Subcluster2` varchar(5) DEFAULT NULL,
   PRIMARY KEY (`PhageID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `pham`
---
-
 DROP TABLE IF EXISTS `pham`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -181,16 +142,11 @@ CREATE TABLE `pham` (
   `name` int(10) unsigned DEFAULT NULL,
   `orderAdded` int(5) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`GeneID`),
-  KEY `orderAdded_index` (`orderAdded`),
   KEY `name_index` (`name`),
+  KEY `orderAdded` (`orderAdded`),
   CONSTRAINT `pham_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=77956 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `pham_color`
---
-
 DROP TABLE IF EXISTS `pham_color`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -199,13 +155,8 @@ CREATE TABLE `pham_color` (
   `name` int(10) unsigned NOT NULL,
   `color` char(7) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11036 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=23752 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `pham_history`
---
-
 DROP TABLE IF EXISTS `pham_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -215,14 +166,9 @@ CREATE TABLE `pham_history` (
   `action` enum('join','split') NOT NULL,
   `datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`name`,`parent`,`action`),
-  KEY `parent_index` (`parent`)
+  KEY `parent` (`parent`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `pham_old`
---
-
 DROP TABLE IF EXISTS `pham_old`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -231,16 +177,11 @@ CREATE TABLE `pham_old` (
   `name` int(10) unsigned DEFAULT NULL,
   `orderAdded` int(5) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`orderAdded`),
-  KEY `orderAdded_index` (`orderAdded`),
-  KEY `GeneID_index` (`GeneID`),
+  KEY `orderAdded` (`orderAdded`),
+  KEY `GeneID` (`GeneID`),
   CONSTRAINT `pham_old_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `scores_summary`
---
-
 DROP TABLE IF EXISTS `scores_summary`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -252,22 +193,64 @@ CREATE TABLE `scores_summary` (
   `clustalw_score` decimal(5,4) unsigned DEFAULT NULL,
   `blast_bit_score` double unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `scores_summary_ibfk_1` (`query`),
-  KEY `scores_summary_ibfk_2` (`subject`),
+  KEY `query` (`query`),
+  KEY `subject` (`subject`),
   CONSTRAINT `scores_summary_ibfk_1` FOREIGN KEY (`query`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `scores_summary_ibfk_2` FOREIGN KEY (`subject`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `version`
---
-
+DROP TABLE IF EXISTS `tmrna`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tmrna` (
+  `PhageID` varchar(25) NOT NULL,
+  `TmrnaID` varchar(35) NOT NULL,
+  `LocusTag` varchar(35) DEFAULT NULL,
+  `Start` mediumint(9) NOT NULL,
+  `Stop` mediumint(9) NOT NULL,
+  `Orientation` enum('F','R') NOT NULL,
+  `Note` blob,
+  `PeptideTag` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`TmrnaID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `trna`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `trna` (
+  `PhageID` varchar(25) NOT NULL,
+  `TrnaID` varchar(35) NOT NULL,
+  `LocusTag` varchar(35) DEFAULT NULL,
+  `Start` mediumint(9) NOT NULL,
+  `Stop` mediumint(9) NOT NULL,
+  `Length` mediumint(9) NOT NULL,
+  `Orientation` enum('F','R') NOT NULL,
+  `Sequence` varchar(100) NOT NULL,
+  `Product` blob,
+  `Note` blob,
+  `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','Gln','Glu','Gly','His','Ile','Leu','Lys','Met','Phe','Pro','Ser','Thr','Trp','Tyr','Val','Undet','OTHER') NOT NULL,
+  `Anticodon` varchar(4) NOT NULL,
+  `InfernalScore` decimal(4,2) DEFAULT NULL,
+  PRIMARY KEY (`TrnaID`),
+  KEY `PhageID` (`PhageID`),
+  CONSTRAINT `trna_ibfk_1` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `trna_structures`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `trna_structures` (
+  `Sequence` varchar(100) NOT NULL,
+  `Structure` varchar(300) NOT NULL,
+  PRIMARY KEY (`Sequence`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `version`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `version` (
   `version` int(11) unsigned NOT NULL,
+  `schema_version` int(11) unsigned NOT NULL,
   PRIMARY KEY (`version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -281,4 +264,3 @@ CREATE TABLE `version` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-07 17:27:19

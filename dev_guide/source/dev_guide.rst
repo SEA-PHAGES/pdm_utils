@@ -255,7 +255,7 @@ As the structure of the database changes, perform the following:
 
     2. In bash, create an empty schema::
 
-        > mysqldump --no-data -u root -p --skip-comments Actino_Draft > Actino_Draft_schema<new schema int>.sql
+        > mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_<new schema int>.sql
 
     3. Add the sql file to the schemas directory.
     4. Update the schema_updates.txt history file with the changes, including a list of all MySQL statements executed to change the schema.

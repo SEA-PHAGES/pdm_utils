@@ -20,7 +20,7 @@ CREATE TABLE `domain` (
   `Name` varchar(25) DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `hit_id` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2176995 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2186092 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gene`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -42,7 +42,7 @@ CREATE TABLE `gene` (
   KEY `PhageID` (`PhageID`),
   KEY `id` (`ID`),
   CONSTRAINT `gene_ibfk_2` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1137489 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1148013 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gene_domain`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -59,7 +59,7 @@ CREATE TABLE `gene_domain` (
   KEY `hit_id` (`HitID`),
   CONSTRAINT `gene_domain_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `gene_domain_ibfk_2` FOREIGN KEY (`HitID`) REFERENCES `domain` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1386407 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1395804 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `phage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -102,7 +102,7 @@ CREATE TABLE `pham_color` (
   `Name` int(10) unsigned NOT NULL,
   `Color` char(7) NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=29670 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=23752 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tmrna`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

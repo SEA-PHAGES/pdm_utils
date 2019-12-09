@@ -19,7 +19,7 @@ The current database schema (schema version 6) contains 10 tables:
 
 .. _figschema:
 
-.. figure:: /images/database_structure/schema6_map.jpg
+.. figure:: /images/database_structure/schema_6_map.jpg
 
     Map of the Phamerator database schema (schema version 6).
 
