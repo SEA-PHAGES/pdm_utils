@@ -2,23 +2,18 @@ Installation
 ============
 
 
-The ``pdm_utils`` package is written in Python3 and can be installed on MacOS and Linux platforms.
+The ``pdm_utils`` package is written in Python3 and can be installed on MacOS and Linux platforms. There are several third-party general dependencies that need to be installed in advance, and there are several dependencies specific to a subset of ``pdm_utils`` tools or pipelines that are only needed for specific goals. Below is a general step-by-step guide to installing all dependencies and the ``pdm_utils`` package.
 
-Dependencies
-____________
-
-
-There are also several third-party dependencies that need to be installed locally for certain ``pdm_utils`` tools.
 
 1. MySQL
-********
+________
 
 :mysql:`MySQL Community Server 5.7 <>`
 
     This is required for practically all ``pdm_utils`` tools. Below is a brief summary of the installation steps. Refer to the official MySQL documentation for more details.
 
 MacOS installation
-++++++++++++++++++
+******************
 
 Installing MySQL on MacOS can be tricky.
 
@@ -79,148 +74,147 @@ If the MySQL password is lost, it can be reset.
     11. Close the first Terminal window.
 
 Ubuntu installation
-+++++++++++++++++++
+*******************
 
 # TODO Add description
 
 
 
+2. Python dependencies
+______________________
 
-
-2. Phamerator database instance
-*******************************
-
-Many ``pdm_utils`` modules and pipelines require access to a specifically structured MySQL database that can be used by the Phamerator GUI.
-
-
-The Actino_Draft database
-+++++++++++++++++++++++++
-
-Installing the primary, actinobacteriophage, database instance (Actino_Draft) for the first time can be performed two ways.
-
-    1. Using ``pdm_utils``: refer to the 'get_db' installation management pipeline user page.
-    2. Manually:
-
-        1. Open a Terminal window.
-        2. Create an empty database (enter your password when prompted)::
-
-            > mysql -u root -p --execute "CREATE DATABASE Actino_Draft"
-
-        3. Retrieve the current version of the database::
-
-            > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.sql > ./Actino_Draft.sql
-
-        4. Import the database into MySQL (enter your password when prompted)::
-
-            > mysql -u root -p Actino_Draft < Actino_Draft.sql
-
-
-
-This database is always being updated. As with the initial installation, keeping the local database up-to-date can be performed using the 'get_db' tool or manually.
-
-    1. Using ``pdm_utils``: refer to the 'get_db' installation management pipeline user page.
-    2. Manually:
-
-        1. Log in to MySQL (enter your password when prompted)::
-
-            > mysql -u root -p
-
-        2. Execute the following query to get the current version::
-
-            mysql> SELECT Version FROM version;
-            mysql> exit
-
-        3. Download the current version file from the Hatfull lab server::
-
-            > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.version > ./Actino_Draft.version
-
-        4. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'installing a new Actino_Draft database' section.
-
-
-
-Frozen Phamerator databases
-+++++++++++++++++++++++++++
-
-Typically, different versions, or instances, of the Phamerator database are created for specific studies/publications. The unique name of the database is normally published in the Materials and Methods. To download this database, follow the same steps as described above, substituting the frozen database name for Actino_Draft.
-
-
-3. MMSeqs
-*********
-
-:mmseqs:`MMSeqs <>`
-
-    Required only if gene phamilies need to be identified using MMSeqs and the mmseqs_phamerate pipeline.
-
-# TODO add installation instructions.
-
-
-4. NCBI Blast+ toolkit
-**********************
-
-:blastplus:`NCBI blast+ <>`
-
-    Required only if conserved domains within genes need to be identified from the NCBI Conserved Domain Database and the cdd pipeline.
-
-# TODO add installation instructions.
-
-
-
-
-5. NCBI Conserved Domain Database
-*********************************
-
-:cdd:`NCBI Conserved Domain Database <>`
-
-    Required only if conserved domains within genes need to be identified using the cdd pipeline.
-
-# TODO add installation instructions.
-
-
-
-
-
-6. Python dependencies in MacOS or Ubuntu
-*****************************************
-
-There are several third-party python packages:
+There are several third-party python packages required:
 
     - :biopython:`Biopython <>`
     - :pymysql:`pymysql <>`
     - :paramiko:`paramiko <>`
     - tabulate
 
-Some of the python dependencies themselves have python or binary dependencies. Although these dependencies can be manually installed, it can be tricky to do so. Instead, the Conda environment manager is a simple, automated alternative.
+Some of them also have python or binary dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install all python dependencies:
 
-    1. Install Conda locally through the :anaconda:`Anaconda <>` package.
-    2. After installing Conda, create an environment to be able to install and use ``pdm_utils``::
+    1. Install Conda locally through the :anaconda:`Anaconda <>` package. Follow the manufacturer's installation guide for MacOS or Ubuntu.
+
+    2. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything)::
 
         > conda create --name pdm_utils python pip biopython pymysql paramiko tabulate
-        > source activate pdm_utils
+        > conda activate pdm_utils
+        (pdm_utils)>
+
+The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment.
+
+
+3. The ``pdm_utils`` package
+____________________________
+
+Once MySQL and the Conda environment are installed, ``pdm_utils`` can be easily installed:
+
+    1. Execute the following command::
+
+        (pdm_utils)> pip install pdm_utils
+
+    2. The package is routinely updated, and the most recent version can be retrieved::
+
+        (pdm_utils)> pip install --upgrade pdm_utils
+
+
+4. Phamerator database instance
+_______________________________
+
+Many ``pdm_utils`` modules and pipelines require access to a specifically structured MySQL database that can be used by the Phamerator GUI.
+
+The primary database instance that reflects the most up-to-date actinobacteriophage genomics data is the 'Actino_Draft' database. Typically, different versions, or instances, of the Phamerator database are created ('frozen') for specific studies/publications. The unique name of the database is normally published in the Materials and Methods.
+
+The ``pdm_utils`` 'get_db' installation management tool can be used to retrieve, install, and update these databases, or any custom MySQL database that is compliant with the Phamerator database schema, from a local file or from the Hatfull lab server. Refer to the 'get_db' user guide page.
+
+Alternatively, databases can be manually downloaded and installed, as described below (using Actino_Draft as an example):
+
+Manual installation
+*******************
+
+    1. Open a Terminal window.
+    2. Create an empty database (enter your password when prompted)::
+
+        > mysql -u root -p --execute "CREATE DATABASE Actino_Draft"
+
+    3. Retrieve the current version of the database::
+
+        > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.sql > ./Actino_Draft.sql
+
+    4. Import the database into MySQL (enter your password when prompted)::
+
+        > mysql -u root -p Actino_Draft < Actino_Draft.sql
+
+
+Manual update
+*************
+
+    1. Log in to MySQL (enter your password when prompted)::
+
+        > mysql -u root -p
+
+    2. Execute the following query to get the current version::
+
+        mysql> SELECT Version FROM version;
+        mysql> exit
+
+    3. Download the current version file from the Hatfull lab server::
+
+        > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.version > ./Actino_Draft.version
+
+    4. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'installing a new Actino_Draft database' section.
 
 
 
-7. ``pdm_utils`` source code repository
-***************************************
 
-This project is maintained using git and is available on :pdmutils:`GitHub <>`. Some files stored in the repository are required for ``pdm_utils`` tools but are not installed directly with the Python package. Instead, the repository can be downloaded two ways:
+
+
+
+
+
+5. Tool-specific dependencies
+_____________________________
+
+Several ``pdm_utils`` tools have specific dependencies. Install the following tools/files as needed.
+
+
+MMSeqs
+******
+
+
+:mmseqs:`MMSeqs <>`
+
+    Required only if gene phamilies need to be identified using MMSeqs in the 'phamerate' pipeline.
+
+# TODO add installation instructions.
+
+
+NCBI Blast+ toolkit
+*******************
+
+:blastplus:`NCBI blast+ <>`
+
+    Required only if conserved domains within genes need to be identified from the NCBI Conserved Domain Database in the 'cdd' pipeline.
+
+# TODO add installation instructions.
+
+
+NCBI Conserved Domain Database
+******************************
+
+:cdd:`NCBI Conserved Domain Database <>`
+
+    Required only if conserved domains within genes need to be identified from the NCBI Conserved Domain Database in the 'cdd' pipeline.
+
+# TODO add installation instructions.
+
+
+``pdm_utils`` source code repository
+************************************
+
+Some ``pdm_utils`` tools, such as the 'convert' tool, require non-Python data files that are not directly installed with the Python package. Instead, these files are available on the ``pdm_utils`` git repository, which can be accessed through :pdmutils:`GitHub <>`. The repository can be downloaded two ways:
 
     1. Using git on the command line::
 
         > git clone https://github.com/SEA-PHAGES/pdm_utils.git
 
-    2. Manually through GitHub using the link provided above.
-
-
-
-
-The ``pdm_utils`` package
-_________________________
-
-
-    1. With the Conda environment activated, execute the following command::
-
-        (pdm_utils)> pip install pdm_utils
-
-    2. Update the version::
-
-        (pdm_utils)> pip install --upgrade pdm_utils
+    2. Manually through GitHub.

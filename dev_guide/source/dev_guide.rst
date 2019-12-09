@@ -174,6 +174,13 @@ For Sphinx to find the entire ``pdm_utils`` package for autodoc, and to NOT auto
 
     (make build may also be used instead of sphinx-build, not sure though)
 
+This generates a preview of the html documentation. In order to push the updated documentation to ReadTheDocs:
+
+    1. Merge all source code updates into the master git branch.
+    2. Push all changes in the master branch to the GitHub repo.
+    3. Login to readthedocs.org.
+    4. Choose the 'pdm_utils' project.
+    5. Choose 'build version'. 
 
 
 
