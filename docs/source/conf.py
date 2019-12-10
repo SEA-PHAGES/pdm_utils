@@ -79,5 +79,6 @@ extlinks = {
     'paramiko': ('http://www.paramiko.org/%s', ''),
     'mysql': ('https://www.mysql.com/%s', ''),
     'mmseqs': ('https://www.ncbi.nlm.nih.gov/pubmed/26743509%s', ''),
-    'anaconda': ('https://www.anaconda.com/%s', '')
+    'anaconda': ('https://www.anaconda.com/%s', ''),
+    'ncbi': ('https://www.ncbi.nlm.nih.gov/%s', '')
 }

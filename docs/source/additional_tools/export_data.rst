@@ -5,7 +5,8 @@ This tool is used to export data from a Phamerator database in a variety of form
 
     1. A SQL file that represents the entire database.
     2. CSV-formatted tables for selected tables.
-    3. Formatted filed for selected genomes, such as:
+    3. Formatted files for selected genomes, such as:
+
         a. GenBank-formatted flat files
         b. Fasta-formatted files
 
