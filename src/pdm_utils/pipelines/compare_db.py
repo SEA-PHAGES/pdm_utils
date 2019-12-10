@@ -16,6 +16,11 @@
 import time, sys, os, getpass, csv, re
 import json
 import urllib.request
+import argparse
+import pathlib
+from pdm_utils.functions import ncbi
+from pdm_utils.functions import basic
+
 
 
 #Third-party libraries
@@ -1732,6 +1737,32 @@ class DatabaseSummary:
 
 
 
+#here
+def parse_args(unparsed_args_list):
+    """Verify the correct arguments are selected for comparing databases."""
+
+    COMPARE_HELP = ("Pipeline to compare Phamerator, PhagesDB, and "
+                    "NCBI databases for inconsistencies.")
+    DATABASE_HELP = "Name of the MySQL database from which to compare data."
+    OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
+    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
+
+    parser = argparse.ArgumentParser(description=COMPARE_HELP)
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser.add_argument("output_folder", type=pathlib.Path, help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
+        help=NCBI_CRED_FILE_HELP)
+
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
+    args = parser.parse_args(unparsed_args_list[2:])
+    return args
+
+
+
+
+
 
 
 def main(unparsed_args_list):
@@ -1739,46 +1770,14 @@ def main(unparsed_args_list):
     ##Mainline code
     start_time = time.strftime("%x %X")
 
-
     #Get the command line parameters
-    try:
-        database = unparsed_args_list[2] #What Phamerator database should be compared to phagesdb?
-        output_dir = unparsed_args_list[3] #What is the directory into which the report should go
-    except:
-        print("\n\n\
-                This is a python script to compare the Phamerator, phagesdb, and NCBI databases for inconsistencies.\n\
-                It requires two arguments:\n\
-                First argument: name of MySQL database that will be checked (e.g. 'Actino_Draft').\n\
-                Second argument: directory path to where the consistency report should be made (csv-formatted).\n")
-        sys.exit(1)
+    args = parse_args(unparsed_args_list)
+    database = args.database
+    output_dir = basic.set_path(args.output_folder, kind="dir", expect=True)
+    output_dir = str(output_dir)
 
-    #Expand home directory
-    home_dir = os.path.expanduser('~')
-
-
-    #Verify the folder exists
-
-    #Add '/' at the end if it's not there
-    if output_dir[-1] != "/":
-        output_dir = output_dir + "/"
-
-
-    #Expand the path if it references the home directory
-    if output_dir[0] == "~":
-        output_dir = home_dir + output_dir[1:]
-
-    #Expand the path, to make sure it is a complete directory path (in case user inputted path with './path/to/folder')
-    output_dir = os.path.abspath(output_dir)
-
-
-    if os.path.isdir(output_dir) == False:
-        print("\n\nInvalid output folder.\n\n")
-        sys.exit(1)
-
-
-
-
-
+    #Get email info for NCBI
+    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
 
 
     #Set up MySQL parameters
@@ -1800,7 +1799,7 @@ def main(unparsed_args_list):
     #Create output directories
     date = time.strftime("%Y%m%d")
 
-    main_output_folder = '%s_database_comparison' % date
+    main_output_folder = '%s_compare' % date
     main_output_path = os.path.join(output_dir,main_output_folder)
 
 
@@ -1903,8 +1902,6 @@ def main(unparsed_args_list):
     #Set up NCBI parameters if selected by user
     if 'ncbi' in valid_database_set:
 
-        #Get email infor for NCBI
-        contact_email = input('\n\nProvide email for NCBI: ')
 
         batch_size = ''
         batch_size_valid = False
@@ -2395,11 +2392,11 @@ def main(unparsed_args_list):
 
         print("\n\nRetrieving records from NCBI")
 
-
-
         #Use esearch to verify the accessions are valid and efetch to retrieve the record
-        Entrez.email = contact_email
-        Entrez.tool = 'NCBIRecordRetrievalScript'
+        ncbi.set_entrez_credentials(
+            tool=ncbi_cred_dict["ncbi_tool"],
+            email=ncbi_cred_dict["ncbi_email"],
+            api_key=ncbi_cred_dict["ncbi_api_key"])
 
 
 
