@@ -136,9 +136,7 @@ def main(unparsed_args_list):
         print(f"Invalid working directory '{working_dir}'")
         sys.exit(1)
 
-    # TODO complete this step.
-    ncbi_cred_dict = get_ncbi_creds(args.ncbi_credentials_file)
-
+    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
 
     # Create data sets
     print("Preparing genome data sets from the phamerator database...")
@@ -185,28 +183,9 @@ def main(unparsed_args_list):
     print("\n\n\nRetrieve updates script completed.")
 
 
+
+
 # TODO unittest.
-def get_ncbi_creds(filename):
-    """Get NCBI credentials from a file."""
-    ncbi_cred_dict = {}
-    ncbi_cred_dict["ncbi_api_key"] = None
-    ncbi_cred_dict["ncbi_email"] = None
-    ncbi_cred_dict["ncbi_tool"] = None
-
-    if filename is not None:
-        filepath = basic.set_path(filename, kind="file", expect=True)
-        config_dict = basic.parse_config_file(filepath)
-        try:
-            ncbi_cred_dict["ncbi_api_key"] = config_dict["ncbi_api_key"]
-            ncbi_cred_dict["ncbi_email"] = config_dict["ncbi_email"]
-            ncbi_cred_dict["ncbi_tool"] = config_dict["ncbi_tool"]
-        except:
-            print(f"Unable to parse NCBI credentials from {filepath.name}")
-    return ncbi_cred_dict
-
-
-
-
 def modify_phamerator_data(input_list):
     """Modify certain types of data retrieved from Phamerator."""
     mod_list = []

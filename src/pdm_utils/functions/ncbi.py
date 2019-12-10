@@ -1,5 +1,28 @@
 """Misc. functions to interact with NCBI databases."""
 from Bio import Entrez, SeqIO
+from pdm_utils.functions import basic
+
+
+
+
+# TODO unittest.
+def get_ncbi_creds(filename):
+    """Get NCBI credentials from a file."""
+    ncbi_cred_dict = {}
+    ncbi_cred_dict["ncbi_api_key"] = None
+    ncbi_cred_dict["ncbi_email"] = None
+    ncbi_cred_dict["ncbi_tool"] = None
+
+    if filename is not None:
+        filepath = basic.set_path(filename, kind="file", expect=True)
+        config_dict = basic.parse_config_file(filepath)
+        try:
+            ncbi_cred_dict["ncbi_api_key"] = config_dict["ncbi_api_key"]
+            ncbi_cred_dict["ncbi_email"] = config_dict["ncbi_email"]
+            ncbi_cred_dict["ncbi_tool"] = config_dict["ncbi_tool"]
+        except:
+            print(f"Unable to parse NCBI credentials from {filepath.name}")
+    return ncbi_cred_dict
 
 # TODO unittest.
 def set_entrez_credentials(tool=None, email=None, api_key=None):

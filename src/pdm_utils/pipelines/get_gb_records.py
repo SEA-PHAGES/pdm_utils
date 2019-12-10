@@ -18,10 +18,14 @@ def parse_args(unparsed_args_list):
                      "stored in a MySQL Phamerator database.")
     DATABASE_HELP = "Name of the MySQL database."
     OUTPUT_FOLDER_HELP = ("Path to the directory where records will be stored.")
+    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
+
     parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("output_folder", type=pathlib.Path,
         help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
+        help=NCBI_CRED_FILE_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -61,6 +65,12 @@ def main(unparsed_args_list):
         sys.exit(1)
 
 
+
+    ## TODO add creds
+    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
+
+
+
     # Create data sets
     print("Retrieving accessions from the phamerator database...")
     sql_handle = connect_to_db(args.database)
@@ -70,11 +80,11 @@ def main(unparsed_args_list):
     if None in accessions:
         accessions.remove(None)
 
-    get_genbank_data(working_path, accessions)
+    get_genbank_data(working_path, accessions, ncbi_cred_dict)
 
 
 # TODO unittest.
-def get_genbank_data(output_folder, accession_set):
+def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
     """Retrieve genomes from GenBank."""
 
     batch_size = 200
@@ -84,10 +94,10 @@ def get_genbank_data(output_folder, accession_set):
     # Sayers, recommends that a single request not contain more than about 200
     # UIDS so we will use that as our batch size, and all Entrez requests must
     # include the user's email address and tool name.
-    email = input("\nPlease provide email address for NCBI: ")
     ncbi.set_entrez_credentials(
-        tool="NCBIRecordRetrievalScript",
-        email=email)
+        tool=ncbi_cred_dict["ncbi_tool"],
+        email=ncbi_cred_dict["ncbi_email"],
+        api_key=ncbi_cred_dict["ncbi_api_key"])
 
 
     # Use esearch to verify the accessions are valid and efetch to retrieve
