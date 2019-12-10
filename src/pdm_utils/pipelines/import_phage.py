@@ -28,7 +28,7 @@ import time, sys, os, getpass, csv, re, shutil
 import json
 import urllib.request
 from datetime import datetime
-
+import argparse
 
 
 #Import third-party modules
@@ -55,6 +55,48 @@ except:
 
 
 #Define several functions
+
+def parse_args(unparsed_args_list):
+    """Verify the correct arguments are selected for import new genomes."""
+
+    IMPORT_HELP = ("Pipeline to import new genome data into "
+                   "a Phamerator MySQL database.")
+    DATABASE_HELP = "Name of the MySQL database to import the genomes."
+    INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
+    IMPORT_TABLE_HELP = """
+        Path to the CSV-formatted table containing
+        instructions to process each genome.
+        Structure of import ticket table:
+            1. Action to implement on the database (add, remove, replace, update)
+            2. PhageID to add or update
+            3. Host genus of the updated phage
+            4. Cluster of the updated phage
+            5. Subcluster of the updated phage
+            6. Annotation status of the updated phage (draft, final, unknown)
+            7. Annotation authorship of the updated phage (hatfull, gbk)
+            8. Gene description field of the updated phage (product, note, function)
+            9. Accession of the updated phage
+            10. Run mode of the updated phage
+            11. PhageID that will be removed or replaced")
+        """
+    PROD_RUN_HELP = \
+        ("Indicates whether the script should make any changes to the database. "
+         "If True, the production run will implement all changes in the "
+         "indicated database. If False, the test run will not "
+         "implement any changes.")
+
+    parser = argparse.ArgumentParser(description=IMPORT_HELP)
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser.add_argument("input_folder", type=str, help=INPUT_FOLDER_HELP)
+    parser.add_argument("import_table", type=str, help=IMPORT_TABLE_HELP)
+    parser.add_argument("-p", "--prod_run", action="store_true",
+        default=False, help=PROD_RUN_HELP)
+
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
+    args = parser.parse_args(unparsed_args_list[2:])
+    return args
 
 #Print out statements to both the terminal and to the output file
 #For SQL statements that may be long (>150 characters), don't print entire statements.
@@ -450,34 +492,12 @@ run_mode_options_dict = {\
 
 
 #########################
-
 def main(unparsed_args_list):
 
-    #Get the command line parameters
-    try:
-        database = unparsed_args_list[2]
-        phageListDir = unparsed_args_list[3]
-        updateFile = unparsed_args_list[4]
-    except:
-        print("\n\n\
-                This is a python script to import and update phage genomes in the Phamerator database.\n\
-                It requires three arguments:\n\
-                First argument: name of MySQL database that will be updated (e.g. 'Actino_Draft').\n\
-                Second argument: directory path to the folder of genome files that will be uploaded (genbank-formatted).\n\
-                Third argument: directory path to the import table file with the following columns (csv-formatted):\n\
-                    1. Action to implement on the database (add, remove, replace, update)\n\
-                    2. PhageID to add or update\n\
-                    3. Host genus of the updated phage\n\
-                    4. Cluster of the updated phage\n\
-                    5. Subcluster of the updated phage\n\
-                    6. Annotation status of the updated phage (draft, final, unknown)\n\
-                    7. Annotation authorship of the updated phage (hatfull, gbk)\n\
-                    8. Gene description field of the updated phage (product, note, function)\n\
-                    9. Accession of the updated phage\n\
-                    10. Run mode of the updated phage\n\
-                    11. PhageID that will be removed or replaced\n\n")
-        sys.exit(1)
-
+    args = parse_args(unparsed_args_list)
+    database = args.database
+    phageListDir = args.input_folder
+    updateFile = args.import_table
 
     #Expand home directory
     home_dir = os.path.expanduser('~')
@@ -531,23 +551,10 @@ def main(unparsed_args_list):
     password = getpass.getpass(prompt='mySQL password:')
     print("\n\n")
 
-
-    #Set up run type
-    run_type_options = [\
-        'none',\
-        'test',\
-        'production']
-    print('\n\nThe following run types are available:\n')
-    #print('0: ' + run_type_options[0])
-    # print('1: ' + run_type_options[1])
-    # print('2: ' + run_type_options[2])
-    print('1: ' + run_type_options[1] + ' (checks flat files for accuracy, but the database is not changed.)')
-    print('2: ' + run_type_options[2] + ' (after testing files, the database is updated.)')
-    run_type = select_option(\
-        "\nWhich run type do you want? ", \
-        set([1,2]))
-    run_type = run_type_options[run_type]
-
+    if args.prod_run == True:
+        run_type = 'production'
+    else:
+        run_type = 'test'
 
 
 

@@ -93,7 +93,7 @@ def parse_args(unparsed_args_list):
                    "a Phamerator MySQL database.")
     DATABASE_HELP = "Name of the MySQL database to import the genomes."
     INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
-    OUTPUT_FOLDER_HELP = ("Path to the folder containing to store results.")
+    OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
     IMPORT_GENOME_FOLDER_HELP = """
         Path to the folder containing
         GenBank-formatted flat files
@@ -123,9 +123,9 @@ def parse_args(unparsed_args_list):
         """
     PROD_RUN_HELP = \
         ("Indicates whether the script should make any changes to the database. "
-         "If False, the production run will implement all changes in the "
-         "indicated database. If True, the test run will not "
-         "implement any changes")
+         "If True, the production run will implement all changes in the "
+         "indicated database. If False, the test run will not "
+         "implement any changes.")
     RUN_MODE_HELP = \
         ("Indicates the evaluation configuration "
          "for importing genomes.")
