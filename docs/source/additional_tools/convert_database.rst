@@ -1,5 +1,5 @@
 Convert database schema
-======================================
+=======================
 
 Occasionally, the structure (schema) of the Phamerator database is modified, which can result in certain types of data being stored differently. Even though the actual data may not have changed, these schema changes may prevent other tools from interacting with and retrieving data from the database. The ``pdm_utils`` 'convert' tool is built to upgrade and downgrade the schema of a Phamerator database on your local computer to ensure your tools can still access the data.
 
