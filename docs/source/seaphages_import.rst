@@ -20,7 +20,7 @@ database instances.
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Contents:
 
    Overview <./seaphages_pipeline/overview>

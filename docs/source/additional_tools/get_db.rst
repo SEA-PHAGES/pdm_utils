@@ -1,3 +1,5 @@
+.. _getdb:
+
 Download and install Phamerator databases
 =========================================
 

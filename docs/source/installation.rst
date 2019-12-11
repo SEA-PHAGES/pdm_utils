@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -124,7 +126,7 @@ Many ``pdm_utils`` modules and pipelines require access to a specifically struct
 
 The primary database instance that reflects the most up-to-date actinobacteriophage genomics data is the 'Actino_Draft' database. Typically, different versions, or instances, of the Phamerator database are created ('frozen') for specific studies/publications. The unique name of the database is normally published in the Materials and Methods.
 
-The ``pdm_utils`` 'get_db' installation management tool can be used to retrieve, install, and update these databases, or any custom MySQL database that is compliant with the Phamerator database schema, from a local file or from the Hatfull lab server. Refer to the 'get_db' user guide page.
+The ``pdm_utils`` 'get_db' installation management tool can be used to retrieve, install, and update these databases, or any custom MySQL database that is compliant with the Phamerator database schema, from a local file or from the Hatfull lab server (:ref:`getdb`).
 
 Alternatively, databases can be manually downloaded and installed, as described below (using Actino_Draft as an example):
 

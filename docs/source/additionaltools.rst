@@ -15,6 +15,7 @@ contains to further analyze and manipulate data within a Phamerator database.
    Convert database schema <./additional_tools/convert_database>
    Export data from a database <./additional_tools/export_data>
    Retrieve records from GenBank <./additional_tools/get_gb_records>
+   Flat file QC review <./additional_tools/flat_file_qc>
 
 .. Identify NCBI conserved domains <./additional_tools/cdd>
 .. Compare databases <./additional_tools/compare>
