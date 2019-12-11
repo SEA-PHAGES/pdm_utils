@@ -57,6 +57,9 @@ def run_export(unparsed_args_list):
     dbx = False
     ix = False
 
+    values_list = None
+    filters = None
+
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values_list = parse_value_list_input(args.input)
         filters = parse_filters(args.filters, verbose=args.verbose)
@@ -260,18 +263,20 @@ def execute_export(sql_handle, output_path, output_name,
 
     if verbose:
         print("Creating export folder...")
-    output_path = output_path.joinpath(output_name) 
+    output_path = output_path.joinpath(output_name)  
+
+    if(output_path.is_dir()):
+        output_version = 1
+        while(output_path.is_dir()):
+            output_version += 1
+            updated_output_name = f"{output_name}_{output_version}"
+            output_path = output_path.with_name(updated_output_name)
+
+        output_path.mkdir()
+    else:
+        output_path.mkdir()
+
     output_path.mkdir(exist_ok=True)
-   
-    output_name = sql_handle.database
-    output_version = 1
-    inner_folder_path = output_path.joinpath(output_name)
-
-    while(inner_folder_path.is_dir()):
-        output_version += 1
-        output_name = f"{sql_handle.database}_{output_version}"
-        inner_folder_path = output_path.joinpath(output_name)
-
     if db_export:
         if verbose:
             print("Writing SQL database file...")
@@ -505,10 +510,10 @@ def parse_value_list_input(value_list_input):
 @parse_value_list_input.register(Path)
 def _(value_list_input):
     value_list = []
-    with open(phage_list_input, newline = '') as csv_file:
+    with open(value_list_input, newline = '') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter = ",", quotechar = '|')
         for name in csv_reader:
-            phage_list.append(name[0])
+            value_list.append(name[0])
     return value_list
 
 @parse_value_list_input.register(list)
@@ -730,7 +735,7 @@ def write_csv(table, db_filter, sql_handle, output_path,
 def write_database(sql_handle, version, output_path,
                     output_name="export"):
 
-    export_path = export_path.joinpath(export_dir_name)
+    export_path = output_path.joinpath(output_name)
 
     if not export_path.exists():
         export_path.mkdir()

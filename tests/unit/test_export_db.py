@@ -62,22 +62,85 @@ class TestFileExport(unittest.TestCase):
         self.test_version_dictionary = \
                 {"Version" : "Test", "SchemaVersion": "Test"}
 
-    @patch("pdm_utils.pipelines.export_db.execute_file_export")
+    @patch("pdm_utils.pipelines.export_db.execute_export")
     @patch("pdm_utils.pipelines.export_db.parse_filters")
-    @patch("pdm_utils.pipelines.export_db.parse_phage_list_input")
+    @patch("pdm_utils.pipelines.export_db.parse_value_list_input")
     @patch(
     "pdm_utils.pipelines.export_db.establish_database_connection")
     @patch("pdm_utils.pipelines.export_db.print")
-    @patch("pdm_utils.pipelines.export_db.parse_file_export")
+    @patch("pdm_utils.pipelines.export_db.parse_export")
     def test_run_file_export(self, ArgParseMock, PrintMock, EstablishDBMock,
-                             ParsePhageListMock, ParseFiltersMock,
+                             ParseValueListMock, ParseFiltersMock,
                              ExecuteExportMock):
         """
         Unittest for export_db.run_file_export()
             -Tests branching based on returned
             argparse attributes
         """
-        pass
+ 
+        with self.subTest(pipeline_args="csvx"):      
+            type(ArgParseMock.return_value).pipeline = \
+                    PropertyMock(return_value="csv")
+            export_db.run_export("Test")
+            ArgParseMock.assert_called_with("Test")
+            EstablishDBMock.assert_called()
+            ParseValueListMock.assert_called()
+            ParseFiltersMock.assert_called()
+            ExecuteExportMock.assert_called()
+
+        ArgParseMock.reset_mock()
+        EstablishDBMock.reset_mock()
+        ParseValueListMock.reset_mock()
+        ParseFiltersMock.reset_mock()
+        ExecuteExportMock.reset_mock()
+
+        with self.subTest(pipeline_args="gb"):
+            type(ArgParseMock.return_value).pipeline = \
+                    PropertyMock(return_value="gb")
+            export_db.run_export("Test")
+            ArgParseMock.assert_called_with("Test")
+            EstablishDBMock.assert_called()
+            ParseValueListMock.assert_called()
+            ParseFiltersMock.assert_called()
+            ExecuteExportMock.assert_called()
+
+        ArgParseMock.reset_mock()
+        EstablishDBMock.reset_mock()
+        ParseValueListMock.reset_mock()
+        ParseFiltersMock.reset_mock()
+        ExecuteExportMock.reset_mock()
+
+        with self.subTest(pipeline_args="sql"):
+            type(ArgParseMock.return_value).pipeline = \
+                    PropertyMock(return_value="sql")
+            export_db.run_export("Test")
+            ArgParseMock.assert_called_with("Test")
+            EstablishDBMock.assert_called()
+            ParseValueListMock.assert_not_called()
+            ParseFiltersMock.assert_not_called()
+            ExecuteExportMock.assert_called()
+
+        ArgParseMock.reset_mock()
+        EstablishDBMock.reset_mock()
+        ParseValueListMock.reset_mock()
+        ParseFiltersMock.reset_mock()
+        ExecuteExportMock.reset_mock()
+
+        with self.subTest(pipeline_args="I"):
+            type(ArgParseMock.return_value).pipeline = \
+                    PropertyMock(return_value="I")
+            export_db.run_export("Test")
+            ArgParseMock.assert_called_with("Test")
+            EstablishDBMock.assert_called()
+            ParseValueListMock.assert_not_called()
+            ParseFiltersMock.assert_not_called()
+            ExecuteExportMock.assert_not_called()
+
+        ArgParseMock.reset_mock()
+        EstablishDBMock.reset_mock()
+        ParseValueListMock.reset_mock()
+        ParseFiltersMock.reset_mock()
+        ExecuteExportMock.reset_mock()
 
     def test_parse_file_export(self):
         """
@@ -121,7 +184,7 @@ class TestFileExport(unittest.TestCase):
         """
         pass
 
-    def test_parse_phage_list_input(self):
+    def test_parse_value_list_input(self):
         """
         Unittest for export_db.parse_phage_list_input()
             -Tests for single dispatch handling of list parameter type
@@ -129,13 +192,13 @@ class TestFileExport(unittest.TestCase):
         """
         #Sub test that tests for single dispatch handling of list type
         with self.subTest(input_type="list"):
-            phage_list = export_db.parse_phage_list_input(
+            phage_list = export_db.parse_value_list_input(
                                          ["Test", "Test", "Test"])
             self.assertEqual(phage_list, ["Test", "Test", "Test"])
         #Sub test that tests for single dispatch handling of
         with self.subTest(input_type=None):
             with self.assertRaises(TypeError):
-                phage_list = export_db.parse_phage_list_input(None)
+                phage_list = export_db.parse_value_list_input(None)
 
     def test_set_cds_seqfeatures(self):
         """
