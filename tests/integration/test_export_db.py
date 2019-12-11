@@ -5,12 +5,12 @@ from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import *
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
-from pdm_utils.classes import genome
+from pdm_utils.classes import genome, filter
 from pdm_utils.pipelines import export_db
 from pdm_utils.classes import mysqlconnectionhandler
 
 from pathlib import Path
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock, call, MagicMock
 import os, sys, unittest, shutil, csv, pymysql
 
 class TestFileExport(unittest.TestCase):
@@ -156,7 +156,7 @@ class TestFileExport(unittest.TestCase):
     #Tests undefined singledispatch type
     #Tests list singledispatch type
     #Tests Path singledispatch type
-    def test_parse_phage_list_input(self):
+    def test_parse_value_list_input(self):
         """
         Unittest that tests export_db.parse_phage_list_input()
             -Tests for Path object single dispatch handling
@@ -167,8 +167,8 @@ class TestFileExport(unittest.TestCase):
         csv_path.touch()
         csv_path.write_text("Test, NotSeen, NotSeen")
         #Asserts that parse_phage_list_input correctly read csv
-        test_phage_list = export_db.parse_phage_list_input(csv_path)
-        self.assertEqual(test_phage_list[0], "Test")
+        test_value_list = export_db.parse_value_list_input(csv_path)
+        self.assertEqual(test_value_list[0], "Test")
         #Removes test csv file
         csv_path.unlink()
         self.assertFalse(csv_path.exists())
@@ -318,86 +318,7 @@ class TestFileExport(unittest.TestCase):
                  base input directories
                 -Asserts files are created according to naming conventions
         """
-        #Sub test to test the writing functionalities of write_csv()
-        with self.subTest(export_directory_name="export",
-                          csv_file_name="database"):
-            #Asserts write_csv correctly creates directory and file
-            export_db.write_csv([self.genome], self.test_cwd)
-            dir_path = (self.test_cwd).joinpath("export")
-            self.assertTrue(dir_path.is_dir())
-            csv_path = dir_path.joinpath("database.csv")
-            self.assertTrue(csv_path.is_file())
-            #Asserts write_csv correctly recognizes existing log
-            export_db.write_csv([self.genome], self.test_cwd)
-            second_csv_path = csv_path.with_name("database2.csv")
-            self.assertTrue(second_csv_path.is_file())
-            #Removes test files and directory
-            second_csv_path.unlink()
-            csv_path.unlink()
-            dir_path.rmdir()
-        #Sub test to test the directory and file naming functionality
-        #of write_csv()
-        with self.subTest(export_directory_name="test_directory",
-                          csv_file_name="log"):
-            #Asserts write_csv correctly creates directory and file
-            export_db.write_csv([self.genome], self.test_cwd,
-                                      export_dir_name="test_directory",
-                                      csv_name="log")
-            dir_path = (self.test_cwd).joinpath("test_directory")
-            self.assertTrue(dir_path.is_dir())
-            csv_path = dir_path.joinpath("log.csv")
-            self.assertTrue(csv_path.is_file())
-            #Asserts write_csv correctly recognizes existing log
-            export_db.write_csv([self.genome], self.test_cwd,
-                                      export_dir_name="test_directory",
-                                      csv_name="log")
-            second_csv_path = csv_path.with_name("log2.csv")
-            self.assertTrue(second_csv_path.is_file())
-            #Removes test files and directory
-            second_csv_path.unlink()
-            csv_path.unlink()
-            dir_path.rmdir()
-        #Test to test the format of write_csv()
-        export_db.write_csv([self.genome], self.test_cwd,
-                              export_dir_name="Test",
-                              csv_name="Test")
-        dir_path = (self.test_cwd).joinpath("Test")
-        self.assertTrue(dir_path.is_dir())
-        csv_path = dir_path.joinpath("Test.csv")
-        self.assertTrue(csv_path.is_file())
-        if(csv_path.is_file()):
-            csv_contents = []
-            #Reads csv file contents
-            with open(csv_path, newline="") as test_csv:
-                csv_reader = csv.reader(test_csv, delimiter=",", quotechar="|")
-                for row in csv_reader:
-                    csv_contents.append(row)
-            self.assertEqual(csv_contents[0],["PhageID",
-                                              "Accession",
-                                              "Name",
-                                              "HostStrain",
-                                              "SequenceLength",
-                                              "DateLastModified",
-                                              "Notes",
-                                              "GC",
-                                              "Cluster",
-                                              "Subcluster",
-                                              "Status",
-                                              "RetrieveRecord",
-                                              "AnnotationAuthor"] )
-            self.assertEqual(csv_contents[1],["TestID",
-                                              "TestAccession",
-                                              "Test",
-                                              "TestHost",
-                                              "TestLength",
-                                              "TestDate",
-                                              "TestDescription",
-                                              "TestGC",
-                                              "TestCluster",
-                                              "TestSubcluster",
-                                              "TestStatus",
-                                              "TestRecord",
-                                              "TestAuthor"])
+        pass
 
     def test_write_database(self):
         """
