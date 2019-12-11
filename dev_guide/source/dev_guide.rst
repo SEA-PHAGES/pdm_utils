@@ -180,7 +180,7 @@ This generates a preview of the html documentation. In order to push the updated
     2. Push all changes in the master branch to the GitHub repo.
     3. Login to readthedocs.org.
     4. Choose the 'pdm_utils' project.
-    5. Choose 'build version'. 
+    5. Choose 'build version'.
 
 
 
@@ -222,7 +222,7 @@ Follow the steps below to push a new version of the ``pdm_utils`` package to PyP
 
     7. Now upload the package to PyPI::
 
-        > twine upload dist/*
+        > twine upload ./dist/*
 
 
 

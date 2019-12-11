@@ -25,7 +25,7 @@ The Actino_Draft database contains the most up-to-date actinobacteriophage annot
 In addition to improving the structure of PhameratorDB, several interactive scripts and tools have been developed to improve the database management process [Table 1]. These scripts are written in Python 3 and rely on several third-party Python packages or stand-alone command line tools. They should be executed from the command line in either Ubuntu OS or Mac OS, and they directly communicate with PhagesDB, GenBank, PECAAN, a local copy of the NCBI CDD, and a local copy of PhameratorDB in MySQL. The complete collection of scripts is tracked using the version control system, :git:`git <>`. The code is publicly available on the SEA-PHAGES GitHub page as the :pdmutils:`pdm_utils repository <>`.
 
 
-.. csv-table:: pipeline stages
+.. csv-table:: pdm_utils tools
     :file: ../images/pipeline_stages.csv
 
 

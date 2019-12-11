@@ -23,7 +23,8 @@ Introduction
 
 
 ``pdm_utils`` source code
-=========================
+_________________________
+
 This project is maintained using git and is available on :pdmutils:`GitHub <>`.
 
 
