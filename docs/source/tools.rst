@@ -9,16 +9,14 @@ contains to analyze and manipulate data within a Phamerator database.
    :caption: Contents:
 
    get_db: download and install a database <./tools/get_db>
-   convert: convert database schema <./tools/convert>
-   export: export data from a database <./tools/export>
-   get_gb_records: retrieve records from GenBank <./tools/get_gb_records>
+   get_data: get new data to import into the database <./tools/get_data>
+   update: make updates to specific database fields <./tools/update>
+   import: manage genome data <./tools/import>
    cdd: find NCBI conserved domains <./tools/find_domains>
    phamerate: create gene phamilies <./tools/phamerate>
+   export: export data from a database <./tools/export>
+   push: upload a database to a public server <./tools/push>
    compare: compare data between databases <./tools/compare>
    freeze: freeze a database for long-term reference <./tools/freeze>
-   push: upload a database to a public server <./tools/push>
-   get_data: get new data to import into the database <./tools/get_data>
-
-
-.. Create gene phamilies <./tools/phamerate>
-.. Make updates to a database <./tools/update>
+   convert: convert database schema <./tools/convert>
+   get_gb_records: retrieve records from GenBank <./tools/get_gb_records>

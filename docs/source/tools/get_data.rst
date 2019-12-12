@@ -1,42 +1,59 @@
-Data retrieval
-==============
+Retrieve new data
+=================
 
 
+New genomics data routinely becomes available for adding to a Phamerator database, including:
 
-The first step to update PhameratorDB requires gathering all new genome data (new sequences or annotations), creating corresponding tickets, and systematically staging them in a local directory in preparation for evaluation and import into PhameratorDB. This is accomplished using the retrieve_data.py script, which requires two arguments [Table 3].
+    1. Metadata pertaining to individual phages (such as host, cluster, subcluster, and accession)
+    2. Newly-sequenced and auto-annotated 'draft' genomes
+    3. New manually-annotated 'final' genomes
+    4. Updated annotations from GenBank
 
-.. TODO insert table describing how to use script
 
+These data can be automatically retrieved using the ``pdm_utils`` 'get_data' tool::
 
+    > python3 -m pdm_utils get_data Actino_Draft ./ -c ncbi_credentials.txt
 
-This script retrieves four types of data to be imported and creates tickets for them. The database administrator can select to retrieve all, or only specific, types of data. For each type of data, the script stores the retrieved data in a structured directory ready for import: a new folder is created that contains a) one csv-formatted import_table listing each ticket, and b) a genome subdirectory containing flat files.
+The argument 'Actino_Draft' indicates the name of the database from which updates are determined. The './' indicates the working directory where the data should be downloaded. Similar to the 'get_gb_records' tool, retrieving updates from GenBank relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI requests that you provide information about yourself. The '-c' flag points to a simple text file containing your information (:ref:`ncbicreds`). If only certain types of updates are required, there are separate command line flags for each type of update.
+
+Each type of data is retrieved and staged for import. A new folder is created that contains:
+
+    1. a CSV-formatted import table listing each 'ticket' pertaining to the type of update
+    2. a 'genomes' subdirectory containing flat files for import (if applicable)
 
 
 Metadata updates
 ----------------
 
 
-
-Using the PhagesDB API, genome data for all :phagesdb:`sequenced phages <api/sequenced_phages>` can be directly retrieved. For phage metadata, the script iterates through every phage in PhameratorDB, matches the PhageID to the identical phage name in PhagesDB, and compares metadata stored in PhameratorDB to what is stored in PhagesDB, including: Cluster, Subcluster, Host genus, and Accession. PhagesDB is the primary data source for these fields, so if any information is different between the two databases, a new import ticket is created with the current metadata from PhagesDB, so that PhameratorDB is synchronized accordingly (Table 2, Metadata update).
-
+PhagesDB is the primary source for Cluster, Subcluster, Host, and Accession data for phages in a Phamerator database. 'get_data' compares these data for each phage in the selected database to the corresponding data in PhagesDB, and creates a new update ticket for all discrepant data that need to be corrected in the Phamerator database. New metadata is retrieved from PhagesDB: :phagesdb:`sequenced phages <api/sequenced_phages>`. For each phage, PhagesDB stores both GenBank and RefSeq accession data, but only GenBank accession data (stored in the *genbank_accession* field) are stored in a Phamerator database.
 
 
-New auto-annotations
---------------------
-
-When new phage genomes are sequenced, the sequence is uploaded to PhagesDB. The draft auto-annotations are imported into the Actino_Draft instance for immediate reference to end-users (with tools such as the Phamerator GUI and Starterator) until the refined, reliable, final annotations are prepared. PhagesDB tracks which genomes have been imported into Actino_Draft, and it provides a :phagesdb:`list <data/unphameratedlist>` of newly sequenced "unphamerated" phages that need to be imported. Automated annotations of these new genomes can be generated through the phage genomics tool, :pecaan:`PECAAN <>`. For each new phage genome, a request for auto-annotation is sent to PECAAN with the URL: 'https://discoverdev.kbrinsgd.org/phameratoroutput/phage/[PhageID]' (where [PhageID] indicates the specific phage name of interest). PECAAN retrieves the new sequence from PhagesDB and automatically annotates coding sequence (CDS) genes using Glimmer [ref Delcher 1999] and GeneMark [ref Borodovsky 2003], and tRNA genes using tRNAscan-SE [ref Lowe and Eddy 1997] and ARAGORN [ref Laslett and Canback 2004]. The script retrieves a GenBank-formatted flat file of the auto-annotations, stores it in the local staging directory, and creates a new import ticket in the import_table [Table 2, New auto-ann.]. When auto-annotated draft genomes are imported into Actino_Draft, PhagesDB removes them from the list of “unphamerated” genomes so that they are not re-processed during subsequent rounds of PhameratorDB updates. It is important to note that since the list of “unphamerated” genomes is created by PhagesDB based on data in the Actino_Draft PhameratorDB instance, this data retrieval step is not reliable if it is used to update alternative PhameratorDB instances.
 
 
-New preliminary final annotations
----------------------------------
+New 'draft' auto-annotations
+----------------------------
 
-The draft gene annotations are eventually replaced in PhameratorDB with manual, final, gene annotations. The refined annotations are submitted by senior annotators as preliminary final annotations to PhagesDB in GenBank-formatted flat files so that they can be evaluated for quality in the PhameratorDB pipeline. When preliminary final annotations are uploaded to PhagesDB, the flat files are stored on Phagesdb in the qced_genbank_file field with a timestamp stored in the qced_genbank_file_date field. Similar to new metadata retrieval, the retrieval script iterates through every PhageID in PhameratorDB, matches it to the phage name in PhagesDB, reviews the date (if any) that a preliminary final annotation file was uploaded, and if it is more recent than the date of the annotations stored in PhameratorDB (indicated in the DateLastModified field of the *phage* table), it retrieves the new flat file from the qced_genbank_file field, stages it in the genome folder, and creates a new import ticket [Table 2, New prelim. final ann.]. The quality of the gene annotations is reviewed during import using the import_phage.py script (see below).
+PhagesDB is the primary source for new genome sequences generated through the SEA-PHAGES program. Automatically-generated 'draft' annotations can be imported into a Phamerator database for immediate reference. 'get_data' identifies genomes present in PhagesDB that are not present in the selected Phamerator database. For each new genome, a request is sent to the phage genomics tool :pecaan:`PECAAN <>` to generate auto-annotations with the URL: 'https://discoverdev.kbrinsgd.org/phameratoroutput/phage/<PhageID>' (where <PhageID> indicates the specific phage name of interest). PECAAN retrieves the new sequence from PhagesDB, automatically annotates genes, and returns a GenBank-formatted flat file. 'get_data' stages the new file and a corresponding import ticket in an import table that are ready to be processed with the 'import' tool.
 
-Updated GenBank annotations. After preliminary final annotations are evaluated for quality and imported into PhameratorDB, they are eventually submitted to GenBank with a unique accession number. Annotators provide the accession number to PhagesDB, which gets retrieved for import into PhameratorDB using the metadata retrieval step (see above). In the update GenBank data retrieval step, the script iterates through every PhageID in PhameratorDB, retrieves the accession number from the Accession field (if any), and retrieves the associated genome record from the GenBank nucleotide database using the Entrez python package. For each record, the script identifies the date of the record (Figure 2), and if the record date is more recent than the date of the annotations stored in PhameratorDB (indicated in the DateLastModified field of the *phage* table), the script retrieves the updated flat file, stages it in the genome folder, and creates a new import ticket [Table 2, Updated Genbank ann.]. The database administrator is required to provide an email address for this step since the NCBI requests contact information for all users downloading data from GenBank through Entrez. Additionally, the script creates a csv-formatted summary_table of all PhageIDs, their accession, and the results of data retrieval from GenBank.
+
+New 'final' annotations
+-----------------------
+
+The 'draft' annotations in a Phamerator database are eventually replaced with manually-generated 'final' annotations. The refined annotations are submitted by senior annotators to PhagesDB in GenBank-formatted flat files, which are are stored in the *qced_genbank_file* field with a timestamp stored in the *qced_genbank_file_date* field. Similar to metadata updates, 'get_data' matches phage data in the selected Phamerator database to the corresponding data in PhagesDB, and determines whether there is a new version of a 'final' annotation available for import. It reviews the date that the genome data was uploaded to PhagesDB, and if it is more recent than the date of the annotations stored in the selected Phamerator database (indicated in the DateLastModified field of the *phage* table), it stages the new flat file from PhagesDB and a corresponding import ticket in an import table that are ready to be processed with the 'import' tool.
+
+
+Updated GenBank annotations
+---------------------------
+
+The 'final' annotations are eventually submitted to GenBank with a unique accession number. The GenBank records are routinely updated with improved annotation data, so these records are subsequently re-imported into a Phamerator database to replace the prior annotations.
+
+'get_data' matches phage data in the selected Phamerator database to the corresponding data in GenBank (indicated in the Accession field of the *phage* table) and assesses whether the date of the record is more recent than the date of the annotations stored in the Phamerator database (indicated in the DateLastModified field of the *phage* table). If the GenBank record is more recent, 'get_data' stages the new flat file from GenBank and a corresponding import ticket in an import table that are ready to be processed with the 'import' tool.
+
+Additionally, a CSV-formatted summary table of all PhageIDs, their accession, and the results of data retrieval from GenBank is generated.
+
 
 New non-SEA-PHAGES annotations
 ------------------------------
 
-Actinobacteriophage genomes that have been sequenced and annotated outside of the SEA-PHAGES program occasionally become available in GenBank. SEA-PHAGES annotators review the quality of these genomes and annotations and assess whether or not they should be imported into the Actino_Draft database. If the genomes should be imported, the database administrator manually retrieves the flat files from GenBank, stages them in a local directory, and creates the appropriate import tickets [Table 2, New non-SEA-PHAGES ann.].
-
-Miscellaneous notes about data retrieval. Currently, the default value populating the Gene description field field is PRODUCT, since this is where descriptions generated from the SEA-PHAGES program are expected to be stored. Also, if GenBank accession numbers are retrieved from PhagesDB, they are retrieved from the genbank_accession field, ensuring that GenBank ACCESSION numbers (and not RefSeq ACCESSION numbers) are stored in PhameratorDB (see above). Last, it is important to note that not all fields are applicable for every ticket type, but the import script requires that all fields are populated. Fields that do not contain relevant data for the ticket type should be populated with none [Table 2].
+Actinobacteriophage genomes that have been sequenced and annotated outside of the SEA-PHAGES program occasionally become available in GenBank. If the genomes should be imported into a Phamerator database, the GenBank-formatted flat files need to be manually retrieved from GenBank and staged in a local directory with a manually-generated import ticket.
