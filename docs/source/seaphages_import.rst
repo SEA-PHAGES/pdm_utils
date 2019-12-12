@@ -25,11 +25,14 @@ database instances.
 
    Overview <./seaphages_pipeline/overview>
    Ticket tracking systems <./seaphages_pipeline/ticket_tracking>
-   Retrieving new genomics data <./seaphages_pipeline/data_retrieval>
    Import new genomes <./seaphages_pipeline/data_import>
    Update specific fields <./seaphages_pipeline/data_updates>
-   Identifying conserved domains <./seaphages_pipeline/conserved_domains>
-   Grouping gene products into phamilies <./seaphages_pipeline/create_phams>
-   Export updated databases <./seaphages_pipeline/data_export>
-   Freeze databases <./seaphages_pipeline/freeze_data>
-   Synchronize databases <./seaphages_pipeline/data_compare>
+
+
+
+Retrieving new genomics data
+Grouping gene products into phamilies
+Identifying conserved domains
+Export updated databases
+Freeze databases
+Synchronize databases

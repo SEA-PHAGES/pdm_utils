@@ -14,10 +14,10 @@
    Introduction <intro>
    Installation <installation>
    Database structure <database>
-   Data processing pipeline <seaphages_import>
+   Primary toolkit <tools>
+   Actino_Draft management pipeline <seaphages_import>
    Additional tools <additionaltools>
-   pdm_utils subpackages <pdm_utils>
-   pdm_utils user guide <package_user_guide>
+   Library for developers <pdm_utils>
    References <bibliography>
 
 

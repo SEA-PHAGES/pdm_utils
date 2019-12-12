@@ -16,15 +16,23 @@ ________
 
 Export the entire database as a SQL file::
 
-    > python3 -m pdm_utils export sql Actino_Draft ...
+    > python3 -m pdm_utils export sql Actino_Draft
+
+In order to distribute an updated database to end-users, the database needs to be exported from MySQL into a single file that can be easily uploaded to a server (e.g. Actino_Draft.sql). In a Phamerator database, the database version is tracked as an integer in the Version field of the *version* table. A version file is also generated (e.g. Actino_Draft.version), which is a text file that contains a single integer corresponding to the database version.
+
 
 
 CSV File
 ________
 
-Export specific tables from the database::
+Export specific tables from the database into CSV-formatted files::
 
     > python3 -m pdm_utils export csv Actino_Draft ...
+
+
+
+
+
 
 
 GenBank-formatted Flat File

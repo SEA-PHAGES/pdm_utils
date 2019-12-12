@@ -6,10 +6,10 @@ Subpackages
 
 .. toctree::
 
-   classes
-   constants
-   functions
-   pipelines
+   classes <./subpackages/classes>
+   constants <./subpackages/constants>
+   functions <./subpackages/functions>
+   pipelines <./subpackages/pipelines>
 
 Submodules
 ----------
