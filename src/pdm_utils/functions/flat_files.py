@@ -556,10 +556,9 @@ def copy_data(bndl, from_type, to_type, flag="ticket"):
 #     return (genomes, valid_files, failed_files)
 
 def genome_to_seqrecord(phage_genome):
-    """Creates a SeqRecord object from the data within
-    the Genome object and returns it
+    """Creates a SeqRecord object from a Genome object.
 
-    param:phage_genome:
+    :param phage_genome:
         Input a Genome object.a
     :type phage_genome: genome
     :returns:
@@ -608,8 +607,8 @@ def get_seqrecord_features(phage_genome):
 
 # TODO Owen unittest.
 def get_seqrecord_description(phage_genome):
-    """Helper function that uses Genome data to populate
-    the description SeqRecord attribute
+    """Helper function to construct a description SeqRecord attribute.
+
     :param phage_genome:
         Input a Genome object.
     :type phage_genome: genome

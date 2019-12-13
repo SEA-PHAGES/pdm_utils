@@ -282,13 +282,13 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
 
 def log_evaluations(dict_of_dict_of_lists):
     """Export evaluations to log.
-
-    Structure of the evaluation dictionary:
-        {1: {"bundle": [eval_object1, ...],
-             "ticket": [eval_object1, ...],
-             "genome": [eval_object1, ...]},
-         2: {...}}
     """
+    # Structure of the evaluation dictionary:
+    #     {1: {"bundle": [eval_object1, ...],
+    #          "ticket": [eval_object1, ...],
+    #          "genome": [eval_object1, ...]},
+    #      2: {...}}
+
     logger.info("Logging all evaluations.")
     for key1 in dict_of_dict_of_lists:
         msg1 = f"Evaluations for bundle {key1}:"
