@@ -15,9 +15,8 @@
    Installation <installation>
    Database structure <database>
    Primary toolkit <tools>
-   Actino_Draft management pipeline <seaphages_import>
-   Additional tools <additionaltools>
-   Library for developers <pdm_utils>
+   Applications <applications>
+   Library <pdm_utils>
    References <bibliography>
 
 

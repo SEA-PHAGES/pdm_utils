@@ -3,7 +3,6 @@
 import: manage genome data and annotations
 ==========================================
 
-
 In general, data pertaining to a complete phage genome is managed within a Phamerator database as a discrete unit, in which genome data (such as the PhageID, genome sequence, host data, etc.) is added, removed, and replaced concomitantly with all associated gene annotation data (primarily CDS features), such that any data pertaining to a particular phage in the database has been parsed from one external source, instead of added piecemeal from separate sources or modified within the database after insertion. There are a few fields that are exceptions to this general practice (:ref:`update`)
 
 The ``pdm_utils`` 'import' tool is used to manage the addition, replacement, or removal of genomes::

@@ -3,7 +3,7 @@
 Phamerator database structure
 =============================
 
-The current database schema (schema version 6) contains 10 tables:
+PhameratorDB is a MySQL database (:ref:`Cresawn et al., 2011 <cresawn2011>`]. The current database schema (schema version 6) contains 10 tables:
 
     1.  phage
     2.  gene
@@ -71,6 +71,7 @@ This table contains information that pertains to the entire phage genome, such a
 gene
 ----
 This table contains information that pertains to individual genes, including coordinates, orientation, the gene product, etc.
+
 
 .. csv-table::
     :file: images/database_structure/gene_table.csv
@@ -181,6 +182,7 @@ This table contains a list of color codes for each unique pham.
 version
 -------
 This table keeps track of the database version and is updated every time the database is changed.
+
 
 .. csv-table::
     :file: images/database_structure/version_table.csv
