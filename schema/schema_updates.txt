@@ -2,7 +2,7 @@
 # (relative to the prior schema).
 
 # Schema version: 0
-# Implemented by: Steve Cresawn
+# Implemented by: Steven Cresawn
 # The empty schema does not contain CASCADE settings.
 
 # Schema version: 1
@@ -20,8 +20,7 @@
 # Schema version: 3
 # Implemented by: Travis Mavrich
 # Added/removed several columns in multiple tables.
-# These improvements were implemented ~20180620 over several versions instead of in a
-# single step.
+# These improvements were implemented ~20180620 over versions 165-166.
 
 # Schema version: 4
 # Implemented by: Christian Gauthier

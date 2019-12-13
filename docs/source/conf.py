@@ -71,6 +71,7 @@ extlinks = {
     'git': ('https://git-scm.com/%s', ''),
     'pdmutils': ('https://github.com/SEA-PHAGES/pdm_utils/%s', ''),
     'cdd': ('https://www.ncbi.nlm.nih.gov/cdd/%s', ''),
+    'cdd_le': ('ftp://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz%s',''),
     'blastplus': ('https://blast.ncbi.nlm.nih.gov/'
         'Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download%s', ''),
     'hatfullserver': ('http://phamerator.webfactional.com/databases_Hatfull/%s',

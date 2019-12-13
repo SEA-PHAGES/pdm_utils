@@ -197,7 +197,8 @@ NCBI Blast+ toolkit
 
     Required only if conserved domains within genes need to be identified from the NCBI Conserved Domain Database in the 'cdd' pipeline.
 
-# TODO add installation instructions.
+    1. Follow the installation instructions at the link above according to your operating system.
+    2. The cdd tool assumes the binaries are installed at "/usr/bin/rpsblast+".
 
 
 NCBI Conserved Domain Database
@@ -207,7 +208,10 @@ NCBI Conserved Domain Database
 
     Required only if conserved domains within genes need to be identified from the NCBI Conserved Domain Database in the 'cdd' pipeline.
 
-# TODO add installation instructions.
+    1. Download the compressed :cdd_le:`NCBI CDD <>`.
+    2. Expand the archived file into a directory of CDD files.
+
+
 
 
 ``pdm_utils`` source code repository
