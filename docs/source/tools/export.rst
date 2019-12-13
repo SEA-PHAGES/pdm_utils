@@ -1,5 +1,7 @@
-Export data from database
-=========================
+.. _export:
+
+export: export data from a database
+===================================
 
 This tool is used to export data from a Phamerator database in a variety of formats, including:
 

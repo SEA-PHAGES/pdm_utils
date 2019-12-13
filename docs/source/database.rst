@@ -92,7 +92,7 @@ This table contains information that pertains to individual genes, including coo
 
 **LocusTag** This field facilitates automatic updating of GenBank records. Once a genome has been submitted to GenBank, genes are assigned unique locus tags in the LOCUS_TAG field. These identifiers cannot be changed, and annotators are required to use them when requesting to update details about individual genes. This field provides a direct link to the corresponding GenBank feature. Note: this field is only populated for records retrieved from GenBank.
 
-**Notes** This field contains data on the gene function, and is derived from one of several fields of the GenBank feature. [Add more info on how it is parsed here?]
+**Notes** This field contains data on the gene function, and is derived from one of several fields of the GenBank feature.
 
 **DomainStatus** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to PhameratorDB, the DomainStatus field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with DomainStatus < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the DomainStatus field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
 

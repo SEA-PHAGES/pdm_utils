@@ -1,7 +1,7 @@
 .. _getdb:
 
-Download and install Phamerator databases
-=========================================
+get_db: download and install a database
+=======================================
 
 
 The Hatfull lab server hosts the primary actinobacteriophage database instance, Actino_Draft, which is routinely updated with new genomics data, as well as databases that have been frozen for publication. These databases can be downloaded and installed using the ``pdm_utils`` 'get_db' tool.

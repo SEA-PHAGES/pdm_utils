@@ -1,7 +1,7 @@
 .. _update:
 
-Update specific database fields
-===============================
+update: make updates to specific database fields
+================================================
 
 Sometimes it is necessary to modify or update specific fields for specific phages. This can be accomplished using the ``pdm_utils`` 'update' tool that relies on a specifically structured update ticket (:ref:`ticketupdate`)::
 

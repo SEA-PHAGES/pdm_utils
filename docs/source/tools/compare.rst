@@ -1,5 +1,7 @@
-Compare databases
-=================
+.. _compare:
+
+compare: compare data between databases
+=======================================
 
 In the SEA-PHAGES program, genomics data may be stored in three separate databases (PhagesDB, a Phamerator database, and GenBank). As a result, data inconsistencies may arise without a mechanism to compare and synchronize different data sources. Although the import tool implements many QC checks for this purpose, it only ensures consistency for the specific genomes being imported and it only cross-checks databases as directed by the import ticket. In order to ensure comprehensive consistency, the ``pdm_utils`` 'compare' tool can perform an all-against-all data assessment::
 

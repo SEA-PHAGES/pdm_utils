@@ -1,5 +1,7 @@
-Retrieve new data
-=================
+.. _getdata:
+
+get_data: get new data to import into the database
+==================================================
 
 
 New genomics data routinely becomes available for adding to a Phamerator database, including:

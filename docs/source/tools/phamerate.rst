@@ -1,5 +1,7 @@
-Create phamilies
-================
+.. _phamerate:
+
+phamerate: create gene phamilies
+================================
 
 All gene products stored in a Phamerator database can be grouped into phamilies (“phams”) using the ``pdm_utils`` 'phamerate' tool.
 

@@ -1,5 +1,7 @@
-Upload a database to a public server
-====================================
+.. _push:
+
+push: upload a database to a public server
+==========================================
 
 
 Data can be uploaded to the :hatfullserver:`Hatfull lab’s public server <>` using the ``pdm_utils`` 'push' tool::

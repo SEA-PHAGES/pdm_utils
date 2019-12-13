@@ -1,5 +1,7 @@
-Retrieve records from GenBank
-=============================
+.. _getgbrecords:
+
+get_gb_records: retrieve records from GenBank
+=============================================
 
 
 Genome data in the MySQL database may be directly associated with genome data stored in GenBank. The 'Accession' field in the 'phage' table provides a link to these records, and all GenBank records associated with any particular database can be retrieved using the 'get_gb_records' tool.

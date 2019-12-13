@@ -1,5 +1,7 @@
-Freeze databases
-================
+.. _freeze:
+
+freeze: create a static database for long-term reference
+========================================================
 
 The primary PhameratorDB instance, Actino_Draft, contains all available actinobacteriophage data, and is routinely updated and modified. However, specific projects may require a version of the database that:
 

@@ -1,7 +1,8 @@
 .. _findcdd:
 
-Identifying conserved domains
-=============================
+
+cdd: find NCBI conserved domains
+================================
 
 
 The NCBI maintains a :cdd:`conserved domain database (CDD) <>` in which the functions of protein sequences are systematically categorized and organized [ref Marchler-Bauer 2011]. Every gene product in a Phamerator database can be evaluated for conserved domains using a local copy of the CDD, and this conserved domain data is stored in the database using the ``pdm_utils`` 'cdd' tool.
