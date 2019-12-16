@@ -1700,5 +1700,45 @@ class TestPhameratorFunctions3(unittest.TestCase):
             self.assertIsNone(sql_handle)
 
 
+
+class TestPhameratorFunctions4(unittest.TestCase):
+    def setUp(self):
+
+        self.sql_handle_1 = mysqlconnectionhandler.MySQLConnectionHandler()
+        self.sql_handle_1.database = "Actino_Draft"
+        self.sql_handle_1.username = user
+        self.sql_handle_1.password = pwd
+
+        self.sql_handle_2 = mysqlconnectionhandler.MySQLConnectionHandler()
+        self.sql_handle_2.database = "Actino_Draft"
+        self.sql_handle_2.username = user
+        self.sql_handle_2.password = pwd
+        self.sql_handle_2.credential_status = False
+        self.sql_handle_2._database_status = False
+
+
+    @patch("pdm_utils.functions.phamerator.setup_sql_handle")
+    def test_connect_to_db_1(self, setup_sql_mock):
+        """Verify that sql_handle returned when valid info provided."""
+        setup_sql_mock.return_value = (self.sql_handle_1, "")
+        sql_handle = phamerator.connect_to_db("Actino_Draft")
+        with self.subTest():
+            self.assertTrue(setup_sql_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(sql_handle)
+
+    @patch("sys.exit")
+    @patch("pdm_utils.functions.phamerator.setup_sql_handle")
+    def test_connect_to_db_2(self, setup_sql_mock, sys_exit_mock):
+        """Verify that sys exit is called when sql_handle is None."""
+        setup_sql_mock.return_value = (None, "")
+        sql_handle = phamerator.connect_to_db("Actino_Draft")
+        with self.subTest():
+            self.assertTrue(setup_sql_mock.called)
+        with self.subTest():
+            self.assertTrue(sys_exit_mock.called)
+
+
+
 if __name__ == '__main__':
     unittest.main()

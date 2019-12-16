@@ -1079,3 +1079,13 @@ def parse_config_file(path, delimiter="="):
         print("There are duplicate config keys in the file. "
               "Unable to parse config settings.")
     return config_dict
+
+
+
+# TODO unittest.
+def get_values_from_dict_list(list_of_dicts):
+    """Convert a list of dictionaries to a set of the values."""
+    output_set = set()
+    for dict in list_of_dicts:
+        output_set = output_set | set(dict.values())
+    return output_set

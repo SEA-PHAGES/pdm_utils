@@ -59,7 +59,7 @@ def main(unparsed_args_list):
     logger.info("Folder and file arguments verified.")
 
     # Get connection to database.
-    sql_handle = connect_to_db(args.database)
+    sql_handle = phamerator.connect_to_db(args.database)
     logger.info(f"Connected to database: {args.database}.")
 
     # If everything checks out, pass on args for data input/output:
@@ -74,16 +74,6 @@ def main(unparsed_args_list):
             output_folder=args.output_folder,
             interactive=args.interactive)
     logger.info("Import complete.")
-
-
-def connect_to_db(database):
-    """Connect to a MySQL database."""
-    sql_handle, msg = phamerator.setup_sql_handle(database)
-    if sql_handle is None:
-        logger.info(msg)
-        sys.exit(1)
-    else:
-        return sql_handle
 
 
 def parse_args(unparsed_args_list):

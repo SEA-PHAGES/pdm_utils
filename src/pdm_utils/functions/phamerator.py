@@ -1,6 +1,7 @@
 """Functions to interact with PhameratorDB."""
 
-
+import subprocess
+import sys
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import cds
@@ -543,6 +544,18 @@ def setup_sql_handle(database=None):
     return (sql_handle, msg)
 
 
+# TODO can probably be merged with setup_sql_handle()
+# TODO unittest.
+def setup_sql_handle2(username=None, password=None, database=None):
+    """Connect to a MySQL database without requiring user input."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.username = username
+    sql_handle.password = password
+    return sql_handle
+
+
+
 def change_version(sql_handle, amount=1):
     """Change the database version number."""
     query = ("SELECT Version from version")
@@ -552,6 +565,162 @@ def change_version(sql_handle, amount=1):
     print(f"Updating version from {current} to {new}.")
     statement = (f"UPDATE version SET Version = {new}")
     sql_handle.execute_transaction([statement])
+
+
+# TODO originally coded in export pipeline, so ensure that function is removed.
+# TODO unittest.
+def get_version_table_data(sql_handle):
+    """Retrieves data from the version table.
+
+    :param sql_database_handle:
+        Input a mysqlconnectionhandler object.
+    :type sql_database_handle: mysqlconnectionhandler
+    :returns:
+        database_versions_list(dictionary) is a dictionary
+        of size 2 that contains values tied to keys
+        "Version" and "SchemaVersion"
+    """
+    result_list = retrieve_data(sql_handle, query="SELECT * FROM version")
+    return result_list[0]
+
+
+# TODO unittest.
+def get_mysql_dbs(sql_handle):
+    """Retrieve database names from MySQL.
+
+    Returns a set of database names."""
+    query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    databases = basic.get_values_from_dict_list(result_list)
+    return databases
+
+
+# TODO unittest.
+def get_db_tables(sql_handle, database):
+    """Retrieve tables names from the database.
+
+    Returns a set of table names."""
+    query = ("SELECT table_name FROM information_schema.tables "
+             f"WHERE table_schema = '{database}'")
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    db_tables = basic.get_values_from_dict_list(result_list)
+    return db_tables
+
+
+# TODO unittest.
+def get_table_columns(sql_handle, database, table_name):
+    """Retrieve columns names from the phage table.
+
+    Returns a set of column names."""
+    query = ("SELECT column_name FROM information_schema.columns WHERE "
+              f"table_schema = '{database}' AND "
+              f"table_name = '{table_name}'")
+    result_list = sql_handle.execute_query(query)
+    sql_handle.close_connection()
+    columns = basic.get_values_from_dict_list(result_list)
+    return columns
+
+
+# TODO unittest.
+def get_schema_version(sql_handle):
+    """Identify the schema version of the database_versions_list."""
+    # If version table does not exist, schema_version = 0.
+    # If no schema_version or SchemaVersion field,
+    # it is either schema_version = 1 or 2.
+    # If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
+    # columns are in phage table, schema_version = 2.
+    db_tables = get_db_tables(sql_handle, sql_handle.database)
+    if "version" in db_tables:
+        version_table = True
+    else:
+        version_table = False
+
+    if version_table == True:
+        version_columns = get_version_table_data(sql_handle)
+        if "schema_version" in version_columns.keys():
+            schema_version = version_columns["schema_version"]
+        elif "SchemaVersion" in version_columns.keys():
+            schema_version = version_columns["SchemaVersion"]
+        else:
+            phage_columns = get_table_columns(
+                                sql_handle, sql_handle.database, "phage")
+            expected = {"AnnotationAuthor", "Program",
+                        "AnnotationQC", "RetrieveRecord"}
+            diff = expected - phage_columns
+            if len(diff) == 0:
+                schema_version = 2
+            else:
+                schema_version = 1
+    else:
+        schema_version = 0
+    return schema_version
+
+
+# TODO unittest.
+def create_new_db(sql_handle, database):
+    """Creates a new, empty database."""
+    # First, test if a test database already exists within mysql.
+    # If there is, delete it so that a new database is installed.
+    databases = get_mysql_dbs(sql_handle)
+    if database in databases:
+        statement1 = [f"DROP DATABASE {database}"]
+        result = sql_handle.execute_transaction(statement1)
+        sql_handle.close_connection()
+    else:
+        result = 0
+    if result == 0:
+        statement2 = [f"CREATE DATABASE {database}"]
+        result = sql_handle.execute_transaction(statement2)
+        sql_handle.close_connection()
+    return result
+
+
+# TODO unittest.
+def copy_db(sql_handle, new_database):
+    """Copies a database.
+
+    The sql_handle contains pointer to the name of the database
+    that will be copied into the new_database parameter.
+    """
+    #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
+    command_string1 = ("mysqldump "
+                      f"-u {sql_handle.username} "
+                      f"-p{sql_handle.password} "
+                      f"{sql_handle.database}")
+    command_string2 = ("mysql -u "
+                      f"{sql_handle.username} "
+                      f"-p{sql_handle.password} "
+                      f"{new_database}")
+    command_list1 = command_string1.split(" ")
+    command_list2 = command_string2.split(" ")
+    try:
+        print("Copying database...")
+
+        # Per subprocess documentation:
+        # 1. For pipes, use Popen instead of check_call.
+        # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
+        #    which gets called when used as a context manager.
+        # communicate() waits for the process to complete.
+        with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
+                p2.communicate()
+        print("Copy complete.")
+        result = 0
+    except:
+        print(f"Unable to copy {sql_handle.database} to {new_database} in MySQL.")
+        result = 1
+    return result
+
+
+def connect_to_db(database):
+    """Connect to a MySQL database."""
+    sql_handle, msg = setup_sql_handle(database)
+    if sql_handle is None:
+        sys.exit(1)
+    else:
+        return sql_handle
 
 
 
@@ -594,158 +763,3 @@ def change_version(sql_handle, amount=1):
 #                 genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
 #                 bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
 #         to_gnm.set_value_flag(flag)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO need to work on this.
-# TODO implement.
-# TODO unit test.
-def implement_update_statements():
-
-    #If it looks like there is a problem with some of the genomes on the list,
-    #cancel the transaction, otherwise proceed
-    if updated == update_total:
-        if run_type == "production":
-            con = mdb.connect(mysqlhost, username, password, database)
-            con.autocommit(False)
-            cur = con.cursor()
-
-            try:
-                cur.execute("START TRANSACTION")
-                for statement in update_statements:
-                    cur.execute(statement)
-                    write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
-                cur.execute("COMMIT")
-                write_out(output_file,"\nAll update statements committed.")
-                cur.close()
-                con.autocommit(True)
-
-            except:
-                success_action_file_handle.close()
-                mdb_exit("\nError: problem updating genome information.\nNo changes have been made to the database.")
-
-            con.close()
-        else:
-            write_out(output_file,f"\nRUN TYPE IS {run_type}, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n")
-    else:
-        write_out(output_file,"\nError: problem processing data list to update genomes. Check input table format.\nNo changes have been made to the database.")
-        write_out(output_file,"\nExiting import script.")
-        output_file.close()
-        success_action_file_handle.close()
-        sys.exit(1)
-
-    #Document the update actions
-    for element in update_data_list:
-        if element[7] == "":
-            element[7] = "none"
-
-        update_output_list = [element[0],\
-                                element[1],\
-                                element[2],\
-                                element[3],\
-                                element[8],\
-                                element[4],\
-                                author_dictionary[element[9]],\
-                                element[5],\
-                                element[7],\
-                                element[10],\
-                                element[6]]
-        success_action_file_writer.writerow(update_output_list)
-
-    write_out(output_file,"\nAll field update actions have been implemented.")
-    raw_input("\nPress ENTER to proceed to next import stage.")
-
-
-
-
-# TODO need to work on this.
-# TODO implement.
-# TODO unit test.
-def implement_remove_statements():
-
-    #If it looks like there is a problem with some of the genomes on the list,
-    #cancel the transaction, otherwise proceed
-
-    if removed == remove_total:
-
-        if run_type == "production":
-            con = mdb.connect(mysqlhost, username, password, database)
-            con.autocommit(False)
-            cur = con.cursor()
-
-            try:
-                cur.execute("START TRANSACTION")
-                for statement in removal_statements:
-                    cur.execute(statement)
-                    write_out(output_file,"\n" + statement + " executed successfully, but not yet committed.")
-                cur.execute("COMMIT")
-                write_out(output_file,"\nAll remove statements committed.")
-                cur.close()
-                con.autocommit(True)
-
-            except:
-                success_action_file_handle.close()
-                mdb_exit("\nError: problem removing genomes with no replacements.\nNo remove actions have been implemented.")
-            con.close()
-        else:
-            write_out(output_file,f"\nRUN TYPE IS {run_type}, SO NO CHANGES TO THE DATABASE HAVE BEEN IMPLEMENTED.\n")
-    else:
-        write_out(output_file,"\nError: problem processing data list to remove genomes. Check input table format.\nNo remove actions have been implemented.")
-        output_file.close()
-        success_action_file_handle.close()
-        sys.exit(1)
-
-    #Document the remove actions
-    for element in remove_data_list:
-        remove_output_list = [element[0],\
-                                element[1],\
-                                element[2],\
-                                element[3],\
-                                element[8],\
-                                element[4],\
-                                element[9],\
-                                element[5],\
-                                element[7],\
-                                element[10],\
-                                element[6]]
-        success_action_file_writer.writerow(remove_output_list)
-    write_out(output_file,"\nAll genome remove actions have been implemented.")
-    raw_input("\nPress ENTER to proceed to next import stage.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###

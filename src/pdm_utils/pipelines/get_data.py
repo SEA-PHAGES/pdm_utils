@@ -461,7 +461,7 @@ def get_update_data(output_folder, matched_genomes):
         print("\n\nNew field updates are available.")
         field_folder = pathlib.Path(output_folder, "updates")
         field_folder.mkdir()
-        filename2 = "import_table.csv"
+        filename2 = "update_table.csv"
         filepath2 = pathlib.Path(field_folder, filename2)
         with filepath2.open("w") as fh:
             writer = csv.writer(fh)

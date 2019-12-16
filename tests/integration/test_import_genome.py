@@ -646,13 +646,6 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.sql_handle_1.username = user
         self.sql_handle_1.password = pwd
 
-        self.sql_handle_2 = mch.MySQLConnectionHandler()
-        self.sql_handle_2.database = "Actino_Draft"
-        self.sql_handle_2.username = user
-        self.sql_handle_2.password = pwd
-        self.sql_handle_2.credential_status = False
-        self.sql_handle_2._database_status = False
-
         self.args_list = ["run.py",
                           "import",
                           "Actino_Draft",
@@ -670,34 +663,8 @@ class TestImportGenomeMain3(unittest.TestCase):
         shutil.rmtree(self.base_dir)
 
 
-
-
-    @patch("pdm_utils.functions.phamerator.setup_sql_handle")
-    def test_connect_to_db_1(self, setup_sql_mock):
-        """Verify that sql_handle returned when valid info provided."""
-        setup_sql_mock.return_value = (self.sql_handle_1, "")
-        sql_handle = import_genome.connect_to_db("Actino_Draft")
-        with self.subTest():
-            self.assertTrue(setup_sql_mock.called)
-        with self.subTest():
-            self.assertIsNotNone(sql_handle)
-
-    @patch("sys.exit")
-    @patch("pdm_utils.functions.phamerator.setup_sql_handle")
-    def test_connect_to_db_2(self, setup_sql_mock, sys_exit_mock):
-        """Verify that sys exit is called when sql_handle is None."""
-        setup_sql_mock.return_value = (None, "")
-        sql_handle = import_genome.connect_to_db("Actino_Draft")
-        with self.subTest():
-            self.assertTrue(setup_sql_mock.called)
-        with self.subTest():
-            self.assertTrue(sys_exit_mock.called)
-
-
-
-
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.pipelines.import_genome.connect_to_db")
+    @patch("pdm_utils.functions.phamerator.connect_to_db")
     def test_main_1(self, setup_sql_mock, data_io_mock):
         """Verify that correct args calls data_io."""
         self.input_folder.mkdir()
@@ -708,7 +675,7 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.pipelines.import_genome.connect_to_db")
+    @patch("pdm_utils.functions.phamerator.connect_to_db")
     @patch("sys.exit")
     def test_main_2(self, sys_exit_mock, setup_sql_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
@@ -719,7 +686,7 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.pipelines.import_genome.connect_to_db")
+    @patch("pdm_utils.functions.phamerator.connect_to_db")
     @patch("sys.exit")
     def test_main_3(self, sys_exit_mock, setup_sql_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""

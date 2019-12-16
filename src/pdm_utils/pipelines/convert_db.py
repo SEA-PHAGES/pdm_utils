@@ -2,9 +2,7 @@
 
 import argparse
 import pathlib
-import subprocess
 import sys
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.functions import basic
 from pdm_utils.functions import phamerator
 
@@ -60,109 +58,6 @@ def parse_args(unparsed_args_list):
     return args
 
 
-# TODO not tested, but nearly identical function in import_genome.py tested.
-def connect_to_db(database):
-    """Connect to a MySQL database."""
-    sql_handle, msg = phamerator.setup_sql_handle(database)
-    if sql_handle is None:
-        print(msg)
-        sys.exit(1)
-    else:
-        return sql_handle
-
-
-# TODO unittest.
-def get_schema_version(sql_handle):
-    """Identify the schema version of the database_versions_list."""
-    # If version table does not exist, schema_version = 0.
-    # If no schema_version or SchemaVersion field,
-    # it is either schema_version = 1 or 2.
-    # If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
-    # columns are in phage table, schema_version = 2.
-    db_tables = get_db_tables(sql_handle, sql_handle.database)
-    if "version" in db_tables:
-        version_table = True
-    else:
-        version_table = False
-
-    if version_table == True:
-        version_columns = retrieve_database_version(sql_handle)
-        if "schema_version" in version_columns.keys():
-            schema_version = version_columns["schema_version"]
-        elif "SchemaVersion" in version_columns.keys():
-            schema_version = version_columns["SchemaVersion"]
-        else:
-            phage_columns = get_table_columns(sql_handle, sql_handle.database,
-                                              "phage")
-            expected = {"AnnotationAuthor", "Program",
-                        "AnnotationQC", "RetrieveRecord"}
-            diff = expected - phage_columns
-            if len(diff) == 0:
-                schema_version = 2
-            else:
-                schema_version = 1
-    else:
-        schema_version = 0
-    return schema_version
-
-
-# TODO unittest.
-def get_db_tables(sql_handle, database):
-    """Retrieve tables names from the database.
-
-    Returns a set of table names."""
-    query = ("SELECT table_name FROM information_schema.tables "
-             f"WHERE table_schema = '{database}'")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    db_tables = get_values_from_dict_list(result_list)
-    return db_tables
-
-
-# TODO unittest.
-def get_table_columns(sql_handle, database, table_name):
-    """Retrieve columns names from the phage table.
-
-    Returns a set of column names."""
-    query = ("SELECT column_name FROM information_schema.columns WHERE "
-              f"table_schema = '{database}' AND "
-              f"table_name = '{table_name}'")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    columns = get_values_from_dict_list(result_list)
-    return columns
-
-# TODO unittest.
-def get_db_names(sql_handle):
-    """Retrieve database names from MySQL.
-
-    Returns a set of database names."""
-    query = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    databases = get_values_from_dict_list(result_list)
-    return databases
-
-
-
-# TODO unittest.
-def get_values_from_dict_list(list_of_dicts):
-    """Convert a list of dictionaries to a set of the values."""
-    output_set = set()
-    for dict in list_of_dicts:
-        output_set = output_set | set(dict.values())
-    return output_set
-
-
-# TODO not unittested, but identical to function in export_db.
-def retrieve_database_version(sql_handle):
-    """Gets the database version and schema version.
-    """
-    result = phamerator.retrieve_data(sql_handle,
-                                      query="SELECT * FROM version")
-    return result[0]
-
-
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main conversion pipeline."""
@@ -170,9 +65,9 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
     args.conversion_scripts_folder = \
         basic.set_path(args.conversion_scripts_folder, kind="dir", expect=True)
-    sql_handle1 = connect_to_db(args.database)
+    sql_handle1 = phamerator.connect_to_db(args.database)
     target = args.schema_version
-    actual = get_schema_version(sql_handle1)
+    actual = phamerator.get_schema_version(sql_handle1)
     steps, dir = get_conversion_direction(actual, target)
 
     # Iterate through list of versions and implement SQL files.
@@ -185,15 +80,15 @@ def main(unparsed_args_list):
     if convert == True:
         if (args.new_database_name is not None and
                 args.new_database_name != args.database):
-            result = create_new_db(sql_handle1, args.new_database_name)
+            result = phamerator.create_new_db(sql_handle1, args.new_database_name)
             if result == 0:
-                result = copy_db(sql_handle1, args.new_database_name)
+                result = phamerator.copy_db(sql_handle1, args.new_database_name)
                 if result == 0:
                     # Create a new connection to the new database.
-                    sql_handle2 = mch.MySQLConnectionHandler()
-                    sql_handle2.username = sql_handle1.username
-                    sql_handle2.password = sql_handle1.password
-                    sql_handle2.database = args.new_database_name
+                    sql_handle2 = phamerator.setup_sql_handle2(
+                                    username=sql_handle1.username,
+                                    password=sql_handle1.password,
+                                    database=args.new_database_name)
                 else:
                     print("Unable to copy the database for conversion.")
                     convert = False
@@ -229,63 +124,6 @@ def get_conversion_direction(actual, target):
         dir = "downgrade"
     return steps, dir
 
-
-
-# TODO similar to function in get_db.py
-# TODO unittest.
-def create_new_db(sql_handle, database):
-    """Creates a new, empty database."""
-    # First, test if a test database already exists within mysql.
-    # If there is, delete it so that a new database is installed.
-    databases = get_db_names(sql_handle)
-    if database in databases:
-        statement1 = [f"DROP DATABASE {database}"]
-        result = sql_handle.execute_transaction(statement1)
-        sql_handle.close_connection()
-    else:
-        result = 0
-    if result == 0:
-        statement2 = [f"CREATE DATABASE {database}"]
-        result = sql_handle.execute_transaction(statement2)
-        sql_handle.close_connection()
-    return result
-
-
-# TODO unittest.
-def copy_db(sql_handle, new_database):
-    """Copies a database.
-
-    The sql_handle contains pointer to the name of the database
-    that will be copied into the new_database parameter.
-    """
-    #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
-    command_string1 = ("mysqldump "
-                      f"-u {sql_handle.username} "
-                      f"-p{sql_handle.password} "
-                      f"{sql_handle.database}")
-    command_string2 = ("mysql -u "
-                      f"{sql_handle.username} "
-                      f"-p{sql_handle.password} "
-                      f"{new_database}")
-    command_list1 = command_string1.split(" ")
-    command_list2 = command_string2.split(" ")
-    try:
-        print("Copying database...")
-
-        # Per subprocess documentation:
-        # 1. For pipes, use Popen instead of check_call.
-        # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
-        #    which gets called when used as a context manager.
-        # communicate() waits for the process to complete.
-        with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
-                p2.communicate()
-        print("Copy complete.")
-        result = 0
-    except:
-        print(f"Unable to copy {sql_handle.database} to {new_database} in MySQL.")
-        result = 1
-    return result
 
 # TODO unittest.
 def convert_schema(sql_handle, conversion_folder, actual, dir, steps):

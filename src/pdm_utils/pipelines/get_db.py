@@ -161,7 +161,8 @@ def parse_args(unparsed_args_list):
 
     return args
 
-
+# TODO this can now be removed and replaced with two functions in the
+# phamerator module = get_mysql_dbs() and create_new_db()
 # TODO unittest.
 def create_new_db(sql_handle, database):
     """Creates a new, empty database."""
