@@ -28,7 +28,7 @@ def main(unparsed_args_list):
         status = False
 
     if status == True:
-        server.set_log_file("/tmp/paramiko.log")
+        server.set_log_file(str(args.log_file))
         transport = server.get_transport(constants.DB_HOST)
         if transport is None:
             status = False
@@ -67,11 +67,14 @@ def parse_args(unparsed_args_list):
                    "a Phamerator MySQL database to the server.")
     DIRECTORY_HELP = ("Path to the folder containing files for upload.")
     FILE_HELP = ("Path to the file for upload.")
+    LOG_FILE_HELP = ("Path to the file to log paramiko output.")
     parser = argparse.ArgumentParser(description=PUSH_DB_HELP)
     parser.add_argument("-d", "--directory", type=pathlib.Path,
         help=DIRECTORY_HELP)
     parser.add_argument("-f", "--file", type=pathlib.Path,
         help=FILE_HELP)
+    parser.add_argument("-l", "--log_file", type=pathlib.Path,
+        default=pathlib.Path("/tmp/paramiko.log"), help=LOG_FILE_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
