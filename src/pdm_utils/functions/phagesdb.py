@@ -392,4 +392,19 @@ def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
     return (cluster_set, subcluster_set)
 
 
+# TODO unittest.
+def get_unphamerated_phage_list(url):
+    """Retreive list of unphamerated phages from PhagesDB.
+
+    Retrieved file is a tab-delimited text file.
+    Each row is a newly-sequenced phage.
+    """
+    response = urllib.request.urlopen(url)
+    processed_list = []
+    for new_phage in response:
+        new_phage = new_phage.strip()  # Remove \t at end of each row
+        new_phage = new_phage.decode("utf-8")  # convert bytes object to str
+        processed_list.append(new_phage)
+    return processed_list
+
 ###
