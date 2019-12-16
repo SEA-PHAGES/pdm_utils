@@ -9,29 +9,17 @@ from pdm_utils.functions import basic
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
-
-# TODO not tested, but nearly identical function in import_genome.py tested.
-def connect_to_db(database):
-    """Connect to a MySQL database."""
-    sql_handle, msg = phamerator.setup_sql_handle(database)
-    if sql_handle is None:
-        print(msg)
-        sys.exit(1)
-    else:
-        return sql_handle
-
-
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main freeze database pipeline."""
     args = parse_args(unparsed_args_list)
     args.output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
-    sql_handle = connect_to_db(args.database)
+    sql_handle1 = phamerator.connect_to_db(args.database)
 
     # Get the number of draft genomes.
     query = "SELECT count(*) FROM phage WHERE Status != 'draft'"
-    result = sql_handle.execute_query(query)
+    result = sql_handle1.execute_query(query)
     phage_count = result[0]["count(*)"]
 
     # Create the new frozen database folder e.g. Actinobacteriophage_XYZ.
@@ -49,42 +37,24 @@ def main(unparsed_args_list):
     new_history.mkdir()
 
     # Create the new database
-    statement = f"CREATE DATABASE {new_database}"
-    result = sql_handle.execute_transaction([statement])
+    result = phamerator.create_new_db(sql_handle1, new_database)
+
+    # Copy database.
     if result == 0:
-
-        #Output database to new folder with new name
-        print(f"Creating new {new_database} database file...")
-        filename = f"temp_db.sql"
-        filepath = pathlib.Path(new_dir, filename)
-        command_string1 = (f"mysqldump -u {sql_handle.username} "
-                           f"-p{sql_handle.password} "
-                           f"--skip-comments {sql_handle.database}")
-        command_list1 = command_string1.split(" ")
-        with filepath.open("w") as fh:
-            subprocess.check_call(command_list1,stdout=fh)
-
-        # Import new database file into MySQL
-        print(f"Importing new {new_database} database file into MySQL...")
-        command_string2 = (f"mysql -u {sql_handle.username} "
-                          f"-p{sql_handle.password} {new_database}")
-        command_list2 = command_string2.split(" ")
-        with filepath.open("r") as fh:
-            subprocess.check_call(command_list2, stdin=fh)
-
-        # Drop all 'draft' databases and reset version.
-        print(f"Deleting 'draft' genomes...")
-
-        # TODO it would be better to instantiate a new handler object.
-        # Pass previously verified username and password,
-        # but use new database.
-        statement2 = f"USE {new_database}"
-        sql_handle.execute_transaction([statement2])
-        statement3 = "DELETE FROM phage WHERE Status = 'draft'"
-        sql_handle.execute_transaction([statement3])
-        statement4 = "UPDATE version SET Version = 0"
-        sql_handle.execute_transaction([statement4])
-        os.remove(filepath)
+        result = phamerator.copy_db(sql_handle1, new_database)
+        if result == 0:
+            print(f"Deleting 'draft' genomes...")
+            # Create a new connection to the new database.
+            sql_handle2 = phamerator.setup_sql_handle2(
+                            username=sql_handle1.username,
+                            password=sql_handle1.password,
+                            database=new_database)
+            statement3 = "DELETE FROM phage WHERE Status = 'draft'"
+            sql_handle2.execute_transaction([statement3])
+            statement4 = "UPDATE version SET Version = 0"
+            sql_handle2.execute_transaction([statement4])
+        else:
+            print("Unable to copy the database.")
     else:
         print(f"Error creating new database: {new_database}.")
     print("Freeze database script completed.")

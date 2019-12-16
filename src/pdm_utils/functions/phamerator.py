@@ -718,6 +718,7 @@ def connect_to_db(database):
     """Connect to a MySQL database."""
     sql_handle, msg = setup_sql_handle(database)
     if sql_handle is None:
+        print(msg)
         sys.exit(1)
     else:
         return sql_handle
