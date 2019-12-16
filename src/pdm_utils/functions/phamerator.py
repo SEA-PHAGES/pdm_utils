@@ -659,21 +659,35 @@ def get_schema_version(sql_handle):
 
 
 # TODO unittest.
-def create_new_db(sql_handle, database):
+def drop_create_db(sql_handle, database):
     """Creates a new, empty database."""
-    # First, test if a test database already exists within mysql.
+    # First, test if the database already exists within mysql.
     # If there is, delete it so that a new database is installed.
     databases = get_mysql_dbs(sql_handle)
     if database in databases:
-        statement1 = [f"DROP DATABASE {database}"]
-        result = sql_handle.execute_transaction(statement1)
-        sql_handle.close_connection()
+        result = drop_db(sql_handle, database)
     else:
         result = 0
     if result == 0:
-        statement2 = [f"CREATE DATABASE {database}"]
-        result = sql_handle.execute_transaction(statement2)
-        sql_handle.close_connection()
+        result = create_db(sql_handle, database)
+    return result
+
+
+# TODO unittest.
+def drop_db(sql_handle, database):
+    """Drops a database."""
+    statement = [f"DROP DATABASE {database}"]
+    result = sql_handle.execute_transaction(statement)
+    sql_handle.close_connection()
+    return result
+
+
+# TODO unittest.
+def create_db(sql_handle, database):
+    """Create a new, empty database."""
+    statement = [f"CREATE DATABASE {database}"]
+    result = sql_handle.execute_transaction(statement)
+    sql_handle.close_connection()
     return result
 
 

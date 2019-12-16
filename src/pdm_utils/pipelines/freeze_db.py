@@ -13,8 +13,6 @@ from pdm_utils.classes import mysqlconnectionhandler as mch
 def main(unparsed_args_list):
     """Run main freeze database pipeline."""
     args = parse_args(unparsed_args_list)
-    args.output_folder = basic.set_path(args.output_folder, kind="dir",
-                                        expect=True)
     sql_handle1 = phamerator.connect_to_db(args.database)
 
     # Get the number of draft genomes.
@@ -26,18 +24,8 @@ def main(unparsed_args_list):
     prefix = get_prefix()
     new_database = f"{prefix}_{phage_count}"
 
-    new_dir = pathlib.Path(args.output_folder, new_database)
-    new_dir = basic.set_path(new_dir, kind="dir", expect=False)
-    new_current = pathlib.Path(new_dir, "Current")
-    new_backup = pathlib.Path(new_dir, "Backup")
-    new_history = pathlib.Path(new_dir, "Update_history")
-    new_dir.mkdir()
-    new_current.mkdir()
-    new_backup.mkdir()
-    new_history.mkdir()
-
     # Create the new database
-    result = phamerator.create_new_db(sql_handle1, new_database)
+    result = phamerator.drop_create_db(sql_handle1, new_database)
 
     # Copy database.
     if result == 0:
@@ -66,11 +54,8 @@ def parse_args(unparsed_args_list):
 
     PIPELINE_HELP = ("Pipeline to prepare a database for publication.")
     DATABASE_HELP = "Name of the MySQL database."
-    OUTPUT_FOLDER_HELP = ("Path to the directory for storing files.")
     parser = argparse.ArgumentParser(description=PIPELINE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("output_folder", type=pathlib.Path,
-        help=OUTPUT_FOLDER_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

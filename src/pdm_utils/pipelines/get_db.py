@@ -75,7 +75,7 @@ def main(unparsed_args_list):
             sql_handle = mch.MySQLConnectionHandler()
             sql_handle.open_connection()
             if sql_handle.credential_status:
-                result2 = phamerator.create_new_db(sql_handle, args.database)
+                result2 = phamerator.drop_create_db(sql_handle, args.database)
                 if result2 == 0:
                     sql_handle.database = args.database
                     sql_handle.open_connection()

@@ -80,7 +80,7 @@ def main(unparsed_args_list):
     if convert == True:
         if (args.new_database_name is not None and
                 args.new_database_name != args.database):
-            result = phamerator.create_new_db(sql_handle1, args.new_database_name)
+            result = phamerator.drop_create_db(sql_handle1, args.new_database_name)
             if result == 0:
                 result = phamerator.copy_db(sql_handle1, args.new_database_name)
                 if result == 0:
