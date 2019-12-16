@@ -11,6 +11,8 @@ from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 
 # CHANGE THESE VARIABLES TO MODIFY BEHAVIOR
 RPSBLAST_BINARY = "/usr/bin/rpsblast+"
+# MAC
+# RPSBLAST_BINARY = "/usr/local/ncbi/blast/bin/rpsblast"
 TMP_DIR = "/tmp/cdd"
 
 # SQL QUERIES
