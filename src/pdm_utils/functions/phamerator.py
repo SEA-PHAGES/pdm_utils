@@ -724,6 +724,23 @@ def connect_to_db(database):
 
 
 
+
+# TODO unittest.
+def install_db(sql_handle, schema_filepath):
+    """Install a MySQL file into the indicated database."""
+    command_string = (f"mysql -u {sql_handle.username} "
+                      f"-p{sql_handle.password} {sql_handle.database}")
+    command_list = command_string.split(" ")
+    with schema_filepath.open("r") as fh:
+        try:
+            print("Installing database...")
+            subprocess.check_call(command_list, stdin=fh)
+            print("Installation complete.")
+        except:
+            print(f"Unable to install {schema_filepath.name} in MySQL.")
+
+
+
 # TODO this may no longer be needed.
 # def copy_data(bndl, from_type, to_type, flag="retain"):
 #     """Copy data from a 'phamerator' genome object.

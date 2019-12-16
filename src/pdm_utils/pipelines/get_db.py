@@ -75,13 +75,13 @@ def main(unparsed_args_list):
             sql_handle = mch.MySQLConnectionHandler()
             sql_handle.open_connection()
             if sql_handle.credential_status:
-                result2 = create_new_db(sql_handle, args.database)
+                result2 = phamerator.create_new_db(sql_handle, args.database)
                 if result2 == 0:
                     sql_handle.database = args.database
                     sql_handle.open_connection()
                     if (sql_handle.credential_status == True and
                             sql_handle._database_status == True):
-                        install_db(sql_handle, db_filepath)
+                        phamerator.install_db(sql_handle, db_filepath)
                     else:
                         print(f"No connection to the {args.database} database due "
                               "to invalid credentials or database.")
@@ -160,39 +160,3 @@ def parse_args(unparsed_args_list):
         args.remove = True
 
     return args
-
-# TODO this can now be removed and replaced with two functions in the
-# phamerator module = get_mysql_dbs() and create_new_db()
-# TODO unittest.
-def create_new_db(sql_handle, database):
-    """Creates a new, empty database."""
-    # First, test if a test database already exists within mysql.
-    # If there is, delete it so that a fresh test database is installed.
-    query = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
-             f"WHERE SCHEMA_NAME = '{database}'")
-    result1 = sql_handle.execute_query(query)
-    if len(result1) != 0:
-        statement1 = [f"DROP DATABASE {database}"]
-        result2 = sql_handle.execute_transaction(statement1)
-    else:
-        result2 = 0
-    if result2 == 0:
-        # Next, create the database within mysql.
-        statement2 = [f"CREATE DATABASE {database}"]
-        result2 = sql_handle.execute_transaction(statement2)
-        sql_handle.close_connection()
-    return result2
-
-# TODO unittest.
-def install_db(sql_handle, schema_filepath):
-    """Install a MySQL file into the indicated database."""
-    command_string = (f"mysql -u {sql_handle.username} "
-                      f"-p{sql_handle.password} {sql_handle.database}")
-    command_list = command_string.split(" ")
-    with schema_filepath.open("r") as fh:
-        try:
-            print("Installing database...")
-            subprocess.check_call(command_list, stdin=fh)
-            print("Installation complete.")
-        except:
-            print(f"Unable to install {schema_filepath.name} in MySQL.")
