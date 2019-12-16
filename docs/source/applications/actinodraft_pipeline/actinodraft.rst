@@ -59,30 +59,62 @@ The most up-to-date version of Actino_Draft is stored on the Hatfull lab's publi
 
 
 
-    1. **Retrieving the newest version of Actino_Draft.** Ensure the newest version of the database is locally installed.
+    1. **Retrieving the newest version of Actino_Draft.** Ensure the newest version of the database is locally installed::
 
-    2. **Retrieving new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. The *get_data* took creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts.
+        > python3 -m pdm_utils get_db Actino_Draft ./ -a
+
+    2. **Retrieving new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. The *get_data* took creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
+
+        > python3 -m pdm_utils get_data Actino_Draft ./ -a -c get_data_config.txt
 
 
+    3. **Update specific fields.** New updates are implemented predominantly in the *phage* table::
 
-    3. **Update specific fields.** New updates are implemented predominantly in the *phage* table.
+        > python3 -m pdm_utils update Actino_Draft -f update_table.csv
+
+
 
     4. **Import new and replacement genome data.** New data (mostly in the form of flat files) is parsed and imported into the *phage* and *gene* tables. The *import* tool should be run separately for different types of genome data, in the following order:
 
-        1. Auto-annotated genomes
-        2. New final annotations
-        3. Auto-updated SEA-PHAGES final annotations from GenBank
-        4. Other miscellaneous genomes
+        1. Auto-annotated genomes::
 
-    5. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *pham* and *pham_color* tables.
+            > python3 -m pdm_utils import Actino_Draft ./pecaan/genomes/ ./pecaan/import_table.csv -p
 
-    6. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables.
+        2. New final annotations::
 
-    7. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table.
+            > python3 -m pdm_utils import Actino_Draft ./phagesdb/genomes/ ./phagesdb/import_table.csv -p
 
-    8. **Export the updated database to a single file.** The updated Actino_Draft database is exported from MySQL into a single file, Actino_Draft.sql, with a corresponding Actin_Draft.version file that stores the database version number.
 
-    9. **Upload the database for public access.** The SQL file is uploaded to that Hatfull lab's public server, where it can be retrieved by end-users for downstream applications and data analysis tools.
+        3. Auto-updated SEA-PHAGES final annotations from GenBank::
+
+            > python3 -m pdm_utils import Actino_Draft ./genbank/genomes/ ./genbank/import_table.csv -p
+
+
+        4. Other miscellaneous genomes::
+
+            > python3 -m pdm_utils import Actino_Draft ./misc/genomes/ ./misc/import_table.csv -p
+
+
+
+    5. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *pham* and *pham_color* tables::
+
+        > python3 -m pdm_utils phamerate Actino_Draft --steps 2
+
+    6. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables::
+
+        > python3 -m pdm_utils cdd Actino_Draft ./cdd/
+
+    7. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table::
+
+        > python3 -m pdm_utils update Actino_Draft -v
+
+    8. **Export the updated database to a single file.** The updated Actino_Draft database is exported from MySQL into a single file, Actino_Draft.sql, with a corresponding Actino_Draft.version file that stores the database version number::
+
+        > python3 -m pdm_utils export sql Actino_Draft
+
+    9. **Upload the database for public access.** The SQL file is uploaded to that Hatfull lab's public server, where it can be retrieved by end-users for downstream applications and data analysis tools::
+
+        > python3 -m pdm_utils push -d ./new_version/
 
 
 
