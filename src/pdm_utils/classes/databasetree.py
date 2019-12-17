@@ -1,70 +1,107 @@
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 
-class DatabaseTree:
+
+def setup_db_tree_leaves(sql_handle, db_node):
+    table_query = (
+        "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+       f"WHERE TABLE_SCHEMA='{sql_handle.database}'")
+    table_dicts = sql_handle.execute_query(table_query)
+
+    for data_dict in table_dicts:
+        table_node = TableNode(data_dict["TABLE_NAME"])
+        db_node.add_table(table_node)
+        
+        column_query = f"SHOW columns IN {data_dict['TABLE_NAME']}"
+        column_dicts = sql_handle.execute_query(column_query)
+        for column_dict in column_dicts:
+            if column_dict["Null"] == "YES":
+                Null = True
+            else:
+                Null = False
+
+            column_node = ColumnNode(column_dict["Field"],
+                                     type=column_dict["Type"],
+                                     Null=Null,
+                                     key=column_dict["Key"])
+            table_node.add_column(column_node)
+            if(column_dict["Key"] == "PRI"):
+                table_node.primary_key = column_node
+
+def setup_db_tree_webs(sql_handle, db_node):
+    for table in db_node.children:
+        #print(table.id + ": ")
+        foreign_key_query = (
+              f"SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, "
+               "REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME "
+               "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
+              f"WHERE REFERENCED_TABLE_SCHEMA='{sql_handle.database}' AND "
+                    f"REFERENCED_TABLE_NAME='{table.id}'")
+        foreign_key_results = sql_handle.execute_query(foreign_key_query)
+        if foreign_key_results != ():
+            for dict in foreign_key_results:
+                primary_key_node = table.get_column(
+                                             dict["COLUMN_NAME"])
+                ref_table = db_node.get_table(
+                                             dict["TABLE_NAME"])
+                foreign_key_node = ref_table.get_column(
+                                             dict["COLUMN_NAME"])
+
+                primary_key_node.add_table(ref_table)
+                
+                if foreign_key_node == ref_table.primary_key:
+                    ref_table.primary_key = primary_key_node
+
+                for parent in foreign_key_node.parents:
+                    if parent not in primary_key_node.parents:
+                        primary_key_node.add_table(parent)
+                        parent.remove_column(foreign_key_node)
+
+                ref_table.remove_column(foreign_key_node)
+
+def setup_grouping_options(sql_handle, db_node):
+    limited_sets = ["varchar", "enum", "char", "tinyint"]
+    str_sets     = ["blob", "mediumblob", "varchar"]
+    num_sets     = ["int", "decimal", "mediumint", "float", "datetime",
+                    "double"]
+
+    for table in db_node.children:
+        for column in table.children:
+            if column == table.primary_key:
+                continue
+            if column.parse_type() in str_sets:
+                column.group = "large_str_set"
+
+            elif column.parse_type() in num_sets:
+                column.group = "large_num_set"
+
+            elif column.parse_type() in limited_sets:
+                query = f"SELECT COUNT(DISTINCT {column.id}) FROM {table.id}"
+                results_dict = sql_handle.execute_query(query)[0]
+
+                if results_dict[f"COUNT(DISTINCT {column.id})"] < 150:
+                    column.group = "limited_set"
+
+class DatabaseTree: 
     def __init__(self, sql_handle):
         self.sql_handle = sql_handle 
         self.db_node = DatabaseNode(sql_handle.database)
-   
-        table_query = (
-            "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-           f"WHERE TABLE_SCHEMA='{sql_handle.database}'")
-        table_dicts = sql_handle.execute_query(table_query)
-     
-        for data_dict in table_dicts:
-            table_node = TableNode(data_dict["TABLE_NAME"])
-            self.db_node.add_table(table_node)
-            
-            column_query = f"SHOW columns IN {data_dict['TABLE_NAME']}"
-            column_dicts = sql_handle.execute_query(column_query)
-            for column_dict in column_dicts:
-                column_node = ColumnNode(column_dict["Field"],
-                                         type=column_dict["Type"])
-                table_node.add_column(column_node)
+        
+        setup_db_tree_leaves(sql_handle, self.db_node)                
+        setup_db_tree_webs(sql_handle, self.db_node) 
 
-            primary_key_query = (
-                   f"SHOW KEYS FROM {data_dict['TABLE_NAME']} "
-                    "WHERE Key_name='PRIMARY'")
-            primary_key_dict = sql_handle.execute_query(primary_key_query)[0]
-            primary_key_node = table_node.get_column(
-                                         primary_key_dict["Column_name"]) 
-            table_node.primary_key = primary_key_node
+        setup_grouping_options(sql_handle, self.db_node)
 
-        for table in self.db_node.children:
-            #print(table.id + ": ")
-            foreign_key_query = (
-                  f"SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, "
-                   "REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME "
-                   "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
-                  f"WHERE REFERENCED_TABLE_SCHEMA='{sql_handle.database}' AND "
-                        f"REFERENCED_TABLE_NAME='{table.id}'")
-            foreign_key_results = sql_handle.execute_query(foreign_key_query)
-            if foreign_key_results != ():
-                for dict in foreign_key_results:
-                    primary_key_node = table.get_column(
-                                                 dict["COLUMN_NAME"])
-                    ref_table = self.db_node.get_table(
-                                                 dict["TABLE_NAME"])
-                    foreign_key_node = ref_table.get_column(
-                                                 dict["COLUMN_NAME"])
+    def get_table(self, table):
+        return self.db_node.get_table(table)
 
-                    primary_key_node.add_table(ref_table)
-                    
-                    if foreign_key_node == ref_table.primary_key:
-                        ref_table.primary_key = primary_key_node
-    
-                    for parent in foreign_key_node.parents:
-                        if parent not in primary_key_node.parents:
-                            primary_key_node.add_table(parent)
-                            parent.remove_column(foreign_key_node)
+    def has_table(self, table):
+        return self.db_node.has_table(table)
 
-                    ref_table.remove_column(foreign_key_node)
-                    
-                    
+    def show_tables(self):
+        return self.db_node.show_tables()
+
     def get_root(self):
         return self.db_node
-
-    def build_values(self):
-        pass
 
     def find_path(self, curr_table, target_table, current_path=None):
             if current_path == None:
@@ -72,7 +109,7 @@ class DatabaseTree:
                 current_path = []
 
             previous_tables = []
-            print(current_path)
+
             for previous in current_path:
                 previous_tables.append(previous[0])
 
@@ -96,6 +133,39 @@ class DatabaseTree:
                         if path != None:
                             if (path[-1])[0] == target_table.id:
                                 return path
+
+    def build_values(self, table, column, values_column=None,
+                     queries=[], values=[]):
+        table_node = self.get_table(table)
+        if table_node == None:
+            raise ValueError
+
+        if not table_node.has_column(column):
+            raise ValueError
+        query = f"SELECT {column} FROM {table}"
+
+        if queries or values:
+            query = query + " WHERE "
+
+        if queries:
+            query = query + " and ".join(queries)
+            if values:
+                query = query + " and "
+
+        if values and values_column == None:
+            query = query +f"{table_node.primary_key.id} IN ('" +\
+                              "','".join(values) + "')"
+        elif values and values_column != None: 
+            if not table_node.has_column(values_column):
+                raise ValueError
+            query = query +f"{values_column} IN ('" +\
+                            "','".join(values) + "')"
+
+        values = []
+        for result in self.sql_handle.execute_query(query):
+            values.append(result[column])
+  
+        return values
 
 class Node:
     def __init__(self, id, parents=None, children=None):
@@ -219,7 +289,31 @@ class TableNode(Node):
         return self.remove_child(column)
 
     def show_columns(self):
-        return self.get_children()
+        return self.show_children()
+
+    def show_columns_info(self):
+        columns_info = []
+        for columns in self.children:
+            columns_info.append(columns.show_info())
+
+        return columns_info
+    
+    def print_columns_info(self):
+        print(" " + "_"*46 + " ")
+        print("|" + " "*46 + "|")
+        print("| %-16s | %-10s | %-6s | %s |" % \
+                         ("Field", "Type", "Null", "Key"))
+     
+        print("|" + "-"*46 + "|")
+        for column in self.show_columns_info():
+            key = column[3]
+            if key == "":
+                key = "   "
+            print("| %-16s | %-10s | %-6s | %s |" % \
+                         (column[0], column[1], column[2], key))
+
+        print("|" + "_"*46 + "|")
+
 
     def has_column(self, column):
         return self.has_child(column) 
@@ -249,14 +343,16 @@ class TableNode(Node):
         return self.primary_key.id
 
 class ColumnNode(Node):
-    def __init__(self, id, parents=None, children=None, type=None):
+    def __init__(self, id, parents=None, children=None, 
+                 type=None, Null=None, key=None):
         super(ColumnNode, self).__init__(
                                     id, parents=parents, children=children)
         
         self.type = type
+        self.null = Null
+        self.key = key
 
-        self.comparable = None
-        self.groupable = None
+        self.group = None
 
     def create_table(self, table):
         return self.create_parent(table)
@@ -269,41 +365,28 @@ class ColumnNode(Node):
 
     def get_type(self):
         return self.type
+   
+    def parse_type(self):
+        type = self.type.split("(")
+        type = type[0].split(" ")
+        
+        return type[0]
 
-    def check_comparable(self):
-        pass
+    def show_info(self):
+        return [self.id, self.parse_type(), self.null, self.key]
 
-    def set_comparable(self):
-        pass
-
-    def check_groupable(self):
-        pass
-
-    def set_groupable(self):
-        pass
-
-
-def debug_print(db_node):
+def print_database_tables(db_node):
     for table in db_node.children:
         print(table.id + ":")
-        print("primary_key: ") 
-        print("    " + table.primary_key.id)
-        print("")
-        print("foreign_keys: ")
-        for foreign_key in table.show_foreign_keys():
-            print("    " + foreign_key)
-        print("")
-        print("columns: ")
-        for column in table.children:
-            print("    " + column.id)
-            print("        " + column.type)
-        print("----------")
+        table.print_columns_info()
+        print("\n")
+        
 
 if __name__ == "__main__":
     sql_handle = MySQLConnectionHandler()
-    sql_handle.username = "root"
-    sql_handle.password = "phage"
-    sql_handle.database = "Actino_Draft"
+    sql_handle.database = input("Please enter database name: ")
+    sql_handle.get_credentials()
     sql_handle.validate_credentials()
     db_tree = DatabaseTree(sql_handle)
     db_node = db_tree.get_root()
+    print_database_tables(db_node)
