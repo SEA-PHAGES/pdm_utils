@@ -4,7 +4,7 @@
 convert: upgrade and downgrade a database schema
 ================================================
 
-Occasionally, the structure (schema) of the Phamerator database is modified, which can result in certain types of data being stored differently. Even though the actual data may not have changed, these schema changes may prevent other tools from interacting with and retrieving data from the database. The ``pdm_utils`` **convert** tool is built to upgrade and downgrade the schema of a Phamerator database on your local computer to ensure your tools can still access the data.
+Occasionally, the structure (schema) of the MySQL database is modified, which can result in certain types of data being stored differently. Even though the actual data may not have changed, these schema changes may prevent other tools from interacting with and retrieving data from the database. The ``pdm_utils`` **convert** tool is built to upgrade and downgrade the schema of a the database on a local computer to ensure your tools can still access the data.
 
 In order for this python-based schema conversion tool to work it must access a collection of SQL scripts to upgrade or downgrade the database. These scripts are stored in the :pdmutils:`pdm_utils GitHub repository <>`. Clone the repository onto your local computer. The folder of the conversion scripts is located at 'pdm_utils/schema/conversion_scripts/'.
 

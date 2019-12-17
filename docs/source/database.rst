@@ -1,9 +1,9 @@
 .. _dbstructure:
 
-Phamerator database structure
-=============================
+MySQL database structure
+========================
 
-PhameratorDB is a MySQL database (:ref:`Cresawn et al., 2011 <cresawn2011>`]. The current database schema (schema version 6) contains 10 tables:
+The current schema (schema version 6) of the MySQL database contains 10 tables:
 
     1.  phage
     2.  gene
@@ -21,7 +21,7 @@ PhameratorDB is a MySQL database (:ref:`Cresawn et al., 2011 <cresawn2011>`]. Th
 
 .. figure:: /images/database_structure/schema_6_map.jpg
 
-    Map of the Phamerator database schema (schema version 6).
+    Map of the MySQL database schema (schema version 6).
 
 .. .. csv-table::
     :file: images/database_structure/database.csv
@@ -41,9 +41,9 @@ This table contains information that pertains to the entire phage genome, such a
 
 **PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actino_Draft database (although there are a few exceptions, due to naming restrictions in different databases).
 
-**Name** This field also reflects the phage name, but it is not as constrained as the PhageID, and this name is displayed in the Phamerator GUI. For all 'draft' genomes, the Name contains the PhageID with a '_Draft' suffix appended, indicating the annotations have been automatically annotated. For all other genomes, the Name corresponds to the PhageID.
+**Name** This field also reflects the phage name, but it is not as constrained as the PhageID, and does not have to be unique. For all 'draft' genomes, the Name contains the PhageID with a '_Draft' suffix appended, indicating the annotations have been automatically annotated. For all other genomes, the Name corresponds to the PhageID. In some downstream applications, such as Phamerator, this serves as the phage's display name.
 
-**Accession** This field is populated and updated directly from import tickets and is used for auto-updating genomes from GenBank records. It is important to note that the NCBI generates RefSeq records that are derived from GenBank records. After data is submitted to GenBank, authors retain control of the GenBank record but not the RefSeq record. As a result, the PhameratorDB Accession field should always store the GenBank ACCESSION number (and not the RefSeq ACCESSION number) for SEA-PHAGES genomes. For non-SEA-PHAGES genomes, either accession number may be stored. In either case, the Accession should not contain the sequence version (represented by the integer to the right of the decimal).
+**Accession** This field is populated and updated directly from import tickets and is used for auto-updating genomes from GenBank records. It is important to note that the NCBI generates RefSeq records that are derived from GenBank records. After data is submitted to GenBank, authors retain control of the GenBank record but not the RefSeq record. As a result, this field should always store the GenBank ACCESSION number (and not the RefSeq ACCESSION number) for SEA-PHAGES genomes. For non-SEA-PHAGES genomes, either accession number may be stored. In either case, the Accession should not contain the sequence version (represented by the integer to the right of the decimal).
 
 **HostStrain** This field indicates the host genus (e.g. *Mycobacterium*, *Streptomyces*, etc.) from which the phage was isolated.
 
@@ -57,7 +57,7 @@ This table contains information that pertains to the entire phage genome, such a
 
 **Subcluster2** This field indicates the phage’s subcluster designation if it has been subclustered, otherwise it remains empty (NULL).
 
-**Cluster** This field combines information from Cluster2 and Subcluster2, and is used by certain applications (such as Phamerator GUI). It remains empty (NULL) if the phage is a singleton (and is not clustered), is populated with the cluster designation if the phage is clustered (but not subclustered), or is populated with the subcluster designation if the phage is clustered and subclustered.
+**Cluster** This field combines information from Cluster2 and Subcluster2, and is used by certain downstream applications, such as Phamerator and Starterator. It remains empty (NULL) if the phage is a singleton (and is not clustered), is populated with the cluster designation if the phage is clustered (but not subclustered), or is populated with the subcluster designation if the phage is clustered and subclustered.
 
 **DateLastModified** This field records the date in which a genome and its annotations have been imported. This is valuable to keep track of which annotation version has been imported, and it also facilitates automated updating of the database. It is important to note that the date stored in this field reflects the date the annotation data were imported, and not the date that the annotation data were created. Although the field is a DATETIME data type, only date data is stored, and no time data is retained.
 
@@ -79,11 +79,11 @@ This table contains information that pertains to individual genes, including coo
 
 **GeneID** Unique identifier for the gene annotation in the database. This can be derived three ways. First, it can simply be synonymous with the LOCUS_TAG of the CDS feature in the flat file. For SEA-PHAGES flat files, this is usually the case. However, for non-SEA-PHAGES flat files, there may not be a LOCUS_TAG for every, or any, CDS feature. As a result, the GeneID can be computed by concatenating the PhageID with the CDS count (which indicates the order that the CDS was parsed from the feature list during import). However, neither of these naming strategies guarantee a unique identifier, and naming conflicts may arise with features already present in the *gene* table. In this case, a _duplicateID[0123] suffix is appended to the GeneID (where [0123] is an integer).
 
-**Name** This field is an identifier for the annotation but does not need to be unique. Most of the time (but not always), it is a number. This field is displayed on Phamerator GUI genome maps. [Add how this is computed in the script]
+**Name** This field is an identifier for the annotation but does not need to be unique, analogous to the distinction between the PhageID and Name fields in the *phage* table. Most of the time (but not always), it is a number. This field is displayed on Phamerator genome maps.
 
 **PhageID** The name of the phage genome from which the gene is derived, matching one of the phage names in the PhageID of the *phage* table.
 
-**Start, Stop** These fields store the genomic coordinates marking the coordinate boundaries of the gene. Start and Stop reflect the left and right (respectively) boundaries of the gene based on the genome orientation stored in the database. Note: the coordinates are stored in 0-based half-open format (as opposed to the 1-based closed format used in GenBank records). For practical purposes, the start coordinate has been decreased by 1 nucleotide.
+**Start, Stop** These fields store the genomic coordinates marking the coordinate boundaries of the gene. The coordinates are stored in '0-based half-open' format (as opposed to the '1-based closed' format used in other representations, such as a GenBank-formatted flat file). For practical purposes, the start coordinate has been decreased by 1 nucleotide. Start and Stop reflect the left and right (respectively) boundaries of the feature based on the genome orientation stored in the database. They do not directly reflect the translational start and stop coordinates of the feature, which are dependent on strand. Since only two coordinates are stored for each feature, compound features spanning more than one contiguous region of the genome (such as features that wrap-around genome termini or features with a translational frameshift) are not completely represented in the database.
 
 **Orientation** This field indicates the strand in which the feature is encoded.
 
@@ -95,7 +95,7 @@ This table contains information that pertains to individual genes, including coo
 
 **Notes** This field contains data on the gene function, and is derived from one of several fields of the GenBank feature.
 
-**DomainStatus** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to PhameratorDB, the DomainStatus field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with DomainStatus < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the DomainStatus field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
+**DomainStatus** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to the *gene* table, the DomainStatus field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with DomainStatus < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the DomainStatus field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
 
 
 
@@ -174,7 +174,7 @@ This table contains a list of color codes for each unique pham.
 
 **Name** Unique identifier for each hexrgb color code.
 
-**Color** The hexrgb color code reflecting unique phams, which is used to create phamerator maps. The script attempts to maintain consistency of pham designations and colors between rounds of clustering.
+**Color** The hexrgb color code reflecting unique phams, which is used by downstream applications such as Phamerator. The script attempts to maintain consistency of pham designations and colors between rounds of clustering.
 
 
 
@@ -191,7 +191,7 @@ This table keeps track of the database version and is updated every time the dat
 
 **Version** This field reflects the current version of the database. Every time changes are made to the database, this integer is incremented by 1.
 
-**SchemaVersion** This field indicates the current version of the database structure, or schema and enhances version control of scripts that directly communicate with PhameratorDB. As the structure of the database changes, such as by the addition or removal of tables or fields, the database schema number can be incremented to reflect that changes have been made. This does not occur often, and needs to be manually changed.
+**SchemaVersion** This field indicates the current version of the database structure (schema) and enhances version control of downstream tools that utilize the database. As the structure of the database changes, such as by the addition or removal of tables or fields, the database schema number can be incremented to reflect that changes have been made. This does not occur often, and needs to be manually changed.
 
 
 

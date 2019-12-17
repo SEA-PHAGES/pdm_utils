@@ -22,7 +22,7 @@ SEA-PHAGES genome sequencing and annotation
 
 The SEA-PHAGES program begins with identification of new phages. Thousands of undergraduate students isolate and purify new actinobacteriophages in the SEA-PHAGES course (:ref:`Hanauer et al., 2017 <hanauer2017>`). Lysates are sent to the University of Pittsburgh where the genomes are sequenced, assembled, clustered (and subclustered) relative to other actinobacteriophages. The genome sequence, along with its metadata (e.g. cluster, subcluster, host, etc.), is uploaded to PhagesDB.
 
-After new genomes are sequenced, genes need to be annotated and easily accessible for downstream applications and data analysis tools, including Phamerator, PhagesDB, Starterator, and PECAAN (:pecaan:`Phage Evidence Collection And Annotation Network (PECAAN) website <>`). Gene annotation is an intensive, multi-step process involving many participants and several stages of quality control:
+After new genomes are sequenced, genes need to be annotated and easily accessible for several applications and data analysis tools, including Phamerator, PhagesDB, Starterator, and PECAAN (:pecaan:`Phage Evidence Collection And Annotation Network (PECAAN) website <>`). Gene annotation is an intensive, multi-step process involving many participants and several stages of quality control:
 
     1. Automated 'draft' annotations are generated using tools that predict coding and tRNA genes. The draft annotations are used as a reference for manual review.
 
@@ -37,16 +37,16 @@ After new genomes are sequenced, genes need to be annotated and easily accessibl
     6. Annotations can be continually refined, and corrections or updates can be made to the final GenBank annotations as often as needed by authors that are specifically listed in the GenBank record.
 
 
-PhameratorDB
-------------
+Phage genomics database
+-----------------------
 
-A uniquely-structured MySQL database (here designated as :ref:`PhameratorDB <dbstructure>`) is used to store phage genome and gene annotation data in a standardized format that enhances downstream genomics analyses and that can be easily distributed to end-users. Different versions, or instances, of PhameratorDB can be constructed for different research projects.
+A specifically-structured :ref:`MySQL database <dbstructure>` is used to store phage genome and gene annotation data in a standardized format that enhances downstream genomics analyses and that can be easily distributed to end-users. Different versions, or instances, of this genomics database can be constructed for different research projects.
 
 
 The Actino_Draft database
 -------------------------
 
-The primary PhameratorDB instance for the SEA-PHAGES program is the Actino_Draft. This database serves not only as a repository of final, refined gene annotations, but also as a tool to facilitate the dynamic, iterative improvement of annotations. Using the ``pdm_utils`` toolkit, a data management pipeline is constructed to accommodate the needs of this constantly updated database.
+The primary instance of this database, the Actino_Draft, works in conjunction with the :ref:`PhagesDB <phagesdb>` database as the primary source of genomics data for the SEA-PHAGES program. This database serves not only as a repository of final, refined gene annotations, but also as a tool to facilitate the dynamic, iterative improvement of annotations. Using the ``pdm_utils`` toolkit, a data management pipeline is constructed to accommodate the needs of this constantly updated database.
 
 The Actino_Draft management pipeline relies on :ref:`GenBank-formatted flat files <flatfile>` as the primary file format for importing annotation data into the database. During the import process, data is parsed from flat files. If a previous annotated version of the genome is already present in the database, all data relating to that genome is removed and the genome is completely re-imported using the new flat file. Only in limited circumstances are individual fields populated with data extrinsic to a flat file or retained between rounds of genome replacement.
 

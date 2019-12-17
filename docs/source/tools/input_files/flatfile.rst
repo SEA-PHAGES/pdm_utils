@@ -12,7 +12,7 @@ A flat file can be generated for any genome at any annotation stage using:
     3. :pecaan:`PECAAN <>`
     4. :biopython:`Biopython <>` (:ref:`Cock et al., 2009 <cock2009>`)
 
-Flat file fields, such as LOCUS, DEFINITION, and REFERENCE-AUTHORS provide information regarding the entire record, while others, such as FEATURES, provide information about particular regions of the sequence in the record, such as tRNA or CDS genes. PhameratorDB stores data from flat files in the *phage* and *gene* tables.
+Flat file fields, such as LOCUS, DEFINITION, and REFERENCE-AUTHORS provide information regarding the entire record, while others, such as FEATURES, provide information about particular regions of the sequence in the record, such as tRNA or CDS genes. Data from flat files are stored in the *phage* and *gene* tables.
 
 .. _figflatfile:
 

@@ -1,4 +1,4 @@
-# MySQL script to upgrade Phamerator database schema from version 4 to 5.
+# MySQL script to upgrade the database schema from version 4 to 5.
 DROP TABLE `node`;
 DROP TABLE `host_range`;
 DROP TABLE `host`;

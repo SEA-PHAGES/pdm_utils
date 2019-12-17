@@ -1,13 +1,13 @@
 # README #
 
-### What is this repository for? ###
+### Purpose: ###
 
-* This repository provides a collection of tools and utilities to create, update, and maintain MySQL databases for the SEA-PHAGES program.
+* The pdm_utils repository provides the source code for pdm_utils Python package, developed in the SEA-PHAGES program to create, update, and maintain MySQL phage genomics databases. Documentation for the package is available on https://readthedocs.org/
 
-### Contribution guidelines ###
+### Contribution guidelines: ###
 
-* Please contact if you have any contributions or suggestions.
+* Please contact us if you have any contributions or suggestions.
 
-### Who do I talk to? ###
+### Developers: ###
 
-* Contact Travis Mavrich (trm53@pitt.edu) or Christian Gauthier (christian.gauthier@pitt.edu).
+* Travis Mavrich (trm53@pitt.edu) or Christian Gauthier (christian.gauthier@pitt.edu).

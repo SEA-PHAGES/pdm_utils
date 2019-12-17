@@ -1,4 +1,4 @@
-# MySQL script to downgrade Phamerator database schema from version 4 to 3.
+# MySQL script to downgrade the database schema from version 4 to 3.
 UPDATE `gene` SET `translation` = NULL WHERE LENGTH(`translation`) > 4000;
 ALTER TABLE `gene` MODIFY `translation` VARCHAR(4000) DEFAULT NULL;
 DROP TABLE `tmrna`;

@@ -1,4 +1,4 @@
-# MySQL script to downgrade Phamerator database schema from version 1 to 0.
+# MySQL script to downgrade the database schema from version 1 to 0.
 ALTER TABLE `gene` DROP COLUMN `cdd_status`;
 
 ALTER TABLE `scores_summary` DROP FOREIGN KEY `scores_summary_ibfk_1`;

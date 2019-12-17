@@ -1,4 +1,4 @@
-# MySQL script to upgrade Phamerator database schema from version 3 to 4.
+# MySQL script to upgrade the database schema from version 3 to 4.
 CREATE TABLE `tmrna` (
   `PhageID` varchar(25) NOT NULL,
   `TmrnaID` varchar(35) NOT NULL,

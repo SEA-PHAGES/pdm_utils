@@ -8,7 +8,7 @@ Run modes and evaluation flags
 Optional QC steps
 -----------------
 
-Many QC steps in the import script need to be performed on every genome (such as confirming the nucleotide sequence is not already present in the database under a separate name). However, a Phamerator database may store data for diverse types of genomes, and some QC steps are dependent on factors such as the annotation status, the authorship, or the data source. As a result, some QC steps can be turned on (yes) and off (no) depending on the type of genome being imported.
+Many QC steps in the import script need to be performed on every genome (such as confirming the nucleotide sequence is not already present in the database under a separate name). However, a MySQL database may store data for diverse types of genomes, and some QC steps are dependent on factors such as the annotation status, the authorship, or the data source. As a result, some QC steps can be turned on (yes) and off (no) depending on the type of genome being imported.
 
 
 use_basename

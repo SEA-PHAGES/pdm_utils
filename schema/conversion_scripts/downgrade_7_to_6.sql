@@ -1,4 +1,4 @@
-# MySQL script to downgrade Phamerator database schema from version 7 to 6.
+# MySQL script to downgrade the database schema from version 7 to 6.
 RENAME TABLE `pham` TO `pham_color`;
 RENAME TABLE `cds_pham` TO `pham`;
 RENAME TABLE `cds_domain` TO `gene_domain`;

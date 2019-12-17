@@ -1,7 +1,7 @@
 Primary tools
 ================
 Below is a description of tools that the ``pdm_utils`` package
-contains to analyze and manipulate data within a Phamerator database:
+contains to analyze and manipulate data within a MySQL database:
 
 
 .. toctree::
@@ -37,4 +37,4 @@ Supplementary information associated with different tools:
    :file: ./images/pipeline_stages.csv
 
 
-The ``pdm_utils`` toolkit can be used to manage different PhameratorDB instances. However, some tools may only be relevant specifically to the primary actinobacteriophage PhameratorDB instance, Actino_Draft.
+The ``pdm_utils`` toolkit can be used to manage different database instances. However, some tools may only be relevant specifically to the primary instance, Actino_Draft.

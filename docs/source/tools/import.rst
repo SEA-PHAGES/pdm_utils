@@ -3,13 +3,13 @@
 import: manage genome data and annotations
 ==========================================
 
-In general, data pertaining to a complete phage genome is managed within a Phamerator database as a discrete unit, in which genome data (such as the PhageID, genome sequence, host data, etc.) is added, removed, and replaced concomitantly with all associated gene annotation data (primarily CDS features), such that any data pertaining to a particular phage in the database has been parsed from one external source, instead of added piecemeal from separate sources or modified within the database after insertion. There are a few fields that are exceptions to this general practice (:ref:`update`)
+In general, data pertaining to a complete phage genome is managed within a MySQL database as a discrete unit, in which genome data (such as the PhageID, genome sequence, host data, etc.) is added, removed, and replaced concomitantly with all associated gene annotation data (primarily CDS features), such that any data pertaining to a particular phage in the database has been parsed from one external source, instead of added piecemeal from separate sources or modified within the database after insertion. There are a few fields that are exceptions to this general practice (:ref:`update`)
 
 The ``pdm_utils`` **import** tool is used to manage the addition, replacement, or removal of genomes::
 
     > python3 -m pdm_utils import Actino_Draft ./genomes/ ./import_table.csv
 
-This script is a versatile tool for specifically updating the Actino_Draft database, managing different PhameratorDB instances, and supporting the entire SEA-PHAGES annotation pipeline because it:
+This script is a versatile tool for specifically updating the Actino_Draft database, managing different MySQL database instances, and supporting the entire SEA-PHAGES annotation pipeline because it:
 
     1. relies on import tickets to substantially automate the import process.
 
@@ -38,9 +38,9 @@ For replace tickets, the current genome data in the database is removed and the 
 Genome-specific data
 ********************
 
-Genome-level data, such as the phage name, nucleotide sequence, host genus, accession, and authorship is parsed and stored in the *phage* table. The data in the flat file is matched to the import ticket by the phage name parsed from the SOURCE-ORGANISM field at the top of the file, and subsequently evaluated and compared to data in the import ticket and in the Phamerator database. After this, several fields in the Phage table are populated from data derived from the import ticket or from the flat file.
+Genome-level data, such as the phage name, nucleotide sequence, host genus, accession, and authorship is parsed and stored in the *phage* table. The data in the flat file is matched to the import ticket by the phage name parsed from the SOURCE-ORGANISM field at the top of the file, and subsequently evaluated and compared to data in the import ticket and in the database. After this, several fields in the Phage table are populated from data derived from the import ticket or from the flat file.
 
-Matching tickets to flat files requires that the phage names are spelled identically. Sometimes this is not the case, in which the desired spelling of the phage name in PhameratorDB (and thus in the import ticket) is slightly differently than the spelling in the GenBank record. These conflicts can arise for several reasons that cannot be immediately corrected:
+Matching tickets to flat files requires that the phage names are spelled identically. Sometimes this is not the case, in which the desired spelling of the phage name in the database (and thus in the import ticket) is slightly differently than the spelling in the GenBank record. These conflicts can arise for several reasons that cannot be immediately corrected:
 
     1. Minor variations in nomenclature (such as “phiELB20” versus “ELB20”)
 
@@ -48,11 +48,11 @@ Matching tickets to flat files requires that the phage names are spelled identic
 
     3. Different nomenclature constraints implemented in GenBank (such as “LeBron”, which is spelled “Bron” in the SOURCE-ORGANISM field of the GenBank record)
 
-    4. Different nomenclature constraints implemented in PhameratorDB or PhagesDB (such as “ATCC29399B_C” versus “ATCC29399BC”)
+    4. Different nomenclature constraints implemented in the MySQL database or PhagesDB (such as “ATCC29399B_C” versus “ATCC29399BC”)
 
-To account for these conflicts, **import** contains a phage name dictionary that converts several GenBank phage names to the desired phage name stored in PhagesDB and the Phamerator database. This list contains nearly two dozen name conversions and does not change frequently. To avoid phage name discrepancies, the phage name can be parsed from the filename of the flat file instead of from the SOURCE-ORGANISM field within the record. This allows for greater flexibility when parsing batches of flat files that may not adhere to these default expectations, such as when new PhameratorDB instances are developed for phages that have not been annotated through the SEA-PHAGES program. This option can be implemented using a different run mode (:ref:`runmodes`).
+To account for these conflicts, **import** contains a phage name dictionary that converts several GenBank phage names to the desired phage name stored in PhagesDB and the Actino_Draft database. This list contains nearly two dozen name conversions and does not change frequently. To avoid phage name discrepancies, the phage name can be parsed from the filename of the flat file instead of from the SOURCE-ORGANISM field within the record. This allows for greater flexibility when parsing batches of flat files that may not adhere to these default expectations, such as when new database instances are developed for phages that have not been annotated through the SEA-PHAGES program. This option can be implemented using a different run mode (:ref:`runmodes`).
 
-Several fields in the flat file contain data about the phage and host names: DEFINITION, SOURCE, SOURCE-ORGANISM, and the ORGANISM, HOST, and LAB_HOST sub-fields of the FEATURE-SOURCE field. The host and phage name data stored in PhameratorDB is derived from the ticket, but they are compared to the data parsed from these various fields for confirmation.
+Several fields in the flat file contain data about the phage and host names: DEFINITION, SOURCE, SOURCE-ORGANISM, and the ORGANISM, HOST, and LAB_HOST sub-fields of the FEATURE-SOURCE field. The host and phage name data stored in the database is derived from the ticket, but they are compared to the data parsed from these various fields for confirmation.
 
 
 Gene-specific data
@@ -62,7 +62,7 @@ The second type of data parsed from the flat file pertains to individual genes (
 
 .. note::
 
-    Currently, tRNA and tmRNA features are not dynamically parsed from flat files and stored in PhameratorDB.
+    Currently, tRNA and tmRNA features are not dynamically parsed from flat files and stored in the MySQL database.
 
 CDS features are parsed, evaluated, and stored in the *gene* table. The majority of data that **import** stores in the *gene* table are derived directly from the flat file. Several things to note:
 

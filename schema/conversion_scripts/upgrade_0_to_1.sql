@@ -1,4 +1,4 @@
-# MySQL script to upgrade Phamerator database schema from version 0 to 1.
+# MySQL script to upgrade the database schema from version 0 to 1.
 CREATE TABLE `version` (
   `version` int(11) unsigned NOT NULL,
   PRIMARY KEY (`version`)

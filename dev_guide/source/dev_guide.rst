@@ -21,12 +21,12 @@ Unit and integration tests designed for ``pdm_utils``.
 misc/
 *****
 
-Miscellaneous documentation or reference material for maintaining Phamerator or the GitHub repository that should not be included in Sphinx-generated documentation.
+Miscellaneous documentation or reference material for maintaining SEA-PHAGES phage genomics databases or the GitHub repository that should not be included in Sphinx-generated documentation.
 
 legacy/
 *******
 
-A compilation of legacy Python2 scripts used to maintain the Phamerator database.
+A compilation of legacy Python2 scripts used to maintain SEA-PHAGES phage genomics databases.
 
 docs/
 *****
@@ -140,7 +140,7 @@ The directory of integration and unit tests can be stored completely separately 
         > python3 -m unittest discover ../tests/integration/ -p test_phamerator.py
 
 
-For Phamerator integration tests, it is expected that MySQL user 'pdm_anon' exists with password 'pdm_anon' that has all privileges for 'test_db' database. Log in to MySQL as the 'root' user and execute the following commands::
+For integration tests that require a MySQL database, it is expected that MySQL user 'pdm_anon' exists with password 'pdm_anon' that has all privileges for 'test_db' database. Log in to MySQL as the 'root' user and execute the following commands::
 
     mysql> CREATE USER 'pdm_anon'@'localhost' IDENTIFIED BY 'pdm_anon';
     mysql> GRANT ALL PRIVILEGES ON test_db.* TO 'pdm_anon'@'localhost';

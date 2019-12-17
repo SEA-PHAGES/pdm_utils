@@ -15,7 +15,7 @@ def check_update_tickets():
     #     bndl = list_of_update_objects[index]
     #
     #     if len(bndl.genome_pairs_dict.keys()) == 0:
-    #         # TODO throw an error if there is no matched Phamerator genome?
+    #         # TODO throw an error if there is no matched genome in the database?
     #         pass
     #
     #     for key in bndl.genome_pairs_dict.keys():
@@ -27,7 +27,7 @@ def check_update_tickets():
     #         genome_pair.check_xyz()
     #
     #         # TODO check for conflicting status. It is not common to
-    #         # change status unless the current phamerator is draft status.
+    #         # change status unless the current genome in the database is draft status.
     #         # The only common change is from draft to final.
     #         genome_pair.check_xyz()
     #
@@ -63,7 +63,7 @@ def check_remove_tickets(list_of_remove_objects, genome_type):
     #     try:
     #         gnm = bndl.genomes_dict[genome_type]
     #     except:
-    #         # TODO throw an error if there is no matched Phamerator genome?
+    #         # TODO throw an error if there is no matched MySQL genome?
     #         continue
     #
     #

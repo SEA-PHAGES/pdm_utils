@@ -1,7 +1,7 @@
 Introduction
 ============
 
-``pdm_utils`` is a Python package designed to facilitate the creation, management, and manipulation of MySQL phage genomics databases for :webpham:`Phamerator <>` in the :seaphages:`SEA-PHAGES program <>`.
+``pdm_utils`` is a Python package designed to facilitate the creation, management, and manipulation of MySQL phage genomics databases in the :seaphages:`SEA-PHAGES program <>`.
 
 ``pdm_utils`` contains several types of tools:
 
@@ -11,17 +11,17 @@ Introduction
 
         b. Functions and methods to manipulate those classes as well as interact with several databases and servers, including PhagesDB, GenBank, PECAAN, and MySQL.
 
-    2. Data processing pipelines to maintain a Phamerator database.
+    2. Data processing pipelines to maintain a phage genomics database.
 
 ``pdm_utils`` is useful for:
 
-    1. Database administrators in the Hatfull lab to maintain the primary Phamerator database instance, Actino_Draft.
+    1. The Hatfull lab to maintain the primary database instance, Actino_Draft.
 
-    2. Researchers to retrieve, access, and export data from a Phamerator database.
+    2. Researchers to directly access and retrieve phage genomics data.
 
-    3. Non-Hatfull lab database administrators to generate custom Phamerator databases.
+    3. Generation of custom phage genomics databases.
 
-    4. Developers building data analysis tools that rely on a Phamerator database.
+    4. Developers building downstream data analysis tools.
 
 
 

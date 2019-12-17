@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.15",
     author="Travis Mavrich",
     author_email="trm53@pitt.edu",
-    description="Phamerator database management utilities",
+    description="MySQL phage genomics database management utilities",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/SEA-PHAGES/pdm_utils",
