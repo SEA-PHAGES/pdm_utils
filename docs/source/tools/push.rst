@@ -4,7 +4,7 @@ push: upload a database to a public server
 ==========================================
 
 
-Data can be uploaded to the :hatfullserver:`Hatfull lab’s public server <>` using the ``pdm_utils`` 'push' tool::
+Data can be uploaded to the :hatfullserver:`Hatfull lab’s public server <>` using the ``pdm_utils`` **push** tool::
 
     > python3 -m pdm_utils push  -f Actino_Draft.sql
 
