@@ -12,7 +12,7 @@ from Bio import SeqIO
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.functions import tickets
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
@@ -129,7 +129,7 @@ def main(unparsed_args_list):
 
     # Create data sets
     print("Preparing genome data sets from the MySQL database...")
-    sql_handle = phamerator.connect_to_db(args.database)
+    sql_handle = mysqldb.connect_to_db(args.database)
 
     # Parse existing MySQL database genome data to assess what needs to be updated.
     query = (

@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
-from pdm_utils.functions import basic, phamerator
+from pdm_utils.functions import basic, mysqldb
 
 
 # TODO currently the 'output_folder' argument is not directly attached to
@@ -75,13 +75,13 @@ def main(unparsed_args_list):
             sql_handle = mch.MySQLConnectionHandler()
             sql_handle.open_connection()
             if sql_handle.credential_status:
-                result2 = phamerator.drop_create_db(sql_handle, args.database)
+                result2 = mysqldb.drop_create_db(sql_handle, args.database)
                 if result2 == 0:
                     sql_handle.database = args.database
                     sql_handle.open_connection()
                     if (sql_handle.credential_status == True and
                             sql_handle._database_status == True):
-                        phamerator.install_db(sql_handle, db_filepath)
+                        mysqldb.install_db(sql_handle, db_filepath)
                     else:
                         print(f"No connection to the {args.database} database due "
                               "to invalid credentials or database.")

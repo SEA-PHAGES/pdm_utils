@@ -2,7 +2,7 @@
 
 
 import unittest
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.classes import genome
 from pdm_utils.classes import cds
 from pdm_utils.constants import constants
@@ -28,7 +28,7 @@ schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 
 
 
-class TestPhameratorFunctions1(unittest.TestCase):
+class TestMysqldbFunctions1(unittest.TestCase):
 
     def setUp(self):
         """In order to test MySQL database-related functions, create a
@@ -113,7 +113,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result = phamerator.create_phage_id_set(sql_handle)
+        result = mysqldb.create_phage_id_set(sql_handle)
         self.assertEqual(len(result), 3)
 
 
@@ -145,7 +145,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result = phamerator.create_accession_set(sql_handle)
+        result = mysqldb.create_accession_set(sql_handle)
         self.assertEqual(len(result), 3)
 
 
@@ -180,7 +180,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result = phamerator.create_seq_set(sql_handle)
+        result = mysqldb.create_seq_set(sql_handle)
         with self.subTest():
             self.assertEqual(len(result), 3)
         with self.subTest():
@@ -224,7 +224,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5"], query=query)
         with self.subTest():
@@ -266,7 +266,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["EagleEye"], query=query)
         self.assertEqual(len(result_list), 0)
@@ -307,7 +307,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5","Trixie"], query=query)
         self.assertEqual(len(result_list), 2)
@@ -348,7 +348,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5","Trixie","EagleEye","D29"],
                         query=query)
@@ -390,7 +390,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, query=query)
         self.assertEqual(len(result_list), 3)
 
@@ -441,7 +441,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["L5"], query=query)
         with self.subTest():
@@ -495,7 +495,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, column="PhageID",
                         phage_id_list=["Trixie"], query=query)
         self.assertEqual(len(result_list), 0)
@@ -553,7 +553,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        result_list = phamerator.retrieve_data(
+        result_list = mysqldb.retrieve_data(
                         sql_handle, query=query)
         self.assertEqual(len(result_list), 5)
 
@@ -613,7 +613,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        genome_list = phamerator.parse_genome_data(sql_handle,
+        genome_list = mysqldb.parse_genome_data(sql_handle,
                         phage_id_list=["L5"], phage_query=phage_query,
                         gnm_type="phamerator")
         with self.subTest():
@@ -666,7 +666,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        genome_list = phamerator.parse_genome_data(
+        genome_list = mysqldb.parse_genome_data(
                           sql_handle, phage_id_list=["EagleEye"],
                           phage_query=phage_query)
         self.assertEqual(len(genome_list), 0)
@@ -727,7 +727,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        genome_list = phamerator.parse_genome_data(
+        genome_list = mysqldb.parse_genome_data(
                         sql_handle, phage_id_list=["L5"], phage_query=phage_query,
                         gene_query=gene_query)
         with self.subTest():
@@ -801,7 +801,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        genome_list = phamerator.parse_genome_data(
+        genome_list = mysqldb.parse_genome_data(
                         sql_handle, phage_query=phage_query,
                         gene_query=gene_query)
 
@@ -876,7 +876,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        cds_list = phamerator.parse_cds_data(sql_handle, column="PhageID",
+        cds_list = mysqldb.parse_cds_data(sql_handle, column="PhageID",
                                              phage_id_list=["L5"], query=query)
         with self.subTest():
             self.assertEqual(len(cds_list), 1)
@@ -929,7 +929,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        cds_list = phamerator.parse_cds_data(sql_handle,
+        cds_list = mysqldb.parse_cds_data(sql_handle,
                                              column="PhageID",
                                              phage_id_list=["Trixie"],
                                              query=query)
@@ -980,7 +980,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         sql_handle.username = user
         sql_handle.password = pwd
         sql_handle.database = db
-        cds_list = phamerator.parse_cds_data(sql_handle, query=query)
+        cds_list = mysqldb.parse_cds_data(sql_handle, query=query)
 
         with self.subTest():
             self.assertEqual(len(cds_list), 2)
@@ -1008,7 +1008,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         gnm.cluster_subcluster = ""
         gnm.cluster = "singleton"
         gnm.subcluster = "A2"
-        statement = phamerator.create_phage_table_insert(gnm)
+        statement = mysqldb.create_phage_table_insert(gnm)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1078,7 +1078,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
     def test_get_phage_table_count_1(self):
         """Verify the correct number of phages is returned when
         the database is empty."""
-        count = phamerator.get_phage_table_count(self.sql_handle)
+        count = mysqldb.get_phage_table_count(self.sql_handle)
         self.assertEqual(count, 0)
 
 
@@ -1104,7 +1104,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         cur.execute(insert1)
         connection.commit()
         connection.close()
-        count = phamerator.get_phage_table_count(self.sql_handle)
+        count = mysqldb.get_phage_table_count(self.sql_handle)
         self.assertEqual(count, 1)
 
 
@@ -1123,7 +1123,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         cur.execute(statement)
         connection.commit()
         connection.close()
-        phamerator.change_version(self.sql_handle)
+        mysqldb.change_version(self.sql_handle)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1150,7 +1150,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         cur.execute(statement)
         connection.commit()
         connection.close()
-        phamerator.change_version(self.sql_handle, amount=5)
+        mysqldb.change_version(self.sql_handle, amount=5)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1177,7 +1177,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         cur.execute(statement)
         connection.commit()
         connection.close()
-        phamerator.change_version(self.sql_handle, amount=-5)
+        mysqldb.change_version(self.sql_handle, amount=-5)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1194,7 +1194,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
 
-class TestPhameratorFunctions2(unittest.TestCase):
+class TestMysqldbFunctions2(unittest.TestCase):
 
     def setUp(self):
         """In order to test MySQL database-related functions, create a
@@ -1295,7 +1295,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         cds1.strand = "F"
         cds1.processed_description = "integrase"
         cds1.locus_tag = "TAG1"
-        insert2 = phamerator.create_gene_table_insert(cds1)
+        insert2 = mysqldb.create_gene_table_insert(cds1)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1349,7 +1349,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
     def test_create_update_1(self):
         """Verify correct Cluster2 statement is created for a non-singleton."""
-        statement = phamerator.create_update(
+        statement = mysqldb.create_update(
             "phage", "Cluster2", "B", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
@@ -1374,7 +1374,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
     def test_create_update_2(self):
         """Verify correct Cluster2 statement is created for a singleton."""
-        statement = phamerator.create_update(
+        statement = mysqldb.create_update(
             "phage", "Cluster2", "SINGLETON", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
@@ -1400,7 +1400,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
     def test_create_update_3(self):
         """Verify correct Subcluster2 statement is created for a
         non-empty value."""
-        statement = phamerator.create_update(
+        statement = mysqldb.create_update(
             "phage", "Subcluster2", "A2", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
@@ -1441,7 +1441,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
         connection.close()
 
         # Second run the update statement.
-        statement = phamerator.create_update(
+        statement = mysqldb.create_update(
             "gene", "Notes", "Repressor", "GeneID", "SEA_L5_123")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
@@ -1486,7 +1486,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
             results1_phageids.add(dict["PhageID"])
 
         # Second, execute the DELETE statement.
-        statement = phamerator.create_delete("phage", "PhageID", "L5")
+        statement = mysqldb.create_delete("phage", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
@@ -1563,7 +1563,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
             results1_geneids.add(dict["GeneID"])
 
         # Third, execute the DELETE statement.
-        statement = phamerator.create_delete("gene", "GeneID", "SEA_L5_1")
+        statement = mysqldb.create_delete("gene", "GeneID", "SEA_L5_1")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
@@ -1602,7 +1602,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
 
 
 
-class TestPhameratorFunctions3(unittest.TestCase):
+class TestMysqldbFunctions3(unittest.TestCase):
     def setUp(self):
         self.database = "Actino_Draft"
 
@@ -1613,7 +1613,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
         """Verify that handle returned with valid info
         when database is provided."""
         getpass_mock.side_effect = [user, pwd]
-        sql_handle, msg = phamerator.setup_sql_handle("Actino_Draft")
+        sql_handle, msg = mysqldb.setup_sql_handle("Actino_Draft")
         with self.subTest():
             self.assertTrue(getpass_mock.called)
         with self.subTest():
@@ -1630,7 +1630,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
         """Verify that handle returned with valid info
         when database is not provided."""
         getpass_mock.side_effect = [user, pwd]
-        sql_handle, msg = phamerator.setup_sql_handle()
+        sql_handle, msg = mysqldb.setup_sql_handle()
         with self.subTest():
             self.assertTrue(getpass_mock.called)
         with self.subTest():
@@ -1649,7 +1649,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle_mock.credential_status = False
         sql_handle_mock._database_status = True
         mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = phamerator.setup_sql_handle(self.database)
+        sql_handle, msg = mysqldb.setup_sql_handle(self.database)
         with self.subTest():
             self.assertTrue(mch_mock.called)
         with self.subTest():
@@ -1664,7 +1664,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle_mock.credential_status = True
         sql_handle_mock._database_status = False
         mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = phamerator.setup_sql_handle(self.database)
+        sql_handle, msg = mysqldb.setup_sql_handle(self.database)
         with self.subTest():
             self.assertTrue(mch_mock.called)
         with self.subTest():
@@ -1679,7 +1679,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle_mock.credential_status = False
         sql_handle_mock._database_status = False
         mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = phamerator.setup_sql_handle(self.database)
+        sql_handle, msg = mysqldb.setup_sql_handle(self.database)
         with self.subTest():
             self.assertTrue(mch_mock.called)
         with self.subTest():
@@ -1693,7 +1693,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
         sql_handle_mock.credential_status = False
         sql_handle_mock._database_status = True
         mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = phamerator.setup_sql_handle()
+        sql_handle, msg = mysqldb.setup_sql_handle()
         with self.subTest():
             self.assertTrue(mch_mock.called)
         with self.subTest():
@@ -1701,7 +1701,7 @@ class TestPhameratorFunctions3(unittest.TestCase):
 
 
 
-class TestPhameratorFunctions4(unittest.TestCase):
+class TestMysqldbFunctions4(unittest.TestCase):
     def setUp(self):
 
         self.sql_handle_1 = mysqlconnectionhandler.MySQLConnectionHandler()
@@ -1717,22 +1717,22 @@ class TestPhameratorFunctions4(unittest.TestCase):
         self.sql_handle_2._database_status = False
 
 
-    @patch("pdm_utils.functions.phamerator.setup_sql_handle")
+    @patch("pdm_utils.functions.mysqldb.setup_sql_handle")
     def test_connect_to_db_1(self, setup_sql_mock):
         """Verify that sql_handle returned when valid info provided."""
         setup_sql_mock.return_value = (self.sql_handle_1, "")
-        sql_handle = phamerator.connect_to_db("Actino_Draft")
+        sql_handle = mysqldb.connect_to_db("Actino_Draft")
         with self.subTest():
             self.assertTrue(setup_sql_mock.called)
         with self.subTest():
             self.assertIsNotNone(sql_handle)
 
     @patch("sys.exit")
-    @patch("pdm_utils.functions.phamerator.setup_sql_handle")
+    @patch("pdm_utils.functions.mysqldb.setup_sql_handle")
     def test_connect_to_db_2(self, setup_sql_mock, sys_exit_mock):
         """Verify that sys exit is called when sql_handle is None."""
         setup_sql_mock.return_value = (None, "")
-        sql_handle = phamerator.connect_to_db("Actino_Draft")
+        sql_handle = mysqldb.connect_to_db("Actino_Draft")
         with self.subTest():
             self.assertTrue(setup_sql_mock.called)
         with self.subTest():

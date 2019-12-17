@@ -4,7 +4,7 @@ import argparse
 import pathlib
 import sys
 from pdm_utils.functions import basic
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 
 MAX_VERSION = 7
 CURRENT_VERSION = 6
@@ -65,9 +65,9 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
     args.conversion_scripts_folder = \
         basic.set_path(args.conversion_scripts_folder, kind="dir", expect=True)
-    sql_handle1 = phamerator.connect_to_db(args.database)
+    sql_handle1 = mysqldb.connect_to_db(args.database)
     target = args.schema_version
-    actual = phamerator.get_schema_version(sql_handle1)
+    actual = mysqldb.get_schema_version(sql_handle1)
     steps, dir = get_conversion_direction(actual, target)
 
     # Iterate through list of versions and implement SQL files.
@@ -80,12 +80,12 @@ def main(unparsed_args_list):
     if convert == True:
         if (args.new_database_name is not None and
                 args.new_database_name != args.database):
-            result = phamerator.drop_create_db(sql_handle1, args.new_database_name)
+            result = mysqldb.drop_create_db(sql_handle1, args.new_database_name)
             if result == 0:
-                result = phamerator.copy_db(sql_handle1, args.new_database_name)
+                result = mysqldb.copy_db(sql_handle1, args.new_database_name)
                 if result == 0:
                     # Create a new connection to the new database.
-                    sql_handle2 = phamerator.setup_sql_handle2(
+                    sql_handle2 = mysqldb.setup_sql_handle2(
                                     username=sql_handle1.username,
                                     password=sql_handle1.password,
                                     database=args.new_database_name)

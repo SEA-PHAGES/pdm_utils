@@ -24,7 +24,7 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature #, FeatureLocation, CompoundLocation
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
-from pdm_utils.functions import flat_files, phamerator #, basic
+from pdm_utils.functions import flat_files, mysqldb #, basic
 
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
@@ -355,7 +355,7 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
         print(
           f"Retrieving {data_name} data from {sql_handle.database}...")
     if table == "phage":
-        genomes = phamerator.parse_genome_data(
+        genomes = mysqldb.parse_genome_data(
                                 sql_handle,
                                 phage_id_list=db_filter.results(
                                                 verbose=verbose),
@@ -579,7 +579,7 @@ def retrieve_database_version(sql_handle):
         "Version" and "SchemaVersion"
     """
 
-    database_versions_list = phamerator.retrieve_data(
+    database_versions_list = mysqldb.retrieve_data(
             sql_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
@@ -935,7 +935,7 @@ def parse_cds_data_from_geneid(sql_handle, geneid_list):
 
     cds_list = []
     for data_dict in result_list:
-        cds_list.append(phamerator.parse_gene_table_data(data_dict))
+        cds_list.append(mysqldb.parse_gene_table_data(data_dict))
 
     return cds_list
 

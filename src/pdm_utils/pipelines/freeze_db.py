@@ -6,14 +6,14 @@ import os
 import pathlib
 import subprocess
 from pdm_utils.functions import basic
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main freeze database pipeline."""
     args = parse_args(unparsed_args_list)
-    sql_handle1 = phamerator.connect_to_db(args.database)
+    sql_handle1 = mysqldb.connect_to_db(args.database)
 
     # Get the number of draft genomes.
     query = "SELECT count(*) FROM phage WHERE Status != 'draft'"
@@ -25,15 +25,15 @@ def main(unparsed_args_list):
     new_database = f"{prefix}_{phage_count}"
 
     # Create the new database
-    result = phamerator.drop_create_db(sql_handle1, new_database)
+    result = mysqldb.drop_create_db(sql_handle1, new_database)
 
     # Copy database.
     if result == 0:
-        result = phamerator.copy_db(sql_handle1, new_database)
+        result = mysqldb.copy_db(sql_handle1, new_database)
         if result == 0:
             print(f"Deleting 'draft' genomes...")
             # Create a new connection to the new database.
-            sql_handle2 = phamerator.setup_sql_handle2(
+            sql_handle2 = mysqldb.setup_sql_handle2(
                             username=sql_handle1.username,
                             password=sql_handle1.password,
                             database=new_database)

@@ -3,7 +3,7 @@ for retrieving data from a SQL database."""
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation, FeatureLocation
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler
 from typing import List
 import cmd, readline, argparse, os, sys, re, string
@@ -13,7 +13,7 @@ GROUP_OPTIONS = ["cluster2", "subcluster2",
                  "status",  "hoststrain"]
 
 GROUP_OPTIONS_DICT = {"phage" : ["cluster2", "subcluster2",
-                                 "status",  "hoststrain"], 
+                                 "status",  "hoststrain"],
                       "gene"  : []}
 
 def build_tables(sql_handle):
@@ -21,7 +21,7 @@ def build_tables(sql_handle):
         "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
        f"WHERE TABLE_SCHEMA='{sql_handle.database}'")
     table_dicts = sql_handle.execute_query(query)
-     
+
     tables = {}
     for data_dict in table_dicts:
         table = data_dict["TABLE_NAME"]
@@ -30,7 +30,7 @@ def build_tables(sql_handle):
         for column_dict in column_dicts:
             column_list.append((column_dict["Field"]))
         tables.update({table.lower(): column_list})
- 
+
     del tables["version"]
     return tables
 
@@ -116,7 +116,7 @@ class Filter:
             raise ValueError
 
         if values_list == []:
-           self.values = list(build_values_set(table, 
+           self.values = list(build_values_set(table,
                                               self.primary_keys[table],
                                               sql_handle))
         else:
@@ -174,7 +174,7 @@ class Filter:
         query = (f"SELECT {self.key} "
                  f"FROM {self.table} WHERE {self.key} IN "
                  "('" + "','".join(self.values) + "')")
-        
+
         results_dicts = self.sql_handle.execute_query(query)
         results = []
         for result in results_dicts:
@@ -186,8 +186,8 @@ class Filter:
         """
         Updates results list for the Filter object
         """
-        queries = [] 
-        query_results = self.values 
+        queries = []
+        query_results = self.values
         if len(query_results) == 0:
             return
 
@@ -202,7 +202,7 @@ class Filter:
                               " and ".join(queries) + \
                              f" and {self.key} IN ('" + \
                               "','".join(query_results) + "')")
-            
+
                     if verbose:
                         print(
                         f"Filtering {table} in "
@@ -215,11 +215,11 @@ class Filter:
 
             else:
                     transposed_values = self.transpose(
-                                                query_results, table, field, 
+                                                query_results, table, field,
                                                 queries, verbose=verbose)
                     if transposed_values:
                         query_results = transposed_values
-      
+
             queries = []
             if not query_results:
                 break
@@ -241,7 +241,7 @@ class Filter:
             query_results = []
             for result in self.sql_handle.execute_query(query):
                 query_results.append(result[self.key])
-            
+
             self.values = query_results
 
         else:
@@ -280,8 +280,8 @@ class Filter:
                     for dict in results_dicts:
                         current_results.append(dict[connection_key[1]])
                 current_key = connection_key[1]
-                current_table = connection_key[0] 
-                
+                current_table = connection_key[0]
+
             return list(set(query_results) & set(current_results))
 
     def results(self, verbose=False):
@@ -322,7 +322,7 @@ class Filter:
         Resets created queries and filters
         for the Filter object
         """
-        self.values = list(phamerator.create_phage_id_set(self.sql_handle))
+        self.values = list(mysqldb.create_phage_id_set(self.sql_handle))
         self.history = []
         if verbose:
             print("Results and results history cleared.")
@@ -346,7 +346,7 @@ class Filter:
         else:
             if verbose:
                 print(f"Grouping option by {field} is not supported.")
-        
+
     def group_str_qualitative(self, field_name):
         """
         Helper function that groups qualitative
@@ -386,9 +386,9 @@ class Filter:
             for result_dict in results_dicts:
                 results_list.append(result_dict[self.key])
             groups["None"] = results_list
-    
+
         return groups
-    
+
     def interactive(self, sql_handle = None):
         """
         Function to start interactive filtering.
@@ -400,7 +400,7 @@ class DatabaseForeignKeyTree:
         self.sql_handle = sql_handle
 
         self.tables_dict = build_tables(sql_handle)
-        self.foreign_keys_dict = build_foreign_keys(self.tables_dict.keys(), 
+        self.foreign_keys_dict = build_foreign_keys(self.tables_dict.keys(),
                                                     sql_handle)
         self.primary_keys = build_primary_keys(self.tables_dict.keys(),
                                                sql_handle)
@@ -439,7 +439,7 @@ class DatabaseForeignKeyTree:
                                             parent_node.id != current_table:
                     path = current_path.copy()
                     path.append([parent_node.id, child_node.id])
-                    path = self.find_path(parent_node.id, target_table, 
+                    path = self.find_path(parent_node.id, target_table,
                                           path)
                     if path != None:
                         if (path[-1])[0] == target_table:
@@ -476,7 +476,7 @@ class Node:
         child_node = Node(child_id)
         self.add_child(child_node)
         return child_node
-    
+
 class Cmd_Filter(cmd.Cmd):
     def __init__(self, db_filter=None, sql_handle=None):
         super(Cmd_Filter, self).__init__()
@@ -653,7 +653,7 @@ if __name__ == "__main__":
     sql_handle._password = "phage"
     sql_handle.database = "Actino_Draft"
 
-    #db_filter = Filter(sql_handle, table="phage") 
+    #db_filter = Filter(sql_handle, table="phage")
     #db_filter.add_filter("phage", "hoststrain", "Gordonia", verbose=True)
     #db_filter.add_filter("gene", "notes", "antirepressor", verbose=True)
     #db_filter.update()
@@ -666,4 +666,3 @@ if __name__ == "__main__":
     #db_filter.update()
     #db_filter.sort("GeneID", verbose=True)
     #db_filter.results(verbose=True)
-

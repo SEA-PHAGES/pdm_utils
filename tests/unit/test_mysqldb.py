@@ -2,7 +2,7 @@
 
 
 import unittest
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.classes import genome
 from pdm_utils.classes import cds
 from datetime import datetime
@@ -12,7 +12,7 @@ from Bio.Seq import Seq
 
 
 
-class TestPhameratorFunctions1(unittest.TestCase):
+class TestMysqldbFunctions1(unittest.TestCase):
 
 
     def setUp(self):
@@ -44,7 +44,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                      "AnnotationAuthor":1}
 
         self.genome1 = \
-            phamerator.parse_phage_table_data(data_dict, gnm_type="phamerator")
+            mysqldb.parse_phage_table_data(data_dict, gnm_type="phamerator")
 
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
@@ -89,7 +89,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"PhageID":"L5"}
-        self.genome1 = phamerator.parse_phage_table_data(data_dict)
+        self.genome1 = mysqldb.parse_phage_table_data(data_dict)
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
         with self.subTest():
@@ -104,17 +104,17 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
     def test_convert_for_sql_1(self):
         """Verify non-empy value returned contains ''."""
-        value = phamerator.convert_for_sql("A")
+        value = mysqldb.convert_for_sql("A")
         self.assertEqual(value, "'A'")
 
     def test_convert_for_sql_2(self):
         """Verify empty value returned is NULL."""
-        value = phamerator.convert_for_sql("")
+        value = mysqldb.convert_for_sql("")
         self.assertEqual(value, "NULL")
 
     def test_convert_for_sql_3(self):
         """Verify 'singleton' value returned is NULL."""
-        value = phamerator.convert_for_sql("SINGLETON")
+        value = mysqldb.convert_for_sql("SINGLETON")
         self.assertEqual(value, "NULL")
 
 
@@ -135,7 +135,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
                      "Notes":"description".encode("utf-8"),
                      "LocusTag":"SEA_L5_001"}
 
-        cds1 = phamerator.parse_gene_table_data(data_dict)
+        cds1 = mysqldb.parse_gene_table_data(data_dict)
 
         with self.subTest():
             self.assertEqual(cds1.id, "L5_001")
@@ -172,7 +172,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         data_dict = {"GeneID":"L5_001",
                      "PhageID":"L5",
                      "Start":10}
-        cds1 = phamerator.parse_gene_table_data(data_dict)
+        cds1 = mysqldb.parse_gene_table_data(data_dict)
         with self.subTest():
             self.assertEqual(cds1.id, "L5_001")
         with self.subTest():
@@ -204,7 +204,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
-        statements = phamerator.create_genome_statements(
+        statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="add")
         self.assertEqual(len(statements), 1)
 
@@ -228,7 +228,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
-        statements = phamerator.create_genome_statements(
+        statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="replace")
         self.assertEqual(len(statements), 2)
 
@@ -277,14 +277,14 @@ class TestPhameratorFunctions1(unittest.TestCase):
         self.genome1.subcluster = "A2"
         self.genome1.cds_features = [cds1, cds2]
 
-        statements = phamerator.create_genome_statements(
+        statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="add")
         self.assertEqual(len(statements), 3)
 
 
 
 
-# class TestPhameratorFunctions2(unittest.TestCase):
+# class TestMysqldbFunctions2(unittest.TestCase):
 #
 #     def setUp(self):
 #
@@ -310,7 +310,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 #         not impacted."""
 #
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         phamerator.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
 #         genome1 = self.bundle1.genome_dict["add"]
 #         with self.subTest():
 #             self.assertFalse(genome1._value_flag)
@@ -326,7 +326,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
 #         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-#         phamerator.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
 #         genome1 = self.bundle1.genome_dict["add"]
 #         with self.subTest():
 #             self.assertFalse(genome1._value_flag)
@@ -342,7 +342,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 #         self.genome1.type = "invalid"
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
-#         phamerator.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
 #         with self.subTest():
 #             self.assertEqual(
 #                 len(self.bundle1.genome_pair_dict.keys()), 0)
@@ -355,7 +355,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 #
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
-#         phamerator.copy_data(self.bundle1, "phamerator", "invalid")
+#         mysqldb.copy_data(self.bundle1, "phamerator", "invalid")
 #         with self.subTest():
 #             self.assertEqual(
 #                 len(self.bundle1.genome_pair_dict.keys()), 0)
@@ -370,7 +370,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
 #         self.genome1._value_flag = False
-#         phamerator.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
 #         with self.subTest():
 #             self.assertTrue(self.genome1._value_flag)
 #         with self.subTest():

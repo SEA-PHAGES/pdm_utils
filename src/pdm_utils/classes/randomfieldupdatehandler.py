@@ -1,5 +1,5 @@
 import pymysql as pms
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.functions import basic
 
 # TODO unittest entire class.
@@ -8,8 +8,8 @@ class RandomFieldUpdateHandler:
         """
         This object is a ticket validation/execution machine for
         performing any number of simple, single-field database updates
-        on a Phamerator database.
-        :param connection: the connection to the MySQL Phamerator db
+        on a MySQL database.
+        :param connection: the connection to the MySQL db
         """
         self.connection = connection        # MySQL connection
         self.table = ""                        # database table
@@ -160,7 +160,7 @@ class RandomFieldUpdateHandler:
         if self.valid_ticket is False:
             return 0
         try:
-            command = phamerator.create_update(self.table, self.field,
+            command = mysqldb.create_update(self.table, self.field,
                         self.value, self.key_name, self.key_value)
             # print("\nCommand to execute:")
             # print(command)

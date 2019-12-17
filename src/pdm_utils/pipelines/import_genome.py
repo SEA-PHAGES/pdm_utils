@@ -16,7 +16,7 @@ from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
@@ -59,7 +59,7 @@ def main(unparsed_args_list):
     logger.info("Folder and file arguments verified.")
 
     # Get connection to database.
-    sql_handle = phamerator.connect_to_db(args.database)
+    sql_handle = mysqldb.connect_to_db(args.database)
     logger.info(f"Connected to database: {args.database}.")
 
     # If everything checks out, pass on args for data input/output:
@@ -203,7 +203,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         logger.info("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
 
-    start_count = phamerator.get_phage_table_count(sql_handle)
+    start_count = mysqldb.get_phage_table_count(sql_handle)
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(
@@ -214,7 +214,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
                         host_genus_field=host_genus_field,
                         interactive=interactive)
 
-    final_count = phamerator.get_phage_table_count(sql_handle)
+    final_count = mysqldb.get_phage_table_count(sql_handle)
 
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
@@ -442,9 +442,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         # Since data from each parsed flat file is imported into the
         # database one file at a time, these sets are not static.
         # So these sets should be recomputed for every flat file evaluated.
-        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
-        phamerator_seq_set = phamerator.create_seq_set(sql_handle)
-        phamerator_accession_set = phamerator.create_accession_set(sql_handle)
+        phamerator_phage_id_set = mysqldb.create_phage_id_set(sql_handle)
+        phamerator_seq_set = mysqldb.create_seq_set(sql_handle)
+        phamerator_accession_set = mysqldb.create_accession_set(sql_handle)
         logger.info(f"Checking file: {filepath.name}.")
         run_checks(bndl,
                    accession_set=phamerator_accession_set,
@@ -486,9 +486,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     # to flat files. If there are any tickets left, errors need to be counted.
     if len(ticket_dict.keys()) > 0:
         logger.info("Processing unmatched tickets.")
-        phamerator_phage_id_set = phamerator.create_phage_id_set(sql_handle)
-        phamerator_seq_set = phamerator.create_seq_set(sql_handle)
-        phamerator_accession_set = phamerator.create_accession_set(sql_handle)
+        phamerator_phage_id_set = mysqldb.create_phage_id_set(sql_handle)
+        phamerator_seq_set = mysqldb.create_seq_set(sql_handle)
+        phamerator_accession_set = mysqldb.create_accession_set(sql_handle)
         key_list = list(ticket_dict.keys())
         for key in key_list:
             bndl = bundle.Bundle()
@@ -609,7 +609,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
                           "Unable to retrieve data.")
                 else:
                     query = "SELECT * FROM phage"
-                    pmr_genomes =  phamerator.parse_genome_data(
+                    pmr_genomes =  mysqldb.parse_genome_data(
                                        sql_handle=sql_handle,
                                        phage_id_list=[ff_gnm.id],
                                        phage_query=query,
@@ -1188,7 +1188,7 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
 
         # Update the date field to reflect the day of import.
         import_gnm.date = IMPORT_DATE
-        bndl.sql_statements = phamerator.create_genome_statements(
+        bndl.sql_statements = mysqldb.create_genome_statements(
                                 import_gnm, bndl.ticket.type)
         if prod_run:
             result = sql_handle.execute_transaction(bndl.sql_statements)

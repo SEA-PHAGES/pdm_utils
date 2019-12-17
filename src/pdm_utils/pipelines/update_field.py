@@ -5,13 +5,13 @@ import csv
 import pathlib
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.classes.randomfieldupdatehandler import RandomFieldUpdateHandler
-from pdm_utils.functions import basic, phamerator
+from pdm_utils.functions import basic, mysqldb
 
 
 # TODO not tested, but nearly identical function in import_genome.py tested.
 def connect_to_db(database):
     """Connect to a MySQL database."""
-    sql_handle, msg = phamerator.setup_sql_handle(database)
+    sql_handle, msg = mysqldb.setup_sql_handle(database)
     if sql_handle is None:
         print(msg)
         sys.exit(1)
@@ -28,7 +28,7 @@ def main(unparsed_args):
     mysql_handler = connect_to_db(args.database)
 
     if args.version == True:
-        phamerator.change_version(mysql_handler)
+        mysqldb.change_version(mysql_handler)
         print("Database version updated.")
 
     if args.ticket_table is not None:

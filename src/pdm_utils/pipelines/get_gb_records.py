@@ -7,7 +7,7 @@ import time
 from Bio import SeqIO
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
-from pdm_utils.functions import phamerator
+from pdm_utils.functions import mysqldb
 from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
@@ -38,7 +38,7 @@ def parse_args(unparsed_args_list):
 # TODO not tested, but nearly identical function in import_genome.py tested.
 def connect_to_db(database):
     """Connect to a MySQL database."""
-    sql_handle, msg = phamerator.setup_sql_handle(database)
+    sql_handle, msg = mysqldb.setup_sql_handle(database)
     if sql_handle is None:
         print(msg)
         sys.exit(1)
@@ -74,7 +74,7 @@ def main(unparsed_args_list):
     # Create data sets
     print("Retrieving accessions from the database...")
     sql_handle = connect_to_db(args.database)
-    accessions = phamerator.create_accession_set(sql_handle)
+    accessions = mysqldb.create_accession_set(sql_handle)
     if "" in accessions:
         accessions.remove("")
     if None in accessions:
