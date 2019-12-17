@@ -682,7 +682,7 @@ def get_seqrecord_annotations_comments(phage_genome):
         cluster_comment = "Cluster: {}; Subcluster: {}".format\
                 (phage_genome.cluster, phage_genome.subcluster)
     auto_generated_comment =\
-            "Auto-generated genome record from Phamerator database"
+            "Auto-generated genome record from the MySQL database"
     annotation_status_comment =\
             "Annotation Status: {}; Annotation Author: {}".format\
             (phage_genome.annotation_status,\

@@ -1,5 +1,5 @@
 """Represents a structure to contain directions for how to parse and import
-genomes into Phamerator."""
+genomes into a MySQL database."""
 
 from pdm_utils.classes import eval
 from pdm_utils.functions import basic
@@ -23,7 +23,7 @@ class GenomeTicket:
         # Attributes used to populate Genome objects for
         # 'update', 'add', and 'replace' ticket types.
         self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
-        self.data_retain = set() # Data that should be retained from Phamerator.
+        self.data_retain = set() # Data that should be retained from the MySQL database.
         self.data_add = set() # Data to be added to genome from ticket.
         self.data_dict = {} # Original data from import table.
 

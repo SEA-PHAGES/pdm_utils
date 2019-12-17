@@ -60,7 +60,7 @@ def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
     IMPORT_HELP = ("Pipeline to import new genome data into "
-                   "a Phamerator MySQL database.")
+                   "a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database to import the genomes."
     INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
     IMPORT_TABLE_HELP = """
@@ -595,7 +595,7 @@ def main(unparsed_args_list):
 
     #Open file to record update information
     output_file = open(os.path.join(phageListDir,success_folder,date + "_phage_import_log_" + run_type + "_run.txt"), "w")
-    write_out(output_file,date + " Phamerator database updates:\n\n\n")
+    write_out(output_file,date + " MySQL database updates:\n\n\n")
     write_out(output_file,"\n\n\n\nBeginning import script...")
     write_out(output_file,"\nRun type: " + run_type)
 
@@ -679,7 +679,7 @@ def main(unparsed_args_list):
             modified_datelastmod = genome_tuple[6]
 
 
-        #The Accession field in Phamerator defaults to "". Some accessions have the version number suffix.
+        #The Accession field defaults to "". Some accessions have the version number suffix.
         #Process Accession data. Discard the version number.
         if genome_tuple[7] != "":
             modified_accession = genome_tuple[7].split('.')[0]
@@ -715,7 +715,7 @@ def main(unparsed_args_list):
 
 
 
-    #Now that sets and dictionaries have been made, create a phamerator_data_dict
+    #Now that sets and dictionaries have been made, create a data dict
     #Key = phageID
     #Value = list of modified data retrieved from MySQL query
     phamerator_data_dict = {}
@@ -764,7 +764,7 @@ def main(unparsed_args_list):
 
     #phageName typo correction Dictionary
     #Key = Phage Name as it is spelled in the Genbank record
-    #Value = Phage Name as it is spelled in phagesdb and/or Phamerator, and thus
+    #Value = Phage Name as it is spelled in phagesdb and/or the MySQL database, and thus
     #how it is spelled in the import ticket.
     #The phageName parsed from the Genbank record gets reassigned this corrected phageName
     #Reasons for the exceptions:
@@ -1013,7 +1013,7 @@ def main(unparsed_args_list):
 
                     #Sometimes cluster information is not present. In the phagesdb database, it is is recorded as NULL.
                     #When phages data is downloaded from phagesdb, NULL cluster data is converted to "Unclustered".
-                    #In these cases, leaving the cluster as NULL in phamerator won't work,
+                    #In these cases, leaving the cluster as NULL in the MySQL database won't work,
                     #because NULL means Singleton. Therefore, assign the cluster as Unknown.
                     row[3] = 'UNK'
                 else:
@@ -1429,18 +1429,18 @@ def main(unparsed_args_list):
 
 
     #Check to see if there are any inconsistencies with the
-    #update data compared to current phamerator data
+    #update data compared to current MySQL data
     for genome_data in update_data_list:
 
         #Initialize variable
         matched_phamerator_data = ''
 
         #Now that the Draft suffix is no longer appended to the import ticket,
-        #this is less complications with matching to Phamerator PhageIDs
+        #this is less complications with matching to MySQL PhageIDs
         try:
             matched_phamerator_data = phamerator_data_dict[genome_data[1]]
         except:
-            write_out(output_file,"\nError: unable to retrieve phamerator data for %s." %genome_data[1])
+            write_out(output_file,"\nError: unable to retrieve MySQL data for %s." %genome_data[1])
             table_errors += 1
             continue
 
@@ -1448,7 +1448,7 @@ def main(unparsed_args_list):
         if genome_data[2] != matched_phamerator_data[2]:
 
             print("\n\nThere is conflicting host data for genome %s" % genome_data[1])
-            print("Phamerator host: %s" % matched_phamerator_data[2])
+            print("MySQL host: %s" % matched_phamerator_data[2])
             print("Import ticket host: %s" % genome_data[2])
             print("The new host data will be imported.")
             table_errors += question("\nError: incorrect host data for %s." % genome_data[1], output_file)
@@ -1461,7 +1461,7 @@ def main(unparsed_args_list):
             if matched_phamerator_data[4] != 'draft':
 
                 print("\n\nThere is conflicting status data for genome %s" % genome_data[1])
-                print("Phamerator status: %s" % matched_phamerator_data[4])
+                print("MySQL status: %s" % matched_phamerator_data[4])
                 print("Import ticket status: %s" % genome_data[4])
                 print("The new status data will be imported.")
                 table_errors += question("\nError: incorrect status data for %s." % genome_data[1], output_file)
@@ -1470,7 +1470,7 @@ def main(unparsed_args_list):
             elif genome_data[4] != "final":
 
                 print("\n\nThere is conflicting status data for genome %s" % genome_data[1])
-                print("Phamerator status: %s" % matched_phamerator_data[4])
+                print("MySQL status: %s" % matched_phamerator_data[4])
                 print("Import ticket status: %s" % genome_data[4])
                 print("The new status data will be imported.")
                 table_errors += question("\nError: incorrect status data for %s." % genome_data[1], output_file)
@@ -1480,7 +1480,7 @@ def main(unparsed_args_list):
         if genome_data[7] == "none" and matched_phamerator_data[7] != "none":
 
             print("\n\nThere is conflicting accession data for genome %s" % genome_data[1])
-            print("Phamerator accession: %s" % matched_phamerator_data[7])
+            print("MySQL accession: %s" % matched_phamerator_data[7])
             print("Import ticket accession: %s" % genome_data[7])
             print("The new accession data will be imported.")
             table_errors += question("\nError: incorrect accession data for %s." % genome_data[1], output_file)
@@ -1488,7 +1488,7 @@ def main(unparsed_args_list):
         elif genome_data[7] != "none" and matched_phamerator_data[7] != "none" and genome_data[7] != matched_phamerator_data[7]:
 
             print("\n\nThere is conflicting accession data for genome %s" % genome_data[1])
-            print("Phamerator accession: %s" % matched_phamerator_data[7])
+            print("MySQL accession: %s" % matched_phamerator_data[7])
             print("Import ticket accession: %s" % genome_data[7])
             print("The new accession data will be imported.")
             table_errors += question("\nError: incorrect accession data for %s." % genome_data[1], output_file)
@@ -1501,7 +1501,7 @@ def main(unparsed_args_list):
         if genome_data[9] != matched_phamerator_data[9]:
 
             print("\n\nThere is conflicting author data for genome %s" % genome_data[1])
-            print("Phamerator author: %s" % author_dictionary[matched_phamerator_data[9]])
+            print("MySQL author: %s" % author_dictionary[matched_phamerator_data[9]])
             print("Import ticket author: %s" % author_dictionary[genome_data[9]])
             print("The new author data will be imported.")
             table_errors += question("\nError: incorrect author data for %s." % genome_data[1], output_file)
@@ -1510,7 +1510,7 @@ def main(unparsed_args_list):
     #Check to see if genomes to be removed are the correct status
     for genome_data in remove_data_list:
 
-        #The next QC check relies on the PhageID being present in the Phamerator.
+        #The next QC check relies on the PhageID being present in the MySQL database.
         #If it is not, this error will have already been identified, and a table_error
         #will already have been added. However, the code will crash without
         #here without adding an exception. So no need to add another table_error
@@ -1973,7 +1973,7 @@ def main(unparsed_args_list):
                     phageName = phageName[:-6]
 
 
-                #Some phage names are spelled differently in phagesdb and Phamerator
+                #Some phage names are spelled differently in phagesdb and the MySQL database
                 #compared to the Genbank record. Convert the parsed name to the
                 #expected name in these databases before proceeding.
                 if phageName in phage_name_typo_dict.keys():
@@ -2244,7 +2244,7 @@ def main(unparsed_args_list):
             #If replacing a genome:
             elif import_action == "replace":
 
-                #Retrieve current phamerator data (if it is a 'replace' ticket)
+                #Retrieve current MySQL data (if it is a 'replace' ticket)
                 try:
                     matched_phamerator_data = phamerator_data_dict[import_genome_replace]
                 except:
@@ -2265,7 +2265,7 @@ def main(unparsed_args_list):
                     phamerator_retrieve_record = matched_phamerator_data[11]
 
                 else:
-                    write_out(output_file,"\nError: problem matching phage %s in file %s to phamerator data. This genome was not added. Check input table format." % (phageName,filename))
+                    write_out(output_file,"\nError: problem matching phage %s in file %s to MySQL data. This genome was not added. Check input table format." % (phageName,filename))
                     record_errors += 1
                     failed_genome_files.append(filename)
                     script_warnings += record_warnings
@@ -2274,18 +2274,18 @@ def main(unparsed_args_list):
                     continue
 
 
-                #Import and Phamerator host data check
+                #Import and MySQL host data check
                 if import_host != phamerator_host:
 
                     record_warnings += 1
                     write_out(output_file,"\nWarning: There is conflicting host data for genome %s" % phageName)
-                    print("Phamerator host: %s" % phamerator_host)
+                    print("MySQL host: %s" % phamerator_host)
                     print("Import ticket host: %s" % import_host)
                     print("The new host data will be imported.")
                     record_errors += question("\nError: incorrect host data for %s." % phageName, output_file)
 
 
-                #Import and Phamerator status data check
+                #Import and MySQL status data check
                 if import_status != phamerator_status:
 
                     #It is not common to change from 'unknown' or 'final' to anything else
@@ -2293,7 +2293,7 @@ def main(unparsed_args_list):
 
                         record_warnings += 1
                         write_out(output_file,"\nWarning: There is conflicting status data for genome %s" % phageName)
-                        print("Phamerator status: %s" % phamerator_status)
+                        print("MySQL status: %s" % phamerator_status)
                         print("Import ticket status: %s" % import_status)
                         print("The new status data will be imported.")
                         record_errors += question("\nError: incorrect status data for %s." % phageName, output_file)
@@ -2303,14 +2303,14 @@ def main(unparsed_args_list):
 
                         record_warnings += 1
                         write_out(output_file,"\nWarning: There is conflicting status data for genome %s" % phageName)
-                        print("Phamerator status: %s" % phamerator_status)
+                        print("MySQL status: %s" % phamerator_status)
                         print("Import ticket status: %s" % import_status)
                         print("The new status data will be imported.")
                         record_errors += question("\nError: incorrect status data for %s." % phageName, output_file)
 
 
                 #Verify there are no accession conflicts.
-                #Phamerator may or may not have accession data.
+                #MySQL may or may not have accession data.
                 #Import table may or may not have accession data.
                 #Genbank-formatted file may or may not have accession data.
 
@@ -2328,7 +2328,7 @@ def main(unparsed_args_list):
                 elif len(accession_comparison_set) > 1:
                     record_warnings += 1
                     write_out(output_file,"\nWarning: There is conflicting accession data for genome %s" % phageName)
-                    print("Phamerator accession: %s" % phamerator_accession)
+                    print("MySQL accession: %s" % phamerator_accession)
                     print("Import ticket accession: %s" % import_accession)
                     print("Parsed accession from file: %s" % parsed_accession)
                     print("If the parsed accession is not None, it will be imported.")
@@ -2354,7 +2354,7 @@ def main(unparsed_args_list):
 
                     record_warnings += 1
                     write_out(output_file,"\nWarning: there is conflicting author data for genome %s." % phageName)
-                    print("Phamerator author: %s" % author_dictionary[phamerator_author])
+                    print("MySQL author: %s" % author_dictionary[phamerator_author])
                     print("Import ticket author: %s" % author_dictionary[import_author])
                     print("The new author data will be imported.")
                     record_errors += question("\nError: incorrect author data for %s." % phageName, output_file)
@@ -2394,13 +2394,13 @@ def main(unparsed_args_list):
                     pass
 
                 #Check to see if the date in the new record is more recent
-                #than when the old record was uploaded into Phamerator
+                #than when the old record was uploaded into the MySQL database
                 #(stored in DateLastModified)
                 if not seq_record_date > phamerator_datelastmod:
                     record_warnings += 1
-                    write_out(output_file,"\nWarning: The date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod))
+                    write_out(output_file,"\nWarning: The date %s in file %s is not more recent than the MySQL date %s." %(seq_record_date,filename,phamerator_datelastmod))
                     print('Despite it being an older record, the phage %s will continue to be imported.' % phageName)
-                    record_errors +=  question("\nError: the date %s in file %s is not more recent than the Phamerator date %s." %(seq_record_date,filename,phamerator_datelastmod), output_file)
+                    record_errors +=  question("\nError: the date %s in file %s is not more recent than the MySQL date %s." %(seq_record_date,filename,phamerator_datelastmod), output_file)
 
                 #Create the DELETE command
                 add_replace_statements.append("DELETE FROM phage WHERE PhageID = '" + import_genome_replace + "';")
@@ -2476,7 +2476,7 @@ def main(unparsed_args_list):
 
             #Determine AnnotationQC and RetrieveRecord settings
             #AnnotationQC and RetrieveRecord settings can be carried over
-            #from the previous settings in Phamerator under specific
+            #from the previous settings in the MySQL database under specific
             #circumstances.
             #This enables manual updates made to the database for these two fields
             #to be carried over as the genome is manually or automatically updated.

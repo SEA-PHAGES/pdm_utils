@@ -1,4 +1,4 @@
-"""Pipeline to retrieve GenBank records using accessions stored in PhameratorDB."""
+"""Pipeline to retrieve GenBank records using accessions stored in the MySQL database."""
 
 import argparse
 import pathlib
@@ -15,7 +15,7 @@ from pdm_utils.classes import mysqlconnectionhandler as mch
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting GenBank records."""
     RETRIEVE_HELP = ("Pipeline to retrieve GenBank records using accessions"
-                     "stored in a MySQL Phamerator database.")
+                     "stored in a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     OUTPUT_FOLDER_HELP = ("Path to the directory where records will be stored.")
     NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
@@ -72,7 +72,7 @@ def main(unparsed_args_list):
 
 
     # Create data sets
-    print("Retrieving accessions from the phamerator database...")
+    print("Retrieving accessions from the database...")
     sql_handle = connect_to_db(args.database)
     accessions = phamerator.create_accession_set(sql_handle)
     if "" in accessions:

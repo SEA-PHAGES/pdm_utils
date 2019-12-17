@@ -1,4 +1,4 @@
-""" Unit tests for misc. functions that interact with PhameratorDB."""
+""" Unit tests for misc. functions that interact with a MySQL database."""
 
 
 import unittest
@@ -24,7 +24,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
     def test_parse_phage_table_data_1(self):
-        """Verify standard Phamerator genome data is parsed correctly
+        """Verify standard MySQL genome data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"PhageID":"L5",
@@ -85,7 +85,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
     def test_parse_phage_table_data_2(self):
-        """Verify truncated Phamerator genome data is parsed correctly
+        """Verify truncated MySQL genome data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"PhageID":"L5"}
@@ -121,7 +121,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
     def test_parse_gene_table_data_1(self):
-        """Verify standard Phamerator CDS data is parsed correctly
+        """Verify standard MySQL CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"GeneID":"L5_001",
@@ -166,7 +166,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
 
 
     def test_parse_gene_table_data_2(self):
-        """Verify truncated Phamerator CDS data is parsed correctly
+        """Verify truncated MySQL CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
         data_dict = {"GeneID":"L5_001",

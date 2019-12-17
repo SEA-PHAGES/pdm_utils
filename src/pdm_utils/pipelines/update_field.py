@@ -75,7 +75,7 @@ def main(unparsed_args):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""
     UPDATE_HELP = ("Pipeline to update specific fields in a "
-                   "MySQL Phamerator database.")
+                   "MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     TICKET_TABLE_HELP = """
             Path to the CSV-formatted table containing

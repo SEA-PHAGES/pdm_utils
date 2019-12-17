@@ -2084,7 +2084,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     3. Fail trying to replace Alice genome when there is no matching PhageID.
     4. Use invalid ticket.
     5. Use minimal ticket.
-    6. Set some ticket fields to 'retain', but have PhageID that is not found in Phamerator.
+    6. Set some ticket fields to 'retain', but have PhageID that is not found in MySQL.
     7. Date that is not newer.
     8. Test description_field = function instead of product.
     9. Check id_typo in organism field.

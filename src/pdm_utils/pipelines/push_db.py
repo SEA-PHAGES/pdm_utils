@@ -64,7 +64,7 @@ def main(unparsed_args_list):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for uploading to the server."""
     PUSH_DB_HELP = ("Pipeline to upload a new version of "
-                   "a Phamerator MySQL database to the server.")
+                   "a MySQL database to the server.")
     DIRECTORY_HELP = ("Path to the folder containing files for upload.")
     FILE_HELP = ("Path to the file for upload.")
     LOG_FILE_HELP = ("Path to the file to log paramiko output.")

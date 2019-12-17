@@ -14,7 +14,7 @@ class TrnaFeature:
 
         # Initialize all non-calculated attributes:
 
-        #Datafields from Phamerator database:
+        #Datafields from MySQL database:
         self.type = '' #Feature type: CDS, GenomeBoundary,or tRNA
         self.left = -1 #Position of left boundary of feature, 0-indexed
         self.right = -1 #Position of right boundary of feature, 0-indexed
@@ -22,7 +22,7 @@ class TrnaFeature:
         self.length = 0
 
 
-        #Common to Phamerator
+        #Common to MySQL database
         self.genome_id = ''
         self.id = '' #tRNA ID comprised of PhageID and Gene name
         self.name = ''

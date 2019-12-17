@@ -7,7 +7,7 @@ Introduction
 
     1. Python library including:
 
-        a. Classes to store/parse phage genome data from a variety of sources, interact with a MySQL database, and manage instructions to add, remove, and update genomes.
+        a. Classes to store/parse phage genome, interact with a MySQL database, and manage instructions to add, remove, and update genomes.
 
         b. Functions and methods to manipulate those classes as well as interact with several databases and servers, including PhagesDB, GenBank, PECAAN, and MySQL.
 
@@ -15,13 +15,13 @@ Introduction
 
 ``pdm_utils`` is useful for:
 
-    1. The Hatfull lab to maintain the primary database instance, Actino_Draft.
+    1. The Hatfull lab to maintain MySQL phage genomics databases in the SEA-PHAGES program.
 
     2. Researchers to directly access and retrieve phage genomics data.
 
-    3. Generation of custom phage genomics databases.
+    3. Researchers to create custom MySQL phage genomics databases.
 
-    4. Developers building downstream data analysis tools.
+    4. Developers to build downstream data analysis tools.
 
 
 

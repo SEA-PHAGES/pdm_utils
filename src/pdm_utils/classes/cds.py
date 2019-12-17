@@ -39,7 +39,7 @@ class Cds:
         self.genome_length = -1
 
 
-        # The following attributes are common to PhameratorDB.
+        # The following attributes are common to MySQL database.
         self.pham = 0 # TODO build method to implement this.
         self.description = "" # Raw gene description
         self.processed_description = "" # Non-generic gene descriptions

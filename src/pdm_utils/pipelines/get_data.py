@@ -1,4 +1,4 @@
-"""Pipeline to gather new data to be imported into PhameratorDB."""
+"""Pipeline to gather new data to be imported into a MySQL database."""
 
 import argparse
 import csv
@@ -60,7 +60,7 @@ def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""
 
     RETRIEVE_HELP = ("Pipeline to retrieve new data to import into a "
-                            "MySQL Phamerator database.")
+                            "MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     OUTPUT_FOLDER_HELP = ("Path to the directory where updates will be stored.")
     UPDATES_HELP = ("Retrieve updates to HostStrain, Cluster, "
@@ -128,10 +128,10 @@ def main(unparsed_args_list):
     ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
 
     # Create data sets
-    print("Preparing genome data sets from the phamerator database...")
+    print("Preparing genome data sets from the MySQL database...")
     sql_handle = phamerator.connect_to_db(args.database)
 
-    # Parse existing Phamerator genome data to assess what needs to be updated.
+    # Parse existing MySQL database genome data to assess what needs to be updated.
     query = (
         "SELECT PhageID, Name, HostStrain, Status, Cluster2, "
         "DateLastModified, Accession, RetrieveRecord, Subcluster2, "
@@ -176,7 +176,7 @@ def main(unparsed_args_list):
 
 # TODO unittest.
 def modify_phamerator_data(input_list):
-    """Modify certain types of data retrieved from Phamerator."""
+    """Modify certain types of data retrieved from the MySQL database."""
     mod_list = []
     for genome_dict in input_list:
         phamerator_id = genome_dict["PhageID"]
@@ -190,12 +190,12 @@ def modify_phamerator_data(input_list):
         phamerator_subcluster = genome_dict["Subcluster2"]
         phamerator_author = genome_dict["AnnotationAuthor"]
 
-        # In Phamerator, Singleton Clusters are recorded as '\N', but in
+        # In the MySQL database, Singleton Clusters are recorded as '\N', but in
         # phagesdb they are recorded as "Singleton".
         if phamerator_cluster is None:
             phamerator_cluster = "Singleton"
 
-        # In Phamerator, if Subcluster has not been assigned,
+        # In the MySQL database, if Subcluster has not been assigned,
         # Subcluster2 is recorded as '\N'.
         if phamerator_subcluster is None:
             phamerator_subcluster = "none"
@@ -248,7 +248,7 @@ def modify_phamerator_data(input_list):
 
 # TODO unittest.
 def match_genomes(modified_genome_data_list, phagesdb_data_dict):
-    """Match Phamerator genome data to PhagesDB genome data."""
+    """Match MySQL database genome data to PhagesDB genome data."""
     unmatched_hatfull_count = 0
     unmatched_phage_id_list = []
     unmatched_hatfull_phage_id_list = []
@@ -263,8 +263,8 @@ def match_genomes(modified_genome_data_list, phagesdb_data_dict):
     unmatched_phagesdb_ids = phagesdb_ids - phamerator_ids
 
 
-    # Match Phamerator data to PhagesDB data.
-    # Iterate through each phage in Phamerator
+    # Match the MySQL database data to PhagesDB data.
+    # Iterate through each phage
     matched_genomes = []
     for genome_data in modified_genome_data_list:
         phamerator_id = genome_data[0]
@@ -277,13 +277,13 @@ def match_genomes(modified_genome_data_list, phagesdb_data_dict):
                 unmatched_hatfull_count += 1
                 unmatched_hatfull_phage_id_list.append(phamerator_id)
 
-    print("\nSummary of genomes matched between PhameratorDB and PhagesDB.")
+    print("\nSummary of genomes matched between the MySQL database and PhagesDB.")
     print(f"{len(matched_ids)} genomes matched.")
-    print(f"{len(unmatched_phamerator_ids)} Phamerator genomes not matched.")
+    print(f"{len(unmatched_phamerator_ids)} MySQL database genomes not matched.")
     print(f"{len(unmatched_phagesdb_ids)} PhagesDB genomes not matched.")
     if unmatched_hatfull_count > 0:
         print(f"{unmatched_hatfull_count} Hatfull-authored "
-              "unmatched PhameratorDB genomes:")
+              "unmatched MySQL database genomes:")
         for element in unmatched_hatfull_phage_id_list:
             print(element)
 
@@ -336,8 +336,8 @@ def get_phagesdb_data(url):
         # phagesdb database, it is is recorded as NULL. When phages
         # data is downloaded from phagesdb, NULL cluster data is
         # converted to "Unclustered". In these cases, leaving the
-        # cluster as NULL in phamerator won't work, because NULL
-        # means Singleton. Therefore, the phamerator cluster is
+        # cluster as NULL in the MySQL database won't work, because NULL
+        # means Singleton. Therefore, the cluster is
         # listed as 'UNK' (Unknown).
         if genome_dict["pcluster"] is None:
             phagesdb_cluster = "UNK"
@@ -479,7 +479,7 @@ def get_final_data(output_folder, matched_genomes):
     phagesdb_retrieved_list = []
     phagesdb_failed_list = []
 
-    # Iterate through each phage in Phamerator
+    # Iterate through each phage in the MySQL database
     for matched_genome_tuple in matched_genomes:
         genome_data = matched_genome_tuple[0]
         matched_phagesdb_data = matched_genome_tuple[1]
@@ -523,11 +523,11 @@ def get_final_data(output_folder, matched_genomes):
         # available on phagesdb. Check to see if there is a flatfile for
         # this phage. Download the flatfile only if there is a date tag,
         # and only if that date is more recent than the date stored in
-        # Phamerator for that genome. The tagged date only reflects when
+        # the MySQL database for that genome. The tagged date only reflects when
         # the file was uploaded into phagesdb. The date the actual
         # Genbank record was created is stored within the file,
         # and this too could be less recent than the current version in
-        # Phamerator; however, this part gets checked during the import
+        # the MySQL database; however, this part gets checked during the import
         # stage.
         if (matched_phagesdb_data['qced_genbank_file'] is None or \
                 phagesdb_flatfile_date < phamerator_date):
@@ -561,7 +561,7 @@ def get_final_data(output_folder, matched_genomes):
                     fh.write(response5_str)
                 # Create the new import ticket
                 # Since the phagesdb phage has been matched to
-                # the phamerator phage, the AnnotationAuthor field
+                # the MySQL database phage, the AnnotationAuthor field
                 # could be assigned from the current phamerator_author
                 # variable. However, since this genbank-formatted
                 # file is acquired through phagesdb, both the
@@ -632,7 +632,7 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
     # 2 Using esearch, verify which accessions are valid
     # 3 Using esummary, get update date for each valid accession
     # 4 Using efetch, retrieve flat files for NCBI records newer than
-    # phamerator date
+    # the MySQL database date
     # 5 Save new records in a folder and create an import table for them
 
     # Create output folder
@@ -669,7 +669,7 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
         else:
             phamerator_accession_set.add(phamerator_accession)
 
-    # Iterate through each phage in Phamerator
+    # Iterate through each phage in the MySQL database
     for genome_data in list_of_genomes:
         phamerator_id = genome_data[0]
         phamerator_name = genome_data[1]
@@ -814,18 +814,18 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
             phamerator_date = genome_data[5]
             phamerator_status = genome_data[3]
 
-            # If Document Summary date is newer than the phamerator date,
+            # If Document Summary date is newer than the MySQL database date,
             # or if the genome being evaluated is currently draft status but
             # we were able to retrieve a Genbank record (i.e. it's not a
             # draft anymore), append the accession to the list of accessions
             # from this batch to retrieve.
             if doc_sum_date > phamerator_date or phamerator_status == "draft":
                 accessions_to_retrieve.append(doc_sum_accession)
-            # Otherwise, if the phamerator date is newer or the phamerator
+            # Otherwise, if the MySQL database date is newer or the MySQL database
             # status isn't draft, mark down in the ncbi_results file that
             # the record in Genbank isn't new.
             else:
-                # We need more information about the phamerator data for
+                # We need more information about the MySQL database data for
                 # this genome
 
                 phamerator_id = genome_data[0]
@@ -884,7 +884,7 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
     # import table entries for them.
     for retrieved_record in retrieved_record_list:
 
-        # Pull out the accession to get the matched Phamerator data
+        # Pull out the accession to get the matched MySQL database data
         retrieved_record_accession = retrieved_record.name
         retrieved_record_accession = retrieved_record_accession.split('.')[0]
 
@@ -911,7 +911,7 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
         # an import ticket for replacement regardless of the date in
         # the Genbank record. This ensures that if a user fails to
         # upload a manual annotation to phagesdb, once the Genbank
-        # accession becomes active Phamerator will get the new version.
+        # accession becomes active MySQL database will get the new version.
         # This should always happen, since we've only retrieved new records.
         if retrieved_record_date > phamerator_date or \
                 phamerator_status == 'draft':
@@ -932,8 +932,8 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
                 import_table_name = phamerator_id
 
             # Determine what the status of the genome will be.
-            # If the genome in Phamerator was already 'final' or 'unknown',
-            # then keep the status unchanged. If the genome in Phamerator
+            # If the genome in the MySQL database was already 'final' or 'unknown',
+            # then keep the status unchanged. If the genome in the MySQL database
             # was 'draft', the status should be changed to 'final'.
             if phamerator_status == 'draft':
                 phamerator_status = 'final'
@@ -1012,7 +1012,7 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
     with filepath3.open("w") as fh:
         writer = csv.writer(fh)
         ncbi_results_header = ["PhageID", "PhageName", "Accession", "Status",
-                                "PhameratorDate", "GenBankDate", "Result"]
+                                "MySQLDate", "GenBankDate", "Result"]
         writer.writerow(ncbi_results_header)
         writer.writerows(ncbi_results_list)
 
@@ -1020,7 +1020,7 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
 
 
     # Print summary of script
-    print(f"Number of genomes in Phamerator: {tally_total}")
+    print(f"Number of genomes in the MySQL database: {tally_total}")
     print("Number of genomes that are NOT set to be updated: "
           f"{tally_not_auto_updated}")
     print("Number of auto-updated genomes with no accession: "
@@ -1030,9 +1030,9 @@ def get_genbank_data(output_folder, list_of_genomes, ncbi_cred_dict={}):
     print("Number of records that failed to be retrieved: "
           f"{tally_retrieval_failure}")
     print("Number of records retrieved that are NOT more recent than "
-          f"Phamerator record: {tally_retrieved_not_new}")
+          f"the MySQL record: {tally_retrieved_not_new}")
     print("Number of records retrieved that should be updated in "
-          f"Phamerator: {tally_retrieved_for_update}")
+          f"the MySQL database: {tally_retrieved_for_update}")
     # input("\n\nPress ENTER to continue.")
 
 

@@ -99,7 +99,7 @@ class TestMiscFunctions(unittest.TestCase):
         """Verify that one genome is matched correctly."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        list1 = [self.bundle1] # Trixie phamerator genome.
+        list1 = [self.bundle1] # Trixie MySQL genome.
         genomes_to_match = {self.genome2.id: self.genome2}
         misc.match_genomes(list1, genomes_to_match, "phamerator", "new_genome")
         matched_genome = list1[0].genome_dict["new_genome"]
@@ -139,7 +139,7 @@ class TestMiscFunctions(unittest.TestCase):
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
         self.bundle2.genome_dict[self.genome3.type] = self.genome3
 
-        # Trixie phamerator genome, L5 phamerator genome.
+        # Trixie MySQL genome, L5 MySQL genome.
         list1 = [self.bundle1, self.bundle2]
 
         genomes_to_match = {self.genome2.id: self.genome2,
@@ -157,7 +157,7 @@ class TestMiscFunctions(unittest.TestCase):
         parameter omitted."""
 
         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        list1 = [self.bundle1] # Trixie phamerator genome.
+        list1 = [self.bundle1] # Trixie MySQL genome.
         genomes_to_match = {self.genome2.id: self.genome2}
         misc.match_genomes(list1, genomes_to_match, "phamerator")
         matched_genome = list1[0].genome_dict["flat_file"]

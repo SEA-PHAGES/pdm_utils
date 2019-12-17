@@ -32,7 +32,7 @@ def parse_cluster(data_dict):
     If for some reason no Cluster info is added at the time
     the genome is added to PhagesDB, 'pcluster' may automatically be
     set to NULL, which gets converted to "Unclustered" during retrieval.
-    In Phamerator NULL means Singleton, and the long form
+    In the MySQL database NULL means Singleton, and the long form
     "Unclustered" is invalid due to its character length,
     so this value is converted to 'UNK' ('Unknown').
 

@@ -1,5 +1,5 @@
 """Primary pipeline to process and evaluate data to be imported
-into PhameratorDB."""
+into the MySQL database."""
 
 
 import argparse
@@ -80,7 +80,7 @@ def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for import new genomes."""
 
     IMPORT_HELP = ("Pipeline to import new genome data into "
-                   "a Phamerator MySQL database.")
+                   "a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database to import the genomes."
     INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
     OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
@@ -596,16 +596,16 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
                         attr_value = getattr(pdb_gnm, attr)
                         setattr(ff_gnm, attr, attr_value)
 
-            # If the ticket type is 'replace', retrieve data from phamerator.
+            # If the ticket type is 'replace', retrieve data from the MySQL database.
             # If any attributes in flat_file are set to 'retain', copy data
-            # from the phamerator genome.
+            # from the MySQL genome.
             if bndl.ticket.type == "replace":
 
                 if sql_handle is None:
                     logger.info(
                           f"Ticket {bndl.ticket.id} is a 'replace' ticket "
                           "but no details about how to connect to the "
-                          "Phamerator database have been provided. "
+                          "MySQL database have been provided. "
                           "Unable to retrieve data.")
                 else:
                     query = "SELECT * FROM phage"
@@ -628,7 +628,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
                         bndl.set_genome_pair(gnm_pair, ff_gnm.type, pmr_gnm.type)
                     else:
                         logger.info(f"There is no {ff_gnm.id} genome "
-                                    "in the Phamerator database. "
+                                    "in the MySQL database. "
                                     "Unable to retrieve data.")
 
             ff_gnm.set_cluster_subcluster(value="internal")
@@ -835,7 +835,7 @@ def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref="
         if tkt.type == "replace":
             bndl.check_genome_dict(retain_ref, expect=True, eval_id="BNDL_006")# TODO LOCK
 
-            # There should be a genome_pair between the current phamerator
+            # There should be a genome_pair between the current MySQL
             # genome and the new flat_file genome.
             pair_key = f"{file_ref}_{retain_ref}"
             bndl.check_genome_pair_dict(pair_key, eval_id="BNDL_007")# TODO LOCK
@@ -1134,10 +1134,10 @@ def compare_genomes(genome_pair, eval_flags):
     if eval_flags["check_replace"]:
         # The following checks assume that:
         # 'genome1' slot = new genome to be evaluated
-        # 'genome2' slot = the current genome in Phamerator
+        # 'genome2' slot = the current MySQL genome
 
         # The new genome to be evaluated is expected to be
-        # newer than the current genome annotations in Phamerator.
+        # newer than the current MySQL genome annotations.
         genome_pair.compare_date("newer", eval_id="GP_015")
 
         if genome_pair.genome2.annotation_status == "draft":

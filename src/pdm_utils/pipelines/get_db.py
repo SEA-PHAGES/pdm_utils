@@ -107,7 +107,7 @@ def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting a new database."""
 
     UPDATE_DB_HELP = ("Pipeline to retrieve and install a new version of "
-                   "a Phamerator MySQL database.")
+                   "a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     OUTPUT_FOLDER_HELP = ("Path to the folder to create the folder for "
                           "downloading the database.")

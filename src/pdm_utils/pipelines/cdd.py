@@ -33,7 +33,7 @@ def setup_argparser():
     # Pipeline description
     description = "Uses rpsblast to search the NCBI conserved domain database" \
                   "for significant domain hits in all new proteins of a " \
-                  "Phamerator database."
+                  "MySQL database."
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)

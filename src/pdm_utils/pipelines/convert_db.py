@@ -1,4 +1,4 @@
-"""Pipeline to upgrade or downgrade the schema of a Phamerator database."""
+"""Pipeline to upgrade or downgrade the schema of a MySQL database."""
 
 import argparse
 import pathlib
@@ -31,7 +31,7 @@ def get_script_filename(dir, step):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for converting database."""
     CONVERT_HELP = ("Pipeline to upgrade or downgrade the "
-                    "schema of a Phamerator database.")
+                    "schema of a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     CONVERSION_SCRIPTS_FOLDER_HELP = \
         ("Path to the folder containing conversion SQL scripts.")

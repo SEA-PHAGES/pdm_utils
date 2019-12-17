@@ -280,7 +280,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_6(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'replace' ticket, with phamerator data,
+        one record, one 'replace' ticket, with MySQL data,
         and no phagesdb data."""
         # Use host_genus and accession to confirm that only attributes
         # in the data_retain set are copied.
@@ -342,7 +342,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_7(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'replace' ticket, no phamerator data,
+        one record, one 'replace' ticket, no MySQL data,
         and no phagesdb data."""
 
         l5_data = ["L5x", "ABC123", "L5_Draft", "Gordonia", "ATCG",
@@ -394,7 +394,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_8(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'replace' ticket, with phamerator data,
+        one record, one 'replace' ticket, with MySQL data,
         no MySQL connection handle, and no phagesdb data."""
 
         l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",

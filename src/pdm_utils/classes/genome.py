@@ -36,7 +36,7 @@ class Genome:
         self.lifestyle = "" # E.g. temperate, obligately lytic, unknown, etc.
         self.translation_table = 0
 
-        # The following attributes are common to PhameratorDB.
+        # The following attributes are common to MySQL database.
         self.cluster_subcluster = "" # Combined cluster/subcluster data.
         self.annotation_status = "" # Final, Draft, Unknown version of genome data
         self.annotation_author = -1 # 1 (can be changed), 0 (can not be changed)
@@ -81,7 +81,7 @@ class Genome:
         # from various data sources.
         self.filename = "" # The file name from which the data is derived
         self.type = "" # Identifier to describes how this genome is used
-                       # (e.g. import, phamerator, phagesdb, etc.)
+                       # (e.g. import, MySQL database, phagesdb, etc.)
         self.evaluations = [] # List of warnings and errors about the data
         self._value_flag = False
 
@@ -202,7 +202,7 @@ class Genome:
     def set_accession(self, value, format="empty_string"):
         """Set the accession.
 
-        The Accession field in Phamerator defaults to ''.
+        The Accession field in the MySQL database defaults to ''.
         Some flat file accessions have the version number suffix, so discard
         the version number.
 
@@ -281,7 +281,7 @@ class Genome:
             else:
                 self.cluster = value
 
-        # Phamerator-output format
+        # MySQL database-output format
         if value is None:
             self.cluster = singleton
 
@@ -300,7 +300,7 @@ class Genome:
         if isinstance(value, str):
             self.subcluster = value.strip()
 
-        # Phamerator-output format
+        # MySQL database-output format
         if value is None:
             self.subcluster = "none"
 

@@ -146,7 +146,7 @@ PECAAN_PREFIX = "https://discoverdev.kbrinsgd.org/phameratoroutput/phage/"
 
 # Phage name typo correction dictionary.
 # Key = Phage name as it is spelled in the GenBank-formatted record.
-# Value = Phage name as it is spelled in PhagesDB and/or Phamerator, and thus
+# Value = Phage name as it is spelled in PhagesDB and/or the MySQL database, and thus
 # how it should be spelled in the import ticket.
 # The phage name parsed from the GenBank-formatted record gets
 # reassigned this corrected name.
@@ -204,7 +204,7 @@ PHAGE_ID_DICT = {
 
 # Host genus typo dictionary.
 # Key = Host genus as it is spelled in the GenBank-formatted record.
-# Value = Host genus as it is spelled in PhagesDB and/or Phamerator, and thus
+# Value = Host genus as it is spelled in PhagesDB and/or the MySQL database, and thus
 # how it should be spelled in the import ticket.
 # The host genus parsed from the GenBank-formatted record gets
 # reassigned this corrected name.
@@ -222,7 +222,7 @@ HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
 
 
 
-# Phamerator server info
+# Hatfull lab server info
 DB_HOST = "phamerator.webfactional.com"
 DB_HOST_DIR = "/home/phamerator/webapps/htdocs/databases_Hatfull/"
 DB_WEBSITE = "http://phamerator.webfactional.com/databases_Hatfull/"

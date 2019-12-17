@@ -1,4 +1,4 @@
-"""Functions to interact with PhameratorDB."""
+"""Functions to interact with MySQL."""
 
 import subprocess
 import sys
@@ -12,10 +12,10 @@ from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
-    """Parse a Phamerator database dictionary to create a Genome object.
+    """Parse a MySQL database dictionary to create a Genome object.
 
     :param data_dict:
-        Dictionary of data retrieved from the phage table of PhameratorDB.
+        Dictionary of data retrieved from the phage table.
     :type data_dict: dict
     :param trans_table:
         The translation table that can be used to translate CDS features.
@@ -79,14 +79,14 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
-        # Singletons are stored in PhameratorDB as NULL, which gets
+        # Singletons are stored in the MySQL database as NULL, which gets
         # returned as None.
         gnm.set_cluster(data_dict["Cluster2"])
     except:
         pass
 
 
-    # Non-subclustered phages are stored in PhameratorDB as NULL, which gets
+    # Non-subclustered phages are stored in the MySQL database as NULL, which gets
     # returned as None.
     try:
         gnm.set_subcluster(data_dict["Subcluster2"])
@@ -114,10 +114,10 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
 
 
 def parse_gene_table_data(data_dict, trans_table=11):
-    """Parse a Phamerator database dictionary to create a Cds object.
+    """Parse a MySQL database dictionary to create a Cds object.
 
     :param data_dict:
-        Dictionary of data retrieved from the gene table of PhameratorDB.
+        Dictionary of data retrieved from the gene table.
     :type data_dict: dict
     :param trans_table:
         The translation table that can be used to translate CDS features.
@@ -188,7 +188,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
 
 
 def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
-    """Retrieve genome data from Phamerator for a single genome.
+    """Retrieve genome data from a MySQL database for a single genome.
 
     The query is modified to include one or more PhageIDs
 
@@ -227,7 +227,7 @@ def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
 
 def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
     """Returns Cds objects containing data parsed from a
-    Phamerator database.
+    MySQL database.
 
     :param sql_handle:
         This parameter is passed directly to the 'retrieve_data' function.
@@ -256,8 +256,8 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
 
 def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
                       gene_query=None, trna_query=None, gnm_type=""):
-    """Returns a list of Genome objects containing data parsed from MySQL
-    Phamerator database.
+    """Returns a list of Genome objects containing data parsed from a MySQL
+    database.
 
     :param sql_handle:
         This parameter is passed directly to the 'retrieve_data' function.
@@ -316,7 +316,7 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
 # is able to switch to a standard cursor instead of only using
 # dictcursor.
 def create_phage_id_set(sql_handle):
-    """Create set of phage_ids currently in PhameratorDB.
+    """Create set of phage_ids currently in a MySQL database.
 
     :param sql_handle:
         A pdm_utils MySQLConnectionHandler object containing
@@ -338,7 +338,7 @@ def create_phage_id_set(sql_handle):
 
 
 def create_seq_set(sql_handle):
-    """Create set of genome sequences currently in PhameratorDB.
+    """Create set of genome sequences currently in a MySQL database.
 
     :param sql_handle:
         A pdm_utils MySQLConnectionHandler object containing
@@ -365,7 +365,7 @@ def create_seq_set(sql_handle):
 
 
 def create_accession_set(sql_handle):
-    """Create set of accessions currently in PhameratorDB.
+    """Create set of accessions currently in a MySQL database.
 
     :param sql_handle:
         A pdm_utils MySQLConnectionHandler object containing
@@ -758,10 +758,10 @@ def install_db(sql_handle, schema_filepath):
 
 # TODO this may no longer be needed.
 # def copy_data(bndl, from_type, to_type, flag="retain"):
-#     """Copy data from a 'phamerator' genome object.
+#     """Copy data from a MySQL database genome object.
 #
 #     If a genome object stored in the Bundle object has
-#     attributes that are set to be 'retained' from Phamerator,
+#     attributes that are set to be 'retained' from a MySQL database,
 #     copy any necessary data from the genome with 'type' attribute
 #     set to 'phamerator' to the new genome.
 #

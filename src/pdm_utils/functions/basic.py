@@ -143,7 +143,7 @@ def reformat_coordinates(left, right, current, new):
     '1_closed':
 
         1-based closed intervals that is the common format
-        for the Phamerator Database, UCSC Browser,
+        for the MySQL Database, UCSC Browser,
         the Ensembl genomics database,
         VCF files, GFF files. This format seems to be more
         intuitive and used for visualization.

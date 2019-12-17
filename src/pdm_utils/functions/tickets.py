@@ -71,7 +71,7 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
     # If row in import table contains fields with no data, they are
     # assigned "" by csv.DictReader.
     # "retrieve" = get data from PhagesDB.
-    # "retain" = get data from current genome in Phamerator.
+    # "retain" = get data from current genome in the MySQL database.
     # "none" = there is no applicable data (only for accession and subcluster)
     # "" = source of data should be automatically determined (optional)
     if (len(missing_req_fields) == 0 and len(extra_fields) == 0):

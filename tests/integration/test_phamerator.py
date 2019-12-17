@@ -1,4 +1,4 @@
-"""Integration tests for misc. functions that interact with PhameratorDB."""
+"""Integration tests for misc. functions that interact with a MySQL database."""
 
 
 import unittest
@@ -33,7 +33,7 @@ class TestPhameratorFunctions1(unittest.TestCase):
     def setUp(self):
         """In order to test MySQL database-related functions, create a
         new, empty 'test' database and structure it using the
-        same schema as in PhameratorDB.
+        expected schema.
         Each unittest will populate the empty database as needed."""
 
 
@@ -1199,7 +1199,7 @@ class TestPhameratorFunctions2(unittest.TestCase):
     def setUp(self):
         """In order to test MySQL database-related functions, create a
         new, empty 'test' database and structure it using the
-        same schema as in PhameratorDB.
+        expected schema.
         Each unittest will populate the empty database as needed."""
 
 
