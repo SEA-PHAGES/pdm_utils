@@ -2252,7 +2252,7 @@ def main(unparsed_args_list):
 
 
                 if matched_phamerator_data != "error":
-                    write_out(output_file,"\nRetrieved phamerator data for phage: %s" % phageName)
+                    write_out(output_file,"\nRetrieved MySQL data for phage: %s" % phageName)
 
                     phamerator_host = matched_phamerator_data[2]
                     phamerator_cluster = matched_phamerator_data[5]

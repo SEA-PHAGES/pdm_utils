@@ -40,13 +40,13 @@ class TestGenomePairClass(unittest.TestCase):
         type is the identifying attribute, using 'copy' keyword."""
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("type", "phamerator", "import", "copy")
+        self.genome_pair.copy_data("type", "mysql", "import", "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.name, "Trixie")
         with self.subTest():
@@ -58,13 +58,13 @@ class TestGenomePairClass(unittest.TestCase):
 
         self.genome1.id = "L5"
         self.genome1.name = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "Trixie"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("type", "import", "phamerator", "copy")
+        self.genome_pair.copy_data("type", "import", "mysql", "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome1.name, "Trixie")
         with self.subTest():
@@ -77,13 +77,13 @@ class TestGenomePairClass(unittest.TestCase):
 
         self.genome1.id = "L5"
         self.genome1.name = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "Trixie"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("type", "phamerator", "import", "copy")
+        self.genome_pair.copy_data("type", "mysql", "import", "copy")
         self.assertEqual(self.genome_pair.genome2.name, "Trixie")
 
     def test_copy_data_4(self):
@@ -91,7 +91,7 @@ class TestGenomePairClass(unittest.TestCase):
         id is the identifying attribute, using 'copy' keyword."""
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
@@ -106,7 +106,7 @@ class TestGenomePairClass(unittest.TestCase):
 
         self.genome1.id = "L5"
         self.genome1.name = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "Trixie"
@@ -121,7 +121,7 @@ class TestGenomePairClass(unittest.TestCase):
 
         self.genome1.id = "L5"
         self.genome1.name = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "Trixie"
@@ -136,11 +136,11 @@ class TestGenomePairClass(unittest.TestCase):
         are not found in the 'attr' attribute."""
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
-        self.genome2.type = "phamerator"
+        self.genome2.type = "mysql"
 
         self.genome_pair.copy_data("type", "L5", "D29", "copy")
         self.assertEqual(self.genome_pair.genome2.name, "copy")
@@ -153,12 +153,12 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
         self.genome1.host_genus = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "L5"
         self.genome2.name = "copy"
         self.genome2.host_genus = "Mycobacterium"
-        self.genome2.type = "phamerator"
+        self.genome2.type = "mysql"
 
         self.genome_pair.copy_data("id", "L5", "L5", "copy")
         with self.subTest():
@@ -173,12 +173,12 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
         self.genome1.host_genus = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
         self.genome2.host_genus = "Mycobacterium"
-        self.genome2.type = "phamerator"
+        self.genome2.type = "mysql"
 
         self.genome_pair.copy_data("id", "Trixie", "L5", "copy")
         with self.subTest():
@@ -193,12 +193,12 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
         self.genome1.host_genus = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
         self.genome2.host_genus = "Mycobacterium"
-        self.genome2.type = "phamerator"
+        self.genome2.type = "mysql"
 
         self.genome_pair.copy_data("id", "L5", "Trixie", "copy")
         with self.subTest():
@@ -213,7 +213,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
         self.genome1.host_genus = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
@@ -233,14 +233,14 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.id = "L5"
         self.genome1.name = "Trixie"
         self.genome1.host_genus = "copy"
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
 
         self.genome2.id = "D29"
         self.genome2.name = "copy"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("type", "phamerator", "Trixie", "copy")
+        self.genome_pair.copy_data("type", "mysql", "Trixie", "copy")
         with self.subTest():
             self.assertEqual(self.genome_pair.genome1.host_genus, "copy")
         with self.subTest():
@@ -250,7 +250,7 @@ class TestGenomePairClass(unittest.TestCase):
         """Check that all data (except for 'type' attribute)
         is copied if no keyword is provided."""
 
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.id = 1
         self.genome1.name = 2
         self.genome1.host_genus = 3
@@ -297,7 +297,7 @@ class TestGenomePairClass(unittest.TestCase):
 
         self.genome2.type = "import"
 
-        self.genome_pair.copy_data("type", "phamerator", "import")
+        self.genome_pair.copy_data("type", "mysql", "import")
 
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.type, "import")
@@ -698,12 +698,12 @@ class TestGenomePairClass(unittest.TestCase):
     def test_compare_annotation_status_1(self):
         """Verify no error is produced when both genomes have an
         expected annotation_status."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status(
-            "type", "phamerator", "flat_file", "draft", "final", "eval_id")
+            "type", "mysql", "flat_file", "draft", "final", "eval_id")
         with self.subTest():
             self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
         with self.subTest():
@@ -711,12 +711,12 @@ class TestGenomePairClass(unittest.TestCase):
 
     def test_compare_annotation_status_2(self):
         """Verify no test is performed when the attribute is invalid."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status(
-            "type_x", "phamerator", "flat_file", "draft", "final")
+            "type_x", "mysql", "flat_file", "draft", "final")
         with self.subTest():
             self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
         with self.subTest():
@@ -724,55 +724,55 @@ class TestGenomePairClass(unittest.TestCase):
 
     def test_compare_annotation_status_3(self):
         """Verify no test is performed when the ref_name is invalid."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status(
-            "type", "phamerator_x", "flat_file", "draft", "final")
+            "type", "mysql_x", "flat_file", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
     def test_compare_annotation_status_4(self):
         """Verify no test is performed when the query_name is invalid."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status(
-            "type", "phamerator", "flat_file_x", "draft", "final")
+            "type", "mysql", "flat_file_x", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
     def test_compare_annotation_status_5(self):
         """Verify no test is performed when the ref_name and query_name
         are the same."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "draft"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "final"
         self.genome_pair.compare_annotation_status(
-            "type", "phamerator", "phamerator", "draft", "final")
+            "type", "mysql", "mysql", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
     def test_compare_annotation_status_6(self):
         """Verify no error is produced when both genomes have an
         expected annotation_status with order reverse."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "final"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "draft"
         self.genome_pair.compare_annotation_status(
-            "type", "flat_file", "phamerator", "draft", "final")
+            "type", "flat_file", "mysql", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
 
     def test_compare_annotation_status_7(self):
         """Verify an error is produced when genomes do not have the
         expected annotation_status."""
-        self.genome1.type = "phamerator"
+        self.genome1.type = "mysql"
         self.genome1.annotation_status = "final"
         self.genome2.type = "flat_file"
         self.genome2.annotation_status = "draft"
         self.genome_pair.compare_annotation_status(
-            "type", "phamerator", "flat_file", "draft", "final")
+            "type", "mysql", "flat_file", "draft", "final")
         self.assertEqual(self.genome_pair.evaluations[0].status, "error")
 
 
@@ -833,12 +833,12 @@ class TestGenomePairClass(unittest.TestCase):
     # def test_compare_date_1(self):
     #     """Verify no error is produced when
     #     query is newer than ref as expected."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_jan1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_feb1
     #     self.genome_pair.compare_date(
-    #         "type", "phamerator", "flat_file", "newer", "eval_id")
+    #         "type", "mysql", "flat_file", "newer", "eval_id")
     #     with self.subTest():
     #         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
     #     with self.subTest():
@@ -847,12 +847,12 @@ class TestGenomePairClass(unittest.TestCase):
     # def test_compare_date_2(self):
     #     """Verify no error is produced when
     #     query is older than ref as expected."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "phamerator", "flat_file", "older", "eval_id")
+    #         "type", "mysql", "flat_file", "older", "eval_id")
     #     with self.subTest():
     #         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
     #     with self.subTest():
@@ -861,12 +861,12 @@ class TestGenomePairClass(unittest.TestCase):
     # def test_compare_date_3(self):
     #     """Verify no error is produced when
     #     query is equal to ref as expected."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_feb1_b
     #     self.genome_pair.compare_date(
-    #         "type", "phamerator", "flat_file", "equal", "eval_id")
+    #         "type", "mysql", "flat_file", "equal", "eval_id")
     #     with self.subTest():
     #         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
     #     with self.subTest():
@@ -875,12 +875,12 @@ class TestGenomePairClass(unittest.TestCase):
     # def test_compare_date_4(self):
     #     """Verify no error is produced when
     #     query and ref are reversed."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "flat_file", "phamerator", "newer", "eval_id")
+    #         "type", "flat_file", "mysql", "newer", "eval_id")
     #     with self.subTest():
     #         self.assertEqual(self.genome_pair.evaluations[0].status, "correct")
     #     with self.subTest():
@@ -889,12 +889,12 @@ class TestGenomePairClass(unittest.TestCase):
     # def test_compare_date_5(self):
     #     """Verify an error is produced when
     #     query is older to ref unexpectedly."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "flat_file", "phamerator", "older", "eval_id")
+    #         "type", "flat_file", "mysql", "older", "eval_id")
     #     with self.subTest():
     #         self.assertEqual(self.genome_pair.evaluations[0].status, "error")
     #     with self.subTest():
@@ -902,12 +902,12 @@ class TestGenomePairClass(unittest.TestCase):
     #
     # def test_compare_date_6(self):
     #     """Verify no test is performed when the attribute is invalid."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "invalid", "flat_file", "phamerator", "older")
+    #         "invalid", "flat_file", "mysql", "older")
     #     with self.subTest():
     #         self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
     #     with self.subTest():
@@ -915,44 +915,44 @@ class TestGenomePairClass(unittest.TestCase):
     #
     # def test_compare_date_7(self):
     #     """Verify no test is performed when the ref_name is invalid."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "invalid", "phamerator", "older")
+    #         "type", "invalid", "mysql", "older")
     #     self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
     #
     # def test_compare_date_8(self):
     #     """Verify no test is performed when the query_name is invalid."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "phamerator", "invalid", "older")
+    #         "type", "mysql", "invalid", "older")
     #     self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
     #
     # def test_compare_date_9(self):
     #     """Verify no test is performed when the ref_name and query_name
     #     are the same."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "phamerator", "phamerator", "older")
+    #         "type", "mysql", "mysql", "older")
     #     self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
     #
     # def test_compare_date_10(self):
     #     """Verify no test is performed when an
     #     invalid comparison is selected."""
-    #     self.genome1.type = "phamerator"
+    #     self.genome1.type = "mysql"
     #     self.genome1.date = self.date_feb1
     #     self.genome2.type = "flat_file"
     #     self.genome2.date = self.date_jan1
     #     self.genome_pair.compare_date(
-    #         "type", "phamerator", "flat_file", "invalid")
+    #         "type", "mysql", "flat_file", "invalid")
     #     self.assertEqual(self.genome_pair.evaluations[0].status, "untested")
 
 

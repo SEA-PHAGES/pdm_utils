@@ -355,7 +355,7 @@ class GenomePair:
 
         # TODO make sure this below is accounted for. If there is no
         # matching genome...
-        # #If there is no matching NCBI genome, assign all Phamerator genes to Unmatched
+        # #If there is no matching NCBI genome, assign all MySQL genes to Unmatched
         # else:
         #
         #     #Set unmatched cds lists, but do NOT count them in the unmatched tally.

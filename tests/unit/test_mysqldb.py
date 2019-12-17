@@ -44,7 +44,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
                      "AnnotationAuthor":1}
 
         self.genome1 = \
-            mysqldb.parse_phage_table_data(data_dict, gnm_type="phamerator")
+            mysqldb.parse_phage_table_data(data_dict, gnm_type="mysql")
 
         with self.subTest():
             self.assertEqual(self.genome1.id, "L5")
@@ -81,7 +81,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome1.translation_table, 11)
         with self.subTest():
-            self.assertEqual(self.genome1.type, "phamerator")
+            self.assertEqual(self.genome1.type, "mysql")
 
 
     def test_parse_phage_table_data_2(self):
@@ -301,7 +301,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 #
 #         self.genome2 = genome.Genome()
 #         self.genome2.id = "L5"
-#         self.genome2.type = "phamerator"
+#         self.genome2.type = "mysql"
 #         self.genome2.host_genus = "Mycobacterium"
 #         self.genome2.cluster = "A"
 #
@@ -310,7 +310,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 #         not impacted."""
 #
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "mysql", "add")
 #         genome1 = self.bundle1.genome_dict["add"]
 #         with self.subTest():
 #             self.assertFalse(genome1._value_flag)
@@ -326,7 +326,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
 #         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "mysql", "add")
 #         genome1 = self.bundle1.genome_dict["add"]
 #         with self.subTest():
 #             self.assertFalse(genome1._value_flag)
@@ -342,7 +342,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 #         self.genome1.type = "invalid"
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
-#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "mysql", "add")
 #         with self.subTest():
 #             self.assertEqual(
 #                 len(self.bundle1.genome_pair_dict.keys()), 0)
@@ -355,7 +355,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 #
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
-#         mysqldb.copy_data(self.bundle1, "phamerator", "invalid")
+#         mysqldb.copy_data(self.bundle1, "mysql", "invalid")
 #         with self.subTest():
 #             self.assertEqual(
 #                 len(self.bundle1.genome_pair_dict.keys()), 0)
@@ -364,13 +364,13 @@ class TestMysqldbFunctions1(unittest.TestCase):
 #
 #     def test_copy_data_5(self):
 #         """Check that an "add" genome with host_genus field set to 'retain' is
-#         not populated correctly when there is no matching "phamerator"
+#         not populated correctly when there is no matching "mysql"
 #         genomet type."""
 #
 #         self.bundle1.genome_dict[self.genome1.type] = self.genome1
 #         self.genome1.host_genus = "retain"
 #         self.genome1._value_flag = False
-#         mysqldb.copy_data(self.bundle1, "phamerator", "add")
+#         mysqldb.copy_data(self.bundle1, "mysql", "add")
 #         with self.subTest():
 #             self.assertTrue(self.genome1._value_flag)
 #         with self.subTest():

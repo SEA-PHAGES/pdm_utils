@@ -20,7 +20,7 @@ class TestBundleClass1(unittest.TestCase):
         self.genome1 = genome.Genome()
         self.genome1.type = "flat_file"
         self.genome2 = genome.Genome()
-        self.genome2.type = "phamerator"
+        self.genome2.type = "mysql"
         self.tkt = ticket.GenomeTicket()
 
 
@@ -33,9 +33,9 @@ class TestBundleClass1(unittest.TestCase):
         self.bndl.genome_dict[self.genome1.type] = self.genome1
         self.bndl.genome_dict[self.genome2.type] = self.genome2
         genome_pair = genomepair.GenomePair()
-        self.bndl.set_genome_pair(genome_pair, "phamerator", "flat_file")
+        self.bndl.set_genome_pair(genome_pair, "mysql", "flat_file")
         self.assertEqual(list(self.bndl.genome_pair_dict.keys())[0],
-                            "phamerator_flat_file")
+                            "mysql_flat_file")
 
     def test_set_genome_pair_2(self):
         """Check that a genome pair is not set if one key is not present."""
@@ -113,9 +113,9 @@ class TestBundleClass1(unittest.TestCase):
     def test_check_genome_pair_dict_1(self):
         """Check that no error is produced when a genome_pair is present
         in the dictionary and is expected to be present."""
-        self.bndl.genome_pair_dict["flat_file_phamerator"] = ""
+        self.bndl.genome_pair_dict["flat_file_mysql"] = ""
         self.bndl.check_genome_pair_dict(
-            "flat_file_phamerator", eval_id="eval_id")
+            "flat_file_mysql", eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].status, "correct")
         with self.subTest():
@@ -124,8 +124,8 @@ class TestBundleClass1(unittest.TestCase):
     def test_check_genome_pair_dict_2(self):
         """Check that an error is produced when a genome_pair is not present
         in the dictionary and is expected to be present."""
-        self.bndl.genome_pair_dict["flat_file_phamerator"] = ""
-        self.bndl.check_genome_pair_dict("flat_file_phamerator", False)
+        self.bndl.genome_pair_dict["flat_file_mysql"] = ""
+        self.bndl.check_genome_pair_dict("flat_file_mysql", False)
         with self.subTest():
             self.assertEqual(self.bndl.evaluations[0].status, "error")
         with self.subTest():
@@ -172,7 +172,7 @@ class TestBundleClass2(unittest.TestCase):
         self.genome1.source_features.append(self.src1)
         self.genome1.source_features.append(self.src2)
         self.genome2 = genome.Genome()
-        self.genome2.type = "phamerator"
+        self.genome2.type = "mysql"
         self.genome_pair1 = genomepair.GenomePair()
         self.genome_pair2 = genomepair.GenomePair()
         self.bndl = bundle.Bundle()
@@ -353,7 +353,7 @@ class TestBundleClass2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(eval_dict["genome_flat_file"]), 2)
         with self.subTest():
-            self.assertEqual(len(eval_dict["genome_phamerator"]), 1)
+            self.assertEqual(len(eval_dict["genome_mysql"]), 1)
 
     def test_get_evaluations_4(self):
         """Verify one eval is returned from each Source eval list in

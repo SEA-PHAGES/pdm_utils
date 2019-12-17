@@ -323,11 +323,11 @@ class TestImportGenomeMain1(unittest.TestCase):
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file",
-                    retain_ref="phamerator",
+                    retain_ref="mysql",
                     sql_handle=self.sql_handle)
         ff_gnm = bndl.genome_dict["flat_file"]
-        pmr_gnm = bndl.genome_dict["phamerator"]
-        ff_pmr_pair = bndl.genome_pair_dict["flat_file_phamerator"]
+        pmr_gnm = bndl.genome_dict["mysql"]
+        ff_pmr_pair = bndl.genome_pair_dict["flat_file_mysql"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 3)
         with self.subTest():

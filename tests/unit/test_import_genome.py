@@ -306,7 +306,7 @@ class TestImportGenomeClass3(unittest.TestCase):
         self.ff_gnm.translation_table = 11
 
         self.pmr_gnm = genome.Genome()
-        self.pmr_gnm.type = "phamerator"
+        self.pmr_gnm.type = "mysql"
         self.pmr_gnm.id = "Trixie"
         self.pmr_gnm.name = "Trixie_Draft"
         self.pmr_gnm.date = self.date_jan1
@@ -1327,8 +1327,8 @@ class TestImportGenomeClass5(unittest.TestCase):
         self.bndl.genome_dict["ticket"] = self.gnm1
         self.bndl.genome_dict["flat_file"] = self.gnm2
         self.bndl.genome_dict["phagesdb"] = self.gnm3
-        self.bndl.genome_dict["phamerator"] = self.gnm4
-        self.bndl.set_genome_pair(self.genome_pair, "flat_file", "phamerator")
+        self.bndl.genome_dict["mysql"] = self.gnm4
+        self.bndl.set_genome_pair(self.genome_pair, "flat_file", "mysql")
 
 
 
@@ -1339,7 +1339,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -1354,7 +1354,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 1)
@@ -1368,7 +1368,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file_x",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 6)
@@ -1383,7 +1383,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -1398,7 +1398,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 6)
@@ -1412,7 +1412,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket_x",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -1427,7 +1427,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 6)
@@ -1441,7 +1441,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb_x",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -1457,7 +1457,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator")
+                                   retain_ref="mysql")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 5)
@@ -1471,7 +1471,7 @@ class TestImportGenomeClass5(unittest.TestCase):
                                    ticket_ref="ticket",
                                    file_ref="flat_file",
                                    retrieve_ref="phagesdb",
-                                   retain_ref="phamerator_x")
+                                   retain_ref="mysql_x")
         errors = get_errors(self.bndl)
         with self.subTest():
             self.assertEqual(len(self.bndl.evaluations), 7)
@@ -1515,7 +1515,7 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.gnm1.id = "Trixie"
 
         self.gnm2 = genome.Genome()
-        self.gnm2.type = "phamerator"
+        self.gnm2.type = "mysql"
         self.gnm2.id = "Trixie"
 
         self.genome_pair = genomepair.GenomePair()
@@ -1547,7 +1547,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():
@@ -1567,7 +1567,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():
@@ -1588,7 +1588,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():
@@ -1621,7 +1621,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():
@@ -1638,10 +1638,10 @@ class TestImportGenomeClass6(unittest.TestCase):
 
     def test_run_checks_5(self):
         """Verify run_checks works using a bundle with:
-        'add' ticket, no genome, 'flat_file_phamerator' genome_pair."""
+        'add' ticket, no genome, 'flat_file_mysql' genome_pair."""
         self.tkt.type = "add"
         self.bndl.ticket = self.tkt
-        self.bndl.genome_pair_dict["flat_file_phamerator"] = self.genome_pair
+        self.bndl.genome_pair_dict["flat_file_mysql"] = self.genome_pair
         import_genome.run_checks(
                 self.bndl,
                 accession_set=self.accession_set,
@@ -1650,7 +1650,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():
@@ -1661,10 +1661,10 @@ class TestImportGenomeClass6(unittest.TestCase):
 
     def test_run_checks_6(self):
         """Verify run_checks works using a bundle with:
-        'replace' ticket, no genome, 'flat_file_phamerator' genome_pair."""
+        'replace' ticket, no genome, 'flat_file_mysql' genome_pair."""
         self.tkt.type = "replace"
         self.bndl.ticket = self.tkt
-        self.bndl.genome_pair_dict["flat_file_phamerator"] = self.genome_pair
+        self.bndl.genome_pair_dict["flat_file_mysql"] = self.genome_pair
         import_genome.run_checks(
                 self.bndl,
                 accession_set=self.accession_set,
@@ -1673,7 +1673,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():
@@ -1691,7 +1691,7 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.gnm1.source_features = [self.src1, self.src2]
         self.gnm1.trna_features = [self.trna1, self.trna2]
         self.bndl.genome_dict["flat_file_x"] = self.gnm1
-        self.bndl.genome_pair_dict["flat_file_phamerator_x"] = self.genome_pair
+        self.bndl.genome_pair_dict["flat_file_mysql_x"] = self.genome_pair
         import_genome.run_checks(
                 self.bndl,
                 accession_set=self.accession_set,
@@ -1700,7 +1700,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                 cluster_set=self.cluster_set,
                 subcluster_set=self.subcluster_set,
                 file_ref="flat_file", ticket_ref="ticket",
-                retrieve_ref="phagesdb", retain_ref="phamerator")
+                retrieve_ref="phagesdb", retain_ref="mysql")
         with self.subTest():
             self.assertTrue(len(self.bndl.evaluations) > 0)
         with self.subTest():

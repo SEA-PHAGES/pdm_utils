@@ -398,7 +398,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     # Alias for different types of genomes gathered and processed.
     file_ref = "flat_file"
     ticket_ref = "ticket"
-    retain_ref = "phamerator"
+    retain_ref = "mysql"
     retrieve_ref = "phagesdb"
 
     # Will hold all results data. These can be used by various types of

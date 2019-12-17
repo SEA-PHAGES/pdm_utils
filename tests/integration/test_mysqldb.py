@@ -615,7 +615,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         sql_handle.database = db
         genome_list = mysqldb.parse_genome_data(sql_handle,
                         phage_id_list=["L5"], phage_query=phage_query,
-                        gnm_type="phamerator")
+                        gnm_type="mysql")
         with self.subTest():
             self.assertEqual(len(genome_list), 1)
         with self.subTest():
@@ -623,7 +623,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome_list[0].seq, "ATCG")
         with self.subTest():
-            self.assertEqual(genome_list[0].type, "phamerator")
+            self.assertEqual(genome_list[0].type, "mysql")
         with self.subTest():
             self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
         with self.subTest():

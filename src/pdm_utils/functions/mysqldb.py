@@ -763,7 +763,7 @@ def install_db(sql_handle, schema_filepath):
 #     If a genome object stored in the Bundle object has
 #     attributes that are set to be 'retained' from a MySQL database,
 #     copy any necessary data from the genome with 'type' attribute
-#     set to 'phamerator' to the new genome.
+#     set to 'mysql' to the new genome.
 #
 #     :param bndl: A pdm_utils Bundle object.
 #     :type bndl: Bundle
@@ -777,7 +777,7 @@ def install_db(sql_handle, schema_filepath):
 #     :type to_type: str
 #     :param flag:
 #         Indicates the value that attributes of the target genome object
-#         must have in order be updated from the 'phamerator' genome object.
+#         must have in order be updated from the 'mysql' genome object.
 #     :type flag: str
 #     """
 #     if to_type in bndl.genome_dict.keys():

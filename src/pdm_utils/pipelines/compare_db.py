@@ -3,12 +3,12 @@
 #University of Pittsburgh
 #Travis Mavrich
 #20170203
-#The purpose of this script is to compare the Phamerator, phagesdb, and NCBI databases for inconsistencies and report what needs to be updated.
+#The purpose of this script is to compare the MySQL, phagesdb, and NCBI databases for inconsistencies and report what needs to be updated.
 
-# Note this script compares and matches data from Genbank data and Phamerator data. As a result, there are many similarly
+# Note this script compares and matches data from Genbank data and MySQL data. As a result, there are many similarly
 # named variables. Variables are prefixed to indicate database:
 #NCBI =  "ncbi".
-#Phamerator = "ph"
+#MySQL = "ph"
 #phagesdb = "pdb"
 
 
@@ -592,7 +592,7 @@ class CdsFeature:
 
         # Initialize all non-calculated attributes:
 
-        #Datafields from Phamerator database:
+        #Datafields from MySQL database:
         self.__type_id = '' #Feature type: CDS, GenomeBoundary,or tRNA
         self.__left_boundary = '' #Position of left boundary of feature, 0-indexed
         self.__right_boundary = '' #Position of right boundary of feature, 0-indexed
@@ -681,7 +681,7 @@ class PhameratorCdsFeature(CdsFeature):
 
         # Initialize all non-calculated attributes:
 
-        #Datafields from Phamerator database:
+        #Datafields from MySQL database:
         self.__phage_id = ''
         self.__gene_id = '' #Gene ID comprised of PhageID and Gene name
         self.__gene_name = ''
@@ -837,7 +837,7 @@ class MatchedGenomes:
         self.__phagesdb_genome = ''
         self.__ncbi_genome = ''
 
-        #Phamerator and NCBI matched data comparison results
+        #MySQL and NCBI matched data comparison results
         self.__phamerator_ncbi_sequence_mismatch = False
         self.__phamerator_ncbi_sequence_length_mismatch = False
         self.__ncbi_record_header_fields_phage_name_mismatch = False
@@ -858,7 +858,7 @@ class MatchedGenomes:
 
 
 
-        #Phamerator and phagesdb matched data comparison results
+        #MySQL and phagesdb matched data comparison results
         self.__phamerator_phagesdb_sequence_mismatch = False
         self.__phamerator_phagesdb_sequence_length_mismatch = False
         self.__phamerator_phagesdb_host_mismatch = False
@@ -886,7 +886,7 @@ class MatchedGenomes:
 
     def compare_phamerator_ncbi_genomes(self):
 
-        #verify that there is a Phamerator and NCBI genome in the matched genome object
+        #verify that there is a MySQL and NCBI genome in the matched genome object
         ph_genome = self.__phamerator_genome
         ncbi_genome = self.__ncbi_genome
         ph_cds_list = ph_genome.get_cds_features()
@@ -936,13 +936,13 @@ class MatchedGenomes:
             elif ph_genome.get_annotation_author() == 0 and search_result != None:
                 self.__ph_ncbi_author_error = True
             else:
-                #Any other combination of phamerator and ncbi author can be skipped
+                #Any other combination of MySQL and ncbi author can be skipped
                 pass
 
 
             #Compare CDS features
 
-            #First find all unique start-end-strand cds identifiers for phamerator and ncbi genomes
+            #First find all unique start-end-strand cds identifiers for MySQL and ncbi genomes
             ph_start_end_strand_id_set = set()
             ph_start_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ph_cds_list:
@@ -973,7 +973,7 @@ class MatchedGenomes:
 
 
             #From the unmatched sets, created second round of end-strand id sets
-            #Phamerator end_strand data
+            #MySQL end_strand data
             ph_end_strand_id_set = set()
             ph_end_strand_duplicate_id_set = set() #All end_strand ids that are not unique
             for cds in ph_cds_list:
@@ -1096,7 +1096,7 @@ class MatchedGenomes:
             self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
 
 
-        #If there is no matching NCBI genome, assign all Phamerator genes to Unmatched
+        #If there is no matching NCBI genome, assign all MySQL genes to Unmatched
         else:
 
             #Set unmatched cds lists, but do NOT count them in the unmatched tally.
@@ -1104,7 +1104,7 @@ class MatchedGenomes:
             self.__phamerator_features_unmatched_in_ncbi = ph_cds_list
 
             #Now that all errors have been computed for each gene, compute how many genes have errors
-            #If there is no matching NCBI genome, gene error tallies are only computed for the Phamerator genome
+            #If there is no matching NCBI genome, gene error tallies are only computed for the MySQL genome
             ph_genome.compute_genes_with_errors_tally()
             self.__total_number_genes_with_errors = ph_genome.get_genes_with_errors_tally()
 
@@ -1113,7 +1113,7 @@ class MatchedGenomes:
 
     def compare_phamerator_phagesdb_genomes(self):
 
-        #verify that there is a Phamerator and phagesdb genome in the matched genome object
+        #verify that there is a MySQL and phagesdb genome in the matched genome object
         ph_genome = self.__phamerator_genome
         pdb_genome = self.__phagesdb_genome
 
@@ -1158,7 +1158,7 @@ class MatchedGenomes:
             self.__contains_errors = True
 
 
-        #Phamerator genome
+        #MySQL genome
         if ph_genome.get_nucleotide_errors():
             self.__contains_errors = True
         if ph_genome.get_status_description_error():
@@ -1180,7 +1180,7 @@ class MatchedGenomes:
                 self.__contains_errors = True
 
 
-        #Phamerator-NCBI
+        #MySQL-NCBI
         if self.__phamerator_ncbi_sequence_mismatch:
             self.__contains_errors = True
         if self.__phamerator_ncbi_sequence_length_mismatch:
@@ -1203,7 +1203,7 @@ class MatchedGenomes:
             self.__contains_errors = True
 
 
-        #Phamerator-phagesdb
+        #MySQL-phagesdb
         if self.__phamerator_phagesdb_sequence_mismatch:
             self.__contains_errors = True
         if self.__phamerator_phagesdb_sequence_length_mismatch:
@@ -1381,7 +1381,7 @@ class DatabaseSummary:
 
         # Initialize all calculated attributes:
 
-        #Phamerator data
+        #MySQL data
         #General genome data
         self.__ph_ncbi_update_flag_tally = 0
 
@@ -1405,14 +1405,14 @@ class DatabaseSummary:
         self.__ncbi_genomes_with_locus_tag_typos_tally = 0
         self.__ncbi_genomes_with_description_field_errors_tally = 0
 
-        #Phamerator-phagesdb checks
+        #MySQL-phagesdb checks
         self.__ph_pdb_sequence_mismatch_tally = 0
         self.__ph_pdb_sequence_length_mismatch_tally = 0
         self.__ph_pdb_cluster_subcluster_mismatch_tally = 0
         self.__ph_pdb_accession_mismatch_tally = 0
         self.__ph_pdb_host_mismatch_tally = 0
 
-        #Phamerator-NCBI checks
+        #MySQL-NCBI checks
         self.__ph_ncbi_sequence_mismatch_tally = 0
         self.__ph_ncbi_sequence_length_mismatch_tally = 0
         self.__ph_ncbi_record_header_phage_mismatch_tally = 0
@@ -1429,7 +1429,7 @@ class DatabaseSummary:
         self.__pdb_ncbi_sequence_length_mismatch_tally = 0
 
 
-        #Phamerator feature
+        #MySQL feature
         #Gene data checks
         self.__ph_translation_errors_tally = 0
         self.__ph_boundary_errors_tally = 0
@@ -1443,7 +1443,7 @@ class DatabaseSummary:
         self.__ncbi_locus_tag_typos_tally = 0
         self.__ncbi_description_field_errors_tally = 0
 
-        #Phamerator-NCBI checks
+        #MySQL-NCBI checks
         self.__ph_ncbi_different_descriptions_tally = 0
         self.__ph_ncbi_different_start_sites_tally = 0
         self.__ph_ncbi_different_translation_tally = 0
@@ -1471,7 +1471,7 @@ class DatabaseSummary:
                 self.__total_genomes_with_errors += 1
 
 
-            #Phamerator data
+            #MySQL data
             if isinstance(ph_genome,PhameratorGenome):
 
                 self.__ph_ncbi_update_flag_tally += ph_genome.get_ncbi_update_flag()
@@ -1524,7 +1524,7 @@ class DatabaseSummary:
             else:
                 self.__ph_genomes_unmatched_to_ncbi_tally += 1
 
-            #Phamerator-phagesdb checks
+            #MySQL-phagesdb checks
             if matched_genomes.get_phamerator_phagesdb_sequence_mismatch():
                 self.__ph_pdb_sequence_mismatch_tally += 1
             if matched_genomes.get_phamerator_phagesdb_sequence_length_mismatch():
@@ -1536,7 +1536,7 @@ class DatabaseSummary:
             if matched_genomes.get_phamerator_phagesdb_host_mismatch():
                 self.__ph_pdb_host_mismatch_tally += 1
 
-            #Phamerator-NCBI checks
+            #MySQL-NCBI checks
             if matched_genomes.get_phamerator_ncbi_sequence_mismatch():
                 self.__ph_ncbi_sequence_mismatch_tally += 1
             if matched_genomes.get_phamerator_ncbi_sequence_length_mismatch():
@@ -1576,7 +1576,7 @@ class DatabaseSummary:
     def get_matched_genomes_list(self):
         return self.__matched_genomes_list
 
-    #Phamerator data
+    #MySQL data
     #General genome data
     def get_ph_ncbi_update_flag_tally(self):
         return self.__ph_ncbi_update_flag_tally
@@ -1614,7 +1614,7 @@ class DatabaseSummary:
     def get_ncbi_genomes_with_locus_tag_typos_tally(self):
         return self.__ncbi_genomes_with_locus_tag_typos_tally
 
-    #Phamerator-phagesdb checks
+    #MySQL-phagesdb checks
     def get_ph_pdb_sequence_mismatch_tally(self):
         return self.__ph_pdb_sequence_mismatch_tally
     def get_ph_pdb_sequence_length_mismatch_tally(self):
@@ -1626,7 +1626,7 @@ class DatabaseSummary:
     def get_ph_pdb_host_mismatch_tally(self):
         return self.__ph_pdb_host_mismatch_tally
 
-    #Phamerator-NCBI checks
+    #MySQL-NCBI checks
     def get_ph_ncbi_sequence_mismatch_tally(self):
         return self.__ph_ncbi_sequence_mismatch_tally
     def get_ph_ncbi_sequence_length_mismatch_tally(self):
@@ -1656,7 +1656,7 @@ class DatabaseSummary:
     def get_pdb_ncbi_sequence_length_mismatch_tally(self):
         return self.__pdb_ncbi_sequence_length_mismatch_tally
 
-    #Phamerator feature
+    #MySQL feature
     #Gene data checks
     def get_ph_translation_errors_tally(self):
         return self.__ph_translation_errors_tally
@@ -1676,7 +1676,7 @@ class DatabaseSummary:
     def get_ncbi_description_field_errors_tally(self):
         return self.__ncbi_description_field_errors_tally
 
-    #Phamerator-NCBI checks
+    #MySQL-NCBI checks
     def get_ph_ncbi_different_descriptions_tally(self):
         return self.__ph_ncbi_different_descriptions_tally
     def get_ph_ncbi_different_start_sites_tally(self):
@@ -1741,7 +1741,7 @@ class DatabaseSummary:
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for comparing databases."""
 
-    COMPARE_HELP = ("Pipeline to compare Phamerator, PhagesDB, and "
+    COMPARE_HELP = ("Pipeline to compare MySQL, PhagesDB, and "
                     "NCBI databases for inconsistencies.")
     DATABASE_HELP = "Name of the MySQL database from which to compare data."
     OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
@@ -1827,12 +1827,12 @@ def main(unparsed_args_list):
 
 
 
-    #Determine which database should be compared: Phamerator, phagesdb, NCBI
+    #Determine which database should be compared: MySQL, phagesdb, NCBI
     analyze_database_options = [\
-        'Phamerator',\
-        'Phamerator and phagesdb',\
-        'Phamerator and NCBI',\
-        'Phamerator, phagesdb, and NCBI']
+        'MySQL database',\
+        'MySQL database and phagesdb',\
+        'MySQL database and NCBI',\
+        'MySQL database, phagesdb, and NCBI']
     print('\n\nThe following databases can be compared:')
     print('0: ' + analyze_database_options[0])
     print('1: ' + analyze_database_options[1])
@@ -1857,8 +1857,8 @@ def main(unparsed_args_list):
         valid_database_set.add('phagesdb')
         valid_database_set.add('ncbi')
     else:
-        #By default, all Phamerator genomes are checked, \
-        #so 'else' results in only Phamerator genomes checked
+        #By default, all MySQL genomes are checked, \
+        #so 'else' results in only MySQL genomes checked
         pass
 
 
@@ -1867,12 +1867,12 @@ def main(unparsed_args_list):
 
     #Determine if fasta files should be saved.
     save_phamerator_records = select_option(\
-        "\n\nDo you want to save retrieved phamerator records to disk? (yes or no) ", \
+        "\n\nDo you want to save retrieved MySQL records to disk? (yes or no) ", \
         set(['yes','y','no','n']))
 
 
-    #Create a folder to store phamerator records
-    phamerator_output_folder = '%s_phamerator_records' % date
+    #Create a folder to store MySQL records
+    phamerator_output_folder = '%s_mysql_records' % date
     phamerator_output_path = os.path.join(main_output_path,phamerator_output_folder)
     os.mkdir(phamerator_output_path)
 
@@ -1940,7 +1940,7 @@ def main(unparsed_args_list):
         'Hatfull only',\
         'Genbank only',\
         'Hatfull and Genbank']
-    print('\n\nThe following types of Phamerator genomes based on authorship can be analyzed:')
+    print('\n\nThe following types of genomes based on authorship can be analyzed:')
     #print('0: ' + analyze_genome_author_options[0])
     print('1: ' + analyze_genome_author_options[1])
     print('2: ' + analyze_genome_author_options[2])
@@ -1980,7 +1980,7 @@ def main(unparsed_args_list):
         'draft and unknown',\
         'final and unknown',\
         'draft, final, and unknown']
-    print('\n\nThe following types of Phamerator genomes based on annotation status can be analyzed:')
+    print('\n\nThe following types of genomes based on annotation status can be analyzed:')
     #print('0: ' + analyze_genome_status_options[0])
     print('1: ' + analyze_genome_status_options[1])
     print('2: ' + analyze_genome_status_options[2])
@@ -2086,7 +2086,7 @@ def main(unparsed_args_list):
 
 
 
-    print('\n\nPreparing genome data sets from the phamerator database...')
+    print('\n\nPreparing genome data sets from the MySQL database...')
     ph_genome_count = 1
     processed_ph_genome_count = 0 #May not be equal to ph_genome_count
     ph_genome_object_dict = {} #Key = PhageID; #Value = genome_object
@@ -2096,9 +2096,9 @@ def main(unparsed_args_list):
     ph_accession_duplicate_set = set()
     ph_total_genome_count = len(ph_genome_data_tuples)
 
-    #Iterate through each phamerator genome and create a genome object
+    #Iterate through each MySQL genome and create a genome object
     for genome_tuple in ph_genome_data_tuples:
-        print("Processing Phamerator genome %s out of %s" \
+        print("Processing MySQL genome %s out of %s" \
                 %(ph_genome_count,ph_total_genome_count))
 
         #Check to see if the genome has a user-selected status and authorship
@@ -2163,26 +2163,26 @@ def main(unparsed_args_list):
 
 
 
-    #phagesdb relies on the phageName, and not the phageID. But Phamerator does not require phageName values to be unique.
+    #phagesdb relies on the phageName, and not the phageID. But the MySQL database does not require phageName values to be unique.
     #Check if there are any phageName duplications. If there are, they will not be able to be compared to phagesdb data.
     #Output duplicate phage search names to file
     if len(ph_search_name_duplicate_set) > 0:
-        print('Warning: There are duplicate phage search names in Phamerator.')
-        print('Some Phamerator genomes will not be able to be matched to phagesdb.')
+        print('Warning: There are duplicate phage search names in the MySQL database.')
+        print('Some MySQL genomes will not be able to be matched to phagesdb.')
         output_to_file(list(ph_search_name_duplicate_set),\
-                        'duplicate_phamerator_phage_names.csv',\
+                        'duplicate_mysql_phage_names.csv',\
                         analyze_genome_status_output,\
                         database + '_v' + ph_version,\
                         analyze_genome_author_output)
         input('Press ENTER to proceed')
 
-    #Accessions aren't required to be unique in the Phamerator database (but they should be), so there could be duplicates
+    #Accessions aren't required to be unique in the MySQL database (but they should be), so there could be duplicates
     #Output duplicate names to file
     if len(ph_accession_duplicate_set) > 0:
-        print('Warning: There are duplicate accessions in Phamerator.')
-        print('Some Phamerator genomes will not be able to be matched to NCBI records.')
+        print('Warning: There are duplicate accessions in the MySQL database.')
+        print('Some MySQL genomes will not be able to be matched to NCBI records.')
         output_to_file(list(ph_accession_duplicate_set),\
-                        'duplicate_phamerator_phage_accessions.csv',\
+                        'duplicate_mysql_phage_accessions.csv',\
                         analyze_genome_status_output,\
                         database + '_v' + ph_version,\
                         analyze_genome_author_output)
@@ -2191,14 +2191,14 @@ def main(unparsed_args_list):
 
 
 
-    print('\n\nPreparing gene data sets from the phamerator database...')
+    print('\n\nPreparing gene data sets from the MySQL database...')
     ph_gene_count = 1
     ph_gene_objects_list = []
     ph_gene_data_phage_id_set = set()
     ph_total_gene_count = len(ph_gene_data_tuples)
 
     for gene_tuple in ph_gene_data_tuples:
-        print("Processing Phamerator gene %s of %s" %(ph_gene_count,ph_total_gene_count))
+        print("Processing MySQL gene %s of %s" %(ph_gene_count,ph_total_gene_count))
         ph_gene_data_phage_id_set.add(gene_tuple[0])
 
         gene_object = PhameratorCdsFeature()
@@ -2224,7 +2224,7 @@ def main(unparsed_args_list):
 
 
     #ph_gene_objects_dict = {} #Key = PhageID; #Value = list of gene objects
-    print('Matching gene and genome data sets from the phamerator database...')
+    print('Matching gene and genome data sets from the MySQL database...')
     ph_match_count = 1
     ph_total_match_count = len(ph_genome_object_dict.keys())
     for phage_id in ph_genome_object_dict.keys():
@@ -2358,7 +2358,7 @@ def main(unparsed_args_list):
         if len(pdb_search_name_duplicate_set) > 0:
 
             print('Warning: There are duplicate phage search names in phagesdb.')
-            print('Some phagesdb genomes will not be able to be matched to Phamerator.')
+            print('Some phagesdb genomes will not be able to be matched to genomes in MySQL.')
             output_to_file(list(pdb_search_name_duplicate_set),\
                             'duplicate_phagesdb_phage_names.csv',\
                             analyze_genome_status_output,\
@@ -2705,14 +2705,14 @@ def main(unparsed_args_list):
 
 
 
-    #Now that all NCBI and phagesdb data is retrieved, match up to Phamerator genome data
-    print("Matching phagesdb and NCBI genomes to Phamerator genomes...")
+    #Now that all NCBI and phagesdb data is retrieved, match up to MySQL genome data
+    print("Matching phagesdb and NCBI genomes to MySQL genomes...")
     matched_genomes_list = [] #Will store a list of MatchedGenomes objects
-    ph_unmatched_to_pdb_genomes = [] #List of the phamerator genome objects with no phagesdb matches
-    ph_unmatched_to_ncbi_genomes = [] #List of the phamerator genome objects with no NCBI matches
+    ph_unmatched_to_pdb_genomes = [] #List of the MySQL genome objects with no phagesdb matches
+    ph_unmatched_to_ncbi_genomes = [] #List of the MySQL genome objects with no NCBI matches
     matched_genome_count = 1
     matched_total_genome_count = len(ph_genome_object_dict.keys())
-    #Iterate through each phage in Phamerator
+    #Iterate through each phage in the MySQL database
     for phage_id in ph_genome_object_dict.keys():
 
         print("Matching genome %s of %s" %(matched_genome_count,matched_total_genome_count))
@@ -2774,7 +2774,7 @@ def main(unparsed_args_list):
 
     if 'phagesdb' in valid_database_set:
 
-        unmatched_genome_output_writer.writerow(['The following Phamerator genomes were not matched to phagesdb:'])
+        unmatched_genome_output_writer.writerow(['The following MySQL genomes were not matched to phagesdb:'])
         unmatched_genome_output_writer.writerow(['PhageID','PhageName','Author','Status'])
         for element in ph_unmatched_to_pdb_genomes:
             unmatched_genome_output_writer.writerow([element.get_phage_id(),\
@@ -2784,7 +2784,7 @@ def main(unparsed_args_list):
 
     if 'ncbi' in valid_database_set:
         unmatched_genome_output_writer.writerow([''])
-        unmatched_genome_output_writer.writerow(['\nThe following Phamerator genomes were not matched to NCBI:'])
+        unmatched_genome_output_writer.writerow(['\nThe following MySQL genomes were not matched to NCBI:'])
         unmatched_genome_output_writer.writerow(['PhageID','PhageName','Author','Status','Accession'])
         for element in ph_unmatched_to_ncbi_genomes:
             unmatched_genome_output_writer.writerow([element.get_phage_id(),\
@@ -2864,7 +2864,7 @@ def main(unparsed_args_list):
         'total_genomes_with_errors',\
 
 
-        #Phamerator data
+        #MySQL data
         #General genome data
         'ph_ncbi_update_flag_tally',\
 
@@ -2888,14 +2888,14 @@ def main(unparsed_args_list):
         'ncbi_genomes_with_missing_locus_tags_tally',\
         'ncbi_genomes_with_locus_tag_typos_tally',\
 
-        #Phamerator-phagesdb checks
+        #MySQL-phagesdb checks
         'ph_pdb_sequence_mismatch_tally',\
         'ph_pdb_sequence_length_mismatch_tally',\
         'ph_pdb_cluster_subcluster_mismatch_tally',\
         'ph_pdb_accession_mismatch_tally',\
         'ph_pdb_host_mismatch_tally',\
 
-        #Phamerator-NCBI checks
+        #MySQL-NCBI checks
         'ph_ncbi_sequence_mismatch_tally',\
         'ph_ncbi_sequence_length_mismatch_tally',\
         'ph_ncbi_record_header_phage_mismatch_tally',\
@@ -2920,7 +2920,7 @@ def main(unparsed_args_list):
         #Column header
         'Database comparison metric',\
 
-        #Phamerator feature
+        #MySQL feature
         #Gene data checks
         'ph_translation_errors_tally',\
         'ph_boundary_errors_tally',\
@@ -2933,7 +2933,7 @@ def main(unparsed_args_list):
         'ncbi_locus_tag_typos_tally',\
         'ncbi_description_field_errors_tally',\
 
-        #Phamerator-NCBI checks
+        #MySQL-NCBI checks
         'ph_ncbi_different_descriptions_tally',\
         'ph_ncbi_different_start_sites_tally',\
         'ph_ncbi_different_translation_tally',\
@@ -2962,7 +2962,7 @@ def main(unparsed_args_list):
         'ph_phage_id',\
         'contains_errors',\
 
-        #Phamerator
+        #MySQL
         #General genome data
         'ph_phage_name',\
         'ph_search_id',\
@@ -3029,21 +3029,21 @@ def main(unparsed_args_list):
         'ncbi_locus_tag_typo_tally',\
         'ncbi_description_field_error_tally',\
 
-        #phamerator-phagesdb
+        #MySQL-phagesdb
         'ph_pdb_dna_seq_error',\
         'ph_pdb_dna_seq_length_error',\
         'ph_pdb_cluster_subcluster_error',\
         'ph_pdb_accession_error',\
         'ph_pdb_host_error',\
 
-        #phamerator-ncbi
+        #MySQL-ncbi
         'ph_ncbi_dna_seq_error',\
         'ph_ncbi_dna_seq_length_error',\
         'ph_ncbi_record_header_name_error',\
         'ph_ncbi_record_header_host_error',\
 
 
-        #Author error is dependent on Phamerator genome annotation author and
+        #Author error is dependent on MySQL genome annotation author and
         #NCBI list of authors, so this metric should be reported with
         #the other ph_ncbi error tallies.
         'ph_ncbi_author_error',\
@@ -3055,7 +3055,7 @@ def main(unparsed_args_list):
         'ph_ncbi_perfectly_matched_gene_translation_error_tally',\
 
         #Number of genes with errors is computed slightly differently
-        #depending on whethere there are matching Phamerator and NCBI genomes.
+        #depending on whethere there are matching MySQL and NCBI genomes.
         #Therefore,this metric should be reported with the other ph_ncbi error tallies
         #even if there is no matching NCBI genome.
         'ph_ncbi_genes_with_errors_tally',\
@@ -3087,7 +3087,7 @@ def main(unparsed_args_list):
         'ph_search_name',\
         'total_errors',\
 
-        #Phamerator
+        #MySQL
         #General gene data
         'ph_phage_id',\
         'ph_search_id',\
@@ -3128,7 +3128,7 @@ def main(unparsed_args_list):
         'ncbi_locus_tag_typo',\
         'ncbi_description_field_error',\
 
-        #Phamerator-NCBI checks
+        #MySQL-NCBI checks
         'ph_ncbi_unmatched_error',\
         'ph_ncbi_description_error',\
         'ph_ncbi_start_coordinate_error',\
@@ -3156,7 +3156,7 @@ def main(unparsed_args_list):
 
 
 
-    #Phamerator data
+    #MySQL data
     #General genome data
     summary_data_output.append(summary_object.get_ph_ncbi_update_flag_tally())
 
@@ -3184,14 +3184,14 @@ def main(unparsed_args_list):
 
 
 
-    #Phamerator-phagesdb checks
+    #MySQL-phagesdb checks
     summary_data_output.append(summary_object.get_ph_pdb_sequence_mismatch_tally())
     summary_data_output.append(summary_object.get_ph_pdb_sequence_length_mismatch_tally())
     summary_data_output.append(summary_object.get_ph_pdb_cluster_subcluster_mismatch_tally())
     summary_data_output.append(summary_object.get_ph_pdb_accession_mismatch_tally())
     summary_data_output.append(summary_object.get_ph_pdb_host_mismatch_tally())
 
-    #Phamerator-NCBI checks
+    #MySQL-NCBI checks
     summary_data_output.append(summary_object.get_ph_ncbi_sequence_mismatch_tally())
     summary_data_output.append(summary_object.get_ph_ncbi_sequence_length_mismatch_tally())
     summary_data_output.append(summary_object.get_ph_ncbi_record_header_phage_mismatch_tally())
@@ -3216,7 +3216,7 @@ def main(unparsed_args_list):
     summary_data_output.append('tally') #Column header
 
 
-    #Phamerator feature
+    #MySQL feature
     #Gene data checks
     summary_data_output.append(summary_object.get_ph_translation_errors_tally())
     summary_data_output.append(summary_object.get_ph_boundary_errors_tally())
@@ -3229,7 +3229,7 @@ def main(unparsed_args_list):
     summary_data_output.append(summary_object.get_ncbi_locus_tag_typos_tally())
     summary_data_output.append(summary_object.get_ncbi_description_field_errors_tally())
 
-    #Phamerator-NCBI checks
+    #MySQL-NCBI checks
     summary_data_output.append(summary_object.get_ph_ncbi_different_descriptions_tally())
     summary_data_output.append(summary_object.get_ph_ncbi_different_start_sites_tally())
     summary_data_output.append(summary_object.get_ph_ncbi_different_translation_tally())
@@ -3254,9 +3254,9 @@ def main(unparsed_args_list):
 
 
     #Now iterate through matched objects.
-    #All Phamerator genomes are stored in a MatchedGenomes object, even if there are no phagesdb or NCBI matches.
-    #All but a few Phamerator phages should be matched to phagesdb
-    #Only ~half of Phamerator phages should be matched to NCBI
+    #All MySQL genomes are stored in a MatchedGenomes object, even if there are no phagesdb or NCBI matches.
+    #All but a few MySQL phages should be matched to phagesdb
+    #Only ~half of MySQL phages should be matched to NCBI
     for matched_genomes in summary_object.get_matched_genomes_list():
 
         genome_data_output = []
@@ -3271,7 +3271,7 @@ def main(unparsed_args_list):
         genome_data_output.append(ph_genome.get_phage_id())# PhageID
         genome_data_output.append(matched_genomes.get_contains_errors())# any errors detected in this genome?
 
-        #Phamerator data
+        #MySQL data
         #General genome data
         genome_data_output.append(ph_genome.get_phage_name())# Name
         genome_data_output.append(ph_genome.get_search_id())# search_id
@@ -3351,7 +3351,7 @@ def main(unparsed_args_list):
                                         '','','','','','','','','','',\
                                         '','',''])
 
-        #Phamerator-phagesdb checks
+        #MySQL-phagesdb checks
         if isinstance(pdb_genome,PhagesdbGenome):
             genome_data_output.append(matched_genomes.get_phamerator_phagesdb_sequence_mismatch())# sequence
             genome_data_output.append(matched_genomes.get_phamerator_phagesdb_sequence_length_mismatch())# sequence length
@@ -3362,7 +3362,7 @@ def main(unparsed_args_list):
             genome_data_output.extend(['','','','',''])
 
 
-        #Phamerator-NCBI checks
+        #MySQL-NCBI checks
         if isinstance(ncbi_genome,NcbiGenome):
             genome_data_output.append(matched_genomes.get_phamerator_ncbi_sequence_mismatch())# sequence
             genome_data_output.append(matched_genomes.get_phamerator_ncbi_sequence_length_mismatch())# sequence length
@@ -3371,9 +3371,9 @@ def main(unparsed_args_list):
             genome_data_output.append(matched_genomes.get_ph_ncbi_author_error())# Author list is missing 'Hatfull'
             genome_data_output.append(matched_genomes.get_phamerator_ncbi_perfect_matched_features_tally())# # genes perfectly matched
             genome_data_output.append(matched_genomes.get_phamerator_ncbi_imperfect_matched_features_tally())# # genes imperfectly matched (different start sites)
-            genome_data_output.append(matched_genomes.get_phamerator_features_unmatched_in_ncbi_tally())# # Phamerator genes not matched
+            genome_data_output.append(matched_genomes.get_phamerator_features_unmatched_in_ncbi_tally())# # MySQL genes not matched
             genome_data_output.append(matched_genomes.get_ncbi_features_unmatched_in_phamerator_tally())# # NCBI genes not matched
-            genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_descriptions_tally())# # genes with Phamerator descriptions not in NCBI description fields
+            genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_descriptions_tally())# # genes with MySQL descriptions not in NCBI description fields
             genome_data_output.append(matched_genomes.get_phamerator_ncbi_different_translation_tally())# # genes perfectly matched with different translations
         else:
             genome_data_output.extend(['','','','','',\
@@ -3416,8 +3416,8 @@ def main(unparsed_args_list):
             feature_data_output = [] #Will hold all data for each gene
 
             #Gene summaries
-            #Add Phamerator genome search name to each gene row regardless of the type of CDS data (matched or unmatched)
-            feature_data_output.append(ph_genome.get_search_name())# matched Phamerator search name
+            #Add MySQL genome search name to each gene row regardless of the type of CDS data (matched or unmatched)
+            feature_data_output.append(ph_genome.get_search_name())# matched MySQL search name
             feature_data_output.append(mixed_feature_object.get_total_errors())# total # of errors for this gene
 
             #Now retrieve specific data
@@ -3436,7 +3436,7 @@ def main(unparsed_args_list):
                     phamerator_feature = ''
                     ncbi_feature = ''
 
-            #Phamerator feature
+            #MySQL feature
             if isinstance(phamerator_feature,PhameratorCdsFeature):
 
                 #General gene data
@@ -3493,13 +3493,13 @@ def main(unparsed_args_list):
                                             '','','','','',''])
 
 
-            #Phamerator-NCBI checks
+            #MySQL-NCBI checks
             if isinstance(mixed_feature_object,MatchedCdsFeatures):
 
-                #If this is a matched cds feature, both phamerator and ncbi features should have identical unmatched_error value.
+                #If this is a matched cds feature, both MySQL and ncbi features should have identical unmatched_error value.
                 feature_data_output.append(mixed_feature_object.get_phamerator_feature().get_unmatched_error())
 
-                feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_descriptions())# Phamerator description in product, function, or note description
+                feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_descriptions())# MySQL description in product, function, or note description
                 feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_start_sites())# same start site
                 feature_data_output.append(mixed_feature_object.get_phamerator_ncbi_different_translations())# same translation
             else:
