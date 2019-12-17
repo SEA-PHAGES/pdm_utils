@@ -34,10 +34,10 @@ functions
    :undoc-members:
    :show-inheritance:
 
-``phamerator`` module
+``mysqldb`` module
 ---------------------------
 
-.. automodule:: pdm_utils.functions.phamerator
+.. automodule:: pdm_utils.functions.mysqldb
    :members:
    :undoc-members:
    :show-inheritance:
