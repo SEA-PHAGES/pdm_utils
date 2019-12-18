@@ -1089,3 +1089,23 @@ def get_values_from_dict_list(list_of_dicts):
     for dict in list_of_dicts:
         output_set = output_set | set(dict.values())
     return output_set
+
+
+
+
+
+# TODO unittest.
+def convert_list_to_dict(data_list, key):
+    """Convert list of dictionaries to a dictionary of dictionaries
+
+    Returns an empty dictionary if all intended keys are not unique."""
+    data_dict = {}
+    for element_dict in data_list:
+        if element_dict[key] not in data_dict.keys():
+            data_dict[element_dict[key]] = element_dict
+    diff = len(data_list) - len(data_dict)
+    if diff != 0:
+        print("\nUnable to create dictionary since "
+              "some intended keys are duplicated.")
+        data_dict = {}
+    return data_dict

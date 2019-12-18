@@ -15,7 +15,7 @@ from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import tickets
 from pdm_utils.classes import mysqlconnectionhandler as mch
-
+from pdm_utils.classes import genomepair
 
 # TODO Column headers for import table - new version:
 # import_table_columns2 = constants.IMPORT_TABLE_STRUCTURE["order"]
@@ -144,12 +144,57 @@ def main(unparsed_args_list):
     sql_handle.close_connection()
     modified_genome_data_list = modify_phamerator_data(current_genome_list)
 
+### TODO refactoring in progress below
+
+    #HERE
+    mysqldb_genome_list =  mysqldb.parse_genome_data(
+                       sql_handle=sql_handle,
+                       phage_query=query,
+                       gnm_type="mysqldb")
+
+    mysqldb_genome_dict = {}
+    for gnm in mysqldb_genome_list:
+        mysqldb_genome_dict[gnm.id] = gnm
+
+    # how data is originally modified
+    # # Accession data may have version number (e.g. XY12345.1)
+    # if phamerator_accession is None:
+    #     phamerator_accession = "none"
+    #
+    # elif phamerator_accession.strip() == "":
+    #     phamerator_accession = "none"
+    #
+    # if phamerator_accession != "none":
+    #     phamerator_accession = phamerator_accession.split(".")[0]
+    #
+    #
+    # # Annotation authorship is stored as 1 (Hatfull) or 0 (Genbank/Other)
+    # if phamerator_author == 1:
+    #     phamerator_author = "hatfull"
+    # else:
+    #     phamerator_author = "gbk"
+
+
     # Get data from PhagesDB
     if (args.updates or args.final or args.draft) is True:
-
         phagesdb_data_dict = get_phagesdb_data(constants.API_SEQUENCED)
+        phagesdb_genome_dict = phagesdb.get_genomes(constants.API_SEQUENCED, gnm_type="phagesdb")
+        # TODO exit if all phage data wasn't retrieved.
+        if len(phagesdb_genome_dict) == 0:
+            sys.exit(1)
+        # TODO Old formatting: Accession = "none" instead of "".
+        # So this may need to be accounted for.
+
         # Returns a list of tuples.
-        match_output = match_genomes(modified_genome_data_list, phagesdb_data_dict)
+        match_output = match_genomes(mysqldb_genome_dict, phagesdb_genome_dict)
+        matched_genomes = match_output[0]
+        unmatched_phagesdb_ids = match_output[1]
+
+
+        ###Above in progress refactoring
+
+        # Returns a list of tuples.
+        match_output = match_genomes_old(modified_genome_data_list, phagesdb_data_dict)
         matched_genomes = match_output[0]
         unmatched_phagesdb_ids = match_output[1]
 
@@ -191,7 +236,7 @@ def modify_phamerator_data(input_list):
         phamerator_author = genome_dict["AnnotationAuthor"]
 
         # In the MySQL database, Singleton Clusters are recorded as '\N', but in
-        # phagesdb they are recorded as "Singleton".
+        # PhagesDB they are recorded as "Singleton".
         if phamerator_cluster is None:
             phamerator_cluster = "Singleton"
 
@@ -246,8 +291,67 @@ def modify_phamerator_data(input_list):
     return mod_list
 
 
+
+
+
 # TODO unittest.
-def match_genomes(modified_genome_data_list, phagesdb_data_dict):
+def match_genomes(mysqldb_dict, phagesdb_dict):
+    """Match MySQL database genome data to PhagesDB genome data.
+
+    Both dictionaries:
+    Key = PhageID
+    Value = pdm_utils genome object"""
+
+    # Generate phage_id sets and match sets.
+    phagesdb_ids = phagesdb_dict.keys()
+    mysqldb_ids = mysqldb_dict.keys()
+
+    matched_ids = mysqldb_ids & phagesdb_ids
+    unmatched_mysqldb_ids = mysqldb_ids - phagesdb_ids
+    unmatched_phagesdb_ids = phagesdb_ids - mysqldb_ids
+
+
+    matched_genomes = []
+    for id in matched_ids:
+        #HERE
+        # TODO could create a bundle if needed.
+        gnm_pair = genomepair.GenomePair()
+        gnm_pair.genome1 = mysqldb_dict[id]
+        gnm_pair.genome2 = phagesdb_dict[id]
+        matched_genomes.append(gnm_pair)
+
+    unmatched_mysqldb_authored_genomes = {}
+    for id in unmatched_mysqldb_ids:
+        gnm = mysqldb_dict[id]
+        if gnm.annotation_author == 1:
+            unmatched_mysqldb_authored_genomes[id] = gnm
+
+    print("\nSummary of genomes matched between the MySQL database and PhagesDB.")
+    print(f"{len(matched_ids)} genomes matched.")
+    print(f"{len(unmatched_mysqldb_ids} MySQL genomes not matched.")
+    print(f"{len(unmatched_phagesdb_ids)} PhagesDB genomes not matched.")
+
+    unmatched_hatfull_count = len(unmatched_mysqldb_authored_genomes.keys())
+    if unmatched_hatfull_count > 0:
+        print(f"{unmatched_hatfull_count} Hatfull-authored "
+              "unmatched MySQL genomes:")
+        for key in unmatched_mysqldb_authored_genomes.keys():
+            print(key)
+
+    return (matched_genomes, unmatched_phagesdb_ids)
+
+
+
+
+
+
+
+
+
+
+
+# TODO unittest.
+def match_genomes_old(modified_genome_data_list, phagesdb_data_dict):
     """Match MySQL database genome data to PhagesDB genome data."""
     unmatched_hatfull_count = 0
     unmatched_phage_id_list = []
@@ -293,7 +397,7 @@ def match_genomes(modified_genome_data_list, phagesdb_data_dict):
 # TODO unittest.
 def get_phagesdb_data(url):
     """Retrieve all sequence genome data from PhagesDB."""
-    print("Retrieving data from phagesdb...")
+    print("Retrieving data from PhagesDB...")
     sequenced_phages_json = request.urlopen(url)
     # Response is a bytes object that json.loads can't read without first
     # being decoded to a UTF-8 string.
@@ -321,7 +425,7 @@ def get_phagesdb_data(url):
         genome_dict = phagesdb_data_dict[key]
 
         # Accession
-        # Sometimes accession data from phagesdb have
+        # Sometimes accession data from PhagesDB have
         # whitespace characters and version suffix.
         phagesdb_accession = genome_dict["genbank_accession"]
         if phagesdb_accession.strip() != "":
@@ -333,8 +437,8 @@ def get_phagesdb_data(url):
 
         # Cluster
         # Sometimes cluster information is not present. In the
-        # phagesdb database, it is is recorded as NULL. When phages
-        # data is downloaded from phagesdb, NULL cluster data is
+        # PhagesDB database, it is is recorded as NULL. When phages
+        # data is downloaded from PhagesDB, NULL cluster data is
         # converted to "Unclustered". In these cases, leaving the
         # cluster as NULL in the MySQL database won't work, because NULL
         # means Singleton. Therefore, the cluster is
@@ -471,7 +575,7 @@ def get_final_data(output_folder, matched_genomes):
     phagesdb_genome_folder.mkdir()
 
 
-    # Initialize phagesdb retrieval variables - Final updates
+    # Initialize PhagesDB retrieval variables - Final updates
     phagesdb_ticket_list = []
     phagesdb_ticket_list2 = [] # TODO for updated import pipeline
     phagesdb_retrieved_tally = 0
@@ -520,11 +624,11 @@ def get_final_data(output_folder, matched_genomes):
                 phagesdb_flatfile_date, "%Y-%m-%d")
 
         # Not all phages have associated Genbank-formatted files
-        # available on phagesdb. Check to see if there is a flatfile for
+        # available on PhagesDB. Check to see if there is a flatfile for
         # this phage. Download the flatfile only if there is a date tag,
         # and only if that date is more recent than the date stored in
         # the MySQL database for that genome. The tagged date only reflects when
-        # the file was uploaded into phagesdb. The date the actual
+        # the file was uploaded into PhagesDB. The date the actual
         # Genbank record was created is stored within the file,
         # and this too could be less recent than the current version in
         # the MySQL database; however, this part gets checked during the import
@@ -535,7 +639,7 @@ def get_final_data(output_folder, matched_genomes):
             phagesdb_failed_list.append(phamerator_id)
         else:
             # Save the file on the hard drive with the same name as
-            # stored on phagesdb
+            # stored on PhagesDB
             phagesdb_flatfile_url = \
                 matched_phagesdb_data["qced_genbank_file"]
 
@@ -560,11 +664,11 @@ def get_final_data(output_folder, matched_genomes):
                 with flatfile_path.open("w") as fh:
                     fh.write(response5_str)
                 # Create the new import ticket
-                # Since the phagesdb phage has been matched to
+                # Since the PhagesDB phage has been matched to
                 # the MySQL database phage, the AnnotationAuthor field
                 # could be assigned from the current phamerator_author
                 # variable. However, since this genbank-formatted
-                # file is acquired through phagesdb, both the
+                # file is acquired through PhagesDB, both the
                 # Annotation status is expected to be 'final' and
                 # the Annotation author is expected to be 'hatfull'.
                 result7 = ["replace",

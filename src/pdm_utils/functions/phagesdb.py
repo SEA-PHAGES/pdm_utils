@@ -43,7 +43,7 @@ def parse_cluster(data_dict):
     """
     try:
         if data_dict["pcluster"] is None:
-            cluster = 'UNK'
+            cluster = "UNK"
         else:
             cluster = data_dict["pcluster"]["cluster"]
     except:
@@ -318,6 +318,54 @@ def get_genome(phage_id, gnm_type=""):
 
 
 
+
+
+
+
+# TODO unittest.
+def get_phagesdb_data(url):
+    """Retrieve all sequenced genome data from PhagesDB."""
+    data_json = request.urlopen(url)
+    # Response is a bytes object that json.loads can't read without first
+    # being decoded to a UTF-8 string.
+    data_dict = json.loads(data_json.read().decode("utf-8"))
+    data_json.close()
+
+    # Returned dict:
+    # Keys:
+    # count = # of phages
+    # results = list of sequenced phage data
+    data_list = data_dict["results"]
+    diff = len(data_list) - data_dict["count"]
+    if diff != 0:
+        print("\nUnable to retrieve all phage data from PhagesDB due to "
+              "default parameters.")
+        data_list = []
+    return data_list
+
+
+# TODO unittest.
+def parse_genomes_dict(data_dict, gnm_type=gnm_type):
+    """Returns a dictionary of pdm_utils genome objects
+
+    Key = PhageID
+    Value = Genome object."""
+    genome_dict = {}
+    for key in data_dict.keys():
+        gnm = parse_genome_data(data_dict[key], gnm_type=gnm_type)
+        genome_dict[gnm.id] = gnm
+    return genome_dict
+
+
+# TODO unittest.
+def get_genomes(url, gnm_type=""):
+    """Retrieve all sequenced genome data from PhagesDB
+
+    Similar to get_genome(), except it processes all genomes from PhagesDB."""
+    sequenced_phages_list = get_phagesdb_data(url)
+    phagesdb_data_dict = basic.convert_list_to_dict(sequenced_phages_list, "phage_name")
+    genome_dict = parse_genomes_dict(phagesdb_data_dict, gnm_type=gnm_type)
+    return genome_dict
 
 
 

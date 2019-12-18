@@ -312,6 +312,9 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
     return genome_list
 
 
+
+
+
 # TODO this can be improved if the MCH.execute_query() method
 # is able to switch to a standard cursor instead of only using
 # dictcursor.
