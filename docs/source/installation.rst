@@ -4,7 +4,7 @@ Installation
 ============
 
 
-The ``pdm_utils`` package is written in Python3 and can be installed on MacOS and Linux platforms. There are several third-party general dependencies that need to be installed in advance, and there are several dependencies specific to a subset of ``pdm_utils`` tools or pipelines that are only needed for specific goals. Below is a general step-by-step guide to installing all dependencies and the ``pdm_utils`` package.
+The ``pdm_utils`` package is written in Python 3 and can be installed on MacOS and Linux platforms. There are several third-party general dependencies that need to be installed in advance, and there are several dependencies specific to a subset of ``pdm_utils`` tools or pipelines that are only needed for specific goals. Below is a general step-by-step guide to installing all dependencies and the ``pdm_utils`` package.
 
 
 1. MySQL
@@ -78,21 +78,28 @@ If the MySQL password is lost, it can be reset.
 Ubuntu installation
 *******************
 
-# TODO Add description
+Installing MySQL on Ubuntu is more straightforward:
 
+
+    1. Open a Terminal window.
+    2. Enter the following command::
+
+        > sudo apt-get install mysql-server
+
+    3. When prompted, provide a new password for the MySQL 'root' user.
 
 
 2. Python dependencies
 ______________________
 
-There are several third-party python packages required:
+There are several third-party Python packages required:
 
     - :biopython:`Biopython <>`
     - :pymysql:`pymysql <>`
     - :paramiko:`paramiko <>`
     - tabulate
 
-Some of them also have python or binary dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install all python dependencies:
+Some of them also have Python or binary dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install all Python dependencies:
 
     1. Install Conda locally through the :anaconda:`Anaconda <>` package. Follow the manufacturer's installation guide for MacOS or Ubuntu.
 
@@ -126,7 +133,7 @@ Many ``pdm_utils`` modules and pipelines require access to a specifically struct
 
 The primary database instance that reflects the most up-to-date actinobacteriophage genomics data in the SEA-PHAGES program is the 'Actino_Draft' database. Typically, different versions, or instances, of the database are created ('frozen') for specific studies/publications. The unique name of the database is normally published in the Materials and Methods.
 
-The ``pdm_utils`` 'get_db' installation management tool can be used to retrieve, install, and update these databases, or any custom MySQL database that is compliant with the database schema, from a local file or from the Hatfull lab server (:ref:`getdb`).
+The ``pdm_utils get_db`` installation management tool can be used to retrieve, install, and update these databases, or any custom MySQL database that is compliant with the database schema, from a local file or from the Hatfull lab server (:ref:`getdb <getdb>`).
 
 Alternatively, databases can be manually downloaded and installed, as described below (using Actino_Draft as an example):
 
@@ -217,7 +224,7 @@ NCBI Conserved Domain Database
 ``pdm_utils`` source code repository
 ************************************
 
-Some ``pdm_utils`` tools, such as the 'convert' tool, require non-Python data files that are not directly installed with the Python package. Instead, these files are available on the ``pdm_utils`` git repository, which can be accessed through :pdmutils:`GitHub <>`. The repository can be downloaded two ways:
+Some ``pdm_utils`` tools, such as the ``convert`` tool, require non-Python data files that are not directly installed with the Python package. Instead, these files are available on the ``pdm_utils`` git repository, which can be accessed through :pdmutils:`GitHub <>`. The repository can be downloaded two ways:
 
     1. Using git on the command line::
 

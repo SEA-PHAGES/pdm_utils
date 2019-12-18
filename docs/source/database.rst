@@ -157,7 +157,6 @@ This table contains a list of CDS features from the *gene* table with their comp
 
 **Name** Unique pham numbers.
 
-**OrderAdded** Auto-incrementing values.
 
 
 

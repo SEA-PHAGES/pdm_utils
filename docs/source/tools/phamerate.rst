@@ -3,7 +3,7 @@
 phamerate: create gene phamilies
 ================================
 
-All gene products stored in the database can be grouped into phamilies (“phams”) using the ``pdm_utils`` **phamerate** tool.
+All gene products stored in the database can be grouped into phamilies (“phams”) using the ``pdm_utils phamerate`` tool.
 
 To phamerate gene products::
 

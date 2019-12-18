@@ -7,11 +7,11 @@ Introduction
 
     1. Python library including:
 
-        a. Classes to store/parse phage genome, interact with a MySQL database, and manage instructions to add, remove, and update genomes.
+        a. Classes to store/parse phage genomes, interact with a local MySQL genomics database, and manage the process of making database changes.
 
         b. Functions and methods to manipulate those classes as well as interact with several databases and servers, including PhagesDB, GenBank, PECAAN, and MySQL.
 
-    2. Data processing pipelines to maintain a phage genomics database.
+    2. A data processing toolkit to maintain a phage genomics database.
 
 ``pdm_utils`` is useful for:
 

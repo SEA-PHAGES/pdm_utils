@@ -46,7 +46,7 @@ A specifically-structured :ref:`MySQL database <dbstructure>` is used to store p
 The Actino_Draft database
 -------------------------
 
-The primary instance of this database, the Actino_Draft, works in conjunction with the :ref:`PhagesDB <phagesdb>` database as the primary source of genomics data for the SEA-PHAGES program. This database serves not only as a repository of final, refined gene annotations, but also as a tool to facilitate the dynamic, iterative improvement of annotations. Using the ``pdm_utils`` toolkit, a data management pipeline is constructed to accommodate the needs of this constantly updated database.
+The primary instance of this database, the Actino_Draft, works in conjunction with the :phagesdb:`PhagesDB <>` database as the primary source of genomics data for the SEA-PHAGES program. This database serves not only as a repository of final, refined gene annotations, but also as a tool to facilitate the dynamic, iterative improvement of annotations. Using the ``pdm_utils`` toolkit, a data management pipeline is constructed to accommodate the needs of this constantly updated database.
 
 The Actino_Draft management pipeline relies on :ref:`GenBank-formatted flat files <flatfile>` as the primary file format for importing annotation data into the database. During the import process, data is parsed from flat files. If a previous annotated version of the genome is already present in the database, all data relating to that genome is removed and the genome is completely re-imported using the new flat file. Only in limited circumstances are individual fields populated with data extrinsic to a flat file or retained between rounds of genome replacement.
 

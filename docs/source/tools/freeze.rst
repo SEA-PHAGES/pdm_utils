@@ -12,7 +12,7 @@ The primary database instance, Actino_Draft, contains all available actinobacter
     3. has an identifier distinct from other databases.
 
 
-The ``pdm_utils`` **freeze** tool can create these “frozen” databases::
+The ``pdm_utils freeze`` tool can create these “frozen” databases::
 
     > python3 -m pdm_utils freeze Actino_Draft ./
 
