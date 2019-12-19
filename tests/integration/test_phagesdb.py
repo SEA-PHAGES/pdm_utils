@@ -53,7 +53,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
+        self.gnm = phagesdb.parse_genome_data(data_dict,
+                                              gnm_type="phagesdb",
+                                              seq=True)
         with self.subTest():
             self.assertEqual(self.gnm.name, "Trixie")
         with self.subTest():
@@ -82,6 +84,8 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm._description_host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(self.gnm.type, "phagesdb")
+        with self.subTest():
+            self.assertIsInstance(self.gnm.misc, dict)
 
 
     def test_parse_genome_data_2(self):
@@ -166,7 +170,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file_x": url}
-        self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
+        self.gnm = phagesdb.parse_genome_data(data_dict,
+                                              gnm_type="phagesdb",
+                                              seq=True)
         with self.subTest():
             self.assertEqual(self.gnm.filename, "")
         with self.subTest():
@@ -189,7 +195,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host": {"genus": "Mycobacterium"},
                     "genbank_accession": "ABC123",
                     "fasta_file": url}
-        self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
+        self.gnm = phagesdb.parse_genome_data(data_dict,
+                                              gnm_type="phagesdb",
+                                              seq=True)
         with self.subTest():
             self.assertEqual(self.gnm.filename, filename)
         with self.subTest():
@@ -211,7 +219,7 @@ class TestPhagesDBFunctions(unittest.TestCase):
                     "isolation_host_x": {"genus": "Mycobacterium"},
                     "genbank_accession_x": "ABC123",
                     "fasta_file_x": url}
-        self.gnm = phagesdb.parse_genome_data(data_dict)
+        self.gnm = phagesdb.parse_genome_data(data_dict, seq=True)
         with self.subTest():
             self.assertEqual(self.gnm.name, "Trixie")
         with self.subTest():
@@ -236,6 +244,31 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm._description_host_genus, "")
         with self.subTest():
             self.assertEqual(self.gnm.type, "")
+
+
+    def test_parse_genome_data_10(self):
+        """Verify output when seq is False."""
+        url = "https://phagesdb.org/media/fastas/L5.fasta"
+        filename = Path(url).stem
+        data_dict = {"phage_name":"Trixie",
+                    "pcluster": {"cluster": "A"},
+                    "psubcluster": {"subcluster": "A2"},
+                    "isolation_host": {"genus": "Mycobacterium"},
+                    "genbank_accession": "ABC123",
+                    "fasta_file": url}
+        self.gnm = phagesdb.parse_genome_data(data_dict,
+                                              gnm_type="phagesdb",
+                                              seq=False)
+        with self.subTest():
+            self.assertEqual(self.gnm.filename, filename)
+        with self.subTest():
+            self.assertEqual(self.gnm.seq, "")
+        with self.subTest():
+            self.assertEqual(self.gnm.description, "")
+        with self.subTest():
+            self.assertEqual(self.gnm._description_name, "")
+        with self.subTest():
+            self.assertEqual(self.gnm._description_host_genus, "")
 
 
 

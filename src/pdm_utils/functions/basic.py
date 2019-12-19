@@ -1091,10 +1091,6 @@ def get_values_from_dict_list(list_of_dicts):
     return output_set
 
 
-
-
-
-# TODO unittest.
 def convert_list_to_dict(data_list, key):
     """Convert list of dictionaries to a dictionary of dictionaries
 

@@ -1481,5 +1481,22 @@ class TestBasicFunctions(unittest.TestCase):
 
 
 
+
+    def test_convert_list_to_dict_1(self):
+        """Verify list with dictionaries with unique intended keys is
+        converted correctly."""
+        input_list = [{"name":"Trixie", "host":"Mycobacterium"},
+                      {"name":"L5", "host":"Gordonia"}]
+        output_dict = basic.convert_list_to_dict(input_list, "name")
+        self.assertEqual(output_dict.keys(), set(["Trixie", "L5"]))
+
+    def test_convert_list_to_dict_2(self):
+        """Verify list with dictionaries with non-unique intended keys is
+        not converted correctly."""
+        input_list = [{"name":"Trixie", "host":"Mycobacterium"},
+                      {"name":"Trixie", "host":"Gordonia"}]
+        output_dict = basic.convert_list_to_dict(input_list, "name")
+        self.assertEqual(len(output_dict.keys()), 0)
+
 if __name__ == '__main__':
     unittest.main()

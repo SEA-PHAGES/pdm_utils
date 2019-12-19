@@ -84,6 +84,9 @@ class Genome:
                        # (e.g. import, MySQL database, phagesdb, etc.)
         self.evaluations = [] # List of warnings and errors about the data
         self._value_flag = False
+        self.misc = None # Unstructured attribute to store misc. data not
+                         # applicable to any of the other attributes and that
+                         # may be used differently for downstream applications.
 
 
     def set_filename(self, filepath):

@@ -171,12 +171,14 @@ def parse_fasta_data(fasta_data):
     return (header, sequence)
 
 
-def parse_genome_data(data_dict, gnm_type=""):
+def parse_genome_data(data_dict, gnm_type="", seq=False):
     """Parses a dictionary of genome data retrieved from PhagesDB into a
     Genome object.
 
     :param data_dict: Dictionary of data retrieved from PhagesDB.
     :type data_dict: dict
+    :param seq: Indicates whether the genome sequence should be retrieved.
+    :type seq: bool
     :returns: A pdm_utils genome object with the parsed data.
     :rtype: genome
     """
@@ -210,7 +212,8 @@ def parse_genome_data(data_dict, gnm_type=""):
     gnm.set_filename(fastafile_url_path)
 
     # Fasta file record
-    if fastafile_url != "":
+    # if fastafile_url != "":
+    if (fastafile_url != "" and seq == True):
         fasta_file = retrieve_fasta_data(fastafile_url)
 
         # TODO unit test - not sure how to test this, since this function
@@ -221,6 +224,8 @@ def parse_genome_data(data_dict, gnm_type=""):
             gnm.set_sequence(seq)
             gnm.description = header
             gnm.parse_description()
+
+    gnm.misc = data_dict
     return gnm
 
 def retrieve_genome_data(phage_url):
@@ -298,7 +303,7 @@ def construct_phage_url(phage_name):
 #         to_gnm.set_value_flag(flag)
 
 # TODO this will probably replace copy_data()
-def get_genome(phage_id, gnm_type=""):
+def get_genome(phage_id, gnm_type="", seq=False):
     """Get genome data from 'phagesdb'.
 
     :param phage_id:
@@ -311,7 +316,7 @@ def get_genome(phage_id, gnm_type=""):
     phage_url = construct_phage_url(phage_id)
     data_dict = retrieve_genome_data(phage_url)
     if len(data_dict.keys()) != 0:
-        gnm = parse_genome_data(data_dict, gnm_type=gnm_type)
+        gnm = parse_genome_data(data_dict, gnm_type=gnm_type, seq=seq)
     else:
         gnm = None
     return gnm
@@ -325,7 +330,7 @@ def get_genome(phage_id, gnm_type=""):
 # TODO unittest.
 def get_phagesdb_data(url):
     """Retrieve all sequenced genome data from PhagesDB."""
-    data_json = request.urlopen(url)
+    data_json = urllib.request.urlopen(url)
     # Response is a bytes object that json.loads can't read without first
     # being decoded to a UTF-8 string.
     data_dict = json.loads(data_json.read().decode("utf-8"))
@@ -345,29 +350,16 @@ def get_phagesdb_data(url):
 
 
 # TODO unittest.
-def parse_genomes_dict(data_dict, gnm_type=gnm_type):
+def parse_genomes_dict(data_dict, gnm_type="", seq=False):
     """Returns a dictionary of pdm_utils genome objects
 
     Key = PhageID
     Value = Genome object."""
     genome_dict = {}
     for key in data_dict.keys():
-        gnm = parse_genome_data(data_dict[key], gnm_type=gnm_type)
+        gnm = parse_genome_data(data_dict[key], gnm_type=gnm_type, seq=seq)
         genome_dict[gnm.id] = gnm
     return genome_dict
-
-
-# TODO unittest.
-def get_genomes(url, gnm_type=""):
-    """Retrieve all sequenced genome data from PhagesDB
-
-    Similar to get_genome(), except it processes all genomes from PhagesDB."""
-    sequenced_phages_list = get_phagesdb_data(url)
-    phagesdb_data_dict = basic.convert_list_to_dict(sequenced_phages_list, "phage_name")
-    genome_dict = parse_genomes_dict(phagesdb_data_dict, gnm_type=gnm_type)
-    return genome_dict
-
-
 
 
 
