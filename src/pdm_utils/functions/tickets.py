@@ -9,7 +9,7 @@ from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 import pathlib
 
-def export_ticket_data(list_of_data_dicts, file_path, headers):
+def export_ticket_data(list_of_data_dicts, file_path, headers, include_headers=False):
     """Save a dictionary of data to file using specified column headers.
 
     Ensures the output file contains a specified number of columns,
@@ -21,7 +21,8 @@ def export_ticket_data(list_of_data_dicts, file_path, headers):
     # with open(file_path, "w") as file_handle:
     with file_path.open("w") as file_handle:
         file_writer = csv.DictWriter(file_handle, headers)
-        file_writer.writerow(headers_dict)
+        if include_headers:
+            file_writer.writerow(headers_dict)
         for data_dict in list_of_data_dicts:
             file_writer.writerow(data_dict)
 
