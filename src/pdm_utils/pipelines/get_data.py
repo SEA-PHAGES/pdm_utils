@@ -3,13 +3,10 @@
 import argparse
 import csv
 from datetime import datetime
-import json
 import pathlib
 import sys
 import time
-from urllib import request, error
 from Bio import SeqIO
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import ticket
 from pdm_utils.constants import constants
@@ -21,30 +18,30 @@ from pdm_utils.functions import tickets
 
 # TODO update column headers for import table
 # Old format
-import_table_columns1 = ["type",
-                        "phage_id",
-                        "host_genus",
-                        "cluster",
-                        "subcluster",
-                        "annotation_status",
-                        "annotation_author",
-                        "description_field",
-                        "accession",
-                        "run_mode",
-                        "secondary_phage_id"]
+IMPORT_COLUMNS1 = ["type",
+                   "phage_id",
+                   "host_genus",
+                   "cluster",
+                   "subcluster",
+                   "annotation_status",
+                   "annotation_author",
+                   "description_field",
+                   "accession",
+                   "run_mode",
+                   "secondary_phage_id"]
 
 # New format
-import_table_columns2 = constants.IMPORT_TABLE_STRUCTURE["order"]
+IMPORT_COLUMNS2 = constants.IMPORT_TABLE_STRUCTURE["order"]
 
 # Columns for new format for update tickets to match RandomFieldUpdateHandler
-update_columns = ["table",
+UPDATE_COLUMNS = ["table",
                   "field",
                   "value",
                   "key_name",
                   "key_value"]
 
 # Column headers for NCBI results output file.
-ncbi_results_header = ["phage_id",
+NCBI_RESULTS_COLUMNS = ["phage_id",
                        "phage_name",
                        "accession",
                        "annotation_status",
@@ -52,6 +49,7 @@ ncbi_results_header = ["phage_id",
                        "genbank_date",
                        "result"]
 
+GENOMES_DIR = "genomes"
 
 # TODO unittest.
 def parse_args(unparsed_args_list):
@@ -93,6 +91,13 @@ def parse_args(unparsed_args_list):
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
 
+
+    if (args.updates == False and
+            args.draft == False and
+            args.final == False and
+            args.genbank == False):
+        args.all_data = True
+
     if args.all_data == True:
         args.updates = True
         args.draft = True
@@ -129,7 +134,7 @@ def main(unparsed_args_list):
     print("Preparing genome data sets from the MySQL database...")
     sql_handle = mysqldb.connect_to_db(args.database)
 
-    # Parse existing MySQL database genome data to assess what needs to be updated.
+    # Get existing data from MySQL to determine what needs to be updated.
     query = ("SELECT PhageID, Name, HostStrain, Status, Cluster2, "
              "DateLastModified, Accession, RetrieveRecord, Subcluster2, "
              "AnnotationAuthor FROM phage")
@@ -146,15 +151,13 @@ def main(unparsed_args_list):
     # Get data from PhagesDB
     if (args.updates or args.final or args.draft) is True:
         print("Retrieving data from PhagesDB...")
-        sequenced_phages_list = phagesdb.get_phagesdb_data(
-                                    constants.API_SEQUENCED)
-        phagesdb_data_dict = basic.convert_list_to_dict(
-                                sequenced_phages_list, "phage_name")
+        phagesdb_phages = phagesdb.get_phagesdb_data(constants.API_SEQUENCED)
+        phagesdb_phages_dict = basic.convert_list_to_dict(phagesdb_phages,
+                                                          "phage_name")
         phagesdb_genome_dict = phagesdb.parse_genomes_dict(
-                                    phagesdb_data_dict,
+                                    phagesdb_phages_dict,
                                     gnm_type="phagesdb",
                                     seq=False)
-
 
         # TODO exit if all phage data wasn't retrieved.
         if len(phagesdb_genome_dict) == 0:
@@ -165,23 +168,14 @@ def main(unparsed_args_list):
         matched_genomes = match_output[0]
         unmatched_phagesdb_ids = match_output[1]
 
-
-    # Option 1: Determine if any fields need to be updated
     if args.updates is True:
         get_update_data(working_path, matched_genomes)
-
-    # Option 2: Determine if any new manually annotated genomes are available.
     if args.final is True:
         get_final_data(working_path, matched_genomes)
-
-    # Option 3: Retrieve updated records from NCBI
     if args.genbank is True:
         get_genbank_data(working_path, mysqldb_genome_dict, ncbi_cred_dict)
-
-    # Option 4: Retrieve auto-annotated genomes from PECAAN
     if args.draft is True:
         get_draft_data(working_path, unmatched_phagesdb_ids)
-
     print("\n\n\nRetrieve updates script completed.")
 
 
@@ -197,11 +191,9 @@ def match_genomes(mysqldb_dict, phagesdb_dict):
     # Generate phage_id sets and match sets.
     phagesdb_ids = phagesdb_dict.keys()
     mysqldb_ids = mysqldb_dict.keys()
-
     matched_ids = mysqldb_ids & phagesdb_ids
     unmatched_mysqldb_ids = mysqldb_ids - phagesdb_ids
     unmatched_phagesdb_ids = phagesdb_ids - mysqldb_ids
-
 
     matched_genomes = []
     for id in matched_ids:
@@ -216,15 +208,14 @@ def match_genomes(mysqldb_dict, phagesdb_dict):
         if gnm.annotation_author == 1:
             unmatched_mysqldb_authored_genomes[id] = gnm
 
-    print("\nSummary of genomes matched between the MySQL database and PhagesDB.")
-    print(f"{len(matched_ids)} genomes matched.")
-    print(f"{len(unmatched_mysqldb_ids)} MySQL genomes not matched.")
-    print(f"{len(unmatched_phagesdb_ids)} PhagesDB genomes not matched.")
+    print("\nSummary of genomes matched:")
+    print(f"{len(matched_ids):>6}: genomes matched.")
+    print(f"{len(unmatched_mysqldb_ids):>6}: MySQL genomes not matched.")
+    print(f"{len(unmatched_phagesdb_ids):>6}: PhagesDB genomes not matched.")
 
-    unmatched_hatfull_count = len(unmatched_mysqldb_authored_genomes.keys())
-    if unmatched_hatfull_count > 0:
-        print(f"{unmatched_hatfull_count} Hatfull-authored "
-              "unmatched MySQL genomes:")
+    count = len(unmatched_mysqldb_authored_genomes.keys())
+    if count > 0:
+        print(f"{count} Hatfull-authored unmatched MySQL genomes:")
         for key in unmatched_mysqldb_authored_genomes.keys():
             print(key)
 
@@ -307,23 +298,12 @@ def get_update_data(output_folder, matched_genomes):
     # Field updates
     if len(update_tickets) > 0:
         print("\n\nNew field updates are available.")
-        filepath = prepare_output_filepath(output_folder, "update_table.csv",
+        filepath = basic.prepare_filepath(output_folder, "update_table.csv",
                                            folder_name="updates")
-        tickets.export_ticket_data(update_tickets, filepath, update_columns, include_headers=True)
+        tickets.export_ticket_data(update_tickets, filepath,
+                                   UPDATE_COLUMNS, include_headers=True)
     else:
         print("\n\nNo field updates found.")
-
-
-# TODO unittest
-def prepare_output_filepath(output_folder, filename, folder_name=None):
-    """Prepare output folder."""
-    if folder_name is not None:
-        new_folder_path = pathlib.Path(output_folder, folder_name)
-        new_folder_path.mkdir()
-    else:
-        new_folder_path = output_folder
-    filepath = pathlib.Path(new_folder_path, filename)
-    return filepath
 
 
 # TODO unittest
@@ -372,16 +352,10 @@ def get_final_data(output_folder, matched_genomes):
 
     phagesdb_folder = pathlib.Path(output_folder, "phagesdb")
     phagesdb_folder.mkdir()
-    phagesdb_genome_folder = pathlib.Path(phagesdb_folder, "genomes")
-    phagesdb_genome_folder.mkdir()
-
-
-    # Initialize PhagesDB retrieval variables - Final updates
-    phagesdb_ticket_list = []
-    phagesdb_retrieved_tally = 0
-    phagesdb_failed_tally = 0
-    phagesdb_retrieved_list = []
-    phagesdb_failed_list = []
+    genome_folder = pathlib.Path(phagesdb_folder, GENOMES_DIR)
+    genome_folder.mkdir()
+    import_tickets = []
+    failed_list = []
 
     # Iterate through each phage in the MySQL database
     for gnm_pair in matched_genomes:
@@ -400,20 +374,15 @@ def get_final_data(output_folder, matched_genomes):
         # stage.
         set_phagesdb_gnm_date(phagesdb_gnm)
         set_phagesdb_gnm_file(phagesdb_gnm)
-
-        if (phagesdb_gnm.filename == "" or phagesdb_gnm.date < mysqldb_gnm.date):
-            phagesdb_failed_tally += 1
-            phagesdb_failed_list.append(mysqldb_gnm.id)
-        else:
+        if (phagesdb_gnm.filename != "" and phagesdb_gnm.date > mysqldb_gnm.date):
             # Save the file on the hard drive with the same name as
             # stored on PhagesDB
-            flatfile_data = phagesdb.retrieve_fasta_data(phagesdb_gnm.filename)
+            flatfile_data = phagesdb.retrieve_url_data(phagesdb_gnm.filename)
             if flatfile_data == "":
-                phagesdb_failed_tally += 1
-                phagesdb_failed_list.append(mysqldb_gnm.id)
+                failed_list.append(mysqldb_gnm.id)
             else:
                 flatfile_filename = phagesdb_gnm.filename.split("/")[-1]
-                flatfile_path = pathlib.Path(phagesdb_genome_folder,
+                flatfile_path = pathlib.Path(genome_folder,
                                              flatfile_filename)
                 with flatfile_path.open("w") as fh:
                     fh.write(flatfile_data)
@@ -439,26 +408,27 @@ def get_final_data(output_folder, matched_genomes):
                 # TODO secondary_phage_id data is for old ticket format.
                 tkt.data_dict["secondary_phage_id"] = mysqldb_gnm.id
                 tkt.data_dict["retrieve_record"] = 1
-                phagesdb_ticket_list.append(tkt)
-                phagesdb_retrieved_tally += 1
-                phagesdb_retrieved_list.append(mysqldb_gnm.id)
+                import_tickets.append(tkt)
 
 
-    count1 = len(phagesdb_ticket_list)
+    count1 = len(import_tickets)
     if count1 > 0:
         print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
-        filepath = prepare_output_filepath(phagesdb_folder, "import_table.csv")
-        phagesdb_ticket_list = convert_tickets_to_dict(phagesdb_ticket_list, old_format=True)
-        tickets.export_ticket_data(phagesdb_ticket_list, filepath, import_table_columns1)
+        filepath = basic.prepare_filepath(phagesdb_folder, "import_table.csv")
+        import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
+        tickets.export_ticket_data(import_tickets, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
-        # filepath2 = prepare_output_filepath(phagesdb_folder, "import_table2.csv")
-        # phagesdb_ticket_list3 = convert_tickets_to_dict(phagesdb_ticket_list)
-        # tickets.export_ticket_data(phagesdb_ticket_list3, filepath2, import_table_columns2, include_headers=True)
+        # filepath2 = basic.prepare_filepath(phagesdb_folder, "import_table2.csv")
+        # phagesdb_ticket_list3 = convert_tickets_to_dict(import_tickets)
+        # tickets.export_ticket_data(phagesdb_ticket_list3, filepath2, IMPORT_COLUMNS2, include_headers=True)
 
-    else:
-        print("\n\nNo new phages were retrieved from PhagesDB.")
+    if len(failed_list) > 0:
+        print(f"{len(failed_list)} phage(s) failed to be retrieved:")
+        for element in failed_list:
+            print(element)
+        input("\n\nPress ENTER to continue.")
 
 
 
@@ -501,7 +471,7 @@ def set_phagesdb_gnm_file(gnm):
 
 
 # TODO unittest.
-def get_genbank_data(output_folder, mysqldb_genome_dict, ncbi_cred_dict={}):
+def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={}):
     """Run sub-pipeline to retrieve genomes from GenBank."""
 
     # Flow of the NCBI record retrieval process:
@@ -515,57 +485,18 @@ def get_genbank_data(output_folder, mysqldb_genome_dict, ncbi_cred_dict={}):
     # Create output folder
     ncbi_folder = pathlib.Path(output_folder, f"genbank")
     ncbi_folder.mkdir()
-    genome_folder = pathlib.Path(ncbi_folder, "genomes")
-    genome_folder.mkdir()
 
-    # Results file
     ncbi_results_list = []
-
-    tally_total = len(mysqldb_genome_dict.keys())
-    tally_not_auto_updated = 0
-    tally_no_accession = 0
-    tally_retrieved_not_new = 0
-    tally_retrieved_for_update = 0
-    tally_duplicate_accession = 0
-
-
-    import_ticket_lists = []
-    unique_accession_dict = {}
-
-    # Determine if any accessions are duplicated.
-    mysqldb_accession_set, mysqldb_duplicate_accessions = get_accessions(mysqldb_genome_dict)
+    tallies = {}
+    tallies["total"] = len(genome_dict.keys())
 
     # Iterate through each phage in the MySQL database
-    for key in mysqldb_genome_dict.keys():
-        gnm = mysqldb_genome_dict[key]
-        # For NCBI retrieval, add to dictionary if
-        # 1) the genome is set to be automatically updated and
-        # 2) if there is an accession number
-        if gnm.retrieve_record != 1:
-            tally_not_auto_updated += 1
-            ncbi_results = get_ncbi_results_dict(gnm, "NA", "no automatic update")
-            ncbi_results_list.append(ncbi_results)
-
-        elif (gnm.accession is None or
-                gnm.accession == "none" or
-                gnm.accession == ""):
-            tally_no_accession += 1
-            ncbi_results = get_ncbi_results_dict(gnm, "NA", "no accession")
-            ncbi_results_list.append(ncbi_results)
-
-        elif gnm.accession in mysqldb_duplicate_accessions:
-            tally_duplicate_accession += 1
-            ncbi_results = get_ncbi_results_dict(gnm, "NA", "duplicate accession")
-            ncbi_results_list.append(ncbi_results)
-
-        else:
-            # Dictionary of phage data based on unique accessions
-            # Key = accession
-            # Value = genome object
-            unique_accession_dict[gnm.accession] = gnm
-
-
-    batch_size = 200
+    result_tuple1 = sort_by_accession(genome_dict)
+    tallies["not_auto_updated"] = result_tuple1[0]
+    tallies["no_accession"] = result_tuple1[1]
+    tallies["duplicate_accession"] = result_tuple1[2]
+    ncbi_results_list.extend(result_tuple1[3])
+    unique_accession_dict = result_tuple1[4]
 
     # More setup variables if NCBI updates are desired.  NCBI Bookshelf resource
     # "The E-utilities In-Depth: Parameters, Syntax and More", by Dr. Eric
@@ -577,37 +508,143 @@ def get_genbank_data(output_folder, mysqldb_genome_dict, ncbi_cred_dict={}):
         email=ncbi_cred_dict["ncbi_email"],
         api_key=ncbi_cred_dict["ncbi_api_key"])
 
-    print("\n\nRetrieving updated records from NCBI")
+    results_tuple2 = retrieve_records(unique_accession_dict, batch_size=200)
+    tallies["docsum_not_new"] = results_tuple2[0]
+    retrieved_record_list = results_tuple2[1]
+    retrieval_error_list = results_tuple2[2]
+    ncbi_results_list.extend(results_tuple2[3])
 
-    # Use esearch to verify the accessions are valid and efetch to retrieve
-    # the record
-    # Create batches of accessions
-    unique_accession_list = list(unique_accession_dict.keys())
+    # Report the genomes that could not be retrieved.
+    results3 = process_failed_retrieval(retrieval_error_list, unique_accession_dict)
+    ncbi_results_list.extend(results3)
+    tallies["retrieval_failure"] = len(retrieval_error_list)
 
-    # Add [ACCN] field to each accession number
-    appended_accessions = \
-        [accession + "[ACCN]" for accession in unique_accession_list]
+    results_tuple4 = check_record_date(retrieved_record_list, unique_accession_dict)
+    new_record_list = results_tuple4[0]
+    ncbi_results_list.extend(results_tuple4[1])
 
-    # Keep track of specific records
-    retrieved_record_list = []
-    retrieval_error_list = []
+    tallies["retrieved_for_import"] = len(new_record_list)
+    tallies["record_not_new"] = (len(retrieved_record_list)
+                                 - len(new_record_list))
+
+    if len(new_record_list) > 0:
+        save_files_and_tkts(new_record_list, unique_accession_dict, ncbi_folder)
+
+    # Record all results.
+    filepath3 = basic.prepare_filepath(ncbi_folder, "ncbi_results.csv")
+    tickets.export_ticket_data(ncbi_results_list, filepath3,
+                               NCBI_RESULTS_COLUMNS, include_headers=True)
+
+    # Print summary of script
+    tallies["auto_updated"] = tallies["total"] - tallies["not_auto_updated"]
+    tallies["accession"] = (tallies["auto_updated"]
+                            - tallies["no_accession"]
+                            - tallies["duplicate_accession"])
+
+    print("\n\n\nSummary of GenBank data retrieval:")
+    print("Of the genomes in the MySQL database:")
+    print(f"{tallies['total']:>6}: total")
+    print(f"{tallies['not_auto_updated']:>6}: not auto-updated")
+    print(f"{tallies['auto_updated']:>6}: auto-updated")
+
+    print("\nOf the auto-updated genomes:")
+    print(f"{tallies['no_accession']:>6}: no accession")
+    print(f"{tallies['duplicate_accession']:>6}: duplicated accession")
+    print(f"{tallies['accession']:>6}: unique accession")
+
+    print("\nOf the GenBank records with unique accessions:")
+    print(f"{tallies['retrieval_failure']:>6}: could not be retrieved")
+    print(f"{tallies['docsum_not_new']:>6}: retrieved but docsum not new")
+    print(f"{tallies['record_not_new']:>6}: retrieved but record not new")
+    print(f"{tallies['retrieved_for_import']:>6}: retrieved for import")
+
+
+# TODO unittest.
+def sort_by_accession(genome_dict):
+    """Sort genome objects based on their accession status."""
+
+    tally_not_auto_updated = 0
+    tally_no_accession = 0
+    tally_duplicate_accession = 0
+    ncbi_results_list = []
+    accession_dict = {}
+
+    # Get a list of duplicated accessions.
+    unique_accessions, duplicate_accessions = create_accession_sets(genome_dict)
+
+    # Iterate through each phage in the MySQL database
+    for key in genome_dict.keys():
+        gnm = genome_dict[key]
+        # For NCBI retrieval, add to dictionary if
+        # 1) the genome is set to be automatically updated and
+        # 2) if there is an accession number
+        if gnm.retrieve_record != 1:
+            tally_not_auto_updated += 1
+            ncbi_results = create_results_dict(gnm, "NA", "no automatic update")
+            ncbi_results_list.append(ncbi_results)
+
+        elif (gnm.accession is None or
+                gnm.accession == "none" or
+                gnm.accession == ""):
+            tally_no_accession += 1
+            ncbi_results = create_results_dict(gnm, "NA", "no accession")
+            ncbi_results_list.append(ncbi_results)
+
+        elif gnm.accession in duplicate_accessions:
+            tally_duplicate_accession += 1
+            ncbi_results = create_results_dict(gnm, "NA", "duplicate accession")
+            ncbi_results_list.append(ncbi_results)
+
+        else:
+            # Dictionary of phage data based on unique accessions
+            # Key = accession
+            # Value = genome object
+            accession_dict[gnm.accession] = gnm
+
+    return (tally_not_auto_updated, tally_no_accession,
+            tally_duplicate_accession, ncbi_results_list,
+            accession_dict)
+
+
+
+def process_failed_retrieval(accession_list, accession_dict):
+    """."""
+    results = []
+    for accession in accession_list:
+        gnm = accession_dict[accession]
+        result = create_results_dict(gnm, "NA", "retrieval failure")
+        results.append(result)
+    return results
+
+
+
+def retrieve_records(accession_dict, batch_size=200):
+    """."""
+    # First use esearch to verify the accessions are valid.
+    # Seoncd use efetch to retrieve the record.
+    print("\n\nRetrieving records from NCBI")
+    retrieved_records = [] # GenBank records that have been retrieved.
+    retrieval_errors = []
+    tally_not_new = 0 # Keeps track if docsum date is new or not.
+    results = [] # Summary of retrieval results.
+    accessions = list(accession_dict.keys())
+    mod_accessions = [accession + "[ACCN]" for accession in accessions]
+
 
     # When retrieving in batch sizes, first create the list of values
-    # indicating which indices of the unique_accession_list should be used
+    # indicating which indices of the accessions should be used
     # to create each batch.
     # For instace, if there are five accessions, batch size of two produces
     # indices = 0,2,4
-    batch_indices = basic.create_indices(unique_accession_list, batch_size)
-    print(f"There are {len(unique_accession_list)} GenBank accessions to check.")
+
+    batch_indices = basic.create_indices(mod_accessions, batch_size)
+    print(f"There are {len(mod_accessions)} GenBank accessions to check.")
     for indices in batch_indices:
-        batch_index_start = indices[0]
-        batch_index_stop = indices[1]
-        print("Checking accessions "
-              f"{batch_index_start + 1} to {batch_index_stop}...")
-        current_batch_size = batch_index_stop - batch_index_start
+        start = indices[0]
+        stop = indices[1]
+        print(f"Checking accessions {start + 1} to {stop}...")
         delimiter = " | "
-        esearch_term = delimiter.join(appended_accessions[
-                                      batch_index_start:batch_index_stop])
+        esearch_term = delimiter.join(mod_accessions[start:stop])
 
         # Use esearch for each accession
         search_record = ncbi.run_esearch(db="nucleotide", term=esearch_term,
@@ -616,78 +653,83 @@ def get_genbank_data(output_folder, mysqldb_genome_dict, ncbi_cred_dict={}):
         search_webenv = search_record["WebEnv"]
         search_query_key = search_record["QueryKey"]
 
-
         # Keep track of the accessions that failed to be located in NCBI
+        # Each accession in the error list is formatted "accession[ACCN]"
+        current_batch_size = stop - start
         if search_count < current_batch_size:
-            search_accession_failure = search_record["ErrorList"][
-                "PhraseNotFound"]
-
-            # Each element in this list is formatted "accession[ACCN]"
-            for element in search_accession_failure:
-                # print(element, element[:-6])
-                retrieval_error_list.append(element[:-6])
+            search_failure = search_record["ErrorList"]["PhraseNotFound"]
+            for accession in search_failure:
+                retrieval_errors.append(accession[:-6])
 
         # Now get summaries for these records using esummary
-        accessions_to_retrieve = []
         summary_records = ncbi.get_summaries(db="nucleotide",
                                              query_key=search_query_key,
                                              webenv=search_webenv)
-        for doc_sum in summary_records:
-            doc_sum_name = doc_sum["Title"]
-            doc_sum_accession = doc_sum["Caption"]
-            doc_sum_date = datetime.strptime(doc_sum["UpdateDate"],
-                                                      "%Y/%m/%d")
-            gnm = unique_accession_dict[doc_sum_accession]
 
-            # If Document Summary date is newer than the MySQL database date,
-            # or if the genome being evaluated is currently draft status but
-            # we were able to retrieve a Genbank record (i.e. it's not a
-            # draft anymore), append the accession to the list of accessions
-            # from this batch to retrieve.
-            if doc_sum_date > gnm.date or gnm.annotation_status == "draft":
-                accessions_to_retrieve.append(doc_sum_accession)
-            # Otherwise, if the MySQL database date is newer or the MySQL database
-            # status isn't draft, mark down in the ncbi_results file that
-            # the record in Genbank isn't new.
-            else:
-                # We need more information about the MySQL database data for
-                # this genome
-                tally_retrieved_not_new += 1
-                ncbi_results = get_ncbi_results_dict(gnm, doc_sum_date, "record not new")
-                ncbi_results_list.append(ncbi_results)
+        results_tuple = get_accessions_to_retrieve(summary_records,
+                                                   accession_dict)
+        accessions_to_retrieve = results_tuple[0]
+        results.extend(results_tuple[1])
+        tally_not_new += len(summary_records) - len(accessions_to_retrieve)
 
         if len(accessions_to_retrieve) > 0:
             output_list = ncbi.get_records(accessions_to_retrieve,
                                            db="nucleotide",
                                            rettype="gb",
                                            retmode="text")
-            retrieved_record_list.extend(output_list)
+            retrieved_records.extend(output_list)
+
+    return (tally_not_new, retrieved_records, retrieval_errors, results)
 
 
 
-    # Report the genomes that could not be retrieved.
-    tally_retrieval_failure = len(retrieval_error_list)
-    for retrieval_error_accession in retrieval_error_list:
-        gnm = unique_accession_dict[retrieval_error_accession]
-        ncbi_results = get_ncbi_results_dict(gnm, "NA", "retrieval failure")
-        ncbi_results_list.append(ncbi_results)
 
+
+
+
+
+
+
+# TODO unittest.
+def get_accessions_to_retrieve(summary_records, accession_dict):
+    """Review GenBank summary to determine which records are new."""
+    accessions = []
+    results = []
+    for doc_sum in summary_records:
+        doc_sum_accession = doc_sum["Caption"]
+        doc_sum_date = datetime.strptime(doc_sum["UpdateDate"], "%Y/%m/%d")
+        gnm = accession_dict[doc_sum_accession]
+
+        # If Document Summary date is newer than the MySQL database date,
+        # or if the genome being evaluated is currently draft status but
+        # we were able to retrieve a Genbank record (i.e. it's not a
+        # draft anymore), append the accession to the list of accessions
+        # from this batch to retrieve.
+        # Otherwise, record that the GenBank record isn't new.
+        if doc_sum_date > gnm.date or gnm.annotation_status == "draft":
+            accessions.append(doc_sum_accession)
+        else:
+            result = create_results_dict(gnm, doc_sum_date, "record not new")
+            results.append(result)
+    return (accessions, results)
+
+
+# TODO unittest.
+def check_record_date(record_list, accession_dict):
+    """Check whether the record is new."""
+    results = []
+    new_record_list = []
     # For any records that were retrieved, mark their data in the NCBI
     # results file, and save their records as Genbank files, and create
     # import table entries for them.
-    for retrieved_record in retrieved_record_list:
-
-        # Pull out the accession to get the matched MySQL database data
-        retrieved_record_accession = retrieved_record.name
-        retrieved_record_accession = retrieved_record_accession.split('.')[0]
-
-        # Convert date to datetime object
-        retrieved_record_date = retrieved_record.annotations["date"]
-        retrieved_record_date = datetime.strptime(
-            retrieved_record_date, '%d-%b-%Y')
-
-        # MySQL outputs the DateLastModified as a datetime object
-        gnm = unique_accession_dict[retrieved_record_accession]
+    index = 0
+    while index < len(record_list):
+        record = record_list[index]
+        date = record.annotations["date"]
+        date = datetime.strptime(date, '%d-%b-%Y')
+        accession = record.name
+        accession = accession.split('.')[0]
+        gnm = accession_dict[accession]
 
         # Save new records in a folder and create an import table row
         # for them. If the genome is currently a draft annotation, create
@@ -696,93 +738,69 @@ def get_genbank_data(output_folder, mysqldb_genome_dict, ncbi_cred_dict={}):
         # upload a manual annotation to phagesdb, once the Genbank
         # accession becomes active MySQL database will get the new version.
         # This should always happen, since we've only retrieved new records.
-        if (retrieved_record_date > gnm.date or
-                gnm.annotation_status == "draft"):
-            tally_retrieved_for_update += 1
-            ncbi_results = get_ncbi_results_dict(
-                                gnm,
-                                retrieved_record_date,
-                                "record retrieved for import")
-            ncbi_results_list.append(ncbi_results)
-
+        if (date > gnm.date or gnm.annotation_status == "draft"):
+            data_dict = create_results_dict(gnm, date, "retrieved for import")
+            results.append(data_dict)
+            new_record_list.append(record)
             # Determine what the status of the genome will be.
             # If the genome in the MySQL database was already 'final' or 'unknown',
             # then keep the status unchanged. If the genome in the MySQL database
             # was 'draft', the status should be changed to 'final'.
             if gnm.annotation_status == "draft":
                 gnm.annotation_status = "final"
-
-            # Now output the file and create the import ticket.
-            ncbi_filename = (f"{gnm.name.lower()}__"
-                            f"{retrieved_record_accession}.gb")
-
-            flatfile_path = pathlib.Path(genome_folder, ncbi_filename)
-            SeqIO.write(retrieved_record, str(flatfile_path), "genbank")
-
-            tkt = ticket.GenomeTicket()
-            tkt.type = "replace"
-            tkt.phage_id = gnm.id
-            tkt.data_dict["host_genus"] = gnm.host_genus
-            tkt.data_dict["cluster"] = gnm.cluster
-            tkt.data_dict["subcluster"] = gnm.subcluster
-            tkt.data_dict["annotation_status"] = gnm.annotation_status
-            tkt.data_dict["annotation_author"] = gnm.annotation_author
-            tkt.description_field = "product"
-            tkt.data_dict["accession"] = gnm.accession
-            tkt.run_mode = "sea_auto"
-            # TODO secondary_phage_id data is for old ticket format.
-            tkt.data_dict["secondary_phage_id"] = gnm.id
-            tkt.data_dict["retrieve_record"] = 1
-            import_ticket_lists.append(tkt)
-
         else:
-            print("A Genbank record was retrieved "
-                  f"for {gnm.id} even though it wasn't new")
+            data_dict = create_results_dict(gnm, date, "record date not new")
+            results.append(data_dict)
+        index += 1
 
-
-    # Now make the import table.
-    if len(import_ticket_lists) > 0:
-        filepath = prepare_output_filepath(ncbi_folder, "import_table.csv")
-        import_ticket_lists = convert_tickets_to_dict(import_ticket_lists, old_format=True)
-        tickets.export_ticket_data(import_ticket_lists, filepath, import_table_columns1)
-
-        # TODO new dictwriter. Use this block instead of above once the
-        # new import script is functioning.
-        # filepath2 = prepare_output_filepath(ncbi_folder, "import_table2.csv")
-        # import_ticket_lists = convert_tickets_to_dict(import_ticket_lists)
-        # tickets.export_ticket_data(import_ticket_lists, filepath2, import_table_columns2, include_headers=True)
-
-
-
-    # Record all results.
-    filepath3 = prepare_output_filepath(ncbi_folder, "ncbi_results.csv")
-    tickets.export_ticket_data(ncbi_results_list, filepath3,
-                               ncbi_results_header, include_headers=True)
-
-
-
-
-    # Print summary of script
-    print(f"Number of genomes in the MySQL database: {tally_total}")
-    print("Number of genomes that are NOT set to be updated: "
-          f"{tally_not_auto_updated}")
-    print("Number of auto-updated genomes with no accession: "
-          f"{tally_no_accession}")
-    print("Number of auto-updated genomes with a duplicated accession: "
-          f"{tally_duplicate_accession}")
-    print("Number of records that failed to be retrieved: "
-          f"{tally_retrieval_failure}")
-    print("Number of records retrieved that are NOT more recent than "
-          f"the MySQL record: {tally_retrieved_not_new}")
-    print("Number of records retrieved that should be updated in "
-          f"the MySQL database: {tally_retrieved_for_update}")
-    # input("\n\nPress ENTER to continue.")
-
-
+    return (new_record_list, results)
 
 
 # TODO unittest.
-def get_accessions(genome_dict):
+def save_files_and_tkts(record_list, accession_dict, output_folder):
+    """Save flat files retrieved from GenBank and create import tickets."""
+    import_tickets = []
+    genome_folder = pathlib.Path(output_folder, GENOMES_DIR)
+    genome_folder.mkdir()
+    for record in record_list:
+        accession = record.name
+        accession = accession.split('.')[0]
+        gnm = accession_dict[accession]
+        ncbi_filename = f"{gnm.name.lower()}__{accession}.gb"
+        flatfile_path = pathlib.Path(genome_folder, ncbi_filename)
+        SeqIO.write(record, str(flatfile_path), "genbank")
+
+        tkt = ticket.GenomeTicket()
+        tkt.type = "replace"
+        tkt.phage_id = gnm.id
+        tkt.data_dict["host_genus"] = gnm.host_genus
+        tkt.data_dict["cluster"] = gnm.cluster
+        tkt.data_dict["subcluster"] = gnm.subcluster
+        tkt.data_dict["annotation_status"] = gnm.annotation_status
+        tkt.data_dict["annotation_author"] = gnm.annotation_author
+        tkt.description_field = "product"
+        tkt.data_dict["accession"] = gnm.accession
+        tkt.run_mode = "sea_auto"
+        # TODO secondary_phage_id data is for old ticket format.
+        tkt.data_dict["secondary_phage_id"] = gnm.id
+        tkt.data_dict["retrieve_record"] = 1
+        import_tickets.append(tkt)
+
+    # Now make the import table.
+    if len(import_tickets) > 0:
+        filepath = basic.prepare_filepath(output_folder, "import_table.csv")
+        import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
+        tickets.export_ticket_data(import_tickets, filepath, IMPORT_COLUMNS1)
+
+        # TODO new dictwriter. Use this block instead of above once the
+        # new import script is functioning.
+        # filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
+        # import_tickets = convert_tickets_to_dict(import_tickets)
+        # tickets.export_ticket_data(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
+
+
+# TODO unittest.
+def create_accession_sets(genome_dict):
     """Generate set of unique and non-unique accessions.
 
     Input is a dictionary of pdm_utils genome objects."""
@@ -800,28 +818,28 @@ def get_accessions(genome_dict):
 
 
 # TODO unittest.
-def get_ncbi_results_dict(gnm, genbank_date, retrieve_result):
+def create_results_dict(gnm, genbank_date, retrieve_result):
     """Create a dictionary of data summarizing NCBI retrieval status."""
-    result_dict = {}
-    result_dict["phage_id"] = gnm.id
-    result_dict["phage_name"] = gnm.name
-    result_dict["accession"] = gnm.accession
-    result_dict["annotation_status"] = gnm.annotation_status
-    result_dict["mysql_date"] = gnm.date
-    result_dict["genbank_date"] = genbank_date
-    result_dict["result"] = retrieve_result
-    return result_dict
+    data_dict = {}
+    data_dict["phage_id"] = gnm.id
+    data_dict["phage_name"] = gnm.name
+    data_dict["accession"] = gnm.accession
+    data_dict["annotation_status"] = gnm.annotation_status
+    data_dict["mysql_date"] = gnm.date
+    data_dict["genbank_date"] = genbank_date
+    data_dict["result"] = retrieve_result
+    return data_dict
 
 
 # TODO unittest.
-def get_draft_data(output_path, unmatched_phagesdb_ids):
+def get_draft_data(output_path, phage_id_set):
     """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
 
-    if len(unmatched_phagesdb_ids) > 0:
-        phagesdb_new_phages_list = list(unmatched_phagesdb_ids)
+    if len(phage_id_set) > 0:
+        phage_id_list = list(phage_id_set)
         pecaan_folder = pathlib.Path(output_path, f"pecaan")
         pecaan_folder.mkdir()
-        retrieve_drafts(pecaan_folder, phagesdb_new_phages_list)
+        retrieve_drafts(pecaan_folder, phage_id_list)
     else:
         print("No new 'draft' genomes available.")
 
@@ -832,41 +850,27 @@ def retrieve_drafts(output_folder, phage_list):
     """Retrieve auto-annotated 'draft' genomes from PECAAN."""
 
     print("\n\nRetrieving new phages from PECAAN")
-    pecaan_genome_folder = pathlib.Path(output_folder, "genomes")
-    pecaan_genome_folder.mkdir()
+    genome_folder = pathlib.Path(output_folder, GENOMES_DIR)
+    genome_folder.mkdir()
 
     # Keep track of how many genomes were retrieved from PECAAN
-    pecaan_retrieved_tally = 0
-    pecaan_failed_tally = 0
-    pecaan_retrieved_list = []
-    pecaan_failed_list = []
-    import_ticket_lists = []
+    retrieved_tally = 0
+    failed_list = []
+    import_tickets = []
 
     # Iterate through each row in the file
     for new_phage in phage_list:
         pecaan_link = constants.PECAAN_PREFIX + new_phage
-        try:
-            # gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) ==> required for
-            # urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]
-            # certificate verify failed (_ssl.c:590)> ==> creating new TLS
-            # context tells urllib2 to ignore certificate chain
-            # NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
-            response = request.urlopen(pecaan_link)
-            response_str = str(response.read().decode("utf-8"))
-            response.close()
-
-        except:
+        response = phagesdb.retrieve_url_data(pecaan_link)
+        if response == "":
             print(f"Error: unable to retrieve {new_phage} draft genome.")
             print(pecaan_link)
-            pecaan_failed_tally += 1
-            pecaan_failed_list.append(new_phage)
-            response_str = None
-
-        if response_str is not None:
+            failed_list.append(new_phage)
+        else:
             pecaan_filename = f"{new_phage}.txt"
-            pecaan_filepath = pathlib.Path(pecaan_genome_folder, pecaan_filename)
+            pecaan_filepath = pathlib.Path(genome_folder, pecaan_filename)
             with pecaan_filepath.open("w") as fh:
-                fh.write(response_str)
+                fh.write(response)
 
             tkt = ticket.GenomeTicket()
             tkt.type = "add"
@@ -882,30 +886,29 @@ def retrieve_drafts(output_folder, phage_list):
             # TODO secondary_phage_id data is for old ticket format.
             tkt.data_dict["secondary_phage_id"] = "none"
             tkt.data_dict["retrieve_record"] = 1
-            import_ticket_lists.append(tkt)
+            import_tickets.append(tkt)
 
             print(f"{new_phage} retrieved from PECAAN.")
-            pecaan_retrieved_tally += 1
-            pecaan_retrieved_list.append(new_phage)
+            retrieved_tally += 1
 
     # Now make the import table.
-    if len(import_ticket_lists) > 0:
-        filepath = prepare_output_filepath(output_folder, "import_table.csv")
-        import_ticket_lists = convert_tickets_to_dict(import_ticket_lists, old_format=True)
-        tickets.export_ticket_data(import_ticket_lists, filepath, import_table_columns1)
+    if len(import_tickets) > 0:
+        filepath = basic.prepare_filepath(output_folder, "import_table.csv")
+        import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
+        tickets.export_ticket_data(import_tickets, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
-        # filepath2 = prepare_output_filepath(output_folder, "import_table2.csv")
-        # import_ticket_lists = convert_tickets_to_dict(import_ticket_lists)
-        # tickets.export_ticket_data(import_ticket_lists, filepath2, import_table_columns2, include_headers=True)
+        # filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
+        # import_tickets = convert_tickets_to_dict(import_tickets)
+        # tickets.export_ticket_data(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
 
     # Report results
-    if pecaan_retrieved_tally > 0:
-        print(f"{pecaan_retrieved_tally} phage(s) were successfully retrieved")
+    if retrieved_tally > 0:
+        print(f"{retrieved_tally} phage(s) were successfully retrieved")
 
-    if pecaan_failed_tally > 0:
-        print(f"{pecaan_failed_tally} phage(s) failed to be retrieved:")
-        for element in pecaan_failed_list:
+    if len(failed_list) > 0:
+        print(f"{len(failed_list)} phage(s) failed to be retrieved:")
+        for element in failed_list:
             print(element)
         input("\n\nPress ENTER to continue.")

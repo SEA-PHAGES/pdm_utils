@@ -24,19 +24,19 @@ class TestPhagesDBFunctions(unittest.TestCase):
 
 
 
-    def test_retrieve_fasta_data_1(self):
+    def test_retrieve_url_data_1(self):
         """Verify fasta data is retrieved and no error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        fasta_data = phagesdb.retrieve_fasta_data(url)
+        fasta_data = phagesdb.retrieve_url_data(url)
         expected_fasta_data_header = ">Mycobacterium phage L5"
         self.assertEqual(fasta_data[:23], expected_fasta_data_header)
 
-    def test_retrieve_fasta_data_2(self):
+    def test_retrieve_url_data_2(self):
         """Verify fasta data is not retrieved and an error is produced."""
 
         url = "https://phagesdb.org/media/fastas/L5_x.fasta"
-        fasta_data = phagesdb.retrieve_fasta_data(url)
+        fasta_data = phagesdb.retrieve_url_data(url)
         expected_fasta_data_header = ""
         self.assertEqual(fasta_data, expected_fasta_data_header)
 

@@ -63,7 +63,7 @@ The most up-to-date version of Actino_Draft is stored on the Hatfull lab's publi
 
         > python3 -m pdm_utils get_db Actino_Draft ./ -a
 
-    2. **Retrieving new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. The *get_data* took creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
+    2. **Retrieving new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. *get_data* creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
 
         > python3 -m pdm_utils get_data Actino_Draft ./ -a -c get_data_config.txt
 

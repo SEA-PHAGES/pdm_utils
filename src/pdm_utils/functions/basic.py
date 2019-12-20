@@ -1105,3 +1105,17 @@ def convert_list_to_dict(data_list, key):
               "some intended keys are duplicated.")
         data_dict = {}
     return data_dict
+
+
+
+
+# TODO unittest
+def prepare_filepath(folder_path, file_name, folder_name=None):
+    """Prepare output folder."""
+    if folder_name is not None:
+        subfolder_path = Path(folder_path, folder_name)
+        subfolder_path.mkdir()
+    else:
+        subfolder_path = folder_path
+    file_path = Path(subfolder_path, file_name)
+    return file_path

@@ -122,22 +122,28 @@ def parse_fasta_filename(data_dict):
     return fastafile_url
 
 
-def retrieve_fasta_data(fastafile_url):
+def retrieve_url_data(url):
     """Retrieve fasta file from PhagesDB.
 
-    :param fastafile_url: URL for a fasta file.
-    :type fastafile_url: str
-    :returns: Data from the fasta file.
+    :param url: URL for data to be retrieved.
+    :type url: str
+    :returns: Data from the URL.
     :rtype: str
     """
     try:
-        request = urllib.request.Request(fastafile_url)
+        # gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) ==> required for
+        # urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]
+        # certificate verify failed (_ssl.c:590)> ==> creating new TLS
+        # context tells urllib2 to ignore certificate chain
+        # NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
+        request = urllib.request.Request(url)
         with urllib.request.urlopen(request) as response:
-            fasta_data = response.read()
-            fasta_data = fasta_data.decode("utf-8")
+            data = response.read()
+            data = data.decode("utf-8")
     except:
-        fasta_data = ""
-    return fasta_data
+        print(f"Unable to retrieve data from {url}")
+        data = ""
+    return data
 
 
 def parse_fasta_data(fasta_data):
@@ -214,7 +220,7 @@ def parse_genome_data(data_dict, gnm_type="", seq=False):
     # Fasta file record
     # if fastafile_url != "":
     if (fastafile_url != "" and seq == True):
-        fasta_file = retrieve_fasta_data(fastafile_url)
+        fasta_file = retrieve_url_data(fastafile_url)
 
         # TODO unit test - not sure how to test this, since this function
         # retrieves and parses files from PhagesDB.
