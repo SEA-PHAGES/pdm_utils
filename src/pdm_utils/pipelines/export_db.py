@@ -19,6 +19,7 @@ from pathlib import Path
 import re
 import sys
 import time
+import copy
 from typing import List, Dict
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -62,7 +63,8 @@ def run_export(unparsed_args_list):
 
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values_list = parse_value_list_input(args.input)
-        filters = parse_filters(args.filters, verbose=args.verbose)
+        filters = parse_filters(args.filters)
+        groups = parse_groups(args.groups)
 
         if args.pipeline == "csv":
             csvx = True
@@ -82,7 +84,7 @@ def run_export(unparsed_args_list):
                             values_list=values_list, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
                             table=args.table,
-                            filters=filters, groups=args.groups)
+                            filters=filters, groups=groups)
     else:
         pass
 
@@ -200,7 +202,6 @@ def parse_export(unparsed_args_list):
 
         if export.pipeline != "csv":
             parser.add_argument("-g", "--groups", type=str.lower,
-                            choices=filter.GROUP_OPTIONS,
                             help=GROUPS_HELP, nargs="*",
                             dest="groups")
 
@@ -262,20 +263,19 @@ def execute_export(sql_handle, output_path, output_name,
 
     if verbose:
         print("Creating export folder...")
-    output_path = output_path.joinpath(output_name)
+    export_path = output_path.joinpath(output_name)
 
-    if(output_path.is_dir()):
-        output_version = 1
-        while(output_path.is_dir()):
-            output_version += 1
-            updated_output_name = f"{output_name}_{output_version}"
-            output_path = output_path.with_name(updated_output_name)
+    if(export_path.is_dir()):
+        export_version = 1
+        while(export_path.is_dir()):
+            export_version += 1
+            updated_export_name = f"{output_name}_{export_version}"
+            export_path = export_path.with_name(updated_export_name)
 
-        output_path.mkdir()
+        export_path.mkdir()
     else:
-        output_path.mkdir()
+        export_path.mkdir()
 
-    output_path.mkdir(exist_ok=True)
     if db_export:
         if verbose:
             print("Writing SQL database file...")
@@ -285,24 +285,31 @@ def execute_export(sql_handle, output_path, output_name,
     if csv_export or ffile_export:
         if verbose:
             print("Building SQL data handlers...")
-        db_filter = filter.Filter(sql_handle,
-                                  values_list=values_list, table=table)
+        db_filter = filter.Filter(sql_handle, table=table)
+        if values_list:
+            db_filter.set_values = values_list
+
         for filter_list in filters:
             db_filter.add_filter(filter_list[0], filter_list[1],
-                                 filter_list[2], verbose=verbose)
-        db_filter.refresh()
-        db_filter.update(verbose=verbose)
-        if db_filter.hits(verbose=verbose) == 0:
-            print("Database returned no results.")
-            exit(1)
+                                 filter_list[2], filter_list[3],
+                                 verbose=verbose)
+
+        if not db_filter.updated:
+            db_filter.update(verbose=verbose)
+            if db_filter.hits(verbose=verbose) == 0:
+                print("Database returned no results.")
+                exit(1)
+            if verbose:
+                print("")
         db_filter.sort(db_filter.key)
 
         if csv_export:
-            file_name = \
-                f"{sql_handle.database}_v{db_version['Version']}_{table}"
-            write_csv(table, db_filter, sql_handle,
-              output_path, output_name=output_name, csv_name=file_name,
-              verbose=verbose)
+            file_name = f"{sql_handle.database}.{table}"
+                #f"{sql_handle.database}_v{db_version['Version']}_{table}"
+            execute_csv_export(db_filter, sql_handle,
+                               output_path, output_name, 
+                               csv_name=file_name, table=table,
+                               verbose=verbose)
 
         if ffile_export != None:
             if groups:
@@ -312,13 +319,14 @@ def execute_export(sql_handle, output_path, output_name,
                              db_version, ffile_export,
                              table=table, verbose=verbose)
             else:
-                execute_ffx_export(sql_handle, db_filter, ffile_export,
-                                   output_path, output_name, db_version,
-                                   verbose=verbose,
-                                   data_name=db_version["Version"],
+                execute_ffx_export(sql_handle, 
+                                   db_filter.results(verbose=verbose),
+                                   ffile_export,output_path, output_name, 
+                                   db_version, verbose=verbose,
+                                   data_name=f"{sql_handle.database}.{table}",
                                    table=table)
 
-def execute_ffx_export(sql_handle, db_filter, file_format,
+def execute_ffx_export(sql_handle, values, file_format,
                        output_path, output_name, db_version,
                        verbose=False, data_name="database", table="phage"):
     """
@@ -354,16 +362,15 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
     if verbose:
         print(
           f"Retrieving {data_name} data from {sql_handle.database}...")
+
     if table == "phage":
         genomes = phamerator.parse_genome_data(
                                 sql_handle,
-                                phage_id_list=db_filter.results(
-                                                verbose=verbose),
+                                phage_id_list=values,
                                 phage_query="SELECT * FROM phage",
                                 gene_query="SELECT * FROM gene")
     else:
-        cds_list = parse_cds_data_from_geneid(
-                sql_handle, db_filter.results(verbose=verbose))
+        raise ValueError
 
     if verbose:
         print(f"Converting {data_name} data to SeqRecord format...")
@@ -381,14 +388,91 @@ def execute_ffx_export(sql_handle, db_filter, file_format,
             append_database_version(record, db_version)
 
     else:
-        for cds in cds_list:
-            seqrecords.append(cds_to_seqrecord(cds))
+        raise ValueError
 
     write_seqrecord(seqrecords,
                     file_format,
                     output_path,
                     export_dir_name=output_name,
                     verbose=verbose)
+
+def execute_csv_export(db_filter, sql_handle,
+                       output_path, output_name, 
+                       csv_name="database", table="phage", verbose=False):
+    remove_fields = {"phage"           : ["Sequence"],
+                     "gene"            : ["Translation"],
+                     "domain"          : [],
+                     "gene_domain"     : [],
+                     "pham"            : [],
+                     "pham_color"      : [],
+                     "trna"            : ["Sequence"],
+                     "tmrna"           : [],
+                     "trna_structures" : []}
+
+    valid_fields = db_filter.db_tree.get_table(table).show_columns()
+
+    for unwanted_field in remove_fields[table]:
+        valid_fields.remove(unwanted_field)
+   
+    if db_filter.values:
+        csv_request = ("SELECT " + ",".join(valid_fields) +\
+                     f" FROM {table} WHERE {db_filter.key} IN ('" + \
+                      "','".join(db_filter.results(verbose=verbose)) + "')")
+    else:
+        csv_request = ("SELECT " + ",".join(valid_fields) + f" FROM {table}")
+
+    if verbose:
+        print(
+          f"Retrieving {csv_name} data from {sql_handle.database}...")
+    csv_data_dicts = sql_handle.execute_query(csv_request)
+
+    csv_data = []
+    csv_data.append(csv_data_dicts[0].keys())
+    row_data = []
+    for dict in csv_data_dicts:
+        for key in dict.keys():
+            row_data.append(dict[key])
+        csv_data.append(row_data)
+        row_data = []
+    write_csv(csv_data, output_path, 
+              output_name=output_name, csv_name=csv_name,
+              verbose=verbose)
+
+def new_ffx_grouping(sql_handle, group_path, group_list, db_filter,
+                 db_version, file_format, table="phage", verbose=False):
+    """
+    Recursive helper function that handles grouping for ffx
+    """
+    curr_group_list = group_list.copy()
+    curr_group = curr_group_list.pop(0)
+    
+    groups = db_filter.group(curr_group[0], curr_group[1], verbose=verbose)
+
+    for group in groups.keys():
+        db_fitler = db_filter.copy()
+        db_filter.set_values(groups[group])
+
+        if db_filter.hits(verbose=verbose) == 0:
+            continue
+
+        if verbose:
+            print(f"Group found for {curr_group[1]}='{group}' "
+                  f"in {curr_group[0]}...")
+            db_filter.hits(verbose=verbose)
+
+        grouped_path = group_path.joinpath(group)
+        grouped_path.mkdir(exist_ok=True)
+
+        if curr_group_list:
+            ffx_grouping(sql_handle, grouped_path, curr_group_list,
+                         db_filter, db_version, file_format,
+                         table=table, verbose=verbose)
+
+        else:
+            execute_ffx_export(sql_handle, db_filter.results(verbose=verbose),
+                               file_format, group_path, group, db_version,
+                               verbose=verbose, data_name=group,
+                               table=table)
 
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                  db_version, file_format, table="phage", verbose=False):
@@ -398,26 +482,38 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
     """
     current_group_list = group_list.copy()
     current_group = current_group_list.pop(0)
-    group_dict = db_filter.group(current_group, verbose=verbose)
-    for group in group_dict.keys():
-        if group_dict[group]:
-            if verbose:
-                print(f"Grouped {group}...")
-            grouped_path = group_path.joinpath(group)
-            grouped_path.mkdir(exist_ok=True)
-            if current_group_list:
-                ffx_grouping(sql_handle, grouped_path, current_group_list,
-                              filter.Filter(sql_handle,
-                                            group_dict[group]),
-                             db_version, file_format, table=table,
+
+    groups = db_filter.group(current_group[0], current_group[1],
                              verbose=verbose)
 
-            else:
-                db_filter.values = group_dict[group]
-                execute_ffx_export(sql_handle, db_filter, file_format,
-                                   group_path, group, db_version,
-                                   verbose=verbose, data_name=group,
-                                   table=table)
+    for group in groups.keys():
+        if verbose:
+            print(f"For group {current_group[1]}='{group}' "
+                  f"in {current_group[0]}")
+        db_filter.set_values(groups[group])
+    
+        grouped_path = group_path.joinpath(group)
+        grouped_path.mkdir(exist_ok=True)
+
+        if current_group_list:
+            curr_db_filter = db_filter.copy()
+            curr_db_filter.add_filter(current_group[0], current_group[1], 
+                                      group, "=")
+
+            ffx_grouping(sql_handle, grouped_path, current_group_list,
+                         curr_db_filter, db_version, file_format,
+                         table=table, verbose=verbose)
+
+        else:
+            values = db_filter.results(verbose=verbose)
+            if verbose:
+                db_filter.hits(verbose=True)
+                print("")
+
+            execute_ffx_export(sql_handle, values, file_format, group_path, 
+                               group, db_version, verbose=verbose, 
+                               data_name=f"{current_group[1]}='{group}'", 
+                               table=table)
 
 def convert_path(path: str):
     """Function to convert a string to a working Path object.
@@ -460,7 +556,7 @@ def convert_dir_path(path: str):
         return path_object
     else:
         print("Path input does not direct to a folder")
-        raise ValueError
+        exit(1)
 
 def convert_file_path(path: str):
     """Helper function to convert a string to a working Path object.
@@ -480,21 +576,36 @@ def convert_file_path(path: str):
         print("Path input does not direct to a file")
         raise ValueError
 
-def parse_filters(unparsed_filters, verbose=False):
+def parse_filters(unparsed_filters):
     """
     Helper function to return a two-dimensional
     array of filter parameters
     """
-    filter_format = re.compile("\w*.\w*=\w*", re.IGNORECASE)
+    filter_format = re.compile("\w+.\w+[=<>!]+\w+", re.IGNORECASE)
     filters = []
     for filter in unparsed_filters:
         if re.match(filter_format, filter) != None:
-            filters.append(re.split("\W+", filter))
+            filters.append(re.split("\W+", filter) +\
+                           re.findall("[!=<>]+", filter))
         else:
-            if verbose:
-                print(f"Unsupported filtering format: '{filter}'")
+            print(f"Unsupported filtering format: '{filter}'")
+            exit(1)
+            
+        
     return filters
 
+def parse_groups(unparsed_groups):
+    group_format = re.compile("\w+.\w+", re.IGNORECASE)
+    groups = []
+    for group in unparsed_groups:
+        if re.match(group_format, group) != None:
+            groups.append(re.split("\W+", group))
+        else:
+            print(f"Unsupported grouping format: '{group}'")
+            exit(1)
+
+    return groups
+            
 @singledispatch
 def parse_value_list_input(value_list_input):
     """Helper function to populate the filter list for a SQL query.
@@ -661,33 +772,17 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
 
     for record in seqrecord_list:
         if verbose:
-            print(f"Writing {record.name}")
+            print(f"...Writing {record.name}...")
         output_dir = f"{record.name}.{file_format}"
         output_path = export_path.joinpath(output_dir)
         output_handle = output_path.open(mode='w')
         SeqIO.write(record, output_handle, file_format)
         output_handle.close()
 
-def write_csv(table, db_filter, sql_handle, output_path,
-              output_name="export",csv_name="database",
+def write_csv(csv_data, output_path, output_name="export",csv_name="database",
               verbose=False):
     """Writes a formatted csv file from genome objects"""
-
-    remove_fields = {"phage"           : ["Sequence"],
-                     "gene"            : ["Translation"],
-                     "domain"          : [],
-                     "gene_domain"     : [],
-                     "pham"            : [],
-                     "pham_color"      : [],
-                     "trna"            : ["Sequence"],
-                     "tmrna"           : [],
-                     "trna_structures" : []}
-
-    valid_fields = db_filter.tables[table].copy()
-
-    for unwanted_field in remove_fields[table]:
-        valid_fields.remove(unwanted_field)
-
+ 
     export_path = output_path.joinpath(output_name)
 
     if not export_path.exists():
@@ -699,29 +794,9 @@ def write_csv(table, db_filter, sql_handle, output_path,
     while(csv_path.exists()):
         csv_version += 1
         csv_path = export_path.joinpath(f"{csv_name}{csv_version}.csv")
-
+ 
     if verbose:
-        print(
-          f"Retrieving {csv_name} data from {sql_handle.database}...")
-
-    csv_request = ("SELECT " + ",".join(valid_fields) +\
-                 f" FROM {table} WHERE {db_filter.key} IN ('" + \
-                  "','".join(db_filter.values) + "')")
-
-    sql_data = sql_handle.execute_query(csv_request)
-
-    csv_data = []
-    csv_data.append(sql_data[0].keys())
-
-    row_data = []
-    for sql_dict in sql_data:
-        for key in sql_dict.keys():
-            row_data.append(sql_dict[key])
-        csv_data.append(row_data)
-        row_data = []
-
-    if verbose:
-            print(f"Writing {csv_name}.csv...")
+            print(f"...Writing {csv_name}.csv...")
 
     csv_path.touch()
     with open(csv_path, 'w', newline="") as csv_file:

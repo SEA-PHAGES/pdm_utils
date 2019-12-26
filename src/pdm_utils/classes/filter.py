@@ -6,7 +6,7 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation
 from pdm_utils.functions import phamerator
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler, databasetree
 from typing import List
-import cmd, readline, argparse, os, sys, re, string
+import cmd, readline, argparse, os, sys, re, string, math
 
 #Global file constants
 OPERATOR_OPTIONS      = ["=", "!=", ">", "<"]
@@ -14,9 +14,10 @@ COMPARATIVE_OPERATORS = [">", "<"]
 COMPARABLE_TYPES      = ["int", "decimal",
                          "mediumint", "float",
                          "datetime", "double"]
+GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
 class Filter:
-    def __init__(self, sql_handle, values_list=None, table='phage'):
+    def __init__(self, sql_handle, table='phage'):
         """Initializes a Filter object used to filter
         results from a SQL database
         """
@@ -28,7 +29,7 @@ class Filter:
             print(f"Table passed to filter is not in {sql_handle.database}")
             raise ValueError
 
-        self.values = values_list
+        self.values = None
 
         self.table = table
 
@@ -38,8 +39,8 @@ class Filter:
         self.history = []
         self.filters = {}
 
-        self.values_valid = False
-        self.updated = False
+        self.values_valid = True
+        self.updated = True
 
     def translate_table(self, raw_table, verbose=False):
         for table in self.db_tree.db_node.show_tables():
@@ -68,7 +69,7 @@ class Filter:
 
     def check_operator(self, operator, table, field, verbose=False):
         if operator not in OPERATOR_OPTIONS:
-            return None
+            raise ValueError
 
         table_node = self.db_tree.get_table(table) 
         if table_node == None:
@@ -89,6 +90,16 @@ class Filter:
                   f"is not comparable (Operator: {operator})")
             raise ValueError
 
+    def switch_table(self, raw_table, verbose=False):
+        table = self.translate_table(raw_table)
+        table_node = self.db_tree.get_table(table)
+        
+        self.values = self.transpose(self.table, self.values, 
+                                     target_table=table)
+        self.table = table
+        self.key = table_node.primary_key.id
+        self.update()
+        
     def add_filter(self, raw_table, raw_field, value, operator, verbose=False):
         """
         Adds a filter to database queries
@@ -116,83 +127,91 @@ class Filter:
         else:
             self.filters[table] = {field: {operator : [value]}}
 
+        self.updated = False
+
+    def set_values(self, values):
+        if values:
+            if not isinstance(values[0], str):
+                raise ValueError
+
+        self.values = values
+        self.valid_values = False
+        self.updated = False
+
     def refresh(self):
         """
         Refreshes values
         """
-        if self.values == None:
+        if not self.values or self.values_valid:
             self.values_valid = True
+            return
 
-        else:
-            query = (f"SELECT {self.key} "
-                     f"FROM {self.table} WHERE {self.key} IN "
-                     "('" + "','".join(self.values) + "')")
-            
-            results_dicts = self.sql_handle.execute_query(query)
-            results = []
-            for result in results_dicts:
-                results.append(result[self.key])
-
-            self.values = results
-            self.values_valid = True
+        self.values = self.db_tree.build_values(self.table, self.key, 
+                                                values=self.values)
+        self.values_valid = True
 
     def update(self, verbose=False):
         """
         Updates results list for the Filter object
         """
         self.refresh()
-        
+        if self.updated:
+            return
+
         if not self.filters:
+            self.values = self.db_tree.build_values(self.table, self.key,
+                                                    values=self.values)
             self.updated = True
             return
-        if self.values != None and len(self.values) == 0:
-            self.updated = True
-            return
-       
-        if self.values == None:
-            query_values = []
-        else:
-            query_values = self.values 
+
+        query_values = self.values 
        
         for table in self.filters.keys():
             queries = self.build_queries(table)
             if verbose:
-                print(f"Filtering {table} in "
-                      f"{self.sql_handle.database} for "+\
-                            " and ".join(queries) + "...")
+                print(f"Filtering {self.sql_handle.database}.{table} for "
+                       + " and ".join(queries) + "...")
 
             if table == self.table:
                 query_values = self.db_tree.build_values(
                                                 table, self.key,
                                                 queries=queries,
                                                 values=query_values)
+
             else:
                 key = self.db_tree.get_table(table).primary_key.id
-                untransposed = self.db_tree.build_values(
+                untransposed_values = self.db_tree.build_values(
                                                 table, key,
                                                 queries=queries)
-                query_values = list(set(query_values) &\
-                                    set(self.transpose(table, untransposed)))
-
+                transposed_values = self.transpose(table, untransposed_values)
+                if query_values:
+                    query_values = list(set(query_values) &\
+                                        set(transposed_values))
+                else:
+                    query_values = transposed_values
             if not query_values:
-                break
+                self.values = query_values
+                return
 
         self.values = query_values
-        if len(query_values) > 0:
-            self.history.append(query_values)
+        self.history.append(query_values)
 
     def build_queries(self, table):
         queries = []
         for field in self.filters[table].keys():
             for operator in self.filters[table][field].keys():
-                queries.append(
-                    f"{field}{operator}'"+ \
-                        "','".join((self.filters[table])\
-                                                [field]\
-                                                [operator]) + "'")
+                operator_queries = []
+                for value in self.filters[table][field][operator]:
+                    operator_queries.append(f"{field}{operator}'{value}'")
+                query = ("(" + " or ".join(operator_queries) + ")")
+                queries.append(query)
+
         return queries
 
     def sort(self, sort_field, verbose=False):
+        if not self.values:
+            return
+
         sort_field = self.translate_field(sort_field, self.table) 
         if verbose:
             print(f"Sorting by '{sort_field}'...")
@@ -206,9 +225,13 @@ class Filter:
         
         self.values = query_results
 
-    def transpose(self, table, values, verbose=False):
+    def transpose(self, table, values, target_table=None):
+        if not values:
+            return []
+        if target_table == None:
+            target_table = self.table
         table_node = self.db_tree.get_table(table)
-        target_table_node = self.db_tree.get_table(self.table)
+        target_table_node = self.db_tree.get_table(target_table)
         traversal_path = self.db_tree.find_path(table_node, target_table_node)
 
         if not traversal_path:
@@ -229,9 +252,10 @@ class Filter:
             current_key = connection_key[1]
             current_table = connection_key[0] 
        
-        if current_key != self.key:
+        if current_key != target_table_node.primary_key.id:
             current_values = self.db_tree.build_values(
-                                    current_table, self.key,
+                                    current_table, 
+                                    target_table_node.primary_key.id,
                                     values_column=current_key,
                                     values=current_values)
 
@@ -241,22 +265,36 @@ class Filter:
         """
         Sets results according to current filters
         """
+        if not self.values:
+            return []
+
+        if not self.values_valid:
+            self.refresh()
+
         if verbose:
-            print("Results:")
+            print(" " + "_"*57 + " ")
+            print("| %-20s" % \
+                 (f"{self.key} Results:") \
+                 + " "*36 + "|")
+            print("|" + "-"*57 + "|")
             for row in range(0, len(self.values), 3):
                 result_row = self.values[row:row+3]
                 if len(result_row) == 3:
-                    print("%-20s %-20s %s" % \
+                    print("| %-20s %-20s %-13s |" % \
                          (result_row[0], result_row[1], result_row[2]))
                 elif len(result_row) == 2:
-                    print("%-20s %-20s" % \
-                         (result_row[0], result_row[1]))
+                    print("| %-20s %-20s %-13s" % \
+                         (result_row[0], result_row[1], "") \
+                         + " " + "|")
 
                 elif len(result_row) == 1:
-                    print("%s" % (result_row[0]))
+                    print("| %-20s %-20s %-13s" % \
+                         (result_row[0], "", "") \
+                         + " " + "|")
+            print("|" + "_"*57 + "|")
 
         return self.values
-
+ 
     def undo(self, verbose=False):
         """
         Undos last filter option
@@ -275,7 +313,7 @@ class Filter:
         Resets created queries and filters
         for the Filter object
         """
-        self.values = list(phamerator.create_phage_id_set(self.sql_handle))
+        self.values = None
         self.history = []
         if verbose:
             print("Results and results history cleared.")
@@ -294,69 +332,131 @@ class Filter:
         values from the results list
         separated by a characteristic.
         """
-        table = self.translate_table(raw_table)
+        table = self.translate_table(table)
         table_node = self.db_tree.get_table(table)
-        field = self.translate_field(raw_field, table)
+        field = self.translate_field(field, table)
         field_node = table_node.get_column(field) 
 
-        group_options = {"limited_set"    : self.group_limited_set,
-                         "large_num_set"  : self.group_large_num_set,
-                         "large_str_set"  : self.group_large_str_set}
+        if field_node.group in GROUP_OPTIONS:
+            if verbose:
+                print(f"Grouping by {field} in {table}...")
 
-        if table_node.group in group_options.keys():
-            return group_options[table_node.group]
+            if field_node.group == "limited_set":
+                distinct_field = field
+
+            elif field_node.group == "num_set":
+                distinct_field = self.large_num_set_distinct_query(
+                                                             table, field)
+            elif field_node.group == "str_set":
+                distinct_field = f"substring({field}, 1, 1)"
+            return self.build_groups(table_node, field_node,
+                                     distinct_field=distinct_field,
+                                     verbose=verbose)
         else:
             print(f"Grouping option by {field} is not supported.")
             raise ValueError
+       
+    def build_groups(self, table_node, field_node, distinct_field=None,
+                     verbose=False):
+        if not self.values:
+            return {}
+
+        if distinct_field == None:
+            distinct_field = field_node.id
+        query = f"SELECT DISTINCT {distinct_field} FROM {table_node.id}"
+
+        if table_node.id != self.table:
+            group_assist_filter = self.copy()
+            group_assist_filter.switch_table(table_node.id)
         
-    def group_limited_set(self, table_node, field_node):
-        """
-        Helper function that groups limited set
-        values into a two-dimensional array
-        """
-        group_dicts = self.sql_handle.execute_query(
-            f"SELECT DISTINCT {field_node.id} FROM {table_node.id}")
-        group_set = []
-        for group_dict in group_dicts:
-            group_set.append(group_dict[f"{field_node.id}"])
-
         groups = {}
-        for key in group_set:
-            groups.update({key: []})
+        for dict in self.sql_handle.execute_query(query):
+            query = f"{distinct_field}='{str(dict[distinct_field])}'"
 
-        for group in group_set:
-            query =(f"SELECT {table_node.primary_key.id} FROM {table_node.id} "
-                    f"WHERE {field_node.id}='{group}'"+\
-                    f" and {self.key} IN " + "('" + \
-                     "','".join(self.values) + "')")
-            results_dicts = self.sql_handle.execute_query(query)
-            if results_dicts != ():
-                results_list = []
-                for result_dict in results_dicts:
-                     results_list.append(result_dict[self.key])
-                groups[group] = results_list
+            if table_node.id == self.table:
+                values = self.db_tree.build_values(table_node.id, 
+                                                   table_node.primary_key.id,
+                                                   queries=[query],
+                                                   values=self.values)
 
+            else:
+                values = self.group_transpose(group_assist_filter,
+                                              table_node, query)
+           
+            if values:
+                groups[str((dict[distinct_field]))] = values
+                if verbose:
+                    print(f"...Group found for {field_node.id}="
+                          f"'{str(dict[distinct_field])}' "
+                          f"in {table_node.id}...")
+                    print("......Database hits in group: " + str(len(values)))
+            else:
+                if verbose:
+                    print(f"...No group found for {field_node.id}="
+                          f"'{str(dict[distinct_field])}' "
+                          f"in {table_node.id}...")
+ 
         if field_node.null:
-            groups.update({"None": []})
+            null_query = f"{field_node.id} IS NULL"
+            values = self.db_tree.build_values(table_node.id, field_node.id,
+                                               values_column=distinct_field,
+                                               queries=[null_query],
+                                               values=self.values)
+            if values:
+                groups["Null"] = values
 
-            query =(f"SELECT {table_node.primary_key.id} FROM {table_node.id} "
-                    f"WHERE {field_node.id} is NULL "
-                    f"and {self.key} IN" + "('" + \
-                     "','".join(self.values) + "')")
-            results_dicts = self.sql_handle.execute_query(query)
-            if results_dicts != ():
-                results_list = []
-                for result_dict in results_dicts:
-                    results_list.append(result_dict[self.key])
-                groups["None"] = results_list
-    
         return groups
-   
-    def group_large_num_set(self, table, field):
-        pass
 
-    def group_large_str_set(self, table, field):
-        pass
+    def group_transpose(self, assist_filter, table_node, query):
+        values = self.db_tree.build_values(table_node.id,
+                                           table_node.primary_key.id,
+                                           queries=[query],
+                                           values=assist_filter.values)
+
+        values = self.transpose(table_node.id, values)
+        if values:
+            values = self.db_tree.build_values(self.table, self.key, 
+                                               values=values)
+
+        return values
+        
+    def large_num_set_distinct_query(self, table, field):
+        range_query = (
+                f"SELECT round(log10(Max({field}) - Min({field}))) as pow "
+                f"FROM {table}")
+        range_pow = int(self.sql_handle.execute_query(range_query)[0]["pow"])
+        range_pow = 10**(range_pow-2)
+        return f"round({field}/{range_pow})*{range_pow}"
+
+    def copy(self):
+        duplicate_filter = Filter(self.sql_handle, table=self.table)
+        duplicate_filter.db_tree = self.db_tree
+        if self.values != None:
+            duplicate_filter.values = self.values.copy()
+
+        duplicate_filter.key = self.key
+
+        duplicate_filter.values_valid = self.values_valid
+        duplicate_filter.updated = self.updated
+
+        duplicate_filter.filters = self.copy_filters()
+
+        return duplicate_filter
+
+    def copy_filters(self):
+        duplicate_filters = {}
+        for table in self.filters.keys():
+            duplicate_filters[table] = {}
+            for field in self.filters[table].keys():
+                duplicate_filters[table].update({field: {}})
+                for operator in self.filters[table][field].keys():
+                    values = []
+                    for value in self.filters[table][field][operator]:
+                        values.append(value)
+                    duplicate_filters[table][field].update({operator : values})
+
+        return duplicate_filters
+
 
 def debug_filter(db_filter):
     db_filter.add_filter("phage", "hoststrain", "Gordonia", "=", verbose=True)
@@ -366,13 +466,22 @@ def debug_filter(db_filter):
     db_filter.sort("PhageID")
     db_filter.results(verbose=True)
     db_filter.hits(verbose=True)
+    print("")
+    db_filter.group("phage", "Subcluster2", verbose=True)
+    db_filter.group("phage", "PhageID", verbose=True)
+    db_filter.group("gene", "Orientation", verbose=True)
 
 if __name__ == "__main__":
+    #sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
+    #sql_handle.database = input("Please enter database name: ")
+    #sql_handle.get_credentials()
+    #sql_handle.validate_credentials()
     sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-    sql_handle.database = input("Please enter database name: ")
-    sql_handle.get_credentials()
+    sql_handle.database = "Actino_Draft"
+    sql_handle.username = "root"
+    sql_handle.password = "phage"
     sql_handle.validate_credentials()
     db_filter = Filter(sql_handle) 
-    #debug_filter(db_filter)
+    debug_filter(db_filter)
 
     
