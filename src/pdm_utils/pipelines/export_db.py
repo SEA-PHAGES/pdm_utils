@@ -1,14 +1,8 @@
 """Pipeline for converting a database, filtered for some phages, and writing
 appropriate output files"""
 
-# import readline
-# import typing
-# from contextlib import contextmanager
-# from Bio.Seq import Seq
-
 #for (to be moved) cds_to_seqrecord dependancy
 from Bio.Alphabet import IUPAC
-
 
 import argparse
 import cmd
@@ -23,9 +17,9 @@ import copy
 from typing import List, Dict
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-from Bio.SeqFeature import SeqFeature #, FeatureLocation, CompoundLocation
+from Bio.SeqFeature import SeqFeature
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
-from pdm_utils.functions import flat_files, phamerator #, basic
+from pdm_utils.functions import flat_files, phamerator 
 
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
@@ -63,8 +57,8 @@ def run_export(unparsed_args_list):
 
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values_list = parse_value_list_input(args.input)
-        filters = parse_filters(args.filters)
-        groups = parse_groups(args.groups)
+        filters = filter.parse_filters(args.filters)
+        groups = filter.parse_groups(args.groups)
 
         if args.pipeline == "csv":
             csvx = True
@@ -283,29 +277,10 @@ def execute_export(sql_handle, output_path, output_name,
                         output_path, output_name=output_name)
 
     if csv_export or ffile_export:
-        if verbose:
-            print("Building SQL data handlers...")
-        db_filter = filter.Filter(sql_handle, table=table)
-        if values_list:
-            db_filter.set_values = values_list
-
-        for filter_list in filters:
-            db_filter.add_filter(filter_list[0], filter_list[1],
-                                 filter_list[2], filter_list[3],
-                                 verbose=verbose)
-
-        if not db_filter.updated:
-            db_filter.update(verbose=verbose)
-            if db_filter.hits(verbose=verbose) == 0:
-                print("Database returned no results.")
-                exit(1)
-            if verbose:
-                print("")
-        db_filter.sort(db_filter.key)
-
+        db_filter = build_filter(sql_handle, table, values_list, 
+                                 filters, verbose=verbose)
         if csv_export:
             file_name = f"{sql_handle.database}.{table}"
-                #f"{sql_handle.database}_v{db_version['Version']}_{table}"
             execute_csv_export(db_filter, sql_handle,
                                output_path, output_name, 
                                csv_name=file_name, table=table,
@@ -438,42 +413,6 @@ def execute_csv_export(db_filter, sql_handle,
               output_name=output_name, csv_name=csv_name,
               verbose=verbose)
 
-def new_ffx_grouping(sql_handle, group_path, group_list, db_filter,
-                 db_version, file_format, table="phage", verbose=False):
-    """
-    Recursive helper function that handles grouping for ffx
-    """
-    curr_group_list = group_list.copy()
-    curr_group = curr_group_list.pop(0)
-    
-    groups = db_filter.group(curr_group[0], curr_group[1], verbose=verbose)
-
-    for group in groups.keys():
-        db_fitler = db_filter.copy()
-        db_filter.set_values(groups[group])
-
-        if db_filter.hits(verbose=verbose) == 0:
-            continue
-
-        if verbose:
-            print(f"Group found for {curr_group[1]}='{group}' "
-                  f"in {curr_group[0]}...")
-            db_filter.hits(verbose=verbose)
-
-        grouped_path = group_path.joinpath(group)
-        grouped_path.mkdir(exist_ok=True)
-
-        if curr_group_list:
-            ffx_grouping(sql_handle, grouped_path, curr_group_list,
-                         db_filter, db_version, file_format,
-                         table=table, verbose=verbose)
-
-        else:
-            execute_ffx_export(sql_handle, db_filter.results(verbose=verbose),
-                               file_format, group_path, group, db_version,
-                               verbose=verbose, data_name=group,
-                               table=table)
-
 def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                  db_version, file_format, table="phage", verbose=False):
     """
@@ -498,22 +437,40 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
         if current_group_list:
             curr_db_filter = db_filter.copy()
             curr_db_filter.add_filter(current_group[0], current_group[1], 
-                                      group, "=")
+                                      "=", group)
 
             ffx_grouping(sql_handle, grouped_path, current_group_list,
                          curr_db_filter, db_version, file_format,
                          table=table, verbose=verbose)
 
         else:
-            values = db_filter.results(verbose=verbose)
-            if verbose:
-                db_filter.hits(verbose=True)
-                print("")
-
-            execute_ffx_export(sql_handle, values, file_format, group_path, 
-                               group, db_version, verbose=verbose, 
+            execute_ffx_export(sql_handle, db_filter.results(), file_format, 
+                               group_path, group, db_version, verbose=verbose, 
                                data_name=f"{current_group[1]}='{group}'", 
                                table=table)
+
+def build_filter(sql_handle, table, values_list, filters, verbose=False):
+    if verbose:
+        print("Building SQL data handlers...")
+    db_filter = filter.Filter(sql_handle, table=table)
+    if values_list:
+        db_filter.set_values(values_list)
+
+    for filter_list in filters:
+        db_filter.add_filter(filter_list[0], filter_list[1],
+                             filter_list[3], filter_list[2],
+                             verbose=verbose)
+
+    if not db_filter.updated:
+        db_filter.update(verbose=verbose)
+        if db_filter.hits(verbose=verbose) == 0:
+            print("Database returned no results.")
+            exit(1)
+        if verbose:
+            print("")
+    db_filter.sort(db_filter.key)
+
+    return db_filter
 
 def convert_path(path: str):
     """Function to convert a string to a working Path object.
@@ -575,36 +532,6 @@ def convert_file_path(path: str):
     else:
         print("Path input does not direct to a file")
         raise ValueError
-
-def parse_filters(unparsed_filters):
-    """
-    Helper function to return a two-dimensional
-    array of filter parameters
-    """
-    filter_format = re.compile("\w+.\w+[=<>!]+\w+", re.IGNORECASE)
-    filters = []
-    for filter in unparsed_filters:
-        if re.match(filter_format, filter) != None:
-            filters.append(re.split("\W+", filter) +\
-                           re.findall("[!=<>]+", filter))
-        else:
-            print(f"Unsupported filtering format: '{filter}'")
-            exit(1)
-            
-        
-    return filters
-
-def parse_groups(unparsed_groups):
-    group_format = re.compile("\w+.\w+", re.IGNORECASE)
-    groups = []
-    for group in unparsed_groups:
-        if re.match(group_format, group) != None:
-            groups.append(re.split("\W+", group))
-        else:
-            print(f"Unsupported grouping format: '{group}'")
-            exit(1)
-
-    return groups
             
 @singledispatch
 def parse_value_list_input(value_list_input):
@@ -788,7 +715,7 @@ def write_csv(csv_data, output_path, output_name="export",csv_name="database",
     if not export_path.exists():
         export_path.mkdir()
 
-    csv_path = Path(os.path.join(export_path, f"{csv_name}.csv"))
+    csv_path = export_path.joinpath(f"{csv_name}.csv")
     csv_version = 1
 
     while(csv_path.exists()):
@@ -835,7 +762,6 @@ def main(args):
     run_export(args)
 
 class Cmd_Export(cmd.Cmd):
-
     def __init__(self, file_format="gb",database=None,
                  phage_filter_list=[], sql_handle=None,
                  export_directory_name="export_db",
@@ -858,7 +784,6 @@ class Cmd_Export(cmd.Cmd):
         self.data = None
 
     def preloop(self):
-
         if self.database == None:
             print("---------------------Database Login ---------------------")
             self.database = input("MySQL database: ")

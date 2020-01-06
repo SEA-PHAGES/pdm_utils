@@ -73,10 +73,8 @@ def setup_db_tree_webs(sql_handle, db_node):
 
                 for parent in foreign_key_node.parents:
                     if parent not in primary_key_node.parents:
-                        primary_key_node.add_table(parent)
                         parent.remove_column(foreign_key_node)
-
-                ref_table.remove_column(foreign_key_node)
+                        primary_key_node.add_table(parent)
 
 def setup_grouping_options(sql_handle, db_node):
     """Function to categorize structures to mimic a MySQL database.
@@ -164,6 +162,18 @@ class DatabaseTree:
         :type self.db_node.show_tables(): List[str]
         """
         return self.db_node.show_tables()
+
+    def print_info(self):
+        """Function to display information about a MySQL DatabaseTree.
+
+        :param db_node:
+            Input a DatabaseNode root of a DatabaseTree.
+        :type db_node: DatabaseNode
+        """
+        for table in self.db_node.children:
+            print("|" + table.id + ": |")
+            table.print_columns_info()
+            print("\n")
 
     def get_root(self):
         """Function that allows access to the DatabaseNode.
@@ -296,54 +306,79 @@ class Node:
         else:
             self.children = children
 
+        if not isinstance(id, str):
+            raise TypeError("id parameter must be a string object.")
         self.id = id
 
-    def add_parent(self, parent_node):
-        """Function to link an existing Node object as a parent.
+    def has_parent(self, parent):
+        """Function that returns a boolean of if a parent Node exists.
 
-        :param parent_node:
-            Input a Node object.
-        :type parent_node: Node
+        :param parent:
+            Input the name of a parent Node as a string.
+        :type parent: str
+        :returns (parent in parents)
+            Returns a boolean expression of if a ID matches any parent Node.
+        :type (parent in parents): Boolean
         """
-        parent_node.children.append(self)
-        self.parents.append(parent_node)
+        if not isinstance(parent, str):
+            raise TypeError("parent parameter must be a string object")
 
-    def add_child(self, child_node):
-        """Function to link an existing Node object as a child.
+        parents = self.show_parents()
+        return (parent in parents)
 
-        :param child_node:
-            Input a Node object.
-        :type child_node: Node
+    def has_child(self, child):
+        """Function that returns a boolean of if a child Node exists.
+
+        :param child:
+            Input the name of a child Node as a string.
+        :type child: str
+        :returns (child in children)
+            Returns a boolean expression of if a ID matches any child Node.
+        :type (child in children): Boolean
         """
-        child_node.parents.append(self)
-        self.children.append(child_node)
+        if not isinstance(child, str):
+            raise TypeError("child paremeter must be a string object")
+        children = self.show_children()
+        return (child in children)
 
-    def create_parent(self, parent_id):
-        """Function to create and link a new Node object as a parent.
+    def get_parent(self, parent_id):
+        """Function that returns a connected parent Node.
 
         :param parent_id:
-            Input an ID for the new Node object as a string.
-        :type parent_id: str
-        :returns parent_node:
-            Returns the created and linked Node object.
+            Input the ID of a parent Node as a string.
+        :type child_id: str
+        :returns parent_node
+            Returns a parent Node with a matching ID.
         :type parent_node: Node
         """
-        parent_node = Node(parent_id)
-        self.add_parent(parent_node)
+        if not isinstance(parent_id, str):
+            raise TypeError("parent_id parameter must be a string object")
+
+        parent_node = None
+        for parent in self.parents:
+            if parent.id == parent_id:
+                parent_node = parent
+
         return parent_node
 
-    def create_child(self, child_id):
-        """Function to create and link a new Node object as a child.
-        
+    def get_child(self, child_id):
+        """Function that returns a connected child Node.
+
         :param child_id:
-            Input an ID for the new Node object as a string.
+            Input the ID of a child Node as a string.
         :type child_id: str
-        :returns child_node:
-            Returns the created and linked Node object.
-        :type child_id: Node
+        :returns child_node
+            Returns a child Node with a matching ID.
+        :type child_node: Node
         """
-        child_node = Node(child_id)
-        self.add_child(child_node)
+        if not isinstance(child_id, str):
+            raise TypeError("parent_id parameter must be a string object")
+
+        child_node = None
+        for child in self.children:
+            if child.id == child_id:
+                child_node = child
+
         return child_node
 
     def show_parents(self):
@@ -372,66 +407,82 @@ class Node:
 
         return children
 
-    def has_parent(self, parent):
-        """Function that returns a boolean of if a parent Node exists.
+    def add_parent(self, parent_node):
+        """Function to link an existing Node object as a parent.
 
-        :param parent:
-            Input the name of a parent Node as a string.
-        :type parent: str
-        :returns (parent in parents)
-            Returns a boolean expression of if a ID matches any parent Node.
-        :type (parent in parents): Boolean
-        """
-        parents = self.show_parents()
-        return (parent in parents)
-
-    def has_child(self, child):
-        """Function that returns a boolean of if a child Node exists.
-
-        :param child:
-            Input the name of a child Node as a string.
-        :type child: str
-        :returns (child in children)
-            Returns a boolean expression of if a ID matches any child Node.
-        :type (child in children): Boolean
-        """
-        children = self.show_children()
-        return (child in children)
-
-    def get_parent(self, parent_id):
-        """Function that returns a connected parent Node.
-
-        :param parent_id:
-            Input the ID of a parent Node as a string.
-        :type child_id: str
-        :returns parent_node
-            Returns a parent Node with a matching ID.
+        :param parent_node:
+            Input a Node object.
         :type parent_node: Node
         """
-        parent_node = None
-        for parent in self.parents:
-            if parent.id == parent_id:
-                parent_node = parent
+        if not isinstance(parent_node, Node):
+            raise TypeError("parent_node parameter must be a Node object.")
+        
+        if parent_node in self.parents:
+            raise ValueError(
+            "parent_node cannot be a duplicate of an existing parent Node.")
 
-        return parent_node
+        if self.has_parent(parent_node.id):
+            raise ValueError(
+            "parent_node cannot have the id of an existing parent Node.")
 
-    def get_child(self, child_id):
-        """Function that returns a connected child Node.
+        parent_node.children.append(self)
+        self.parents.append(parent_node)
 
-        :param child_id:
-            Input the ID of a child Node as a string.
-        :type child_id: str
-        :returns child_node
-            Returns a child Node with a matching ID.
+    def add_child(self, child_node):
+        """Function to link an existing Node object as a child.
+
+        :param child_node:
+            Input a Node object.
         :type child_node: Node
         """
-        child_node = None
-        for child in self.children:
-            if child.id == child_id:
-                child_node = child
+        if not isinstance(child_node, Node):
+            raise TypeError("child_node parameter must be a Node object.")
 
+        if child_node in self.parents:
+            raise ValueError(
+            "child_node cannot be a duplicate of an existing child Node.")
+
+        if self.has_child(child_node.id):
+            raise ValueError(
+            "child_node cannot have the id of and existing child Node.")
+
+        child_node.parents.append(self)
+        self.children.append(child_node)
+
+    def create_parent(self, parent_id):
+        """Function to create and link a new Node object as a parent.
+
+        :param parent_id:
+            Input an ID for the new Node object as a string.
+        :type parent_id: str
+        :returns parent_node:
+            Returns the created and linked Node object.
+        :type parent_node: Node
+        """
+        if not isinstance(parent_id, str):
+            raise TypeError("parent_id parameter must be a string object")
+
+        parent_node = Node(parent_id)
+        self.add_parent(parent_node)
+        return parent_node
+
+    def create_child(self, child_id):
+        """Function to create and link a new Node object as a child.
+        
+        :param child_id:
+            Input an ID for the new Node object as a string.
+        :type child_id: str
+        :returns child_node:
+            Returns the created and linked Node object.
+        :type child_id: Node
+        """
+        if not isinstance(child_id, str):
+            raise TypeError("child_id parameter must be a string object")
+
+        child_node = Node(child_id)
+        self.add_child(child_node)
         return child_node
-
+  
     def remove_parent(self, parent_node):
         """Function that disconnects a connected parent Node.
 
@@ -442,6 +493,9 @@ class Node:
             Returns the removed parent_node.
         :type parent_node: Node
         """
+        if not isinstance(parent_node, Node):
+            raise TypeError
+
         if parent_node != None:
             self.parents.remove(parent_node)
             parent_node.children.remove(self)
@@ -458,6 +512,9 @@ class Node:
             Returns the removed child_node.
         :type child_node: Node
         """
+        if not isinstance(child_node, Node):
+            raise TypeError
+
         if child_node != None:
             self.children.remove(child_node)
             child_node.parents.remove(self)
@@ -469,7 +526,18 @@ class DatabaseNode(Node):
     def __init__(self, id, parents=None, children=None):
         super(DatabaseNode, self).__init__(
                                     id, parents=parents, children=children)
-   
+
+    def add_table(self, table_node):
+        """Function to link an existing TableNode object as a child.
+
+        :param table_node:
+            Input a Node object.
+        :type table_node: Node
+        """
+        if not isinstance(table_node, TableNode):
+            raise TypeError("table_node parameter must be a TableNode object.")
+        self.add_child(table_node)
+
     def create_table(self, table):
         """Function to create and link a new TableNode object as a child.
         
@@ -480,30 +548,14 @@ class DatabaseNode(Node):
             Returns the created and linked Node object.
         :type child_id: Node
         """
-        return self.create_child(table)
+        if not isinstance(table, str):
+            raise TypeError("table parameter must be a string object.")
 
-    def add_table(self, table_node):
-        """Function to link an existing TableNode object as a child.
+        table_node = TableNode(table)
+        self.add_table(table_node)
 
-        :param table_node:
-            Input a Node object.
-        :type table_node: Node
-        """
-        self.add_child(table_node)
-
-    def remove_table(self, table):
-        """Function that disconnects a connected TableNode.
-
-        :param table_node:
-            Input the TableNode.
-        :type table_node: Node
-        :returns child_node
-            Returns the removed child_node.
-        :type child_node: Node
-        """
-
-        return self.remove_child(table)
-
+        return table_node
+ 
     def show_tables(self):
         """Function that returns a list representing all the TableNodes.
         
@@ -546,6 +598,17 @@ class TableNode(Node):
 
         self.primary_key = None
 
+    def add_column(self, column_node):
+        """Function to link an existing Node object as a child.
+
+        :param column_node:
+            Input a Node object.
+        :type column_node: ColumnNode
+        """
+        if not isinstance(column_node, ColumnNode):
+            raise TypeError("column_node parameter must be a ColumnNode object.")
+        self.add_child(column_node)
+
     def create_column(self, column):
         """Function to create and link a ColumnNode object.
 
@@ -556,32 +619,12 @@ class TableNode(Node):
             Returns the created and linked ColumnNode object.
         :type column_node: ColumnNode
         """
+        if not isinstance(column, str):
+            raise TypeError("column parameter must be a string object.")
         column_node = ColumnNode(column)
-        column_node.parents.append(self)
-        self.children.append(column_node)
+        self.add_column(column_node)
 
         return column_node
-
-    def add_column(self, column_node):
-        """Function to link an existing Node object as a child.
-
-        :param column_node:
-            Input a Node object.
-        :type column_node: ColumnNode
-        """
-        return self.add_child(column_node)
-
-    def remove_column(self, column_node):
-        """Function that disconnects a connected child Node.
-
-        :param column_node:
-            Input the ColumnNode.
-        :type column_node: ColumnNode
-        :returns child_node
-            Returns the removed column node.
-        :type child_node: ColumnNode
-        """
-        return self.remove_child(column_node)
 
     def show_columns(self):
         """Function that returns a list representing all the ColumnNodes.
@@ -658,6 +701,9 @@ class TableNode(Node):
         foreign_keys = []
         for column in self.children:
             if column != self.primary_key:
+                if not isinstance(column, ColumnNode):
+                    raise TypeError(
+                    "Object in TableNode.children is not a ColumnNode object.")
                 if len(column.parents) > 1:
                     foreign_keys.append(column.id)
 
@@ -673,6 +719,9 @@ class TableNode(Node):
         foreign_keys = []
         for column in self.children:
             if column != self.primary_key:
+                if not isinstance(column, ColumnNode):
+                    raise TypeError(
+                    "Object in TableNode.children is not a ColumnNode object.")
                 if len(column.parents) > 1:
                     foreign_keys.append(column)
 
@@ -685,11 +734,14 @@ class TableNode(Node):
             Returns the name of the primary key ColumnNode of the TableNode.
         :type id: str
         """
-        return self.primary_key.id
+        if self.primary_key:
+            return self.primary_key.id
+
+        return ""
 
 class ColumnNode(Node):
     def __init__(self, id, parents=None, children=None, 
-                 type=None, Null=None, key=None):
+                 type="", Null=None, key=None):
         super(ColumnNode, self).__init__(
                                     id, parents=parents, children=children)
         
@@ -698,7 +750,19 @@ class ColumnNode(Node):
         self.key = key
 
         self.group = "Undefined"
+    
+    def add_table(self, table_node):
+        """Function to link an existing TableNode object as a parent.
 
+        :param table_node:
+            Input a TableNode object.
+        :type table_node: TableNode
+        """
+        if not isinstance(table_node, TableNode):
+            raise TypeError("table_node parameter must be a TableNode object.")
+
+        self.add_parent(table_node)
+    
     def create_table(self, table):
         """Function to create and link a new TableNode object as a parent.
 
@@ -709,32 +773,12 @@ class ColumnNode(Node):
             Returns the created and linked TableNode object.
         :type table_node: TableNode
         """
+        if not isinstance(table, str):
+            raise TypeError("table parameter must be a string object.")
         table_node = TableNode(table)
-        table_node.children.append(self)
-        self.parents.append(table_node)
-    
+        self.add_table(table_node) 
+
         return table_node
-
-    def add_table(self, table_node):
-        """Function to link an existing TableNode object as a parent.
-
-        :param table_node:
-            Input a TableNode object.
-        :type table_node: TableNode
-        """
-        self.add_parent(table_node)
-
-    def remove_table(self, table):
-        """Function that disconnects a connected TableNode.
-
-        :param table:
-            Input the TableNode to be removed.
-        :type table: TableNode
-        :returns parent_node:
-            Returns the removed parent_node.
-        :type parent_node: Node
-        """
-        return self.remove_parent(table)
 
     def get_type(self):
         """Function that returns the raw column type.
@@ -765,20 +809,7 @@ class ColumnNode(Node):
         :type info: List[str]
         """
         info = [self.id, self.parse_type(), self.group, self.null, self.key]
-        return info
-
-def print_database_tables(db_node):
-    """Function to display information about a MySQL DatabaseTree.
-
-    :param db_node:
-        Input a DatabaseNode root of a DatabaseTree.
-    :type db_node: DatabaseNode
-    """
-    for table in db_node.children:
-        print(table.id + ":")
-        table.print_columns_info()
-        print("\n")
-        
+        return info        
 
 if __name__ == "__main__":
     sql_handle = MySQLConnectionHandler()
@@ -786,5 +817,4 @@ if __name__ == "__main__":
     sql_handle.get_credentials()
     sql_handle.validate_credentials()
     db_tree = DatabaseTree(sql_handle)
-    db_node = db_tree.get_root()
-    print_database_tables(db_node)
+    db_tree.print_tables()
