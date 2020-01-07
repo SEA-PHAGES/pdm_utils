@@ -23,10 +23,17 @@ COMPARABLE_TYPES      = ["int", "decimal",
 GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
 class Filter:
-    "MySQL database filtering object."
+    """MySQL database filtering object."""
     def __init__(self, sql_handle, table='phage'):
         """Initializes a Filter object used to filter
         results from a SQL database
+
+        :param sql_handle: 
+            Input a valid MySQLConnectionHandler object.
+        :type sql_handle: MySQLConnectionHandler
+        :param table: 
+            Input a string representing a table in the connected MySQL table.
+        :type table: str
         """
         self.sql_handle = sql_handle
 
@@ -52,6 +59,19 @@ class Filter:
         self.updated = True
 
     def translate_table(self, raw_table, verbose=False):
+        """Parses a case-insensitive string to match a case-sensitive 
+        table_node id string.
+
+        :param raw_table:
+            Input a case-insensitive string for a TableNode id.
+        :type raw_table: str
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        :return table:
+            Returns a case-sensitive string for a TableNode id.
+        :type table: str
+        """
         for table in self.db_tree.db_node.show_tables():
             if table.lower() == raw_table.lower():
                 return table
@@ -61,6 +81,21 @@ class Filter:
         raise ValueError
 
     def translate_field(self, raw_field, table, verbose=False):
+        """Parses a case-insensitive string to match a case-sensitive
+        column_node id string.
+
+        :param raw_field:
+            Input a raw string for a ColumnNode id.
+        :type raw_field: str
+        :param table:
+            Input a case-sensitive string for a TableNode id.
+        :type table: str
+        :param verbose:
+            Set a boolean to control the terminal output.
+        :type verbose: Boolean
+        :return field:
+            Returns a case-sensitive string for a ColumnNode id.
+        """
         table_node = self.db_tree.get_table(table)
         if table_node == None:
             print(
@@ -77,6 +112,21 @@ class Filter:
         raise ValueError
 
     def check_operator(self, operator, table, field, verbose=False):
+        """Parses a operator string to match a MySQL query operators.
+
+        :param operator:
+            Input a raw operator string for an accepted MySQL query operator.
+        :type operator: str
+        :param table:
+            Input a case-sensitive string for a TableNode id.
+        :type table: str
+        :param field:
+            Input a case-sensitive string for a ColumnNode id.
+        :type field: str
+        :param verbose:
+            Set a boolean to control the terminal output.
+        :type verbose: Boolean
+        """
         if operator not in OPERATOR_OPTIONS:
             raise ValueError
 
@@ -100,6 +150,15 @@ class Filter:
             raise ValueError
 
     def build_queries(self, table):
+        """Builds MySQL query statements from Filter object.
+
+        :param table:
+            Input a case-sensitive string for a TableNode id.
+        :type table: str
+        :returns queries:
+            Returns a list of MySQL query strings.
+        :type queries: List[str]
+        """
         queries = []
         for field in self.filters[table].keys():
             for operator in self.filters[table][field].keys():
@@ -112,6 +171,19 @@ class Filter:
         return queries
  
     def transpose(self, table, values, target_table=None):
+        """Takes a set of primary key values and uses foreign-keys 
+        between tables to get the corresponding set of values in another table.
+
+        :param table:
+            Input a case-sensitive string for a TableNode id.
+        :type table: str
+        :param values:
+            Input a list of primary key values for the corresponding table.
+        :type values: List[str]
+        :return current_values:
+            Returns a list of primary key values for another table.
+        :type current_values: List[str]
+        """
         if not values:
             return []
         if target_table == None:
@@ -148,6 +220,13 @@ class Filter:
         return current_values
 
     def add_history(self, function):
+        """Adds a HistoryNode to the history attribute of the Filter object
+        depending on the type of function specified.
+
+        :param function:
+            Input the function type to control the contents of the HistoryNode.
+        :type function: str
+        """
         if self.history_count == 100:
             current = self.history
             for i in range(0, 50):
@@ -178,8 +257,11 @@ class Filter:
         self.history_count += 1
 
     def undo(self, verbose=False):
-        """
-        Undos last filter option 
+        """Undos last attribute-changing filter function.
+
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
         """
         if self.history_count == 0:
             if verbose:
@@ -213,8 +295,8 @@ class Filter:
                 print(f"Undid {current.id} operation.")
 
     def refresh(self):
-        """
-        Refreshes values
+        """Validates the current set of values against the connected
+        MySQL database.
         """ 
         if not self.values or self.values_valid:
             self.values_valid = True
@@ -225,6 +307,16 @@ class Filter:
         self.values_valid = True
 
     def switch_table(self, raw_table, verbose=False): 
+        """Changes the properties of the Filter object and transposes
+        all the values to that table.
+
+        :param raw_table:
+            Input a case-insensitive string for a TableNode id.
+        :type raw_table: str
+        :param verbose:
+            Set a boolean to control the terminal output.
+        :type verbose: Boolean
+        """
         self.add_history("switch")
 
         table = self.translate_table(raw_table)
@@ -240,8 +332,23 @@ class Filter:
         self.update()
         
     def add_filter(self, raw_table, raw_field, operator, value, verbose=False):
-        """
-        Adds a filter to database queries
+        """Adds to the filters attribute of the Filter object.
+
+        :param raw_table:
+            Input a case-insensitive string for a TableNode id.
+        :type raw_table: str
+        :param raw_field:
+            Input a case-insensitive string for a TableNode id.
+        :type raw_field: str
+        :param operator:
+            Input a operator string for a MySQL query.
+        :type operator: str
+        :param value:
+            Input a value string to filter for in a MySQL query.
+        :type value: str
+        :param verbose:
+            Set a boolean to control the terminal output.
+        :type verbose: Boolean
         """
         self.add_history("add")
 
@@ -271,6 +378,12 @@ class Filter:
         self.updated = False
 
     def set_values(self, values):
+        """Sets values attribute of the Filter object.
+
+        :param values:
+            Input a list of primary key values as strings.
+        :type values: List[str]
+        """
         if values:
             if not isinstance(values[0], str):
                 raise ValueError
@@ -282,8 +395,11 @@ class Filter:
         self.updated = False
  
     def update(self, verbose=False):
-        """
-        Updates results list for the Filter object
+        """Updates values list for the Filter object with the current filters.
+
+        :param verbose:
+            Set a boolean to control the terminal output.
+        :type verbose: Boolean
         """
         self.add_history("update")
 
@@ -329,6 +445,15 @@ class Filter:
         self.values = query_values
 
     def sort(self, sort_field, verbose=False): 
+        """Sorts values list for the Filter object by a field key.
+
+        :param sort_field:
+            Input a case-insensitive string for a ColumnNode id.
+        :type sort_field: str
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        """
         if not self.values:
             return
 
@@ -348,9 +473,11 @@ class Filter:
         self.values = query_results
 
     def reset(self, verbose=False):
-        """
-        Resets created queries and filters
-        for the Filter object
+        """Resets created queries and filters for the Filter object.
+
+        :param verbose:
+            Sets a boolean to control terminal output.
+        :type verbose: Boolean
         """ 
         self.add_history("reset")
 
@@ -363,8 +490,14 @@ class Filter:
             print("Results and filters cleared.")
 
     def results(self, verbose=False):
-        """
-        Sets results according to current filters
+        """Returns the current list of valid values.
+
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        :return values:
+            Returns a list of primary key values.
+        :type values: str
         """
         if not self.values:
             return []
@@ -397,8 +530,14 @@ class Filter:
         return self.values
    
     def hits(self, verbose=False):
-        """
-        Returns length of current results
+        """Returns the number of current values.
+
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        :return len(values):
+            Returns the an integer of the number of current values.
+        :type len(values): int
         """
         if self.values == None:
             if verbose:
@@ -409,15 +548,26 @@ class Filter:
             print(f"Database hits: {len(self.values)}")
         return len(self.values)
 
-    def group(self, table, field, verbose=False):
+    def group(self, raw_table, raw_field, verbose=False):
+        """Function that determines a grouping strategy based on
+        the characteristics of the given MySQL field.
+
+        :param raw_table:
+            Input a case-insensitive string for a TableNode id.
+        :type raw_table: str
+        :param raw_field:
+            Input a case-insensitive string for a ColumnNode id.
+        :type raw_field: str
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        :return groups:
+            Returns a two-dimensional list of primary key value strings.
+        :type groups: List[List[str]]
         """
-        Function that creates a two-dimensional array of
-        values from the results list
-        separated by a characteristic.
-        """
-        table = self.translate_table(table)
+        table = self.translate_table(raw_table)
         table_node = self.db_tree.get_table(table)
-        field = self.translate_field(field, table)
+        field = self.translate_field(raw_field, table)
         field_node = table_node.get_column(field) 
 
         if field_node.group in GROUP_OPTIONS:
@@ -467,6 +617,26 @@ class Filter:
        
     def build_groups(self, table_node, field_node, distinct_field=None,
                      verbose=False):
+        """Function that creates a two-dimensional array of values 
+        from the results list separated by a field key.
+
+        :param table_node:
+            Input a TableNode representing a MySQL table.
+        :type table_node: TableNode
+        :param field_node:
+            Input a ColumnNode representing a MySQL field.
+        :type field_node: ColumnNode
+        :param distinct_field:
+            Input a string to control the MySQL distinct groupings.
+        :type distinct_field: str
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        :return groups:
+            Returns a two-dimensional list of primary key value strings.
+        :type groups: List[List[str]]
+
+        """
         if not self.values:
             return {}
 
@@ -517,6 +687,22 @@ class Filter:
         return groups
 
     def group_transpose(self, assist_filter, table_node, query):
+        """Helper function that queries for a set of primary key values
+        within another table and transposes them to an original table.
+
+        :param assist_filter:
+            Input a Filter object with values linked to another MySQL table.
+        :type assist_filter: Filter
+        :param table_node:
+            Input a TableNode that represents a MySQL table.
+        :type table_node: TableNode
+        :param query:
+            Input a single query to generate values for.
+        :type query: str
+        :return values:
+            Returns a list of primary key value strings.
+        :type values: List[str]
+        """
         values = self.db_tree.build_values(table_node.id,
                                            table_node.primary_key.id,
                                            queries=[query],
@@ -529,14 +715,34 @@ class Filter:
         return values
         
     def large_num_set_distinct_query(self, table, field):
+        """Helper function to generate a query for grouping values 
+        by a numeric field.
+
+        :param table:
+            Input a case-sensitive string for a MySQL table.
+        :type table: str
+        :param field:
+            Input a case-sensitive string for a MySQL column.
+        :type table: str
+        :return distinct_field:
+            Returns a string to control the MySQL distinct groupings.
+        :type distinct_field: str
+        """
         range_query = (
                 f"SELECT round(log10(Max({field}) - Min({field}))) as pow "
                 f"FROM {table}")
         range_pow = int(self.sql_handle.execute_query(range_query)[0]["pow"])
         range_pow = 10**(range_pow-2)
-        return f"round({field}/{range_pow})*{range_pow}"
+        distinct_field = f"round({field}/{range_pow})*{range_pow}"
+        return distinct_field
 
     def copy(self):
+        """Function to return a duplicate object of the current Filter object.
+
+        :return duplicate_filter:
+            Returns a duplicate Filter object.
+        :type duplicate_filter: Filter
+        """
         duplicate_filter = Filter(self.sql_handle, table=self.table)
         duplicate_filter.db_tree = self.db_tree
         duplicate_filter.values = self.copy_values()
@@ -551,6 +757,13 @@ class Filter:
         return duplicate_filter
 
     def copy_values(self):
+        """Function to return a duplicate list of values of the current
+        Filter object.
+
+        :return values:
+            Returns a duplicate set of primary key value strings.
+        :type values: List[str]
+        """
         values = None
         if self.values != None:
             values = self.values.copy()
@@ -558,6 +771,13 @@ class Filter:
         return values
 
     def copy_filters(self):
+        """Function to return a duplicate dictionary of filters of the current
+        Filter object.
+
+        :param duplicate_filters:
+            Returns a duplicate dict of filters.
+        :type duplicate_filters: Dict{Dict{Dict{List[str]}}}
+        """
         duplicate_filters = {}
         for table in self.filters.keys():
             duplicate_filters[table] = {}
@@ -572,6 +792,19 @@ class Filter:
         return duplicate_filters
 
     def write_csv(self, output_path, csv_name=None, verbose=False):
+        """Function to write a csv-file of the values of the current Filter
+        object.
+
+        :param output_path:
+            Input a valid Path object leading to a directory to store a csv.
+        :type output_path: Path
+        :param csv_name: 
+            Input a string for the name of the csv_file.
+        :type csv_name: str
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        """
         if csv_name == None:
             date = time.strftime("%Y%m%d")
             csv_name = f"{date}_filter"
@@ -600,9 +833,14 @@ class Filter:
                 csvwriter.writerow([value])
 
 def parse_filters(unparsed_filters):
-    """
-    Helper function to return a two-dimensional
-    array of filter parameters
+    """Helper function to return a two-dimensional array of filter parameters.
+
+    :param unparsed_filters:
+        Input a list of filter expressions to parse and split.
+    :type unparsed_filters: List[str]
+    :return filters:
+        Returns a two-dimensional array of filter parameters.
+    :type filters: List[List[str]]
     """
     filter_format = re.compile("\w+\.\w+[=<>!]+\w+", re.IGNORECASE)
     filters = []
@@ -616,6 +854,15 @@ def parse_filters(unparsed_filters):
     return filters
 
 def parse_groups(unparsed_groups):
+    """Helper function to return a two-dimensional array of group parameters.
+
+    :param unparsed_groups:
+        Input a list of group expressions to parse and split.
+    :type unparsed_groups: List[str]
+    :return groups:
+        Returns a two-dimensional array of group parameters.
+    :type groups: List[List[str]]
+    """
     group_format = re.compile("\w+\.\w+", re.IGNORECASE)
     groups = []
     for group in unparsed_groups:
@@ -627,7 +874,7 @@ def parse_groups(unparsed_groups):
     return groups
 
 class HistoryNode:
-    "Filter history storage object."
+    """Filter history storage object."""
     def __init__(self, id, history):
         if not isinstance(id, str):
             raise TypeError("id parameter must be a string object.")
@@ -638,19 +885,50 @@ class HistoryNode:
         self.next = None
 
     def get_id(self):
+        """Function to return the id of the HistoryNode object.
+
+        :return id:
+            Returns the id string of the HistoryNode object.
+        :type id: str
+        """
         return self.id
 
     def get_history(self):
+        """Function to return the history of the HistoryNode object.
+
+        :return history:
+            Returns the history in a list of the HistoryNode object.
+        :type history: List[?]
+        """
         return self.history
     
     def has_next(self):
+        """Function to determine if the HistoryNode has a
+        HistoryNode reference.
+
+        :return has_next:
+            Returns a boolean of whether the HistoryNode has a next reference.
+        :type has_next: Boolean
+        """
         has_next = (self.next!=None)
         return has_next
     
     def get_next(self):
+        """Function to return the referenced next HistoryNode.
+
+        :return next: 
+            Returns the referenced HistoryNode.
+        :type next: HistoryNode
+        """
         return self.next
 
     def add_next(self, history_node):
+        """Function to set the next attribute of the current HistoryNode.
+
+        :param history_node:
+            Input a HistoryNode to reference.
+        :type history_node: HistoryNode
+        """
         if not isinstance(history_node, HistoryNode):
             raise TypeError("history_node parameter must be a string object.")
         if not self.has_next():
@@ -660,6 +938,16 @@ class HistoryNode:
             self.next = history_node
 
     def create_next(self, id, history):
+        """Function to create and set the next attribute of the
+        current HistoryNode.
+
+        :param id:
+            Input a id string for a new HistoryNode object.
+        :type id: str
+        :param history:
+            Input a list containing data for a new HistoryNode object.
+        :type history: List[?]
+        """
         if not isinstance(id, str):
             raise TypeError("id parameter must be a string object.")
         next_node = HistoryNode(id, history)
@@ -668,6 +956,12 @@ class HistoryNode:
         return next_node
 
     def remove_next(self):
+        """Function to remove the current referenced next HistoryNode.
+
+        :return next_node:
+            Returns the removed HistoryNode.
+        :type next_node: HistoryNode
+        """
         next_node = None
         if self.has_next():
             next_node = self.get_next()
@@ -679,7 +973,7 @@ class HistoryNode:
         return next_node
 
 class CmdFilter(cmd.Cmd):
-    "Filtering CmdLoop object."
+    """Filtering CmdLoop object."""
     def __init__(self, sql_handle):
         super(CmdFilter, self).__init__()
 
