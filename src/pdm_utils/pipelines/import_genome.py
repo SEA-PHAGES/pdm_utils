@@ -230,7 +230,8 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         success_path.mkdir()
         if len(success_ticket_list) > 0:
             success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
-            tickets.export_ticket_data(success_ticket_list, success_tkt_file, headers)
+            tickets.export_ticket_data(success_ticket_list, success_tkt_file,
+                                       headers, include_headers=True)
         if len(success_filepath_list) > 0:
             success_genomes_path = pathlib.Path(success_path, "genomes")
             success_genomes_path.mkdir()
@@ -244,7 +245,8 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         failed_path.mkdir()
         if len(failed_ticket_list) > 0:
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
-            tickets.export_ticket_data(failed_ticket_list, failed_tkt_file, headers)
+            tickets.export_ticket_data(failed_ticket_list, failed_tkt_file,
+                                       headers, include_headers=True)
         if len(failed_filepath_list) > 0:
             failed_genomes_path = pathlib.Path(failed_path, "genomes")
             failed_genomes_path.mkdir()

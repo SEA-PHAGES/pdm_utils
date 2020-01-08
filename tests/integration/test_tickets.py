@@ -45,7 +45,7 @@ class TestTicketFunctions1(unittest.TestCase):
         list_of_data = [self.tkt_dict1, self.tkt_dict2]
         headers = ["type", "phage_id", "host_genus", "cluster"]
         tickets.export_ticket_data(list_of_data, self.export_file,
-                                    headers)
+                                    headers, include_headers=True)
 
         exp_success_tkts = []
         with open(self.export_file,'r') as file:
