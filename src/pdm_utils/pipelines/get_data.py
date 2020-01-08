@@ -243,7 +243,7 @@ def get_update_data(output_folder, matched_genomes):
             result2 = {
                       "table":"phage",
                       "field":"Cluster",
-                      "value":phagesdb_cluster,
+                      "value":phagesdb_gnm.cluster,
                       "key_name":"PhageID",
                       "key_value":mysqldb_gnm.id}
             update_tickets.append(result2)
@@ -552,7 +552,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={}):
     print(f"{tallies['duplicate_accession']:>6}: duplicated accession")
     print(f"{tallies['accession']:>6}: unique accession")
 
-    print("\nOf the GenBank records with unique accessions:")
+    print("\nOf the auto-updated genomes with unique accessions:")
     print(f"{tallies['retrieval_failure']:>6}: could not be retrieved")
     print(f"{tallies['docsum_not_new']:>6}: retrieved but docsum not new")
     print(f"{tallies['record_not_new']:>6}: retrieved but record not new")
