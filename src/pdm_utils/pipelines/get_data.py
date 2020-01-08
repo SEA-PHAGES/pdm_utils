@@ -159,7 +159,7 @@ def main(unparsed_args_list):
                                     gnm_type="phagesdb",
                                     seq=False)
 
-        # TODO exit if all phage data wasn't retrieved.
+        # Exit if all phage data wasn't retrieved.
         if len(phagesdb_genome_dict) == 0:
             sys.exit(1)
 
@@ -442,8 +442,8 @@ def set_phagesdb_gnm_date(gnm):
     # Since there may be multiple 'dates' associated with a genome in PhagesDB,
     # this date attribute can't be directly set when parsing the data.
     # Some phages may have a file but no associated
-    # date tagged with that file (since date tagging has only
-    # recently been implemented). If there is a date, it is
+    # date tagged with that file (since date tagging has not
+    # always been implemented). If there is a date, it is
     # formatted as: '2017-02-15T10:37:21Z'. If there is no date,
     # it is Null, but change this to a standarized 'empty' value of 1/1/0001.
     date = gnm.misc["qced_genbank_file_date"]
@@ -607,8 +607,9 @@ def sort_by_accession(genome_dict):
 
 
 
+# TODO unittest.
 def process_failed_retrieval(accession_list, accession_dict):
-    """."""
+    """Create list of data dictionaries for records that could not be retrieved."""
     results = []
     for accession in accession_list:
         gnm = accession_dict[accession]
@@ -618,8 +619,9 @@ def process_failed_retrieval(accession_list, accession_dict):
 
 
 
+# TODO unittest.
 def retrieve_records(accession_dict, batch_size=200):
-    """."""
+    """Retrieve GenBank records."""
     # First use esearch to verify the accessions are valid.
     # Seoncd use efetch to retrieve the record.
     print("\n\nRetrieving records from NCBI")
@@ -683,13 +685,6 @@ def retrieve_records(accession_dict, batch_size=200):
 
 
 
-
-
-
-
-
-
-
 # TODO unittest.
 def get_accessions_to_retrieve(summary_records, accession_dict):
     """Review GenBank summary to determine which records are new."""
@@ -716,7 +711,7 @@ def get_accessions_to_retrieve(summary_records, accession_dict):
 
 # TODO unittest.
 def check_record_date(record_list, accession_dict):
-    """Check whether the record is new."""
+    """Check whether the GenBank record is new."""
     results = []
     new_record_list = []
     # For any records that were retrieved, mark their data in the NCBI
