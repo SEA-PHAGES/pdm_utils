@@ -1,6 +1,6 @@
 Primary tools
 ================
-Below is a description of tools that the ``pdm_utils`` package
+Below is a description of command line tools that the ``pdm_utils`` package
 contains to analyze and manipulate data within a MySQL database:
 
 
@@ -22,6 +22,12 @@ contains to analyze and manipulate data within a MySQL database:
 
 
 
+.. csv-table:: pdm_utils tools
+  :file: ./images/pipeline_stages.csv
+
+
+The ``pdm_utils`` toolkit can be used to manage different database instances. However, some tools may only be relevant specifically to the primary instance, Actino_Draft.
+
 Supplementary information associated with different tools:
 
 .. toctree::
@@ -32,9 +38,3 @@ Supplementary information associated with different tools:
     Update tickets <./tools/input_files/ticket_update>
     Run modes <./tools/input_files/run_modes>
     Flat files <./tools/input_files/flatfile>
-
-.. csv-table:: pdm_utils tools
-   :file: ./images/pipeline_stages.csv
-
-
-The ``pdm_utils`` toolkit can be used to manage different database instances. However, some tools may only be relevant specifically to the primary instance, Actino_Draft.

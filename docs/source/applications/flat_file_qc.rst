@@ -14,18 +14,28 @@ The Actino_Draft database is routinely updated with new genomics data. When new 
     7.	Incorrect field used to store the gene descriptions
     8.	Incorrect tRNA genes
 
+.. note::
+
+    ``pdm_utils import`` checks the quality of flat files for the purpose of maintaining database consistency and integrity. Although it does check the quality of many aspects of the genome, it is not intended for comprehensive evaluation of the quality, validity, or biological accuracy of all data stored in the flat file.
+
 After creating the GenBank-formatted flat file, annotators can follow the steps below to review their files using this pipeline to verify that it contains all the necessary information to be successfully imported into the Actino_Draft database:
 
-    1. Ensure that the newest version of ``pdm_utils`` is installed, along with the MySQL and Python :ref:`dependencies <installation>`.
+    1. Ensure that MySQL is installed. If using a Mac, also ensure that the MySQL server is turned ON (:ref:`installation <installation>`).
 
-    2. Ensure you have the most recent version of the Actino_Draft database, using :ref:`getdb <getdb>`.
+    2. Open a Terminal window.
 
-    3. Open a Terminal window, create a folder (such as 'validation') to work in and navigate to it::
+    3. If Conda is used to manage dependencies, activate the Conda environment. If Conda is not used, ensure all dependencies are installed (:ref:`installation <installation>`).
+
+    4. Ensure that the newest version of ``pdm_utils`` is installed (:ref:`installation <installation>`).
+
+    5. Ensure you have the most recent version of the Actino_Draft database, using :ref:`getdb <getdb>`.
+
+    6. Create a folder (such as 'validation') to work in and navigate to it::
 
         > mkdir validation
         > cd ./validation
 
-    4. Within this new folder, create a csv-formatted import table (such as 'import_table.csv') of :ref:`import tickets <ticketimport>`. A template table is provided on the ``pdm_utils`` source code repository on GitHub. Below are tips to structure tickets for routine review your flat files:
+    7. Within this new folder, create a csv-formatted import table (such as 'import_table.csv') of :ref:`import tickets <ticketimport>`. A template table is provided on the ``pdm_utils`` source code repository on GitHub. Below are tips to structure tickets for routine review your flat files:
 
         1. Ticket Type should be set to “replace”.
         2. Host, Cluster, Subcluster, and Accession should be set to “retrieve”.
@@ -41,13 +51,13 @@ After creating the GenBank-formatted flat file, annotators can follow the steps 
             :file: ../images/import_table.csv
 
 
-    5.	Create a new folder (such as 'genomes') within the validation folder to contain all flat files you would like to check::
+    8.	Create a new folder (such as 'genomes') within the validation folder to contain all flat files you would like to check::
 
         > mkdir genomes
 
-    6. Manually move all flat files into that folder. No other files should be present.
+    9. Manually move all flat files into that folder. No other files should be present.
 
-    7.	Run ``import``. The pipeline requires you to indicate the name of the database, the folder of flat files, and the import table. Below is an example of the command that executes the script, assuming you are still in the ‘validation’ folder::
+    10.	Run ``import``. The pipeline requires you to indicate the name of the database, the folder of flat files, and the import table. Below is an example of the command that executes the script, assuming you are still in the ‘validation’ folder::
 
         > python3 -m pdm_utils import Actino_Draft ./genomes/ ./import_table.csv
 
@@ -55,12 +65,12 @@ After creating the GenBank-formatted flat file, annotators can follow the steps 
 
         By default, the pipeline runs in 'test' mode so it does not actually make any changes to the database.
 
-    8.	When prompted, provide your MySQL username and password to access your local Actino_Draft database.
+    11.	When prompted, provide your MySQL username and password to access your local Actino_Draft database.
 
-    9.	Monitor the output as the file is processed.
+    12.	Monitor the output as the file is processed.
 
-    10.	After the evaluation is complete, review specific warnings and errors in the log file if needed.
+    13.	After the evaluation is complete, review specific warnings and errors in the log file if needed.
 
-    11.	Repeat process if needed. After any errors are identified, re-create the flat files with the appropriate corrections, and repeat the import process to ensure the corrected file now passes validation.
+    14.	Repeat process if needed. After any errors are identified, re-create the flat files with the appropriate corrections, and repeat the import process to ensure the corrected file now passes validation.
 
-    12.	Once everything is correct, upload the flat file to PhagesDB for official import into the database.
+    15.	Once everything is correct, upload the flat file to PhagesDB for official import into the database.

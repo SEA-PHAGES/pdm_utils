@@ -75,6 +75,18 @@ If the MySQL password is lost, it can be reset.
     10. Close the second Terminal window.
     11. Close the first Terminal window.
 
+
+Access to MySQL, even on your local computer, is controlled through a server-client model. The server needs to be turned ON in order to use MySQL. This can be accomplished manually or it can be set to start automatically every time your Mac is restarted.
+
+    1. Click on the Apple icon in the top left corner of your desktop.
+    2. Select 'System Preferences'.
+    3. Click on the MySQL icon.
+    4. If 'MySQL Server Instance is stopped' is displayed, then click on 'Start MySQL Server'.
+    5. To perform this step every time automatically, select 'Automatically Start MySQL Server on Startup'.
+
+If the automatic option is not selected, anytime your Mac is restarted the server is turned OFF, and you will be unable to use any ``pdm_utils`` tools that require access to MySQL until you manually turn the server ON.
+
+
 Ubuntu installation
 *******************
 
@@ -99,17 +111,34 @@ There are several third-party Python packages required:
     - :paramiko:`paramiko <>`
     - tabulate
 
-Some of them also have Python or binary dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install all Python dependencies:
+Some of them also have Python or binary dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install all Python dependencies. (Conda is available as part of Anaconda or Miniconda. The directions below highlight installation of Anaconda, but either of these tools is fine since they both install Conda):
 
-    1. Install Conda locally through the :anaconda:`Anaconda <>` package. Follow the manufacturer's installation guide for MacOS or Ubuntu.
+    1. Install Conda locally through the :anaconda:`Anaconda <>` package.
 
-    2. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything)::
+    2. Navigate to the 'Anaconda Distribution' option.
+
+    3. For MacOS: download the Python 3.7 graphical installer. For Linux: download the Python 3.7 x86 installer.
+
+    4. Follow the manufacturer's installation instructions.
+
+    5. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything)::
 
         > conda create --name pdm_utils python pip biopython pymysql paramiko tabulate
         > conda activate pdm_utils
         (pdm_utils)>
 
-The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment.
+The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment. To exit the Conda environment::
+
+    (pdm_utils)> conda deactivate
+    >
+
+
+.. note::
+
+    If Conda is used to manage dependencies, the Conda environment must be activated every time you want to use ``pdm_utils``. Otherwise, an error will be encountered.
+
+
+The 'pdm_utils' Conda environment now contains the necessary dependencies, and the actual ``pdm_utils`` Python package can be installed (see below).
 
 
 3. The ``pdm_utils`` package
@@ -117,11 +146,15 @@ ____________________________
 
 Once MySQL and the Conda environment are installed, ``pdm_utils`` can be easily installed:
 
-    1. Execute the following command::
+    1. Open a Terminal window.
+
+    2. Activate the Conda environment (see above).
+
+    3. Install the ``pdm_utils`` package using pip::
 
         (pdm_utils)> pip install pdm_utils
 
-    2. The package is routinely updated, and the most recent version can be retrieved::
+    4. The package is routinely updated, and the most recent version can be retrieved::
 
         (pdm_utils)> pip install --upgrade pdm_utils
 

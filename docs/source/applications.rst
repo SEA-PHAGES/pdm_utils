@@ -9,11 +9,11 @@ Applications
    :maxdepth: 1
 
 
-   Actino_Draft database management <./applications/actinodraft_pipeline/actinodraft>
-   Flat file QC <./applications/flat_file_qc>
-   Create custom databases <./applications/customization>
+   Maintaining the Actino_Draft database <./applications/actinodraft_pipeline/actinodraft>
+   Reviewing flat file quality <./applications/flat_file_qc>
+   Creating custom databases <./applications/customization>
    Maintaining database compatibility with downstream tools <./applications/compatibility>
-   Providing a library for downstream data analysis tools <./applications/library>
+   Creating custom data analysis tools <./applications/library>
 
 .. Using the MySQLConnectionHandler <>
 .. Retrieving all data from the database <>

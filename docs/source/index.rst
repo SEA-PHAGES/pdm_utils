@@ -14,9 +14,9 @@
    Introduction <intro>
    Installation <installation>
    Database structure <database>
-   Primary toolkit <tools>
-   Applications <applications>
-   Library <pdm_utils>
+   Command line toolkit <tools>
+   Package applications <applications>
+   Source code library <pdm_utils>
    References <bibliography>
 
 
