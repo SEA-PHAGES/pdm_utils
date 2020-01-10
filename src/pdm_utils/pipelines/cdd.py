@@ -1,19 +1,17 @@
+import platform
 import argparse
 import sys
 import os
 import multiprocessing as mp
+
+from subprocess import Popen, PIPE
+import shlex
 
 from Bio.Blast.Applications import NcbirpsblastCommandline
 from Bio.Blast import NCBIXML
 
 from pdm_utils.functions.basic import expand_path
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
-
-# CHANGE THESE VARIABLES TO MODIFY BEHAVIOR
-RPSBLAST_BINARY = "/usr/bin/rpsblast+"
-# MAC
-# RPSBLAST_BINARY = "/usr/local/ncbi/blast/bin/rpsblast"
-TMP_DIR = "/tmp/cdd"
 
 # SQL QUERIES
 GET_GENES_FOR_CDD = "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0"
@@ -45,18 +43,23 @@ def setup_argparser():
                         help="number of concurrent cdd searches to run")
     parser.add_argument("--evalue", default=0.001, type=float,
                         help="evalue cutoff for rpsblast hits")
+    parser.add_argument("--rpsblast", default=None, type=str,
+                        help="path to rpsblast(+) binary")
+    parser.add_argument("--tmp-dir", default="tmp/cdd", type=str,
+                        help="path to temporary directory for file I/O")
     return parser
 
 
-def make_tempdir():
+def make_tempdir(tmp_dir):
     """
     Uses pdm_utils.functions.basic.expand_path to expand TMP_DIR; then
-    checks whether TMP_DIR exists - if it doesn't, uses os.makedirs to
+    checks whether tmpdir exists - if it doesn't, uses os.makedirs to
     make it recursively.
+    :param tmp_dir: location where I/O should take place
     :return:
     """
     try:
-        path = expand_path(TMP_DIR)
+        path = expand_path(tmp_dir)
         # If the path doesn't exist yet
         if not os.path.exists(path):
             # Make it recursively
@@ -65,9 +68,9 @@ def make_tempdir():
         print(f"Error {err.args[0]}: {err.args[1]}")
 
 
-def search_and_process(datum, database, evalue,
-                       domain_queue, gene_domain_queue,
-                       gene_queue, tmp="/tmp/cdd"):
+def search_and_process(datum, database, evalue, domain_queue,
+                       gene_domain_queue, gene_queue, rpsblast,
+                       tmp_dir):
     """
     Uses blast to search indicated gene against the indicated database
     :param database: path to target database
@@ -80,12 +83,13 @@ def search_and_process(datum, database, evalue,
     statements
     :param gene_queue: Queue to store 'update gene set DomainStatus'
     statements
-    :param tmp: path to directory where I/O files will be stored
+    :param rpsblast: path to rpsblast binary
+    :param tmp_dir: path to directory where I/O files will be stored
     :return:
     """
     # Setup I/O variables
-    i = "{}/{}.txt".format(tmp, datum["GeneID"])
-    o = "{}/{}.xml".format(tmp, datum["GeneID"])
+    i = "{}/{}.txt".format(tmp_dir, datum["GeneID"])
+    o = "{}/{}.xml".format(tmp_dir, datum["GeneID"])
 
     # Write the input file
     f = open(i, "w")
@@ -93,16 +97,12 @@ def search_and_process(datum, database, evalue,
     f.close()
 
     # Setup and run the rpsblast command
-    rps_command = NcbirpsblastCommandline(cmd=RPSBLAST_BINARY, db=database,
+    rps_command = NcbirpsblastCommandline(cmd=rpsblast, db=database,
                                           query=i, out=o, outfmt=5,
                                           evalue=evalue)
     rps_command()
 
-    """
-    command = "{} -db {} -query {} -out {} -outfmt 5 -evalue {}".format(
-        RPSBLAST_BINARY, database, i, o, evalue)
-    os.system(command)
-    """
+    # Process results
     with open(o, "r") as oh:
         for record in NCBIXML.parse(oh):
             # Only need to process if there are record alignments
@@ -157,6 +157,35 @@ def main(argument_list):
     cdd_db = os.path.join(cdd_dir, cdd_dir.split("/")[-1])
     threads = args.threads
     evalue = args.evalue
+    rpsblast_path = args.rpsblast
+    tmp_dir = args.tmp_dir
+
+    # If user didn't supply path to rpsblast binary, try to discover it based on operating system
+    if rpsblast_path is None:
+        # MacOS
+        if platform.system() == "Darwin":
+            command = shlex.split("which rpsblast")
+        # Linux
+        elif platform.system() == "Linux":
+            command = shlex.split("which rpsblast+")
+        # Windows or others
+        else:
+            print(f"Unsupported system '{platform.system()}'; cannot run cdd pipeline.")
+            # Leave main early and return to __main__
+            return
+
+        # If we didn't return, we have a command. Run it, and PIPE stdout into rpsblast_path
+        with Popen(args=command, stdout=PIPE) as proc:
+            rpsblast_path = proc.stdout.read().decode("utf-8").rstrip("\n")
+
+        # If empty string, rpsblast not found in globally available executables, otherwise proceed with value
+        if rpsblast_path == "":
+            print("No rpsblast binary found. If you have rpsblast on your machine, please try again with the "
+                  "'--rpsblast' flag and provide the full path to your rpsblast binary.")
+            return
+
+    # Temporary directory where cdd files will be written to and read from
+    tmp_dir = "/tmp/cdd"
 
     # Use MySQLConnectionHandler to query for translations that need to be
     # put through this pipeline
@@ -186,7 +215,7 @@ def main(argument_list):
         # create list of job tuples - each tuple contains all the arguments
         # for the search_and_process function
         jobs = [(gene, cdd_db, evalue, domain_queue, gene_domain_queue,
-                 gene_queue) for gene in results]
+                 gene_queue, rpsblast_path, tmp_dir) for gene in results]
 
         # Create worker pool and use starmap to run concurrent jobs with
         # multiple args
