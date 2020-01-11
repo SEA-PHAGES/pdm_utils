@@ -23,10 +23,10 @@ class Cds:
         self.id = "" # Gene ID
         self.name = "" # Tends to be an integer for SEA-PHAGES.
         self.seqfeature = None # Biopython SeqFeature object.
-        self.left = -1 # Genomic position
-        self.right = -1 # Genomic position
+        self.start = -1 # Genomic position
+        self.stop = -1 # Genomic position
         self.coordinate_format = "" # Indexing format used for coordinates.
-        self.strand = "" #'forward', 'reverse', 'top', 'bottom', etc.
+        self.orientation = "" #'forward', 'reverse', 'top', 'bottom', etc.
         self.parts = 0 # Number of regions that define the feature
         self.translation_table = 0
         self.translation = Seq("", IUPAC.protein) # Biopython amino acid Seq object.
@@ -61,8 +61,8 @@ class Cds:
         # from various data sources.
         self.evaluations = []
         self.type = ""
-        self._left_right_strand_id = ()
-        self._end_strand_id = ()
+        self._start_stop_orient_id = ()
+        self._end_orient_id = ()
         self._start_end_id = ()
 
 
@@ -171,23 +171,23 @@ class Cds:
             pass
 
 
-    def get_start_end(self):
-        """Return the coordinates in start-end format."""
+    def get_begin_end(self):
+        """Return the coordinates in transcription begin-end format."""
 
-        # Ensure format of strand info.
-        strand = basic.reformat_strand(self.strand, "fr_long")
+        # Ensure format of orientation info.
+        orientation = basic.reformat_strand(self.orientation, "fr_long")
 
-        if strand == "forward":
-            start = self.left
-            end = self.right
-        elif strand == "reverse":
-            start = self.right
-            end = self.left
+        if orientation == "forward":
+            begin = self.start
+            end = self.stop
+        elif orientation == "reverse":
+            begin = self.stop
+            end = self.start
         else:
-            start = -1
+            begin = -1
             end = -1
 
-        return (start, end)
+        return (begin, end)
 
     def translate_seq(self):
         """Translate the CDS nucleotide sequence.
@@ -261,43 +261,44 @@ class Cds:
             self.translation_table = -1
 
 
-    def set_strand(self, value, format, case=False):
-        """Sets strand based on indicated format.
+    def set_orientation(self, value, format, case=False):
+        """Sets orientation based on indicated format.
 
-        Relies on the  `reformat_strand` function to manage strand data.
+        Relies on the  `reformat_strand` function to manage orientation data.
 
-        :param value: Input strand value.
+        :param value: Input orientation value.
         :type value: misc.
-        :param format: Indicates how the strand data should be formatted.
+        :param format: Indicates how the orientation data should be formatted.
         :type format: str
-        :param case: Indicates whether the output strand data should be cased.
+        :param case: Indicates whether the output orientation data should be cased.
         :type case: bool
         """
-        self.strand = basic.reformat_strand(value, format, case)
+        self.orientation = basic.reformat_strand(value, format, case)
 
 
     def set_location_id(self):
         """Create a tuple of feature location data.
 
-        For left and right coordinates of the feature, it doesn't matter
+        For start and stop coordinates of the feature, it doesn't matter
         whether the feature is complex with a translational frameshift or not.
-        Retrieving the "left" and "right" boundary attributes return the very
+        Retrieving the "start" and "stop" boundary attributes return the very
         beginning and end of the feature, disregarding the
         inner "join" coordinates.
-        If only the feature "end" coordinate is used, strand information is
-        required.
-        If "start" and "end" coordinates are used instead of "left" and "right"
-        coordinates, no strand information is required.
+        If only the feature transcription "end" coordinate is used,
+        orientation information is required.
+        If transcription "begin" and "end" coordinates are used
+        instead of "start" and "stop" coordinates,
+        no orientation information is required.
         """
-        self._left_right_strand_id = (self.left, self.right, self.strand)
+        self._start_stop_orient_id = (self.start, self.stop, self.orientation)
 
-        start, end = self.get_start_end()
-        self._end_strand_id = (end, self.strand)
-        self._start_end_id = (start, end)
+        begin, end = self.get_begin_end()
+        self._end_orient_id = (end, self.orientation)
+        self._start_end_id = (begin, end)
 
 
-    def reformat_left_and_right(self, new_format):
-        """Convert left and right coordinates to new coordinate format.
+    def reformat_start_and_stop(self, new_format):
+        """Convert start and stop coordinates to new coordinate format.
         This also updates the coordinate format attribute to reflect
         change.
 
@@ -306,11 +307,11 @@ class Cds:
         :param new_format: Indicates how coordinates should be formatted.
         :type new_format: str
         """
-        new_left, new_right = basic.reformat_coordinates(
-            self.left, self.right, self.coordinate_format, new_format)
+        new_start, new_stop = basic.reformat_coordinates(
+            self.start, self.stop, self.coordinate_format, new_format)
         if (new_format != self.coordinate_format):
-            self.left = new_left
-            self.right = new_right
+            self.start = new_start
+            self.stop = new_stop
             self.coordinate_format = new_format
 
 
@@ -319,7 +320,7 @@ class Cds:
 
         :param seq:
             Nucleotide length can be computed multiple ways.
-            If the 'seq' parameter is False, the 'left' and 'right'
+            If the 'seq' parameter is False, the 'start' and 'stop'
             coordinates are used to determine the length (and take into
             account the 'coordinate_format' attribute. However, for
             compound features, this value may not be accurate.
@@ -335,11 +336,9 @@ class Cds:
             pass
         else:
             if self.coordinate_format == "0_half_open":
-                self.length = \
-                    self.right - self.left
+                self.length = self.stop - self.start
             elif self.coordinate_format == "1_closed":
-                self.length = \
-                    self.right - self.left + 1
+                self.length = self.stop - self.start + 1
             else:
                 self.length = -1
 
@@ -356,7 +355,7 @@ class Cds:
         '0-based half-open', the object contains coordinates for every
         part of the feature (e.g. if it is a compound feature) and
         fuzzy locations. As a result, the length of the retrieved sequence
-        may not exactly match the length indicated from the 'left' and 'right'
+        may not exactly match the length indicated from the 'start' and 'stop'
         coordinates.
         If the nucleotide sequence 'value' is provided, the
         'parent_genome_seq' does not impact the result.
@@ -394,22 +393,22 @@ class Cds:
         """
 
         # SeqFeature methods rely on coordinates in 0-based half-open
-        # format and strand to be numeric.
-        new_left, new_right = \
-            basic.reformat_coordinates(self.left, \
-                                       self.right, \
-                                       self.coordinate_format, \
+        # format and orientation to be numeric.
+        new_start, new_stop = \
+            basic.reformat_coordinates(self.start,
+                                       self.stop,
+                                       self.coordinate_format,
                                        "0_half_open")
 
-        new_strand = basic.reformat_strand(self.strand, "numeric")
-        if self.left <= self.right:
-            self.seqfeature = SeqFeature(FeatureLocation(new_left, new_right),\
+        new_strand = basic.reformat_strand(self.orientation, "numeric")
+        if self.start <= self.stop:
+            self.seqfeature = SeqFeature(FeatureLocation(new_start, new_stop),
                                      strand=new_strand, type="CDS")
         else:
-            self.seqfeature = SeqFeature(CompoundLocation\
-                    ([FeatureLocation(new_left, self.genome_length),\
-                    FeatureLocation(0, new_right)]),\
-                    strand = new_strand, type = "CDS")
+            self.seqfeature = SeqFeature(CompoundLocation
+                    ([FeatureLocation(new_start, self.genome_length),
+                    FeatureLocation(0, new_stop)]),
+                    strand=new_strand, type="CDS")
         self.seqfeature.qualifiers = self.get_qualifiers()
 
     # TODO Owen unittest.
@@ -532,28 +531,28 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    def check_strand(self, format="fr_short", case=True, eval_id=None):
-        """Check if strand is set appropriately.
+    def check_orientation(self, format="fr_short", case=True, eval_id=None):
+        """Check if orientation is set appropriately.
 
-        Relies on the `reformat_strand` function to manage strand data.
+        Relies on the `reformat_strand` function to manage orientation data.
 
         :param format: Indicates how coordinates should be formatted.
         :type format: str
-        :param case: Indicates whether the strand data should be cased.
+        :param case: Indicates whether the orientation data should be cased.
         :type case: bool
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        expected_strand = basic.reformat_strand(self.strand,
+        expected_orient = basic.reformat_strand(self.orientation,
                                                 format=format,
                                                 case=case)
-        if self.strand == expected_strand:
-            result = "The feature strand is correct."
+        if self.orientation == expected_orient:
+            result = "The feature orientation is correct."
             status = "correct"
         else:
-            result = "The feature strand is not correct."
+            result = "The feature orientation is not correct."
             status = "error"
-        definition = "Check if the strand is set appropriately."
+        definition = "Check if the orientation is set appropriately."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -567,19 +566,19 @@ class Cds:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if not (isinstance(self.left, int) and isinstance(self.right, int)):
+        if not (isinstance(self.start, int) and isinstance(self.stop, int)):
             result = ("The feature coordinates are not integers: "
-                      + str((self.left, self.right)))
+                      + str((self.start, self.stop)))
             status = "error"
-        elif (self.left == -1 or self.right == -1):
+        elif (self.start == -1 or self.stop == -1):
             result = ("The feature coordinates are not determined: "
-                      + str((self.left, self.right)))
+                      + str((self.start, self.stop)))
             status = "error"
         else:
             result = "Feature coordinates are exact."
             status = "correct"
 
-        definition = ("Check if the left and right boundary coordinates "
+        definition = ("Check if the start and stop boundary coordinates "
                       "are exact or fuzzy.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)

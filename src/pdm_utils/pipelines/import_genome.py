@@ -771,9 +771,9 @@ def review_cds_descriptions(feature_list, description_field):
         short_function = basic.truncate_value(cds.processed_function, x, y)
         short_note = basic.truncate_value(cds.processed_note, x, y)
         dict = {"CDS ID": cds.id,
-                "Start": cds.left,
-                "Stop": cds.right,
-                "Strand": cds.strand,
+                "Start": cds.start,
+                "Stop": cds.stop,
+                "Orientation": cds.orientation,
                 "Product": short_product,
                 "Function": short_function,
                 "Note": short_note
@@ -1084,7 +1084,7 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
     cds_ftr.check_translation_present(eval_id="CDS_003") # TODO LOCK
     cds_ftr.check_translation_table(check_table=11, eval_id="CDS_004")
     cds_ftr.check_coordinates(eval_id="CDS_005") # TODO LOCK
-    cds_ftr.check_strand(format="fr_short", case=True, eval_id="CDS_006") # TODO LOCK
+    cds_ftr.check_orientation(format="fr_short", case=True, eval_id="CDS_006") # TODO LOCK
     if eval_flags["check_locus_tag"]:
         cds_ftr.check_locus_tag_present(expect=True, eval_id="CDS_007")
 

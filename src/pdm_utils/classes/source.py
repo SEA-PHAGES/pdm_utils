@@ -12,8 +12,8 @@ class Source:
         self.id = ""
         self.name = ""
         self.seqfeature = None # Biopython SeqFeature object.
-        self.left = -1
-        self.right = -1
+        self.start = -1
+        self.stop = -1
         self.organism = ""
         self.host = ""
         self.lab_host = ""

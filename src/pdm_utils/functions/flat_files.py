@@ -63,17 +63,17 @@ def parse_coordinates(seqfeature):
     :param seqfeature: Biopython SeqFeature
     :type seqfeature: SeqFeature
     :returns:
-        tuple (left, right, parts)
+        tuple (start, stop, parts)
         WHERE
-        left(int) is the first coordinate, regardless of strand.
-        right(int) is the second coordinate, regardless of strand.
+        start(int) is the first coordinate, regardless of strand.
+        stop(int) is the second coordinate, regardless of strand.
         parts(int) is the number of open reading frames that define
         the feature.
     """
-    left_position = None
-    right_position = None
-    left = -1
-    right = -1
+    start_position = None
+    stop_position = None
+    start = -1
+    stop = -1
     parts = 0
 
     if (isinstance(seqfeature.location, FeatureLocation) or \
@@ -83,8 +83,8 @@ def parse_coordinates(seqfeature):
             pass
         elif isinstance(seqfeature.location, FeatureLocation):
             parts = 1
-            left_position = seqfeature.location.start
-            right_position = seqfeature.location.end
+            start_position = seqfeature.location.start
+            stop_position = seqfeature.location.end
         elif isinstance(seqfeature.location, CompoundLocation):
             parts = len(seqfeature.location.parts)
 
@@ -94,11 +94,11 @@ def parse_coordinates(seqfeature):
 
                 # Retrieve compound seqfeature positions based on strand.
                 if seqfeature.strand == 1:
-                    left_position = seqfeature.location.parts[0].start
-                    right_position = seqfeature.location.parts[1].end
+                    start_position = seqfeature.location.parts[0].start
+                    stop_position = seqfeature.location.parts[1].end
                 elif seqfeature.strand == -1:
-                    left_position = seqfeature.location.parts[1].start
-                    right_position = seqfeature.location.parts[0].end
+                    start_position = seqfeature.location.parts[1].start
+                    stop_position = seqfeature.location.parts[0].end
                 else:
                     pass
             else:
@@ -107,11 +107,11 @@ def parse_coordinates(seqfeature):
             pass
     else:
         pass
-    if isinstance(left_position, ExactPosition):
-        left = int(left_position)
-    if isinstance(right_position, ExactPosition):
-        right = int(right_position)
-    return (left, right, parts)
+    if isinstance(start_position, ExactPosition):
+        start = int(start_position)
+    if isinstance(stop_position, ExactPosition):
+        stop = int(stop_position)
+    return (start, stop, parts)
 
 
 def parse_cds_seqfeature(seqfeature):
@@ -137,8 +137,8 @@ def parse_cds_seqfeature(seqfeature):
         locus_tag = ""
     cds_ftr.set_locus_tag(locus_tag)
 
-    cds_ftr.set_strand(seqfeature.strand, "fr_short", case = True)
-    cds_ftr.left, cds_ftr.right, cds_ftr.parts = parse_coordinates(seqfeature)
+    cds_ftr.set_orientation(seqfeature.strand, "fr_short", case = True)
+    cds_ftr.start, cds_ftr.stop, cds_ftr.parts = parse_coordinates(seqfeature)
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
@@ -207,9 +207,9 @@ def parse_source_seqfeature(seqfeature):
     """
     src_ftr = source.Source()
     src_ftr.seqfeature = seqfeature
-    left, right, parts = parse_coordinates(seqfeature)
-    src_ftr.left = left
-    src_ftr.right = right
+    start, stop, parts = parse_coordinates(seqfeature)
+    src_ftr.start = start
+    src_ftr.stop = stop
 
     try:
         src_ftr.organism = str(seqfeature.qualifiers["organism"][0])
@@ -741,10 +741,10 @@ def parse_tmrna_seqfeature(seqfeature):
 #     #Retrieve tRNA coordinates
 #     try:
 #         #Biopython converts coordinates to 0-index
-#         #Start(left) coordinates are 0-based inclusive (feature starts there)
-#         #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
-#         tRNA_left = str(feature.location.start)
-#         tRNA_right = str(feature.location.end)
+#         #Start coordinates are 0-based inclusive (feature starts there)
+#         #Stop coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
+#         tRNA_start = str(feature.location.start)
+#         tRNA_stop = str(feature.location.end)
 #
 #     except:
 #         #TODO error handling
@@ -755,8 +755,8 @@ def parse_tmrna_seqfeature(seqfeature):
 #
 #     #Retrieve top strand of tRNA feature. It is NOT necessarily
 #     #in the correct orientation
-#     tRNA_size = abs(tRNA_right - tRNA_left)
-#     tRNA_seq = phageSeq[tRNA_left:tRNA_right].upper()
+#     tRNA_size = abs(tRNA_stop - tRNA_start)
+#     tRNA_seq = phageSeq[tRNA_start:tRNA_stop].upper()
 #
 #     #Convert sequence to reverse complement if it is on bottom strand
 #     if feature.strand == 1:
@@ -767,7 +767,7 @@ def parse_tmrna_seqfeature(seqfeature):
 #         #TODO error handling
 #         record_errors += 1
 #         write_out(output_file,"\Error: tRNA starting at %s does not have proper orientation in %s phage." \
-#                 % (tRNA_left + 1,phageName))
+#                 % (tRNA_start + 1,phageName))
 #         continue
 #
 #     #Retrieve and check product
@@ -776,7 +776,7 @@ def parse_tmrna_seqfeature(seqfeature):
 #     except:
 #         #TODO error handling
 #         write_out(output_file,"\nError: tRNA starting at %s is missing product field in phage %s." \
-#             % (tRNA_left + 1,phageName))
+#             % (tRNA_start + 1,phageName))
 #         record_errors += 1
 #         tRNA_product = ''
 #

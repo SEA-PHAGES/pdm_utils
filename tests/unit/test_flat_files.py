@@ -31,12 +31,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
             ExactPosition(2), ExactPosition(10)),
             type = "CDS",
             strand = 1)
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, 2)
+            self.assertEqual(output_start, 2)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
         with self.subTest():
             self.assertEqual(parts, 1)
 
@@ -55,12 +55,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         'join'),
                         type='CDS',
                         location_operator='join')
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, 2)
+            self.assertEqual(output_start, 2)
         with self.subTest():
-            self.assertEqual(output_right, 20)
+            self.assertEqual(output_stop, 20)
         with self.subTest():
             self.assertEqual(parts, 2)
 
@@ -79,12 +79,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         'join'),
                         type='CDS',
                         location_operator='join')
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, 8)
+            self.assertEqual(output_start, 8)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
         with self.subTest():
             self.assertEqual(parts, 2)
 
@@ -106,12 +106,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         'join'),
                         type='CDS',
                         location_operator='join')
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, 154873)
+            self.assertEqual(output_start, 154873)
         with self.subTest():
-            self.assertEqual(output_right, 4)
+            self.assertEqual(output_stop, 4)
         with self.subTest():
             self.assertEqual(parts, 2)
 
@@ -135,12 +135,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         'join'),
                         type='CDS',
                         location_operator='join')
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, 154873)
+            self.assertEqual(output_start, 154873)
         with self.subTest():
-            self.assertEqual(output_right, 4)
+            self.assertEqual(output_stop, 4)
         with self.subTest():
             self.assertEqual(parts, 2)
 
@@ -159,12 +159,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         'join'),
                         type='CDS',
                         location_operator='join')
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, -1)
+            self.assertEqual(output_start, -1)
         with self.subTest():
-            self.assertEqual(output_right, -1)
+            self.assertEqual(output_stop, -1)
         with self.subTest():
             self.assertEqual(parts, 0)
 
@@ -187,12 +187,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         'join'),
                         type='CDS',
                         location_operator='join')
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, -1)
+            self.assertEqual(output_start, -1)
         with self.subTest():
-            self.assertEqual(output_right, -1)
+            self.assertEqual(output_stop, -1)
         with self.subTest():
             self.assertEqual(parts, 3)
 
@@ -200,17 +200,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
         """Verify location of invalid data type is not parsed."""
 
         seqfeature = SeqFeature(None, type = "CDS", strand = None)
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, -1)
+            self.assertEqual(output_start, -1)
         with self.subTest():
-            self.assertEqual(output_right, -1)
+            self.assertEqual(output_stop, -1)
         with self.subTest():
             self.assertEqual(parts, 0)
 
     def test_parse_coordinates_9(self):
-        """Verify non-compound location with fuzzy left coordinate
+        """Verify non-compound location with fuzzy start coordinate
         is parsed correctly."""
         seqfeature = SeqFeature(
                         FeatureLocation(
@@ -218,17 +218,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             ExactPosition(10)),
                         type = "CDS",
                         strand = 1)
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, -1)
+            self.assertEqual(output_start, -1)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
         with self.subTest():
             self.assertEqual(parts, 1)
 
     def test_parse_coordinates_10(self):
-        """Verify non-compound location with fuzzy right coordinate
+        """Verify non-compound location with fuzzy stop coordinate
         is parsed correctly."""
         seqfeature = SeqFeature(
                         FeatureLocation(
@@ -236,17 +236,17 @@ class TestFlatFileFunctions1(unittest.TestCase):
                             BeforePosition(10)),
                         type = "CDS",
                         strand = 1)
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, 2)
+            self.assertEqual(output_start, 2)
         with self.subTest():
-            self.assertEqual(output_right, -1)
+            self.assertEqual(output_stop, -1)
         with self.subTest():
             self.assertEqual(parts, 1)
 
     def test_parse_coordinates_11(self):
-        """Verify 1 strand 2-part compound location with fuzzy left
+        """Verify 1 strand 2-part compound location with fuzzy start
         coordinate is parsed correctly."""
         seqfeature = SeqFeature(CompoundLocation([
                         FeatureLocation(
@@ -260,12 +260,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
                         "join"),
                         type="CDS",
                         location_operator="join")
-        output_left, output_right, parts = \
+        output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_left, -1)
+            self.assertEqual(output_start, -1)
         with self.subTest():
-            self.assertEqual(output_right, 20)
+            self.assertEqual(output_stop, 20)
         with self.subTest():
             self.assertEqual(parts, 2)
 
@@ -490,11 +490,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr._locus_tag_num, "1")
         with self.subTest():
-            self.assertEqual(cds_ftr.strand, "F")
+            self.assertEqual(cds_ftr.orientation, "F")
         with self.subTest():
-            self.assertEqual(cds_ftr.left, 2)
+            self.assertEqual(cds_ftr.start, 2)
         with self.subTest():
-            self.assertEqual(cds_ftr.right, 10)
+            self.assertEqual(cds_ftr.stop, 10)
         with self.subTest():
             self.assertEqual(cds_ftr.parts, 1)
         with self.subTest():
@@ -532,7 +532,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.qualifier_dict.pop("locus_tag")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
-            self.assertEqual(cds_ftr.left, 2)
+            self.assertEqual(cds_ftr.start, 2)
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "")
         with self.subTest():
@@ -638,11 +638,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
-            self.assertEqual(cds_ftr.strand, "F")
+            self.assertEqual(cds_ftr.orientation, "F")
         with self.subTest():
-            self.assertEqual(cds_ftr.left, -1)
+            self.assertEqual(cds_ftr.start, -1)
         with self.subTest():
-            self.assertEqual(cds_ftr.right, -1)
+            self.assertEqual(cds_ftr.stop, -1)
         with self.subTest():
             self.assertEqual(cds_ftr.parts, 3)
         with self.subTest():
@@ -664,11 +664,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
-            self.assertEqual(cds_ftr.strand, "F")
+            self.assertEqual(cds_ftr.orientation, "F")
         with self.subTest():
-            self.assertEqual(cds_ftr.left, -1)
+            self.assertEqual(cds_ftr.start, -1)
         with self.subTest():
-            self.assertEqual(cds_ftr.right, 10)
+            self.assertEqual(cds_ftr.stop, 10)
         with self.subTest():
             self.assertEqual(cds_ftr.parts, 1)
         with self.subTest():
@@ -842,28 +842,28 @@ class TestFlatFileFunctions3(unittest.TestCase):
             self.assertEqual(gnm.cds_features[3].id, "KatherineG_CDS_2")
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].left, 2)
+            self.assertEqual(gnm.cds_features[0].start, 2)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[0].right, 10)
+            self.assertEqual(gnm.cds_features[0].stop, 10)
         with self.subTest():
             self.assertEqual(gnm.cds_features[0].genome_length, 4)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].left, 154873)
+            self.assertEqual(gnm.cds_features[1].start, 154873)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].right, 4)
+            self.assertEqual(gnm.cds_features[1].stop, 4)
         with self.subTest():
             self.assertEqual(gnm.cds_features[1].genome_length, 4)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[2].left, 9)
+            self.assertEqual(gnm.cds_features[2].start, 9)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[2].right, 50)
+            self.assertEqual(gnm.cds_features[2].stop, 50)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[3].left, 9)
+            self.assertEqual(gnm.cds_features[3].start, 9)
         with self.subTest():
-            self.assertEqual(gnm.cds_features[3].right, 30)
+            self.assertEqual(gnm.cds_features[3].stop, 30)
 
 
         with self.subTest():
@@ -872,9 +872,9 @@ class TestFlatFileFunctions3(unittest.TestCase):
             self.assertEqual(gnm.source_features[0].genome_host_genus,
                              "Gordonia")
         with self.subTest():
-            self.assertEqual(gnm.source_features[0].left, 1)
+            self.assertEqual(gnm.source_features[0].start, 1)
         with self.subTest():
-            self.assertEqual(gnm.source_features[0].right, 11000)
+            self.assertEqual(gnm.source_features[0].stop, 11000)
         with self.subTest():
             self.assertEqual(gnm.source_features[0].id, "KatherineG_SRC_2")
         with self.subTest():
@@ -1302,9 +1302,9 @@ class TestFlatFileFunctions5(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(src_ftr.seqfeature, SeqFeature)
         with self.subTest():
-            self.assertEqual(src_ftr.left, 2)
+            self.assertEqual(src_ftr.start, 2)
         with self.subTest():
-            self.assertEqual(src_ftr.right, 10)
+            self.assertEqual(src_ftr.stop, 10)
         with self.subTest():
             self.assertEqual(src_ftr.organism, self.string1)
         with self.subTest():

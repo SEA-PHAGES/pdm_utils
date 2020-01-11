@@ -39,20 +39,20 @@ class TestFileExport(unittest.TestCase):
         self.sql_handle = mch
         #Creates test Cds objects
         test_cds1 = cds.Cds()
-        test_cds1.left = 1
-        test_cds1.right = 2
+        test_cds1.start = 1
+        test_cds1.stop = 2
         test_cds1.coordinate_format = "0_half_open"
-        test_cds1.strand = 1
+        test_cds1.orientation = 1
         test_cds2 = cds.Cds()
-        test_cds2.left = 2
-        test_cds2.right = 3
+        test_cds2.start = 2
+        test_cds2.stop = 3
         test_cds2.coordinate_format = "0_half_open"
-        test_cds2.strand = 1
+        test_cds2.orientation = 1
         test_cds3 = cds.Cds()
-        test_cds3.left = 3
-        test_cds3.right = 4
+        test_cds3.start = 3
+        test_cds3.stop = 4
         test_cds3.coordinate_format = "0_half_open"
-        test_cds3.strand = 1
+        test_cds3.orientation = 1
         self.cds_list = [test_cds1, test_cds2, test_cds3]
         #Creates a test SeqRecord object
         seq = Seq("ATGC")
@@ -77,8 +77,8 @@ class TestFileExport(unittest.TestCase):
             -Tests branching based on returned
             argparse attributes
         """
- 
-        with self.subTest(pipeline_args="csvx"):      
+
+        with self.subTest(pipeline_args="csvx"):
             type(ArgParseMock.return_value).pipeline = \
                     PropertyMock(return_value="csv")
             export_db.run_export("Test")

@@ -275,7 +275,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.cds_features = 32
         self.genome1._cds_features_tally = 33
         self.genome1._cds_start_end_ids = 34
-        self.genome1._cds_end_strand_ids = 35
+        self.genome1._cds_end_orient_ids = 35
         self.genome1._cds_processed_descriptions_tally = 36
         self.genome1.trna_features = 37
         self.genome1._trna_features_tally = 38
@@ -292,8 +292,8 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._cds_processed_notes_tally = 50
         self.genome1._cds_unique_start_end_ids = 51
         self.genome1._cds_duplicate_start_end_ids = 52
-        self.genome1._cds_unique_end_strand_ids = 53
-        self.genome1._cds_duplicate_end_strand_ids = 54
+        self.genome1._cds_unique_end_orient_ids = 53
+        self.genome1._cds_duplicate_end_orient_ids = 54
 
         self.genome2.type = "import"
 
@@ -350,7 +350,7 @@ class TestGenomePairClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2._cds_start_end_ids, 34)
         with self.subTest():
-            self.assertEqual(self.genome_pair.genome2._cds_end_strand_ids, 35)
+            self.assertEqual(self.genome_pair.genome2._cds_end_orient_ids, 35)
         with self.subTest():
             self.assertEqual(
                 self.genome_pair.genome2._cds_processed_descriptions_tally,
@@ -401,10 +401,10 @@ class TestGenomePairClass(unittest.TestCase):
                 self.genome_pair.genome2._cds_duplicate_start_end_ids, 52)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._cds_unique_end_strand_ids, 53)
+                self.genome_pair.genome2._cds_unique_end_orient_ids, 53)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._cds_duplicate_end_strand_ids, 54)
+                self.genome_pair.genome2._cds_duplicate_end_orient_ids, 54)
 
     def test_copy_data_14(self):
         """Check that all data (except for 'id' attribute)

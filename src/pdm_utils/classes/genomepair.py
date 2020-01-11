@@ -144,9 +144,9 @@ class GenomePair:
                 second._cds_features_tally = first._cds_features_tally
             if (second._cds_start_end_ids == keyword or keyword is None):
                 second._cds_start_end_ids = first._cds_start_end_ids
-            if (second._cds_end_strand_ids == keyword or keyword is None):
-                second._cds_end_strand_ids = first._cds_end_strand_ids
-            if (second._cds_processed_descriptions_tally == keyword \
+            if (second._cds_end_orient_ids == keyword or keyword is None):
+                second._cds_end_orient_ids = first._cds_end_orient_ids
+            if (second._cds_processed_descriptions_tally == keyword
                     or keyword is None):
                 second._cds_processed_descriptions_tally = \
                     first._cds_processed_descriptions_tally
@@ -170,41 +170,41 @@ class GenomePair:
                 second._source_host_genus = first._source_host_genus
             if (second._organism_host_genus == keyword or keyword is None):
                 second._organism_host_genus = first._organism_host_genus
-            if (second._cds_processed_products_tally == keyword \
+            if (second._cds_processed_products_tally == keyword
                     or keyword is None):
                 second._cds_processed_products_tally = \
                     first._cds_processed_products_tally
-            if (second._cds_processed_functions_tally == keyword \
+            if (second._cds_processed_functions_tally == keyword
                     or keyword is None):
                 second._cds_processed_functions_tally = \
                     first._cds_processed_functions_tally
-            if (second._cds_processed_notes_tally == keyword \
+            if (second._cds_processed_notes_tally == keyword
                     or keyword is None):
                 second._cds_processed_notes_tally = \
                     first._cds_processed_notes_tally
-            if (second._cds_unique_start_end_ids == keyword \
+            if (second._cds_unique_start_end_ids == keyword
                     or keyword is None):
                 second._cds_unique_start_end_ids = \
                     first._cds_unique_start_end_ids
-            if (second._cds_duplicate_start_end_ids == keyword \
+            if (second._cds_duplicate_start_end_ids == keyword
                     or keyword is None):
                 second._cds_duplicate_start_end_ids = \
                     first._cds_duplicate_start_end_ids
-            if (second._cds_unique_end_strand_ids == keyword
+            if (second._cds_unique_end_orient_ids == keyword
                     or keyword is None):
-                second._cds_unique_end_strand_ids = \
-                    first._cds_unique_end_strand_ids
-            if (second._cds_duplicate_end_strand_ids == keyword \
+                second._cds_unique_end_orient_ids = \
+                    first._cds_unique_end_orient_ids
+            if (second._cds_duplicate_end_orient_ids == keyword
                     or keyword is None):
-                second._cds_duplicate_end_strand_ids = \
-                    first._cds_duplicate_end_strand_ids
+                second._cds_duplicate_end_orient_ids = \
+                    first._cds_duplicate_end_orient_ids
 
 
     # TODO finish revamping code for matching features.
     # TODO unit test.
     def match_cds_start_stop_ids(self):
         """Match annotated features in each genome with the same start and
-        stop coordinates and the same strand (perfect match)."""
+        stop coordinates and the same orientation (perfect match)."""
 
 
         # Create the perfect matched and unmatched sets.
@@ -225,11 +225,11 @@ class GenomePair:
     # TODO unit test.
     def match_cds_stop_ids(self, list1, list2):
         """Match annotated features in each genome with the same stop
-        coordinates and same strand but different start coordinates
+        coordinates and same orientation but different start coordinates
         (imperfect match)."""
 
         # From the unmatched sets, created second round of
-        # end-strand id sets.
+        # end-orientation id sets.
         stop_ids_1 = []
         stop_ids_2 = []
 
@@ -257,7 +257,7 @@ class GenomePair:
     # TODO unit test.
     def match_cds_features(self):
         """Match annotated features in each genome with the same stop
-        coordinates and same strand but different start coordinates
+        coordinates and same orientation but different start coordinates
         (imperfect match)."""
 
         matched_start_stop_set = set(self.matched_cds_start_stop_ids)
@@ -311,13 +311,13 @@ class GenomePair:
 
 
         # Imperfectly matched features
-        for end_strand_tup in imperfect_matched_cds_id_set:
+        for end_orient_tup in imperfect_matched_cds_id_set:
 
             matched_cds_object = MatchedCdsFeatures()
             matched_cds_object.feature1 = \
-                g1_matched_cds_stop_dict[end_strand_tup]
+                g1_matched_cds_stop_dict[end_orient_tup]
             matched_cds_object.feature2 = \
-                ncbi_imperfect_matched_cds_dict[end_strand_tup]
+                ncbi_imperfect_matched_cds_dict[end_orient_tup]
             # TODO add a step to run all MatchedCDS evaluation methods?
 
             self.matched_stop_features.append(matched_cds_object)

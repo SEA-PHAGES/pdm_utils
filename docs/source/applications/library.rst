@@ -109,11 +109,11 @@ For each phage, all Cds objects for are stored in the Genome object's 'cds_featu
     >>> cds54 = d29.cds_features[54]
     >>> cds54.description
     'DNA primase'
-    >>> cds54.left
+    >>> cds54.start
     38737
-    >>> cds54.right
+    >>> cds54.stop
     39127
-    >>> cds54.strand
+    >>> cds54.orientation
     'R'
     >>> cds54.coordinate_format
     '0_half_open'

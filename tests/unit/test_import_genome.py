@@ -530,17 +530,17 @@ class TestImportGenomeClass4(unittest.TestCase):
 
         self.cds1 = cds.Cds()
         self.cds1.id = "L5_1"
-        self.cds1.left = 10
-        self.cds1.right = 20
+        self.cds1.start = 10
+        self.cds1.stop = 20
         self.cds1.coordinate_format = "0_half_open"
-        self.cds1.strand = "F"
+        self.cds1.orientation = "F"
 
         self.cds2 = cds.Cds()
         self.cds2.id = "L5_2"
-        self.cds2.left = 100
-        self.cds2.right = 200
+        self.cds2.start = 100
+        self.cds2.stop = 200
         self.cds2.coordinate_format = "0_half_open"
-        self.cds2.strand = "F"
+        self.cds2.orientation = "F"
 
         self.gnm = genome.Genome()
         self.gnm.type = "flat_file"
@@ -1181,8 +1181,8 @@ class TestImportGenomeClass4(unittest.TestCase):
     def test_check_genome_46(self):
         """Verify correct number of errors are produced using:
         duplicated feature coordinates."""
-        self.cds2.left = 10
-        self.cds2.right = 20
+        self.cds2.start = 10
+        self.cds2.stop = 20
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
@@ -1836,10 +1836,10 @@ class TestImportGenomeClass8(unittest.TestCase):
         self.cds1.translation_length = 2
         self.cds1.seq = Seq("ATGTTTTGA", IUPAC.unambiguous_dna)
         self.cds1.translation_table = 11
-        self.cds1.left = 10
-        self.cds1.right = 20
+        self.cds1.start = 10
+        self.cds1.stop = 20
         self.cds1.coordinate_format = "0_half_open"
-        self.cds1.strand = "F"
+        self.cds1.orientation = "F"
         self.cds1.parts = 1
         self.cds1.length = 9
         self.cds1.genome_id = "L5"
@@ -1935,15 +1935,15 @@ class TestImportGenomeClass8(unittest.TestCase):
         self.assertEqual(errors, 1)
 
     def test_check_cds_11(self):
-        """Verify correct number of errors with incorrect left coordinate."""
-        self.cds1.left = -1
+        """Verify correct number of errors with incorrect start coordinate."""
+        self.cds1.start = -1
         import_genome.check_cds(self.cds1, self.eval_flags)
         errors = get_errors(self.cds1)
         self.assertEqual(errors, 1)
 
     def test_check_cds_12(self):
-        """Verify correct number of errors with incorrect strand."""
-        self.cds1.strand = "f"
+        """Verify correct number of errors with incorrect orientation."""
+        self.cds1.orientation = "f"
         import_genome.check_cds(self.cds1, self.eval_flags)
         errors = get_errors(self.cds1)
         self.assertEqual(errors, 1)
@@ -2010,8 +2010,8 @@ class TestImportGenomeClass9(unittest.TestCase):
         self.src1.id = 1
         self.src1.name = ""
         self.src1.type = "source"
-        self.src1.left = 1
-        self.src1.right = 50000
+        self.src1.start = 1
+        self.src1.stop = 50000
         self.src1.organism = "Mycobacterium phage L5"
         self.src1.host = "Mycobacterium smegmatis mc1255"
         self.src1.lab_host = "Mycobacterium smegmatis mc1255"

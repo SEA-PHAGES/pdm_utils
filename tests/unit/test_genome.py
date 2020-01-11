@@ -130,11 +130,11 @@ class TestGenomeClass1(unittest.TestCase):
         """Check that CDS feature identifier lists are set."""
         cds1 = cds.Cds()
         cds1._start_end_id = (1, 5)
-        cds1._end_strand_id = (5, "forward")
+        cds1._end_orient_id = (5, "forward")
 
         cds2 = cds.Cds()
         cds2._start_end_id = (21, 2)
-        cds2._end_strand_id = (2, "reverse")
+        cds2._end_orient_id = (2, "reverse")
 
         features_list = [cds1, cds2]
         self.gnm.set_cds_features(features_list)
@@ -148,7 +148,7 @@ class TestGenomeClass1(unittest.TestCase):
                 self.gnm._cds_start_end_ids, start_end_id_list)
         with self.subTest():
             self.assertEqual(
-                self.gnm._cds_end_strand_ids, end_strand_id_list)
+                self.gnm._cds_end_orient_ids, end_strand_id_list)
 
 
 
@@ -874,18 +874,18 @@ class TestGenomeClass1(unittest.TestCase):
 
 
 
-    def test_set_unique_cds_end_strand_ids_1(self):
+    def test_set_unique_cds_end_orient_ids_1(self):
         """Verify that both sets are computed."""
-        self.gnm._cds_end_strand_ids = \
+        self.gnm._cds_end_orient_ids = \
             [(1, "forward"), (2, "reverse"), (2, "forward"), (2, "reverse")]
         expected_unique_set = set([(1, "forward"), (2, "forward")])
         expected_duplicate_set = set([(2, "reverse")])
-        self.gnm.set_unique_cds_end_strand_ids()
+        self.gnm.set_unique_cds_end_orient_ids()
         with self.subTest():
-            self.assertEqual(self.gnm._cds_unique_end_strand_ids, \
+            self.assertEqual(self.gnm._cds_unique_end_orient_ids,
                 expected_unique_set)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_duplicate_end_strand_ids, \
+            self.assertEqual(self.gnm._cds_duplicate_end_orient_ids,
                 expected_duplicate_set)
 
 
@@ -911,18 +911,18 @@ class TestGenomeClass1(unittest.TestCase):
 
 
 
-    def test_check_cds_end_strand_ids_1(self):
+    def test_check_cds_end_orient_ids_1(self):
         """Verify that no warning is produced."""
-        self.gnm.check_cds_end_strand_ids("eval_id")
+        self.gnm.check_cds_end_orient_ids("eval_id")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
-    def test_check_cds_end_strand_ids_2(self):
+    def test_check_cds_end_orient_ids_2(self):
         """Verify that a warning is produced."""
-        self.gnm._cds_duplicate_end_strand_ids = set([(2, "forward")])
-        self.gnm.check_cds_end_strand_ids()
+        self.gnm._cds_duplicate_end_orient_ids = set([(2, "forward")])
+        self.gnm.check_cds_end_orient_ids()
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "error")
         with self.subTest():
@@ -1359,13 +1359,13 @@ class TestGenomeClass1(unittest.TestCase):
 
 
     def test_check_feature_coordinates_1(self):
-        """Verify no error is produced by two CDS features on same strand."""
-        self.cds1.strand = "F"
-        self.cds1.left = 5
-        self.cds1.right = 50
-        self.cds2.strand = "F"
-        self.cds2.left = 20
-        self.cds2.right = 70
+        """Verify no error is produced by two CDS features with same orientation."""
+        self.cds1.orientation = "F"
+        self.cds1.start = 5
+        self.cds1.stop = 50
+        self.cds2.orientation = "F"
+        self.cds2.start = 20
+        self.cds2.stop = 70
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True,eval_id="eval_id")
         with self.subTest():
@@ -1374,14 +1374,14 @@ class TestGenomeClass1(unittest.TestCase):
             self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
 
     def test_check_feature_coordinates_2(self):
-        """Verify an error is produced by two CDS features on same strand
-        with identical left and right coordinates."""
-        self.cds1.strand = "F"
-        self.cds1.left = 5
-        self.cds1.right = 50
-        self.cds2.strand = "F"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        """Verify an error is produced by two CDS features with same orientation
+        with identical start and stop coordinates."""
+        self.cds1.orientation = "F"
+        self.cds1.start = 5
+        self.cds1.stop = 50
+        self.cds2.orientation = "F"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         with self.subTest():
@@ -1390,93 +1390,93 @@ class TestGenomeClass1(unittest.TestCase):
             self.assertIsNone(self.gnm.evaluations[0].id)
 
     def test_check_feature_coordinates_3(self):
-        """Verify an error is produced by two CDS features on different strand
-        with identical left and right coordinates."""
-        self.cds1.strand = "R"
-        self.cds1.left = 5
-        self.cds1.right = 50
-        self.cds2.strand = "F"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        """Verify an error is produced by two CDS features with different orientation
+        with identical start and stop coordinates."""
+        self.cds1.orientation = "R"
+        self.cds1.start = 5
+        self.cds1.stop = 50
+        self.cds2.orientation = "F"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_feature_coordinates_4(self):
-        """Verify no error is produced by two CDS features on different strand
-        with identical left and right coordinates when strand is True."""
-        self.cds1.strand = "R"
-        self.cds1.left = 5
-        self.cds1.right = 50
-        self.cds2.strand = "F"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        """Verify no error is produced by two CDS features with different orientation
+        with identical start and stop coordinates when strand is True."""
+        self.cds1.orientation = "R"
+        self.cds1.start = 5
+        self.cds1.stop = 50
+        self.cds2.orientation = "F"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True, strand=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_5(self):
-        """Verify an error is produced by two CDS features on same strand
+        """Verify an error is produced by two CDS features with same orientation
         when they have nested coordinates."""
-        self.cds1.strand = "F"
-        self.cds1.left = 10
-        self.cds1.right = 20
-        self.cds2.strand = "F"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        self.cds1.orientation = "F"
+        self.cds1.start = 10
+        self.cds1.stop = 20
+        self.cds2.orientation = "F"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
 
     def test_check_feature_coordinates_6(self):
-        """Verify no error is produced by two CDS features on "F" strand
-        when they have the same left (start) coordinates."""
-        self.cds1.strand = "F"
-        self.cds1.left = 10
-        self.cds1.right = 20
-        self.cds2.strand = "F"
-        self.cds2.left = 10
-        self.cds2.right = 50
+        """Verify no error is produced by two CDS features with "F" orientation
+        when they have the same start coordinates."""
+        self.cds1.orientation = "F"
+        self.cds1.start = 10
+        self.cds1.stop = 20
+        self.cds2.orientation = "F"
+        self.cds2.start = 10
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_7(self):
-        """Verify an error is produced by two CDS features on "F" strand
-        when they have the same right (stop) coordinates."""
-        self.cds1.strand = "F"
-        self.cds1.left = 10
-        self.cds1.right = 50
-        self.cds2.strand = "F"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        """Verify an error is produced by two CDS features with "F" orientation
+        when they have the same stop coordinates."""
+        self.cds1.orientation = "F"
+        self.cds1.start = 10
+        self.cds1.stop = 50
+        self.cds2.orientation = "F"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_feature_coordinates_8(self):
-        """Verify no error is produced by two CDS features on "R" strand
-        when they have the same right (start) coordinates."""
-        self.cds1.strand = "R"
-        self.cds1.left = 10
-        self.cds1.right = 50
-        self.cds2.strand = "R"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        """Verify no error is produced by two CDS features with "R" orientation
+        when they have the same stop coordinates."""
+        self.cds1.orientation = "R"
+        self.cds1.start = 10
+        self.cds1.stop = 50
+        self.cds2.orientation = "R"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_9(self):
-        """Verify no error is produced by two CDS features on "R" strand
-        when they have the same left (stop) coordinates."""
-        self.cds1.strand = "R"
-        self.cds1.left = 5
-        self.cds1.right = 20
-        self.cds2.strand = "R"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        """Verify no error is produced by two CDS features with "R" orientation
+        when they have the same start coordinates."""
+        self.cds1.orientation = "R"
+        self.cds1.start = 5
+        self.cds1.stop = 20
+        self.cds2.orientation = "R"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
@@ -1484,15 +1484,15 @@ class TestGenomeClass1(unittest.TestCase):
     def test_check_feature_coordinates_10(self):
         """Verify an error is produced by a CDS and tRNA feature
         when they have the same coordinates."""
-        self.cds1.strand = "F"
-        self.cds1.left = 5
-        self.cds1.right = 20
-        self.cds2.strand = "F"
-        self.cds2.left = 100
-        self.cds2.right = 200
-        self.trna1.left = 5
-        self.trna1.right = 20
-        self.trna1.strand = "F"
+        self.cds1.orientation = "F"
+        self.cds1.start = 5
+        self.cds1.stop = 20
+        self.cds2.orientation = "F"
+        self.cds2.start = 100
+        self.cds2.stop = 200
+        self.trna1.start = 5
+        self.trna1.stop = 20
+        self.trna1.orientation = "F"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.trna_features = [self.trna1]
         self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True)
@@ -1501,15 +1501,15 @@ class TestGenomeClass1(unittest.TestCase):
     def test_check_feature_coordinates_11(self):
         """Verify no error is produced by a CDS and tRNA feature
         when they have the same coordinates when CDS is false."""
-        self.cds1.strand = "F"
-        self.cds1.left = 5
-        self.cds1.right = 20
-        self.cds2.strand = "F"
-        self.cds2.left = 100
-        self.cds2.right = 200
-        self.trna1.left = 5
-        self.trna1.right = 20
-        self.trna1.strand = "F"
+        self.cds1.orientation = "F"
+        self.cds1.start = 5
+        self.cds1.stop = 20
+        self.cds2.orientation = "F"
+        self.cds2.start = 100
+        self.cds2.stop = 200
+        self.trna1.start = 5
+        self.trna1.stop = 20
+        self.trna1.orientation = "F"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.trna_features = [self.trna1]
         self.gnm.check_feature_coordinates(trna_ftr=True)
@@ -1519,15 +1519,15 @@ class TestGenomeClass1(unittest.TestCase):
         """Verify an error is produced by a CDS feature stored in the
         CDS features list and a CDS feature stored in a supplementary list
         when they have the same coordinates."""
-        self.cds1.strand = "F"
-        self.cds1.left = 5
-        self.cds1.right = 20
-        self.cds2.strand = "F"
-        self.cds2.left = 100
-        self.cds2.right = 200
-        self.cds3.strand = "F"
-        self.cds3.left = 5
-        self.cds3.right = 20
+        self.cds1.orientation = "F"
+        self.cds1.start = 5
+        self.cds1.stop = 20
+        self.cds2.orientation = "F"
+        self.cds2.start = 100
+        self.cds2.stop = 200
+        self.cds3.orientation = "F"
+        self.cds3.start = 5
+        self.cds3.stop = 20
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True, other=[self.cds3])
         self.assertEqual(self.gnm.evaluations[0].status, "error")
@@ -1538,16 +1538,16 @@ class TestGenomeClass1(unittest.TestCase):
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_14(self):
-        """Verify no error is produced by two CDS features on same strand
+        """Verify no error is produced by two CDS features with same orientation
         when one wraps around the end of the genome."""
-        # For wrap-around genes, the 'left' coordinate is larger than
-        # the 'right' coordinate.
-        self.cds1.strand = "F"
-        self.cds1.left = 50000
-        self.cds1.right = 20
-        self.cds2.strand = "F"
-        self.cds2.left = 5
-        self.cds2.right = 50
+        # For wrap-around genes, the 'start' coordinate is larger than
+        # the 'stop' coordinate.
+        self.cds1.orientation = "F"
+        self.cds1.start = 50000
+        self.cds1.stop = 20
+        self.cds2.orientation = "F"
+        self.cds2.start = 5
+        self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.check_feature_coordinates(cds_ftr=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
@@ -1574,40 +1574,40 @@ class TestGenomeClass2(unittest.TestCase):
 
 
         #1
-        self.trna3.left = 10
-        self.trna3.right = 15
+        self.trna3.start = 10
+        self.trna3.stop = 15
 
         #2
-        self.trna2.left = 10
-        self.trna2.right = 17
+        self.trna2.start = 10
+        self.trna2.stop = 17
 
         #3
-        self.cds4.left = 10
-        self.cds4.right = 20
+        self.cds4.start = 10
+        self.cds4.stop = 20
 
         #4
-        self.cds3.left = 18
-        self.cds3.right = 30
+        self.cds3.start = 18
+        self.cds3.stop = 30
 
         #5
-        self.cds2.left = 18
-        self.cds2.right = 40
+        self.cds2.start = 18
+        self.cds2.stop = 40
 
         #6
-        self.src2.left = 19
-        self.src2.right = 35
+        self.src2.start = 19
+        self.src2.stop = 35
 
         #7
-        self.trna1.left = 100
-        self.trna1.right = 200
+        self.trna1.start = 100
+        self.trna1.stop = 200
 
         #8
-        self.src1.left = 101
-        self.src1.right = 300
+        self.src1.start = 101
+        self.src1.stop = 300
 
         #9 Wrap-around feature.
-        self.cds1.left = 400
-        self.cds1.right = 3
+        self.cds1.start = 400
+        self.cds1.stop = 3
 
         self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
         self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
