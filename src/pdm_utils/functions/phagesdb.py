@@ -18,7 +18,7 @@ def parse_phage_name(data_dict):
     :rtype: str
     """
     try:
-        phage_name = data_dict['phage_name']
+        phage_name = data_dict["phage_name"]
     except:
         phage_name = ""
     return phage_name

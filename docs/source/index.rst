@@ -17,6 +17,7 @@
    Command line toolkit <tools>
    Package applications <applications>
    Source code library <pdm_utils>
+   How to contribute <contribute>
    References <bibliography>
 
 

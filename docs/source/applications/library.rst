@@ -187,3 +187,6 @@ one gene that is annotated as the 'repressor' are needed. This filter can be add
     4
     >>> db_filter.values
     ['Pukovnik', 'RedRock', 'Odin', 'Adzzy']
+
+
+For more information on how different Genome and Cds object attributes map to the MySQL database, refer to the :ref:`object attribute maps <attributemap>`.
