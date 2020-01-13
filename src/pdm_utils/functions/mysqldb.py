@@ -139,12 +139,12 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr.left = int(data_dict["Start"])
+        cds_ftr.start = int(data_dict["Start"])
     except:
         pass
 
     try:
-        cds_ftr.right = int(data_dict["Stop"])
+        cds_ftr.stop = int(data_dict["Stop"])
     except:
         pass
 
@@ -166,7 +166,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr.strand = data_dict["Orientation"]
+        cds_ftr.orientation = data_dict["Orientation"]
     except:
         pass
 
@@ -461,10 +461,10 @@ def create_gene_table_insert(cds_ftr):
                  "(GeneID, PhageID, Start, Stop, Length, Name, "
                  "Translation, Orientation, Notes, LocusTag) "
                  "VALUES "
-                 f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.left}, "
-                 f"{cds_ftr.right}, {cds_ftr.translation_length}, "
+                 f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.start}, "
+                 f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
                  f"'{cds_ftr.name}', '{cds_ftr.translation}', "
-                 f"'{cds_ftr.strand}', '{cds_ftr.processed_description}', "
+                 f"'{cds_ftr.orientation}', '{cds_ftr.processed_description}', "
                  f"'{cds_ftr.locus_tag}');"
                  )
     return statement

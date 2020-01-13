@@ -128,7 +128,7 @@ def reformat_strand(input_value, format, case=False):
     return new_value
 
 
-def reformat_coordinates(left, right, current, new):
+def reformat_coordinates(start, stop, current, new):
     """Converts common coordinate formats.
 
     The type of coordinate formats include:
@@ -148,43 +148,43 @@ def reformat_coordinates(left, right, current, new):
         VCF files, GFF files. This format seems to be more
         intuitive and used for visualization.
 
-    The function assumes coordinates reflect the left and right
-    boundaries (where the left coordinates is smaller than the right
-    coordinate), instead of gene start and stop coordinates.
+    The function assumes coordinates reflect the start and stop
+    boundaries (where the start coordinates is smaller than the stop
+    coordinate), instead of transcription start and stop coordinates.
 
-    :param left: Left coordinate
-    :type left: int
-    :param right: Left coordinate
-    :type right: int
+    :param start: Start coordinate
+    :type start: int
+    :param stop: Stop coordinate
+    :type stop: int
     :param current: Indicates the indexing format of the input coordinates.
     :type current: str
     :param new: Indicates the indexing format of the output coordinates.
     :type new: str
-    :returns: The re-formatted left and right coordinates.
+    :returns: The re-formatted start and stop coordinates.
     :rtype: int
     """
     format_set = set(["0_half_open", "1_closed"])
     if (current in format_set and new in format_set):
         if current == "0_half_open":
             if new == "1_closed":
-                new_left = left + 1
-                new_right = right
+                new_start = start + 1
+                new_stop = stop
             else:
-                new_left = left
-                new_right = right
+                new_start = start
+                new_stop = stop
         else:
             if new == "0_half_open":
-                new_left = left - 1
-                new_right = right
+                new_start = start - 1
+                new_stop = stop
             else:
-                new_left = left
-                new_right = right
+                new_start = start
+                new_stop = stop
     else:
-        # new_left = left
-        # new_right = right
+        # new_start = start
+        # new_stop = stop
         raise ValueError("Format for CDS coordinate formats must "
                          "either be '0_half_open' or '1_closed'")
-    return (new_left, new_right)
+    return (new_start, new_stop)
 
 
 def check_empty(value, lower=True):

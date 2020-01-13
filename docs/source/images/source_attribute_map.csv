@@ -1,0 +1,9 @@
+pdm_utils object.attribute,MySQL table.column,GenBank flat file BioPython object.attribute,PhagesDB API dictionary
+Source.id,N/A,N/A,N/A
+Source.name,N/A,N/A,N/A
+Source.seqfeature,N/A,SeqFeature,N/A
+Source.start,N/A,SeqFeature.location.start OR end,N/A
+Source.stop,N/A,SeqFeature.location.start OR end,N/A
+Source.organism,N/A,"SeqFeature.qualifiers[""organism""][0]",N/A
+Source.host,N/A,"SeqFeature.qualifiers[""host""][0]",N/A
+Source.lab_host,N/A,"SeqFeature.qualifiers[""lab_host""][0]",N/A

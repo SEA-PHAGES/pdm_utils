@@ -109,11 +109,11 @@ For each phage, all Cds objects for are stored in the Genome object's 'cds_featu
     >>> cds54 = d29.cds_features[54]
     >>> cds54.description
     'DNA primase'
-    >>> cds54.left
+    >>> cds54.start
     38737
-    >>> cds54.right
+    >>> cds54.stop
     39127
-    >>> cds54.strand
+    >>> cds54.orientation
     'R'
     >>> cds54.coordinate_format
     '0_half_open'
@@ -187,3 +187,6 @@ one gene that is annotated as the 'repressor' are needed. This filter can be add
     4
     >>> db_filter.values
     ['Pukovnik', 'RedRock', 'Odin', 'Adzzy']
+
+
+For more information on how different Genome and Cds object attributes map to the MySQL database, refer to the :ref:`object attribute maps <attributemap>`.

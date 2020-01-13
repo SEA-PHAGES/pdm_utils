@@ -257,7 +257,7 @@ NCBI Conserved Domain Database
 ``pdm_utils`` source code repository
 ************************************
 
-Some ``pdm_utils`` tools, such as the ``convert`` tool, require non-Python data files that are not directly installed with the Python package. Instead, these files are available on the ``pdm_utils`` git repository, which can be accessed through :pdmutils:`GitHub <>`. The repository can be downloaded two ways:
+Some ``pdm_utils`` tools may require non-Python data files that are not directly installed with the Python package. Instead, these files are available on the ``pdm_utils`` git repository, which can be accessed through :pdmutils:`GitHub <>`. The repository can be downloaded two ways:
 
     1. Using git on the command line::
 

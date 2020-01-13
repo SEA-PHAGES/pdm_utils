@@ -1286,13 +1286,13 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cds1 = cds.Cds()
         cds1.id = "SEA_L5_123"
         cds1.genome_id = "L5"
-        cds1.left = 5
-        cds1.right = 10
+        cds1.start = 5
+        cds1.stop = 10
         cds1.translation_length = 20
         cds1.name = "Int"
         cds1.type = "CDS"
         cds1.translation = "ACKLG"
-        cds1.strand = "F"
+        cds1.orientation = "F"
         cds1.processed_description = "integrase"
         cds1.locus_tag = "TAG1"
         insert2 = mysqldb.create_gene_table_insert(cds1)

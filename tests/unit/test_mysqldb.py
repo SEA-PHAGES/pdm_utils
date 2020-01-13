@@ -142,9 +142,9 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds1.genome_id, "L5")
         with self.subTest():
-            self.assertEqual(cds1.left, 10)
+            self.assertEqual(cds1.start, 10)
         with self.subTest():
-            self.assertEqual(cds1.right, 100)
+            self.assertEqual(cds1.stop, 100)
         with self.subTest():
             self.assertEqual(cds1.length, 1000)
         with self.subTest():
@@ -154,7 +154,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds1.translation, "AGGPT")
         with self.subTest():
-            self.assertEqual(cds1.strand, "F")
+            self.assertEqual(cds1.orientation, "F")
         with self.subTest():
             self.assertEqual(cds1.description, "description")
         with self.subTest():
@@ -178,7 +178,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds1.genome_id, "L5")
         with self.subTest():
-            self.assertEqual(cds1.left, 10)
+            self.assertEqual(cds1.start, 10)
         with self.subTest():
             self.assertEqual(cds1.translation_table, 11)
 
@@ -239,25 +239,25 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         cds1 = cds.Cds()
         cds1.genome_id = "L5"
-        cds1.left = 10
-        cds1.right = 100
+        cds1.start = 10
+        cds1.stop = 100
         cds1.length = 1000
         cds1.name = "1"
         cds1.type = "CDS"
         cds1.translation = "AGGPT"
-        cds1.strand = "F"
+        cds1.orientation = "F"
         cds1.description = "description"
         cds1.locus_tag = "SEA_L5_001"
 
         cds2 = cds.Cds()
         cds2.genome_id = "L5"
-        cds2.left = 100
-        cds2.right = 1000
+        cds2.start = 100
+        cds2.stop = 1000
         cds2.length = 10000
         cds2.name = "2"
         cds2.type = "CDS"
         cds2.translation = "AKKQE"
-        cds2.strand = "R"
+        cds2.orientation = "R"
         cds2.description = "description"
         cds2.locus_tag = "SEA_L5_002"
 

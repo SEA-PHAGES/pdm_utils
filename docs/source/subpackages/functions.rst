@@ -2,48 +2,48 @@ functions
 =========
 
 
-``basic`` module
-----------------------
+``basic``
+---------
 
 .. automodule:: pdm_utils.functions.basic
    :members:
    :undoc-members:
    :show-inheritance:
 
-``flat\_files`` module
-----------------------------
+``flat_files``
+--------------
 
 .. automodule:: pdm_utils.functions.flat_files
    :members:
    :undoc-members:
    :show-inheritance:
 
-``misc`` module
----------------------
+``misc``
+--------
 
 .. automodule:: pdm_utils.functions.misc
    :members:
    :undoc-members:
    :show-inheritance:
 
-``phagesdb`` module
--------------------------
+``phagesdb``
+------------
 
 .. automodule:: pdm_utils.functions.phagesdb
    :members:
    :undoc-members:
    :show-inheritance:
 
-``mysqldb`` module
----------------------------
+``mysqldb``
+-----------
 
 .. automodule:: pdm_utils.functions.mysqldb
    :members:
    :undoc-members:
    :show-inheritance:
 
-``tickets`` module
-------------------------
+``tickets``
+-----------
 
 .. automodule:: pdm_utils.functions.tickets
    :members:

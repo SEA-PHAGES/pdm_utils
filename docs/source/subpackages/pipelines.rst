@@ -4,104 +4,104 @@ pipelines
 .. Submodules
 .. ----------
 
-``cdd`` pipeline
-----------------
+``cdd``
+-------
 
 .. automodule:: pdm_utils.pipelines.cdd
    :members:
    :undoc-members:
    :show-inheritance:
 
-``compare`` pipeline
------------------------
+``compare``
+-----------
 
 .. automodule:: pdm_utils.pipelines.compare_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-``convert`` pipeline
------------------------
+``convert``
+-----------
 
 .. automodule:: pdm_utils.pipelines.convert_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-``export`` pipeline
-----------------------
+``export``
+----------
 
 .. automodule:: pdm_utils.pipelines.export_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-``freeze`` pipeline
--------------------
+``freeze``
+----------
 
 .. automodule:: pdm_utils.pipelines.freeze_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-``get_data`` pipeline
----------------------
+``get_data``
+------------
 
 .. automodule:: pdm_utils.pipelines.get_data
    :members:
    :undoc-members:
    :show-inheritance:
 
-``get_db`` pipeline
--------------------
+``get_db``
+----------
 
 .. automodule:: pdm_utils.pipelines.get_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-``get_gb_records`` pipeline
----------------------------
+``get_gb_records``
+------------------
 
 .. automodule:: pdm_utils.pipelines.get_gb_records
    :members:
    :undoc-members:
    :show-inheritance:
 
-``import_genome`` pipeline
---------------------------
+``import_genome``
+-----------------
 
 .. automodule:: pdm_utils.pipelines.import_genome
    :members:
    :undoc-members:
    :show-inheritance:
 
-``import`` pipeline
--------------------------
+``import``
+----------
 
 .. automodule:: pdm_utils.pipelines.import_phage
    :members:
    :undoc-members:
    :show-inheritance:
 
-``phamerate`` pipeline
-----------------------
+``phamerate``
+-------------
 
 .. automodule:: pdm_utils.pipelines.phamerate
    :members:
    :undoc-members:
    :show-inheritance:
 
-``push`` pipeline
---------------------
+``push``
+--------
 
 .. automodule:: pdm_utils.pipelines.push_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-``update`` pipeline
--------------------------
+``update``
+----------
 
 .. automodule:: pdm_utils.pipelines.update_field
    :members:
@@ -109,10 +109,10 @@ pipelines
    :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: pdm_utils.pipelines
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. Module contents
+.. ---------------
+..
+.. .. automodule:: pdm_utils.pipelines
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:

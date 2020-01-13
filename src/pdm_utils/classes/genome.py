@@ -61,15 +61,15 @@ class Genome:
         self.cds_features = [] # List of all parsed CDS features
         self._cds_features_tally = 0
         self._cds_start_end_ids = []
-        self._cds_end_strand_ids = []
+        self._cds_end_orient_ids = []
         self._cds_processed_descriptions_tally = 0
         self._cds_processed_products_tally = 0
         self._cds_processed_functions_tally = 0
         self._cds_processed_notes_tally = 0
         self._cds_unique_start_end_ids = set() # TODO still in development.
         self._cds_duplicate_start_end_ids = set() # TODO still in development.
-        self._cds_unique_end_strand_ids = set() # TODO still in development.
-        self._cds_duplicate_end_strand_ids = set() # TODO still in development.
+        self._cds_unique_end_orient_ids = set() # TODO still in development.
+        self._cds_duplicate_end_orient_ids = set() # TODO still in development.
         self.trna_features = []
         self._trna_features_tally = 0
         self.tmrna_features = []
@@ -237,15 +237,16 @@ class Genome:
         """Creates lists of CDS feature identifiers.
 
         The first identifier is derived from the start and end coordinates.
-        The second identifier is derived from the end coordinate and strand.
+        The second identifier is derived from the transcription end
+        coordinate and orientation.
         """
         start_end_id_list = []
-        end_strand_id_list = []
+        end_orient_id_list = []
         for cds_ftr in self.cds_features:
             start_end_id_list.append(cds_ftr._start_end_id)
-            end_strand_id_list.append(cds_ftr._end_strand_id)
+            end_orient_id_list.append(cds_ftr._end_orient_id)
         self._cds_start_end_ids = start_end_id_list
-        self._cds_end_strand_ids = end_strand_id_list
+        self._cds_end_orient_ids = end_orient_id_list
 
 
     def set_trna_features(self, value):
@@ -349,8 +350,8 @@ class Genome:
         :type format: misc
         """
 
-        if (self.cluster_subcluster is None or \
-                self.cluster_subcluster.lower() == "none" or \
+        if (self.cluster_subcluster is None or
+                self.cluster_subcluster.lower() == "none" or
                 self.cluster_subcluster == ""):
             pass
         else:
@@ -440,12 +441,12 @@ class Genome:
         self._cds_duplicate_start_end_ids = set(duplicate_id_tuples)
 
 
-    def set_unique_cds_end_strand_ids(self):
-        """Identify CDS features contain unique end-strand coordinates."""
+    def set_unique_cds_end_orient_ids(self):
+        """Identify CDS features contain unique transcription end-orientation coordinates."""
         unique_id_tuples, duplicate_id_tuples = \
-            basic.identify_unique_items(self._cds_end_strand_ids)
-        self._cds_unique_end_strand_ids = set(unique_id_tuples)
-        self._cds_duplicate_end_strand_ids = set(duplicate_id_tuples)
+            basic.identify_unique_items(self._cds_end_orient_ids)
+        self._cds_unique_end_orient_ids = set(unique_id_tuples)
+        self._cds_duplicate_end_orient_ids = set(duplicate_id_tuples)
 
 
 
@@ -469,7 +470,7 @@ class Genome:
         """Sets the id of each feature.
 
         Lists of features can be added to this method. The method assumes
-        that all elements in all lists contain 'id', 'left', and 'right'
+        that all elements in all lists contain 'id', 'start', and 'stop'
         attributes. This feature attribute is processed within
         the Genome object because and not within the feature itself since
         the method sorts all features and generates systematic IDs based on
@@ -509,7 +510,7 @@ class Genome:
         if use_tmrna:
             list_to_sort.extend(self.tmrna_features)
 
-        sorted_list = sorted(list_to_sort, key=attrgetter("left", "right"))
+        sorted_list = sorted(list_to_sort, key=attrgetter("start", "stop"))
         index = 0
         while index < len(sorted_list):
             if use_type:
@@ -835,23 +836,23 @@ class Genome:
         """
 
         if len(self._cds_duplicate_start_end_ids) > 0:
-            result = "There are multiple CDS features with the same " + \
-                "start and end coordinates."
+            result = ("There are multiple CDS features with the same "
+                      "start and end coordinates.")
             status = "error"
         else:
-            result = "All CDS features contain unique start and " + \
-                            "end coordinate information."
+            result = ("All CDS features contain unique start and "
+                      "end coordinate information.")
             status = "correct"
-        definition = "Check whether CDS features can be uniquely " + \
-                        "identified by their start and end coordinates."
+        definition = ("Check whether CDS features can be uniquely "
+                      "identified by their start and end coordinates.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_cds_end_strand_ids(self, eval_id=None):
-        """Check if there are any duplicate end-strand coordinates.
+    def check_cds_end_orient_ids(self, eval_id=None):
+        """Check if there are any duplicate transcription end-orientation coordinates.
 
-        Duplicated end-strand coordinates may represent
+        Duplicated transcription end-orientation coordinates may represent
         unintentional duplicate CDS features with slightly
         different start coordinates.
 
@@ -859,16 +860,17 @@ class Genome:
         :type eval_id: str
         """
 
-        if len(self._cds_duplicate_end_strand_ids) > 0:
-            result = "There are multiple CDS features with the same " + \
-                        "end coordinate and strand."
+        if len(self._cds_duplicate_end_orient_ids) > 0:
+            result = ("There are multiple CDS features with the same "
+                      "transcription end coordinate and orientation.")
             status = "error"
         else:
-            result = "All CDS features contain unique strand and " + \
-                            "end coordinate information."
+            result = ("All CDS features contain unique orientation and "
+                      "transcription end coordinate information.")
             status = "correct"
-        definition = "Check whether CDS features can be uniquely " + \
-                            "identified by their strand and end coordinate."
+        definition = ("Check whether CDS features can be uniquely "
+                      "identified by their orientation and transcription end "
+                      "coordinate.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -929,12 +931,12 @@ class Genome:
         if other is not None:
             unsorted_features.extend(other)
         if strand:
-            unsorted_f_features = [] # Forward strand
-            unsorted_r_features = [] # Reverse strand
+            unsorted_f_features = [] # Forward orientation
+            unsorted_r_features = [] # Reverse orientation
             index = 0
             while index < len(unsorted_features):
                 feature = unsorted_features[index]
-                strand = basic.reformat_strand(feature.strand,
+                strand = basic.reformat_strand(feature.orientation,
                                                format="fr_short")
                 if strand == "f":
                     unsorted_f_features.append(feature)
@@ -948,39 +950,39 @@ class Genome:
         msgs = ["There are one or more errors with the feature coordinates."]
         for unsorted_features in unsorted_feature_lists:
             sorted_features = sorted(unsorted_features,
-                                     key=attrgetter("left", "right"))
+                                     key=attrgetter("start", "stop"))
             index = 0
             while index < len(sorted_features) - 1:
                 current = sorted_features[index]
                 next = sorted_features[index + 1]
-                if (current.left == next.left and current.right == next.right):
-                    msgs.append("Features contain identical left and "
-                                "right coordinates.")
+                if (current.start == next.start and current.stop == next.stop):
+                    msgs.append("Features contain identical start and "
+                                "stop coordinates.")
 
                 # To identify nested features, the following tests
                 # avoid false errors due to genes that may wrap around the
                 # genome.
-                elif (current.left < next.left and \
-                      current.left < next.right and \
-                      current.right > next.left and \
-                      current.right > next.right):
+                elif (current.start < next.start and
+                      current.start < next.stop and
+                      current.stop > next.start and
+                      current.stop > next.stop):
                     msgs.append((f"Feature {next.id}, with "
-                                 f"left coordinate: {next.left} and "
-                                 f"right coordinate: {next.right} "
+                                 f"start coordinate: {next.start} and "
+                                 f"stop coordinate: {next.stop} "
                                  f"is nested within feature {current.id}, with "
-                                 f"left coordinate: {current.left} and "
-                                 f"right coordinate: {current.right}.")
+                                 f"start coordinate: {current.start} and "
+                                 f"stop coordinate: {current.stop}.")
                                  )
-                elif (current.left == next.left and \
-                        basic.reformat_strand(current.strand,
-                            format="fr_short") == "r" and \
-                        basic.reformat_strand(next.strand,
+                elif (current.start == next.start and
+                        basic.reformat_strand(current.orientation,
+                            format="fr_short") == "r" and
+                        basic.reformat_strand(next.orientation,
                             format="fr_short") == "r"):
                     msgs.append("Features contain the same stop coordinate.")
-                elif (current.right == next.right and \
-                        basic.reformat_strand(current.strand,
-                            format="fr_short") == "f" and \
-                        basic.reformat_strand(next.strand,
+                elif (current.stop == next.stop and
+                        basic.reformat_strand(current.orientation,
+                            format="fr_short") == "f" and
+                        basic.reformat_strand(next.orientation,
                             format="fr_short") == "f"):
                     msgs.append("Features contain the same stop coordinate.")
                 else:

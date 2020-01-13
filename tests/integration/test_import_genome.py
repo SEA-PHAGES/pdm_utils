@@ -1837,27 +1837,27 @@ class TestImportGenomeMain8(unittest.TestCase):
 
         self.cds1 = cds.Cds()
         self.cds1.id = "L5_001"
-        self.cds1.left = 10
-        self.cds1.right = 20
-        self.cds1.strand = "F"
+        self.cds1.start = 10
+        self.cds1.stop = 20
+        self.cds1.orientation = "F"
         self.cds1.processed_product = "int"
         self.cds1.processed_function = ""
         self.cds1.processed_note = ""
 
         self.cds2 = cds.Cds()
         self.cds2.id = "L5_002"
-        self.cds2.left = 12345
-        self.cds2.right = 12445
-        self.cds2.strand = "F"
+        self.cds2.start = 12345
+        self.cds2.stop = 12445
+        self.cds2.orientation = "F"
         self.cds2.processed_product = "capsid"
         self.cds2.processed_function = ""
         self.cds2.processed_note = "random"
 
         self.cds3 = cds.Cds()
         self.cds3.id = "L5_001"
-        self.cds3.left = 150000
-        self.cds3.right = 151000
-        self.cds3.strand = "R"
+        self.cds3.start = 150000
+        self.cds3.stop = 151000
+        self.cds3.orientation = "R"
         self.cds3.processed_product = "rep"
         self.cds3.processed_function = "lysB"
         self.cds3.processed_note = ""

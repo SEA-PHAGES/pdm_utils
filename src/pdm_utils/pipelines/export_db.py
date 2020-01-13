@@ -556,7 +556,7 @@ def set_cds_seqfeatures(phage_genome: genome.Genome):
     """
 
     try:
-        def _sorting_key(cds_feature): return cds_feature.left
+        def _sorting_key(cds_feature): return cds_feature.start
         phage_genome.cds_features.sort(key=_sorting_key)
     except:
         if phage_genome == None:

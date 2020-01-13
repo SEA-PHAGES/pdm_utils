@@ -16,9 +16,9 @@ class TrnaFeature:
 
         #Datafields from MySQL database:
         self.type = '' #Feature type: CDS, GenomeBoundary,or tRNA
-        self.left = -1 #Position of left boundary of feature, 0-indexed
-        self.right = -1 #Position of right boundary of feature, 0-indexed
-        self.strand = '' #'forward', 'reverse', or 'NA'
+        self.start = -1 #Position of left boundary of feature, 0-indexed
+        self.stop = -1 #Position of right boundary of feature, 0-indexed
+        self.orientation = '' #'forward', 'reverse', or 'NA'
         self.length = 0
 
 
@@ -153,48 +153,48 @@ class TrnaFeature:
 # def check_trna_feature(feature):
 #
 #     #Now that start and stop have been parsed, check if coordinates are fuzzy or not
-#     if (tRNA_left.isdigit() and tRNA_right.isdigit()):
-#         tRNA_left = int(tRNA_left)
-#         tRNA_right = int(tRNA_right)
+#     if (tRNA_start.isdigit() and tRNA_stop.isdigit()):
+#         tRNA_start = int(tRNA_start)
+#         tRNA_stop = int(tRNA_stop)
 #
 #     else:
 #         write_out(output_file,"\nError: tRNA starting at %s has fuzzy coordinates in phage %s."\
-#                 % (tRNA_left,phageName))
+#                 % (tRNA_start,phageName))
 #         record_errors += 1
 #         continue
 #
 #
 #     if len(tRNA_seq) != tRNA_size:
 #         write_out(output_file,"\nError: unable to retrieve sequence for tRNA starting at %s in phage %s."\
-#                 % (tRNA_left + 1,phageName))
+#                 % (tRNA_start + 1,phageName))
 #         record_errors += 1
 #         continue
 #
 #
-#     #Check to see if forward strand terminal nucleotide is correct = A or C
+#     #Check to see if forward orientation terminal nucleotide is correct = A or C
 #     if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
 #         record_warnings += 1
 #         write_out(output_file,"\nWarning: tRNA starting at %s does not appear to have correct terminal nucleotide in %s phage." \
-#                 % (tRNA_left + 1,phageName))
+#                 % (tRNA_start + 1,phageName))
 #         record_errors += question("\nError: tRNA starting at %s has incorrect terminal nucleotide in %s phage." \
-#                 % (tRNA_left + 1,phageName))
+#                 % (tRNA_start + 1,phageName))
 #
 #     if tRNA_size < 60 or tRNA_size > 100:
 #         record_warnings += 1
 #         write_out(output_file,"\nWarning: tRNA starting at %s does not appear to be the correct size in %s phage."  \
-#                 % (tRNA_left + 1,phageName))
+#                 % (tRNA_start + 1,phageName))
 #         record_errors += question("\nError: tRNA starting at %s is incorrect size in %s phage." \
-#                 % (tRNA_left + 1,phageName))
+#                 % (tRNA_start + 1,phageName))
 #
 #         if len(tRNA_product) > 0:
 #             if check_tRNA_product(tRNA_product) > 0:
 #                 write_out(output_file,"\nError: tRNA starting at %s has incorrect amino acid or anticodon in %s." \
-#                     % (tRNA_left + 1, phageName))
+#                     % (tRNA_start + 1, phageName))
 #                 record_errors += 1
 #
 #         else:
 #             write_out(output_file,"\nError: tRNA starting at %s has incorrect product in %s." \
-#                 % (tRNA_left + 1, phageName))
+#                 % (tRNA_start + 1, phageName))
 #             record_errors += 1
 
 #TODO revamp this code into a function

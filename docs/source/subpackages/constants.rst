@@ -1,8 +1,8 @@
 constants
 =========
 
-``constants`` module
---------------------------
+``constants``
+-------------
 
 .. automodule:: pdm_utils.constants.constants
    :members:

@@ -275,40 +275,40 @@ class TestBasicFunctions(unittest.TestCase):
     def test_reformat_coordinates_1(self):
         """Verify 0-based half open interval is converted to
         1-based closed interval."""
-        output_left, output_right = \
+        output_start, output_stop = \
             basic.reformat_coordinates(5, 10, "0_half_open", "1_closed")
         with self.subTest():
-            self.assertEqual(output_left, 6)
+            self.assertEqual(output_start, 6)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
 
     def test_reformat_coordinates_2(self):
         """Verify 0-based half open interval is not converted."""
-        output_left, output_right = \
+        output_start, output_stop = \
             basic.reformat_coordinates(5, 10, "0_half_open", "0_half_open")
         with self.subTest():
-            self.assertEqual(output_left, 5)
+            self.assertEqual(output_start, 5)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
 
     def test_reformat_coordinates_3(self):
         """Verify 1-based closed interval is converted to
         0-based half open interval."""
-        output_left, output_right = \
+        output_start, output_stop = \
             basic.reformat_coordinates(5, 10, "1_closed", "0_half_open")
         with self.subTest():
-            self.assertEqual(output_left, 4)
+            self.assertEqual(output_start, 4)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
 
     def test_reformat_coordinates_4(self):
         """Verify 1-based closed interval is not converted."""
-        output_left, output_right = \
+        output_start, output_stop = \
             basic.reformat_coordinates(5, 10, "1_closed", "1_closed")
         with self.subTest():
-            self.assertEqual(output_left, 5)
+            self.assertEqual(output_start, 5)
         with self.subTest():
-            self.assertEqual(output_right, 10)
+            self.assertEqual(output_stop, 10)
 
     def test_reformat_coordinates_5(self):
         """Verify invalid input format is not converted."""

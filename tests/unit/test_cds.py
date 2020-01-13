@@ -139,15 +139,15 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_set_strand_1(self):
+    def test_set_orientation_1(self):
         """Verify 'f' is converted correctly."""
-        self.feature.set_strand("f", "fr_long")
-        self.assertEqual(self.feature.strand, "forward")
+        self.feature.set_orientation("f", "fr_long")
+        self.assertEqual(self.feature.orientation, "forward")
 
-    def test_set_strand_2(self):
+    def test_set_orientation_2(self):
         """Verify 'r' is converted correctly."""
-        self.feature.set_strand("reverse", "fr_short")
-        self.assertEqual(self.feature.strand, "r")
+        self.feature.set_orientation("reverse", "fr_short")
+        self.assertEqual(self.feature.orientation, "r")
 
 
 
@@ -302,34 +302,34 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_get_start_end_1(self):
-        """Forward strand feature, long format."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "forward"
-        start, end = self.feature.get_start_end()
+    def test_get_begin_end_1(self):
+        """Forward orientation feature, long format."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = "forward"
+        start, end = self.feature.get_begin_end()
         with self.subTest():
             self.assertEqual(start, 5)
         with self.subTest():
             self.assertEqual(end, 10)
 
-    def test_get_start_end_2(self):
-        """Reverse strand feature, short format."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "r"
-        start, end = self.feature.get_start_end()
+    def test_get_begin_end_2(self):
+        """Reverse orientation feature, short format."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = "r"
+        start, end = self.feature.get_begin_end()
         with self.subTest():
             self.assertEqual(start, 10)
         with self.subTest():
             self.assertEqual(end, 5)
 
-    def test_get_start_end_3(self):
-        """Non-standard strand feature."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "other"
-        start, end = self.feature.get_start_end()
+    def test_get_begin_end_3(self):
+        """Non-standard orientation feature."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = "other"
+        start, end = self.feature.get_begin_end()
         with self.subTest():
             self.assertEqual(start, -1)
         with self.subTest():
@@ -356,104 +356,104 @@ class TestCdsClass(unittest.TestCase):
 
 
     def test_set_location_id_1(self):
-        """Forward strand feature, both values should be set."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "forward"
+        """Forward orientation feature, both values should be set."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = "forward"
         location_id_1 = (5, 10, "forward")
         location_id_2 = (10, "forward")
         location_id_3 = (5, 10)
         self.feature.set_location_id()
         with self.subTest():
-            self.assertEqual(self.feature._left_right_strand_id, location_id_1)
+            self.assertEqual(self.feature._start_stop_orient_id, location_id_1)
         with self.subTest():
-            self.assertEqual(self.feature._end_strand_id, location_id_2)
+            self.assertEqual(self.feature._end_orient_id, location_id_2)
         with self.subTest():
             self.assertEqual(self.feature._start_end_id, location_id_3)
 
     def test_set_location_id_2(self):
-        """Reverse strand feature, both values should be set."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "reverse"
+        """Reverse orientation feature, both values should be set."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = "reverse"
         location_id_1 = (5, 10, "reverse")
         location_id_2 = (5, "reverse")
         location_id_3 = (10, 5)
         self.feature.set_location_id()
         with self.subTest():
-            self.assertEqual(self.feature._left_right_strand_id, location_id_1)
+            self.assertEqual(self.feature._start_stop_orient_id, location_id_1)
         with self.subTest():
-            self.assertEqual(self.feature._end_strand_id, location_id_2)
+            self.assertEqual(self.feature._end_orient_id, location_id_2)
         with self.subTest():
             self.assertEqual(self.feature._start_end_id, location_id_3)
 
     def test_set_location_id_3(self):
-        """Test forward strand numeric format."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = 1
+        """Test forward orientation numeric format."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = 1
         location_id_1 = (5, 10, 1)
         location_id_2 = (10, 1)
         location_id_3 = (5, 10)
         self.feature.set_location_id()
         with self.subTest():
-            self.assertEqual(self.feature._left_right_strand_id, location_id_1)
+            self.assertEqual(self.feature._start_stop_orient_id, location_id_1)
         with self.subTest():
-            self.assertEqual(self.feature._end_strand_id, location_id_2)
+            self.assertEqual(self.feature._end_orient_id, location_id_2)
         with self.subTest():
             self.assertEqual(self.feature._start_end_id, location_id_3)
 
     def test_set_location_id_4(self):
-        """Test non-standard strand format."""
-        self.feature.left = 5
-        self.feature.right = 10
-        self.feature.strand = "abcd"
+        """Test non-standard orientation format."""
+        self.feature.start = 5
+        self.feature.stop = 10
+        self.feature.orientation = "abcd"
         location_id_1 = (5, 10, "abcd")
         location_id_2 = (-1, "abcd")
         location_id_3 = (-1, -1)
         self.feature.set_location_id()
         with self.subTest():
-            self.assertEqual(self.feature._left_right_strand_id, location_id_1)
+            self.assertEqual(self.feature._start_stop_orient_id, location_id_1)
         with self.subTest():
-            self.assertEqual(self.feature._end_strand_id, location_id_2)
+            self.assertEqual(self.feature._end_orient_id, location_id_2)
         with self.subTest():
             self.assertEqual(self.feature._start_end_id, location_id_3)
 
 
 
 
-    def test_check_strand_1(self):
-        """Verify no error is produced when the strand is
+    def test_check_orientation_1(self):
+        """Verify no error is produced when the orientation is
         formatted correctly using default settings."""
-        self.feature.strand = "F"
-        self.feature.check_strand(eval_id="eval_id")
+        self.feature.orientation = "F"
+        self.feature.check_orientation(eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
-    def test_check_strand_2(self):
-        """Verify an error is produced when the strand is
+    def test_check_orientation_2(self):
+        """Verify an error is produced when the orientation is
         formatted incorrectly using default settings."""
-        self.feature.strand = 1
-        self.feature.check_strand()
+        self.feature.orientation = 1
+        self.feature.check_orientation()
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "error")
         with self.subTest():
             self.assertIsNone(self.feature.evaluations[0].id)
 
-    def test_check_strand_3(self):
-        """Verify no error is produced when the strand is
+    def test_check_orientation_3(self):
+        """Verify no error is produced when the orientation is
         formatted correctly using custom settings."""
-        self.feature.strand = 1
-        self.feature.check_strand(format="numeric", case=False)
+        self.feature.orientation = 1
+        self.feature.check_orientation(format="numeric", case=False)
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
-    def test_check_strand_4(self):
-        """Verify an error is produced when the strand is
+    def test_check_orientation_4(self):
+        """Verify an error is produced when the orientation is
         formatted incorrectly using custom settings."""
-        self.feature.strand = "F"
-        self.feature.check_strand(format="numeric", case=False)
+        self.feature.orientation = "F"
+        self.feature.check_orientation(format="numeric", case=False)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
@@ -461,8 +461,8 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_coordinates_1(self):
         """Test correct boundaries."""
-        self.feature.left = 5
-        self.feature.right = 10
+        self.feature.start = 5
+        self.feature.stop = 10
         self.feature.check_coordinates(eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -470,9 +470,9 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(self.feature.evaluations[0].id, "eval_id")
 
     def test_check_coordinates_2(self):
-        """Test incorrect left boundary string."""
-        self.feature.left = "a"
-        self.feature.right = 10
+        """Test incorrect start boundary string."""
+        self.feature.start = "a"
+        self.feature.stop = 10
         self.feature.check_coordinates()
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "error")
@@ -480,30 +480,30 @@ class TestCdsClass(unittest.TestCase):
             self.assertIsNone(self.feature.evaluations[0].id)
 
     def test_check_coordinates_3(self):
-        """Test incorrect right boundary string."""
-        self.feature.left = 5
-        self.feature.right = "a"
+        """Test incorrect stop boundary string."""
+        self.feature.start = 5
+        self.feature.stop = "a"
         self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_coordinates_4(self):
-        """Test incorrect left boundary int."""
-        self.feature.left = -1
-        self.feature.right = 10
+        """Test incorrect start boundary int."""
+        self.feature.start = -1
+        self.feature.stop = 10
         self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_coordinates_5(self):
-        """Test incorrect right boundary int."""
-        self.feature.left = 5
-        self.feature.right = -1
+        """Test incorrect stop boundary int."""
+        self.feature.start = 5
+        self.feature.stop = -1
         self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_coordinates_6(self):
-        """Test incorrect left and right boundary ints."""
-        self.feature.left = -1
-        self.feature.right = -1
+        """Test incorrect start and stop boundary ints."""
+        self.feature.start = -1
+        self.feature.stop = -1
         self.feature.check_coordinates()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
@@ -869,8 +869,8 @@ class TestCdsClass(unittest.TestCase):
     def test_set_nucleotide_length_2(self):
         """Verify the nucleotide length is correct for a 0-based
         half-open interval."""
-        self.feature.left = 0
-        self.feature.right = 11
+        self.feature.start = 0
+        self.feature.stop = 11
         self.feature.coordinate_format = "0_half_open"
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature.length, 11)
@@ -878,8 +878,8 @@ class TestCdsClass(unittest.TestCase):
     def test_set_nucleotide_length_3(self):
         """Verify the nucleotide length is correct for a 1-based
         closed interval."""
-        self.feature.left = 0
-        self.feature.right = 11
+        self.feature.start = 0
+        self.feature.stop = 11
         self.feature.coordinate_format = "1_closed"
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature.length, 12)
@@ -887,8 +887,8 @@ class TestCdsClass(unittest.TestCase):
     def test_set_nucleotide_length_4(self):
         """Verify the nucleotide length is not set for invalid
         coordinate format."""
-        self.feature.left = 0
-        self.feature.right = 11
+        self.feature.start = 0
+        self.feature.stop = 11
         self.feature.coordinate_format = "invalid"
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature.length, -1)
@@ -899,46 +899,46 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_reformat_left_and_right_1(self):
+    def test_reformat_start_and_stop_1(self):
         """Verify the coordinates are converted to 1-based closed interval."""
-        self.feature.left = 5
-        self.feature.right = 11
+        self.feature.start = 5
+        self.feature.stop = 11
         self.feature.coordinate_format = "0_half_open"
         new_format = "1_closed"
-        self.feature.reformat_left_and_right(new_format)
+        self.feature.reformat_start_and_stop(new_format)
         with self.subTest():
-            self.assertEqual(self.feature.left, 6)
+            self.assertEqual(self.feature.start, 6)
         with self.subTest():
-            self.assertEqual(self.feature.right, 11)
+            self.assertEqual(self.feature.stop, 11)
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, new_format)
 
-    def test_reformat_left_and_right_2(self):
+    def test_reformat_start_and_stop_2(self):
         """Verify the coordinates are converted to 0-based half open interval."""
-        self.feature.left = 5
-        self.feature.right = 11
+        self.feature.start = 5
+        self.feature.stop = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "0_half_open"
-        self.feature.reformat_left_and_right(new_format)
+        self.feature.reformat_start_and_stop(new_format)
         with self.subTest():
-            self.assertEqual(self.feature.left, 4)
+            self.assertEqual(self.feature.start, 4)
         with self.subTest():
-            self.assertEqual(self.feature.right, 11)
+            self.assertEqual(self.feature.stop, 11)
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, new_format)
 
-    def test_reformat_left_and_right_3(self):
+    def test_reformat_start_and_stop_3(self):
         """Verify the coordinates are not converted."""
-        self.feature.left = 5
-        self.feature.right = 11
+        self.feature.start = 5
+        self.feature.stop = 11
         self.feature.coordinate_format = "1_closed"
         new_format = "invalid"
         with self.assertRaises(ValueError):
-            self.feature.reformat_left_and_right(new_format)
+            self.feature.reformat_start_and_stop(new_format)
         with self.subTest():
-            self.assertEqual(self.feature.left, 5)
+            self.assertEqual(self.feature.start, 5)
         with self.subTest():
-            self.assertEqual(self.feature.right, 11)
+            self.assertEqual(self.feature.stop, 11)
         with self.subTest():
             self.assertEqual(self.feature.coordinate_format, "1_closed")
 
@@ -975,7 +975,7 @@ class TestCdsClass(unittest.TestCase):
             self.assertIsInstance(self.feature.seq, Seq)
 
     def test_set_nucleotide_sequence_4(self):
-        """Verify that expected sequence is extracted from top strand."""
+        """Verify that expected sequence is extracted from top orientation."""
         seq = Seq("AATTCG")
         self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
                                              type="CDS",
@@ -985,7 +985,7 @@ class TestCdsClass(unittest.TestCase):
         self.assertEqual(self.feature.seq, expected_seq)
 
     def test_set_nucleotide_sequence_5(self):
-        """Verify that expected sequence is extracted from bottom strand."""
+        """Verify that expected sequence is extracted from bottom orientation."""
         seq = Seq("AATTCG")
         self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
                                              type="CDS",
@@ -1032,9 +1032,9 @@ class TestCdsClass(unittest.TestCase):
 
     def test_set_seqfeature_1(self):
         """Verify seqfeature is set correctly with no changes."""
-        self.feature.left = 2
-        self.feature.right = 5
-        self.feature.strand = 1
+        self.feature.start = 2
+        self.feature.stop = 5
+        self.feature.orientation = 1
         self.feature.coordinate_format = "0_half_open"
         self.feature.set_seqfeature()
         with self.subTest():
@@ -1047,11 +1047,11 @@ class TestCdsClass(unittest.TestCase):
                 self.feature.seqfeature.location.end.position, 5)
 
     def test_set_seqfeature_2(self):
-        """Verify seqfeature is set correctly with left coordinate and
+        """Verify seqfeature is set correctly with start coordinate and
         strand reformatted."""
-        self.feature.left = 2
-        self.feature.right = 5
-        self.feature.strand = "F"
+        self.feature.start = 2
+        self.feature.stop = 5
+        self.feature.orientation = "F"
         self.feature.coordinate_format = "1_closed"
         self.feature.set_seqfeature()
         with self.subTest():
