@@ -17,8 +17,8 @@ GET_GENES_FOR_CDD = "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0
 GET_UNIQUE_HIT_IDS = "SELECT HitID FROM domain"
 
 # SQL COMMANDS
-INSERT_INTO_DOMAIN = "INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ('{}', '{}', '{}', '{}')"
-INSERT_INTO_GENE_DOMAIN = "INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ('{}', '{}', {}, {}, {})"
+INSERT_INTO_DOMAIN = """INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ("{}", "{}", "{}", "{}")"""
+INSERT_INTO_GENE_DOMAIN = """INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
 UPDATE_GENE = "UPDATE gene SET DomainStatus = 1 WHERE GeneID = '{}'"
 
 

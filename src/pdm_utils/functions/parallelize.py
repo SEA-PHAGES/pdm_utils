@@ -111,6 +111,7 @@ def start_processes(inputs, num_processors):
 
     [process.join() for process in process_pool]
 
-    print("Returning to pipeline")
+    # Leave the progress bar line
+    print("\n")
 
     return results
