@@ -4,10 +4,10 @@ import getpass
 
 class MySQLConnectionHandler:
     def __init__(self, username=None, password=None, database=None,
-                 attempts=3):
+                 attempts=5):
         """
         This object is intended to handle creation of a connection to
-        a MySQL database.  It gives a user 3 attempts to input valid
+        a MySQL database.  It gives a user 5 attempts to input valid
         MySQL credentials, and tests the database name to verify it
         exists.  If valid credentials are given and the database is
         real, a connection is established and can be used externally.
@@ -20,7 +20,9 @@ class MySQLConnectionHandler:
                                              "again.",
                          "too many attempts": "Too many login attempts. Please"
                                               " verify your account "
-                                              "credentials and try again.",
+                                              "credentials and try again. You "
+                                              "will need to create a new "
+                                              "MySQLConnectionHandler object.",
                          "bad database": "User '{}'@'localhost' does not have "
                                          "access to database '{}'. Please "
                                          "verify that the database name is "
@@ -214,6 +216,9 @@ class MySQLConnectionHandler:
                     else:
                         print(self.messages["too many attempts"])
                         return
+            else:
+                print(self.messages["too many attempts"])
+                return
 
     def ask_username_and_password(self):
         """
