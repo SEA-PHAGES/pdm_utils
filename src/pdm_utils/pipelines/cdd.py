@@ -1,25 +1,24 @@
-import platform
 import argparse
-import sys
 import os
+import platform
+import shlex
+from subprocess import Popen, PIPE
 import multiprocessing as mp
 
-from subprocess import Popen, PIPE
-import shlex
-
-from Bio.Blast.Applications import NcbirpsblastCommandline
 from Bio.Blast import NCBIXML
+from Bio.Blast.Applications import NcbirpsblastCommandline
 
-from pdm_utils.functions.basic import expand_path
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
+from pdm_utils.functions.basic import expand_path
+from pdm_utils.functions.parallelize import *
 
 # SQL QUERIES
 GET_GENES_FOR_CDD = "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0"
 GET_UNIQUE_HIT_IDS = "SELECT HitID FROM domain"
 
 # SQL COMMANDS
-INSERT_INTO_DOMAIN = """INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ("{}", "{}", "{}", "{}")"""
-INSERT_INTO_GENE_DOMAIN = """INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
+INSERT_INTO_DOMAIN = "INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ('{}', '{}', '{}', '{}')"
+INSERT_INTO_GENE_DOMAIN = "INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ('{}', '{}', {}, {}, {})"
 UPDATE_GENE = "UPDATE gene SET DomainStatus = 1 WHERE GeneID = '{}'"
 
 
@@ -29,7 +28,7 @@ def setup_argparser():
     :return:
     """
     # Pipeline description
-    description = "Uses rpsblast to search the NCBI conserved domain database" \
+    description = "Uses rpsblast to search the NCBI conserved domain database " \
                   "for significant domain hits in all new proteins of a " \
                   "MySQL database."
 
@@ -43,10 +42,10 @@ def setup_argparser():
                         help="number of concurrent cdd searches to run")
     parser.add_argument("--evalue", default=0.001, type=float,
                         help="evalue cutoff for rpsblast hits")
-    parser.add_argument("--rpsblast", default=None, type=str,
-                        help="path to rpsblast(+) binary")
-    parser.add_argument("--tmp-dir", default="tmp/cdd", type=str,
+    parser.add_argument("--tmp_dir", default="/tmp/cdd", type=str,
                         help="path to temporary directory for file I/O")
+    parser.add_argument("--rpsblast", default="", type=str,
+                        help="path to rpsblast(+) binary")
     return parser
 
 
@@ -68,43 +67,37 @@ def make_tempdir(tmp_dir):
         print(f"Error {err.args[0]}: {err.args[1]}")
 
 
-def search_and_process(datum, database, evalue, domain_queue,
-                       gene_domain_queue, gene_queue, rpsblast,
-                       tmp_dir):
+def search_and_process(rpsblast, cdd_name, tmp_dir, evalue,
+                       geneid, translation):
     """
-    Uses blast to search indicated gene against the indicated database
-    :param database: path to target database
-    :param datum: dictionary containing GeneID and Translation for the
-    gene being processed
-    :param evalue: evalue cutoff for rpsblast hits
-    :param domain_queue: Queue to store 'insert ignore into domain'
-    statements
-    :param gene_domain_queue: Queue to store 'insert into gene domain'
-    statements
-    :param gene_queue: Queue to store 'update gene set DomainStatus'
-    statements
+    Uses rpsblast to search indicated gene against the indicated cdd
     :param rpsblast: path to rpsblast binary
-    :param tmp_dir: path to directory where I/O files will be stored
-    :return:
+    :param cdd_name: cdd database path/name
+    :param tmp_dir: path to directory where I/O will take place
+    :param evalue: evalue cutoff for rpsblast
+    :param geneid: name of the gene to query
+    :param translation: protein sequence for gene to query
+    :return: results
     """
     # Setup I/O variables
-    i = "{}/{}.txt".format(tmp_dir, datum["GeneID"])
-    o = "{}/{}.xml".format(tmp_dir, datum["GeneID"])
+    i = "{}/{}.txt".format(tmp_dir, geneid)
+    o = "{}/{}.xml".format(tmp_dir, geneid)
 
     # Write the input file
-    f = open(i, "w")
-    f.write(">{}\n{}".format(datum["GeneID"], datum["Translation"]))
-    f.close()
+    with open(i, "w") as fh:
+        fh.write(">{}\n{}".format(geneid, translation))
 
     # Setup and run the rpsblast command
-    rps_command = NcbirpsblastCommandline(cmd=rpsblast, db=database,
+    rps_command = NcbirpsblastCommandline(cmd=rpsblast, db=cdd_name,
                                           query=i, out=o, outfmt=5,
                                           evalue=evalue)
     rps_command()
 
-    # Process results
-    with open(o, "r") as oh:
-        for record in NCBIXML.parse(oh):
+    # Process results into a single list
+    results = []
+
+    with open(o, "r") as fh:
+        for record in NCBIXML.parse(fh):
             # Only need to process if there are record alignments
             if record.alignments:
                 for align in record.alignments:
@@ -127,17 +120,28 @@ def search_and_process(datum, database, evalue, domain_queue,
                                 description = ",".join(des_list[2:]).strip()
 
                             # Try to put domain into domain table
-                            domain_queue.put(INSERT_INTO_DOMAIN.format(
-                                    align.hit_id, domain_id, name, description))
+                            results.append(INSERT_INTO_DOMAIN.format(
+                                align.hit_id, domain_id, name, description))
 
                             # Try to put this hit into gene_domain table
-                            gene_domain_queue.put(INSERT_INTO_GENE_DOMAIN.format(
-                                    datum["GeneID"], align.hit_id,
-                                    float(hsp.expect), int(hsp.query_start),
-                                    int(hsp.query_end)))
+                            results.append(INSERT_INTO_GENE_DOMAIN.format(
+                                geneid, align.hit_id, float(hsp.expect),
+                                int(hsp.query_start), int(hsp.query_end)))
 
     # Update this gene's DomainStatus to 1
-    gene_queue.put(UPDATE_GENE.format(datum["GeneID"]))
+    results.append(UPDATE_GENE.format(geneid))
+    return results
+
+
+def learn_cdd_name(cdd_dir):
+    cdd_files = os.listdir(cdd_dir)
+    cdd_files = [os.path.join(cdd_dir, x.split(".")[0]) for x in cdd_files]
+    file_set = set(cdd_files)
+    if len(file_set) == 1:
+        cdd_name = cdd_files[0]
+    else:
+        cdd_name = ""
+    return cdd_name
 
 
 def main(argument_list):
@@ -152,87 +156,82 @@ def main(argument_list):
     args = cdd_parser.parse_args(argument_list)
 
     # Store arguments in more easily accessible variables
-    db = args.db
+    database = args.db
     cdd_dir = expand_path(args.dir)
-    cdd_db = os.path.join(cdd_dir, cdd_dir.split("/")[-1])
+    cdd_name = learn_cdd_name(cdd_dir)
     threads = args.threads
     evalue = args.evalue
-    rpsblast_path = args.rpsblast
+    rpsblast = args.rpsblast
     tmp_dir = args.tmp_dir
 
-    # If user didn't supply path to rpsblast binary, try to discover it based on operating system
-    if rpsblast_path is None:
-        # MacOS
+    # Early exit if either 1) cdd_name == "" or 2) no rpsblast given and we are
+    # unable to find one
+    if cdd_name == "":
+        print(f"Unable to learn cdd database name. Make sure the files in "
+              f"{cdd_dir} all have the same basename.")
+        return
+
+    if rpsblast == "":
+        # See if we're running on a Mac
         if platform.system() == "Darwin":
+            print("Detected MacOS operating system...")
             command = shlex.split("which rpsblast")
-        # Linux
+        # Otherwise see if we're on a Linux machine
         elif platform.system() == "Linux":
+            print("Detected Linux operating system...")
             command = shlex.split("which rpsblast+")
-        # Windows or others
+        # Windows or others - unsupported, leave early
         else:
-            print(f"Unsupported system '{platform.system()}'; cannot run cdd pipeline.")
-            # Leave main early and return to __main__
+            print(f"Unsupported system '{platform.system()}'; cannot run "
+                  f"cdd pipeline.")
             return
 
         # If we didn't return, we have a command. Run it, and PIPE stdout into rpsblast_path
         with Popen(args=command, stdout=PIPE) as proc:
-            rpsblast_path = proc.stdout.read().decode("utf-8").rstrip("\n")
+            rpsblast = proc.stdout.read().decode("utf-8").rstrip("\n")
 
         # If empty string, rpsblast not found in globally available executables, otherwise proceed with value
-        if rpsblast_path == "":
+        if rpsblast == "":
             print("No rpsblast binary found. If you have rpsblast on your machine, please try again with the "
                   "'--rpsblast' flag and provide the full path to your rpsblast binary.")
             return
-
-    # Temporary directory where cdd files will be written to and read from
-    tmp_dir = "/tmp/cdd"
+        else:
+            print(f"Found rpsblast binary at '{rpsblast}'...")
 
     # Use MySQLConnectionHandler to query for translations that need to be
     # put through this pipeline
-    mysql_handler = MySQLConnectionHandler(database=db)
-    mysql_handler.open_connection()     # Gets user/pass automatically
+    mysql_handler = MySQLConnectionHandler()
+    mysql_handler.database = database
+    mysql_handler.open_connection()     # Automatically prompts for user/pass
 
+    # If user entered the wrong credentials too many times
     if mysql_handler.connection_status() is not True:
-        sys.exit(1)                     # If user/pass wrong too many times
+        print("For your safety, only 3 MySQL login attempts are permitted at"
+              " once. Please verify your login credentials and database name, "
+              "and try again.")
+        return
 
-    results = mysql_handler.execute_query(GET_GENES_FOR_CDD)
+    cdd_genes = mysql_handler.execute_query(GET_GENES_FOR_CDD)
     mysql_handler.close_connection()
 
     # Print number of genes to process
-    print(f"{len(results)} genes to search for conserved domains...")
+    print(f"{len(cdd_genes)} genes to search for conserved domains...")
 
     # Only run the pipeline if there are genes returned that need it
-    if len(results) > 0:
+    if len(cdd_genes) > 0:
         # Create temp_dir
-        make_tempdir()
+        make_tempdir(tmp_dir)
 
-        # Create threadsafe queues for workers to put resulting SQL commands
-        # into
-        domain_queue = mp.Manager().Queue()
-        gene_domain_queue = mp.Manager().Queue()
-        gene_queue = mp.Manager().Queue()
+        # Build jobs list
+        jobs = []
+        for cdd_gene in cdd_genes:
+            jobs.append((rpsblast, cdd_name, tmp_dir, evalue, cdd_gene["GeneID"], cdd_gene["Translation"]))
 
-        # create list of job tuples - each tuple contains all the arguments
-        # for the search_and_process function
-        jobs = [(gene, cdd_db, evalue, domain_queue, gene_domain_queue,
-                 gene_queue, rpsblast_path, tmp_dir) for gene in results]
-
-        # Create worker pool and use starmap to run concurrent jobs with
-        # multiple args
-        with mp.Pool(threads) as pool:
-            pool.starmap(search_and_process, jobs)
+        results = parallelize(jobs, threads, search_and_process)
+        print("\n")
 
         mysql_handler.open_connection()
-        # Insert into domain commands
-        while not domain_queue.empty():
-            mysql_handler.execute_transaction([domain_queue.get()])
-
-        # Insert into gene_domain commands
-        while not gene_domain_queue.empty():
-            mysql_handler.execute_transaction([gene_domain_queue.get()])
-
-        # Update gene commands
-        while not gene_queue.empty():
-            mysql_handler.execute_transaction([gene_queue.get()])
+        for result in results:
+            mysql_handler.execute_transaction(result)
 
     return
