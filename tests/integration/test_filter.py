@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import unittest
 
 class TestFilter(unittest.TestCase):
+    pass
 
 if __name__ == "__main__":
     unittest.main()

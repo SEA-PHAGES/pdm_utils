@@ -17,9 +17,10 @@ class TestFilter(unittest.TestCase):
    
     def test_translate_table_1(self):
         "Verify translate_table() returns id match as expected."
+        print(self.db_filter.db_tree.show_tables())
         table = self.db_filter.translate_table("phage")
         self.assertEqual(table, "phage")
-        self.db_filter.translate_table("pHaGe")
+        table = self.db_filter.translate_table("pHaGe")
         self.assertEqual(table, "phage")
 
     def test_translate_table_2(self):

@@ -72,7 +72,7 @@ class Filter:
             Returns a case-sensitive string for a TableNode id.
         :type table: str
         """
-        for table in self.db_tree.db_node.show_tables():
+        for table in self.db_tree.show_tables():
             if table.lower() == raw_table.lower():
                 return table
 
