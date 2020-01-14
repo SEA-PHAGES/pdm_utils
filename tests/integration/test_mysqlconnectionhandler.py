@@ -94,11 +94,13 @@ class TestMySQLConnectionHandler(unittest.TestCase):
 
     def test_get_credentials_2(self):
         """Credential status False should ask for user/pass up to 3 times
-        ...handled by patch. Give bad values 3x should say too many login
+        ...handled by patch. Give bad values 5x should say too many login
         attempts and credential status stays False."""
         self.handler.username = self.valid_user
         self.handler.password = self.valid_pass
         user_input = [self.invalid_user, self.invalid_pass,
+                      self.invalid_user, self.invalid_pass,
+                      self.invalid_user, self.invalid_pass,
                       self.invalid_user, self.invalid_pass,
                       self.invalid_user, self.invalid_pass]
         # patch getpass so we can feed good credentials without manual input
