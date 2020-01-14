@@ -39,20 +39,20 @@ class TestFileExport(unittest.TestCase):
         self.sql_handle = mch
         #Creates test Cds objects
         test_cds1 = cds.Cds()
-        test_cds1.start = 1
-        test_cds1.stop = 2
+        test_cds1.left = 1
+        test_cds1.right = 2
         test_cds1.coordinate_format = "0_half_open"
-        test_cds1.orientation = 1
+        test_cds1.strand = 1
         test_cds2 = cds.Cds()
-        test_cds2.start = 2
-        test_cds2.stop = 3
+        test_cds2.left = 2
+        test_cds2.right = 3
         test_cds2.coordinate_format = "0_half_open"
-        test_cds2.orientation = 1
+        test_cds2.strand = 1
         test_cds3 = cds.Cds()
-        test_cds3.start = 3
-        test_cds3.stop = 4
+        test_cds3.left = 3
+        test_cds3.right = 4
         test_cds3.coordinate_format = "0_half_open"
-        test_cds3.orientation = 1
+        test_cds3.strand = 1
         self.cds_list = [test_cds1, test_cds2, test_cds3]
         #Creates a test SeqRecord object
         seq = Seq("ATGC")
@@ -61,86 +61,6 @@ class TestFileExport(unittest.TestCase):
         self.test_seqrecord = seqrecord
         self.test_version_dictionary = \
                 {"Version" : "Test", "SchemaVersion": "Test"}
-
-    @patch("pdm_utils.pipelines.export_db.execute_export")
-    @patch("pdm_utils.pipelines.export_db.parse_filters")
-    @patch("pdm_utils.pipelines.export_db.parse_value_list_input")
-    @patch(
-    "pdm_utils.pipelines.export_db.establish_database_connection")
-    @patch("pdm_utils.pipelines.export_db.print")
-    @patch("pdm_utils.pipelines.export_db.parse_export")
-    def test_run_file_export(self, ArgParseMock, PrintMock, EstablishDBMock,
-                             ParseValueListMock, ParseFiltersMock,
-                             ExecuteExportMock):
-        """
-        Unittest for export_db.run_file_export()
-            -Tests branching based on returned
-            argparse attributes
-        """
-
-        with self.subTest(pipeline_args="csvx"):
-            type(ArgParseMock.return_value).pipeline = \
-                    PropertyMock(return_value="csv")
-            export_db.run_export("Test")
-            ArgParseMock.assert_called_with("Test")
-            EstablishDBMock.assert_called()
-            ParseValueListMock.assert_called()
-            ParseFiltersMock.assert_called()
-            ExecuteExportMock.assert_called()
-
-        ArgParseMock.reset_mock()
-        EstablishDBMock.reset_mock()
-        ParseValueListMock.reset_mock()
-        ParseFiltersMock.reset_mock()
-        ExecuteExportMock.reset_mock()
-
-        with self.subTest(pipeline_args="gb"):
-            type(ArgParseMock.return_value).pipeline = \
-                    PropertyMock(return_value="gb")
-            export_db.run_export("Test")
-            ArgParseMock.assert_called_with("Test")
-            EstablishDBMock.assert_called()
-            ParseValueListMock.assert_called()
-            ParseFiltersMock.assert_called()
-            ExecuteExportMock.assert_called()
-
-        ArgParseMock.reset_mock()
-        EstablishDBMock.reset_mock()
-        ParseValueListMock.reset_mock()
-        ParseFiltersMock.reset_mock()
-        ExecuteExportMock.reset_mock()
-
-        with self.subTest(pipeline_args="sql"):
-            type(ArgParseMock.return_value).pipeline = \
-                    PropertyMock(return_value="sql")
-            export_db.run_export("Test")
-            ArgParseMock.assert_called_with("Test")
-            EstablishDBMock.assert_called()
-            ParseValueListMock.assert_not_called()
-            ParseFiltersMock.assert_not_called()
-            ExecuteExportMock.assert_called()
-
-        ArgParseMock.reset_mock()
-        EstablishDBMock.reset_mock()
-        ParseValueListMock.reset_mock()
-        ParseFiltersMock.reset_mock()
-        ExecuteExportMock.reset_mock()
-
-        with self.subTest(pipeline_args="I"):
-            type(ArgParseMock.return_value).pipeline = \
-                    PropertyMock(return_value="I")
-            export_db.run_export("Test")
-            ArgParseMock.assert_called_with("Test")
-            EstablishDBMock.assert_called()
-            ParseValueListMock.assert_not_called()
-            ParseFiltersMock.assert_not_called()
-            ExecuteExportMock.assert_not_called()
-
-        ArgParseMock.reset_mock()
-        EstablishDBMock.reset_mock()
-        ParseValueListMock.reset_mock()
-        ParseFiltersMock.reset_mock()
-        ExecuteExportMock.reset_mock()
 
     def test_parse_file_export(self):
         """

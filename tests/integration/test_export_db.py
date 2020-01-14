@@ -123,37 +123,7 @@ class TestFileExport(unittest.TestCase):
             file_path.rmdir()
             self.assertFalse(file_path.exists())
 
-    def test_convert_dir_path(self):
-        """
-        Unittest to test export_db.convert_file_path() helper function
-            -Tests for paths to a current or nonexisting file
-        """
-        #Sub test to test functionality with an existing directory path input
-        with self.subTest(dir_path=True):
-            #Creates path to directory
-            dir_path = (self.test_cwd).joinpath("test_dir")
-            dir_path.mkdir()
-            #Asserts that convert_file_path() correctly converted input path
-            input_path = os.path.join(str(self.test_cwd), "test_dir")
-            returned_path = export_db.convert_dir_path(input_path)
-            self.assertEqual(returned_path, dir_path)
-            #Removes created directory
-            dir_path.rmdir()
-            self.assertFalse(dir_path.exists())
-        #Sub test to test functionality with an invalid directory path input
-        with self.subTest(dir_path=False):
-            #Creates a path to a file
-            dir_path = (self.test_cwd).joinpath("test_dir")
-            dir_path.touch()
-            #Asserts that convert_file_path() raises exception
-            input_path = os.path.join(str(self.test_cwd), "test_dir")
-            with self.assertRaises(ValueError):
-                export_db.convert_dir_path(input_path)
-            #Removes created file
-            dir_path.unlink()
-            self.assertFalse(dir_path.exists())
-
-    #Tests undefined singledispatch type
+        #Tests undefined singledispatch type
     #Tests list singledispatch type
     #Tests Path singledispatch type
     def test_parse_value_list_input(self):
@@ -229,84 +199,6 @@ class TestFileExport(unittest.TestCase):
                     export_db.establish_database_connection(None)
                 GetPasswordMock.assert_not_called()
                 GetPasswordMock.reset_mock()
-
-
-    @patch("pdm_utils.pipelines.export_db.print")
-    def test_write_seqrecord(self, PrintMock):
-        """
-        Unittest that tests export_db.write_seqrecord()
-            -Patches print
-            -Tests input error handling, file writing,
-             and printing functionalities
-                -Asserts print statement calls with MagicMock object calls
-                -Asserts write_seqrecord() raises exceptions on bad
-                 base input directories
-                -Asserts files are created according to naming conventions
-        """
-        #Sub test to test the writing functionalities of write_seqrecord()
-        with self.subTest(seqrecord_list=["test_record"], file_format="gb",
-                          export_path=self.test_cwd,
-                          export_directory_name="export_db", verbose=False):
-            #Assert write_seqrecord() correctly creates directory and file
-            export_db.write_seqrecord([self.test_record], "gb",
-                                          self.test_cwd)
-            test_path = (self.test_cwd).joinpath("export")
-            self.assertTrue(test_path.is_dir())
-            file_path = test_path.joinpath("Test.gb")
-            self.assertTrue(file_path.is_file())
-            PrintMock.assert_not_called()
-            #Remove test file and directory and reset MagicMock object
-            PrintMock.reset_mock()
-            file_path.unlink()
-            test_path.rmdir()
-        #Sub test to test the functionality of optional directory parameters
-        with self.subTest(seqrecord_list=["test_record"], file_format="fasta",
-                          export_path=self.test_cwd,
-                          export_directory_name="test_folder", verbose=False):
-            #Assert write_seqrecord() correctly creates directly and file
-            export_db.write_seqrecord([self.test_record], "fasta",
-                                          self.test_cwd,
-                                          export_dir_name="test_folder")
-            test_path = (self.test_cwd).joinpath("test_folder")
-            self.assertTrue(test_path.is_dir())
-            file_path = test_path.joinpath("Test.fasta")
-            self.assertTrue(file_path.is_file())
-            PrintMock.assert_not_called()
-            #Remove test file and directory and reset MagicMock object
-            PrintMock.reset_mock()
-            file_path.unlink()
-            test_path.rmdir()
-        #Sub test to test error handling of write_seqrecord()
-        with self.subTest(seqrecord_list=[], file_format="gb",
-                          export_path=Path("~/iNvAlId_dIrEcToRy"),
-                          export_directory_name="export_db", verbose=False):
-            #Asserts write_seqrecord() raises exception
-            with self.assertRaises(ValueError):
-                export_db.write_seqrecord([], "gb",
-                                              Path("~/iNvAlId_dIrEcToRy"))
-            PrintMock.assert_called_once()
-            #Reset MagicMock object
-            PrintMock.reset_mock()
-        #Sub test to test verbose option print statements
-        with self.subTest(seqrecord_list=["test_record"], file_format="gb",
-                          export_path=self.test_cwd,
-                          export_dir_name="export", verbose=True):
-            #Assert write_seqrecord() correctly creates directly and file
-            export_db.write_seqrecord([self.test_record], "gb",
-                                          self.test_cwd, verbose=True)
-            test_path = (self.test_cwd).joinpath("export")
-            self.assertTrue(test_path.is_dir())
-            file_path = test_path.joinpath("Test.gb")
-            self.assertTrue(file_path.is_file())
-            PrintMock.assert_has_calls([call("Resolving export path..."),
-                                        call("Resolving current export "
-                                             "directory status..."),
-                                        call("Writing selected data to "
-                                             "files..."),
-                                        call("Writing Test")])
-            #Remove test file and directory
-            file_path.unlink()
-            test_path.rmdir()
 
     def test_write_csv(self):
         """
