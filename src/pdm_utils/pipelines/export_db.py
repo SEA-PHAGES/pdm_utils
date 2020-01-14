@@ -19,7 +19,7 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature
 from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
-from pdm_utils.functions import flat_files, phamerator 
+from pdm_utils.functions import flat_files, mysqldb
 
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
@@ -277,12 +277,12 @@ def execute_export(sql_handle, output_path, output_name,
                         output_path, output_name=output_name)
 
     if csv_export or ffile_export:
-        db_filter = build_filter(sql_handle, table, values_list, 
+        db_filter = build_filter(sql_handle, table, values_list,
                                  filters, verbose=verbose)
         if csv_export:
             file_name = f"{sql_handle.database}.{table}"
             execute_csv_export(db_filter, sql_handle,
-                               output_path, output_name, 
+                               output_path, output_name,
                                csv_name=file_name, table=table,
                                verbose=verbose)
 
@@ -294,9 +294,9 @@ def execute_export(sql_handle, output_path, output_name,
                              db_version, ffile_export,
                              table=table, verbose=verbose)
             else:
-                execute_ffx_export(sql_handle, 
+                execute_ffx_export(sql_handle,
                                    db_filter.results(verbose=verbose),
-                                   ffile_export,output_path, output_name, 
+                                   ffile_export,output_path, output_name,
                                    db_version, verbose=verbose,
                                    data_name=f"{sql_handle.database}.{table}",
                                    table=table)
@@ -339,7 +339,7 @@ def execute_ffx_export(sql_handle, values, file_format,
           f"Retrieving {data_name} data from {sql_handle.database}...")
 
     if table == "phage":
-        genomes = phamerator.parse_genome_data(
+        genomes = mysqldb.parse_genome_data(
                                 sql_handle,
                                 phage_id_list=values,
                                 phage_query="SELECT * FROM phage",
@@ -372,7 +372,7 @@ def execute_ffx_export(sql_handle, values, file_format,
                     verbose=verbose)
 
 def execute_csv_export(db_filter, sql_handle,
-                       output_path, output_name, 
+                       output_path, output_name,
                        csv_name="database", table="phage", verbose=False):
     remove_fields = {"phage"           : ["Sequence"],
                      "gene"            : ["Translation"],
@@ -388,7 +388,7 @@ def execute_csv_export(db_filter, sql_handle,
 
     for unwanted_field in remove_fields[table]:
         valid_fields.remove(unwanted_field)
-   
+
     if db_filter.values:
         csv_request = ("SELECT " + ",".join(valid_fields) +\
                      f" FROM {table} WHERE {db_filter.key} IN ('" + \
@@ -409,7 +409,7 @@ def execute_csv_export(db_filter, sql_handle,
             row_data.append(dict[key])
         csv_data.append(row_data)
         row_data = []
-    write_csv(csv_data, output_path, 
+    write_csv(csv_data, output_path,
               output_name=output_name, csv_name=csv_name,
               verbose=verbose)
 
@@ -430,13 +430,13 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
             print(f"For group {current_group[1]}='{group}' "
                   f"in {current_group[0]}")
         db_filter.set_values(groups[group])
-    
+
         grouped_path = group_path.joinpath(group)
         grouped_path.mkdir(exist_ok=True)
 
         if current_group_list:
             curr_db_filter = db_filter.copy()
-            curr_db_filter.add_filter(current_group[0], current_group[1], 
+            curr_db_filter.add_filter(current_group[0], current_group[1],
                                       "=", group)
 
             ffx_grouping(sql_handle, grouped_path, current_group_list,
@@ -444,9 +444,9 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                          table=table, verbose=verbose)
 
         else:
-            execute_ffx_export(sql_handle, db_filter.results(), file_format, 
-                               group_path, group, db_version, verbose=verbose, 
-                               data_name=f"{current_group[1]}='{group}'", 
+            execute_ffx_export(sql_handle, db_filter.results(), file_format,
+                               group_path, group, db_version, verbose=verbose,
+                               data_name=f"{current_group[1]}='{group}'",
                                table=table)
 
 def build_filter(sql_handle, table, values_list, filters, verbose=False):
@@ -532,7 +532,7 @@ def convert_file_path(path: str):
     else:
         print("Path input does not direct to a file")
         raise ValueError
-            
+
 @singledispatch
 def parse_value_list_input(value_list_input):
     """Helper function to populate the filter list for a SQL query.
@@ -594,7 +594,7 @@ def set_cds_seqfeatures(phage_genome: genome.Genome):
     """
 
     try:
-        def _sorting_key(cds_feature): return cds_feature.left
+        def _sorting_key(cds_feature): return cds_feature.start
         phage_genome.cds_features.sort(key=_sorting_key)
     except:
         if phage_genome == None:
@@ -617,7 +617,7 @@ def retrieve_database_version(sql_handle):
         "Version" and "SchemaVersion"
     """
 
-    database_versions_list = phamerator.retrieve_data(
+    database_versions_list = mysqldb.retrieve_data(
             sql_handle, query='SELECT * FROM version')
     return database_versions_list[0]
 
@@ -709,7 +709,7 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
 def write_csv(csv_data, output_path, output_name="export",csv_name="database",
               verbose=False):
     """Writes a formatted csv file from genome objects"""
- 
+
     export_path = output_path.joinpath(output_name)
 
     if not export_path.exists():
@@ -721,7 +721,7 @@ def write_csv(csv_data, output_path, output_name="export",csv_name="database",
     while(csv_path.exists()):
         csv_version += 1
         csv_path = export_path.joinpath(f"{csv_name}{csv_version}.csv")
- 
+
     if verbose:
             print(f"...Writing {csv_name}.csv...")
 
@@ -935,7 +935,7 @@ def parse_cds_data_from_geneid(sql_handle, geneid_list):
 
     cds_list = []
     for data_dict in result_list:
-        cds_list.append(phamerator.parse_gene_table_data(data_dict))
+        cds_list.append(mysqldb.parse_gene_table_data(data_dict))
 
     return cds_list
 
