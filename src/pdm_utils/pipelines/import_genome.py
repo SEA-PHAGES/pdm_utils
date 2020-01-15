@@ -633,7 +633,6 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
                                     "in the MySQL database. "
                                     "Unable to retrieve data.")
 
-            ff_gnm.set_cluster_subcluster(value="internal")
             set_cds_descriptions(ff_gnm, bndl.ticket, interactive=interactive)
     return bndl
 
@@ -990,8 +989,6 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                         expect=True, eval_id="GNM_016")
     gnm.check_attribute("subcluster", subcluster_set | {"none"},
                         expect=True, eval_id="GNM_017")
-    gnm.check_attribute("cluster_subcluster", cluster_set | subcluster_set,
-                        expect=True, eval_id="GNM_018")
     gnm.check_attribute("translation_table", {11},
                         expect=True, eval_id="GNM_019")
     gnm.check_attribute("host_genus", host_genus_set,

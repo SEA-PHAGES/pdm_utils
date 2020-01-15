@@ -567,8 +567,6 @@ class TestTicketFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(matched_genome.subcluster, "A2")
         with self.subTest():
-            self.assertEqual(matched_genome.cluster_subcluster, "A2")
-        with self.subTest():
             self.assertEqual(matched_genome.annotation_status, "final")
         with self.subTest():
             self.assertEqual(matched_genome.annotation_author, 1)
@@ -620,8 +618,6 @@ class TestTicketFunctions5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.subcluster, "")
         with self.subTest():
-            self.assertEqual(gnm.cluster_subcluster, "")
-        with self.subTest():
             self.assertEqual(gnm.annotation_status, "")
         with self.subTest():
             self.assertEqual(gnm.annotation_author, -1)
@@ -647,8 +643,6 @@ class TestTicketFunctions5(unittest.TestCase):
             self.assertEqual(gnm.host_genus, "")
         with self.subTest():
             self.assertEqual(gnm.cluster, "A")
-        with self.subTest():
-            self.assertEqual(gnm.cluster_subcluster, "A")
 
     def test_get_genome_4(self):
         """Verify subcluster data from ticket is added to genome."""
@@ -658,8 +652,6 @@ class TestTicketFunctions5(unittest.TestCase):
             self.assertEqual(gnm.host_genus, "")
         with self.subTest():
             self.assertEqual(gnm.subcluster, "A2")
-        with self.subTest():
-            self.assertEqual(gnm.cluster_subcluster, "A2")
 
     def test_get_genome_5(self):
         """Verify annotation_status data from ticket is added to genome."""

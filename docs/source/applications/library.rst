@@ -28,21 +28,21 @@ In order to retrieve and explore data stored within the MySQL database, create a
 
 The connection handler object is a wrapper for the third-party ``pymysql`` package, which provides the core interface between Python and MySQL. MySQL queries can be executed using the handler. In the following example, a list of 90 phages in Subcluster A2 are retrieved. For each phage, a dictionary of data is returned::
 
-    >>> result = sql_handle.execute_query("SELECT PhageID,HostStrain FROM phage WHERE Subcluster2 = 'A2'")
+    >>> result = sql_handle.execute_query("SELECT PhageID,HostGenus FROM phage WHERE Subcluster = 'A2'")
     >>> len(result)
     90
     >>> result[0]
-    {'PhageID': '20ES', 'HostStrain': 'Mycobacterium'}
+    {'PhageID': '20ES', 'HostGenus': 'Mycobacterium'}
 
 
 MySQL transactions can also be executed using the handler. It returns 0 if successful, or 1 if unsuccessful::
 
-    >>> txn_result = sql_handle.execute_transaction(["UPDATE phage SET HostStrain = 'Arthrobacter' WHERE PhageID = '20ES'"])
+    >>> txn_result = sql_handle.execute_transaction(["UPDATE phage SET HostGenus = 'Arthrobacter' WHERE PhageID = '20ES'"])
     >>> txn_result
     0
-    >>> result = sql_handle.execute_query("SELECT PhageID,HostStrain FROM phage WHERE Subcluster2 = 'A2'")
+    >>> result = sql_handle.execute_query("SELECT PhageID,HostGenus FROM phage WHERE Subcluster = 'A2'")
     >>> result[0]
-    {'PhageID': '20ES', 'HostStrain': 'Arthrobacter'}
+    {'PhageID': '20ES', 'HostGenus': 'Arthrobacter'}
 
 
 
@@ -59,7 +59,7 @@ Create a list of phages for which data should be retrieved. These are expected t
 
 Construct the MySQL query to retrieve the specific types of data from the *phage* table and the *gene* table::
 
-    >>> phage_query = 'SELECT PhageID, Name, Sequence, Cluster2, Subcluster2, Status, HostStrain FROM phage'
+    >>> phage_query = 'SELECT PhageID, Name, Sequence, Cluster, Subcluster, Status, HostGenus FROM phage'
     >>> gene_query = 'SELECT GeneID, Start, Stop, Orientation, Translation, Notes FROM gene'
 
 
@@ -159,10 +159,10 @@ Sometimes data pertaining to a large set of phages (for instance, all Subcluster
 
 Creating the Subcluster filter identifies 90 phages in Subcluster A2::
 
-    >>> db_filter.add_filter(table="phage", raw_field="Subcluster2", value="A2", verbose=True)
+    >>> db_filter.add_filter(table="phage", raw_field="Subcluster", value="A2", verbose=True)
     >>> db_filter.refresh()
     >>> db_filter.update(verbose=True)
-    Filtering phage in Actino_Draft for Subcluster2='A2'...
+    Filtering phage in Actino_Draft for Subcluster='A2'...
     >>> db_filter.hits(verbose=True)
     Database hits: 90
 

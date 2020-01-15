@@ -2035,7 +2035,7 @@ def main(unparsed_args_list):
     #Retrieve current genome data in database
     #0 = PhageID
     #1 = Name
-    #2 = HostStrain
+    #2 = HostGenus
     #3 = Sequence
     #4 = Length
     #5 = annotation status
@@ -2069,7 +2069,7 @@ def main(unparsed_args_list):
         cur.execute("START TRANSACTION")
         cur.execute("SELECT Version FROM version")
         ph_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,Sequence,SequenceLength,\
+        cur.execute("SELECT PhageID,Name,HostGenus,Sequence,Length,\
                             Status,Cluster,Accession,RetrieveRecord,\
                             DateLastModified,AnnotationAuthor FROM phage")
         ph_genome_data_tuples = cur.fetchall()

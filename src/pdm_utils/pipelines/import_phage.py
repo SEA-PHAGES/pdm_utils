@@ -146,19 +146,6 @@ def mdb_exit(message):
 
 
 
-#This function decides whether Cluster2 or Subcluster2 data
-#gets assigned to the Cluster field
-def assign_cluster_field(subcluster,cluster):
-
-    cluster_field_data = ""
-    if subcluster != "none":
-        cluster_field_data = subcluster
-    else:
-        cluster_field_data = cluster
-
-    return cluster_field_data
-
-
 #If phage Cluster is Singleton, make sure MySQL statement is created correctly
 def create_cluster_statement(phage_name,cluster):
     cluster_statement = ""
@@ -169,26 +156,14 @@ def create_cluster_statement(phage_name,cluster):
     return cluster_statement
 
 
-
-
-#If phage Cluster is Singleton, make sure MySQL statement is created correctly
-def create_cluster2_statement(phage_name,cluster):
-    cluster2_statement = ""
-    if cluster == "singleton":
-        cluster2_statement = "UPDATE phage SET Cluster2 = NULL" + " WHERE PhageID = '" + phage_name + "';"
-    else:
-        cluster2_statement = "UPDATE phage SET Cluster2 = '" + cluster + "' WHERE PhageID = '" + phage_name + "';"
-    return cluster2_statement
-
-
 #If phage Subcluster is empty ("none"), make sure MySQL statement is created correctly
-def create_subcluster2_statement(phage_name,subcluster):
-    subcluster2_statement = ""
+def create_subcluster_statement(phage_name,subcluster):
+    subcluster_statement = ""
     if subcluster == "none":
-        subcluster2_statement = "UPDATE phage SET Subcluster2 = NULL" + " WHERE PhageID = '" + phage_name + "';"
+        subcluster_statement = "UPDATE phage SET Subcluster = NULL" + " WHERE PhageID = '" + phage_name + "';"
     else:
-        subcluster2_statement = "UPDATE phage SET Subcluster2 = '" + subcluster + "' WHERE PhageID = '" + phage_name + "';"
-    return subcluster2_statement
+        subcluster_statement = "UPDATE phage SET Subcluster = '" + subcluster + "' WHERE PhageID = '" + phage_name + "';"
+    return subcluster_statement
 
 
 
@@ -607,13 +582,13 @@ def main(unparsed_args_list):
     #Retrieve current data in database
     #0 = PhageID
     #1 = Name
-    #2 = HostStrain
+    #2 = HostGenus
     #3 = Sequence
     #4 = status
-    #5 = Cluster2
+    #5 = Cluster
     #6 = DateLastModified
     #7 = Accession
-    #8 = Subcluster2
+    #8 = Subcluster
     #9 = AnnotationAuthor
     #10 = RetrieveRecord
     try:
@@ -632,9 +607,9 @@ def main(unparsed_args_list):
         cur.execute("START TRANSACTION")
         cur.execute("SELECT Version FROM version")
         db_version = str(cur.fetchone()[0])
-        cur.execute("SELECT PhageID,Name,HostStrain,Sequence,Status,\
-                            Cluster2,DateLastModified,Accession,\
-                            Subcluster2,AnnotationAuthor,\
+        cur.execute("SELECT PhageID,Name,HostGenus,Sequence,Status,\
+                            Cluster,DateLastModified,Accession,\
+                            Subcluster,AnnotationAuthor,\
                             RetrieveRecord FROM phage")
         current_genome_data_tuples = cur.fetchall()
         cur.execute("COMMIT")
@@ -690,13 +665,13 @@ def main(unparsed_args_list):
         #Add all modified data into new list
         #0 = PhageID
         #1 = Name
-        #2 = HostStrain
+        #2 = HostGenus
         #3 = Sequence
         #4 = status
-        #5 = Cluster2
+        #5 = Cluster
         #6 = Modified DateLastModified
         #7 = Modified Accession
-        #8 = Subcluster2
+        #8 = Subcluster
         #9 = AnnotationAuthor
         #10 = RetrieveRecord
         #Used to retrieve AnnotationQC, but now there is a "1" placeholder.
@@ -732,7 +707,7 @@ def main(unparsed_args_list):
     #Add = add a new genome without removing another.
     #Remove = delete a genome without adding another.
     #Replace = delete a genome and replace it with another. Genome names can be different, but the DNA sequence cannot be different.
-    #Update = make changes to HostStrain, Cluster, Subcluster, or status fields of phages already in the database.
+    #Update = make changes to HostGenus, Cluster, Subcluster, or status fields of phages already in the database.
     action_set = set(["add","remove","replace","update"])
 
 
@@ -1158,7 +1133,7 @@ def main(unparsed_args_list):
                 row[3] == "none" or \
                 row[4] == "none"):
 
-                write_out(output_file,"\nError: %s does not have correctly populated HostStrain, Cluster, Subcluster, or Status fields." %row[1])
+                write_out(output_file,"\nError: %s does not have correctly populated HostGenus, Cluster, Subcluster, or Status fields." %row[1])
                 table_errors += 1
 
             #Description
@@ -1669,21 +1644,17 @@ def main(unparsed_args_list):
         if genome_data[7] == "none":
             genome_data[7] = ""
 
-        #HostStrain, status, Accession, Author updates.
-        update_statements.append("UPDATE phage SET HostStrain = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
+        #HostGenus, status, Accession, Author updates.
+        update_statements.append("UPDATE phage SET HostGenus = '" + genome_data[2] + "' WHERE PhageID = '" + genome_data[1] + "';")
         update_statements.append("UPDATE phage SET Status = '" + genome_data[4] + "' WHERE PhageID = '" + genome_data[1] + "';")
         update_statements.append("UPDATE phage SET Accession = '" + genome_data[7] + "' WHERE PhageID = '" + genome_data[1] + "';")
         update_statements.append("UPDATE phage SET AnnotationAuthor = '" + genome_data[9] + "' WHERE PhageID = '" + genome_data[1] + "';")
 
-        #Create the statement to update Cluster, Cluster2, and Subcluster2
+        #Create the statement to update Cluster and Subcluster
         update_statements.append(\
-                create_cluster2_statement(genome_data[1],genome_data[3]))
+                create_cluster_statement(genome_data[1],genome_data[3]))
         update_statements.append(\
-                create_subcluster2_statement(genome_data[1],genome_data[8]))
-        update_statements.append(\
-                create_cluster_statement(genome_data[1],\
-                assign_cluster_field(genome_data[8],genome_data[3])))
-
+                create_subcluster_statement(genome_data[1],genome_data[8]))
         updated += 1
 
     #If it looks like there is a problem with some of the genomes on the list,
@@ -2021,7 +1992,7 @@ def main(unparsed_args_list):
 
 
 
-            #File header fields are retrieved to be able to check phageName and HostStrain typos
+            #File header fields are retrieved to be able to check phageName and HostGenus typos
             #The Accession field, with the appended version number, is stored as the record.id
             #The Locus name at the top of the file is stored as the record.name
             #The base accession number, without the version, is stored in the 'accession' annotation list
@@ -2564,7 +2535,7 @@ def main(unparsed_args_list):
             phage_data_list.append(annotation_qc) #[10] No longer imported though.
             phage_data_list.append(import_author) #[11]
 
-            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostStrain, Sequence, SequenceLength, GC, Status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
+            add_replace_statements.append("""INSERT INTO phage (PhageID, Accession, Name, HostGenus, Sequence, Length, GC, Status, DateLastModified, RetrieveRecord, AnnotationAuthor) VALUES ("%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s")""" \
                                             % (phage_data_list[0],\
                                             phage_data_list[1],\
                                             phage_data_list[2],\
@@ -2579,12 +2550,9 @@ def main(unparsed_args_list):
 
 
             add_replace_statements.append(\
-                    create_cluster_statement(phage_data_list[0],\
-                    assign_cluster_field(import_subcluster,import_cluster)))
+                    create_cluster_statement(phage_data_list[0],import_cluster))
             add_replace_statements.append(\
-                    create_cluster2_statement(phage_data_list[0],import_cluster))
-            add_replace_statements.append(\
-                    create_subcluster2_statement(phage_data_list[0],import_subcluster))
+                    create_subcluster_statement(phage_data_list[0],import_subcluster))
 
 
             #Next each CDS feature is parsed from the file

@@ -41,7 +41,7 @@ def read_existing_phams(mysql_handler):
     """
     old_phams = dict()
     old_colors = dict()
-
+    # TODO schema7 update - table names, column names
     query = "SELECT * FROM (SELECT a.Name, a.GeneID, b.Color FROM pham AS a " \
             "INNER JOIN pham_color AS b on a.Name = b.Name) AS c ORDER BY " \
             "c.Name ASC"
@@ -392,6 +392,7 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
 
     commands = []
     for key in new_colors.keys():
+        # TODO schema7 update - table names, column names
         commands.append(f"INSERT INTO pham_color (Name, Color) VALUES ({key}, "
                         f"'{new_colors[key]}')")
 
@@ -400,7 +401,7 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
 
 def fix_miscolored_phams(mysql_handler):
     print("Phixing Phalsely Hued Phams...")
-
+    # TODO schema7 update - table names, column names
     query = "SELECT * FROM (SELECT b.ID, COUNT(GeneID) AS count, " \
             "a.Name, b.Color FROM pham AS a INNER JOIN pham_color AS " \
             "b ON a.Name = b.Name GROUP BY a.Name, b.ID) AS c WHERE " \
@@ -412,6 +413,7 @@ def fix_miscolored_phams(mysql_handler):
 
     commands = []
     for dictionary in results:
+        # TODO schema7 update - ID?
         pham_id = dictionary["ID"]
         count = dictionary["count"]
         name = dictionary["Name"]
@@ -428,14 +430,14 @@ def fix_miscolored_phams(mysql_handler):
         hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
                                               int(rgb[2]))
         new_color = hexrgb
-
+        # TODO schema7 update - table names, column names
         commands.append("UPDATE pham_color SET Color = '{}' WHERE "
                         "ID = '{}'".format(new_color, pham_id))
 
     mysql_handler.execute_transaction(commands)
 
     print("Phixing Phalsely Phlagged Orphams...")
-
+    # TODO schema7 update - table names, column names
     query = "SELECT * FROM (SELECT b.ID, COUNT(GeneID) AS count," \
             "a.Name, b.Color FROM pham AS a INNER JOIN pham_color AS " \
             "b ON a.Name = b.Name GROUP BY a.Name, b.ID) AS c WHERE " \
@@ -447,12 +449,13 @@ def fix_miscolored_phams(mysql_handler):
 
     commands = []
     for dictionary in results:
+        # TODO schema7 update - ID
         pham_id = dictionary["ID"]
         count = dictionary["count"]
         name = dictionary["Name"]
         color = dictionary["Color"]
         new_color = "#FFFFFF"
-
+        # TODO schema7 update - table names, column names
         commands.append("UPDATE pham_color SET Color = '{}' WHERE "
                         "ID = '{}'".format(new_color, pham_id))
 

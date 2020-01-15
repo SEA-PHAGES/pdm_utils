@@ -59,7 +59,7 @@ def parse_args(unparsed_args_list):
                             "MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     OUTPUT_FOLDER_HELP = ("Path to the directory where updates will be stored.")
-    UPDATES_HELP = ("Retrieve updates to HostStrain, Cluster, "
+    UPDATES_HELP = ("Retrieve updates to HostGenus, Cluster, "
                            "Subcluster, and Accession field data from PhagesDB.")
     DRAFT_HELP = ("Retrieve auto-annotated 'draft' genomes from PECAAN.")
     FINAL_HELP = ("Retrieve new manually-annotated 'final' "
@@ -135,8 +135,8 @@ def main(unparsed_args_list):
     sql_handle = mysqldb.connect_to_db(args.database)
 
     # Get existing data from MySQL to determine what needs to be updated.
-    query = ("SELECT PhageID, Name, HostStrain, Status, Cluster2, "
-             "DateLastModified, Accession, RetrieveRecord, Subcluster2, "
+    query = ("SELECT PhageID, Name, HostGenus, Status, Cluster, "
+             "DateLastModified, Accession, RetrieveRecord, Subcluster, "
              "AnnotationAuthor FROM phage")
 
     mysqldb_genome_list =  mysqldb.parse_genome_data(
@@ -231,49 +231,33 @@ def get_update_data(output_folder, matched_genomes):
         phagesdb_gnm = gnm_pair.genome2
 
 
-        # Compare Cluster2
+        # Compare Cluster
         if mysqldb_gnm.cluster != phagesdb_gnm.cluster:
             result1 = {
-                      "table":"phage",
-                      "field":"Cluster2",
-                      "value":phagesdb_gnm.cluster,
-                      "key_name":"PhageID",
-                      "key_value":mysqldb_gnm.id}
-            update_tickets.append(result1)
-            result2 = {
                       "table":"phage",
                       "field":"Cluster",
                       "value":phagesdb_gnm.cluster,
                       "key_name":"PhageID",
                       "key_value":mysqldb_gnm.id}
-            update_tickets.append(result2)
+            update_tickets.append(result1)
 
 
-        # Compare Subcluster2
+        # Compare Subcluster
         if mysqldb_gnm.subcluster != phagesdb_gnm.subcluster:
             result3 = {
                       "table":"phage",
-                      "field":"Subcluster2",
+                      "field":"Subcluster",
                       "value":phagesdb_gnm.subcluster,
                       "key_name":"PhageID",
                       "key_value":mysqldb_gnm.id}
             update_tickets.append(result3)
 
 
-            if phagesdb_gnm.subcluster != "none":
-                result4 = {
-                          "table":"phage",
-                          "field":"Cluster",
-                          "value":phagesdb_gnm.subcluster,
-                          "key_name":"PhageID",
-                          "key_value":mysqldb_gnm.id}
-                update_tickets.append(result4)
-
         # Compare Host genus
         if mysqldb_gnm.host_genus != phagesdb_gnm.host_genus:
             result5 = {
                       "table":"phage",
-                      "field":"HostStrain",
+                      "field":"HostGenus",
                       "value":phagesdb_gnm.host_genus,
                       "key_name":"PhageID",
                       "key_value":mysqldb_gnm.id}

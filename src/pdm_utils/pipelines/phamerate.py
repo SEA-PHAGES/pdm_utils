@@ -124,6 +124,7 @@ def main(argument_list):
     # If we got past the early exit, we are probably safe to truncate the
     # pham and pham_color tables, and insert the new pham data
     # Clear old pham data - auto commits at end of transaction
+    # TODO schema7 update - table names
     commands = ["TRUNCATE TABLE pham", "TRUNCATE TABLE pham_color"]
     mysql_handler.execute_transaction(commands)
 

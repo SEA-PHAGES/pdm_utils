@@ -19,5 +19,4 @@ Cds.product,N/A,"SeqFeature.qualifiers[""product""][0]",N/A
 Cds.function,N/A,"SeqFeature.qualifiers[""function""][0]",N/A
 Cds.note,N/A,"SeqFeature.qualifiers[""note""][0]",N/A
 Cds.seqfeature,N/A,SeqFeature,N/A
-N/A,gene.ID,N/A,N/A
 N/A,gene.DomainStatus,N/A,N/A

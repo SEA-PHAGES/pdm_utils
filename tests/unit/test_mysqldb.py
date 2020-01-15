@@ -30,15 +30,14 @@ class TestMysqldbFunctions1(unittest.TestCase):
         data_dict = {"PhageID":"L5",
                      "Accession":"ABC123",
                      "Name":"L5_Draft",
-                     "HostStrain":"Mycobacterium",
+                     "HostGenus":"Mycobacterium",
                      "Sequence":"ATCG".encode("utf-8"),
-                     "SequenceLength":10,
+                     "Length":10,
                      "DateLastModified":constants.EMPTY_DATE,
                      "Notes":"abc".encode("utf-8"),
                      "GC":12.12,
-                     "Cluster":"B",
-                     "Cluster2":"A",
-                     "Subcluster2":"A2",
+                     "Cluster":"A",
+                     "Subcluster":"A2",
                      "Status":"final",
                      "RetrieveRecord":1,
                      "AnnotationAuthor":1}
@@ -66,8 +65,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(self.genome1.description, "abc")
         with self.subTest():
             self.assertEqual(self.genome1.gc, 12.12)
-        with self.subTest():
-            self.assertEqual(self.genome1.cluster_subcluster, "B")
         with self.subTest():
             self.assertEqual(self.genome1.cluster, "A")
         with self.subTest():
@@ -200,7 +197,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_author = "1"
-        self.genome1.cluster_subcluster = "A123"
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
@@ -224,7 +220,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_author = "1"
-        self.genome1.cluster_subcluster = "A123"
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
@@ -272,7 +267,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         self.genome1.date = '1/1/2000'
         self.genome1.retrieve_record = "1"
         self.genome1.annotation_author = "1"
-        self.genome1.cluster_subcluster = "A123"
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
         self.genome1.cds_features = [cds1, cds2]

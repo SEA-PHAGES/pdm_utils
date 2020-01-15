@@ -553,7 +553,6 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.gnm.gc = 0
         self.gnm.cluster = "A"
         self.gnm.subcluster = "A2"
-        self.gnm.cluster_subcluster = "A"
         self.gnm.accession = ""
         self.gnm.host_genus = "Mycobacterium"
         self.gnm.annotation_author = 1
@@ -1044,20 +1043,6 @@ class TestImportGenomeClass4(unittest.TestCase):
         errors = get_errors(self.gnm)
         self.assertEqual(errors, 0)
 
-    def test_check_genome_35(self):
-        """Verify correct number of errors are produced using:
-        'cluster_subcluster' not in cluster_subcluster_set."""
-        self.gnm.cluster_subcluster = "X"
-        self.gnm.cluster = "Z"
-        self.gnm.subcluster = "Z1"
-        self.cluster_set.add("Z")
-        self.subcluster_set.add("Z1")
-        import_genome.check_genome(
-            self.gnm, self.tkt.type, self.tkt.eval_flags,
-            self.id_set, self.seq_set, self.host_set,
-            self.cluster_set, self.subcluster_set, self.accession_set)
-        errors = get_errors(self.gnm)
-        self.assertEqual(errors, 1)
 
     def test_check_genome_36(self):
         """Verify correct number of errors are produced using:

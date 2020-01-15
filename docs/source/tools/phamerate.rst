@@ -17,4 +17,4 @@ In general, the script groups genes into phamilies using a kmer-based strategy i
 
 < Insert description of phamerate pipeline >
 
-The new phams are inserted into the *pham* table of the database, and pham colors that reflect unique phams are computed and inserted into the *pham_color* table of the database. The script attempts to maintain consistency of pham designations and colors between rounds of clustering, although this is not strictly enforced.
+The new phams and their unique colors are inserted into the *pham* table of the database. The script attempts to maintain consistency of pham designations and colors between rounds of clustering, although this is not strictly enforced.

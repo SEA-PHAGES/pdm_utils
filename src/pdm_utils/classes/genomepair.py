@@ -112,8 +112,6 @@ class GenomePair:
                 second.cluster = first.cluster
             if (second.subcluster == keyword or keyword is None):
                 second.subcluster = first.subcluster
-            if (second.cluster_subcluster == keyword or keyword is None):
-                second.cluster_subcluster = first.cluster_subcluster
             if (second.date == keyword or keyword is None):
                 second.date = first.date
             if (second.annotation_author == keyword or keyword is None):

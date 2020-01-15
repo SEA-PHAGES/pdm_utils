@@ -185,18 +185,18 @@ def insert_data_into_phage_table(db, user, pwd, data_dict):
     sql = (
         "INSERT INTO phage "
         "(PhageID, Accession, Name, "
-        "HostStrain, Sequence, SequenceLength, GC, Status, "
+        "HostGenus, Sequence, Length, GC, Status, "
         "DateLastModified, RetrieveRecord, AnnotationAuthor, "
-        "Cluster, Cluster2, Subcluster2) "
+        "Cluster, Subcluster) "
         "VALUES ("
         f"'{data_dict['PhageID']}', '{data_dict['Accession']}', "
-        f"'{data_dict['Name']}', '{data_dict['HostStrain']}', "
-        f"'{data_dict['Sequence']}', {data_dict['SequenceLength']}, "
+        f"'{data_dict['Name']}', '{data_dict['HostGenus']}', "
+        f"'{data_dict['Sequence']}', {data_dict['Length']}, "
         f"{data_dict['GC']}, '{data_dict['Status']}', "
         f"'{data_dict['DateLastModified']}', "
         f"{data_dict['RetrieveRecord']}, "
-        f"{data_dict['AnnotationAuthor']}, '{data_dict['Cluster']}', "
-        f"'{data_dict['Cluster2']}', '{data_dict['Subcluster2']}');"
+        f"{data_dict['AnnotationAuthor']}, "
+        f"'{data_dict['Cluster']}', '{data_dict['Subcluster']}');"
         )
     cur.execute(sql)
     connection.commit()
@@ -230,9 +230,9 @@ def insert_data_into_gene_table(db, user, pwd, data_dict):
 phage_table_query = (
     "SELECT "
     "PhageID, Accession, Name, "
-    "HostStrain, Sequence, SequenceLength, GC, Status, "
+    "HostGenus, Sequence, Length, GC, Status, "
     "DateLastModified, RetrieveRecord, AnnotationAuthor, "
-    "Cluster, Cluster2, Subcluster2 "
+    "Cluster, Subcluster "
     "FROM phage;")
 
 gene_table_query = (
@@ -266,7 +266,7 @@ def process_phage_table_data(list_of_sql_results):
         # print(data_dict.keys())
         # input("pause")
         data_dict["Sequence"] = data_dict["Sequence"].decode("utf-8")
-        data_dict["SequenceLength"] = int(data_dict["SequenceLength"])
+        data_dict["Length"] = int(data_dict["Length"])
         # data_dict["Notes"] = data_dict["Notes"].decode("utf-8")
         data_dict["GC"] = float(data_dict["GC"])
         x += 1
@@ -346,17 +346,16 @@ def get_trixie_phage_table_data():
         "PhageID": "Trixie",
         "Accession": "BCD456",
         "Name": "Trixie",
-        "HostStrain": "Gordonia",
+        "HostGenus": "Gordonia",
         "Sequence": "GGGGGGGGGGGGGGGGGGGG",
-        "SequenceLength": 20,
+        "Length": 20,
         "GC": 1,
         "Status": "final",
         "DateLastModified": datetime.strptime('1/1/2000', '%m/%d/%Y'),
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
-        "Cluster": "A3",
-        "Cluster2": "A",
-        "Subcluster2": "A3"
+        "Cluster": "A",
+        "Subcluster": "A3"
         }
     return dict
 
@@ -367,17 +366,16 @@ def get_redrock_phage_table_data():
         "PhageID": "RedRock",
         "Accession": "BCD456",
         "Name": "RedRock_Draft",
-        "HostStrain": "Arthrobacter",
+        "HostGenus": "Arthrobacter",
         "Sequence": "CCCCCCCCCCCCCCC",
-        "SequenceLength": 15,
+        "Length": 15,
         "GC": 1,
         "Status": "draft",
         "DateLastModified": datetime.strptime('1/1/2010', '%m/%d/%Y'),
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
-        "Cluster": "B1",
-        "Cluster2": "B",
-        "Subcluster2": "B1"
+        "Cluster": "B",
+        "Subcluster": "B1"
         }
     return dict
 
@@ -388,17 +386,16 @@ def get_d29_phage_table_data():
         "PhageID": "D29",
         "Accession": "XYZ123",
         "Name": "D29",
-        "HostStrain": "Microbacterium",
+        "HostGenus": "Microbacterium",
         "Sequence": "ATGCATGCATGCATGC",
-        "SequenceLength": 16,
+        "Length": 16,
         "GC": 0.5,
         "Status": "unknown",
         "DateLastModified": datetime.strptime('1/1/0001', '%m/%d/%Y'),
         "RetrieveRecord": 0,
         "AnnotationAuthor": 0,
-        "Cluster": "D1",
-        "Cluster2": "D",
-        "Subcluster2": "D1"
+        "Cluster": "D",
+        "Subcluster": "D1"
         }
     return dict
 
@@ -487,17 +484,16 @@ def get_alice_genome_draft_data_in_db():
         "PhageID": "Alice",
         "Accession": "",
         "Name": "Alice_Draft",
-        "HostStrain": "Mycobacterium",
+        "HostGenus": "Mycobacterium",
         "Sequence": genome_seq,
-        "SequenceLength": 153401,
+        "Length": 153401,
         "GC": 64.6808,
         "Status": "draft",
         "DateLastModified": current_date,
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
-        "Cluster": "C1",
-        "Cluster2": "C",
-        "Subcluster2": "C1"
+        "Cluster": "C",
+        "Subcluster": "C1"
         }
     return data_dict
 
@@ -1201,13 +1197,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(phage_table_results[0]["Accession"], "")
         with self.subTest():
-            self.assertEqual(phage_table_results[0]["HostStrain"], "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(phage_table_results[0]["Cluster2"], "C")
+            self.assertEqual(phage_table_results[0]["HostGenus"], "Mycobacterium")
         with self.subTest():
             self.assertEqual(phage_table_results[0]["Cluster"], "C")
         with self.subTest():
-            self.assertIsNone(phage_table_results[0]["Subcluster2"])
+            self.assertIsNone(phage_table_results[0]["Subcluster"])
 
 
     @patch("getpass.getpass")
@@ -1224,11 +1218,9 @@ class TestImportGenomeMain1(unittest.TestCase):
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
         with self.subTest():
-            self.assertIsNone(phage_table_results[0]["Cluster2"])
-        with self.subTest():
             self.assertIsNone(phage_table_results[0]["Cluster"])
         with self.subTest():
-            self.assertIsNone(phage_table_results[0]["Subcluster2"])
+            self.assertIsNone(phage_table_results[0]["Subcluster"])
 
 
 

@@ -41,7 +41,7 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
-        gnm.host_genus = data_dict["HostStrain"]
+        gnm.host_genus = data_dict["HostGenus"]
     except:
         pass
 
@@ -52,7 +52,7 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
-        gnm.length = int(data_dict["SequenceLength"])
+        gnm.length = int(data_dict["Length"])
     except:
         pass
 
@@ -74,14 +74,9 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
         pass
 
     try:
-        gnm.set_cluster_subcluster(data_dict["Cluster"])
-    except:
-        pass
-
-    try:
         # Singletons are stored in the MySQL database as NULL, which gets
         # returned as None.
-        gnm.set_cluster(data_dict["Cluster2"])
+        gnm.set_cluster(data_dict["Cluster"])
     except:
         pass
 
@@ -89,7 +84,7 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     # Non-subclustered phages are stored in the MySQL database as NULL, which gets
     # returned as None.
     try:
-        gnm.set_subcluster(data_dict["Subcluster2"])
+        gnm.set_subcluster(data_dict["Subcluster"])
     except:
         pass
 
@@ -403,8 +398,8 @@ def create_update(table, field2, value2, field1, value1):
 
     "'UPDATE <table> SET <field2> = '<value2' WHERE <field1> = '<data1>'."
 
-    When the new value to be added is 'singleton' (e.g. for Cluster and
-    Cluster2 fields), or an empty value (e.g. None, "none", etc.),
+    When the new value to be added is 'singleton' (e.g. for Cluster
+    fields), or an empty value (e.g. None, "none", etc.),
     the new value is set to NULL.
 
     :param table: The database table to insert information.
@@ -482,20 +477,19 @@ def create_phage_table_insert(gnm):
     """
     cluster = convert_for_sql(gnm.cluster)
     subcluster = convert_for_sql(gnm.subcluster)
-    cluster_subcluster = convert_for_sql(gnm.cluster_subcluster)
 
     statement = ("INSERT INTO phage "
-                 "(PhageID, Accession, Name, HostStrain, Sequence, "
-                 "SequenceLength, GC, Status, DateLastModified, "
+                 "(PhageID, Accession, Name, HostGenus, Sequence, "
+                 "Length, GC, Status, DateLastModified, "
                  "RetrieveRecord, AnnotationAuthor, "
-                 "Cluster, Cluster2, Subcluster2) "
+                 "Cluster, Subcluster) "
                  "VALUES "
                  f"('{gnm.id}', '{gnm.accession}', '{gnm.name}', "
                  f"'{gnm.host_genus}', '{gnm.seq}', "
                  f"{gnm.length}, {gnm.gc}, '{gnm.annotation_status}', "
                  f"'{gnm.date}', {gnm.retrieve_record}, "
                  f"{gnm.annotation_author}, "
-                 f"{cluster_subcluster}, {cluster}, {subcluster});"
+                 f"{cluster}, {subcluster});"
                  )
     return statement
 

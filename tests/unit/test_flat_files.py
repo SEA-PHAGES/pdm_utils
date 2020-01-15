@@ -1206,7 +1206,6 @@ class TestFlatFileFunctions4(unittest.TestCase):
         self.genome2.name = "L5_Draft"
         self.genome2.host_genus = "Mycobacterium"
         self.genome2.accession = "ABC123"
-        self.genome2.cluster_subcluster = "C"
         self.genome2.annotation_status = "final"
         self.genome2.annotation_author = 1
         self.genome2.retrieve_record = 3
@@ -1232,8 +1231,6 @@ class TestFlatFileFunctions4(unittest.TestCase):
             self.assertEqual(genome1.host_genus, "Mycobacterium")
         with self.subTest():
             self.assertEqual(genome1.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(genome1.cluster_subcluster, "C")
         with self.subTest():
             self.assertEqual(genome1.annotation_status, "final")
         with self.subTest():

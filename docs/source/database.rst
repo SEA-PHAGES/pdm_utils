@@ -3,18 +3,17 @@
 MySQL database structure
 ========================
 
-The current schema (schema version 6) of the MySQL database contains 10 tables:
+The current schema (schema version 6) of the MySQL database contains the following tables:
 
     1.  phage
     2.  gene
     3.  domain
     4.  gene_domain
     5.  pham
-    6.  pham_color
-    7.  version
-    8.  trna (in development)
-    9.  trna_structures (in development)
-    10. tmrna (in development)
+    6.  version
+    7.  trna (in development)
+    8.  trna_structures (in development)
+    9.  tmrna (in development)
 
 
 .. _figschema:
@@ -45,19 +44,17 @@ This table contains information that pertains to the entire phage genome, such a
 
 **Accession** This field is populated and updated directly from import tickets and is used for auto-updating genomes from GenBank records. It is important to note that the NCBI generates RefSeq records that are derived from GenBank records. After data is submitted to GenBank, authors retain control of the GenBank record but not the RefSeq record. As a result, this field should always store the GenBank ACCESSION number (and not the RefSeq ACCESSION number) for SEA-PHAGES genomes. For non-SEA-PHAGES genomes, either accession number may be stored. In either case, the Accession should not contain the sequence version (represented by the integer to the right of the decimal).
 
-**HostStrain** This field indicates the host genus (e.g. *Mycobacterium*, *Streptomyces*, etc.) from which the phage was isolated.
+**HostGenus** This field indicates the host genus (e.g. *Mycobacterium*, *Streptomyces*, etc.) from which the phage was isolated.
 
 **Sequence** This genome nucleotide sequence of the phage.
 
-**SequenceLength** The length of the phage’s genome sequence, computed by the import script.
+**Length** The length of the phage’s genome sequence, computed by the import script.
 
 **GC** The GC% of the genome sequence, computed by the import script.
 
-**Cluster2** This field indicates the phage’s cluster designation if it has been clustered. If the phage is a singleton, it remains empty (NULL).
+**Cluster** This field indicates the phage’s cluster designation if it has been clustered. If the phage is a singleton, it remains empty (NULL).
 
-**Subcluster2** This field indicates the phage’s subcluster designation if it has been subclustered, otherwise it remains empty (NULL).
-
-**Cluster** This field combines information from Cluster2 and Subcluster2, and is used by certain downstream applications, such as Phamerator and Starterator. It remains empty (NULL) if the phage is a singleton (and is not clustered), is populated with the cluster designation if the phage is clustered (but not subclustered), or is populated with the subcluster designation if the phage is clustered and subclustered.
+**Subcluster** This field indicates the phage’s subcluster designation if it has been subclustered, otherwise it remains empty (NULL).
 
 **DateLastModified** This field records the date in which a genome and its annotations have been imported. This is valuable to keep track of which annotation version has been imported, and it also facilitates automated updating of the database. It is important to note that the date stored in this field reflects the date the annotation data were imported, and not the date that the annotation data were created. Although the field is a DATETIME data type, only date data is stored, and no time data is retained.
 
@@ -97,6 +94,7 @@ This table contains information that pertains to individual genes, including coo
 
 **DomainStatus** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to the *gene* table, the DomainStatus field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with DomainStatus < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the DomainStatus field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
 
+**PhamID** Pham designation for the translation, matching one of the PhamIDs in the *pham* table.
 
 
 
@@ -144,34 +142,14 @@ This table stores information about NCBI-defined conserved domains relevant to C
 
 
 
-
 pham
 ----
-This table contains a list of CDS features from the *gene* table with their computed pham.
-
-.. csv-table::
-    :file: images/database_structure/pham_table.csv
-
-
-**GeneID** Corresponds to unique GeneIDs from *gene* table.
-
-**Name** Unique pham numbers.
-
-
-
-
-
-pham_color
-----------
 This table contains a list of color codes for each unique pham.
 
 .. csv-table::
     :file: images/database_structure/pham_color_table.csv
 
-
-**ID** The primary key of the table. Auto-incrementing values.
-
-**Name** Unique identifier for each hexrgb color code.
+**PhamID** The primary key of the table. Unique identifier for each pham.
 
 **Color** The hexrgb color code reflecting unique phams, which is used by downstream applications such as Phamerator. The script attempts to maintain consistency of pham designations and colors between rounds of clustering.
 

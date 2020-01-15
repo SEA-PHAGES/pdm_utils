@@ -179,7 +179,7 @@ def parse_export(unparsed_args_list):
     if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
         table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage"])
         table_choices.update({"csv": ["domain", "gene", "gene_domain",
-                                       "phage", "pham", "pham_color",
+                                       "phage", "pham",
                                        "tmrna", "trna", "trna_structures"]})
         parser.add_argument("-t", "--table", help=TABLE_HELP,
                             choices=table_choices[export.pipeline])
@@ -379,7 +379,6 @@ def execute_csv_export(db_filter, sql_handle,
                      "domain"          : [],
                      "gene_domain"     : [],
                      "pham"            : [],
-                     "pham_color"      : [],
                      "trna"            : ["Sequence"],
                      "tmrna"           : [],
                      "trna_structures" : []}

@@ -493,7 +493,6 @@ def copy_data(bndl, from_type, to_type, flag="ticket"):
         to_gnm.name = flag
         to_gnm.host_genus = flag
         to_gnm.accession = flag
-        to_gnm.cluster_subcluster = flag
         to_gnm.annotation_status = flag
         to_gnm.annotation_author = flag
         to_gnm.retrieve_record = flag

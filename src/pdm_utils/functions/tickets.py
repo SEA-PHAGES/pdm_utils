@@ -293,7 +293,6 @@ def copy_ticket_to_genome(bndl):
         genome1.annotation_status = tkt.annotation_status
         genome1.set_cluster(tkt.cluster)
         genome1.set_subcluster(tkt.subcluster)
-        genome1.set_cluster_subcluster()
         genome1.set_annotation_author(tkt.annotation_author)
         genome1.set_retrieve_record(tkt.retrieve_record)
 
@@ -328,7 +327,6 @@ def get_genome(tkt, gnm_type=""):
         gnm.set_annotation_author(tkt.data_dict["annotation_author"])
     if "retrieve_record" in tkt.data_add:
         gnm.set_retrieve_record(tkt.data_dict["retrieve_record"])
-    gnm.set_cluster_subcluster()
     return gnm
 
 

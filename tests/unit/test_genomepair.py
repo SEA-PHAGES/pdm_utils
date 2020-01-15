@@ -259,7 +259,6 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1.annotation_status = 7
         self.genome1.cluster = 8
         self.genome1.subcluster = 9
-        self.genome1.cluster_subcluster = 10
         self.genome1.date = 12
         self.genome1.annotation_author = 13
         self.genome1.retrieve_record = 15
@@ -317,8 +316,6 @@ class TestGenomePairClass(unittest.TestCase):
             self.assertEqual(self.genome_pair.genome2.cluster, 8)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.subcluster, 9)
-        with self.subTest():
-            self.assertEqual(self.genome_pair.genome2.cluster_subcluster, 10)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.date, 12)
         with self.subTest():

@@ -2,12 +2,12 @@ pdm_utils object.attribute,MySQL table.column,GenBank flat file BioPython object
 Genome.id,phage.PhageID,SeqRecord.id OR user-selected,"dictionary[""phage_name""]"
 Genome.name,phage.Name,SeqRecord.name OR user-selected,"dictionary[""phage_name""]"
 Genome.seq,phage.Sequence,SeqRecord.seq,"dictionary[""fasta_file""]"
-Genome.length,phage.SequenceLength,SeqRecord.seq,"dictionary[""fasta_file""]"
+Genome.length,phage.Length,SeqRecord.seq,"dictionary[""fasta_file""]"
 Genome.gc,phage.GC,SeqRecord.seq,"dictionary[""fasta_file""]"
-Genome.cluster,phage.Cluster2,N/A,"dictionary[""pcluster""][""cluster""]"
-Genome.subcluster,phage.Subcluster2,N/A,"dictionary[""psubcluster""][""subcluster""]"
+Genome.cluster,phage.Cluster,N/A,"dictionary[""pcluster""][""cluster""]"
+Genome.subcluster,phage.Subcluster,N/A,"dictionary[""psubcluster""][""subcluster""]"
 Genome.accession,phage.Accession,"SeqRecord.annotations[""accessions""][0]","dictionary[""genbank_accession""]"
-Genome.host_genus,phage.HostStrain,"SeqRecord.annotations[""source""] OR [""organism""] OR [""description""] OR user-selected","dictionary[""isolation_host""][""genus""]"
+Genome.host_genus,phage.HostGenus,"SeqRecord.annotations[""source""] OR [""organism""] OR [""description""] OR user-selected","dictionary[""isolation_host""][""genus""]"
 Genome.date,phage.DateLastModified,"SeqRecord.annotations[""date""]",N/A
 Genome.annotation_status,phage.Status,N/A,N/A
 Genome.retrieve_record,phage.RetrieveRecord,N/A,N/A

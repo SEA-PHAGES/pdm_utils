@@ -96,7 +96,7 @@ The most up-to-date version of Actino_Draft is stored on the Hatfull lab's publi
 
 
 
-    5. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *pham* and *pham_color* tables::
+    5. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *gene* and *pham* tables::
 
         > python3 -m pdm_utils phamerate Actino_Draft --steps 2
 

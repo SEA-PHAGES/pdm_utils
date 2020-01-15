@@ -37,7 +37,6 @@ class Genome:
         self.translation_table = 0
 
         # The following attributes are common to MySQL database.
-        self.cluster_subcluster = "" # Combined cluster/subcluster data.
         self.annotation_status = "" # Final, Draft, Unknown version of genome data
         self.annotation_author = -1 # 1 (can be changed), 0 (can not be changed)
         self.retrieve_record = -1 # 1 (auto update), 0 (do not auto update)
@@ -307,77 +306,6 @@ class Genome:
         # MySQL database-output format
         if value is None:
             self.subcluster = "none"
-
-
-    def set_cluster_subcluster(self, value="internal"):
-        """Set the combined Cluster-Subcluster attribute.
-
-
-        :param value:
-            Cluster or Subcluster designation of the genome.
-            If the value is set to 'internal', it is determined from
-            the Cluster and Subcluster designations.
-            Otherwise, the value is directly used to populate this attribute.
-        :type value: misc
-        """
-        if value == "internal":
-            if (self.subcluster is None or
-                self.subcluster.lower() == "none" or
-                self.subcluster == ""):
-                if self.cluster is None:
-                    self.cluster_subcluster = "Singleton"
-                else:
-                    self.cluster_subcluster = self.cluster
-            else:
-                self.cluster_subcluster = self.subcluster
-        elif value is None:
-            self.cluster_subcluster = "Singleton"
-        elif value.capitalize() == "Singleton":
-            self.cluster_subcluster = value.capitalize()
-        else:
-            self.cluster_subcluster = value
-
-
-    def split_cluster_subcluster(self, format="none_string"):
-        """Split the combined cluster_subcluster data.
-
-        :param format:
-            Sets the 'cluster' and 'subcluster' attributes from the
-            'cluster_subcluster' attribute.
-            If the combined 'cluster_subcluster'
-            attribute is None, "none", or "", no changes are implemented
-            to the current cluster and subcluster attributes.
-        :type format: misc
-        """
-
-        if (self.cluster_subcluster is None or
-                self.cluster_subcluster.lower() == "none" or
-                self.cluster_subcluster == ""):
-            pass
-        else:
-            left, right = basic.split_string(self.cluster_subcluster)
-
-            # If splitting produces only an alphabetic string,
-            # set only the cluster.
-            if self.cluster_subcluster == left:
-                self.cluster = left
-                self.subcluster = ""
-
-            # If splitting produces an alphabetic string and a
-            # numberic string, set the cluster and subcluster.
-            elif self.cluster_subcluster == left + right:
-                self.cluster = left
-                self.subcluster = left + right
-
-            # If the value can't be split into alphabetic and numeric strings,
-            # cluster and subcluster should be set to empty.
-            else:
-                self.cluster == ""
-                self.subcluster == ""
-
-        # Now format the cluster and subclusters if they are empty.
-        self.cluster = basic.convert_empty(self.cluster, format)
-        self.subcluster = basic.convert_empty(self.subcluster, format)
 
 
     def set_date(self, value, format="empty_datetime_obj"):

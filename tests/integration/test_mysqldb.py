@@ -99,7 +99,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id in input_phage_ids:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id}', '', '', '', '', 1, 1, 'final', " + \
@@ -133,7 +133,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_accs in input_phage_ids_and_accs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_accs[0]}', '{id_and_accs[1]}', '', '', " + \
@@ -167,7 +167,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = (
                 "INSERT INTO phage (PhageID, Accession, Name, "
-                "HostStrain, Sequence, SequenceLength, GC, Status, "
+                "HostGenus, Sequence, Length, GC, Status, "
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) "
                 "VALUES ("
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
@@ -206,7 +206,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -215,8 +215,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                + " Cluster, DateLastModified, Accession, Subcluster," \
                 + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
@@ -248,7 +248,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -257,8 +257,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                + " Cluster, DateLastModified, Accession, Subcluster," \
                 + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
@@ -289,7 +289,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -298,8 +298,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                + " Cluster, DateLastModified, Accession, Subcluster," \
                 + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
@@ -330,7 +330,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -339,8 +339,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                + " Cluster, DateLastModified, Accession, Subcluster," \
                 + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
@@ -372,7 +372,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -381,8 +381,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                + " Cluster, DateLastModified, Accession, Subcluster," \
                 + " AnnotationAuthor, RetrieveRecord" \
                 + " FROM phage"
 
@@ -413,7 +413,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -467,7 +467,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -525,7 +525,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
@@ -584,7 +584,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 " VALUES (" + \
                 f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
@@ -604,8 +604,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                      + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                      + " Cluster, DateLastModified, Accession, Subcluster," \
                       + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
 
@@ -647,7 +647,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
@@ -657,8 +657,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                      + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                      + " Cluster, DateLastModified, Accession, Subcluster," \
                       + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
 
@@ -695,7 +695,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
@@ -715,8 +715,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                      + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                      + " Cluster, DateLastModified, Accession, Subcluster," \
                       + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
         gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
@@ -769,7 +769,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
@@ -789,8 +789,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostStrain, Sequence, Status," \
-                      + " Cluster2, DateLastModified, Accession, Subcluster2," \
+        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
+                      + " Cluster, DateLastModified, Accession, Subcluster," \
                       + " AnnotationAuthor, RetrieveRecord" \
                       + " FROM phage"
         gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
@@ -848,7 +848,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
@@ -902,7 +902,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
@@ -952,7 +952,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for id_and_seq in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
                 "VALUES (" + \
                 f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
@@ -1005,7 +1005,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         gnm.date = constants.EMPTY_DATE
         gnm.retrieve_record = 1
         gnm.annotation_author = 1
-        gnm.cluster_subcluster = ""
         gnm.cluster = "singleton"
         gnm.subcluster = "A2"
         statement = mysqldb.create_phage_table_insert(gnm)
@@ -1019,9 +1018,9 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
         query =  ("SELECT PhageID, Accession, Name, "
-                 "HostStrain, Sequence, SequenceLength, GC, Status, "
+                 "HostGenus, Sequence, Length, GC, Status, "
                  "DateLastModified, RetrieveRecord, "
-                 "AnnotationAuthor, Cluster, Cluster2, Subcluster2 "
+                 "AnnotationAuthor, Cluster, Subcluster "
                  "FROM phage WHERE PhageID = 'L5'")
         connection = pymysql.connect(host = "localhost",
                                      user = user,
@@ -1034,13 +1033,13 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cur.close()
         connection.close()
         exp = ("INSERT INTO phage "
-               "(PhageID, Accession, Name, HostStrain, Sequence, "
-               "SequenceLength, GC, Status, DateLastModified, RetrieveRecord, "
-               "AnnotationAuthor, Cluster, Cluster2, Subcluster2) "
+               "(PhageID, Accession, Name, HostGenus, Sequence, "
+               "Length, GC, Status, DateLastModified, RetrieveRecord, "
+               "AnnotationAuthor, Cluster, Subcluster) "
                "VALUES "
                "('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', 'ATCG', "
                f"4, 0.5001, 'final', '{constants.EMPTY_DATE}', 1, "
-               "1, NULL, NULL, 'A2');")
+               "1, NULL, 'A2');")
         with self.subTest():
             self.assertEqual(statement, exp)
         with self.subTest():
@@ -1050,11 +1049,11 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Name"], "L5_Draft")
         with self.subTest():
-            self.assertEqual(results["HostStrain"], "Mycobacterium")
+            self.assertEqual(results["HostGenus"], "Mycobacterium")
         with self.subTest():
             self.assertEqual(results["Sequence"].decode("utf-8"), "ATCG")
         with self.subTest():
-            self.assertEqual(results["SequenceLength"], 4)
+            self.assertEqual(results["Length"], 4)
         with self.subTest():
             self.assertEqual(results["GC"], 0.5001)
         with self.subTest():
@@ -1068,9 +1067,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertIsNone(results["Cluster"])
         with self.subTest():
-            self.assertIsNone(results["Cluster2"])
-        with self.subTest():
-            self.assertEqual(results["Subcluster2"], "A2")
+            self.assertEqual(results["Subcluster"], "A2")
 
 
 
@@ -1088,10 +1085,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         # Add the L5 genome to the phage table.
         insert1 = ("INSERT INTO phage "
-                   "(PhageID, Accession, Name, HostStrain, Sequence, "
-                   "SequenceLength, GC, Status, DateLastModified, "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
                    "RetrieveRecord, AnnotationAuthor,"
-                   "Cluster2, Subcluster2) "
+                   "Cluster, Subcluster) "
                    "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
                    "'ATCG', 4, 0.5001, 'final', "
                    f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
@@ -1235,10 +1232,10 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
         # Add the L5 genome to the phage table.
         insert1 = ("INSERT INTO phage "
-                   "(PhageID, Accession, Name, HostStrain, Sequence, "
-                   "SequenceLength, GC, Status, DateLastModified, "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
                    "RetrieveRecord, AnnotationAuthor,"
-                   "Cluster2, Subcluster2) "
+                   "Cluster, Subcluster) "
                    "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
                    "'ATCG', 4, 0.5001, 'final', "
                    f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
@@ -1254,9 +1251,9 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
         self.std_phage_query = \
             ("SELECT PhageID, Accession, Name, "
-             "HostStrain, Sequence, SequenceLength, GC, Status, "
+             "HostGenus, Sequence, Length, GC, Status, "
              "DateLastModified, RetrieveRecord, "
-             "AnnotationAuthor, Cluster2, Subcluster2 "
+             "AnnotationAuthor, Cluster, Subcluster "
              "FROM phage WHERE PhageID = 'L5'")
 
         self.std_cds_query = \
@@ -1348,9 +1345,9 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
 
     def test_create_update_1(self):
-        """Verify correct Cluster2 statement is created for a non-singleton."""
+        """Verify correct Cluster statement is created for a non-singleton."""
         statement = mysqldb.create_update(
-            "phage", "Cluster2", "B", "PhageID", "L5")
+            "phage", "Cluster", "B", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
@@ -1366,16 +1363,16 @@ class TestMysqldbFunctions2(unittest.TestCase):
         results = cur.fetchall()[0]
         cur.close()
         connection.close()
-        exp = "UPDATE phage SET Cluster2 = 'B' WHERE PhageID = 'L5';"
+        exp = "UPDATE phage SET Cluster = 'B' WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp)
         with self.subTest():
-            self.assertEqual(results["Cluster2"], "B")
+            self.assertEqual(results["Cluster"], "B")
 
     def test_create_update_2(self):
-        """Verify correct Cluster2 statement is created for a singleton."""
+        """Verify correct Cluster statement is created for a singleton."""
         statement = mysqldb.create_update(
-            "phage", "Cluster2", "SINGLETON", "PhageID", "L5")
+            "phage", "Cluster", "SINGLETON", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
@@ -1391,17 +1388,17 @@ class TestMysqldbFunctions2(unittest.TestCase):
         results = cur.fetchall()[0]
         cur.close()
         connection.close()
-        exp = "UPDATE phage SET Cluster2 = NULL WHERE PhageID = 'L5';"
+        exp = "UPDATE phage SET Cluster = NULL WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp)
         with self.subTest():
-            self.assertIsNone(results["Cluster2"])
+            self.assertIsNone(results["Cluster"])
 
     def test_create_update_3(self):
-        """Verify correct Subcluster2 statement is created for a
+        """Verify correct Subcluster statement is created for a
         non-empty value."""
         statement = mysqldb.create_update(
-            "phage", "Subcluster2", "A2", "PhageID", "L5")
+            "phage", "Subcluster", "A2", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
@@ -1417,11 +1414,11 @@ class TestMysqldbFunctions2(unittest.TestCase):
         results = cur.fetchall()[0]
         cur.close()
         connection.close()
-        exp = "UPDATE phage SET Subcluster2 = 'A2' WHERE PhageID = 'L5';"
+        exp = "UPDATE phage SET Subcluster = 'A2' WHERE PhageID = 'L5';"
         with self.subTest():
             self.assertEqual(statement, exp)
         with self.subTest():
-            self.assertEqual(results["Subcluster2"], "A2")
+            self.assertEqual(results["Subcluster"], "A2")
 
     def test_create_cluster_statement_4(self):
         """Verify Gene table statement is created correctly."""

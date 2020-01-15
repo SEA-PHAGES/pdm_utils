@@ -300,7 +300,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         for data in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
@@ -361,7 +361,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         for data in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
@@ -413,7 +413,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         for data in input_phage_ids_and_seqs:
             sql1 = \
                 "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostStrain, Sequence, SequenceLength, GC, Status, " + \
+                "HostGenus, Sequence, Length, GC, Status, " + \
                 "DateLastModified, RetrieveRecord, " + \
                 "AnnotationAuthor) VALUES (" + \
                 f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
@@ -445,7 +445,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_9(self):
         """Verify bundle is returned with the genome id converted using
-        the id dictionary and with the cluster_subcluster set."""
+        the id dictionary."""
         self.id_dict["L5"] = "new_id"
         self.tkt1.phage_id = "new_id"
         self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
@@ -472,8 +472,6 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.cluster, "B")
         with self.subTest():
             self.assertEqual(ff_gnm.subcluster, "B2")
-        with self.subTest():
-            self.assertEqual(ff_gnm.cluster_subcluster, "B2")
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "new_id")
 

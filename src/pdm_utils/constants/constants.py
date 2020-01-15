@@ -99,7 +99,7 @@ PROTEIN_ALPHABET = set(IUPAC.protein.letters)
 # Remove = delete a genome without adding another.
 # Replace = delete a genome and replace it with another.
 # Update = make changes to one or more fields related to a genome
-# already present in the database (e.g. HostStrain, Cluster, Subcluster, etc.)
+# already present in the database (e.g. HostGenus, Cluster, Subcluster, etc.)
 IMPORT_TICKET_TYPE_SET = set(["add", "replace"])
 
 # Create set of most common gene description genbank qualifiers.
