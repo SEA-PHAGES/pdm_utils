@@ -66,6 +66,8 @@ def run_export(unparsed_args_list):
             ffx = args.pipeline
     elif args.pipeline == "sql":
         dbx = True
+        # TODO Owen this is a quick bug fix:
+        groups = []
     elif args.pipeline == "I":
         ix = True
     else:

@@ -6,7 +6,7 @@ from pdm_utils.functions import mysqldb
 from pdm_utils.constants import schema_conversions
 
 MAX_VERSION = 7
-CURRENT_VERSION = 6
+CURRENT_VERSION = 7
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
 
