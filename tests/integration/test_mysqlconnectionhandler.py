@@ -15,7 +15,7 @@ class TestMySQLConnectionHandler(unittest.TestCase):
         self.handler = MySQLConnectionHandler()
         self.valid_user = "pdm_anon"
         self.valid_pass = "pdm_anon"
-        self.valid_db = "Actino_Draft"
+        self.valid_db = "Actinobacteriophage"
         self.invalid_user = "invalid"
         self.invalid_pass = "invalid"
         self.invalid_db = "invalid"

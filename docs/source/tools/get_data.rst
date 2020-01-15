@@ -4,7 +4,7 @@ get_data: get new data to import into the database
 ==================================================
 
 
-New genomics data routinely becomes available for adding to the Actino_Draft database, including:
+New genomics data routinely becomes available for adding to the Actinobacteriophage database, including:
 
     1. Metadata pertaining to individual phages (such as host, cluster, subcluster, and accession)
     2. Newly-sequenced and auto-annotated 'draft' genomes
@@ -14,9 +14,9 @@ New genomics data routinely becomes available for adding to the Actino_Draft dat
 
 These data can be automatically retrieved using the ``pdm_utils get_data`` tool::
 
-    > python3 -m pdm_utils get_data Actino_Draft ./ -c ncbi_credentials.txt
+    > python3 -m pdm_utils get_data Actinobacteriophage ./ -c ncbi_credentials.txt
 
-The argument 'Actino_Draft' indicates the name of the database from which updates are determined. The './' indicates the working directory where the data should be downloaded. Similar to the 'get_gb_records' tool, retrieving updates from GenBank relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI requests that you provide information about yourself. The '-c' flag points to a simple text file containing your information (:ref:`ncbicreds`). If only certain types of updates are required, there are separate command line flags for each type of update.
+The argument 'Actinobacteriophage' indicates the name of the database from which updates are determined. The './' indicates the working directory where the data should be downloaded. Similar to the 'get_gb_records' tool, retrieving updates from GenBank relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI requests that you provide information about yourself. The '-c' flag points to a simple text file containing your information (:ref:`ncbicreds`). If only certain types of updates are required, there are separate command line flags for each type of update.
 
 Each type of data is retrieved and staged for import. A new folder is created that contains:
 
@@ -28,7 +28,7 @@ Metadata updates
 ----------------
 
 
-PhagesDB is the primary source for Cluster, Subcluster, Host, and Accession data for phages in the Actino_Draft database. ``get_data`` compares these data for each phage in the selected database to the corresponding data in PhagesDB, and creates a new update ticket for all discrepant data that need to be corrected in the Actino_Draft database. New metadata is retrieved from PhagesDB: :phagesdb:`sequenced phages <api/sequenced_phages>`. For each phage, PhagesDB stores both GenBank and RefSeq accession data, but only GenBank accession data (stored in the *genbank_accession* field) are stored in the Actino_Draft database.
+PhagesDB is the primary source for Cluster, Subcluster, Host, and Accession data for phages in the Actinobacteriophage database. ``get_data`` compares these data for each phage in the selected database to the corresponding data in PhagesDB, and creates a new update ticket for all discrepant data that need to be corrected in the Actinobacteriophage database. New metadata is retrieved from PhagesDB: :phagesdb:`sequenced phages <api/sequenced_phages>`. For each phage, PhagesDB stores both GenBank and RefSeq accession data, but only GenBank accession data (stored in the *genbank_accession* field) are stored in the Actinobacteriophage database.
 
 
 

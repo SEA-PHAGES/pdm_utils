@@ -3,7 +3,7 @@
 MySQL database structure
 ========================
 
-The current schema (schema version 6) of the MySQL database contains the following tables:
+The current schema (schema version 7) of the MySQL database contains the following tables:
 
     1.  phage
     2.  gene
@@ -18,9 +18,9 @@ The current schema (schema version 6) of the MySQL database contains the followi
 
 .. _figschema:
 
-.. figure:: /images/database_structure/schema_6_map.jpg
+.. figure:: /images/database_structure/schema_7_map.jpg
 
-    Map of the MySQL database schema (schema version 6).
+    Map of the MySQL database schema (schema version 7).
 
 .. .. csv-table::
     :file: images/database_structure/database.csv
@@ -38,7 +38,7 @@ This table contains information that pertains to the entire phage genome, such a
 
 
 
-**PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actino_Draft database (although there are a few exceptions, due to naming restrictions in different databases).
+**PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actinobacteriophage database (although there are a few exceptions, due to naming restrictions in different databases).
 
 **Name** This field also reflects the phage name, but it is not as constrained as the PhageID, and does not have to be unique. For all 'draft' genomes, the Name contains the PhageID with a '_Draft' suffix appended, indicating the annotations have been automatically annotated. For all other genomes, the Name corresponds to the PhageID. In some downstream applications, such as Phamerator, this serves as the phage's display name.
 
@@ -83,6 +83,8 @@ This table contains information that pertains to individual genes, including coo
 **Start, Stop** These fields store the genomic coordinates marking the coordinate boundaries of the gene. The coordinates are stored in '0-based half-open' format (as opposed to the '1-based closed' format used in other representations, such as a GenBank-formatted flat file). For practical purposes, the start coordinate has been decreased by 1 nucleotide. Start and Stop reflect the left and right (respectively) boundaries of the feature based on the genome orientation stored in the database. They do not directly reflect the translational start and stop coordinates of the feature, which are dependent on orientation. Since only two coordinates are stored for each feature, compound features spanning more than one contiguous region of the genome (such as features that wrap-around genome termini or features with a translational frameshift) are not completely represented in the database.
 
 **Orientation** This field indicates the strand in which the feature is encoded.
+
+**Parts** This field indicates the number of regions in the genome that define the feature. Only two coordinates are stored for each feature, which is an accurate representation of the majority of features. However, the definition of some features, such as those that extend across the genome termini or those that contain a frameshift, are not completely represented with this strategy. The *Parts* field is used to discriminate between these types of features.
 
 **Length** This field indicates the nucleotide length of the gene, computed by the length of the amino acid sequence. Note: this field needs to be improved to maintain data integrity.
 
@@ -147,7 +149,7 @@ pham
 This table contains a list of color codes for each unique pham.
 
 .. csv-table::
-    :file: images/database_structure/pham_color_table.csv
+    :file: images/database_structure/pham_table.csv
 
 **PhamID** The primary key of the table. Unique identifier for each pham.
 

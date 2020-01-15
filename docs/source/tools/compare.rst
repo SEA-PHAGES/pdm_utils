@@ -5,10 +5,10 @@ compare: compare data between databases
 
 In the SEA-PHAGES program, genomics data may be stored in three separate databases (a local MySQL database, PhagesDB, and GenBank). As a result, data inconsistencies may arise without a mechanism to compare and synchronize different data sources. Although the import tool implements many QC checks for this purpose, it only ensures consistency for the specific genomes being imported and it only cross-checks databases as directed by the import ticket. In order to ensure comprehensive consistency, the ``pdm_utils compare`` tool can perform an all-against-all data assessment::
 
-    > python3 -m pdm_utils compare Actino_Draft ./
+    > python3 -m pdm_utils compare Actinobacteriophage ./
 
 
-The argument 'Actino_Draft' indicates the name of the local MySQL database that serves as the central data source for the comparison. The './' argument indicates the directory in which the results are stored.
+The argument 'Actinobacteriophage' indicates the name of the local MySQL database that serves as the central data source for the comparison. The './' argument indicates the directory in which the results are stored.
 
 Data in a MySQL database can be compared to either PhagesDB data or GenBank data, or data can be compared between all three databases (it does not compare PhagesDB data to GenBank data unless it also compares MySQL database data). All phage data, or subsets of phage data, can be compared. For instance, the administrator can compare genomes depending on their annotation status (draft, final, or unknown) or their authorship (hatfull, non-hatfull).
 

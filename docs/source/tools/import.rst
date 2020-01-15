@@ -7,9 +7,9 @@ In general, data pertaining to a complete phage genome is managed within a MySQL
 
 ``pdm_utils import`` is used to manage the addition or replacement of genomes::
 
-    > python3 -m pdm_utils import Actino_Draft ./genomes/ ./import_table.csv
+    > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv
 
-This tool can be used to specifically update the Actino_Draft database, manage different MySQL database instances, and support the broader SEA-PHAGES annotation pipeline because it:
+This tool can be used to specifically update the Actinobacteriophage database, manage different MySQL database instances, and support the broader SEA-PHAGES annotation pipeline because it:
 
     1. relies on import tickets to substantially automate the import process.
 
@@ -50,7 +50,7 @@ Matching tickets to flat files requires that the phage names are spelled identic
 
     4. Different nomenclature constraints implemented in the MySQL database or PhagesDB (such as “ATCC29399B_C” versus “ATCC29399BC”)
 
-To account for these conflicts, ``import`` contains a phage name dictionary that converts several GenBank phage names to the desired phage name stored in PhagesDB and the Actino_Draft database. This list contains nearly two dozen name conversions and does not change frequently. To avoid phage name discrepancies, the phage name can be parsed from the filename of the flat file instead of from the SOURCE-ORGANISM field within the record. This allows for greater flexibility when parsing batches of flat files that may not adhere to these default expectations, such as when new database instances are developed for phages that have not been annotated through the SEA-PHAGES program. This option can be implemented using a different :ref:`run mode <runmodes>`.
+To account for these conflicts, ``import`` contains a phage name dictionary that converts several GenBank phage names to the desired phage name stored in PhagesDB and the Actinobacteriophage database. This list contains nearly two dozen name conversions and does not change frequently. To avoid phage name discrepancies, the phage name can be parsed from the filename of the flat file instead of from the SOURCE-ORGANISM field within the record. This allows for greater flexibility when parsing batches of flat files that may not adhere to these default expectations, such as when new database instances are developed for phages that have not been annotated through the SEA-PHAGES program. This option can be implemented using a different :ref:`run mode <runmodes>`.
 
 Several fields in the flat file contain data about the phage and host names: DEFINITION, SOURCE, SOURCE-ORGANISM, and the ORGANISM, HOST, and LAB_HOST sub-fields of the FEATURE-SOURCE field. The host and phage name data stored in the database is derived from the ticket, but they are compared to the data parsed from these various fields for confirmation.
 

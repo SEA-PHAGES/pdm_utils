@@ -98,7 +98,7 @@ pwd = "pdm_anon"
 db = "test_db"
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
-schema_file = "test_schema6.sql"
+schema_file = "test_schema7.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 
 # Alice ("test_flat_file_10.gb"),

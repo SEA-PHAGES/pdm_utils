@@ -18,9 +18,9 @@ ________
 
 Export the entire database as a SQL file::
 
-    > python3 -m pdm_utils export sql Actino_Draft
+    > python3 -m pdm_utils export sql Actinobacteriophage
 
-In order to distribute an updated database to end-users, the database needs to be exported from MySQL into a single file that can be easily uploaded to a server (e.g. Actino_Draft.sql). The database version is tracked as an integer in the Version field of the *version* table. A version file is also generated (e.g. Actino_Draft.version), which is a text file that contains a single integer corresponding to the database version.
+In order to distribute an updated database to end-users, the database needs to be exported from MySQL into a single file that can be easily uploaded to a server (e.g. Actinobacteriophage.sql). The database version is tracked as an integer in the Version field of the *version* table. A version file is also generated (e.g. Actinobacteriophage.version), which is a text file that contains a single integer corresponding to the database version.
 
 
 
@@ -29,7 +29,7 @@ ________
 
 Export specific tables from the database into CSV-formatted files::
 
-    > python3 -m pdm_utils export csv Actino_Draft ...
+    > python3 -m pdm_utils export csv Actinobacteriophage ...
 
 
 
@@ -42,4 +42,4 @@ ___________________________
 
 Export genomes into GenBank-formatted flat files::
 
-    > python3 -m pdm_utils export gb Actino_Draft ...
+    > python3 -m pdm_utils export gb Actinobacteriophage ...

@@ -23,7 +23,7 @@ db = "test_db"
 
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
-schema_file = "test_schema6.sql"
+schema_file = "test_schema7.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 
 
@@ -1601,7 +1601,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
 class TestMysqldbFunctions3(unittest.TestCase):
     def setUp(self):
-        self.database = "Actino_Draft"
+        self.database = "Actinobacteriophage"
 
     # setup_sql_handle() calls MySQLConnectionHandler.open_connection(),
     # which uses getpass.getpass() to get the username and password.
@@ -1610,7 +1610,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         """Verify that handle returned with valid info
         when database is provided."""
         getpass_mock.side_effect = [user, pwd]
-        sql_handle, msg = mysqldb.setup_sql_handle("Actino_Draft")
+        sql_handle, msg = mysqldb.setup_sql_handle("Actinobacteriophage")
         with self.subTest():
             self.assertTrue(getpass_mock.called)
         with self.subTest():
@@ -1702,12 +1702,12 @@ class TestMysqldbFunctions4(unittest.TestCase):
     def setUp(self):
 
         self.sql_handle_1 = mysqlconnectionhandler.MySQLConnectionHandler()
-        self.sql_handle_1.database = "Actino_Draft"
+        self.sql_handle_1.database = "Actinobacteriophage"
         self.sql_handle_1.username = user
         self.sql_handle_1.password = pwd
 
         self.sql_handle_2 = mysqlconnectionhandler.MySQLConnectionHandler()
-        self.sql_handle_2.database = "Actino_Draft"
+        self.sql_handle_2.database = "Actinobacteriophage"
         self.sql_handle_2.username = user
         self.sql_handle_2.password = pwd
         self.sql_handle_2.credential_status = False
@@ -1718,7 +1718,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
     def test_connect_to_db_1(self, setup_sql_mock):
         """Verify that sql_handle returned when valid info provided."""
         setup_sql_mock.return_value = (self.sql_handle_1, "")
-        sql_handle = mysqldb.connect_to_db("Actino_Draft")
+        sql_handle = mysqldb.connect_to_db("Actinobacteriophage")
         with self.subTest():
             self.assertTrue(setup_sql_mock.called)
         with self.subTest():
@@ -1729,7 +1729,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
     def test_connect_to_db_2(self, setup_sql_mock, sys_exit_mock):
         """Verify that sys exit is called when sql_handle is None."""
         setup_sql_mock.return_value = (None, "")
-        sql_handle = mysqldb.connect_to_db("Actino_Draft")
+        sql_handle = mysqldb.connect_to_db("Actinobacteriophage")
         with self.subTest():
             self.assertTrue(setup_sql_mock.called)
         with self.subTest():

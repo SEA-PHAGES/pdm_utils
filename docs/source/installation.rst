@@ -164,11 +164,11 @@ _______________________________
 
 Many ``pdm_utils`` modules and pipelines require access to a specifically structured MySQL database.
 
-The primary database instance that reflects the most up-to-date actinobacteriophage genomics data in the SEA-PHAGES program is the 'Actino_Draft' database. Typically, different versions, or instances, of the database are created ('frozen') for specific studies/publications. The unique name of the database is normally published in the Materials and Methods.
+The primary database instance that reflects the most up-to-date actinobacteriophage genomics data in the SEA-PHAGES program is the 'Actinobacteriophage' database. Typically, different versions, or instances, of the database are created ('frozen') for specific studies/publications. The unique name of the database is normally published in the Materials and Methods.
 
 The ``pdm_utils get_db`` installation management tool can be used to retrieve, install, and update these databases, or any custom MySQL database that is compliant with the database schema, from a local file or from the Hatfull lab server (:ref:`getdb <getdb>`).
 
-Alternatively, databases can be manually downloaded and installed, as described below (using Actino_Draft as an example):
+Alternatively, databases can be manually downloaded and installed, as described below (using Actinobacteriophage as an example):
 
 Manual installation
 *******************
@@ -176,15 +176,15 @@ Manual installation
     1. Open a Terminal window.
     2. Create an empty database (enter your password when prompted)::
 
-        > mysql -u root -p --execute "CREATE DATABASE Actino_Draft"
+        > mysql -u root -p --execute "CREATE DATABASE Actinobacteriophage"
 
     3. Retrieve the current version of the database::
 
-        > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.sql > ./Actino_Draft.sql
+        > curl http://phamerator.webfactional.com/databases_Hatfull/Actinobacteriophage.sql > ./Actinobacteriophage.sql
 
     4. Import the database into MySQL (enter your password when prompted)::
 
-        > mysql -u root -p Actino_Draft < Actino_Draft.sql
+        > mysql -u root -p Actinobacteriophage < Actinobacteriophage.sql
 
 
 Manual update
@@ -201,9 +201,9 @@ Manual update
 
     3. Download the current version file from the Hatfull lab server::
 
-        > curl http://phamerator.webfactional.com/databases_Hatfull/Actino_Draft.version > ./Actino_Draft.version
+        > curl http://phamerator.webfactional.com/databases_Hatfull/Actinobacteriophage.version > ./Actinobacteriophage.version
 
-    4. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'installing a new Actino_Draft database' section.
+    4. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'Manual Installation' section.
 
 
 

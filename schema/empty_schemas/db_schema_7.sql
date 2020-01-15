@@ -20,7 +20,7 @@ CREATE TABLE `domain` (
   `Name` varchar(25) DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `hit_id` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2176995 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2198982 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gene`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -35,14 +35,16 @@ CREATE TABLE `gene` (
   `Translation` varchar(5000) DEFAULT NULL,
   `Orientation` enum('F','R') DEFAULT NULL,
   `Notes` blob,
-  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `DomainStatus` tinyint(1) NOT NULL DEFAULT '0',
   `LocusTag` varchar(50) DEFAULT NULL,
+  `Parts` tinyint(1) DEFAULT NULL,
+  `PhamID` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`GeneID`),
   KEY `PhageID` (`PhageID`),
-  KEY `id` (`ID`),
-  CONSTRAINT `gene_ibfk_2` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1137489 DEFAULT CHARSET=latin1;
+  KEY `PhamID` (`PhamID`),
+  CONSTRAINT `gene_ibfk_2` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `gene_ibfk_3` FOREIGN KEY (`PhamID`) REFERENCES `pham` (`PhamID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gene_domain`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -59,7 +61,7 @@ CREATE TABLE `gene_domain` (
   KEY `hit_id` (`HitID`),
   CONSTRAINT `gene_domain_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `gene_domain_ibfk_2` FOREIGN KEY (`HitID`) REFERENCES `domain` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1386407 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1410162 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `phage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -68,18 +70,17 @@ CREATE TABLE `phage` (
   `PhageID` varchar(25) NOT NULL,
   `Accession` varchar(15) NOT NULL,
   `Name` varchar(50) NOT NULL,
-  `HostStrain` varchar(50) DEFAULT NULL,
+  `HostGenus` varchar(50) DEFAULT NULL,
   `Sequence` mediumblob NOT NULL,
-  `SequenceLength` mediumint(9) NOT NULL,
+  `Length` mediumint(9) NOT NULL,
   `DateLastModified` datetime DEFAULT NULL,
   `Notes` blob,
   `GC` float DEFAULT NULL,
-  `Cluster` varchar(5) DEFAULT NULL,
   `Status` enum('unknown','draft','final') DEFAULT NULL,
   `RetrieveRecord` tinyint(1) NOT NULL DEFAULT '0',
   `AnnotationAuthor` tinyint(1) NOT NULL DEFAULT '0',
-  `Cluster2` varchar(5) DEFAULT NULL,
-  `Subcluster2` varchar(5) DEFAULT NULL,
+  `Cluster` varchar(5) DEFAULT NULL,
+  `Subcluster` varchar(5) DEFAULT NULL,
   PRIMARY KEY (`PhageID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -87,22 +88,10 @@ DROP TABLE IF EXISTS `pham`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `pham` (
-  `GeneID` varchar(35) NOT NULL DEFAULT '',
-  `Name` int(10) unsigned DEFAULT NULL,
-  PRIMARY KEY (`GeneID`),
-  KEY `name_index` (`Name`),
-  CONSTRAINT `pham_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `pham_color`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `pham_color` (
-  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `Name` int(10) unsigned NOT NULL,
+  `PhamID` int(10) unsigned NOT NULL,
   `Color` char(7) NOT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=29670 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`PhamID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tmrna`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

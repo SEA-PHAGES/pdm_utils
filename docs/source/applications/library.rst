@@ -20,7 +20,7 @@ In order to retrieve and explore data stored within the MySQL database, create a
 
     >>> from pdm_utils.classes import mysqlconnectionhandler
     >>> sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-    >>> sql_handle.database = 'Actino_Draft'
+    >>> sql_handle.database = 'Actinobacteriophage'
     >>> sql_handle.open_connection()
     MySQL username:
     MySQL password:
@@ -162,7 +162,7 @@ Creating the Subcluster filter identifies 90 phages in Subcluster A2::
     >>> db_filter.add_filter(table="phage", raw_field="Subcluster", value="A2", verbose=True)
     >>> db_filter.refresh()
     >>> db_filter.update(verbose=True)
-    Filtering phage in Actino_Draft for Subcluster='A2'...
+    Filtering phage in Actinobacteriophage for Subcluster='A2'...
     >>> db_filter.hits(verbose=True)
     Database hits: 90
 

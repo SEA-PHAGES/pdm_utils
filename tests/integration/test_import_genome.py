@@ -45,7 +45,7 @@ unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
 
 test_files_path = Path(unittest_dir, "test_files")
-schema_file = "test_schema6.sql"
+schema_file = "test_schema7.sql"
 schema_filepath = Path(test_files_path, schema_file)
 
 
@@ -521,7 +521,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         # Minimum args list
         self.args_list = ["run.py",
                           "import",
-                          "Actino_Draft",
+                          "Actinobacteriophage",
                           str(self.test_directory1),
                           str(self.test_filepath1)]
 
@@ -536,7 +536,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         """Verify args when minimum args_list is provided."""
         args = import_genome.parse_args(self.args_list)
         with self.subTest():
-            self.assertEqual(args.database, "Actino_Draft")
+            self.assertEqual(args.database, "Actinobacteriophage")
         with self.subTest():
             self.assertEqual(args.input_folder, self.test_directory1)
         with self.subTest():
@@ -640,13 +640,13 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.log_file = Path(self.base_dir, "test_log.txt")
 
         self.sql_handle_1 = mch.MySQLConnectionHandler()
-        self.sql_handle_1.database = "Actino_Draft"
+        self.sql_handle_1.database = "Actinobacteriophage"
         self.sql_handle_1.username = user
         self.sql_handle_1.password = pwd
 
         self.args_list = ["run.py",
                           "import",
-                          "Actino_Draft",
+                          "Actinobacteriophage",
                           str(self.input_folder),
                           str(self.import_table),
                           "-g", "FILENAME",
@@ -703,7 +703,7 @@ class TestImportGenomeMain3(unittest.TestCase):
         """Verify that invalid database calls sys exit."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        self.args_list[2] = "Actino_Draft_x"
+        self.args_list[2] = "Actinobacteriophage_x"
         getpass_mock.side_effect = [user, pwd]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
@@ -835,7 +835,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.flat_file_trixie = Path(test_files_path, "test_flat_file_6.gb")
 
         self.sql_handle = mch.MySQLConnectionHandler()
-        self.sql_handle.database = "Actino_Draft"
+        self.sql_handle.database = "Actinobacteriophage"
         self.sql_handle.username = user
         self.sql_handle.password = pwd
 

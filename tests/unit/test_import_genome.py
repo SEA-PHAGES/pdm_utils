@@ -580,7 +580,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.subcluster_set = set(["A1", "A2", "A3"])
         self.accession_set = set(["AAAAA", "XYZ123", "JKL123"])
 
-        self.check_sum = 34
+        self.check_sum = 33
 
     def test_check_genome_1(self):
         """Verify correct number of evaluations are produced using:

@@ -7,10 +7,10 @@ All gene products stored in the database can be grouped into phamilies (“phams
 
 To phamerate gene products::
 
-    > python3 -m pdm_utils phamerate Actino_Draft
+    > python3 -m pdm_utils phamerate Actinobacteriophage
 
 
-The argument 'Actino_Draft' indicates the name of the database in which gene products will be grouped into phamilies.
+The argument 'Actinobacteriophage' indicates the name of the database in which gene products will be grouped into phamilies.
 
 
 In general, the script groups genes into phamilies using a kmer-based strategy implemented with MMSeqs [ref ].
