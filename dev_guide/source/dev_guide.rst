@@ -248,6 +248,68 @@ This repo utilizes the following coding conventions:
         - are split into unit and integration test directories. If the test relies on pure python, it should be stored in the 'unit' directory. These tests run very quickly. If it relies on MySQL, PhagesDB, parsing files, creating files and directories, etc. it should be stored in the 'integration' directory. These tests run more slowly.
 
 
+
+Schema refactoring
+------------------
+
+Any changes made to the structure (schema) of the database (in the form of schema refactoring, schema improvements, and data migration) should be tracked. In order to do this, paired upgrade/downgrade scripts should be created, so that the schema changes can be implemented or reversed if needed.
+
+    1. Determine which aspects of the schema should be changed.
+
+    2. Create a MySQL script that contains the statements needed to make all changes.
+
+    3. In the MySQL command line utility, manually execute each statement on a test database to verify the necessary changes are successful.
+
+    4. Once all statements are constructed, execute the entire MySQL 'upgrade' script at the command line to ensure it works properly::
+
+        > mysql -u root -p <test database> < upgrade_script.sql
+
+    5. Now create a 'downgrade' script to undo the changes. The order of the downgrade statements should be in the reverse order as the upgrade statements. As with the upgrade statements, first test each statement individually in the MySQL command line utility, then test the entire downgrade script at the command line.
+
+    6. It is important that the database schema created when upgrading from an earlier schema version is identical to the database schema created when downgrading from a later schema version. Using a test database, this can be determined with the new paired upgrade/downgrade scripts as follows:
+
+        1. Export the empty schema before upgrade::
+
+            > mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_before.sql
+
+        2. Run the upgrade script::
+
+            > mysql -u root -p <test database> < upgrade_script.sql
+
+        3. Run the downgrade script::
+
+            > mysql -u root -p <test database> < upgrade_script.sql
+
+        4. Export the empty schema after downgrade::
+
+            > mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_after.sql
+
+        5. Check the difference between the empty schemas. Other than AUTO-INCREMENT values, there should be no substantial differences::
+
+            > diff db_schema_before.sql db_schema_after.sql
+
+        6. If the conversion round-trip does not produce an identical empty schema, modify the upgrade or downgrade statements accordingly.
+
+        7. Incorporate the upgrade and downgrade statements into the ``pdm_utils`` schema_conversions module so that they can be implemented using the Python package.
+
+        8. In the convert module, edit the CURRENT_VERSION and MAX_VERSION variables accordingly.
+
+
+Generate schema map
+-------------------
+
+When the database schema is changed, a new schema map should be generated for the user guide:
+
+    1. Open MySQL Workbench and connect to the server.
+    2. Under the Database menu, select Reverse Engineer
+    3. Choose the database of interest.
+    4. Manually move table icons so they are intuitively arranged.
+    5. Under File, select Export, then select Export as Single Page PDF.
+    6. Open the PDF in Preview, and under File, select Export, then select Format JPEG 300 resolution.
+    7. Add the JPEG to the user guide, and update the user guide text as needed.
+
+
+
 Maintaining schema history
 --------------------------
 
@@ -265,4 +327,4 @@ As the structure of the database changes, perform the following:
         > mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_<new schema int>.sql
 
     3. Add the sql file to the schemas directory.
-    4. Update the schema_updates.txt history file with the changes, including a list of all MySQL statements executed to change the schema.
+    4. Update the schema_updates.txt history file with the changes, including a summary of the types of changes implemented.

@@ -37,3 +37,8 @@
 # Implemented by: Travis Mavrich
 # Column nomenclature standardized.
 # Implemented 20191115 in database version = 323.
+
+# Schema version: 7
+# Implemented by: Travis Mavrich
+# Several columns renamed. The pham table was dropped. The pham_color table was renamed to pham.
+# Implemented 20200115 in database version = 335.
