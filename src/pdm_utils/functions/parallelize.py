@@ -5,6 +5,8 @@ Adapted from https://docs.python.org/3/library/multiprocessing.html
 
 import multiprocessing as mp
 
+from pdm_utils.functions.basic import show_progress
+
 
 def parallelize(inputs, num_processors, task):
     """
@@ -60,12 +62,6 @@ def worker(input_queue, output_queue):
     return
 
 
-def show_progress(current, end):
-    progress = int(float(current)/end * 100)
-    print("\r[{}{}] {}%".format('#' * int(progress / 10), ' ' * (10 - int(progress / 10)), progress), end="")
-    return progress
-
-
 def start_processes(inputs, num_processors):
     """
     Creates input and output queues, and runs the jobs
@@ -94,11 +90,11 @@ def start_processes(inputs, num_processors):
         job_queue.put('STOP')
 
     # Start up workers
-    process_pool = []
+    worker_pool = []
     for i in range(num_processors):
-        process = mp.Process(target=worker, args=(job_queue, done_queue))
-        process.start()
-        process_pool.append(process)
+        worker_n = mp.Process(target=worker, args=(job_queue, done_queue))
+        worker_n.start()
+        worker_pool.append(worker_n)
 
     # Grab results from done queue
     results = []
@@ -109,7 +105,7 @@ def start_processes(inputs, num_processors):
         if isinstance(result, list):
             results.append(result)
 
-    [process.join() for process in process_pool]
+    [worker_n.join() for worker_n in worker_pool]
 
     # Leave the progress bar line
     print("\n")
