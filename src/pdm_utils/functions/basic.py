@@ -55,6 +55,7 @@ def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
         pass
     return value
 
+
 def create_indices(input_list, batch_size):
     """Create list of start and stop indices to split a list into batches."""
     index_list = []
@@ -66,6 +67,7 @@ def create_indices(input_list, batch_size):
         tup = (start, stop)
         index_list.append(tup)
     return index_list
+
 
 def reformat_strand(input_value, format, case=False):
     """Converts common strand orientation formats.
@@ -370,8 +372,6 @@ def identify_nested_items(complete_list):
     return (not_nested_set, nested_set)
 
 
-
-
 def trim_characters(string):
     """Remove leading and trailing generic characters from a string.
 
@@ -569,6 +569,7 @@ def split_string(string):
                 value = True
             index += 1
     return (left, right)
+
 
 # TODO this function is specific to genome-level data, so should
 # it be move as a Genome class method?
@@ -851,7 +852,6 @@ def verify_path(filepath, kind=None):
         return False
 
 
-
 def verify_path2(path, kind=None, expect=True):
     """Confirm validity of path argument.
 
@@ -909,9 +909,6 @@ def set_path(path, kind=None, expect=True):
         sys.exit(1)
     else:
         return path
-
-
-
 
 
 def make_new_dir(output_dir, new_dir, attempt=1):
@@ -991,10 +988,6 @@ def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
     return (username, password)
 
 
-
-
-
-
 def choose_from_list(options):
     """Choose a value from a list of values."""
     exit = False
@@ -1015,6 +1008,7 @@ def choose_from_list(options):
     else:
         return None
 
+
 def get_synonyms(search_value, list_of_synonyms):
     """Search for a set of values from a list of sets."""
     syn_set = set([search_value])
@@ -1024,6 +1018,7 @@ def get_synonyms(search_value, list_of_synonyms):
             syn_set = list_of_synonyms[x]
         x += 1
     return syn_set
+
 
 def truncate_value(value, length, suffix):
     """."""
@@ -1055,7 +1050,6 @@ def select_option(prompt, valid_response_set):
     return response
 
 
-
 # TODO could probably improve using configparser module.
 # TODO unittest
 def parse_config_file(path, delimiter="="):
@@ -1081,7 +1075,6 @@ def parse_config_file(path, delimiter="="):
     return config_dict
 
 
-
 # TODO unittest.
 def get_values_from_dict_list(list_of_dicts):
     """Convert a list of dictionaries to a set of the values."""
@@ -1105,8 +1098,6 @@ def convert_list_to_dict(data_list, key):
               "some intended keys are duplicated.")
         data_dict = {}
     return data_dict
-
-
 
 
 # TODO unittest
