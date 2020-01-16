@@ -37,6 +37,7 @@ def parse_args(unparsed_args_list):
                            "the database should be converted.")
     NEW_DATABASE_NAME_HELP = ("The new name of the converted database"
                               "if different from the original database name.")
+    VERBOSE_HELP = ("Conversion progress will be printed.")
     parser = argparse.ArgumentParser(description=CONVERT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("-s", "--schema_version", type=int,
@@ -44,6 +45,9 @@ def parse_args(unparsed_args_list):
         help=SCHEMA_VERSION_HELP)
     parser.add_argument("-n", "--new_database_name", type=str,
         help=NEW_DATABASE_NAME_HELP)
+    parser.add_argument("-v", "--verbose", action="store_true",
+        default=False, help=VERBOSE_HELP)
+
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -53,18 +57,22 @@ def parse_args(unparsed_args_list):
 
 
 # TODO unittest.
-def main(unparsed_args_list):
+def main(unparsed_args_list, sql_handle1=None):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
-    sql_handle1 = mysqldb.connect_to_db(args.database)
+
+    if sql_handle1 is None:
+        sql_handle1 = mysqldb.connect_to_db(args.database)
+
     target = args.schema_version
     actual = mysqldb.get_schema_version(sql_handle1)
     steps, dir = get_conversion_direction(actual, target)
 
     # Iterate through list of versions and implement SQL files.
     if dir == "none":
-        print("No schema conversion is needed.")
+        if args.verbose == True:
+            print("No schema conversion is needed.")
         convert = False
     else:
         convert = True
@@ -82,22 +90,26 @@ def main(unparsed_args_list):
                                     password=sql_handle1.password,
                                     database=args.new_database_name)
                 else:
-                    print("Unable to copy the database for conversion.")
+                    print("Error: Unable to copy the database for conversion.")
                     convert = False
             else:
-                print("Unable to create the new database for conversion.")
+                print("Error: Unable to create the new database for conversion.")
                 convert = False
         else:
             sql_handle2 = sql_handle1
 
         if convert == True:
-            stop_step, summary = convert_schema(sql_handle2, actual, dir, steps)
+            stop_step, summary = convert_schema(sql_handle2, actual, dir,
+                                                steps, verbose=args.verbose)
             if stop_step == target:
-                print("\n\nThe database schema conversion was successful.")
+                if args.verbose == True:
+                    print("\n\nThe database schema conversion was successful.")
             else:
-                print("\n\nThe database schema conversion was not successful. "
+                print("\n\nError: "
+                      "The database schema conversion was not successful. "
                       f"Unable to proceed past schema version {stop_step}.")
-            print_summary(summary)
+            if args.verbose == True:
+                print_summary(summary)
 
 
 # TODO unittest.
@@ -117,7 +129,7 @@ def get_conversion_direction(actual, target):
 
 
 # TODO unittest.
-def convert_schema(sql_handle, actual, dir, steps):
+def convert_schema(sql_handle, actual, dir, steps, verbose=False):
     """Iterate through conversion steps and convert database schema."""
     summary = {} #Key = conversion step. Value = summary dictionary.
     index = 0
@@ -125,7 +137,8 @@ def convert_schema(sql_handle, actual, dir, steps):
     stop_step = actual
     while (index < len(steps) and convert == True):
         step = steps[index]
-        print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
+        if verbose == True:
+            print(f"{dir[:-1].capitalize()}ing to schema version {step}...")
         step_name = get_step_name(dir, step)
         step_dict = get_step_data(step_name)
         commands = step_dict["statements"]
@@ -137,7 +150,7 @@ def convert_schema(sql_handle, actual, dir, steps):
             convert = False
             print("Error encountered while executing MySQL statements.")
         if convert == False:
-            print(f"Unable to {dir} schema to version {step}.")
+            print(f"Error: Unable to {dir} schema to version {step}.")
         else:
             stop_step = step
             summary[step_name] = step_dict["step_summary_dict"]
@@ -149,7 +162,7 @@ def convert_schema(sql_handle, actual, dir, steps):
 def get_step_data(step_name):
     """Get dictionary of conversion step data."""
     if step_name not in schema_conversions.CONVERSION_STEPS.keys():
-        print(f"The conversion step {step_name} is not available.")
+        print(f"Error: The conversion step {step_name} is not available.")
         print("Unable to proceed with database conversion.")
         sys.exit(1)
     else:
