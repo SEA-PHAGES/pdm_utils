@@ -6,9 +6,9 @@ import pathlib
 import subprocess
 import sys
 from pdm_utils.classes import mysqlconnectionhandler as mch
-from pdm_utils.constants import constants
+from pdm_utils.constants import constants, db_schema_0
 from pdm_utils.functions import basic, mysqldb
-
+from pdm_utils.pipelines import convert_db
 
 # TODO currently the 'output_folder' argument is not directly attached to
 # other arguments. This causes a problem sometimes - if installing a database
@@ -20,6 +20,9 @@ def main(unparsed_args_list):
     """Run the get_db pipeline."""
     args = parse_args(unparsed_args_list)
     args.output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
+
+    if args.new == True:
+        schema_version = choose_schema_version()
 
     # curl website > output_file
     # Version file
@@ -70,7 +73,10 @@ def main(unparsed_args_list):
 
     # Install new database
     if args.install == True:
-        result1 = basic.verify_path2(db_filepath, kind="file", expect=True)
+        if args.new == True:
+            result1 = [True, None]
+        else:
+            result1 = basic.verify_path2(db_filepath, kind="file", expect=True)
         if result1[0] == True:
             sql_handle = mch.MySQLConnectionHandler()
             sql_handle.open_connection()
@@ -81,7 +87,16 @@ def main(unparsed_args_list):
                     sql_handle.open_connection()
                     if (sql_handle.credential_status == True and
                             sql_handle._database_status == True):
-                        mysqldb.install_db(sql_handle, db_filepath)
+                        if args.new == True:
+                            sql_handle.execute_transaction(db_schema_0.STATEMENTS)
+                            convert_args = ["pdm_utils.run",
+                                            "convert",
+                                            args.database,
+                                            "-s",
+                                            str(schema_version)]
+                            convert_db.main(convert_args, sql_handle)
+                        else:
+                            mysqldb.install_db(sql_handle, db_filepath)
                     else:
                         print(f"No connection to the {args.database} database due "
                               "to invalid credentials or database.")
@@ -99,7 +114,6 @@ def main(unparsed_args_list):
             os.remove(version_filepath)
         if db_filepath.exists() == True:
             os.remove(db_filepath)
-
 
 
 # TODO unittest.
@@ -124,10 +138,13 @@ def parse_args(unparsed_args_list):
         ("Indicates if the entire pipeline should run: "
          "download, install, and then remove the temp files.")
     FILENAME_HELP = \
-        ("Indicates the name of the SQL file and verion file. "
+        ("Indicates the name of the SQL file and version file. "
          "By default, the filename is "
          "assumed to be the same as the database name. This option enables "
          "database to be created from a file of a different name.")
+    NEW_HELP = \
+        ("Indicates whether a new, empty database with the most current schema "
+         "should be created. This option overrides all other options.")
 
     parser = argparse.ArgumentParser(description=UPDATE_DB_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
@@ -143,9 +160,11 @@ def parse_args(unparsed_args_list):
         default=False, help=ALL_HELP)
     parser.add_argument("-f", "--filename", type=pathlib.Path,
         help=FILENAME_HELP)
+    parser.add_argument("-n", "--new", action="store_true",
+        default=False, help=NEW_HELP)
 
 
-    # TODO implement this option.
+    # TODO implement this option?
     # parser.add_argument("-f", "--force_update", action="store_true",
     #     default=False, help=FORCE_INSTALL_HELP)
 
@@ -154,9 +173,33 @@ def parse_args(unparsed_args_list):
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
 
-    if args.all_steps == True:
+    if args.new == True:
+        args.all_steps == False
+        args.download = False
+        args.install = True
+        args.remove = False
+        args.filename = None
+    elif args.all_steps == True:
         args.download = True
         args.install = True
         args.remove = True
-
+    else:
+        pass
     return args
+
+
+# TODO unittest.
+def choose_schema_version():
+    prompt1 = "Do you want the current database schema? "
+    response1 = basic.ask_yes_no(prompt=prompt1, response_attempt=3)
+    if response1 is not None:
+        if response1 == False:
+            prompt2 = ("Select the schema version: "
+                       f"\n{convert_db.VERSIONS} ")
+            schema_version = basic.select_option(prompt2, convert_db.VERSIONS)
+        else:
+            schema_version = convert_db.CURRENT_VERSION
+    else:
+        print("The database will not be created.")
+        sys.exit(1)
+    return schema_version
