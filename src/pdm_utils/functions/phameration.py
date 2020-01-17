@@ -41,7 +41,6 @@ def read_existing_phams(mysql_handler):
     """
     old_phams = dict()
     old_colors = dict()
-    # TODO schema7 update - table names, column names
     gene_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
     gene_results = mysql_handler.execute_query(gene_query)
 
