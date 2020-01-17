@@ -42,22 +42,24 @@ def read_existing_phams(mysql_handler):
     old_phams = dict()
     old_colors = dict()
     # TODO schema7 update - table names, column names
-    query = "SELECT * FROM (SELECT a.Name, a.GeneID, b.Color FROM pham AS a " \
-            "INNER JOIN pham_color AS b on a.Name = b.Name) AS c ORDER BY " \
-            "c.Name ASC"
-    results = mysql_handler.execute_query(query)
+    gene_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
+    gene_results = mysql_handler.execute_query(gene_query)
 
-    print("{} old genes".format(len(results)))
+    print("{} old genes".format(len(gene_results)))
 
-    for dictionary in results:
-        name = dictionary["Name"]
+    for dictionary in gene_results:
+        pham_id = dictionary["PhamID"]
         geneid = dictionary["GeneID"]
-        color = dictionary["Color"]
-        if name in old_phams.keys():
-            old_phams[name] = old_phams[name] | {geneid}
+
+        if pham_id in old_phams.keys():
+            old_phams[pham_id] = old_phams[pham_id] | {geneid}
         else:
-            old_phams[name] = {geneid}
-            old_colors[name] = color
+            old_phams[pham_id] = {geneid}
+
+    for pham_id in old_phams.keys():
+        color_query = f"SELECT Color FROM pham WHERE PhamID = {pham_id}"
+        color_results = mysql_handler.execute_query(color_query)[0]
+        old_colors[pham_id] = color_results["Color"]
 
     return old_phams, old_colors
 
@@ -72,13 +74,12 @@ def read_unphamerated_genes(mysql_handler):
     """
     new_genes = set()
 
-    query = "SELECT GeneID FROM gene WHERE GeneID NOT IN (SELECT " \
-            "GeneID from pham)"
-    results = mysql_handler.execute_query(query)
+    gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
+    gene_results = mysql_handler.execute_query(gene_query)
 
-    print("{} new genes".format(len(results)))
+    print("{} new genes".format(len(gene_results)))
 
-    for dictionary in results:
+    for dictionary in gene_results:
         geneid = dictionary["GeneID"]
         new_genes = new_genes | {geneid}
 
@@ -227,9 +228,10 @@ def convert_to_parseable(program="mmseqs", dir="/tmp/phamerate"):
 
 def parse_output(program="mmseqs", dir="/tmp/phamerate"):
     """
-
-    :param program:
-    :param dir:
+    Parses output file from clustering program into a dictionary of
+    the new pham data
+    :param program: program used for clustering
+    :param dir: directory where the clustering output is stored
     :return:
     """
     # Variables to store the new pham data
@@ -276,10 +278,14 @@ def parse_output(program="mmseqs", dir="/tmp/phamerate"):
 
 def reintroduce_duplicates(new_phams, trans_groups, genes_and_trans):
     """
-
-    :param new_phams:
-    :param trans_groups:
-    :param genes_and_trans:
+    Reintroduces into each pham ALL GeneIDs that map onto the set of
+    translations in the pham.
+    :param new_phams: the pham dictionary for which duplicates are
+    to be reintroduced
+    :param trans_groups: the dictionary that maps translations to the
+    GeneIDs that share them
+    :param genes_and_trans: the dictionary that maps GeneIDs to their
+    translations
     :return:
     """
     for key in new_phams.keys():
@@ -295,6 +301,15 @@ def reintroduce_duplicates(new_phams, trans_groups, genes_and_trans):
 
 
 def preserve_phams(old_phams, new_phams, old_colors, new_genes):
+    """
+    Attempts to keep pham numbers consistent from one round of pham
+    building to the next
+    :param old_phams: the dictionary that maps old phams to their genes
+    :param new_phams: the dictionary that maps new phams to their genes
+    :param old_colors: the dictionary that maps old phams to colors
+    :param new_genes: the set of previously unphamerated genes
+    :return:
+    """
     final_phams = dict()
     new_colors = dict()
 
@@ -382,18 +397,23 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
 
 
 def reinsert_pham_data(new_phams, new_colors, mysql_handler):
+    """
+    Puts pham data back into the database
+    :param new_phams:
+    :param new_colors:
+    :param mysql_handler:
+    :return:
+    """
     commands = []
     for key in new_phams.keys():
         for gene in new_phams[key]:
-            commands.append(f"INSERT INTO pham (GeneID, Name) VALUES ('"
-                            f"{gene}', {key})")
+            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = {gene}")
 
     mysql_handler.execute_transaction(commands)
 
     commands = []
     for key in new_colors.keys():
-        # TODO schema7 update - table names, column names
-        commands.append(f"INSERT INTO pham_color (Name, Color) VALUES ({key}, "
+        commands.append(f"INSERT INTO pham (PhamID, Color) VALUES ({key}, "
                         f"'{new_colors[key]}')")
 
     mysql_handler.execute_transaction(commands)
@@ -401,11 +421,12 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
 
 def fix_miscolored_phams(mysql_handler):
     print("Phixing Phalsely Hued Phams...")
-    # TODO schema7 update - table names, column names
-    query = "SELECT * FROM (SELECT b.ID, COUNT(GeneID) AS count, " \
-            "a.Name, b.Color FROM pham AS a INNER JOIN pham_color AS " \
-            "b ON a.Name = b.Name GROUP BY a.Name, b.ID) AS c WHERE " \
-            "Color = '#FFFFFF' AND count > 1"
+    # Phams which are colored as though they are orphams, when really
+    # they are multi-member phams
+    query = "SELECT * FROM (SELECT g.PhamID, COUNT(GeneID) AS count, "\
+            "p.Color FROM gene AS g INNER JOIN pham AS p ON g.PhamID " \
+            "= p.PhamID GROUP BY PhamID) AS c WHERE Color = '#FFFFFF' "\
+            "AND count > 1"
 
     results = mysql_handler.execute_query(query)
 
@@ -413,10 +434,8 @@ def fix_miscolored_phams(mysql_handler):
 
     commands = []
     for dictionary in results:
-        # TODO schema7 update - ID?
-        pham_id = dictionary["ID"]
+        pham_id = dictionary["PhamID"]
         count = dictionary["count"]
-        name = dictionary["Name"]
         color = dictionary["Color"]
         h = s = v = 0
         while h <= 0:
@@ -430,18 +449,17 @@ def fix_miscolored_phams(mysql_handler):
         hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
                                               int(rgb[2]))
         new_color = hexrgb
-        # TODO schema7 update - table names, column names
-        commands.append("UPDATE pham_color SET Color = '{}' WHERE "
-                        "ID = '{}'".format(new_color, pham_id))
+        commands.append("UPDATE pham SET Color = '{}' WHERE PhamID = '{}'".format(new_color, pham_id))
 
     mysql_handler.execute_transaction(commands)
 
     print("Phixing Phalsely Phlagged Orphams...")
-    # TODO schema7 update - table names, column names
-    query = "SELECT * FROM (SELECT b.ID, COUNT(GeneID) AS count," \
-            "a.Name, b.Color FROM pham AS a INNER JOIN pham_color AS " \
-            "b ON a.Name = b.Name GROUP BY a.Name, b.ID) AS c WHERE " \
-            "Color != '#FFFFFF' AND count = 1"
+    # Phams which are colored as though they are multi-member phams
+    # when really they are orphams
+    query = "SELECT * FROM (SELECT g.PhamID, COUNT(GeneID) AS count, "\
+            "p.Color FROM gene AS g INNER JOIN pham AS p ON g.PhamID "\
+            "=p.PhamID GROUP BY PhamID) AS c WHERE Color != '#FFFFFF' "\
+            "AND count = 1"
 
     results = mysql_handler.execute_query(query)
 
@@ -449,14 +467,11 @@ def fix_miscolored_phams(mysql_handler):
 
     commands = []
     for dictionary in results:
-        # TODO schema7 update - ID
-        pham_id = dictionary["ID"]
+        pham_id = dictionary["PhamID"]
         count = dictionary["count"]
-        name = dictionary["Name"]
         color = dictionary["Color"]
         new_color = "#FFFFFF"
-        # TODO schema7 update - table names, column names
-        commands.append("UPDATE pham_color SET Color = '{}' WHERE "
-                        "ID = '{}'".format(new_color, pham_id))
+        commands.append("UPDATE pham SET Color = '{}' WHERE "
+                        "PhamID = '{}'".format(new_color, pham_id))
 
     mysql_handler.execute_transaction(commands)
