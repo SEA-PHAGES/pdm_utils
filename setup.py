@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pdm_utils",
-    version="0.0.16",
+    version="0.0.17",
     author="Travis Mavrich",
     author_email="trm53@pitt.edu",
     description="MySQL phage genomics database management utilities",
