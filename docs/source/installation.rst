@@ -12,7 +12,9 @@ ________
 
 :mysql:`MySQL Community Server 5.7 <>`
 
-    This is required for practically all ``pdm_utils`` tools. Below is a brief summary of the installation steps. Refer to the official MySQL documentation for more details.
+    This is required for practically all ``pdm_utils`` tools. ``pdm_utils`` has been developed and tested using MySQL 5.7. The package may work with newer versions of MySQL, but it has not been tested. Below is a brief summary of the installation steps. Refer to the official MySQL documentation for more details.
+
+
 
 MacOS installation
 ******************
@@ -90,15 +92,87 @@ If the automatic option is not selected, anytime your Mac is restarted the serve
 Ubuntu installation
 *******************
 
-Installing MySQL on Ubuntu is more straightforward:
-
+Installing MySQL on Ubuntu is more straightforward. MySQL 5.7 can be downloaded through either the Ubuntu repositories or the official MySQL repositories. Installing MySQL using the Ubuntu repositories is outlined below:
 
     1. Open a Terminal window.
-    2. Enter the following command::
+    2. Update all available repositories (provide the computer login password when prompted)::
 
-        > sudo apt-get install mysql-server
+        > sudo apt update
 
-    3. When prompted, provide a new password for the MySQL 'root' user.
+    3. Enter the following command to install the default MySQL version (currently 5.7)(answer Yes to proceed with installing the new packages, when prompted)::
+
+        > sudo apt install mysql-server
+
+    4. MySQL Community Server should now be installed, but the server may not be running.
+
+        A. Check the server status::
+
+            > systemctl status mysql.service
+
+        If the server is running, it should display::
+
+            Active: active (running))
+
+        If the server is not running, it should display::
+
+            Active: inactive (dead)
+
+
+        B. If the server is not running, it needs to be started::
+
+            > sudo systemctl start mysql
+
+
+        C. Check status again to confirm it is running::
+
+            > systemctl status mysql.service
+
+
+    7. Although MySQL is installed, no password has yet been set for the 'root' user. Login to MySQL without a username (provide the computer login password if prompted)::
+
+        > sudo mysql
+        mysql>
+
+    8. Now set a password for the 'root' user::
+
+        mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '<new password>';
+        mysql> FLUSH PRIVILEGES;
+
+
+
+
+Create additional users (optional)
+**********************************
+
+After MySQL is installed (on MacOS or Ubuntu), additional user accounts with different types of access privileges can be created, if needed.
+
+    1. Login to mysql as 'root' (provide the password when prompted)::
+
+        > mysql -u root -p
+        mysql>
+
+    2. Create a new user 'new_user', and specify the password::
+
+        mysql> CREATE USER 'new_user'@'localhost' IDENTIFIED BY '<new_password>';
+
+    3. Grant different levels of access using one of the following commands:
+
+        - Grant unrestricted access to all databases::
+
+            mysql> GRANT ALL ON *.* TO 'new_user'@'localhost' WITH GRANT OPTION;
+
+        - Grant access with all privileges to a specific database (such as Actinobacteriophage)::
+
+            mysql> GRANT ALL ON Actinobacteriophage.* TO 'new_user'@'localhost';
+
+        - Grant access to all databases, but only with the privilege to retrieve data::
+
+            mysql> GRANT SELECT ON *.* TO 'new_user'@'localhost';
+
+    4. Implement the changes::
+
+        mysql> FLUSH PRIVILEGES;
+
 
 
 2. Python dependencies
