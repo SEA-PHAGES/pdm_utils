@@ -415,7 +415,7 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
     commands = []
     for key in new_phams.keys():
         for gene in new_phams[key]:
-            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = {gene}")
+            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = '{gene}'")
 
     mysql_handler.execute_transaction(commands)
 
@@ -450,7 +450,7 @@ def fix_miscolored_phams(mysql_handler):
         hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
                                               int(rgb[2]))
         new_color = hexrgb
-        commands.append("UPDATE pham SET Color = '{}' WHERE PhamID = '{}'".format(new_color, pham_id))
+        commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE PhamID = '{pham_id}'")
 
     mysql_handler.execute_transaction(commands)
 
@@ -472,7 +472,6 @@ def fix_miscolored_phams(mysql_handler):
         count = dictionary["count"]
         color = dictionary["Color"]
         new_color = "#FFFFFF"
-        commands.append("UPDATE pham SET Color = '{}' WHERE "
-                        "PhamID = '{}'".format(new_color, pham_id))
+        commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE PhamID = '{pham_id}'")
 
     mysql_handler.execute_transaction(commands)
