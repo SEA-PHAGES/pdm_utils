@@ -123,8 +123,9 @@ def main(argument_list):
 
     # If we got past the early exit, we are probably safe to truncate the
     # pham and pham_color tables, and insert the new pham data
-    # Clear old pham data - auto commits at end of transaction
-    commands = ["TRUNCATE TABLE pham"]
+    # Clear old pham data - auto commits at end of transaction - this will also
+    # set all PhamID values in gene table to NULL
+    commands = ["DELETE FROM pham"]
     mysql_handler.execute_transaction(commands)
 
     # Insert new pham/color data

@@ -403,17 +403,19 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
     :param mysql_handler:
     :return:
     """
-    commands = []
-    for key in new_phams.keys():
-        for gene in new_phams[key]:
-            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = {gene}")
-
-    mysql_handler.execute_transaction(commands)
-
+    # Colors have to go first, since PhamID column in gene table references
+    # PhamID in pham table
     commands = []
     for key in new_colors.keys():
         commands.append(f"INSERT INTO pham (PhamID, Color) VALUES ({key}, "
                         f"'{new_colors[key]}')")
+
+    mysql_handler.execute_transaction(commands)
+
+    commands = []
+    for key in new_phams.keys():
+        for gene in new_phams[key]:
+            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = {gene}")
 
     mysql_handler.execute_transaction(commands)
 
