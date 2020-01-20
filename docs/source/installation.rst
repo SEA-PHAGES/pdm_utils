@@ -99,9 +99,9 @@ Installing MySQL on Ubuntu is more straightforward. MySQL 5.7 can be downloaded 
 
         > sudo apt update
 
-    3. Enter the following command to install the default MySQL version (currently 5.7)(answer Yes to proceed with installing the new packages, when prompted)::
+    3. Enter the following command to install the MySQL version 5.7 (answer 'yes' to proceed with installing the new packages, when prompted)::
 
-        > sudo apt install mysql-server
+        > sudo apt install mysql-server=5.7.*
 
     4. MySQL Community Server should now be installed, but the server may not be running.
 
@@ -137,6 +137,7 @@ Installing MySQL on Ubuntu is more straightforward. MySQL 5.7 can be downloaded 
 
         mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '<new password>';
         mysql> FLUSH PRIVILEGES;
+        mysql> exit;
 
 
 
@@ -172,11 +173,12 @@ After MySQL is installed (on MacOS or Ubuntu), additional user accounts with dif
     4. Implement the changes::
 
         mysql> FLUSH PRIVILEGES;
+        mysql> exit;
 
 
 
-2. Python dependencies
-______________________
+2. Anaconda
+___________
 
 There are several third-party Python packages required:
 
@@ -191,20 +193,44 @@ Some of them also have Python or binary dependencies. Manual installation of the
 
     2. Navigate to the 'Anaconda Distribution' option.
 
-    3. For MacOS: download the Python 3.7 graphical installer. For Linux: download the Python 3.7 x86 installer.
+    3. Begin the installation:
+
+        - For MacOS: download the Python 3.7 graphical installer and follow the graphical prompts.
+
+        - For Linux:
+
+            1. Download the Python 3.7 x86 Linux installer (e.g. Anaconda3-2019.10-Linux-x86_64.sh) to the Downloads folder.
+            2. Open a Terminal window.
+            3. Execute the following command::
+
+                > bash ~/Downloads/Anaconda3-2019.10-Linux-x86_64.sh
+
 
     4. Follow the manufacturer's installation instructions.
 
-    5. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything)::
+        - Accept the license agreement.
+        - Install at the default directory.
+        - Enter 'yes' when prompted for the installer to run conda init.
 
-        > conda create --name pdm_utils python pip biopython pymysql paramiko tabulate
+    5. Optional: execute the following command to prevent Conda from starting up automatically every time a Terminal window is opened::
+
+        > conda config --set auto_activate_base false
+
+    6. Close the Terminal window and open a new window.
+
+    7. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything). Enter 'y' when prompted to install all dependencies::
+
+        > conda create --name pdm_utils python pip biopython pymysql paramiko tabulate curl
+
+    8. After the Conda environment is created, it needs to be activated using the following command. The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment::
+
         > conda activate pdm_utils
         (pdm_utils)>
 
-The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment. To exit the Conda environment::
+    9. Optional: enter the following command to exit the Conda environment. The default command line prompt will be displayed, and the name of the Conda environment will no longer be displayed::
 
-    (pdm_utils)> conda deactivate
-    >
+        (pdm_utils)> conda deactivate
+        >
 
 
 .. note::
