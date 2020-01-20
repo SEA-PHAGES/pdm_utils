@@ -22,22 +22,48 @@ MacOS installation
 Installing MySQL on MacOS can be tricky.
 
     1. Download the MySQL Community Server 5.7 dmg file from the MySQL website.
-    2. Follow the standard installation instructions. MySQL can be installed at the default location.
-    3. Make note of the temporary password provided during the installation process.
 
-    .. warning::
-         Be sure to record the temporary password that is generated!!! Once MySQL is installed, this password can only be used ONCE to login.
+        1. Follow the graphical installation instructions:
 
-    4. Open Terminal.
-    5. Log in to MySQL as the root user::
+        .. figure:: /images/mac_mysql_install/step1.png
+
+
+        2. Agree with the license agreement:
+
+        .. figure:: /images/mac_mysql_install/step2.png
+
+        .. figure:: /images/mac_mysql_install/step3.png
+
+        3. Install at the default location:
+
+        .. figure:: /images/mac_mysql_install/step4.png
+
+        4. Allow access to 'System Events.app':
+
+        .. figure:: /images/mac_mysql_install/step5.png
+
+        5. Make note of the temporary password provided during the installation process (highlighted in red):
+
+        .. figure:: /images/mac_mysql_install/step6.png
+
+        .. warning::
+             Be sure to record the temporary password that is generated!!! Once MySQL is installed, this password can only be used ONCE to login.
+
+        6. Installation is complete:
+
+        .. figure:: /images/mac_mysql_install/step7.png
+
+
+    2. Open Terminal.
+    3. Log in to MySQL as the root user::
 
         > mysql -u root -p
 
-    6. Enter the temporary password when prompted::
+    4. Enter the temporary password when prompted::
 
         Enter password: <temporary password>
 
-    7. At the mysql prompt, change the password for the root user::
+    5. At the mysql prompt, change the password for the root user::
 
         mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY '<new password>';
         mysql> exit
