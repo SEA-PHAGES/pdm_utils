@@ -13,7 +13,7 @@
 
    Introduction <intro>
    Installation <installation>
-   Database structure <database>
+   Database structure <database_info>
    Command line toolkit <tools>
    Package applications <applications>
    Source code library <pdm_utils>

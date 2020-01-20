@@ -3,13 +3,6 @@
 MySQL database structure
 ========================
 
-.. toctree::
-   :hidden:
-
-   schema_changelog
-   schema_maps
-
-
 The current schema (schema version 8) of the MySQL database contains the following tables:
 
     1.  phage
@@ -192,13 +185,3 @@ This table contains information that pertains to tRNA secondary structure.
 tmrna (in development)
 ----------------------
 This table contains information that pertains to individual tmRNA features.
-
-
-
-Database schema changes
------------------------
-
-For information about:
-
-    1. History of schema changes: :ref:`schema history <dbchangelog>`.
-    2. Prior database schema maps: :ref:`schema maps <schemamaps>`.

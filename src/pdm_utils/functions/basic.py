@@ -1117,10 +1117,12 @@ def show_progress(current, end, width=50):
 
     :param current: current value (0-n)
     :param end: end value (n)
-    :param width: character width for the progress bar (default 50);
-    ideally 100 divided by width should naturally be an integer
-    :return: progress - the integer percent completion calculated
-    as the ratio of current to end multiplied by 100
+    :param width:
+        character width for the progress bar (default 50);
+        ideally 100 divided by width should naturally be an integer
+    :return:
+        progress - the integer percent completion calculated
+        as the ratio of current to end multiplied by 100
     """
     progress = int(float(current)/end * 100)
     ratio = int(100/width)
