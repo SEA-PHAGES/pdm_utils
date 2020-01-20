@@ -42,3 +42,9 @@
 # Implemented by: Travis Mavrich
 # Several columns renamed. The pham table was dropped. The pham_color table was renamed to pham.
 # Implemented 20200115 in database version = 335.
+
+
+# Schema version: 8
+# Implemented by: Travis Mavrich
+# Small modification: gene.PhamID foreign key constraint was redefined. This was needed to be able to remove data from pham.PhamID even though gene.PhamID is a foreign key.
+# Implemented 20200120 in database version = 336.

@@ -256,7 +256,7 @@ Any changes made to the structure (schema) of the database (in the form of schem
 
     1. Determine which aspects of the schema should be changed.
 
-    2. Create a MySQL script that contains the statements needed to make all changes.
+    2. Create a MySQL script that contains the statements needed to make all changes (including incrementing version.SchemaVersion).
 
     3. In the MySQL command line utility, manually execute each statement on a test database to verify the necessary changes are successful.
 
@@ -290,41 +290,38 @@ Any changes made to the structure (schema) of the database (in the form of schem
 
         6. If the conversion round-trip does not produce an identical empty schema, modify the upgrade or downgrade statements accordingly.
 
-        7. Incorporate the upgrade and downgrade statements into the ``pdm_utils`` schema_conversions module so that they can be implemented using the Python package.
+    7. Incorporate the upgrade and downgrade statements into the ``pdm_utils`` schema_conversions module so that they can be implemented using the Python package.
 
-        8. In the convert module, edit the CURRENT_VERSION and MAX_VERSION variables accordingly.
+    8. In the convert module, edit the CURRENT_VERSION and MAX_VERSION variables accordingly.
 
+    9. Use the convert module to upgrade the primary production database to the new schema version. This will convert the schema and update version.SchemaVersion.
 
-Generate schema map
--------------------
-
-When the database schema is changed, a new schema map should be generated for the user guide:
-
-    1. Open MySQL Workbench and connect to the server.
-    2. Under the Database menu, select Reverse Engineer
-    3. Choose the database of interest.
-    4. Manually move table icons so they are intuitively arranged.
-    5. Under File, select Export, then select Export as Single Page PDF.
-    6. Open the PDF in Preview, and under File, select Export, then select Format JPEG 300 resolution.
-    7. Add the JPEG to the user guide, and update the user guide text as needed.
-
-
-
-Maintaining schema history
---------------------------
-
-A history of each unique database schema is stored under /misc/schemas/.
-As the structure of the database changes, perform the following:
-
-    1. In MySQL, update the schema number and version number::
-
-        mysql> UPDATE version SET SchemaVersion = <new schema int>
-        mysql> UPDATE version SET Version = <new version int>
-
-
-    2. In bash, create an empty schema::
+    10. A history of each unique database schema is stored under /misc/schemas/. Create an empty schema of the upgraded database::
 
         > mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_<new schema int>.sql
 
-    3. Add the sql file to the schemas directory.
-    4. Update the schema_updates.txt history file with the changes, including a summary of the types of changes implemented.
+    11. Add the sql file to the schemas directory in the repo.
+
+    12. Update the schema_updates.txt history file with the changes, including a summary of the types of changes implemented.
+
+    13. Generate a schema map and update all sections of the user guide (see below).
+
+        1. Open MySQL Workbench and connect to the server.
+
+        2. Under the Database menu, select Reverse Engineer.
+
+        3. Choose the database of interest.
+
+        4. Manually move table icons so they are intuitively arranged.
+
+        5. Under File, select Export, then select Export as Single Page PDF.
+
+        6. Open the PDF in Preview, and under File, select Export, then select Format JPEG 300 resolution.
+
+        7. Add the JPEG to the repo in the user guide directory.
+
+    14. Update the user guide as needed with information about the new schema:
+
+        - page describing the current database
+        - page describing prior schema version schema maps
+        - page describing schema version changelog

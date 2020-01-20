@@ -280,6 +280,18 @@ CONVERSION_STEPS = {
             }
         },
 
+    "upgrade_7_to_8": {
+        statements: [
+            """ALTER TABLE `gene` DROP FOREIGN KEY `gene_ibfk_3`;""",
+            """ALTER TABLE `gene`
+                  ADD FOREIGN KEY (`PhamID`)
+                  REFERENCES `pham` (`PhamID`)
+                  ON DELETE SET NULL;""",
+            """UPDATE `version` SET `SchemaVersion` = 8;"""
+            ],
+        step_summary_dict: {}
+        },
+
     # Downgrade steps
     "downgrade_1_to_0": {
         statements: [
@@ -533,5 +545,16 @@ CONVERSION_STEPS = {
         step_summary_dict: {
             lost_data: ["gene.Parts"]
             }
+        },
+
+    "downgrade_8_to_7": {
+        statements: [
+            """ALTER TABLE `gene` DROP FOREIGN KEY `gene_ibfk_3`;""",
+            """ALTER TABLE `gene`
+                  ADD FOREIGN KEY (`PhamID`)
+                  REFERENCES `pham` (`PhamID`);""",
+            """UPDATE `version` SET `SchemaVersion` = 7;"""
+            ],
+        step_summary_dict: {}
         }
     }

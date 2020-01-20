@@ -10,7 +10,7 @@ MySQL database structure
    schema_maps
 
 
-The current schema (schema version 7) of the MySQL database contains the following tables:
+The current schema (schema version 8) of the MySQL database contains the following tables:
 
     1.  phage
     2.  gene
@@ -25,9 +25,9 @@ The current schema (schema version 7) of the MySQL database contains the followi
 
 .. _figschema:
 
-.. figure:: /images/database_structure/schema_7_map.jpg
+.. figure:: /images/database_structure/schema_8_map.jpg
 
-    Map of the MySQL database schema (schema version 7).
+    Map of the MySQL database schema (schema version 8).
 
 .. .. csv-table::
     :file: images/database_structure/database.csv

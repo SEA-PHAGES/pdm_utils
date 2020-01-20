@@ -188,3 +188,14 @@ Renamed several columns. Dropped the pham table and renamed the pham_color table
 **Table renamed**
 
     - pham_color TO pham
+
+
+
+Schema version 8
+****************
+
+Modified foreign key constraint.
+
+**Column modified**
+
+    - gene.PhamID foreign key constraint
