@@ -1113,8 +1113,8 @@ def prepare_filepath(folder_path, file_name, folder_name=None):
 
 
 def show_progress(current, end, width=50):
-    """
-    Updating progress bar that prints to the command line in-line.
+    """Updating progress bar that prints to the command line in-line.
+
     :param current: current value (0-n)
     :param end: end value (n)
     :param width: character width for the progress bar (default 50);
@@ -1126,3 +1126,58 @@ def show_progress(current, end, width=50):
     ratio = int(100/width)
     print("\r[{}{}] {}%".format('#' * int(progress / ratio), ' ' * (width - int(progress / ratio)), progress), end="")
     return progress
+
+
+def export_data_dict(data_dicts, file_path, headers, include_headers=False):
+    """Save a dictionary of data to file using specified column headers.
+
+    Ensures the output file contains a specified number of columns,
+    and it ensures the column headers are exported as well.
+
+    :param data_dicts:
+        list of elements, where each element is a dictionary.
+    :type data_dicts: list
+    :param file_path: Path to file to export data.
+    :type file_path: Path
+    :param headers:
+        List of strings to define the column order in the file.
+        If include_headers is selected, the first row of the file
+        will contain each string.
+    :type headers: list
+    :param include_headers:
+        Indicates whether the file should contain a
+        row of column names derived from the headers parameter.
+    :type include_headers: bool
+    """
+
+    headers_dict = {}
+    for header in headers:
+        headers_dict[header] = header
+    # with open(file_path, "w") as file_handle:
+    with file_path.open("w") as file_handle:
+        file_writer = csv.DictWriter(file_handle, headers)
+        if include_headers:
+            file_writer.writerow(headers_dict)
+        for data_dict in data_dicts:
+            file_writer.writerow(data_dict)
+
+
+def retrieve_data_dict(filepath):
+    """Open file and retrieve a dictionary of data.
+
+    :param filepath:
+        Path to file containing data and column names.
+    :type filepath: Path
+    :returns:
+        A list of elements, where each element is a dictionary
+        representing one row of data.
+        Each key is a column name and each value is the data
+        stored in that field.
+    :rtype: list
+    """
+    data_dicts = []
+    with filepath.open(mode='r') as file:
+        file_reader = csv.DictReader(file)
+        for dict in file_reader:
+            data_dicts.append(dict)
+    return data_dicts

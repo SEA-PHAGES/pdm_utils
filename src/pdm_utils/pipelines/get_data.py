@@ -209,13 +209,13 @@ def match_genomes(mysqldb_dict, phagesdb_dict):
             unmatched_mysqldb_authored_genomes[id] = gnm
 
     print("\nSummary of genomes matched:")
-    print(f"{len(matched_ids):>6}: genomes matched.")
-    print(f"{len(unmatched_mysqldb_ids):>6}: MySQL genomes not matched.")
-    print(f"{len(unmatched_phagesdb_ids):>6}: PhagesDB genomes not matched.")
+    print(f"{len(matched_ids):>6}: genome(s) matched.")
+    print(f"{len(unmatched_mysqldb_ids):>6}: MySQL genome(s) not matched.")
+    print(f"{len(unmatched_phagesdb_ids):>6}: PhagesDB genome(s) not matched.")
 
     count = len(unmatched_mysqldb_authored_genomes.keys())
     if count > 0:
-        print(f"{count} Hatfull-authored unmatched MySQL genomes:")
+        print(f"{count} Hatfull-authored unmatched MySQL genome(s):")
         for key in unmatched_mysqldb_authored_genomes.keys():
             print(key)
 
@@ -284,7 +284,7 @@ def get_update_data(output_folder, matched_genomes):
         print("\n\nNew field updates are available.")
         filepath = basic.prepare_filepath(output_folder, "update_table.csv",
                                            folder_name="updates")
-        tickets.export_ticket_data(update_tickets, filepath,
+        basic.export_data_dict(update_tickets, filepath,
                                    UPDATE_COLUMNS, include_headers=True)
     else:
         print("\n\nNo field updates found.")
@@ -400,13 +400,13 @@ def get_final_data(output_folder, matched_genomes):
         print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
         filepath = basic.prepare_filepath(phagesdb_folder, "import_table.csv")
         import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
-        tickets.export_ticket_data(import_tickets, filepath, IMPORT_COLUMNS1)
+        basic.export_data_dict(import_tickets, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         # filepath2 = basic.prepare_filepath(phagesdb_folder, "import_table2.csv")
         # phagesdb_ticket_list3 = convert_tickets_to_dict(import_tickets)
-        # tickets.export_ticket_data(phagesdb_ticket_list3, filepath2, IMPORT_COLUMNS2, include_headers=True)
+        # basic.export_data_dict(phagesdb_ticket_list3, filepath2, IMPORT_COLUMNS2, include_headers=True)
 
     if len(failed_list) > 0:
         print(f"{len(failed_list)} phage(s) failed to be retrieved:")
@@ -516,7 +516,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={}):
 
     # Record all results.
     filepath3 = basic.prepare_filepath(ncbi_folder, "ncbi_results.csv")
-    tickets.export_ticket_data(ncbi_results_list, filepath3,
+    basic.export_data_dict(ncbi_results_list, filepath3,
                                NCBI_RESULTS_COLUMNS, include_headers=True)
 
     # Print summary of script
@@ -624,7 +624,7 @@ def retrieve_records(accession_dict, batch_size=200):
     # indices = 0,2,4
 
     batch_indices = basic.create_indices(mod_accessions, batch_size)
-    print(f"There are {len(mod_accessions)} GenBank accessions to check.")
+    print(f"There are {len(mod_accessions)} GenBank accession(s) to check.")
     for indices in batch_indices:
         start = indices[0]
         stop = indices[1]
@@ -769,13 +769,13 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
     if len(import_tickets) > 0:
         filepath = basic.prepare_filepath(output_folder, "import_table.csv")
         import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
-        tickets.export_ticket_data(import_tickets, filepath, IMPORT_COLUMNS1)
+        basic.export_data_dict(import_tickets, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         # filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
         # import_tickets = convert_tickets_to_dict(import_tickets)
-        # tickets.export_ticket_data(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
+        # basic.export_data_dict(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
 
 
 # TODO unittest.
@@ -874,13 +874,13 @@ def retrieve_drafts(output_folder, phage_list):
     if len(import_tickets) > 0:
         filepath = basic.prepare_filepath(output_folder, "import_table.csv")
         import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
-        tickets.export_ticket_data(import_tickets, filepath, IMPORT_COLUMNS1)
+        basic.export_data_dict(import_tickets, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         # filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
         # import_tickets = convert_tickets_to_dict(import_tickets)
-        # tickets.export_ticket_data(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
+        # basic.export_data_dict(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
 
     # Report results
     if retrieved_tally > 0:

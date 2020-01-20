@@ -1,54 +1,10 @@
 """Misc. functions to manipulate tickets."""
 
-import csv
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
-from pdm_utils.functions import phagesdb
 from pdm_utils.functions import run_modes
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
-import pathlib
-
-def export_ticket_data(list_of_data_dicts, file_path, headers, include_headers=False):
-    """Save a dictionary of data to file using specified column headers.
-
-    Ensures the output file contains a specified number of columns,
-    and it ensures the column headers are exported as well."""
-
-    headers_dict = {}
-    for header in headers:
-        headers_dict[header] = header
-    # with open(file_path, "w") as file_handle:
-    with file_path.open("w") as file_handle:
-        file_writer = csv.DictWriter(file_handle, headers)
-        if include_headers:
-            file_writer.writerow(headers_dict)
-        for data_dict in list_of_data_dicts:
-            file_writer.writerow(data_dict)
-
-
-def retrieve_ticket_data(filepath):
-    """Open file and retrieve the ticket data.
-
-    :param filename:
-        Path to file containing import ticket data, where
-        each row is assumed to contain column names.
-    :type filename: Path
-    :returns:
-        A list of elements, where each element is a dictionary
-        representing one row of data.
-        Each key is a column name and each value is the data
-        stored in that field.
-    :rtype: list
-    """
-    list_of_ticket_data = []
-    # with open(filename,'r') as file:
-    with filepath.open(mode='r') as file:
-        file_reader = csv.DictReader(file)
-        for dict in file_reader:
-            list_of_ticket_data.append(dict)
-    return list_of_ticket_data
-
 
 # TODO review unittests - are they sufficient?
 def modify_import_data(data_dict, required_keys, optional_keys, keywords):

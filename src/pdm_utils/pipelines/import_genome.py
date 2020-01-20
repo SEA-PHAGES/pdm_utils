@@ -230,7 +230,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         success_path.mkdir()
         if len(success_ticket_list) > 0:
             success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
-            tickets.export_ticket_data(success_ticket_list, success_tkt_file,
+            basic.export_data_dict(success_ticket_list, success_tkt_file,
                                        headers, include_headers=True)
         if len(success_filepath_list) > 0:
             success_genomes_path = pathlib.Path(success_path, "genomes")
@@ -245,7 +245,7 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         failed_path.mkdir()
         if len(failed_ticket_list) > 0:
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
-            tickets.export_ticket_data(failed_ticket_list, failed_tkt_file,
+            basic.export_data_dict(failed_ticket_list, failed_tkt_file,
                                        headers, include_headers=True)
         if len(failed_filepath_list) > 0:
             failed_genomes_path = pathlib.Path(failed_path, "genomes")
@@ -324,7 +324,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
     list_of_tkts = []
     tkt_errors = 0
     logger.info("Retrieving ticket data.")
-    list_of_data_dicts = tickets.retrieve_ticket_data(import_table_file)
+    list_of_data_dicts = basic.retrieve_data_dict(import_table_file)
     logger.info("Constructing tickets.")
     list_of_tkts = tickets.construct_tickets(list_of_data_dicts, run_mode_eval_dict,
                     description_field, required_keys, optional_keys,
