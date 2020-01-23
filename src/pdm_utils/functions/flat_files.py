@@ -616,8 +616,8 @@ def get_seqrecord_description(phage_genome):
         from genome data
     """
 
-    description = "{} phage {}, complete genome".format(\
-            phage_genome.host_genus, phage_genome.id)
+    description = (f"{phage_genome.host_genus} phage {phage_genome.id}"
+                    ", complete genome")
     return description
 
 # TODO Owen unittest.
