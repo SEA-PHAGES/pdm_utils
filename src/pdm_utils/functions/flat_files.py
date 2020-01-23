@@ -652,7 +652,7 @@ def get_seqrecord_annotations(phage_genome):
     annotations["organism"] =\
             "{} phage {}".format\
             (phage_genome.host_genus, phage_genome.name)
-    annotations["taxonomy"].append("Virsues")
+    annotations["taxonomy"].append("Viruses")
     annotations["taxonomy"].append("dsDNA Viruses")
     annotations["taxonomy"].append("Caudovirales")
     annotations["comment"] =\

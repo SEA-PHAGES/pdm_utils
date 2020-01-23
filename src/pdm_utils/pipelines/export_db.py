@@ -264,8 +264,10 @@ def execute_export(sql_handle, output_path, output_name,
         export_version = 1
         while(export_path.is_dir()):
             export_version += 1
-            updated_export_name = f"{output_name}_{export_version}"
-            export_path = export_path.with_name(updated_export_name)
+            export_name = f"{output_name}_{export_version}"
+            export_path = export_path.with_name(export_name)
+    else:
+        export_name = output_name
 
         export_path.mkdir()
     else:
@@ -275,21 +277,21 @@ def execute_export(sql_handle, output_path, output_name,
         if verbose:
             print("Writing SQL database file...")
         write_database(sql_handle, db_version["Version"],
-                        output_path, output_name=output_name)
+                        output_path, output_name=export_name)
 
     if csv_export or ffile_export:
         db_filter = build_filter(sql_handle, table, values_list, 
                                  filters, verbose=verbose)
         if csv_export:
-            file_name = f"{sql_handle.database}.{table}"
+            file_name = f"{sql_handle.database}_{table}"
             execute_csv_export(db_filter, sql_handle,
-                               output_path, output_name, 
+                               output_path, export_name, 
                                csv_name=file_name, table=table,
                                verbose=verbose)
 
         if ffile_export != None:
             if groups:
-                folder_path = output_path.joinpath(output_name)
+                folder_path = output_path.joinpath(export_name)
                 folder_path.mkdir(exist_ok=True)
                 ffx_grouping(sql_handle, folder_path, groups, db_filter,
                              db_version, ffile_export,
@@ -297,7 +299,7 @@ def execute_export(sql_handle, output_path, output_name,
             else:
                 execute_ffx_export(sql_handle, 
                                    db_filter.results(verbose=verbose),
-                                   ffile_export,output_path, output_name, 
+                                   ffile_export,output_path, export_name, 
                                    db_version, verbose=verbose,
                                    data_name=f"{sql_handle.database}.{table}",
                                    table=table)
@@ -712,7 +714,7 @@ def write_csv(csv_data, output_path, output_name="export",csv_name="database",
     csv_path.touch()
     with open(csv_path, 'w', newline="") as csv_file:
         csvwriter=csv.writer(csv_file, delimiter=",",
-                             quotechar="|",
+                             quotechar="\"",
                              quoting=csv.QUOTE_MINIMAL)
         for row in csv_data:
             csvwriter.writerow(row)
