@@ -1,1 +1,1 @@
-Field,Data Type,Data originID,int(10) unsigned,MySQL auto-incrementGeneID,varchar(35),cdd_pp scriptHitID,varchar(25),cdd_pp scriptQueryStart,int(10) unsigned,cdd_pp scriptQueryEnd,int(10) unsigned,cdd_pp scriptExpect,double unsigned,cdd_pp script
+Field,Data Type,Data originID,int(10) unsigned,MySQLGeneID,varchar(35),cddHitID,varchar(25),cddQueryStart,int(10) unsigned,cddQueryEnd,int(10) unsigned,cddExpect,double unsigned,cdd
