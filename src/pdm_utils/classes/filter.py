@@ -11,7 +11,7 @@ import math
 import time
 import csv
 from pathlib import Path
-from pdm_utils.classes import mysqlconnectionhandler, databasetree
+from pdm_utils.classes import mysqlconnectionhandler, schemagraph
 from pdm_utils.pipelines import export_db
 
 #Global file constants
@@ -24,7 +24,7 @@ GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
 class Filter:
     """MySQL database filtering object."""
-    def __init__(self, sql_handle, table='phage'):
+    def __init__(self, sql_handle, table="phage", key=None):
         """Initializes a Filter object used to filter
         results from a SQL database
 
@@ -37,9 +37,9 @@ class Filter:
         """
         self.sql_handle = sql_handle
 
-        self.db_tree = databasetree.DatabaseTree(sql_handle)
-
-        if table not in self.db_tree.show_tables():
+        self.db_graph = schemagraph.SchemaGraph(sql_handle)
+     
+        if table not in self.db_graph.show_tables():
             print(f"Table passed to filter is not in {sql_handle.database}")
             raise ValueError
 
@@ -47,8 +47,14 @@ class Filter:
 
         self.table = table
 
-        table_node = self.db_tree.get_table(table)
-        self.key = table_node.primary_key.id
+        table_node = self.db_graph.get_table(table)
+        if key == None:
+            self.key = table_node.primary_key.id
+        else:
+            if key not in table_node.show_columns():
+                raise ValueError(
+                        f"Column {key} passed to filter is not in {table}.")
+            self.key = key
 
         self.history = HistoryNode("head", None)
         self.history_count = 0
@@ -57,7 +63,7 @@ class Filter:
 
         self.values_valid = True
         self.updated = True
-
+    
     def translate_table(self, raw_table, verbose=False):
         """Parses a case-insensitive string to match a case-sensitive 
         table_node id string.
@@ -72,7 +78,7 @@ class Filter:
             Returns a case-sensitive string for a TableNode id.
         :type table: str
         """
-        for table in self.db_tree.show_tables():
+        for table in self.db_graph.show_tables():
             if table.lower() == raw_table.lower():
                 return table
 
@@ -96,7 +102,7 @@ class Filter:
         :return field:
             Returns a case-sensitive string for a ColumnNode id.
         """
-        table_node = self.db_tree.get_table(table)
+        table_node = self.db_graph.get_table(table)
         if table_node == None:
             print(
               f"Table '{table}' requested to be filtered "
@@ -130,7 +136,7 @@ class Filter:
         if operator not in OPERATOR_OPTIONS:
             raise ValueError
 
-        table_node = self.db_tree.get_table(table) 
+        table_node = self.db_graph.get_table(table) 
         if table_node == None:
             print(f"Table '{table}' requested to be filtered "
               f"is not in '{self.sql_handle.database}'")
@@ -170,55 +176,6 @@ class Filter:
 
         return queries
  
-    def transpose(self, table, values, target_table=None):
-        """Takes a set of primary key values and uses foreign-keys 
-        between tables to get the corresponding set of values in another table.
-
-        :param table:
-            Input a case-sensitive string for a TableNode id.
-        :type table: str
-        :param values:
-            Input a list of primary key values for the corresponding table.
-        :type values: List[str]
-        :return current_values:
-            Returns a list of primary key values for another table.
-        :type current_values: List[str]
-        """
-        if not values:
-            return []
-        if target_table == None:
-            target_table = self.table
-        table_node = self.db_tree.get_table(table)
-        target_table_node = self.db_tree.get_table(target_table)
-        traversal_path = self.db_tree.find_path(table_node, target_table_node)
-
-        if not traversal_path:
-            print(f"Table {table} is not connected to {self.table} "
-                       "by foreign keys")
-            raise ValueError 
-
-        current_key = table_node.primary_key.id
-        current_table = table
-        current_values = values
-
-        for connection_key in traversal_path:
-            if current_key != connection_key[1]:
-                current_values = self.db_tree.build_values(
-                                    current_table, connection_key[1],
-                                    values_column=current_key,
-                                    values=current_values)
-            current_key = connection_key[1]
-            current_table = connection_key[0] 
-       
-        if current_key != target_table_node.primary_key.id:
-            current_values = self.db_tree.build_values(
-                                    current_table, 
-                                    target_table_node.primary_key.id,
-                                    values_column=current_key,
-                                    values=current_values)
-
-        return current_values
-
     def add_history(self, function):
         """Adds a HistoryNode to the history attribute of the Filter object
         depending on the type of function specified.
@@ -302,11 +259,11 @@ class Filter:
             self.values_valid = True
             return
 
-        self.values = self.db_tree.build_values(self.table, self.key, 
+        self.values = self.db_graph.get_values(self.table, self.key, 
                                                 values=self.values)
         self.values_valid = True
 
-    def switch_table(self, raw_table, verbose=False): 
+    def switch_table(self, raw_table, column=None, verbose=False): 
         """Changes the properties of the Filter object and transposes
         all the values to that table.
 
@@ -319,16 +276,31 @@ class Filter:
         """
         self.add_history("switch")
 
+        old_table = self.table
+        old_key = self.key
+
         table = self.translate_table(raw_table)
-        table_node = self.db_tree.get_table(table)
-        
-        self.values = self.transpose(self.table, self.values, 
-                                     target_table=table)
+        table_node = self.db_graph.get_table(table)
+         
         if not self.values:
             self.values = None 
 
         self.table = table
-        self.key = table_node.primary_key.id
+        if column != None:
+            column = self.translate_field(column, table)
+            if not table_node.has_column(column):
+                raise ValueError(f"Column specified is not in {table}.")
+            self.key = column
+        else:
+            self.key = table_node.primary_key.id
+
+        self.values = self.db_graph.transpose_values(
+                                            old_table, self.table,
+                                            self.values, 
+                                            start_column=old_key,
+                                            target_column=self.key)
+
+
         self.update()
         
     def add_filter(self, raw_table, raw_field, operator, value, verbose=False):
@@ -353,7 +325,7 @@ class Filter:
         self.add_history("add")
 
         table = self.translate_table(raw_table)
-        table_node = self.db_tree.get_table(table)
+        table_node = self.db_graph.get_table(table)
 
         field = self.translate_field(raw_field, table)
         self.check_operator(operator, table, field)
@@ -408,7 +380,7 @@ class Filter:
             return
 
         if not self.filters:
-            self.values = self.db_tree.build_values(self.table, self.key,
+            self.values = self.db_graph.get_values(self.table, self.key,
                                                     values=self.values)
             self.updated = True
             return
@@ -422,17 +394,20 @@ class Filter:
                        + " and ".join(queries) + "...")
 
             if table == self.table:
-                query_values = self.db_tree.build_values(
+                query_values = self.db_graph.get_values(
                                                 table, self.key,
                                                 queries=queries,
                                                 values=query_values)
 
             else:
-                key = self.db_tree.get_table(table).primary_key.id
-                untransposed_values = self.db_tree.build_values(
+                key = self.db_graph.get_table(table).primary_key.id
+                untransposed_values = self.db_graph.get_values(
                                                 table, key,
                                                 queries=queries)
-                transposed_values = self.transpose(table, untransposed_values)
+                transposed_values = self.db_graph.transpose_values(
+                                                table, self.table,
+                                                untransposed_values,
+                                                target_column=self.key)
                 if query_values:
                     query_values = list(set(query_values) &\
                                         set(transposed_values))
@@ -444,12 +419,12 @@ class Filter:
 
         self.values = query_values
 
-    def sort(self, sort_field, verbose=False): 
-        """Sorts values list for the Filter object by a field key.
+    def sort(self, sort_column, verbose=False):
+        """Sorts values list for the Filter object by a column key.
 
-        :param sort_field:
+        :param sort_column:
             Input a case-insensitive string for a ColumnNode id.
-        :type sort_field: str
+        :type sort_column: str
         :param verbose:
             Set a boolean to control terminal output.
         :type verbose: Boolean
@@ -459,18 +434,13 @@ class Filter:
 
         self.add_history("sort")
 
-        sort_field = self.translate_field(sort_field, self.table) 
+        sort_column = self.translate_field(sort_column, self.table) 
         if verbose:
-            print(f"Sorting by '{sort_field}'...")
-        query = (f"SELECT {self.key} "
-                 f"FROM {self.table} WHERE {self.key} IN "
-                  "('" + "','".join(self.values) + "') "
-                 f"ORDER BY {sort_field}")
-        query_results = []
-        for result in self.sql_handle.execute_query(query):
-            query_results.append(result[self.key])
-        
-        self.values = query_results
+            print(f"Sorting by '{sort_column}'...")
+
+        self.values = self.db_graph.sort_values(self.table, self.key,
+                                                self.values,
+                                                sort_column=sort_column)
 
     def reset(self, verbose=False):
         """Resets created queries and filters for the Filter object.
@@ -566,7 +536,7 @@ class Filter:
         :type groups: List[List[str]]
         """
         table = self.translate_table(raw_table)
-        table_node = self.db_tree.get_table(table)
+        table_node = self.db_graph.get_table(table)
         field = self.translate_field(raw_field, table)
         field_node = table_node.get_column(field) 
 
@@ -578,8 +548,8 @@ class Filter:
                 distinct_field = field
 
             elif field_node.group == "num_set":
-                distinct_field = self.large_num_set_distinct_query(
-                                                             table, field)
+                distinct_field = self.build_num_set_distinct(table, field)
+
             elif field_node.group == "str_set":
                 distinct_field = f"substring({field}, 1, 1)"
             groups = self.build_groups(table_node, field_node,
@@ -642,42 +612,50 @@ class Filter:
 
         if distinct_field == None:
             distinct_field = field_node.id
-        query = f"SELECT DISTINCT {distinct_field} FROM {table_node.id}"
+        distinct_values = \
+              self.db_graph.get_distinct(table_node.id, distinct_field)
 
         if table_node.id != self.table:
-            group_assist_filter = self.copy()
-            group_assist_filter.switch_table(table_node.id)
-        
+                assist_filter = self.copy()
+                assist_filter.switch_table(table_node.id)
+
         groups = {}
-        for dict in self.sql_handle.execute_query(query):
-            query = f"{distinct_field}='{str(dict[distinct_field])}'"
+        for distinct_value in distinct_values:
+            query = f"{distinct_field}='{str(distinct_value)}'"
 
             if table_node.id == self.table:
-                values = self.db_tree.build_values(table_node.id, 
-                                                   table_node.primary_key.id,
-                                                   queries=[query],
-                                                   values=self.values)
+                values = self.db_graph.get_values(
+                                                table_node.id, 
+                                                self.key,
+                                                queries=[query],
+                                                values=self.values)
 
-            else:
-                values = self.group_transpose(group_assist_filter,
-                                              table_node, query)
-           
+            else: 
+                values = self.db_graph.get_values(
+                                                assist_filter.table,
+                                                assist_filter.key,
+                                                queries=[query],
+                                                values=assist_filter.values)
+
+                values = self.db_graph.transpose_values(
+                                                table_node.id, self.table,
+                                                values, 
+                                                target_column=self.key)
+
+                if self.values:
+                    values = list(set(values) & set(self.values))
+
             if values:
-                groups[str((dict[distinct_field]))] = values
+                groups[str(distinct_value)] = values
                 if verbose:
                     print(f"...Group found for {field_node.id}="
-                          f"'{str(dict[distinct_field])}' "
+                          f"'{distinct_value}' "
                           f"in {table_node.id}...")
-                    #print("......Database hits in group: " + str(len(values)))
-            #else:
-                #if verbose:
-                #    print(f"...No group found for {field_node.id}="
-                #          f"'{str(dict[distinct_field])}' "
-                #          f"in {table_node.id}...")
+                    print("......Database hits in group: " + str(len(values)))
  
         if field_node.null:
             null_query = f"{field_node.id} IS NULL"
-            values = self.db_tree.build_values(table_node.id, field_node.id,
+            values = self.db_graph.get_values(table_node.id, field_node.id,
                                                values_column=distinct_field,
                                                queries=[null_query],
                                                values=self.values)
@@ -686,37 +664,9 @@ class Filter:
 
         return groups
 
-    def group_transpose(self, assist_filter, table_node, query):
-        """Helper function that queries for a set of primary key values
-        within another table and transposes them to an original table.
-
-        :param assist_filter:
-            Input a Filter object with values linked to another MySQL table.
-        :type assist_filter: Filter
-        :param table_node:
-            Input a TableNode that represents a MySQL table.
-        :type table_node: TableNode
-        :param query:
-            Input a single query to generate values for.
-        :type query: str
-        :return values:
-            Returns a list of primary key value strings.
-        :type values: List[str]
-        """
-        values = self.db_tree.build_values(table_node.id,
-                                           table_node.primary_key.id,
-                                           queries=[query],
-                                           values=assist_filter.values)
-
-        values = self.transpose(table_node.id, values)
-        if self.values:
-            values = list(set(values) & set(self.values))
-
-        return values
-        
-    def large_num_set_distinct_query(self, table, field):
+    def build_num_set_distinct(self, table, field):
         """Helper function to generate a query for grouping values 
-        by a numeric field.
+        by a numeric field
 
         :param table:
             Input a case-sensitive string for a MySQL table.
@@ -744,7 +694,7 @@ class Filter:
         :type duplicate_filter: Filter
         """
         duplicate_filter = Filter(self.sql_handle, table=self.table)
-        duplicate_filter.db_tree = self.db_tree
+        duplicate_filter.db_graph = self.db_graph
         duplicate_filter.values = self.copy_values()
         
         duplicate_filter.key = self.key
@@ -1093,12 +1043,12 @@ class CmdFilter(cmd.Cmd):
         USAGE: show {table}"""
         
         if args[0] == "":
-            self.db_filter.db_tree.print_info()
+            self.db_filter.db_graph.print_info()
             return
         
         try:
             table = self.db_filter.translate_table(args[0]) 
-            table_node = self.db_filter.db_tree.get_table(table)
+            table_node = self.db_filter.db_graph.get_table(table)
             table_node.print_columns_info()
 
         except ValueError:

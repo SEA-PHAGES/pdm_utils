@@ -6,18 +6,18 @@ from unittest.mock import patch, Mock, PropertyMock
 import unittest
 
 class TestFilter(unittest.TestCase):
-    @patch("pdm_utils.classes.databasetree.DatabaseTree")
-    def setUp(self, DatabaseTreeMock):
-        DatabaseTreeMock.return_value.\
+    @patch("pdm_utils.classes.schemagraph.SchemaGraph")
+    def setUp(self, SchemaGraphMock):
+        SchemaGraphMock.return_value.\
                 show_tables.return_value = ["phage"]
 
-        self.db_tree_mock = DatabaseTreeMock
+        self.db_graph_mock = SchemaGraphMock
         self.sql_handle = MySQLConnectionHandler()
         self.db_filter = Filter(self.sql_handle)
    
     def test_translate_table_1(self):
         "Verify translate_table() returns id match as expected."
-        print(self.db_filter.db_tree.show_tables())
+        print(self.db_filter.db_graph.show_tables())
         table = self.db_filter.translate_table("phage")
         self.assertEqual(table, "phage")
         table = self.db_filter.translate_table("pHaGe")
@@ -30,7 +30,7 @@ class TestFilter(unittest.TestCase):
 
     def test_translate_field_1(self):
         "Verify translate_field() returns id match as expected."
-        self.db_tree_mock.return_value.\
+        self.db_graph_mock.return_value.\
                 get_table.return_value.\
                 show_columns.return_value = ["phageID"]
 
@@ -41,7 +41,7 @@ class TestFilter(unittest.TestCase):
 
     def test_translate_field_2(self):
         "Verify translate_field() raises ValueError as expected."
-        self.db_tree_mock.return_value.\
+        self.db_graph_mock.return_value.\
                 get_table.return_value.\
                 show_columns.return_value = ["phageID"]
 
@@ -50,11 +50,11 @@ class TestFilter(unittest.TestCase):
 
     def test_check_operator_1(self):
         "Verify as expected."
-        self.db_tree_mock.return_value.\
+        self.db_graph_mock.return_value.\
                 get_table.return_value.\
                 show_columns.return_value = [""]
 
-        self.db_tree_mock.return_value.\
+        self.db_graph_mock.return_value.\
                 get_table.return_value.\
                 show_columns.return_value = ["phageID"]  
     

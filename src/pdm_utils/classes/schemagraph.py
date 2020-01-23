@@ -110,13 +110,13 @@ def setup_grouping_options(sql_handle, db_node):
                 query = f"SELECT COUNT(DISTINCT {column.id}) FROM {table.id}"
                 results_dict = sql_handle.execute_query(query)[0]
 
-                if results_dict[f"COUNT(DISTINCT {column.id})"] < 150:
+                if results_dict[f"COUNT(DISTINCT {column.id})"] < 200:
                     column.group = "limited_set"
 
-class DatabaseTree: 
+class SchemaGraph: 
     """Object which stores a DatabaseNode object as the root of a Tree."""
     def __init__(self, sql_handle):
-        """Intitializes a DatabaseTree object.
+        """Intitializes a SchemaGraph object.
 
         :param sql_handle:
             Input a validated MySQLConnectionHandler object.
@@ -164,10 +164,10 @@ class DatabaseTree:
         return self.db_node.show_tables()
 
     def print_info(self):
-        """Function to display information about a MySQL DatabaseTree.
+        """Function to display information about a MySQL SchemaGraph.
 
         :param db_node:
-            Input a DatabaseNode root of a DatabaseTree.
+            Input a DatabaseNode root of a SchemaGraph.
         :type db_node: DatabaseNode
         """
         for table in self.db_node.children:
@@ -184,7 +184,7 @@ class DatabaseTree:
         """
         return self.db_node
 
-    def find_path(self, curr_table, target_table, current_path=None):
+    def traverse(self, curr_table, target_table, current_path=None):
         """Recursive function that finds a path between two TableNodes.
 
         :param curr_table:
@@ -223,14 +223,14 @@ class DatabaseTree:
                 if table.id not in previous_tables and table != curr_table:
                     path = current_path.copy()
                     path.append([table.id, link.id])
-                    path = self.find_path(table, target_table, path)
+                    path = self.traverse(table, target_table, path)
                     if path != None:
                         if (path[-1])[0] == target_table.id:
                             return path
-
-    def build_values(self, table, column, values_column=None,
+  
+    def get_values(self, table, column, values_column=None,
                      queries=[], values=[]):
-        """Function to query a MySQL database for a set of primary keys.
+        """Function to query a MySQL database for a set of column values.
         
         :param table:
             Input the name of a TableNode as a string.
@@ -255,31 +255,281 @@ class DatabaseTree:
         if table_node == None:
             raise ValueError
 
-        if not table_node.has_column(column):
-            raise ValueError
-        query = f"SELECT {column} FROM {table}"
+        query = f"SELECT {column} FROM {table} "
+
+        if values_column == None:
+            values_column = table_node.primary_key.id
 
         if queries or values:
-            query = query + " WHERE "
-
-        if queries:
-            query = query + " and ".join(queries)
-            if values:
-                query = query + " and "
-
-        if values and values_column == None:
-            query = query +f"{table_node.primary_key.id} IN ('" +\
-                              "','".join(values) + "')"
-        elif values and values_column != None: 
-            query = query +f"{values_column} IN ('" +\
-                            "','".join(values) + "')"
+            query = query + self.build_query_conditionals(values_column,
+                                                          queries=queries,
+                                                          values=values)
 
         values = []
-        for result in self.sql_handle.execute_query(query):
-            values.append(result[column])
- 
+        
+        try:
+            for result in self.sql_handle.execute_query(query):
+                values.append(str(result[column]))
+
+        except TypeError:
+            print(query)
+            raise TypeError("MySQL query failed to execute.") 
+
         return values
 
+    def get_distinct(self, table, column, values_column=None,
+                              queries=[], values=[]):
+        """Function to query a MySQL database for distinct field values.
+        
+        :param table:
+            Input the name of a TableNode as a string.
+        :type table: str
+        :param distinct_field:
+            Input the name of a column or SQL expression.
+        :type distinct_field: str
+        :param values_column:
+            Input the name of a column for the intersecting values.
+        :type values_column: str
+        :param queries:
+            Input a list of MySQL comparison statements.
+        :type queries: List[str]
+        :param values:
+            Input a list of existing values as strings.
+        :type values: List[str]
+        :returns values:
+            Returns a list of column values as strings.
+        :type values: List[str]
+        """
+       
+        table_node = self.get_table(table)
+        if table_node == None:
+            raise ValueError
+
+        query = f"SELECT DISTINCT {column} FROM {table} "
+
+        if values_column == None:
+            values_column = table_node.primary_key.id
+        
+        if queries or values:
+            query = query + self.build_query_conditionals(values_column,
+                                                          queries=queries,
+                                                          values=values)
+       
+        values = []
+
+        try:
+            for result in self.sql_handle.execute_query(query):
+                values.append(str(result[column]))
+        
+        except TypeError:
+            print(query)
+            raise TypeError("MySQL query failed to execute.")
+
+        return values
+
+    def get_count(self, table, count_field="*", values_column=None,
+            queries=[], values=[]):
+        """Function to query a MySQL database for distinct field values.
+        
+        :param table:
+            Input the name of a TableNode as a string.
+        :type table: str
+        :param distinct_field:
+            Input the name of a column or SQL expression.
+        :type distinct_field: str
+        :param values_column:
+            Input the name of a column for the intersecting values.
+        :type values_column: str
+        :param queries:
+            Input a list of MySQL comparison statements.
+        :type queries: List[str]
+        :param values:
+            Input a list of existing values as strings.
+        :type values: List[str]
+        :returns values:
+            Returns a list of column values as strings.
+        :type values: List[str]
+        """
+        table_node = self.get_table(table)
+        if table_node == None:
+            raise ValueError
+
+        query = f"SELECT Count({count_field}) FROM {table} "
+
+        if values_column == None:
+            values_column = table_node.primary_key.id
+
+        if queries or values:
+            query = query + self.build_query_conditionals(values_column,
+                                                          queries=queries,
+                                                          values=values)
+        
+        try: 
+            result = self.sql_handle.execute_query(query)[0]
+
+        except TypeError:
+            print(query)
+            raise TypeError("MySQL query failed to execute.")
+        return result[f"Count({count_field})"]
+
+    def build_query_conditionals(self, values_column, queries=[], values=[]):
+        """Builds the query conditionals from a list of predefined
+        query filters and values.
+        :param values_column:
+            Input the name of a column for the intersecting values.
+        :type values_column: str
+        :param queries:
+            Input a list of MySQL comparison statements.
+        :type queries: List[str]
+        :param values:
+            Input a list of existing values as strings.
+        :type values: List[str]
+        :returns conditional:
+            Returns the query conditionals expression as a string.
+        :type conditional: str
+        """
+        conditional = "WHERE "
+
+        if queries:
+            conditional = conditional + " and ".join(queries)
+            if values:
+                conditional = conditional + " and "
+
+        if values:
+            conditional = conditional + f"{values_column} IN ('" +\
+                              "','".join(values) + "')"
+       
+        return conditional
+
+    def transpose_values(self, start_table, target_table, values, 
+                         start_column=None, target_column=None):
+        """Takes a set of column values and uses foreign-keys 
+        between tables to get the corresponding set of values in another table.
+
+        :param start_table:
+            Input a case-sensitive string for a TableNode id.
+        :type table: str
+        :param values:
+            Input a list of column values for the corresponding table.
+        :type values: List[str]
+        :return current_values:
+            Returns a list of column values for another table.
+        :type current_values: List[str]
+        """
+        if not values:
+            return []
+
+        start_table_node = self.get_table(start_table)
+        if start_column == None:
+            start_column = start_table_node.primary_key.id
+        target_table_node = self.get_table(target_table)
+        if target_column == None:
+            target_column = target_table_node.primary_key.id
+
+        traversal_path = self.traverse(start_table_node, target_table_node)
+
+        if not traversal_path and start_table != target_table:
+            raise ValueError (
+                    f"Table {start_table} is not connected to {self.table} "
+                     "by foreign keys.")
+
+        current_table = start_table
+        current_values = values
+        current_key = start_column
+
+        for connection_key in traversal_path:
+            if current_key != connection_key[1]:
+                current_values = self.get_values(
+                                    current_table, connection_key[1],
+                                    values_column=current_key,
+                                    values=current_values)
+            current_key = connection_key[1]
+            current_table = connection_key[0] 
+       
+        if current_key != target_column:
+            current_values = self.get_values(
+                                    current_table, 
+                                    target_column,
+                                    values_column=current_key,
+                                    values=current_values)
+
+        return list(set(current_values))
+
+    def sort_values(self, table, column, values, 
+                    sort_column=None): 
+        """Sorts values list for the Filter object by a field key.
+
+        :param sort_column:
+            Input a case-insensitive string for a ColumnNode id.
+        :type sort_column: str
+        :param verbose:
+            Set a boolean to control terminal output.
+        :type verbose: Boolean
+        """
+        if not values:
+            return []
+       
+        if sort_column == None:
+            sort_column = column
+
+        table_node = self.get_table(table)
+        if table_node == None:
+            raise ValueError
+
+        query = (f"SELECT {column} "
+                 f"FROM {table} WHERE {column} IN "
+                  "('" + "','".join(values) + "') "
+                 f"ORDER BY {sort_column}")
+        
+        values = []
+
+        try:
+            for result in self.sql_handle.execute_query(query):
+                values.append(str(result[column]))
+
+        except TypeError:
+            print(query)
+            raise TypeError("MySQL query failed to execute.")
+        
+        return values
+
+    def get_data(self, table, value, attributes=["*"]):
+        """Function that collects data for a primary_key in a table
+
+        :param table:
+            Input the table to collect data of a single entry from.
+        :type table: str
+        :param value:
+            Input the primary key value to collect data for the single entry.
+        :type value: str
+        :param attributes:
+            Input a list of data attributes to return data for.
+        :return data:
+            Returns data attributes for the selected value.
+        :type data: Dict{str}
+        """
+
+        table_node = self.get_table(table)
+        if table_node == None:
+            raise ValueError(f"Table {table} not in database.")
+
+        for attribute in attributes:
+            if attribute != "*":
+                if not table_node.has_column(attribute):
+                    raise ValueError(f"Column {attribute} not in {table}.")
+
+        primary_key = table_node.primary_key.id
+        query = ("SELECT " + ",".join(attributes) +\
+               f" FROM {table} WHERE {primary_key}='{value}'")
+
+        try:
+            data = self.sql_handle.execute_query(query)[0]
+
+        except TypeError:
+            print(query)
+            raise TypeError("MySQL query failed to execute.")
+        return data 
+         
 class Node:
     """Object which can store other Node objects and an id."""
 
@@ -816,5 +1066,5 @@ if __name__ == "__main__":
     sql_handle.database = input("Please enter database name: ")
     sql_handle.get_credentials()
     sql_handle.validate_credentials()
-    db_tree = DatabaseTree(sql_handle)
-    db_tree.print_tables()
+    db_tree = SchemaGraph(sql_handle)
+    db_tree.print_info()

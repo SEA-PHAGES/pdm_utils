@@ -1,8 +1,8 @@
-"""Unit unittests for the databasetree module"""
+"""Unit unittests for the schemagraph module"""
 
-from pdm_utils.classes.databasetree import DatabaseTree, Node, \
+from pdm_utils.classes.schemagraph import  Node, \
                                            DatabaseNode, TableNode, ColumnNode
-from pdm_utils.classes import databasetree, mysqlconnectionhandler
+from pdm_utils.classes import schemagraph, mysqlconnectionhandler
 from unittest.mock import Mock, patch
 import unittest
 
@@ -161,7 +161,7 @@ class TestNode(unittest.TestCase):
             self.node.add_parent(parent_node)
             self.node.add_parent(duplicate_parent)
 
-    @patch("pdm_utils.classes.databasetree.Node.has_parent")
+    @patch("pdm_utils.classes.schemagraph.Node.has_parent")
     def test_add_parent_4(self, HasParent):
         "Verify add_parent() calls has_parent() as expected."
         self.node.has_parent("parent")
@@ -196,7 +196,7 @@ class TestNode(unittest.TestCase):
             self.node.add_child(child_node)
             self.node.add_child(duplicate_child)
     
-    @patch("pdm_utils.classes.databasetree.Node.has_child")
+    @patch("pdm_utils.classes.schemagraph.Node.has_child")
     def test_add_child_4(self, HasChild):
         "Verify add_child() calls has_child() as expected."
         self.node.has_child("child")
@@ -223,7 +223,7 @@ class TestNode(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.node.create_parent([])
 
-    @patch("pdm_utils.classes.databasetree.Node.add_parent")
+    @patch("pdm_utils.classes.schemagraph.Node.add_parent")
     def test_create_parent_4(self, AddParent):
         "Verify create_parent() calls add_parent() as expected."
 
@@ -251,7 +251,7 @@ class TestNode(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.node.create_child([])
     
-    @patch("pdm_utils.classes.databasetree.Node.add_child")
+    @patch("pdm_utils.classes.schemagraph.Node.add_child")
     def test_create_child_4(self, AddChild):
         "Verify create_child() calls add_child() as expected."
 
@@ -300,7 +300,7 @@ class TestDatabaseNode(unittest.TestCase):
     def setUp(self):
         self.db_node = DatabaseNode("test")
 
-    @patch("pdm_utils.classes.databasetree.DatabaseNode.add_child")
+    @patch("pdm_utils.classes.schemagraph.DatabaseNode.add_child")
     def add_table_1(self, AddChild):
         "Verify add_table() calls add_child() as expected."
         table_node = TableNode("table")
@@ -323,28 +323,28 @@ class TestDatabaseNode(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.db_node.create_table([])
 
-    @patch("pdm_utils.classes.databasetree.TableNode.add_table")
+    @patch("pdm_utils.classes.schemagraph.TableNode.add_table")
     def create_table_3(self, AddTable):
         "Verify create_table() calls add_table() as expected."
         table_node = self.table_node.create_table("table")
 
         AddTable.assert_called_with(table_node)
 
-    @patch("pdm_utils.classes.databasetree.DatabaseNode.show_children")
+    @patch("pdm_utils.classes.schemagraph.DatabaseNode.show_children")
     def show_tables_1(self, ShowChildren):
         "Verify show_tables() calls show_children() as expected."
         self.db_node.show_tables()
 
         ShowChildren.assert_called()
 
-    @patch("pdm_utils.classes.databasetree.DatabaseNode.has_child")       
+    @patch("pdm_utils.classes.schemagraph.DatabaseNode.has_child")       
     def has_table_1(self, HasChild):
         "Verify has_table() calls has_child() as expected."
         self.db_node.has_table("table")
 
         HasChild.assert_called_with("table")
 
-    @patch("pdm_utils.classes.databasetree.DatabaseNode.get_child")
+    @patch("pdm_utils.classes.schemagraph.DatabaseNode.get_child")
     def get_table_1(self, GetChild):
         "Verify get_table() calls get_child() as expected."
         self.db_node.get_table("table")
@@ -360,7 +360,7 @@ class TestTableNode(unittest.TestCase):
         "Verify TableNode attributes are created as expected."
         self.assertEqual(None, self.table_node.primary_key)
 
-    @patch("pdm_utils.classes.databasetree.TableNode.add_child")
+    @patch("pdm_utils.classes.schemagraph.TableNode.add_child")
     def test_add_column_1(self, AddChild):
         "Verify add_column() calls add_child() as expected."
         column_node = ColumnNode("column")
@@ -384,21 +384,21 @@ class TestTableNode(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.table_node.create_column([])
 
-    @patch("pdm_utils.classes.databasetree.TableNode.add_column")
+    @patch("pdm_utils.classes.schemagraph.TableNode.add_column")
     def test_create_column_3(self, AddColumn):
         "Verify create_column() calls add_column() as expected."
         column_node = self.table_node.create_column("column") 
 
         AddColumn.assert_called_with(column_node)
 
-    @patch("pdm_utils.classes.databasetree.TableNode.show_children")     
+    @patch("pdm_utils.classes.schemagraph.TableNode.show_children")     
     def test_show_columns_1(self, AddChildren):
         "Verify show_columns() calls show_children() as expected."
         self.table_node.show_columns()
 
         AddChildren.assert_called()
 
-    @patch("pdm_utils.classes.databasetree.ColumnNode.show_info")
+    @patch("pdm_utils.classes.schemagraph.ColumnNode.show_info")
     def test_show_columns_info_1(self, ShowColumnsInfo):
         "Verify show_columns_info() calls ColumnNode.show_info() as expected."
         column_node = ColumnNode("column")
@@ -418,14 +418,14 @@ class TestTableNode(unittest.TestCase):
         for info_list in info:
             self.assertTrue(isinstance(info_list, list))
 
-    @patch("pdm_utils.classes.databasetree.TableNode.has_child")
+    @patch("pdm_utils.classes.schemagraph.TableNode.has_child")
     def test_has_column_1(self, HasChild):
         "Verify has_column() calls has_child() as expected."
         self.table_node.has_column("column")
 
         HasChild.assert_called_with("column")
 
-    @patch("pdm_utils.classes.databasetree.TableNode.get_child")
+    @patch("pdm_utils.classes.schemagraph.TableNode.get_child")
     def test_get_column_1(self, GetChild):
         "Verify get_column() calls get_child() as expected."
         self.table_node.get_child("column")
@@ -505,7 +505,7 @@ class TestColumnNode(unittest.TestCase):
         self.assertEqual(self.column_node.null, None)
         self.assertEqual(self.column_node.key, None)
 
-    @patch("pdm_utils.classes.databasetree.ColumnNode.add_parent")
+    @patch("pdm_utils.classes.schemagraph.ColumnNode.add_parent")
     def test_add_table_1(self, AddParent):
         "Verify add_table() calls add_parent() as expected."
         table_node = TableNode("table")
@@ -529,7 +529,7 @@ class TestColumnNode(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.column_node.create_table([])
 
-    @patch("pdm_utils.classes.databasetree.ColumnNode.add_table")
+    @patch("pdm_utils.classes.schemagraph.ColumnNode.add_table")
     def test_create_table_3(self, AddTable):
         "Verify create_table() calls add_table() as expected."
         table_node = self.column_node.create_table("table")
