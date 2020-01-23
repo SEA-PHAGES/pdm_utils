@@ -269,10 +269,6 @@ def execute_export(sql_handle, output_path, output_name,
     else:
         export_name = output_name
 
-        export_path.mkdir()
-    else:
-        export_path.mkdir()
-
     if db_export:
         if verbose:
             print("Writing SQL database file...")
