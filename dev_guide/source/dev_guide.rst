@@ -21,7 +21,7 @@ Unit and integration tests designed for ``pdm_utils``.
 misc/
 *****
 
-Miscellaneous documentation or reference material for maintaining SEA-PHAGES phage genomics databases or the GitHub repository that should not be included in Sphinx-generated documentation.
+Miscellaneous documentation or reference material for maintaining SEA-PHAGES phage genomics databases on the GitHub repository that should not be included in Sphinx-generated documentation.
 
 legacy/
 *******
@@ -195,9 +195,10 @@ Build the PyPI package
 
 Follow the steps below to push a new version of the ``pdm_utils`` package to PyPI:
 
-    1. Increment the version number in three separate locations:
-        - setup.py.
-        - docs/conf.py
+    1. Increment the version number in four separate locations:
+        - setup.py (used by PyPI for tracking package versions)
+        - src/pdm_utils/__init__.py (can be accessed after installation)
+        - docs/conf.py (for Sphinx documentation)
             - version number
             - release number
 
