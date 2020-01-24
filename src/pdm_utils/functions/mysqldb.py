@@ -693,21 +693,22 @@ def create_db(engine, database):
         return 1
 
 
+# TODO refactoring for engine.
 # TODO unittest.
-def copy_db(sql_handle, new_database):
+def copy_db(engine, new_database):
     """Copies a database.
 
-    The sql_handle contains pointer to the name of the database
+    The engine contains pointer to the name of the database
     that will be copied into the new_database parameter.
     """
     #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
     command_string1 = ("mysqldump "
-                      f"-u {sql_handle.username} "
-                      f"-p{sql_handle.password} "
-                      f"{sql_handle.database}")
+                      f"-u {engine.url.username} "
+                      f"-p{engine.url.password} "
+                      f"{engine.url.database}")
     command_string2 = ("mysql -u "
-                      f"{sql_handle.username} "
-                      f"-p{sql_handle.password} "
+                      f"{engine.url.username} "
+                      f"-p{engine.url.password} "
                       f"{new_database}")
     command_list1 = command_string1.split(" ")
     command_list2 = command_string2.split(" ")
@@ -725,7 +726,7 @@ def copy_db(sql_handle, new_database):
         print("Copy complete.")
         result = 0
     except:
-        print(f"Unable to copy {sql_handle.database} to {new_database} in MySQL.")
+        print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
         result = 1
     return result
 
@@ -738,7 +739,6 @@ def connect_to_db(database):
         sys.exit(1)
     else:
         return sql_handle
-
 
 
 
@@ -758,8 +758,6 @@ def install_db(engine, schema_filepath):
 
 
 
-# TODO this is a simple, temporary function to quickly replace MySQLConnectionHandler usage.
-# TODO unittest.
 def setup_sql_handle(database=None):
     """Connect to a MySQL database."""
     sql_handle = mch.MySQLConnectionHandler()
@@ -791,9 +789,12 @@ def setup_sql_handle2(username=None, password=None, database=None):
     return sql_handle
 
 
+# TODO this is a simple, temporary function to quickly replace MySQLConnectionHandler usage.
+# TODO unittest.
 def get_engine(username=None, password=None, database=None, echo=True, attempts=5):
     attempt = 0
     valid = False
+    msg = "Setting up MySQL connection. "
     while (attempt < attempts and valid == False):
         if username is None:
             username = getpass.getpass(prompt="MySQL username: ")
@@ -810,15 +811,16 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
             conn = engine.connect()
             conn.close()
             valid = True
+            msg = msg + "Valid MySQL login credentials."
         except:
-            print("Invalid MySQL login credentials.")
+            msg = msg + "Invalid MySQL login credentials."
             valid = False
         attempt += 1
 
     if valid != True:
-        return None
-    else:
-        return engine
+        engine = None
+
+    return (engine, msg)
 
 
 def construct_engine_string(db_type="mysql", driver="pymysql", username="", password="", database=""):

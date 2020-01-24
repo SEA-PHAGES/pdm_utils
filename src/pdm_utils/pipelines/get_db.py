@@ -77,11 +77,11 @@ def main(unparsed_args_list):
         else:
             result1 = basic.verify_path2(db_filepath, kind="file", expect=True)
         if result1[0] == True:
-            engine1 = mysqldb.get_engine(database="", echo=False)
+            engine1, msg = mysqldb.get_engine(database="", echo=False)
             if engine1 is not None:
                 result2 = mysqldb.drop_create_db(engine1, args.database)
                 if result2 == 0:
-                    engine2 = mysqldb.get_engine(
+                    engine2, msg = mysqldb.get_engine(
                                         database=args.database,
                                         username=engine1.url.username,
                                         password=engine1.url.password,
