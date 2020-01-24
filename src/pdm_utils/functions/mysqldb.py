@@ -1,14 +1,16 @@
 """Functions to interact with MySQL."""
 
-import subprocess
-import sys
-from pdm_utils.classes import genome
-from pdm_utils.classes import genomepair
-from pdm_utils.classes import cds
-from pdm_utils.functions import basic
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
+import getpass
+import subprocess
+import sys
+import sqlalchemy
+from pdm_utils.classes import genome
+from pdm_utils.classes import genomepair
 from pdm_utils.classes import mysqlconnectionhandler as mch
+from pdm_utils.classes import cds
+from pdm_utils.functions import basic
 
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
@@ -582,14 +584,13 @@ def get_version_table_data(sql_handle):
 
 
 # TODO unittest.
-def get_mysql_dbs(sql_handle):
+def get_mysql_dbs(engine):
     """Retrieve database names from MySQL.
 
     Returns a set of database names."""
     query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    databases = basic.get_values_from_dict_list(result_list)
+    result_list = engine.execute(query).fetchall()
+    databases = basic.get_values_from_tuple_list(result_list)
     return databases
 
 
@@ -655,37 +656,41 @@ def get_schema_version(sql_handle):
     return schema_version
 
 
+
 # TODO unittest.
-def drop_create_db(sql_handle, database):
+def drop_create_db(engine, database):
     """Creates a new, empty database."""
     # First, test if the database already exists within mysql.
     # If there is, delete it so that a new database is installed.
-    databases = get_mysql_dbs(sql_handle)
+    databases = get_mysql_dbs(engine)
     if database in databases:
-        result = drop_db(sql_handle, database)
+        result = drop_db(engine, database)
     else:
         result = 0
     if result == 0:
-        result = create_db(sql_handle, database)
+        result = create_db(engine, database)
     return result
 
 
 # TODO unittest.
-def drop_db(sql_handle, database):
+def drop_db(engine, database):
     """Drops a database."""
-    statement = [f"DROP DATABASE {database}"]
-    result = sql_handle.execute_transaction(statement)
-    sql_handle.close_connection()
-    return result
-
+    statement = f"DROP DATABASE {database}"
+    try:
+        engine.execute(statement)
+        return 0
+    except:
+        return 1
 
 # TODO unittest.
-def create_db(sql_handle, database):
+def create_db(engine, database):
     """Create a new, empty database."""
-    statement = [f"CREATE DATABASE {database}"]
-    result = sql_handle.execute_transaction(statement)
-    sql_handle.close_connection()
-    return result
+    statement = f"CREATE DATABASE {database}"
+    try:
+        engine.execute(statement)
+        return 0
+    except:
+        return 1
 
 
 # TODO unittest.
@@ -738,10 +743,10 @@ def connect_to_db(database):
 
 
 # TODO unittest.
-def install_db(sql_handle, schema_filepath):
+def install_db(engine, schema_filepath):
     """Install a MySQL file into the indicated database."""
-    command_string = (f"mysql -u {sql_handle.username} "
-                      f"-p{sql_handle.password} {sql_handle.database}")
+    command_string = (f"mysql -u {engine.url.username} "
+                      f"-p{engine.url.password} {engine.url.database}")
     command_list = command_string.split(" ")
     with schema_filepath.open("r") as fh:
         try:
@@ -751,6 +756,74 @@ def install_db(sql_handle, schema_filepath):
         except:
             print(f"Unable to install {schema_filepath.name} in MySQL.")
 
+
+
+# TODO this is a simple, temporary function to quickly replace MySQLConnectionHandler usage.
+# TODO unittest.
+def setup_sql_handle(database=None):
+    """Connect to a MySQL database."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.open_connection()
+    msg = "Setting up MySQL connection. "
+    status = True
+    if sql_handle.credential_status == False:
+        msg = msg + "Invalid username or password. "
+        status = False
+    if sql_handle._database_status == False:
+        msg = msg + f"Invalid database: {database}."
+        status = False
+    if status == True:
+        msg = msg + f"Connected to the database: {database}."
+    else:
+        sql_handle = None
+    return (sql_handle, msg)
+
+
+# TODO can probably be merged with setup_sql_handle()
+# TODO unittest.
+def setup_sql_handle2(username=None, password=None, database=None):
+    """Connect to a MySQL database without requiring user input."""
+    sql_handle = mch.MySQLConnectionHandler()
+    sql_handle.database = database
+    sql_handle.username = username
+    sql_handle.password = password
+    return sql_handle
+
+
+def get_engine(username=None, password=None, database=None, echo=True, attempts=5):
+    attempt = 0
+    valid = False
+    while (attempt < attempts and valid == False):
+        if username is None:
+            username = getpass.getpass(prompt="MySQL username: ")
+        if password is None:
+            password = getpass.getpass(prompt="MySQL password: ")
+        if database is None:
+            database = input("Database: ")
+        engine_string = construct_engine_string(
+                            username=username,
+                            password=password,
+                            database=database)
+        engine = sqlalchemy.create_engine(engine_string, echo=echo)
+        try:
+            conn = engine.connect()
+            conn.close()
+            valid = True
+        except:
+            print("Invalid MySQL login credentials.")
+            valid = False
+        attempt += 1
+
+    if valid != True:
+        return None
+    else:
+        return engine
+
+
+def construct_engine_string(db_type="mysql", driver="pymysql", username="", password="", database=""):
+    engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
+    return engine_string
 
 
 # TODO this may no longer be needed.

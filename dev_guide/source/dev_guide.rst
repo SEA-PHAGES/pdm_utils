@@ -101,7 +101,7 @@ The Sphinx documentation provides a list of python and binary dependencies to us
 
 All python code in the repo can be executed using the following Conda environment 'pdm_utils-dev'. First install Anaconda locally. Then execute the following commands::
 
-    > conda create --name pdm_utils-dev python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine tabulate curl
+    > conda create --name pdm_utils-dev python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine tabulate curl sqlalchemy
     > source activate pdm_utils-dev
 
 
