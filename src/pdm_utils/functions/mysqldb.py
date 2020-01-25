@@ -568,19 +568,24 @@ def change_version(sql_handle, amount=1):
 
 # TODO originally coded in export pipeline, so ensure that function is removed.
 # TODO unittest.
-def get_version_table_data(sql_handle):
+def get_version_table_data(engine):
     """Retrieves data from the version table.
 
-    :param sql_database_handle:
-        Input a mysqlconnectionhandler object.
-    :type sql_database_handle: mysqlconnectionhandler
+    :param engine:
+        Input a sqlalchemy engine object.
+    :type engine: Engine
     :returns:
         database_versions_list(dictionary) is a dictionary
         of size 2 that contains values tied to keys
         "Version" and "SchemaVersion"
     """
-    result_list = retrieve_data(sql_handle, query="SELECT * FROM version")
-    return result_list[0]
+    query = "SELECT * FROM version"
+    result_list = engine.execute(query).fetchall()
+    result_dict_list = []
+    for row in result_list:
+        row_as_dict = dict(row)
+        result_dict_list.append(row_as_dict)
+    return result_dict_list[0]
 
 
 # TODO unittest.
@@ -589,61 +594,64 @@ def get_mysql_dbs(engine):
 
     Returns a set of database names."""
     query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
-    result_list = engine.execute(query).fetchall()
-    databases = basic.get_values_from_tuple_list(result_list)
+    databases = get_set_of_query_data(engine, query)
     return databases
 
 
 # TODO unittest.
-def get_db_tables(sql_handle, database):
+def get_db_tables(engine, database):
     """Retrieve tables names from the database.
 
     Returns a set of table names."""
     query = ("SELECT table_name FROM information_schema.tables "
              f"WHERE table_schema = '{database}'")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    db_tables = basic.get_values_from_dict_list(result_list)
+    db_tables = get_set_of_query_data(engine, query)
     return db_tables
 
 
 # TODO unittest.
-def get_table_columns(sql_handle, database, table_name):
-    """Retrieve columns names from the phage table.
+def get_table_columns(engine, database, table_name):
+    """Retrieve columns names from a table.
 
     Returns a set of column names."""
     query = ("SELECT column_name FROM information_schema.columns WHERE "
               f"table_schema = '{database}' AND "
               f"table_name = '{table_name}'")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    columns = basic.get_values_from_dict_list(result_list)
+    columns = get_set_of_query_data(engine, query)
     return columns
 
 
+
+def get_set_of_query_data(engine, query):
+    """Retrieve set of data from MySQL query."""
+    result_list = engine.execute(query).fetchall()
+    set_of_data = basic.get_values_from_tuple_list(result_list)
+    return set_of_data
+
+
 # TODO unittest.
-def get_schema_version(sql_handle):
+def get_schema_version(engine):
     """Identify the schema version of the database_versions_list."""
     # If version table does not exist, schema_version = 0.
     # If no schema_version or SchemaVersion field,
     # it is either schema_version = 1 or 2.
     # If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
     # columns are in phage table, schema_version = 2.
-    db_tables = get_db_tables(sql_handle, sql_handle.database)
+    db_tables = get_db_tables(engine, engine.url.database)
     if "version" in db_tables:
         version_table = True
     else:
         version_table = False
 
     if version_table == True:
-        version_columns = get_version_table_data(sql_handle)
+        version_columns = get_version_table_data(engine)
         if "schema_version" in version_columns.keys():
             schema_version = version_columns["schema_version"]
         elif "SchemaVersion" in version_columns.keys():
             schema_version = version_columns["SchemaVersion"]
         else:
             phage_columns = get_table_columns(
-                                sql_handle, sql_handle.database, "phage")
+                                engine, engine.url.database, "phage")
             expected = {"AnnotationAuthor", "Program",
                         "AnnotationQC", "RetrieveRecord"}
             diff = expected - phage_columns
@@ -654,7 +662,6 @@ def get_schema_version(sql_handle):
     else:
         schema_version = 0
     return schema_version
-
 
 
 # TODO unittest.
@@ -693,7 +700,6 @@ def create_db(engine, database):
         return 1
 
 
-# TODO refactoring for engine.
 # TODO unittest.
 def copy_db(engine, new_database):
     """Copies a database.
@@ -733,13 +739,13 @@ def copy_db(engine, new_database):
 
 def connect_to_db(database):
     """Connect to a MySQL database."""
-    sql_handle, msg = setup_sql_handle(database)
-    if sql_handle is None:
+    # sql_handle, msg = setup_sql_handle(database)
+    engine, msg = get_engine(database=database, echo=False)
+    if engine is None:
         print(msg)
         sys.exit(1)
     else:
-        return sql_handle
-
+        return engine
 
 
 # TODO unittest.
@@ -826,6 +832,34 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
 def construct_engine_string(db_type="mysql", driver="pymysql", username="", password="", database=""):
     engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
     return engine_string
+
+
+
+def execute_transaction(engine, list_of_statements):
+    connection = engine.connect()
+    trans = connection.begin()
+    try:
+        for statement in list_of_statements:
+            connection.execute(statement)
+        trans.commit()
+        result = 0
+    except:
+        trans.rollback()
+        result = 1
+        raise
+    return result
+
+    # Code block below does same thing, but doesn't return a value based if there is an error.
+    # with engine.begin() as connection:
+    #     for statement in list_of_statements:
+    #         r1 = connection.execute(statement)
+
+
+
+
+
+
+
 
 
 # TODO this may no longer be needed.

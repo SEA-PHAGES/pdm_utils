@@ -88,7 +88,7 @@ def main(unparsed_args_list):
                                         echo=False)
                     if engine2 is not None:
                         if args.new == True:
-                            engine2.execute(db_schema_0.STATEMENTS)
+                            mysqldb.execute_transaction(engine2, db_schema_0.STATEMENTS)
                             convert_args = ["pdm_utils.run",
                                             "convert",
                                             args.database,
