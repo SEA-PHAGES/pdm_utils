@@ -132,7 +132,8 @@ def main(unparsed_args_list):
 
     # Create data sets
     print("Preparing genome data sets from the MySQL database...")
-    sql_handle = mysqldb.connect_to_db(args.database)
+    # sql_handle = mysqldb.connect_to_db(args.database)
+    engine = mysqldb.connect_to_db(args.database)
 
     # Get existing data from MySQL to determine what needs to be updated.
     query = ("SELECT PhageID, Name, HostGenus, Status, Cluster, "
