@@ -184,15 +184,15 @@ def parse_gene_table_data(data_dict, trans_table=11):
     return cds_ftr
 
 
-def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
+def retrieve_data(engine, column=None, query=None, phage_id_list=None):
     """Retrieve genome data from a MySQL database for a single genome.
 
     The query is modified to include one or more PhageIDs
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param query:
         A MySQL query that selects valid, specific columns
         from the a valid table without conditioning on a PhageID
@@ -217,18 +217,21 @@ def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
                 + "','".join(phage_id_list) \
                 + "')"
     query = query + ";"
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    return result_list
+    result_list = engine.execute(query).fetchall()
+    result_dict_list = []
+    for row in result_list:
+        row_as_dict = dict(row)
+        result_dict_list.append(row_as_dict)
+    return result_dict_list
 
 
-def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
+def parse_cds_data(engine, column=None, phage_id_list=None, query=None):
     """Returns Cds objects containing data parsed from a
     MySQL database.
 
-    :param sql_handle:
+    :param engine:
         This parameter is passed directly to the 'retrieve_data' function.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param query:
         This parameter is passed directly to the 'retrieve_data' function.
     :type query: str
@@ -243,7 +246,7 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
     """
     cds_list = []
     result_list = retrieve_data(
-                    sql_handle, column=column, query=query,
+                    engine, column=column, query=query,
                     phage_id_list=phage_id_list)
     for data_dict in result_list:
         cds_ftr = parse_gene_table_data(data_dict)
@@ -251,14 +254,14 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
     return cds_list
 
 
-def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
+def parse_genome_data(engine, phage_id_list=None, phage_query=None,
                       gene_query=None, trna_query=None, gnm_type=""):
     """Returns a list of Genome objects containing data parsed from a MySQL
     database.
 
-    :param sql_handle:
+    :param engine:
         This parameter is passed directly to the 'retrieve_data' function.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param phage_query:
         This parameter is passed directly to the 'retrieve_data' function
         to retrieve data from the phage table.
@@ -288,13 +291,13 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
     :rtype: list
     """
     genome_list = []
-    result_list1 = retrieve_data(sql_handle, column="PhageID",
-                                             phage_id_list=phage_id_list,
-                                             query=phage_query)
+    result_list1 = retrieve_data(engine, column="PhageID",
+                                 phage_id_list=phage_id_list,
+                                 query=phage_query)
     for data_dict in result_list1:
         gnm = parse_phage_table_data(data_dict, gnm_type=gnm_type)
         if gene_query is not None:
-            cds_list = parse_cds_data(sql_handle, column="PhageID",
+            cds_list = parse_cds_data(engine, column="PhageID",
                                       phage_id_list=[gnm.id],
                                       query=gene_query)
             x = 0
@@ -514,26 +517,6 @@ def get_phage_table_count(sql_handle):
     sql_handle.close_connection()
     count = result_list[0]["COUNT(*)"]
     return count
-
-
-def setup_sql_handle(database=None):
-    """Connect to a MySQL database."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.open_connection()
-    msg = "Setting up MySQL connection. "
-    status = True
-    if sql_handle.credential_status == False:
-        msg = msg + "Invalid username or password. "
-        status = False
-    if sql_handle._database_status == False:
-        msg = msg + f"Invalid database: {database}."
-        status = False
-    if status == True:
-        msg = msg + f"Connected to the database: {database}."
-    else:
-        sql_handle = None
-    return (sql_handle, msg)
 
 
 def change_version(engine, amount=1):
