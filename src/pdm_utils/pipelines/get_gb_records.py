@@ -8,7 +8,6 @@ from Bio import SeqIO
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
-from pdm_utils.classes import mysqlconnectionhandler as mch
 
 
 # TODO unittest.
@@ -35,18 +34,6 @@ def parse_args(unparsed_args_list):
 
 
 
-# TODO not tested, but nearly identical function in import_genome.py tested.
-def connect_to_db(database):
-    """Connect to a MySQL database."""
-    sql_handle, msg = mysqldb.setup_sql_handle(database)
-    if sql_handle is None:
-        print(msg)
-        sys.exit(1)
-    else:
-        return sql_handle
-
-
-
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main get_gb_records pipeline."""
@@ -63,18 +50,12 @@ def main(unparsed_args_list):
     if working_path is None:
         print(f"Invalid working directory '{working_dir}'")
         sys.exit(1)
-
-
-
-    ## TODO add creds
     ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
-
-
 
     # Create data sets
     print("Retrieving accessions from the database...")
-    sql_handle = connect_to_db(args.database)
-    accessions = mysqldb.create_accession_set(sql_handle)
+    engine = mysqldb.connect_to_db(args.database)
+    accessions = mysqldb.create_accession_set(engine)
     if "" in accessions:
         accessions.remove("")
     if None in accessions:

@@ -364,25 +364,18 @@ def create_seq_set(sql_handle):
     return result_set
 
 
-def create_accession_set(sql_handle):
+def create_accession_set(engine):
     """Create set of accessions currently in a MySQL database.
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :returns: A set of accessions.
     :rtype: set
     """
     query = "SELECT Accession FROM phage"
-    # Returns a list of items, where each item is a dictionary of
-    # SQL data for each row in the table.
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    # Convert to a set of accessions.
-    result_set = set([])
-    for dict in result_list:
-        result_set.add(dict["Accession"])
+    result_set = get_set_of_query_data(engine, query)
     return result_set
 
 
@@ -541,17 +534,6 @@ def setup_sql_handle(database=None):
     else:
         sql_handle = None
     return (sql_handle, msg)
-
-
-# TODO can probably be merged with setup_sql_handle()
-# TODO unittest.
-def setup_sql_handle2(username=None, password=None, database=None):
-    """Connect to a MySQL database without requiring user input."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.username = username
-    sql_handle.password = password
-    return sql_handle
 
 
 
@@ -739,7 +721,6 @@ def copy_db(engine, new_database):
 
 def connect_to_db(database):
     """Connect to a MySQL database."""
-    # sql_handle, msg = setup_sql_handle(database)
     engine, msg = get_engine(database=database, echo=False)
     if engine is None:
         print(msg)
@@ -761,38 +742,6 @@ def install_db(engine, schema_filepath):
             print("Installation complete.")
         except:
             print(f"Unable to install {schema_filepath.name} in MySQL.")
-
-
-
-def setup_sql_handle(database=None):
-    """Connect to a MySQL database."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.open_connection()
-    msg = "Setting up MySQL connection. "
-    status = True
-    if sql_handle.credential_status == False:
-        msg = msg + "Invalid username or password. "
-        status = False
-    if sql_handle._database_status == False:
-        msg = msg + f"Invalid database: {database}."
-        status = False
-    if status == True:
-        msg = msg + f"Connected to the database: {database}."
-    else:
-        sql_handle = None
-    return (sql_handle, msg)
-
-
-# TODO can probably be merged with setup_sql_handle()
-# TODO unittest.
-def setup_sql_handle2(username=None, password=None, database=None):
-    """Connect to a MySQL database without requiring user input."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.username = username
-    sql_handle.password = password
-    return sql_handle
 
 
 # TODO this is a simple, temporary function to quickly replace MySQLConnectionHandler usage.
