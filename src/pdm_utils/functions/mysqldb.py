@@ -535,17 +535,26 @@ def setup_sql_handle(database=None):
         sql_handle = None
     return (sql_handle, msg)
 
-
-
-def change_version(sql_handle, amount=1):
+#HERE
+def change_version(engine, amount=1):
     """Change the database version number."""
-    query = ("SELECT Version from version")
-    result = sql_handle.execute_query(query)
-    current = result[0]["Version"]
+    result = get_version_table_data(engine)
+    current = result["Version"]
     new = current + amount
     print(f"Updating version from {current} to {new}.")
     statement = (f"UPDATE version SET Version = {new}")
-    sql_handle.execute_transaction([statement])
+    engine.execute(statement)
+
+
+# def change_version(sql_handle, amount=1):
+#     """Change the database version number."""
+#     query = ("SELECT Version from version")
+#     result = sql_handle.execute_query(query)
+#     current = result[0]["Version"]
+#     new = current + amount
+#     print(f"Updating version from {current} to {new}.")
+#     statement = (f"UPDATE version SET Version = {new}")
+#     sql_handle.execute_transaction([statement])
 
 
 # TODO originally coded in export pipeline, so ensure that function is removed.

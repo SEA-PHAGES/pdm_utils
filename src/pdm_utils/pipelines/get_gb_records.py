@@ -56,6 +56,7 @@ def main(unparsed_args_list):
     print("Retrieving accessions from the database...")
     engine = mysqldb.connect_to_db(args.database)
     accessions = mysqldb.create_accession_set(engine)
+    engine.dispose()
     if "" in accessions:
         accessions.remove("")
     if None in accessions:

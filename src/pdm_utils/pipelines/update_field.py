@@ -1,34 +1,18 @@
 """Pipeline to update specific fields in a MySQL database."""
 import argparse
-import sys
 import csv
 import pathlib
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.classes.randomfieldupdatehandler import RandomFieldUpdateHandler
 from pdm_utils.functions import basic, mysqldb
-
-
-# TODO not tested, but nearly identical function in import_genome.py tested.
-def connect_to_db(database):
-    """Connect to a MySQL database."""
-    sql_handle, msg = mysqldb.setup_sql_handle(database)
-    if sql_handle is None:
-        print(msg)
-        sys.exit(1)
-    else:
-        return sql_handle
 
 
 # TODO unittest.
 def main(unparsed_args):
     """Runs the complete update pipeline."""
     args = parse_args(unparsed_args)
-
-    # Establish the database connection using the MySQLConnectionHandler object
-    mysql_handler = connect_to_db(args.database)
-
+    engine = mysqldb.connect_to_db(args.database)
     if args.version == True:
-        mysqldb.change_version(mysql_handler)
+        mysqldb.change_version(engine)
         print("Database version updated.")
 
     if args.ticket_table is not None:
@@ -48,7 +32,9 @@ def main(unparsed_args):
         failed = 0
 
         for dict in list_of_update_tickets:
-            handler = RandomFieldUpdateHandler(mysql_handler.connection)
+            conn = engine.connect()
+            # Pass the raw db_api connection
+            handler = RandomFieldUpdateHandler(conn.connection)
             handler.table = dict["table"]        # Which table will be updated?
             handler.field = dict["field"]       # Which field will be updated?
             handler.value = dict["value"]       # What value will be put in that field?
@@ -63,6 +49,7 @@ def main(unparsed_args):
                 processed += 1
                 failed += 1
 
+        engine.dispose()
         print("\nDone iterating through tickets.")
         if succeeded > 0:
             print(f"{succeeded} / {processed} tickets successfully handled.")
