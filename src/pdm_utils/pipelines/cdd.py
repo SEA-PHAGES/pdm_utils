@@ -3,7 +3,6 @@ import os
 import platform
 import shlex
 from subprocess import Popen, PIPE
-import multiprocessing as mp
 
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbirpsblastCommandline
