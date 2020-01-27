@@ -7,14 +7,12 @@ from pdm_utils.functions import mysqldb
 from pdm_utils.classes import genome
 from pdm_utils.classes import cds
 from pdm_utils.constants import constants
-from pdm_utils.classes import mysqlconnectionhandler
-import subprocess, os
+import subprocess
 import pymysql
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from pathlib import Path
-from unittest.mock import patch, Mock
-import shutil
+from unittest.mock import patch
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
@@ -37,18 +35,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         expected schema.
         Each unittest will populate the empty database as needed."""
 
-
         engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
-
-
-
-
-        self.sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        self.sql_handle.username = user
-        self.sql_handle.password = pwd
-        self.sql_handle.database = db
-
 
         connection = pymysql.connect(host = "localhost",
                                         user = user,
@@ -82,6 +70,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
     def tearDown(self):
+        self.engine.dispose()
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
@@ -103,23 +92,20 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id in input_phage_ids:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id}', '', '', '', '', 1, 1, 'final', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id}', '', '', '', '', 1, 1, 'final', "
                 f"'{constants.EMPTY_DATE}', 1, 1);"
+                )
 
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result = mysqldb.create_phage_id_set(sql_handle)
+        result = mysqldb.create_phage_id_set(self.engine)
         self.assertEqual(len(result), 3)
 
 
@@ -177,11 +163,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result = mysqldb.create_seq_set(sql_handle)
+        result = mysqldb.create_seq_set(self.engine)
         with self.subTest():
             self.assertEqual(len(result), 3)
         with self.subTest():
@@ -1037,7 +1019,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
     def test_get_phage_table_count_1(self):
         """Verify the correct number of phages is returned when
         the database is empty."""
-        count = mysqldb.get_phage_table_count(self.sql_handle)
+        count = mysqldb.get_phage_table_count(self.engine)
         self.assertEqual(count, 0)
 
 
@@ -1063,8 +1045,9 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cur.execute(insert1)
         connection.commit()
         connection.close()
-        count = mysqldb.get_phage_table_count(self.sql_handle)
+        count = mysqldb.get_phage_table_count(self.engine)
         self.assertEqual(count, 1)
+
 
 
 

@@ -8,7 +8,6 @@ import sys
 import sqlalchemy
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.classes import cds
 from pdm_utils.functions import basic
 
@@ -315,56 +314,59 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
 
 
 
-# TODO this can be improved if the MCH.execute_query() method
-# is able to switch to a standard cursor instead of only using
-# dictcursor.
-def create_phage_id_set(sql_handle):
+def create_phage_id_set(engine):
     """Create set of phage_ids currently in a MySQL database.
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :returns: A set of PhageIDs.
     :rtype: set
     """
     query = "SELECT PhageID FROM phage"
-    # Returns a list of items, where each item is a dictionary of
+
+    # Returns a list of items, where each item is a tuple of
     # SQL data for each row in the table.
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
+    result_list = engine.execute(query)
+
     # Convert to a set of PhageIDs.
-    result_set = set([])
-    for dict in result_list:
-        result_set.add(dict["PhageID"])
+    result_set = set()
+    for tup in result_list:
+        result_set.add(tup[0])
     return result_set
 
 
-def create_seq_set(sql_handle):
+def create_seq_set(engine):
     """Create set of genome sequences currently in a MySQL database.
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :returns: A set of genome sequences.
     :rtype: set
     """
     query = "SELECT Sequence FROM phage"
-    # Returns a list of items, where each item is a dictionary of
+
+    # Returns a list of items, where each item is a tuple of
     # SQL data for each row in the table.
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
+    result_list = engine.execute(query).fetchall()
+
     # Convert to a set of sequences.
     # Sequence data is stored as MEDIUMBLOB, so data is returned as bytes
     # "b'AATT", "b'TTCC", etc.
-    result_set = set([])
-    for dict in result_list:
-        # result_set.add(dict["Sequence"].decode("utf-8"))
-        gnm_seq = dict["Sequence"].decode("utf-8")
+    result_set = set()
+    for tup in result_list:
+        gnm_seq = tup[0].decode("utf-8")
         gnm_seq = Seq(gnm_seq, IUPAC.ambiguous_dna).upper()
         result_set.add(gnm_seq)
     return result_set
+
+
+
+
+
 
 
 def create_accession_set(engine):
@@ -510,12 +512,12 @@ def create_genome_statements(gnm, tkt_type=""):
     return sql_statements
 
 
-def get_phage_table_count(sql_handle):
+def get_phage_table_count(engine):
     """Get the current number of genomes in the database."""
     query = "SELECT COUNT(*) FROM phage"
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    count = result_list[0]["COUNT(*)"]
+    result_list = engine.execute(query)
+    result_list = engine.execute(query).fetchall()
+    count = result_list[0][0]
     return count
 
 
@@ -725,9 +727,9 @@ def install_db(engine, schema_filepath):
             print(f"Unable to install {schema_filepath.name} in MySQL.")
 
 
-# TODO this is a simple, temporary function to quickly replace MySQLConnectionHandler usage.
-# TODO unittest.
+# TODO function is to replace MySQLConnectionHandler usage.
 def get_engine(username=None, password=None, database=None, echo=True, attempts=5):
+    """Create SQLAlchemy Engine object."""
     attempt = 0
     valid = False
     msg = "Setting up MySQL connection. "
@@ -763,7 +765,8 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
     return (engine, msg)
 
 
-def construct_engine_string(db_type="mysql", driver="pymysql", username="", password="", database=""):
+def construct_engine_string(db_type="mysql", driver="pymysql",
+                            username="", password="", database=""):
     engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
     return engine_string
 
