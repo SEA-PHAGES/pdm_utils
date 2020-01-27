@@ -771,24 +771,41 @@ def construct_engine_string(db_type="mysql", driver="pymysql",
     return engine_string
 
 
+# Copied and modeled from MySQLConnectionHandler.execute_transaction,
+# but simplified since Engine does the work of connecting to the database.
+def execute_transaction(engine, statement_list=list()):
+    """Execute list of MySQL statements within a single defined transaction.
 
-def execute_transaction(engine, list_of_statements):
+    :param engine:
+        a sqlalchemy Engine object containing
+        information on which database to connect to.
+    :type engine: Engine
+    :param statement_list:
+        a list of any number of MySQL statements with
+        no expectation that anything will return
+    :return: 0 or 1 status code. 0 means no problems, 1 means problems
+    :rtype: int
+    """
+
     connection = engine.connect()
     trans = connection.begin()
     try:
-        for statement in list_of_statements:
+        for statement in statement_list:
             connection.execute(statement)
         trans.commit()
         result = 0
     except:
+        print("Error executing MySQL statements.")
+        print("Rolling back transaction...")
         trans.rollback()
         result = 1
-        raise
+        # Raising the exception will cause the code to break.
+        # raise
     return result
 
     # Code block below does same thing, but doesn't return a value based if there is an error.
     # with engine.begin() as connection:
-    #     for statement in list_of_statements:
+    #     for statement in statement_list:
     #         r1 = connection.execute(statement)
 
 

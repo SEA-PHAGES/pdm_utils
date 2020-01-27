@@ -19,6 +19,10 @@ from unittest.mock import patch
 user = "pdm_anon"
 pwd = "pdm_anon"
 db = "test_db"
+db2 = "Actinobacteriophage"
+engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
+engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
+
 
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
@@ -35,8 +39,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         expected schema.
         Each unittest will populate the empty database as needed."""
 
-        engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
         connection = pymysql.connect(host = "localhost",
                                         user = user,
@@ -1545,6 +1548,27 @@ class TestMysqldbFunctions2(unittest.TestCase):
             self.assertEqual(len(results2_geneids), 1)
 
 
+    #HERE
+    def test_execute_transaction_1(self):
+        """Valid everything should result in creation of cursor and execution
+        of all statements in the transaction - return code 0."""
+        return_code = mysqldb.execute_transaction(
+                        self.engine, self.valid_transaction)
+        self.assertEqual(return_code, 0)
+
+    def test_execute_transaction_2(self):
+        """Valid connection but invalid transaction should return code 1."""
+        return_code = mysqldb.execute_transaction(
+                        self.engine, self.invalid_transaction)
+        self.assertEqual(return_code, 1)
+
+    def test_execute_transaction_3(self):
+        """Everything ok but no transaction should return 0."""
+        return_code = mysqldb.execute_transaction(self.engine)
+        self.assertEqual(return_code, 0)
+
+
+
 
 
 class TestMysqldbFunctions3(unittest.TestCase):
@@ -1562,10 +1586,6 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertIsNotNone(engine)
 
-
-
-
-
     @patch("getpass.getpass")
     def test_get_engine_2(self, getpass_mock):
         """Verify that engine returned with valid info
@@ -1577,7 +1597,6 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertIsNotNone(engine)
 
-
     @patch("getpass.getpass")
     def test_get_engine_3(self, getpass_mock):
         """Verify that no engine is returned when database is provided and
@@ -1588,7 +1607,6 @@ class TestMysqldbFunctions3(unittest.TestCase):
             self.assertTrue(getpass_mock.called)
         with self.subTest():
             self.assertIsNone(engine)
-
 
     @patch("getpass.getpass")
     def test_get_engine_4(self, getpass_mock):
@@ -1650,6 +1668,36 @@ class TestMysqldbFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
 
+
+
+class TestMysqldbFunctions5(unittest.TestCase):
+
+    def setUp(self):
+        self.valid_engine = sqlalchemy.create_engine(engine_string2, echo=False)
+        self.valid_transaction = ["SELECT COUNT(PhageID) FROM phage",
+                                  "SELECT COUNT(GeneID) FROM gene",
+                                  "SELECT COUNT(PhamID) FROM pham"]
+        self.invalid_transaction = ["SELECT COUNT(PhageID) FROM phage",
+                                    "SELECT COUNT(GeneID) FROM gene",
+                                    "SELECT COUNT(GeneID) FROM phage"]
+
+    # def test_execute_transaction_1(self):
+    #     """Valid everything should result in creation of cursor and execution
+    #     of all statements in the transaction - return code 0."""
+    #     return_code = mysqldb.execute_transaction(
+    #                     self.valid_engine, self.valid_transaction)
+    #     self.assertEqual(return_code, 0)
+    #
+    # def test_execute_transaction_2(self):
+    #     """Valid connection but invalid transaction should return code 1."""
+    #     return_code = mysqldb.execute_transaction(
+    #                     self.valid_engine, self.invalid_transaction)
+    #     self.assertEqual(return_code, 1)
+    #
+    # def test_execute_transaction_3(self):
+    #     """Everything ok but no transaction should return 0."""
+    #     return_code = mysqldb.execute_transaction(self.valid_engine)
+    #     self.assertEqual(return_code, 0)
 
 
 
