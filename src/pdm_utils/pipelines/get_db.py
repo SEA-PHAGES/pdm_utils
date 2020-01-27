@@ -5,7 +5,6 @@ import os
 import pathlib
 import subprocess
 import sys
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants, db_schema_0
 from pdm_utils.functions import basic, mysqldb
 from pdm_utils.pipelines import convert_db
@@ -78,30 +77,35 @@ def main(unparsed_args_list):
         else:
             result1 = basic.verify_path2(db_filepath, kind="file", expect=True)
         if result1[0] == True:
-            sql_handle = mch.MySQLConnectionHandler()
-            sql_handle.open_connection()
-            if sql_handle.credential_status:
-                result2 = mysqldb.drop_create_db(sql_handle, args.database)
+            engine1, msg = mysqldb.get_engine(database="", echo=False)
+            if engine1 is not None:
+                result2 = mysqldb.drop_create_db(engine1, args.database)
                 if result2 == 0:
-                    sql_handle.database = args.database
-                    sql_handle.open_connection()
-                    if (sql_handle.credential_status == True and
-                            sql_handle._database_status == True):
+                    engine2, msg = mysqldb.get_engine(
+                                        database=args.database,
+                                        username=engine1.url.username,
+                                        password=engine1.url.password,
+                                        echo=False)
+                    if engine2 is not None:
                         if args.new == True:
-                            sql_handle.execute_transaction(db_schema_0.STATEMENTS)
+                            mysqldb.execute_transaction(engine2, db_schema_0.STATEMENTS)
                             convert_args = ["pdm_utils.run",
                                             "convert",
                                             args.database,
                                             "-s",
                                             str(schema_version)]
-                            convert_db.main(convert_args, sql_handle)
+                            convert_db.main(convert_args, engine2)
                         else:
-                            mysqldb.install_db(sql_handle, db_filepath)
+                            mysqldb.install_db(engine2, db_filepath)
+                        # Close up all connections in the connection pool.
+                        engine2.dispose()
                     else:
                         print(f"No connection to the {args.database} database due "
                               "to invalid credentials or database.")
                 else:
                     print("Unable to create new, empty database.")
+                # Close up all connections in the connection pool.
+                engine1.dispose()
             else:
                 print("Invalid MySQL credentials.")
         else:
@@ -114,7 +118,6 @@ def main(unparsed_args_list):
             os.remove(version_filepath)
         if db_filepath.exists() == True:
             os.remove(db_filepath)
-
 
 # TODO unittest.
 def parse_args(unparsed_args_list):

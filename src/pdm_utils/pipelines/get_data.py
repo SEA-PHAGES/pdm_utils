@@ -132,7 +132,7 @@ def main(unparsed_args_list):
 
     # Create data sets
     print("Preparing genome data sets from the MySQL database...")
-    sql_handle = mysqldb.connect_to_db(args.database)
+    engine = mysqldb.connect_to_db(args.database)
 
     # Get existing data from MySQL to determine what needs to be updated.
     query = ("SELECT PhageID, Name, HostGenus, Status, Cluster, "
@@ -140,9 +140,10 @@ def main(unparsed_args_list):
              "AnnotationAuthor FROM phage")
 
     mysqldb_genome_list =  mysqldb.parse_genome_data(
-                       sql_handle=sql_handle,
+                       engine=engine,
                        phage_query=query,
                        gnm_type="mysqldb")
+    engine.dispose()
     mysqldb_genome_dict = {}
     for gnm in mysqldb_genome_list:
         mysqldb_genome_dict[gnm.id] = gnm

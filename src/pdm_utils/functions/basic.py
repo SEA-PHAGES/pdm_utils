@@ -1083,6 +1083,14 @@ def get_values_from_dict_list(list_of_dicts):
         output_set = output_set | set(dict.values())
     return output_set
 
+# TODO unittest.
+def get_values_from_tuple_list(list_of_tuples):
+    """Convert a list of tuples to a set of the values."""
+    output_set = set()
+    for tup in list_of_tuples:
+        output_set.add(tup[0])
+    return output_set
+
 
 def convert_list_to_dict(data_list, key):
     """Convert list of dictionaries to a dictionary of dictionaries
