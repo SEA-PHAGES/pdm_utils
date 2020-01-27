@@ -1200,17 +1200,19 @@ class TestMysqldbFunctions2(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        self.std_phage_query = \
-            ("SELECT PhageID, Accession, Name, "
+        self.std_phage_query = (
+             "SELECT PhageID, Accession, Name, "
              "HostGenus, Sequence, Length, GC, Status, "
              "DateLastModified, RetrieveRecord, "
              "AnnotationAuthor, Cluster, Subcluster "
              "FROM phage WHERE PhageID = 'L5'")
 
-        self.std_cds_query = \
-            ("SELECT GeneID, PhageID, Start, Stop, Length, Name, "
+        self.std_cds_query = (
+             "SELECT GeneID, PhageID, Start, Stop, Length, Name, "
              "Translation, Orientation, Notes, LocusTag FROM gene "
              "WHERE PhageID = 'L5'")
+
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
 
     def tearDown(self):
@@ -1222,7 +1224,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cur.execute(f"DROP DATABASE {db}")
         connection.commit()
         connection.close()
-
+        self.engine.dispose()
 
 
 
@@ -1548,25 +1550,69 @@ class TestMysqldbFunctions2(unittest.TestCase):
             self.assertEqual(len(results2_geneids), 1)
 
 
-    #HERE
+
+
     def test_execute_transaction_1(self):
         """Valid everything should result in creation of cursor and execution
         of all statements in the transaction - return code 0."""
-        return_code = mysqldb.execute_transaction(
-                        self.engine, self.valid_transaction)
-        self.assertEqual(return_code, 0)
+        valid1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('D29', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        valid2 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('Trixie', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        valid_stmts = [valid1, valid2]
+        return_code = mysqldb.execute_transaction(self.engine, valid_stmts)
+        query = "SELECT COUNT(PhageID) FROM phage"
+        result_list = self.engine.execute(query).fetchall()
+        count = result_list[0][0]
+        with self.subTest():
+            self.assertEqual(count, 3)
+        with self.subTest():
+            self.assertEqual(return_code, 0)
 
     def test_execute_transaction_2(self):
         """Valid connection but invalid transaction should return code 1."""
-        return_code = mysqldb.execute_transaction(
-                        self.engine, self.invalid_transaction)
-        self.assertEqual(return_code, 1)
+        valid1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('D29', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        invalid1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        invalid_stmts = [valid1, invalid1]
+        return_code = mysqldb.execute_transaction(self.engine, invalid_stmts)
+        query = "SELECT COUNT(PhageID) FROM phage"
+        result_list = self.engine.execute(query).fetchall()
+        count = result_list[0][0]
+        with self.subTest():
+            self.assertEqual(count, 1)
+        with self.subTest():
+            self.assertEqual(return_code, 1)
 
     def test_execute_transaction_3(self):
         """Everything ok but no transaction should return 0."""
         return_code = mysqldb.execute_transaction(self.engine)
         self.assertEqual(return_code, 0)
-
 
 
 
@@ -1668,36 +1714,6 @@ class TestMysqldbFunctions4(unittest.TestCase):
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
 
-
-
-class TestMysqldbFunctions5(unittest.TestCase):
-
-    def setUp(self):
-        self.valid_engine = sqlalchemy.create_engine(engine_string2, echo=False)
-        self.valid_transaction = ["SELECT COUNT(PhageID) FROM phage",
-                                  "SELECT COUNT(GeneID) FROM gene",
-                                  "SELECT COUNT(PhamID) FROM pham"]
-        self.invalid_transaction = ["SELECT COUNT(PhageID) FROM phage",
-                                    "SELECT COUNT(GeneID) FROM gene",
-                                    "SELECT COUNT(GeneID) FROM phage"]
-
-    # def test_execute_transaction_1(self):
-    #     """Valid everything should result in creation of cursor and execution
-    #     of all statements in the transaction - return code 0."""
-    #     return_code = mysqldb.execute_transaction(
-    #                     self.valid_engine, self.valid_transaction)
-    #     self.assertEqual(return_code, 0)
-    #
-    # def test_execute_transaction_2(self):
-    #     """Valid connection but invalid transaction should return code 1."""
-    #     return_code = mysqldb.execute_transaction(
-    #                     self.valid_engine, self.invalid_transaction)
-    #     self.assertEqual(return_code, 1)
-    #
-    # def test_execute_transaction_3(self):
-    #     """Everything ok but no transaction should return 0."""
-    #     return_code = mysqldb.execute_transaction(self.valid_engine)
-    #     self.assertEqual(return_code, 0)
 
 
 

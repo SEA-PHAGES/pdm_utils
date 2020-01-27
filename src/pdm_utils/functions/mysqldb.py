@@ -515,7 +515,6 @@ def create_genome_statements(gnm, tkt_type=""):
 def get_phage_table_count(engine):
     """Get the current number of genomes in the database."""
     query = "SELECT COUNT(*) FROM phage"
-    result_list = engine.execute(query)
     result_list = engine.execute(query).fetchall()
     count = result_list[0][0]
     return count
