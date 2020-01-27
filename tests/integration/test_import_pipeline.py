@@ -67,7 +67,6 @@ import subprocess
 import unittest
 from unittest.mock import patch
 from pdm_utils import run
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
 

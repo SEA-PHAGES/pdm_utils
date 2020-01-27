@@ -2,24 +2,17 @@
 
 import csv
 import getpass
-import os
 from pathlib import Path
 import pymysql
 import shutil
 import subprocess
 import time
 import unittest
-from unittest.mock import patch, Mock
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqFeature import ExactPosition, Reference
-
-
+from unittest.mock import patch
+import sqlalchemy
 from pdm_utils.classes import bundle, genome, genomepair, ticket, eval, cds, source
-from pdm_utils.classes import mysqlconnectionhandler as mch
 from pdm_utils.constants import constants
-from pdm_utils.functions import basic
+from pdm_utils.functions import basic, mysqldb
 from pdm_utils.pipelines import import_genome
 
 
@@ -40,6 +33,11 @@ def get_errors_from_dict(dict):
 user = "pdm_anon"
 pwd = "pdm_anon"
 db = "test_db"
+db2 = "Actinobacteriophage"
+#sqlalchemy setup
+engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
+engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
+
 
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
@@ -94,10 +92,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.test_flat_file1 = Path(test_files_path, "test_flat_file_1.gb")
         self.test_flat_file2 = Path(test_files_path, "test_flat_file_2.gb")
 
-        self.sql_handle = mch.MySQLConnectionHandler()
-        self.sql_handle.database = db
-        self.sql_handle.username = user
-        self.sql_handle.password = pwd
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
         self.eval_flags = {
             "check_locus_tag":True,
@@ -139,6 +134,9 @@ class TestImportGenomeMain1(unittest.TestCase):
 
         # Remove all contents in the directory created for the test.
         shutil.rmtree(self.base_dir)
+
+        # Close all open connections.
+        self.engine.dispose()
 
         # Remove the MySQL database created for the test.
         connection = pymysql.connect(host="localhost",
@@ -298,15 +296,16 @@ class TestImportGenomeMain1(unittest.TestCase):
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for data in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, " + \
-                "AnnotationAuthor) VALUES (" + \
-                f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
-                f"'{data[3]}', '{data[4]}', " + \
-                f" {data[5]}, {data[6]}, '{data[7]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, "
+                "AnnotationAuthor) VALUES ("
+                f"'{data[0]}', '{data[1]}', '{data[2]}', "
+                f"'{data[3]}', '{data[4]}', "
+                f" {data[5]}, {data[6]}, '{data[7]}', "
                 f"'{data[8]}', {data[9]}, {data[10]});"
+                )
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -324,7 +323,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                     genome_id_field="_organism_name",
                     file_ref="flat_file",
                     retain_ref="mysql",
-                    sql_handle=self.sql_handle)
+                    engine=self.engine)
         ff_gnm = bndl.genome_dict["flat_file"]
         pmr_gnm = bndl.genome_dict["mysql"]
         ff_pmr_pair = bndl.genome_pair_dict["flat_file_mysql"]
@@ -359,15 +358,16 @@ class TestImportGenomeMain1(unittest.TestCase):
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for data in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, " + \
-                "AnnotationAuthor) VALUES (" + \
-                f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
-                f"'{data[3]}', '{data[4]}', " + \
-                f" {data[5]}, {data[6]}, '{data[7]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, "
+                "AnnotationAuthor) VALUES ("
+                f"'{data[0]}', '{data[1]}', '{data[2]}', "
+                f"'{data[3]}', '{data[4]}', "
+                f" {data[5]}, {data[6]}, '{data[7]}', "
                 f"'{data[8]}', {data[9]}, {data[10]});"
+                )
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -384,7 +384,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                     ticket_dict=tkt_dict, id=1,
                     genome_id_field="_organism_name",
                     file_ref="flat_file",
-                    sql_handle=self.sql_handle)
+                    engine=self.engine)
         ff_gnm = bndl.genome_dict["flat_file"]
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
@@ -395,7 +395,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_8(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with MySQL data,
-        no MySQL connection handle, and no phagesdb data."""
+        no MySQL engine, and no phagesdb data."""
 
         l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",
                    4, 1, "draft", constants.EMPTY_DATE, 1, 1]
@@ -411,15 +411,16 @@ class TestImportGenomeMain1(unittest.TestCase):
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for data in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, " + \
-                "AnnotationAuthor) VALUES (" + \
-                f"'{data[0]}', '{data[1]}', '{data[2]}', " + \
-                f"'{data[3]}', '{data[4]}', " + \
-                f" {data[5]}, {data[6]}, '{data[7]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, "
+                "AnnotationAuthor) VALUES ("
+                f"'{data[0]}', '{data[1]}', '{data[2]}', "
+                f"'{data[3]}', '{data[4]}', "
+                f" {data[5]}, {data[6]}, '{data[7]}', "
                 f"'{data[8]}', {data[9]}, {data[10]});"
+                )
             cur.execute(sql1)
         connection.commit()
         connection.close()
@@ -639,10 +640,7 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.output_folder = Path(self.base_dir, "output_folder")
         self.log_file = Path(self.base_dir, "test_log.txt")
 
-        self.sql_handle_1 = mch.MySQLConnectionHandler()
-        self.sql_handle_1.database = "Actinobacteriophage"
-        self.sql_handle_1.username = user
-        self.sql_handle_1.password = pwd
+        self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
 
         self.args_list = ["run.py",
                           "import",
@@ -659,15 +657,15 @@ class TestImportGenomeMain3(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
-
+        self.engine.dispose()
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, setup_sql_mock, data_io_mock):
+    def test_main_1(self, ctd_mock, data_io_mock):
         """Verify that correct args calls data_io."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        setup_sql_mock.return_value = self.sql_handle_1
+        ctd_mock.return_value = self.engine
         import_genome.main(self.args_list)
         self.assertTrue(data_io_mock.called)
 
@@ -675,10 +673,10 @@ class TestImportGenomeMain3(unittest.TestCase):
     @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     @patch("sys.exit")
-    def test_main_2(self, sys_exit_mock, setup_sql_mock, data_io_mock):
+    def test_main_2(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
         self.output_folder.mkdir()
-        setup_sql_mock.return_value = self.sql_handle_1
+        ctd_mock.return_value = self.engine
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -686,12 +684,12 @@ class TestImportGenomeMain3(unittest.TestCase):
     @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     @patch("sys.exit")
-    def test_main_3(self, sys_exit_mock, setup_sql_mock, data_io_mock):
+    def test_main_3(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[4] = ""
-        setup_sql_mock.return_value = self.sql_handle_1
+        ctd_mock.return_value = self.engine
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -834,10 +832,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.flat_file_l5 = Path(test_files_path, "test_flat_file_1.gb")
         self.flat_file_trixie = Path(test_files_path, "test_flat_file_6.gb")
 
-        self.sql_handle = mch.MySQLConnectionHandler()
-        self.sql_handle.database = "Actinobacteriophage"
-        self.sql_handle.username = user
-        self.sql_handle.password = pwd
+        self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
 
         self.eval_flags = {}
         self.eval_flags["check_seq"] = True
@@ -884,6 +879,8 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt2.eval_flags = self.eval_flags
         self.tkt2.data_dict = self.data_dict2
 
+    def tearDown(self):
+        self.engine.dispose()
 
 
 
@@ -894,7 +891,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         ticket_dict = {}
         files = []
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
@@ -924,7 +921,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         files = [self.flat_file_l5, self.flat_file_trixie]
         import_into_db_mock.side_effect = [False, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=False, genome_id_field="_organism_name")
 
         success_ticket_list = results_tuple[0]
@@ -956,7 +953,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         files = [self.flat_file_l5, self.flat_file_trixie]
         import_into_db_mock.side_effect = [True, True]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
@@ -987,7 +984,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         files = [self.flat_file_l5, self.flat_file_trixie]
         import_into_db_mock.side_effect = [False, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
@@ -1014,7 +1011,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                        self.tkt2.phage_id: self.tkt2}
         files = []
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
@@ -1046,7 +1043,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         files = [self.flat_file_l5, self.flat_file_trixie]
         import_into_db_mock.side_effect = [True, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=False, genome_id_field="_organism_name")
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
@@ -1066,7 +1063,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_process_files_and_tickets_7(self, ask_mock, execute_mock):
         """Verify correct output using:
@@ -1077,17 +1074,8 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt1.evaluations = [eval.Eval(status="error")]
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
-
-        # self.tkt2.evaluations = [eval.Eval(status="error"),
-        #                          eval.Eval(status="error")]
-        # ticket_dict = {self.tkt1.phage_id: self.tkt1,
-        #                self.tkt2.phage_id: self.tkt2}
-        # files = [self.flat_file_l5, self.flat_file_trixie]
-
-        # ask_mock.side_effect = [True, True]
-
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",
                             interactive=False)
         evaluation_dict = results_tuple[4]
@@ -1101,7 +1089,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_process_files_and_tickets_8(self, ask_mock, execute_mock):
         """Verify correct output using:
@@ -1115,7 +1103,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",
                             interactive=True)
         evaluation_dict = results_tuple[4]
@@ -1129,7 +1117,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_process_files_and_tickets_9(self, ask_mock, execute_mock):
         """Verify correct output using:
@@ -1143,7 +1131,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",
                             interactive=True)
         evaluation_dict = results_tuple[4]
@@ -1157,7 +1145,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
     # Patching so avoid an attempt to add data to the database.
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
     @patch("pdm_utils.pipelines.import_genome.run_checks")
     @patch("pdm_utils.pipelines.import_genome.prepare_bundle")
@@ -1190,7 +1178,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         prep_mock.side_effect = [bndl1, bndl2]
         ask_mock.side_effect = [True, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
-                            files, sql_handle=self.sql_handle,
+                            files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",
                             interactive=True)
         with self.subTest():
@@ -1223,11 +1211,8 @@ class TestImportGenomeMain6(unittest.TestCase):
                                             "test_import_table_2.csv")
         self.output_folder = Path(self.base_dir, "output_folder")
 
-        self.sql_handle = mch.MySQLConnectionHandler()
-        self.sql_handle.database = db
-        self.sql_handle.username = user
-        self.sql_handle.password = pwd
 
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
         self.tkt1 = ticket.GenomeTicket()
         self.tkt1.phage_id = "L5"
@@ -1255,7 +1240,7 @@ class TestImportGenomeMain6(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
-
+        self.engine.dispose()
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.
     @patch("pdm_utils.pipelines.import_genome.log_evaluations")
@@ -1280,7 +1265,7 @@ class TestImportGenomeMain6(unittest.TestCase):
                                  success_filename_list,
                                  failed_filename_list,
                                  evaluation_dict)
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
@@ -1312,8 +1297,6 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertEqual(len(exp_success_tkts), 1)
         with self.subTest():
@@ -1355,7 +1338,7 @@ class TestImportGenomeMain6(unittest.TestCase):
                                  success_filename_list,
                                  failed_filename_list,
                                  evaluation_dict)
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
@@ -1400,7 +1383,7 @@ class TestImportGenomeMain6(unittest.TestCase):
                                  success_filename_list,
                                  failed_filename_list,
                                  evaluation_dict)
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
@@ -1441,7 +1424,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.results_folder3 = Path(self.output_folder, self.results_folder3)
         get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
@@ -1490,7 +1473,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.results_folder3.mkdir()
         get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
@@ -1513,7 +1496,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.output_folder.mkdir()
         get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
@@ -1539,7 +1522,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.flat_file2.touch()
         get_count_mock.return_value = 0
         pft_mock.return_value = ([], [], [], [], {})
-        import_genome.data_io(sql_handle=self.sql_handle,
+        import_genome.data_io(engine=self.engine,
             genome_folder=self.genome_folder,
             import_table_file=self.invalid_import_table_file,
             output_folder=self.output_folder)
