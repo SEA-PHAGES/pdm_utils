@@ -79,7 +79,7 @@ extlinks = {
     'pymysql': ('https://pymysql.readthedocs.io/en/latest/%s', ''),
     'paramiko': ('http://www.paramiko.org/%s', ''),
     'mysql': ('https://www.mysql.com/%s', ''),
-    'mmseqs': ('https://www.ncbi.nlm.nih.gov/pubmed/26743509%s', ''),
+    'mmseqs2': ('https://github.com/soedinglab/MMseqs2%s', ''),
     'anaconda': ('https://www.anaconda.com/%s', ''),
     'ncbi': ('https://www.ncbi.nlm.nih.gov/%s', '')
 }

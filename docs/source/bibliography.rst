@@ -1,17 +1,20 @@
+.. _bibliography:
+
 Bibliography
 ============
 
+.. _cock2009:
 
-< In development >
+Cock et al., 2009. https://www.ncbi.nlm.nih.gov/pubmed/19304878.
 
-.. .. _cock2009:
-..
-.. Cock et al., 2009. https://www.ncbi.nlm.nih.gov/pubmed/19304878.
-..
-.. .. _cresawn2011:
-..
-.. Cresawn et al., 2011. https://www.ncbi.nlm.nih.gov/pubmed/21991981.
-..
-.. .. _hanauer2017:
-..
-.. Hanauer et al., 2017. https://www.ncbi.nlm.nih.gov/pubmed/29208718.
+.. _cresawn2011:
+
+Cresawn et al., 2011. https://www.ncbi.nlm.nih.gov/pubmed/21991981.
+
+.. _hanauer2017:
+
+Hanauer et al., 2017. https://www.ncbi.nlm.nih.gov/pubmed/29208718.
+
+.. _steinegger2017:
+
+Steinegger and Söding, 2017. https://www.ncbi.nlm.nih.gov/pubmed/29035372.
