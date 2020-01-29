@@ -748,17 +748,17 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
             conn = engine.connect()
             conn.close()
             valid = True
-            msg = msg + "Valid MySQL login credentials."
+            msg = msg + "Valid MySQL login credentials. "
         except:
             valid = False
         attempt += 1
 
     if valid != True:
         engine = None
-        msg = msg + "Invalid MySQL login credentials."
+        msg = msg + "Invalid MySQL login credentials. "
         if attempt == attempts:
             msg = msg + (f"For security purposes, only {attempts} MySQL "
-                         "login attempts are permitted at once. "
+                         "login attempt(s) are permitted at once. "
                          "Please verify your login credentials and "
                          "database name, and try again.")
     return (engine, msg)

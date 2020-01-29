@@ -213,7 +213,7 @@ Follow the steps below to push a new version of the ``pdm_utils`` package to PyP
 
     3. To test the package without uploading to PyPI, install the locally-built package file::
 
-        > pip install /path/to/folder/pdm_utils_XXXX.tar.gz
+        > pip install /path/to/dist/pdm_utils_XXXX.tar.gz
 
     4. In a new terminal, open a Python IDE and test the package.
 

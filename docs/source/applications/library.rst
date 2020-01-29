@@ -16,32 +16,30 @@ In the shell terminal, activate the Conda environment containing the installed
 Connect to the MySQL database
 *****************************
 
-In order to retrieve and explore data stored within the MySQL database, create a MySQLConnectionHandler object. This object stores information about the database of interest, login credentials and connection status so that they do not need to be provided multiple times, and it contains several methods to directly interact with the database. Provide the username and password when prompted::
+In order to retrieve and explore data stored within the MySQL database, create a SQLAlchemy 'engine'. This object provides the core interface between Python and MySQL. It stores information about the database of interest, login credentials and connection status so that they do not need to be provided multiple times, and it contains methods to directly interact with the database. The ``pdm_utils`` 'mysqldb' module provides several functions that rely on the engine. To start, create an engine to the primary database, and provide the username and password when prompted::
 
-    >>> from pdm_utils.classes import mysqlconnectionhandler
-    >>> sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-    >>> sql_handle.database = 'Actinobacteriophage'
-    >>> sql_handle.open_connection()
+    >>> from pdm_utils.functions import mysqldb
+    >>> engine = mysqldb.connect_to_db(database='Actinobacteriophage')
     MySQL username:
     MySQL password:
 
+MySQL queries can be executed using the engine. In the following example, a list of 90 phages in Subcluster A2 are retrieved. For each phage, a dictionary of data is returned::
 
-The connection handler object is a wrapper for the third-party ``pymysql`` package, which provides the core interface between Python and MySQL. MySQL queries can be executed using the handler. In the following example, a list of 90 phages in Subcluster A2 are retrieved. For each phage, a dictionary of data is returned::
-
-    >>> result = sql_handle.execute_query("SELECT PhageID,HostGenus FROM phage WHERE Subcluster = 'A2'")
-    >>> len(result)
+    >>> result = engine.execute("SELECT PhageID,HostGenus FROM phage WHERE Subcluster = 'A2'")
+    >>> phages = result.fetchall()
+    >>> len(phages)
     90
-    >>> result[0]
+    >>> dict(phages[0])
     {'PhageID': '20ES', 'HostGenus': 'Mycobacterium'}
 
+MySQL transactions can also be executed using the engine. It returns 0 if successful, or 1 if unsuccessful::
 
-MySQL transactions can also be executed using the handler. It returns 0 if successful, or 1 if unsuccessful::
-
-    >>> txn_result = sql_handle.execute_transaction(["UPDATE phage SET HostGenus = 'Arthrobacter' WHERE PhageID = '20ES'"])
+    >>> txn_result = mysqldb.execute_transaction(engine, ["UPDATE phage SET HostGenus = 'Arthrobacter' WHERE PhageID = '20ES'"])
     >>> txn_result
     0
-    >>> result = sql_handle.execute_query("SELECT PhageID,HostGenus FROM phage WHERE Subcluster = 'A2'")
-    >>> result[0]
+    >>> result = engine.execute("SELECT PhageID,HostGenus FROM phage WHERE Subcluster = 'A2'")
+    >>> phages = result.fetchall()
+    >>> dict(phages[0])
     {'PhageID': '20ES', 'HostGenus': 'Arthrobacter'}
 
 
@@ -49,11 +47,7 @@ MySQL transactions can also be executed using the handler. It returns 0 if succe
 Access ``pdm_utils`` Genome data
 ********************************
 
-To use the connection handler to retrieve data from the database in an object-oriented structure, import the 'mysqldb' module, which contains a collection of functions to retrieve and parse genome data::
-
-    >>> from pdm_utils.functions import mysqldb
-
-Create a list of phages for which data should be retrieved. These are expected to be stored in the PhageID column of the *phage* table::
+Data can also be retrieved in an object-oriented structure. First, create a list of phages for which data should be retrieved. These are expected to be stored in the PhageID column of the *phage* table::
 
     >>> phage_id_list = ['L5', 'Trixie', 'D29']
 
@@ -62,10 +56,9 @@ Construct the MySQL query to retrieve the specific types of data from the *phage
     >>> phage_query = 'SELECT PhageID, Name, Sequence, Cluster, Subcluster, Status, HostGenus FROM phage'
     >>> gene_query = 'SELECT GeneID, Start, Stop, Orientation, Translation, Notes FROM gene'
 
-
 The parse_genome_data function retrieves the data and constructs ``pdm_utils`` Genome and Cds objects from the data. In the example below, there are three Genome objects created, each corresponding to a different phage in phage_id_list::
 
-    >>> phage_data = mysqldb.parse_genome_data(sql_handle, phage_id_list=phage_id_list, phage_query=phage_query, gene_query=gene_query)
+    >>> phage_data = mysqldb.parse_genome_data(engine, phage_id_list=phage_id_list, phage_query=phage_query, gene_query=gene_query)
     >>> len(phage_data)
     3
 
@@ -152,10 +145,10 @@ Access subsets of data using a ``pdm_utils`` Filter
 ***************************************************
 
 
-Sometimes data pertaining to a large set of phages (for instance, all Subcluster A2 phages) is needed. Manually constructing the list of PhageIDs is time intensive and error prone, but can be automatically generated using a ``pdm_utils`` Filter object. Import the filter module, and create a Filter object using the sql_handle::
+Sometimes data pertaining to a large set of phages (for instance, all Subcluster A2 phages) is needed. Manually constructing the list of PhageIDs is time intensive and error prone, but can be automatically generated using a ``pdm_utils`` Filter object. Import the filter module, and create a Filter object using the engine::
 
     >>> from pdm_utils.classes import filter
-    >>> db_filter = filter.Filter(sql_handle)
+    >>> db_filter = filter.Filter(engine)
 
 Creating the Subcluster filter identifies 90 phages in Subcluster A2::
 
@@ -188,5 +181,9 @@ one gene that is annotated as the 'repressor' are needed. This filter can be add
     >>> db_filter.values
     ['Pukovnik', 'RedRock', 'Odin', 'Adzzy']
 
+
+When all interaction with MySQL is complete, the DBAPI connections can be closed::
+
+    >>> engine.dispose()
 
 For more information on how different Genome and Cds object attributes map to the MySQL database, refer to the :ref:`object attribute maps <attributemap>`.
