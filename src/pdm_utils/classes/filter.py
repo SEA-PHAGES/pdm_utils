@@ -11,8 +11,9 @@ import math
 import time
 import csv
 from pathlib import Path
-from pdm_utils.classes import mysqlconnectionhandler, schemagraph
+from pdm_utils.classes import schemagraph
 from pdm_utils.pipelines import export_db
+from pdm_utils.functions import mysqldb
 
 #Global file constants
 OPERATOR_OPTIONS      = ["=", "!=", ">", "<"]
@@ -24,23 +25,23 @@ GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
 class Filter:
     """MySQL database filtering object."""
-    def __init__(self, sql_handle, table="phage", key=None):
+    def __init__(self, engine, table="phage", key=None):
         """Initializes a Filter object used to filter
         results from a SQL database
 
-        :param sql_handle: 
-            Input a valid MySQLConnectionHandler object.
-        :type sql_handle: MySQLConnectionHandler
-        :param table: 
+        :param engine:
+            Input a valid SQLAlchemy Engine object.
+        :type engine: Engine
+        :param table:
             Input a string representing a table in the connected MySQL table.
         :type table: str
         """
-        self.sql_handle = sql_handle
+        self.engine = engine
 
-        self.db_graph = schemagraph.SchemaGraph(sql_handle)
-     
+        self.db_graph = schemagraph.SchemaGraph(engine)
+
         if table not in self.db_graph.show_tables():
-            print(f"Table passed to filter is not in {sql_handle.database}")
+            print(f"Table passed to filter is not in {engine.url.database}")
             raise ValueError
 
         self.values = None
@@ -63,9 +64,9 @@ class Filter:
 
         self.values_valid = True
         self.updated = True
-    
+
     def translate_table(self, raw_table, verbose=False):
-        """Parses a case-insensitive string to match a case-sensitive 
+        """Parses a case-insensitive string to match a case-sensitive
         table_node id string.
 
         :param raw_table:
@@ -83,7 +84,7 @@ class Filter:
                 return table
 
         print(f"Table '{raw_table}' requested to be filtered "
-              f"is not in '{self.sql_handle.database}'")
+              f"is not in '{self.engine.url.database}'")
         raise ValueError
 
     def translate_field(self, raw_field, table, verbose=False):
@@ -106,13 +107,13 @@ class Filter:
         if table_node == None:
             print(
               f"Table '{table}' requested to be filtered "
-              f"is not in '{self.sql_handle.database}'")
+              f"is not in '{self.engine.url.database}'")
             raise ValueError
 
         for field in table_node.show_columns():
             if field.lower() == raw_field.lower():
                 return field
-        
+
         print(f"Field '{raw_field}' requested to be filtered"
                   f" is not in '{table_node.id}'")
         raise ValueError
@@ -136,10 +137,10 @@ class Filter:
         if operator not in OPERATOR_OPTIONS:
             raise ValueError
 
-        table_node = self.db_graph.get_table(table) 
+        table_node = self.db_graph.get_table(table)
         if table_node == None:
             print(f"Table '{table}' requested to be filtered "
-              f"is not in '{self.sql_handle.database}'")
+              f"is not in '{self.engine.url.database}'")
             raise ValueError
 
         column_node = table_node.get_column(field)
@@ -147,7 +148,7 @@ class Filter:
             print(f"Field '{field}' requested to be filtered "
                   f"is not in '{table_node.id}'")
             raise ValueError
-        
+
         type = column_node.parse_type()
         if operator in COMPARATIVE_OPERATORS and \
                 type not in COMPARABLE_TYPES:
@@ -175,7 +176,7 @@ class Filter:
                 queries.append(query)
 
         return queries
- 
+
     def add_history(self, function):
         """Adds a HistoryNode to the history attribute of the Filter object
         depending on the type of function specified.
@@ -188,26 +189,26 @@ class Filter:
             current = self.history
             for i in range(0, 50):
                 current = current.get_next()
-            
+
             current.next = None
             self.history_count = 50
 
         if function == "switch":
-            self.history.create_next(function, 
+            self.history.create_next(function,
                                  [[self.table, self.key, self.copy_values()], \
                                   self.values_valid, self.updated])
         elif function == "add":
-            self.history.create_next(function, 
+            self.history.create_next(function,
                                   [self.copy_filters(), \
                                    self.values_valid, self.updated])
 
         elif function in ["set", "update", "sort"]:
-            self.history.create_next(function, 
+            self.history.create_next(function,
                                   [self.copy_values(), \
                                    self.values_valid, self.updated])
 
         elif function == "reset":
-            self.history.create_next(function, 
+            self.history.create_next(function,
                                  [[self.copy_values(), self.copy_filters()], \
                                    self.values_valid, self.updated])
 
@@ -254,16 +255,16 @@ class Filter:
     def refresh(self):
         """Validates the current set of values against the connected
         MySQL database.
-        """ 
+        """
         if not self.values or self.values_valid:
             self.values_valid = True
             return
 
-        self.values = self.db_graph.get_values(self.table, self.key, 
+        self.values = self.db_graph.get_values(self.table, self.key,
                                                 values=self.values)
         self.values_valid = True
 
-    def switch_table(self, raw_table, column=None, verbose=False): 
+    def switch_table(self, raw_table, column=None, verbose=False):
         """Changes the properties of the Filter object and transposes
         all the values to that table.
 
@@ -281,9 +282,9 @@ class Filter:
 
         table = self.translate_table(raw_table)
         table_node = self.db_graph.get_table(table)
-         
+
         if not self.values:
-            self.values = None 
+            self.values = None
 
         self.table = table
         if column != None:
@@ -296,13 +297,13 @@ class Filter:
 
         self.values = self.db_graph.transpose_values(
                                             old_table, self.table,
-                                            self.values, 
+                                            self.values,
                                             start_column=old_key,
                                             target_column=self.key)
 
 
         self.update()
-        
+
     def add_filter(self, raw_table, raw_field, operator, value, verbose=False):
         """Adds to the filters attribute of the Filter object.
 
@@ -365,7 +366,7 @@ class Filter:
         self.values = values
         self.values_valid = False
         self.updated = False
- 
+
     def update(self, verbose=False):
         """Updates values list for the Filter object with the current filters.
 
@@ -385,12 +386,12 @@ class Filter:
             self.updated = True
             return
 
-        query_values = self.values 
-       
+        query_values = self.values
+
         for table in self.filters.keys():
             queries = self.build_queries(table)
             if verbose:
-                print(f"Filtering {self.sql_handle.database}.{table} for "
+                print(f"Filtering {self.engine.url.database}.{table} for "
                        + " and ".join(queries) + "...")
 
             if table == self.table:
@@ -434,7 +435,7 @@ class Filter:
 
         self.add_history("sort")
 
-        sort_column = self.translate_field(sort_column, self.table) 
+        sort_column = self.translate_field(sort_column, self.table)
         if verbose:
             print(f"Sorting by '{sort_column}'...")
 
@@ -448,7 +449,7 @@ class Filter:
         :param verbose:
             Sets a boolean to control terminal output.
         :type verbose: Boolean
-        """ 
+        """
         self.add_history("reset")
 
         self.values = None
@@ -498,7 +499,7 @@ class Filter:
             print("|" + "_"*57 + "|")
 
         return self.values
-   
+
     def hits(self, verbose=False):
         """Returns the number of current values.
 
@@ -538,7 +539,7 @@ class Filter:
         table = self.translate_table(raw_table)
         table_node = self.db_graph.get_table(table)
         field = self.translate_field(raw_field, table)
-        field_node = table_node.get_column(field) 
+        field_node = table_node.get_column(field)
 
         if field_node.group in GROUP_OPTIONS:
             if verbose:
@@ -584,10 +585,10 @@ class Filter:
         else:
             print(f"Grouping option by {field} is not supported.")
             raise ValueError
-       
+
     def build_groups(self, table_node, field_node, distinct_field=None,
                      verbose=False):
-        """Function that creates a two-dimensional array of values 
+        """Function that creates a two-dimensional array of values
         from the results list separated by a field key.
 
         :param table_node:
@@ -625,12 +626,12 @@ class Filter:
 
             if table_node.id == self.table:
                 values = self.db_graph.get_values(
-                                                table_node.id, 
+                                                table_node.id,
                                                 self.key,
                                                 queries=[query],
                                                 values=self.values)
 
-            else: 
+            else:
                 values = self.db_graph.get_values(
                                                 assist_filter.table,
                                                 assist_filter.key,
@@ -639,7 +640,7 @@ class Filter:
 
                 values = self.db_graph.transpose_values(
                                                 table_node.id, self.table,
-                                                values, 
+                                                values,
                                                 target_column=self.key)
 
                 if self.values:
@@ -652,7 +653,7 @@ class Filter:
                           f"'{distinct_value}' "
                           f"in {table_node.id}...")
                     print("......Database hits in group: " + str(len(values)))
- 
+
         if field_node.null:
             null_query = f"{field_node.id} IS NULL"
             values = self.db_graph.get_values(table_node.id, field_node.id,
@@ -665,7 +666,7 @@ class Filter:
         return groups
 
     def build_num_set_distinct(self, table, field):
-        """Helper function to generate a query for grouping values 
+        """Helper function to generate a query for grouping values
         by a numeric field
 
         :param table:
@@ -681,7 +682,7 @@ class Filter:
         range_query = (
                 f"SELECT round(log10(Max({field}) - Min({field}))) as pow "
                 f"FROM {table}")
-        range_pow = int(self.sql_handle.execute_query(range_query)[0]["pow"])
+        range_pow = int(mysqldb.query_dict_list(range_query)[0]["pow"])
         range_pow = 10**(range_pow-2)
         distinct_field = f"round({field}/{range_pow})*{range_pow}"
         return distinct_field
@@ -693,10 +694,10 @@ class Filter:
             Returns a duplicate Filter object.
         :type duplicate_filter: Filter
         """
-        duplicate_filter = Filter(self.sql_handle, table=self.table)
+        duplicate_filter = Filter(self.engine, table=self.table)
         duplicate_filter.db_graph = self.db_graph
         duplicate_filter.values = self.copy_values()
-        
+
         duplicate_filter.key = self.key
 
         duplicate_filter.values_valid = self.values_valid
@@ -748,7 +749,7 @@ class Filter:
         :param output_path:
             Input a valid Path object leading to a directory to store a csv.
         :type output_path: Path
-        :param csv_name: 
+        :param csv_name:
             Input a string for the name of the csv_file.
         :type csv_name: str
         :param verbose:
@@ -765,9 +766,9 @@ class Filter:
         while(csv_path.exists()):
             csv_version += 1
             csv_path = output_path.joinpath(f"{csv_name}{csv_version}.csv")
-    
+
         if self.values == None:
-            if verbose: 
+            if verbose:
                 print("Database results currently empty.")
             return
 
@@ -800,7 +801,7 @@ def parse_filters(unparsed_filters):
                            re.findall("[!=<>]+", filter))
         else:
             raise ValueError(f"Unsupported filtering format: '{filter}'")
-                
+
     return filters
 
 def parse_groups(unparsed_groups):
@@ -851,7 +852,7 @@ class HistoryNode:
         :type history: List[?]
         """
         return self.history
-    
+
     def has_next(self):
         """Function to determine if the HistoryNode has a
         HistoryNode reference.
@@ -862,11 +863,11 @@ class HistoryNode:
         """
         has_next = (self.next!=None)
         return has_next
-    
+
     def get_next(self):
         """Function to return the referenced next HistoryNode.
 
-        :return next: 
+        :return next:
             Returns the referenced HistoryNode.
         :type next: HistoryNode
         """
@@ -882,7 +883,7 @@ class HistoryNode:
         if not isinstance(history_node, HistoryNode):
             raise TypeError("history_node parameter must be a string object.")
         if not self.has_next():
-            self.next = history_node 
+            self.next = history_node
         else:
             history_node.add_next(self.next)
             self.next = history_node
@@ -918,30 +919,30 @@ class HistoryNode:
             self.next=None
             if next_node.has_next():
                 new_next = next_node.get_next()
-                self.add_next(new_next) 
+                self.add_next(new_next)
 
         return next_node
 
 class CmdFilter(cmd.Cmd):
     """Filtering CmdLoop object."""
-    def __init__(self, sql_handle):
+    def __init__(self, engine):
         super(CmdFilter, self).__init__()
 
-        self.sql_handle = sql_handle
-        db_filter = Filter(sql_handle)
+        self.engine = engine
+        db_filter = Filter(engine)
         self.db_filter = db_filter
 
         self.intro =\
-       f"""---------------Filtering in {sql_handle.database}---------------
+       f"""---------------Filtering in {engine.url.database}---------------
         Type help or ? to list commands.\n"""
-        self.prompt = (f"({sql_handle.database}) "
+        self.prompt = (f"({engine.url.database}) "
                        f"({db_filter.table})"
-                       f"{sql_handle.username}@localhost: ")
+                       f"{engine.url.username}@localhost: ")
 
     def preloop(self):
-        self.prompt = (f"({self.sql_handle.database}) "
+        self.prompt = (f"({self.engine.url.database}) "
                        f"({self.db_filter.table})"
-                       f"{self.sql_handle.username}@localhost: ")
+                       f"{self.engine.url.username}@localhost: ")
 
     def do_add(self, *args):
         """
@@ -955,7 +956,7 @@ class CmdFilter(cmd.Cmd):
                                            filter[3], filter[2],
                                            verbose=True)
         except ValueError:
-            print("Filter not accepted.") 
+            print("Filter not accepted.")
 
     def do_update(self, *args):
         """
@@ -992,7 +993,7 @@ class CmdFilter(cmd.Cmd):
         USAGE: switch {table}"""
         self.db_filter.switch_table(args[0])
 
-    def do_reset(self, *args): 
+    def do_reset(self, *args):
         """
         Resets filtering object results, filters, and history.
         USAGE: reset"""
@@ -1009,7 +1010,7 @@ class CmdFilter(cmd.Cmd):
 
         if output_path.is_dir():
             try:
-                self.db_filter.write_csv(output_path, verbose=True) 
+                self.db_filter.write_csv(output_path, verbose=True)
 
             except:
                 print(f"Csv-file writing in {output_path} failed.")
@@ -1038,16 +1039,16 @@ class CmdFilter(cmd.Cmd):
 
     def do_show(self, *args):
         """
-        Prints current characteristics of a table(s). 
+        Prints current characteristics of a table(s).
         Leave empty to print the entire database.
         USAGE: show {table}"""
-        
+
         if args[0] == "":
             self.db_filter.db_graph.print_info()
             return
-        
+
         try:
-            table = self.db_filter.translate_table(args[0]) 
+            table = self.db_filter.translate_table(args[0])
             table_node = self.db_filter.db_graph.get_table(table)
             table_node.print_columns_info()
 
@@ -1078,13 +1079,3 @@ class CmdFilter(cmd.Cmd):
         print("       Exiting...\n")
 
         sys.exit(1)
-
-if __name__ == "__main__":
-    sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-    sql_handle.database = input("Please enter database name: ")
-    sql_handle.get_credentials()
-    sql_handle.validate_credentials()
-    cmd_filter = CmdFilter(sql_handle)
-    cmd_filter.cmdloop()
-
-    

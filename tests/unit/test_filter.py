@@ -1,7 +1,7 @@
 """Unit unittests for the filter module."""
 
 from pdm_utils.classes.filter import HistoryNode, Filter, CmdFilter
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
+import sqlalchemy
 from unittest.mock import patch, Mock, PropertyMock
 import unittest
 
@@ -12,9 +12,12 @@ class TestFilter(unittest.TestCase):
                 show_tables.return_value = ["phage"]
 
         self.db_graph_mock = SchemaGraphMock
-        self.sql_handle = MySQLConnectionHandler()
-        self.db_filter = Filter(self.sql_handle)
-   
+        engine_string = ("mysql+pymysql://"
+                         "pdm_anon:pdm_anon@localhost/"
+                         "actinobacteriophage")
+        self.engine = sqlalchemy.create_engine(engine_string, echo=True)
+        self.db_filter = Filter(self.engine)
+
     def test_translate_table_1(self):
         "Verify translate_table() returns id match as expected."
         print(self.db_filter.db_graph.show_tables())
@@ -46,7 +49,7 @@ class TestFilter(unittest.TestCase):
                 show_columns.return_value = ["phageID"]
 
         with self.assertRaises(ValueError):
-            self.db_filter.translate_field("gene", "phage")  
+            self.db_filter.translate_field("gene", "phage")
 
     def test_check_operator_1(self):
         "Verify as expected."
@@ -56,8 +59,8 @@ class TestFilter(unittest.TestCase):
 
         self.db_graph_mock.return_value.\
                 get_table.return_value.\
-                show_columns.return_value = ["phageID"]  
-    
+                show_columns.return_value = ["phageID"]
+
     def test_build_queries_1(self):
         "Verify as expected."
         pass
@@ -81,7 +84,7 @@ class TestFilter(unittest.TestCase):
     def test_switch_table_1(self):
         "Verify as expected."
         pass
-    
+
     def test_add_filter_1(self):
         "Verify as expected."
         pass
@@ -238,5 +241,3 @@ class TestCmdFilter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-        
-

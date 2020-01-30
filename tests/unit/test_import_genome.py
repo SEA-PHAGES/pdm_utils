@@ -5,6 +5,7 @@ import unittest
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from datetime import datetime
+import sqlalchemy
 from unittest.mock import patch
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
@@ -12,7 +13,7 @@ from pdm_utils.classes import source
 from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
-from pdm_utils.functions import mysqldb, run_modes
+from pdm_utils.functions import run_modes
 from pdm_utils.pipelines import import_genome
 from pdm_utils.classes import ticket, eval
 
@@ -1516,8 +1517,12 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.host_genus_set = set(["Mycobacterium", "Gordonia"])
         self.cluster_set = set(["A", "B"])
         self.subcluster_set = set(["A2", "B2"])
-        self.engine = mysqldb.get_engine(username="", password="",
-                                         database="", echo=False)
+
+        engine_string = ("mysql+pymysql://"
+                         "pdm_anon:pdm_anon@localhost/"
+                         "actinobacteriophage")
+        self.engine = sqlalchemy.create_engine(engine_string, echo=True)
+
 
     def test_run_checks_1(self):
         """Verify run_checks works using a bundle with:
