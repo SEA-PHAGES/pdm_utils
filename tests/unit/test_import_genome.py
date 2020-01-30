@@ -1,20 +1,20 @@
 """ Unit tests for import functions."""
 
+
+import unittest
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 from datetime import datetime
+from unittest.mock import patch
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
 from pdm_utils.classes import source
 from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
-from pdm_utils.functions import run_modes
+from pdm_utils.functions import mysqldb, run_modes
 from pdm_utils.pipelines import import_genome
 from pdm_utils.classes import ticket, eval
-import unittest
-from Bio.Seq import Seq
-from unittest.mock import patch
-from pdm_utils.classes import mysqlconnectionhandler as mch
-from Bio.Alphabet import IUPAC
 
 def get_errors(item):
     errors = 0
@@ -1516,10 +1516,8 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.host_genus_set = set(["Mycobacterium", "Gordonia"])
         self.cluster_set = set(["A", "B"])
         self.subcluster_set = set(["A2", "B2"])
-
-        self.sql_handle = mch.MySQLConnectionHandler()
-
-
+        self.engine = mysqldb.get_engine(username="", password="",
+                                         database="", echo=False)
 
     def test_run_checks_1(self):
         """Verify run_checks works using a bundle with:
@@ -1708,7 +1706,7 @@ class TestImportGenomeClass6(unittest.TestCase):
         """Verify import_into_db works using a bundle with:
         1 error, prod_run = True, import_locus_tag = True."""
         self.bndl._errors = 1
-        result = import_genome.import_into_db(self.bndl, self.sql_handle,
+        result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="", prod_run=True)
         with self.subTest():
             self.assertFalse(result)
@@ -1723,12 +1721,12 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.tkt.type = "replace"
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["flat_file"] = self.gnm1
-        result = import_genome.import_into_db(self.bndl, self.sql_handle,
+        result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=False)
         self.assertTrue(result)
 
 
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     def test_import_into_db_3(self, execute_transaction_mock):
         """Verify import_into_db works using a bundle with:
         0 errors, genome present, prod_run = True, execution = failed."""
@@ -1737,12 +1735,12 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.tkt.type = "replace"
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["flat_file"] = self.gnm1
-        result = import_genome.import_into_db(self.bndl, self.sql_handle,
+        result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=True)
         self.assertFalse(result)
 
 
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler.execute_transaction")
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     def test_import_into_db_4(self, execute_transaction_mock):
         """Verify import_into_db works using a bundle with:
         0 errors, genome present, prod_run = True, execution = successful."""
@@ -1751,7 +1749,7 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.tkt.type = "replace"
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["flat_file"] = self.gnm1
-        result = import_genome.import_into_db(self.bndl, self.sql_handle,
+        result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=True)
         self.assertTrue(result)
 
@@ -1765,7 +1763,7 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.tkt.eval_flags["import_locus_tag"] = False
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["flat_file"] = self.gnm1
-        result = import_genome.import_into_db(self.bndl, self.sql_handle,
+        result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=False)
         self.assertTrue(clear_mock.called)
 

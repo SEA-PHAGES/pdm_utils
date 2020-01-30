@@ -12,6 +12,17 @@ from pdm_utils.classes import cds
 from pdm_utils.functions import basic
 
 
+
+# TODO unittest.
+def query_dict_list(engine, query):
+    """Get the results of a MySQL query as a list of dictionaries."""
+    result_list = engine.execute(query).fetchall()
+    result_dict_list = []
+    for row in result_list:
+        row_as_dict = dict(row)
+        result_dict_list.append(row_as_dict)
+    return result_dict_list
+
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     """Parse a MySQL database dictionary to create a Genome object.
 
@@ -216,11 +227,7 @@ def retrieve_data(engine, column=None, query=None, phage_id_list=None):
                 + "','".join(phage_id_list) \
                 + "')"
     query = query + ";"
-    result_list = engine.execute(query).fetchall()
-    result_dict_list = []
-    for row in result_list:
-        row_as_dict = dict(row)
-        result_dict_list.append(row_as_dict)
+    result_dict_list = query_dict_list(engine, query)
     return result_dict_list
 
 
@@ -325,15 +332,7 @@ def create_phage_id_set(engine):
     :rtype: set
     """
     query = "SELECT PhageID FROM phage"
-
-    # Returns a list of items, where each item is a tuple of
-    # SQL data for each row in the table.
-    result_list = engine.execute(query)
-
-    # Convert to a set of PhageIDs.
-    result_set = set()
-    for tup in result_list:
-        result_set.add(tup[0])
+    result_set = query_set(engine, query)
     return result_set
 
 
@@ -380,7 +379,7 @@ def create_accession_set(engine):
     :rtype: set
     """
     query = "SELECT Accession FROM phage"
-    result_set = get_set_of_query_data(engine, query)
+    result_set = query_set(engine, query)
     return result_set
 
 
@@ -544,11 +543,7 @@ def get_version_table_data(engine):
         "Version" and "SchemaVersion"
     """
     query = "SELECT * FROM version"
-    result_list = engine.execute(query).fetchall()
-    result_dict_list = []
-    for row in result_list:
-        row_as_dict = dict(row)
-        result_dict_list.append(row_as_dict)
+    result_dict_list = query_dict_list(engine, query)
     return result_dict_list[0]
 
 
@@ -558,7 +553,7 @@ def get_mysql_dbs(engine):
 
     Returns a set of database names."""
     query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
-    databases = get_set_of_query_data(engine, query)
+    databases = query_set(engine, query)
     return databases
 
 
@@ -569,7 +564,7 @@ def get_db_tables(engine, database):
     Returns a set of table names."""
     query = ("SELECT table_name FROM information_schema.tables "
              f"WHERE table_schema = '{database}'")
-    db_tables = get_set_of_query_data(engine, query)
+    db_tables = query_set(engine, query)
     return db_tables
 
 
@@ -581,12 +576,12 @@ def get_table_columns(engine, database, table_name):
     query = ("SELECT column_name FROM information_schema.columns WHERE "
               f"table_schema = '{database}' AND "
               f"table_name = '{table_name}'")
-    columns = get_set_of_query_data(engine, query)
+    columns = query_set(engine, query)
     return columns
 
 
 
-def get_set_of_query_data(engine, query):
+def query_set(engine, query):
     """Retrieve set of data from MySQL query."""
     result_list = engine.execute(query).fetchall()
     set_of_data = basic.get_values_from_tuple_list(result_list)
