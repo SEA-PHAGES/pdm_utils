@@ -757,6 +757,7 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
             msg = msg + "Valid MySQL login credentials. "
         except:
             valid = False
+            print("Invalid login credentials.")
         attempt += 1
 
     if valid != True:

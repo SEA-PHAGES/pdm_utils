@@ -702,7 +702,12 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[2] = "Actinobacteriophage_x"
-        getpass_mock.side_effect = [user, pwd]
+        # Assumes that mysqldb.get_engine(attempts=5)
+        getpass_mock.side_effect = [user, pwd,
+                                    user, pwd,
+                                    user, pwd,
+                                    user, pwd,
+                                    user, pwd]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
