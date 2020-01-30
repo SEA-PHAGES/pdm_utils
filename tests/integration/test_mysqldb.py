@@ -1687,6 +1687,46 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertIsNone(engine)
 
+    @patch("getpass.getpass")
+    def test_get_engine_7(self, getpass_mock):
+        """Verify that engine is returned when database is provided and
+        more than one attempt is needed for username."""
+        getpass_mock.side_effect = ["invalid", pwd, user, pwd]
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage", attempts=3)
+        with self.subTest():
+            self.assertTrue(getpass_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(engine)
+
+    @patch("getpass.getpass")
+    def test_get_engine_8(self, getpass_mock):
+        """Verify that engine is returned when database is provided and
+        more than one attempt is needed for password."""
+        getpass_mock.side_effect = [user, "invalid", user, pwd]
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage", attempts=3)
+        with self.subTest():
+            self.assertTrue(getpass_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(engine)
+
+    @patch("builtins.input")
+    def test_get_engine_9(self, input_mock):
+        """Verify that engine is returned when database is provided by input."""
+        input_mock.side_effect = ["Actinobacteriophage"]
+        engine, msg = mysqldb.get_engine(username=user, password=pwd, attempts=1)
+        with self.subTest():
+            self.assertTrue(input_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(engine)
+
+    @patch("builtins.input")
+    def test_get_engine_10(self, input_mock):
+        """Verify that engine is returned when database is provided and
+        more than one attempt is needed for database."""
+        input_mock.side_effect = ["invalid", "Actinobacteriophage"]
+        engine, msg = mysqldb.get_engine(username=user, password=pwd, attempts=3)
+        with self.subTest():
+            self.assertIsNotNone(engine)
 
 
 

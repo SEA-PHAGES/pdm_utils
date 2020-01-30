@@ -728,16 +728,27 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
     valid = False
     msg = "Setting up MySQL connection. "
     while (attempt < attempts and valid == False):
+        # The value provided by getpass needs to be distinct from
+        # the function parameter. With this setup, if the user inputs
+        # an incorrect value using getpass, they can try again.
+        # But if the user passes an incorrect value as a parameter,
+        # getpass is not called.
         if username is None:
-            username = getpass.getpass(prompt="MySQL username: ")
+            input_username = getpass.getpass(prompt="MySQL username: ")
+        else:
+            input_username = username
         if password is None:
-            password = getpass.getpass(prompt="MySQL password: ")
+            input_password = getpass.getpass(prompt="MySQL password: ")
+        else:
+            input_password = password
         if database is None:
-            database = input("Database: ")
+            input_database = input("Database: ")
+        else:
+            input_database = database
         engine_string = construct_engine_string(
-                            username=username,
-                            password=password,
-                            database=database)
+                            username=input_username,
+                            password=input_password,
+                            database=input_database)
         engine = sqlalchemy.create_engine(engine_string, echo=echo)
         try:
             conn = engine.connect()
