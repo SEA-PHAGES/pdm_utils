@@ -73,7 +73,7 @@ def get_pham_geneids(mysql_handler):
     geneid_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
     geneid_results = mysql_handler.execute_query(geneid_query)
 
-    print(f"Found {len(geneid_results)} genes in phams")
+    print(f"Found {len(geneid_results)} genes in phams...")
 
     for dictionary in geneid_results:
         pham_id = dictionary["PhamID"]
@@ -98,7 +98,7 @@ def get_pham_colors(mysql_handler):
     color_query = "SELECT PhamID, Color FROM pham"
     color_results = mysql_handler.execute_query(color_query)
 
-    print(f"Found colors for {len(color_results)} phams")
+    print(f"Found colors for {len(color_results)} phams...")
 
     for dictionary in color_results:
         pham_id = dictionary["PhamID"]
@@ -120,7 +120,7 @@ def get_new_geneids(mysql_handler):
     gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
     gene_results = mysql_handler.execute_query(gene_query)
 
-    print(f"Found {len(new_geneids)} genes not in phams")
+    print(f"Found {len(new_geneids)} genes not in phams...")
 
     for dictionary in gene_results:
         geneid = dictionary["GeneID"]
@@ -145,7 +145,7 @@ def map_geneids_to_translations(mysql_handler):
         trans = dictionary["Translation"]
         gs_to_ts[geneid] = trans
 
-    print(f"Found {len(results)} genes in the database")
+    print(f"Found {len(results)} genes in the database...")
 
     return gs_to_ts
 
@@ -169,7 +169,7 @@ def map_translations_to_geneids(mysql_handler):
         geneids.append(geneid)
         ts_to_gs[trans] = geneids
 
-    print(f"Found {len(results)} unique translations in the database")
+    print(f"Found {len(ts_to_gs)} unique translations in the database...")
 
     return ts_to_gs
 
@@ -224,6 +224,9 @@ def blastdb_command(wd):
     """
     command = f"{BLASTCLUST_PATH}/formatdb -i {wd}/input.fasta " \
               f"-p T -o T -n {wd}/sequenceDB"
+
+    print("Build blast protein database for blastclust...")
+
     return command
 
 
@@ -234,6 +237,9 @@ def mmseqsdb_command(wd):
     :return:
     """
     command = f"mmseqs createdb {wd}/input.fasta {wd}/sequenceDB"
+
+    print("Build MMseqs2 protein database for mmseqs cluster...")
+
     return command
 
 
@@ -257,12 +263,12 @@ def phamerate(params, program, wd):
         print(f"Unknown program {program}")
         command = "echo No phameration command..."
 
-    print(f"Beginning clustering with {program}...")
+    print(f"Begin clustering with {program}...")
     with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
         print(process.stdout.read().decode("utf-8") + "\n\n")
         print(process.stderr.read().decode("utf-8") + "\n\n")
 
-    print(f"Finished clustering with {program}...")
+    print(f"Finish clustering with {program}...")
 
 
 def blast_phamerate_command(parameters, wd):
@@ -325,10 +331,6 @@ def parse_mmseqs(wd):
     :param wd: the temporary working directory for phameration
     :return: parsed_phams (dictionary)
     """
-    parsed_phams = dict()
-    pham_geneids = list()
-    pham_name = 0
-
     filename = f"{wd}/output.txt"
 
     print("Convert MMseqs2 output into parseable format...")
@@ -347,6 +349,10 @@ def parse_mmseqs(wd):
 
     print("Begin parsing MMseqs2 output...")
 
+    parsed_phams = dict()
+    pham_geneids = list()
+    pham_name = 0
+
     with open(filename, "r") as fh:
         # Latest MMseqs2 output format indicates the start of a new
         # pham by repeating the pham representative's identifier in
@@ -359,6 +365,12 @@ def parse_mmseqs(wd):
         while current:
             # If two adjacent lines are the same - new pham
             if prior == current:
+                # remove the last geneid added to the pham
+                try:
+                    pham_geneids.pop(-1)
+                except IndexError:
+                    # first pham will fail b/c pham_geneids is empty
+                    pass
                 # dump stored geneids into the dictionary
                 parsed_phams[pham_name] = pham_geneids
                 # increment the pham name
@@ -428,11 +440,11 @@ def reintroduce_duplicates(new_phams, trans_groups, genes_and_trans):
     for key in new_phams.keys():
         geneids = new_phams[key]
         dup_geneids = list()
-        for gene in geneids:
-            translation = genes_and_trans[gene]
+        for geneid in geneids:
+            translation = genes_and_trans[geneid]
             dup_group = trans_groups[translation]
-            for geneid in dup_group:
-                dup_geneids.append(geneid)
+            for gene in dup_group:
+                dup_geneids.append(gene)
         new_phams[key] = set(dup_geneids)
     return new_phams
 
@@ -448,11 +460,11 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
     :return:
     """
     final_phams = dict()
-    new_colors = dict()
+    final_colors = dict()
 
     outcount = 0
     total = len(old_phams)
-    new_phams_1 = new_phams.copy()
+    new_phams_copy = new_phams.copy()
 
     # Iterate through old and new phams
     for old_key in old_phams.keys():
@@ -464,8 +476,8 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
         if old_key in final_phams.keys():
             continue
 
-        for new_key in new_phams_1:
-            new_pham = new_phams_1[new_key]
+        for new_key in new_phams_copy.keys():
+            new_pham = new_phams_copy[new_key]
 
             if old_pham & new_pham == set():
                 continue
@@ -473,8 +485,8 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
             # Case 1 + 5 (Identity and Subtraction)
             if old_pham == new_pham:
                 final_phams[old_key] = new_pham
-                new_colors[old_key] = old_colors[old_key]
-                new_phams_1.pop(new_key, None)
+                final_colors[old_key] = old_colors[old_key]
+                new_phams_copy.pop(new_key)
                 break
 
             # Case 2 and 4 (Addition and Join) - PHAM GREW
@@ -484,15 +496,13 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
                 if new_pham & new_genes != set():
 
                     # Case 4 - Join with new gene
-                    if (new_pham - (new_pham & new_genes)) - \
-                            old_pham \
-                            != set():
+                    if (new_pham - (new_pham & new_genes)) - old_pham != set():
                         break
 
                     # Case 2 - Addition with new gene
                     final_phams[old_key] = new_pham
-                    new_colors[old_key] = old_colors[old_key]
-                    new_phams_1.pop(new_key, None)
+                    final_colors[old_key] = old_colors[old_key]
+                    new_phams_copy.pop(new_key)
                     break
 
                 # Case 4 - Join without new gene
@@ -505,16 +515,16 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
 
     final_phams[0] = "placeholder"
     highest_pham = max(map(int, final_phams.keys())) + 1
-    del final_phams[0]
+    final_phams.pop(0)
 
     # Reassign data for split or joined phams
-    for key in new_phams_1:
+    for key in new_phams_copy.keys():
         new_key = highest_pham
         highest_pham += 1
 
-        final_phams[new_key] = new_phams_1[key]
+        final_phams[new_key] = new_phams_copy[key]
 
-        if len(new_phams_1[key]) > 1:
+        if len(new_phams_copy[key]) > 1:
             h = s = v = 0
             while h <= 0:
                 h = random.random()
@@ -526,11 +536,11 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
             rgb = (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
             hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
                                                   int(rgb[2]))
-            new_colors[new_key] = hexrgb
+            final_colors[new_key] = hexrgb
         else:
-            new_colors[new_key] = '#FFFFFF'
+            final_colors[new_key] = '#FFFFFF'
 
-    return final_phams, new_colors
+    return final_phams, final_colors
 
 
 def reinsert_pham_data(new_phams, new_colors, mysql_handler):
