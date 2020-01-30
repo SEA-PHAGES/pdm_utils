@@ -2,7 +2,7 @@ import argparse
 import sys
 import datetime
 import os
-from shutil import rmtree
+import shutil
 
 try:
     import pymysql as pms
@@ -48,6 +48,8 @@ def setup_argparser():
                         help="coverage mode in range [0, 4] (mmseqs only)")
     parser.add_argument("--clu_mode", type=int, default=0,
                         help="cluster mode in range [0, 3] (mmseqs only)")
+    parser.add_argument("--temp_dir", type=str, default="/tmp/phamerate",
+                        help="temporary directory for phameration file I/O")
     return parser
 
 
@@ -58,6 +60,8 @@ def main(argument_list):
     # Parse arguments
     args = phamerate_parser.parse_args(argument_list)
     program = args.program
+    temp_dir = args.temp_dir
+
 
     # Initialize MySQLConnectionHandler with database provided at CLI
     mysql_handler = MySQLConnectionHandler()
@@ -79,37 +83,38 @@ def main(argument_list):
     start = datetime.datetime.now()
 
     # Refresh temp_dir
-    if os.path.exists("/tmp/phamerate"):
+    if os.path.exists(temp_dir):
         try:
-            rmtree("/tmp/phamerate")
+            shutil.rmtree(temp_dir)
         except OSError:
-            print("Failed to delete existing '/tmp/phamerate'")
-            sys.exit(1)
+            print(f"Failed to delete existing temp directory '{temp_dir}'")
+            return
     try:
-        os.makedirs("/tmp/phamerate")
+        os.makedirs(temp_dir)
     except OSError:
-        print("Failed to create new '/tmp/phamerate'")
-        sys.exit(1)
+        print(f"Failed to create new temp directory '{temp_dir}")
+        return
 
     # Get old pham data and un-phamerated genes
-    old_phams, old_colors = read_existing_phams(mysql_handler)
-    unphamerated = read_unphamerated_genes(mysql_handler)
+    old_phams = get_pham_geneids(mysql_handler)
+    old_colors = get_pham_colors(mysql_handler)
+    unphamerated = get_new_geneids(mysql_handler)
 
     # Get GeneIDs & translations, and translation groups
-    genes_and_trans, trans_groups = get_translations(mysql_handler)
+    genes_and_trans = map_geneids_to_translations(mysql_handler)
+    translation_groups = map_translations_to_geneids(mysql_handler)
 
     # Write input fasta file
-    write_fasta(trans_groups)
+    write_fasta(translation_groups, temp_dir)
 
     # Create clusterdb and perform clustering
     program_params = get_program_params(program, args)
-    create_clusterdb(program)
-    phamerate(program_params, program)
+    create_clusterdb(program, temp_dir)
+    phamerate(program_params, program, temp_dir)
 
-    # Convert output to parseable (mmseqs) and parse outputs
-    convert_to_parseable(program)
-    new_phams = parse_output(program)
-    new_phams = reintroduce_duplicates(new_phams, trans_groups, genes_and_trans)
+    # Parse phameration output
+    new_phams = parse_output(program, temp_dir)
+    new_phams = reintroduce_duplicates(new_phams, translation_groups, genes_and_trans)
 
     # Preserve old pham names and colors
     new_phams, new_colors = preserve_phams(old_phams, new_phams, old_colors,

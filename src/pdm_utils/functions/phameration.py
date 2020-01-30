@@ -10,269 +10,407 @@ from pdm_utils.constants.constants import BLASTCLUST_PATH
 
 
 def get_program_params(program, args):
+    program_params = dict()
+
     if program == "blast":
-        params = {"-S": args.identity,
-                  "-L": float(args.coverage)/100,
-                  "-a": args.threads}
+        program_params = get_blast_params(args)
     elif program == "mmseqs":
-        params = {"--threads": args.threads,
-                  "-v": args.verbose,
-                  "--cluster-steps": args.steps,
-                  "--max-seqs": args.max_seqs,
-                  "--min-seq-id": float(args.identity)/100,
-                  "-c": float(args.coverage)/100,
-                  "--alignment-mode": args.aln_mode,
-                  "--cov-mode": args.cov_mode,
-                  "--cluster-mode": args.clu_mode}
+        program_params = get_mmseqs_params(args)
     else:
         print(f"Unknown program {program}")
-        return
 
-    return params
+    return program_params
 
 
-def read_existing_phams(mysql_handler):
+def get_blast_params(args):
     """
-    Uses the provided mysql_handler to query the database for existing
-    pham names and colors, and returns two dictionaries: one mapping
-    phams to geneids, and one mapping phams to colors
-    :param mysql_handler:
-    :return: old_phams, old_colors
+    Uses parsed arguments from phamerate.main() to build the blastclust
+    commandline argument dictionary
+    :param args: dictionary from Argparse.ArgumentParser.parse_args()
+    :return: dictionary of blast CLI parameters
     """
-    old_phams = dict()
-    old_colors = dict()
-    gene_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
-    gene_results = mysql_handler.execute_query(gene_query)
+    blast_params = dict()
+    try:
+        blast_params["-S"] = args.identity
+        blast_params["-L"] = float(args.coverage)/100
+        blast_params["-a"] = args.threads
+    except AttributeError as err:
+        print(f"Error {err.args[0]}: {err.args[1]}")
+    return blast_params
 
-    print("{} old genes".format(len(gene_results)))
 
-    for dictionary in gene_results:
+def get_mmseqs_params(args):
+    """
+    Uses parsed arguments from phamerate.main() to build the MMseqs2
+    commandline argument dictionary
+    :param args: dictionary from Argparse.ArgumentParser.parse_args()
+    :return: dictionary of MMseqs2 CLI parameters
+    """
+    mmseqs_params = dict()
+    try:
+        mmseqs_params["--threads"] = args.threads
+        mmseqs_params["-v"] = args.verbose
+        mmseqs_params["--cluster-steps"] = args.steps
+        mmseqs_params["--max-seqs"] = args.max_seqs
+        mmseqs_params["--min-seq-id"] = float(args.identity)/100
+        mmseqs_params["-c"] = float(args.coverage)/100
+        mmseqs_params["--alignment-mode"] = args.aln_mode
+        mmseqs_params["--cov-mode"] = args.cov_mode
+        mmseqs_params["--cluster-mode"] = args.clu_mode
+    except AttributeError as err:
+        print(f"Error {err.args[0]}: {err.args[1]}")
+    return mmseqs_params
+
+
+def get_pham_geneids(mysql_handler):
+    """
+    Queries the database for those genes that are already phamerated.
+    :param mysql_handler: the Engine allowing access to the database
+    :return: pham_geneids
+    """
+    pham_geneids = dict()
+
+    geneid_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
+    geneid_results = mysql_handler.execute_query(geneid_query)
+
+    print(f"Found {len(geneid_results)} genes in phams")
+
+    for dictionary in geneid_results:
         pham_id = dictionary["PhamID"]
         geneid = dictionary["GeneID"]
 
-        if pham_id in old_phams.keys():
-            old_phams[pham_id] = old_phams[pham_id] | {geneid}
+        if pham_id in pham_geneids.keys():
+            pham_geneids[pham_id] = pham_geneids[pham_id] | {geneid}
         else:
-            old_phams[pham_id] = {geneid}
+            pham_geneids[pham_id] = {geneid}
 
-    for pham_id in old_phams.keys():
-        color_query = f"SELECT Color FROM pham WHERE PhamID = {pham_id}"
-        color_results = mysql_handler.execute_query(color_query)[0]
-        old_colors[pham_id] = color_results["Color"]
-
-    return old_phams, old_colors
+    return pham_geneids
 
 
-def read_unphamerated_genes(mysql_handler):
+def get_pham_colors(mysql_handler):
     """
-    Uses the provided mysql_handler to query the database for genes
-    that are not represented in the pham table (genes whose phages
-    were updated in the current round of database updates). Returns
-    the list of GeneIDs not yet in a pham
-    :return:
+    Queries the database for the colors of existing phams
+    :param mysql_handler: the Engine allowing access to the database
+    :return: pham_colors
     """
-    new_genes = set()
+    pham_colors = dict()
+
+    color_query = "SELECT PhamID, Color FROM pham"
+    color_results = mysql_handler.execute_query(color_query)
+
+    print(f"Found colors for {len(color_results)} phams")
+
+    for dictionary in color_results:
+        pham_id = dictionary["PhamID"]
+        color = dictionary["Color"]
+
+        pham_colors[pham_id] = color
+
+    return pham_colors
+
+
+def get_new_geneids(mysql_handler):
+    """
+    Queries the database for those genes that are not yet phamerated.
+    :param mysql_handler: the Engine allowing access to the database
+    :return: new_geneids
+    """
+    new_geneids = set()
 
     gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
     gene_results = mysql_handler.execute_query(gene_query)
 
-    print("{} new genes".format(len(gene_results)))
+    print(f"Found {len(new_geneids)} genes not in phams")
 
     for dictionary in gene_results:
         geneid = dictionary["GeneID"]
-        new_genes = new_genes | {geneid}
+        new_geneids = new_geneids | {geneid}
 
-    return new_genes
+    return new_geneids
 
 
-def get_translations(mysql_handler):
+def map_geneids_to_translations(mysql_handler):
     """
-    Uses the provided mysql_handler to query the database for all
-    GeneIDs and translations.  Returns two dictionaries: one mapping
-    GeneIDs to translations, and the other mapping translations to
-    the list of GeneIDs associated with them.
-    :param mysql_handler:
-    :return:
+    Constructs a dictionary mapping all geneids to their translations.
+    :param mysql_handler: the Engine allowing access to the database
+    :return: gs_to_ts
     """
-    geneids_to_translations = dict()
-    translation_groups = dict()
+    gs_to_ts = dict()
 
     query = "SELECT GeneID, Translation FROM gene"
     results = mysql_handler.execute_query(query)
 
-    print(f"{len(results)} genes in the database")
+    for dictionary in results:
+        geneid = dictionary["GeneID"]
+        trans = dictionary["Translation"]
+        gs_to_ts[geneid] = trans
+
+    print(f"Found {len(results)} genes in the database")
+
+    return gs_to_ts
+
+
+def map_translations_to_geneids(mysql_handler):
+    """
+    Constructs a dictionary mapping all unique translations to their
+    groups of geneids
+    :param mysql_handler: the Engine allowing access to the database
+    :return: ts_to_gs
+    """
+    ts_to_gs = dict()
+
+    query = "SELECT GeneID, Translation FROM gene"
+    results = mysql_handler.execute_query(query)
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
-        translation = dictionary["Translation"]
-        # map each geneid to its translation
-        geneids_to_translations[geneid] = translation
+        trans = dictionary["Translation"]
+        geneids = ts_to_gs.get(trans, [])
+        geneids.append(geneid)
+        ts_to_gs[trans] = geneids
 
-        # map translations to their corresponding geneids
-        translation_group = translation_groups.get(translation, [])
-        translation_group.append(geneid)
-        translation_groups[translation] = translation_group
+    print(f"Found {len(results)} unique translations in the database")
 
-    return geneids_to_translations, translation_groups
+    return ts_to_gs
 
 
-def write_fasta(trans_groups, dir="/tmp/phamerate"):
+def write_fasta(trans_groups, wd):
     """
-    Writes the translations in `trans_dict` to a fasta_file in `dir`.
+    Writes the translations in `trans_dict` to a fasta_file in `wd`.
     :param trans_groups: dictionary mapping translations to their
     associated GeneIDs
-    :param dir: the directory to write input.fasta into
+    :param wd: the temporary working directory for phameration
     :return:
     """
     print("Begin writing genes to fasta...")
-    fasta = open(f"{dir}/input.fasta", "w")
+    fasta = open(f"{wd}/input.fasta", "w")
     for translation in trans_groups.keys():
         fasta.write(f">{trans_groups[translation][0]}\n{translation}\n")
     fasta.close()
 
 
-def create_clusterdb(program="mmseqs", dir="/tmp/phamerate"):
+def create_clusterdb(program, wd):
     """
-    Decides which program is being used for clustering (mmseqs by
-    default) and builds a database from input.fasta appropriate for
-    use with the indicated program
+    Decides which program is being used for clustering and calls
+    the database constructor method for that program to build a
+    database from input.fasta
     :param program: the program to be used for clustering (currently
     supported options are "mmseqs" or "blast")
-    :param dir: temporary directory where all I/O will take place
+    :param wd: the temporary working directory for phameration
     :return:
     """
+    # If program is MMseqs2 (default), make MMseqs2 database
+    if program == "mmseqs":
+        command = mmseqsdb_command(wd)
     # If program is blast, make blastdb
-    if program == "blast":
-        command = f"{BLASTCLUST_PATH}/formatdb -i {dir}/input.fasta " \
-                  f"-p T -o T -n {dir}/sequenceDB"
-
-    # Default action is mmseqs
-    elif program == "mmseqs":
-        command = f"mmseqs createdb {dir}/input.fasta {dir}/sequenceDB"
-
+    elif program == "blast":
+        command = blastdb_command(wd)
     # Otherwise (e.g. kClust or other programs not currently supported)
     else:
         print(f"Unknown program {program}")
-        return
+        command = "echo No database construction command..."
 
-    print(command)
     # Run the command - assumes mmseqs and makeblastdb are either at the
     # same scope as toplevel that calls these functions, or in $PATH
     with Popen(args=shlex.split(command), stdout=PIPE) as process:
         print(process.stdout.read().decode("utf-8") + "\n\n")
 
 
-def phamerate(params, program="mmseqs", dir="/tmp/phamerate"):
+def blastdb_command(wd):
     """
-    Uses inputs to build the command string, then runs it with Popen
+    Builds a blastp database to use for blastclust phameration
+    :param wd: the temporary working directory for phameration
+    :return:
+    """
+    command = f"{BLASTCLUST_PATH}/formatdb -i {wd}/input.fasta " \
+              f"-p T -o T -n {wd}/sequenceDB"
+    return command
+
+
+def mmseqsdb_command(wd):
+    """
+    Builds an MMseqs2 database to use for MMseqs2 phameration
+    :param wd: the temporary working directory for phameration
+    :return:
+    """
+    command = f"mmseqs createdb {wd}/input.fasta {wd}/sequenceDB"
+    return command
+
+
+def phamerate(params, program, wd):
+    """
+    Phamerates unique translations using specified program
     :param params: dictionary of program parameters
     :param program: the program to be used for clustering (currently
     supported options are "mmseqs" or "blast")
-    :param dir: temporary directory where all I/O will take place
+    :param wd: the temporary working directory for phameration
     :return:
     """
+    # If program is MMseqs2 (default), create mmseqs command string
+    if program == "mmseqs":
+        command = mmseqs_phamerate_command(params, wd)
     # If program is blast, create blastclust command string
-    if program == "blast":
-        base = f"{BLASTCLUST_PATH}/blastclust -i {dir}/input.fasta -d " \
-               f"{dir}/sequenceDB -o {dir}/output.txt"
-
-    # Default action is mmseqs command string
-    elif program == "mmseqs":
-        base = f"mmseqs cluster {dir}/sequenceDB {dir}/clusterDB {dir}"
-
+    elif program == "blast":
+        command = blast_phamerate_command(params, wd)
     # Otherwise (e.g. kClust or other programs not currently supported)
     else:
         print(f"Unknown program {program}")
-        return
+        command = "echo No phameration command..."
 
-    # Now add arguments to the base command:
-    for param in params.keys():
-        base += f" {param} {params[param]}"
-
-    print("Beginning clustering...")
-    with Popen(args=shlex.split(base), stdout=PIPE, stderr=PIPE) as process:
+    print(f"Beginning clustering with {program}...")
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
         print(process.stdout.read().decode("utf-8") + "\n\n")
         print(process.stderr.read().decode("utf-8") + "\n\n")
 
-    print("Finished clustering...")
+    print(f"Finished clustering with {program}...")
 
 
-def convert_to_parseable(program="mmseqs", dir="/tmp/phamerate"):
+def blast_phamerate_command(parameters, wd):
     """
-    If program is not mmseqs, does nothing. Otherwise it converts
-    clusterDB to more parseable output.fasta
-    :param program: the program used for clustering (currently
-    supported options are "mmseqs" or "blast")
-    :param dir: temporary directory where all I/O takes place
-    :return:
+    Builds blast phameration command (base command + user args)
+    :param parameters: dictionary of blastclust parameters
+    :param wd: the temporary working directory for phameration
+    :return: command
     """
-    # Do nothing if blast - output is already easily parseable
-    if program == "blast":
-        return
+    command = f"{BLASTCLUST_PATH}/blastclust -i {wd}/input.fasta -d "\
+              f"{wd}/sequenceDB -o {wd}/output.txt"
 
-    # For mmseqs we want to convert to ~fasta~ format for easier parsing
-    elif program == "mmseqs":
-        command = f"mmseqs createseqfiledb {dir}/sequenceDB {dir}/clusterDB " \
-                  f"{dir}/output.txt"
+    for parameter in parameters.keys():
+        command += f" {parameter} {parameters[parameter]}"
 
-    # Otherwise (e.g. kClust or other programs not currently supported)
-    else:
-        print(f"Unknown program {program}")
-        return
-
-    # Run the command if we got here
-    with Popen(args=shlex.split(command), stdout=PIPE) as process:
-        print(process.stdout.read().decode("utf-8") + "\n\n")
+    return command
 
 
-def parse_output(program="mmseqs", dir="/tmp/phamerate"):
+def mmseqs_phamerate_command(parameters, wd):
     """
-    Parses output file from clustering program into a dictionary of
-    the new pham data
+    Builds MMseqs2 phameration command (base command + user args)
+    :param parameters: dictionary of MMseqs2 parameters
+    :param wd: the temporary working directory for phameration
+    :return: command
+    """
+    command = f"mmseqs cluster {wd}/sequenceDB {wd}/clusterDB {wd}"
+
+    for parameter in parameters.keys():
+        command += f" {parameter} {parameters[parameter]}"
+
+    return command
+
+
+def parse_output(program, wd):
+    """
+    Runs the parser appropriate to the specified phameration program
     :param program: program used for clustering
-    :param dir: directory where the clustering output is stored
+    :param wd: the temporary working directory for phameration
     :return:
     """
     # Variables to store the new pham data
-    phams = dict()
-    name = 1
-    geneids = list()
+    parsed_phams = dict()
 
-    print(f"Beginning to parse {program} output...")
-
-    if program == "blast":
-        with open(f"{dir}/output.txt", "r") as fh:
-            in_reader = csv.reader(fh, delimiter=" ")
-            for i, row in enumerate(in_reader):
-                geneids = [geneid for geneid in row[:-1]]   # last token is ''
-                phams[i + 1] = geneids
-
-    elif program == "mmseqs":
-        with open(f"{dir}/output.txt", "r") as fh:
-            line = fh.readline()
-            # EOF marked by null bit
-            while line != "\x00":
-                if line.startswith(">"):
-                    geneids.append(line.lstrip(">").rstrip("\n").rstrip(" "))
-                # If line starts with a null bit, we hit a new pham
-                elif line.startswith("\x00"):
-                    phams[name] = geneids
-                    name += 1
-                    geneids = [line.lstrip("\x00").lstrip(">").rstrip(
-                        "\n").rstrip(" ")]
-                # Otherwise we're on a translation - skip
-                else:
-                    pass
-                line = fh.readline()
-            # Dump the last pham
-            phams[name] = geneids
-
+    if program == "mmseqs":
+        parsed_phams = parse_mmseqs(wd)
+    elif program == "blast":
+        parsed_phams = parse_blast(wd)
     else:
         print(f"Unknown program {program}...")
-        return {}
 
-    print(f"Done parsing {program} output.")
-    return phams
+    return parsed_phams
+
+
+def parse_mmseqs(wd):
+    """
+    Parses MMseqs2 clustering output by running:
+    - mmseqs createseqfiledb sequenceDB clusterDB clusterSeqs
+    - mmseqs result2flat sequenceDB sequenceDB clusterSeqs output.txt
+    and then parsing output.txt
+    :param wd: the temporary working directory for phameration
+    :return: parsed_phams (dictionary)
+    """
+    parsed_phams = dict()
+    pham_geneids = list()
+    pham_name = 0
+
+    filename = f"{wd}/output.txt"
+
+    print("Convert MMseqs2 output into parseable format...")
+
+    command = f"mmseqs createseqfiledb {wd}/sequenceDB {wd}/clusterDB " \
+              f"{wd}/clusterSeqs"
+
+    with Popen(args=shlex.split(command), stdout=PIPE) as process:
+        print(process.stdout.read().decode("utf-8") + "\n\n")
+
+    command = f"mmseqs result2flat {wd}/sequenceDB {wd}/sequenceDB " \
+              f"{wd}/clusterSeqs {filename}"
+
+    with Popen(args=shlex.split(command), stdout=PIPE) as process:
+        print(process.stdout.read().decode("utf-8") + "\n\n")
+
+    print("Begin parsing MMseqs2 output...")
+
+    with open(filename, "r") as fh:
+        # Latest MMseqs2 output format indicates the start of a new
+        # pham by repeating the pham representative's identifier in
+        # two adjacent lines - need references to the prior line as
+        # well as the current one.
+        prior = fh.readline()
+        current = fh.readline()
+
+        # While not EOF, iterate through lines
+        while current:
+            # If two adjacent lines are the same - new pham
+            if prior == current:
+                # dump stored geneids into the dictionary
+                parsed_phams[pham_name] = pham_geneids
+                # increment the pham name
+                pham_name += 1
+                # the current geneid is the start of the next pham
+                pham_geneids = [current.lstrip(">").rstrip()]
+            # If we got here and line starts with ">", we're a geneid
+            elif current.startswith(">"):
+                # Add geneid to current working pham
+                pham_geneids.append(current.lstrip(">").rstrip())
+            # Otherwise, we're a translation
+            else:
+                # Skip
+                pass
+
+            # The current line is the next loop's prior
+            prior = current
+            # Read in the next line
+            current = fh.readline()
+
+        # Dump the last working pham into the dictionary
+        parsed_phams[pham_name] = pham_geneids
+
+    # Pham 0 is a placeholder - remove it and then return parsed_phams
+    parsed_phams.pop(0)
+
+    print("Finish parsing MMseqs2 output...")
+
+    return parsed_phams
+
+
+def parse_blast(wd):
+    """
+    Parses blastclust output (space-delimited values)
+    :param wd: the temporary working directory for phameration
+    :return: parsed_phams (dictionary)
+    """
+    parsed_phams = dict()
+
+    filename = f"{wd}/output.txt"
+
+    print("Begin parsing blastclust output...")
+
+    with open(filename, "r") as fh:
+        in_reader = csv.reader(fh, delimiter=" ")
+        for i, row in enumerate(in_reader):
+            geneids = [geneid for geneid in row[:-1]]   # last token is ''
+            parsed_phams[i + 1] = geneids
+
+    print("Finish parsing blastclust output...")
+
+    return parsed_phams
 
 
 def reintroduce_duplicates(new_phams, trans_groups, genes_and_trans):
