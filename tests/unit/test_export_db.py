@@ -3,7 +3,7 @@
 import unittest, os
 from argparse import ArgumentError
 from unittest.mock import patch, Mock, PropertyMock, call
-from pdm_utils.classes import genome, cds, mysqlconnectionhandler
+from pdm_utils.classes import genome, cds
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
@@ -31,12 +31,6 @@ class TestFileExport(unittest.TestCase):
         test_phage3 = genome.Genome()
         test_phage3.name = self.names[2]
         self.genomes = [ test_phage1, test_phage2, test_phage3 ]
-        #Creates a test MySQLConnectionHandler object
-        mch = mysqlconnectionhandler.MySQLConnectionHandler()
-        mch._username = "pdm_anon"
-        mch._password = "pdm_anon"
-        mch.database = "Test"
-        self.sql_handle = mch
         #Creates test Cds objects
         test_cds1 = cds.Cds()
         test_cds1.start = 1
