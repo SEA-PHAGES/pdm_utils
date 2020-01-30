@@ -3,16 +3,8 @@ import sys
 import datetime
 import os
 from shutil import rmtree
-
-try:
-    import pymysql as pms
-except ImportError:
-    print("Failed to import pymysql. Please install it and try again.")
-    sys.exit(1)
-
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.functions.phameration import *
-
+from pdm_utils.functions import mysqldb
 
 def setup_argparser():
     """
@@ -59,17 +51,8 @@ def main(argument_list):
     args = phamerate_parser.parse_args(argument_list)
     program = args.program
 
-    # Initialize MySQLConnectionHandler with database provided at CLI
-    mysql_handler = MySQLConnectionHandler()
-    mysql_handler.database = args.db
-
-    # Use open_connection() method to simultaneously get user credentials
-    # and test database access
-    mysql_handler.open_connection()
-
-    # Handle possibility that connection failed (bad database or user/pass)
-    if mysql_handler.connection_status() is not True:
-        sys.exit(1)
+    # Initialize database connection using database provided at CLI
+    engine = mysqldb.connect_to_db(args.db)
 
     # If we made it past the above connection_status() check, database access
     # works (user at least has SELECT privileges on the indicated database).
@@ -92,11 +75,11 @@ def main(argument_list):
         sys.exit(1)
 
     # Get old pham data and un-phamerated genes
-    old_phams, old_colors = read_existing_phams(mysql_handler)
-    unphamerated = read_unphamerated_genes(mysql_handler)
+    old_phams, old_colors = read_existing_phams(engine)
+    unphamerated = read_unphamerated_genes(engine)
 
     # Get GeneIDs & translations, and translation groups
-    genes_and_trans, trans_groups = get_translations(mysql_handler)
+    genes_and_trans, trans_groups = get_translations(engine)
 
     # Write input fasta file
     write_fasta(trans_groups)
@@ -126,13 +109,13 @@ def main(argument_list):
     # Clear old pham data - auto commits at end of transaction - this will also
     # set all PhamID values in gene table to NULL
     commands = ["DELETE FROM pham"]
-    mysql_handler.execute_transaction(commands)
+    mysqldb.execute_transaction(engine, commands)
 
     # Insert new pham/color data
-    reinsert_pham_data(new_phams, new_colors, mysql_handler)
+    reinsert_pham_data(new_phams, new_colors, engine)
 
     # Fix miscolored phams/orphams
-    fix_miscolored_phams(mysql_handler)
+    fix_miscolored_phams(engine)
 
     # Record stop time
     stop = datetime.datetime.now()

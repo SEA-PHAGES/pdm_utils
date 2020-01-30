@@ -9,8 +9,8 @@ how the database was created.
 
 """
 
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.functions.phameration import *
+from pdm_utils.functions import mysqldb
 import os
 from shutil import rmtree
 import unittest
@@ -18,15 +18,13 @@ import unittest
 
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
-        self.handler = MySQLConnectionHandler(username="pdm_anon",
-                                              password="pdm_anon",
-                                              database="test_db")
-        self.handler.open_connection()
+        engine_string = "mysql+pymysql://pdm_anon:pdm_anon@localhost/test_db"
+        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.temp_dir = "/tmp/phamerate"
 
     def test_1_read_existing_phams(self):
         """Verify we get 2 dictionaries with the same keys back"""
-        old_phams, old_colors = read_existing_phams(self.handler)
+        old_phams, old_colors = read_existing_phams(self.engine)
         # Old phams should be a dict
         with self.subTest():
             self.assertEqual(type(old_phams), type(dict()))
@@ -47,7 +45,7 @@ class TestPhamerationFunctions(unittest.TestCase):
 
     def test_2_read_unphamerated_genes(self):
         """Verify we get back a set of length 0"""
-        unphamerated = read_unphamerated_genes(self.handler)
+        unphamerated = read_unphamerated_genes(self.engine)
         # Unphamerated should be a set
         with self.subTest():
             self.assertEqual(type(unphamerated), type(set()))
@@ -57,7 +55,7 @@ class TestPhamerationFunctions(unittest.TestCase):
 
     def test_3_get_translations1(self):
         """Verify we get back two dictionaries"""
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         # gs_to_ts should be a dictionary
         with self.subTest():
             self.assertEqual(type(gs_to_ts), type(dict()))
@@ -68,9 +66,9 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_3_get_translations2(self):
         """Verify sum of old genes and unphamerated genes is same as total
         number of genes retrieved"""
-        old_phams, old_colors = read_existing_phams(self.handler)
-        unphamerated = read_unphamerated_genes(self.handler)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        old_phams, old_colors = read_existing_phams(self.engine)
+        unphamerated = read_unphamerated_genes(self.engine)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         num_genes_1 = 0
         for i in old_phams.keys():
             num_genes_1 += len(old_phams[i])
@@ -85,7 +83,7 @@ class TestPhamerationFunctions(unittest.TestCase):
             rmtree(self.temp_dir)
         os.makedirs(self.temp_dir)
         filename = f"{self.temp_dir}/input.fasta"
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         with open(filename, 'r') as fh:
             lines = fh.readlines()
@@ -105,7 +103,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         # there because of this method
         refresh_tempdir(self.temp_dir)
         db_file = f"{self.temp_dir}/sequenceDB"
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="blast")
         for ext in ["phr", "pin", "psd", "psi", "psq"]:
@@ -118,7 +116,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         # there because of this method
         refresh_tempdir(self.temp_dir)
         db_file = f"{self.temp_dir}/sequenceDB"
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="mmseqs")
         self.assertTrue(os.path.exists(db_file))
@@ -129,7 +127,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         # there because of this method
         refresh_tempdir(self.temp_dir)
         db_file = f"{self.temp_dir}/sequenceDB"
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         # 'unknown' is not a valid program, so db_file shouldn't exist
         create_clusterdb(program="unknown")
@@ -138,7 +136,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_6_phamerate_mmseqs(self):
         """Verify we can phamerate with mmseqs2"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="mmseqs")
         phamerate(params=get_program_params("mmseqs"), program="mmseqs")
@@ -149,7 +147,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     #def test_6_phamerate_blast(self):
     #    """Verify we can phamerate with blastclust"""
     #    refresh_tempdir(self.temp_dir)
-    #    gs_to_ts, ts_to_gs = get_translations(self.handler)
+    #    gs_to_ts, ts_to_gs = get_translations(self.engine)
     #    write_fasta(ts_to_gs)
     #    create_clusterdb(program="blast")
     #    phamerate(params=get_program_params("blast"), program="blast")
@@ -159,7 +157,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_7_convert_output1(self):
         """Verify with mmseqs the output gets converted to parseable format"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="mmseqs")
         phamerate(params=get_program_params("mmseqs"), program="mmseqs")
@@ -171,7 +169,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     #def test_7_convert_output2(self):
     #    """Verify with blast the output stays the same"""
     #    refresh_tempdir(self.temp_dir)
-    #    gs_to_ts, ts_to_gs = get_translations(self.handler)
+    #    gs_to_ts, ts_to_gs = get_translations(self.engine)
     #    write_fasta(ts_to_gs)
     #    create_clusterdb(program="blast")
     #    phamerate(params=get_program_params("blast"), program="blast")
@@ -182,7 +180,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_7_convert_output3(self):
         """Verify with unknown program the output doesn't exist"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="unknown")
         phamerate(params=get_program_params("unknown"), program="unknown")
@@ -193,7 +191,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_8_parse_output1(self):
         """Verify we can parse blastclust output properly"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="blast")
         phamerate(params=get_program_params("blast"), program="blast")
@@ -208,7 +206,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_8_parse_output2(self):
         """Verify we can parse mmseqs output properly"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="mmseqs")
         phamerate(params=get_program_params("mmseqs"), program="mmseqs")
@@ -223,7 +221,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_8_parse_output3(self):
         """Verify we cannot parse unknown program's output"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="unknown")
         phamerate(params=get_program_params("unknown"), program="unknown")
@@ -238,7 +236,7 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_9_reintroduce_duplicates(self):
         """Verify that we can put de-duplicated GeneIDs back together"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="mmseqs")
         phamerate(params=get_program_params("mmseqs"), program="mmseqs")
@@ -258,10 +256,10 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify that pham preservation seems to be working - only needs to
         be tested on results from one clustering program, because this
         function doesn't differentiate between clustering programs"""
-        old_phams, old_colors = read_existing_phams(self.handler)
-        unphamerated = read_unphamerated_genes(self.handler)
+        old_phams, old_colors = read_existing_phams(self.engine)
+        unphamerated = read_unphamerated_genes(self.engine)
         refresh_tempdir(self.temp_dir)
-        gs_to_ts, ts_to_gs = get_translations(self.handler)
+        gs_to_ts, ts_to_gs = get_translations(self.engine)
         write_fasta(ts_to_gs)
         create_clusterdb(program="mmseqs")
         phamerate(params=get_program_params("mmseqs"), program="mmseqs")
