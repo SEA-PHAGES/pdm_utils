@@ -11,6 +11,9 @@ DELETE FROM phage WHERE PhageID NOT IN ('Alice', 'Atlantean',
 
 // Clean up un-referenced PhamIDs in the pham table
 DELETE FROM pham WHERE PhamID NOT IN (SELECT DISTINCT PhamID FROM gene);
+
+// Clean up un-referenced HitIDs in the domain table
+DELETE FROM domain WHERE HitID NOT IN (SELECT DISTINCT HitID FROM gene_domain);
 """
 
 from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
