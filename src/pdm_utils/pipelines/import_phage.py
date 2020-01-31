@@ -2617,8 +2617,8 @@ def main(unparsed_args_list):
                             #Biopython converts coordinates to 0-index
                             #Start(left) coordinates are 0-based inclusive (feature starts there)
                             #Stop (right) coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
-                            tRNA_left = str(feature.location.start)
-                            tRNA_right = str(feature.location.end)
+                            tRNA_left = str(feature.location.start.position)
+                            tRNA_right = str(feature.location.end.position)
 
                         except:
                             write_out(output_file,"\nError: a tRNA has incorrect coordinates in phage %s."\
@@ -2833,13 +2833,13 @@ def main(unparsed_args_list):
                         #Retrieve compound feature positions based on strand
                         if feature.strand == 1:
 
-                            strStart = str(feature.location.parts[0].start)
-                            strStop = str(feature.location.parts[1].end)
+                            strStart = str(feature.location.parts[0].start.position)
+                            strStop = str(feature.location.parts[1].end.position)
 
                         elif feature.strand == -1:
 
-                            strStart = str(feature.location.parts[1].start)
-                            strStop = str(feature.location.parts[0].end)
+                            strStart = str(feature.location.parts[1].start.position)
+                            strStop = str(feature.location.parts[0].end.position)
 
                         #If strand is None...
                         else:
@@ -2847,14 +2847,17 @@ def main(unparsed_args_list):
                             strStop = ""
 
                 else:
-                    strStart = str(feature.location.start)
-                    strStop = str(feature.location.end)
+                    strStart = str(feature.location.start.position)
+                    strStop = str(feature.location.end.position)
 
                 #Now that start and stop have been parsed, check if coordinates are fuzzy or not
                 if (strStart.isdigit() and strStop.isdigit()):
                     startCoord = int(strStart)
                     stopCoord = int(strStop)
                 else:
+                    print(type(strStart))
+                    print(type(strStop))
+
                     record_warnings += 1
                     write_out(output_file,"\nWarning: gene %s start %s and stop %s are non-traditional coordinates. This CDS will be skipped, but processing of the other genes will continue." % (geneID,strStart,strStop))
                     record_errors += question("\nError: feature %s of %s does not have correct coordinates." % (geneID,phageName), output_file)
