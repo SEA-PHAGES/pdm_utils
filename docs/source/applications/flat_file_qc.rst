@@ -28,7 +28,7 @@ After creating the GenBank-formatted flat file, annotators can follow the steps 
 
     4. Ensure that the newest version of ``pdm_utils`` is installed (:ref:`installation <installation>`).
 
-    5. Ensure you have the most recent version of the Actinobacteriophage database, using :ref:`getdb <getdb>`.
+    5. Ensure you have the most recent version of the Actinobacteriophage database, using :ref:`get_db <getdb>`.
 
     6. Create a folder (such as 'validation') to work in and navigate to it::
 

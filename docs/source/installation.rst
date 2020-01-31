@@ -228,7 +228,7 @@ There are several third-party Python packages required:
     - :sqlalchemy:`SQLAlchemy <>`
     - :tabulate:`Tabulate <>`
 
-Some of them also have Python or binary dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install Python and other dependencies.
+Some of them also have Python or non-Python dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install Python and other dependencies.
 
 Conda is available as part of Anaconda or Miniconda, and complete installation instructions are available in the Conda :conda_docs:`user guide <>`. The directions below highlight installation of Anaconda, but either of these tools is fine since they both install Conda:
 

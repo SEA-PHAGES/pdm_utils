@@ -141,49 +141,50 @@ With the SeqFeature constructed, the 390 bp nucleotide sequence can be retrieved
     390
 
 
-Access subsets of data using a ``pdm_utils`` Filter
-***************************************************
-
-
-Sometimes data pertaining to a large set of phages (for instance, all Subcluster A2 phages) is needed. Manually constructing the list of PhageIDs is time intensive and error prone, but can be automatically generated using a ``pdm_utils`` Filter object. Import the filter module, and create a Filter object using the engine::
-
-    >>> from pdm_utils.classes import filter
-    >>> db_filter = filter.Filter(engine)
-
-Creating the Subcluster filter identifies 90 phages in Subcluster A2::
-
-    >>> db_filter.add_filter(table="phage", raw_field="Subcluster", value="A2", verbose=True)
-    >>> db_filter.refresh()
-    >>> db_filter.update(verbose=True)
-    Filtering phage in Actinobacteriophage for Subcluster='A2'...
-    >>> db_filter.hits(verbose=True)
-    Database hits: 90
-
-The filter results are stored in the values attribute, and can be sorted and accessed::
-
-    >>> db_filter.sort(sort_field="PhageID", verbose=True)
-    Sorting by 'PhageID'...
-    >>> len(db_filter.values)
-    90
-    >>> db_filter.values[:10]
-    ['20ES', 'AbbyPaige', 'Acolyte', 'Adzzy', 'AN3', 'AN9', 'ANI8', 'AnnaL29', 'Anselm', 'ArcherNM']
-
-
-This list of PhageIDs can now be passed to other functions, such as mysqldb.parse_genome_data(). The filtered results can be filtered further if needed. Suppose that only Subcluster A2 phages that contain at least
-one gene that is annotated as the 'repressor' are needed. This filter can be added, resulting in a list of only 4 phages::
-
-    >>> db_filter.add_filter(table="gene", raw_field="Notes",value="repressor", verbose=True)
-    >>> db_filter.refresh()
-    >>> db_filter.update(verbose=True)
-    >>> db_filter.hits(verbose=True)
-    Database hits: 4
-    4
-    >>> db_filter.values
-    ['Pukovnik', 'RedRock', 'Odin', 'Adzzy']
-
-
-When all interaction with MySQL is complete, the DBAPI connections can be closed::
-
-    >>> engine.dispose()
-
-For more information on how different Genome and Cds object attributes map to the MySQL database, refer to the :ref:`object attribute maps <attributemap>`.
+.. Note: commented out until filter module is revamped.
+.. Access subsets of data using a ``pdm_utils`` Filter
+.. ***************************************************
+..
+..
+.. Sometimes data pertaining to a large set of phages (for instance, all Subcluster A2 phages) is needed. Manually constructing the list of PhageIDs is time intensive and error prone, but can be automatically generated using a ``pdm_utils`` Filter object. Import the filter module, and create a Filter object using the engine::
+..
+..     >>> from pdm_utils.classes import filter
+..     >>> db_filter = filter.Filter(engine)
+..
+.. Creating the Subcluster filter identifies 90 phages in Subcluster A2::
+..
+..     >>> db_filter.add_filter(raw_table="phage", raw_field="Subcluster", value="A2", verbose=True)
+..     >>> db_filter.refresh()
+..     >>> db_filter.update(verbose=True)
+..     Filtering phage in Actinobacteriophage for Subcluster='A2'...
+..     >>> db_filter.hits(verbose=True)
+..     Database hits: 90
+..
+.. The filter results are stored in the values attribute, and can be sorted and accessed::
+..
+..     >>> db_filter.sort(sort_field="PhageID", verbose=True)
+..     Sorting by 'PhageID'...
+..     >>> len(db_filter.values)
+..     90
+..     >>> db_filter.values[:10]
+..     ['20ES', 'AbbyPaige', 'Acolyte', 'Adzzy', 'AN3', 'AN9', 'ANI8', 'AnnaL29', 'Anselm', 'ArcherNM']
+..
+..
+.. This list of PhageIDs can now be passed to other functions, such as mysqldb.parse_genome_data(). The filtered results can be filtered further if needed. Suppose that only Subcluster A2 phages that contain at least
+.. one gene that is annotated as the 'repressor' are needed. This filter can be added, resulting in a list of only 4 phages::
+..
+..     >>> db_filter.add_filter(table="gene", raw_field="Notes",value="repressor", verbose=True)
+..     >>> db_filter.refresh()
+..     >>> db_filter.update(verbose=True)
+..     >>> db_filter.hits(verbose=True)
+..     Database hits: 4
+..     4
+..     >>> db_filter.values
+..     ['Pukovnik', 'RedRock', 'Odin', 'Adzzy']
+..
+..
+.. When all interaction with MySQL is complete, the DBAPI connections can be closed::
+..
+..     >>> engine.dispose()
+..
+.. For more information on how different Genome and Cds object attributes map to the MySQL database, refer to the :ref:`object attribute maps <attributemap>`.
