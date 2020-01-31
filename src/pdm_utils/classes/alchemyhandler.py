@@ -4,6 +4,8 @@ from getpass import getpass
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
+from pdm_utils.functions import cartography
+from pdm_utils.classes.schemagraph import SchemaGraph
 
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None, 
@@ -65,7 +67,8 @@ class AlchemyHandler:
  
         self._username = username
 
-        self.has_credentials = True
+        if self.password:
+            self.has_credentials = True
         self.connected = False
 
     @property
@@ -90,7 +93,8 @@ class AlchemyHandler:
 
         self._password = password
 
-        self.has_credentials = True
+        if self.username:
+            self.has_credentials = True
         self.connected = False
 
     @property
@@ -159,6 +163,24 @@ class AlchemyHandler:
 
         self.metadata = MetaData(bind=self.engine)
         self.metadata.reflect()
+        return True 
+
+    def get_map(self, template):
+        if not self.metadata:
+            if not self.build_metadata():
+                return None
+
+        return cartography.get_map(self.metadata, template)
+
+    def build_schemagraph(self):
+        if not self.metadata:
+            if not self.build_metadata():
+                return False
+
+        graph = SchemaGraph("database")
+        graph.setup(self.metadata)
+        self.graph = graph
+        
         return True
 
     def build_session(self):
@@ -173,19 +195,21 @@ class AlchemyHandler:
         return True
 
     def connect(self, database=None):
-        self.database = database
+        if database:
+            self.database = database
+
+        if not self.has_credentials:
+            self.ask_credentials()
 
         attempts = 0
         connected = False
         while(not connected and attempts < self.login_attempts):
-            self.ask_credentials()
             connected = self.build_engine()
             attempts += 1
+            self.ask_credentials()
 
         if not connected:
             print("Maximum logout attempts reached.\n"
                   "Please check your credentials and try again")
             exit(1)
 
-if __name__ == "__main__":
-    alchemist = AlchemyHandler()

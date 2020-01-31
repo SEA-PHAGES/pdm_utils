@@ -2,534 +2,158 @@
 and mapping of the characteristics and relationships of a MySQL database.
 """
 
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
+from sqlalchemy import MetaData
 import re
 
-def setup_db_tree_leaves(sql_handle, db_node):
-    """Function to create structures to mimic a MySQL database.
+def parse_filter(unparsed_filter):
+    """Helper function to return a two-dimensional array of filter parameters.
 
-    :param sql_handle:
-        Input a validated MySQLConnectionHandler object.
-    :type sql_handle: MySQLConnectionHandler
-    :param db_node:
-        Input an empty DatabaseNode.
-    :type db_node: DatabaseNode
+    :param unparsed_filters:
+        Input a list of filter expressions to parse and split.
+    :type unparsed_filters: List[str]
+    :return filters:
+        Returns a two-dimensional array of filter parameters.
+    :type filters: List[List[str]]
     """
-    table_query = (
-        "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-       f"WHERE TABLE_SCHEMA='{sql_handle.database}'")
-    table_dicts = sql_handle.execute_query(table_query)
+    filter_format = re.compile("\w+\.\w+[=<>!]+\w+", re.IGNORECASE)
 
-    for data_dict in table_dicts:
-        table_node = TableNode(data_dict["TABLE_NAME"])
-        db_node.add_table(table_node)
-        
-        column_query = f"SHOW columns IN {data_dict['TABLE_NAME']}"
-        column_dicts = sql_handle.execute_query(column_query)
-        for column_dict in column_dicts:
-            if column_dict["Null"] == "YES":
-                Null = True
-            else:
-                Null = False
+    if re.match(filter_format, unparsed_filter) != None:
+        filter = (re.split("\W+", filter) +\
+                        re.findall("[!=<>]+", filter))
+    else:
+        raise ValueError(f"Unsupported filtering format: '{filter}'")
+                
+    return filter
 
-            column_node = ColumnNode(column_dict["Field"],
-                                     type=column_dict["Type"],
-                                     Null=Null,
-                                     key=column_dict["Key"])
+def parse_column(unparsed_column):
+    """Helper function to return a two-dimensional array of group parameters.
+
+    :param unparsed_groups:
+        Input a list of group expressions to parse and split.
+    :type unparsed_groups: List[str]
+    :return groups:
+        Returns a two-dimensional array of group parameters.
+    :type groups: List[List[str]]
+    """
+    column_format = re.compile("\w+\.\w+", re.IGNORECASE)
+
+    if re.match(column_format, unparsed_column) != None:
+        column = re.split("\W+", unparsed_column)
+    else:
+        raise ValueError(f"Unsupported table/column format: "
+                         f"'{unparsed_column}'")
+
+    return column
+
+def setup_column_node_group(column_node):
+    parsed_type = column_node.parse_type()
+
+    str_set = ["BLOB", "MEDIUMBLOB", "VARCHAR"]
+    num_set = ["MEDIUMINT", "INTEGER", "FLOAT", "DECIMAL", "DOUBLE"]
+    limited_set = ["TINYINT", "ENUM", "CHAR"]
+    datetime_set = ["DATETIME"]
+
+    if parsed_type in str_set:
+        column_node.group = "string"
+
+        if parsed_type == "VARCHAR":
+            if column_node.type.length <= 5:
+                column_node.group = "limited"
+
+    elif parsed_type in num_set:
+        column_node.group = "numeric"
+
+    elif parsed_type in limited_set:
+        column_node.group = "limited"
+
+    elif parsed_type in datetime_set:
+        column_node.group = "datetime"
+
+def setup_graph_nodes(db_graph, metadata):
+    for table in metadata.tables.keys():
+        table_node = TableNode(table, table=metadata.tables[table])
+        db_graph.add_table(table_node)
+
+        for column in table_node.table.columns.keys():
+            column_object = table_node.table.columns[column]
+            type = column_object.type
+
+            column_node = ColumnNode(column, type=type,
+                                        nullable=column_object.nullable, 
+                                        primary_key=column_object.primary_key,
+                                        column=column_object)
+            setup_column_node_group(column_node)
+
             table_node.add_column(column_node)
-            if(column_dict["Key"] == "PRI"):
+            if column_node.column.primary_key:
                 table_node.primary_key = column_node
 
-def setup_db_tree_webs(sql_handle, db_node):
-    """Function to modify and link structures to mimic a MySQL database.
+def setup_graph_edges(db_graph, metadata):
+    for table_node in db_graph.children:
+        table_object = table_node.table
 
-    :param sql_handle:
-        Input a validated MySQLConnectionHandler object.
-    :type sql_handle: MySQLConnectionHandler object.
-    :param db_node:
-        Input a DatabaseNode populated with TableNodes and ColumnNodes.
-    """
-    for table in db_node.children:
-        foreign_key_query = (
-              f"SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, "
-               "REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME "
-               "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
-              f"WHERE REFERENCED_TABLE_SCHEMA='{sql_handle.database}' AND "
-                    f"REFERENCED_TABLE_NAME='{table.id}'")
-        foreign_key_results = sql_handle.execute_query(foreign_key_query)
-        if foreign_key_results != ():
-            for dict in foreign_key_results:
-                primary_key_node = table.get_column(
-                                             dict["COLUMN_NAME"])
-                ref_table = db_node.get_table(
-                                             dict["TABLE_NAME"])
-                foreign_key_node = ref_table.get_column(
-                                             dict["COLUMN_NAME"])
+        for column in table_object.columns.keys():
+            foreign_key_set = table_object.columns[column].foreign_keys
 
-                primary_key_node.add_table(ref_table)
+            for foreign_key in foreign_key_set:
+                reference = foreign_key.target_fullname
+                parsed_reference = parse_column(reference)
                 
-                if foreign_key_node == ref_table.primary_key:
-                    ref_table.primary_key = primary_key_node
+                ref_table_node = db_graph.get_table(parsed_reference[0])
+                ref_column_node = ref_table_node.get_column(parsed_reference[1])          
+                column_node = table_node.get_column(column)
 
-                for parent in foreign_key_node.parents:
-                    if parent not in primary_key_node.parents:
-                        parent.remove_column(foreign_key_node)
-                        primary_key_node.add_table(parent)
+                table_node.remove_child(column_node)
+                table_node.add_column(ref_column_node)
+                if table_node.primary_key == column_node:
+                    table_node.primary_key = ref_column_node
 
-def setup_grouping_options(sql_handle, db_node):
-    """Function to categorize structures to mimic a MySQL database.
+def traverse(curr_table, target_table, current_path=None):
+    """Recursive function that finds a path between two TableNodes.
 
-    :param sql_handle:
-        Input a validated MySQLConnectionHandler object.
-    :type sql_handle: MySQLConnectionHandler
-    :param db_node:
-        Input a DatabaseNode populated with TableNodes and ColumnNodes.
-    :type db_node: DatabaseNode
+    :param curr_table:
+        Input a starting TableNode under a DatabaseNode.
+    :type curr_table: TableNode
+    :param target_table:
+        Input a target TableNode under a DatabaseNode.
+    :type target_table: TableNode
+    :param current_path:
+        Input a 2-D array containing the traversed nodes in a path.
+    :returns current_path:
+        Returns a 2-D array containing the tables and keys in the path.
+    :type current_path: List[List[str]] 
     """
-    limited_sets = ["varchar_sm", "enum", "char", "tinyint"]
-    str_sets     = ["blob", "mediumblob", "varchar", "varchar_sm"]
-    num_sets     = ["int", "decimal", "mediumint", "float", "datetime",
-                    "double"]
+    if current_path == None:
+        current_path = [[curr_table.id, curr_table.primary_key.id]]
 
-    for table in db_node.children:
-        for column in table.children:
-            type = column.parse_type()
-            if type == "varchar":
-                varchar_size = re.compile("[1234567890]+")
-                if int(re.findall(varchar_size, column.type)[0]) <= 15:
-                    type = "varchar_sm"
+    previous_tables = []
 
+    for previous in current_path:
+        previous_tables.append(previous[0])
 
-            if type in str_sets:
-                column.group = "str_set"
+    if curr_table == target_table:
+        return current_path
 
-            elif type in num_sets:
-                column.group = "num_set"
+    table_links = curr_table.get_linked_keys()
+    if len(curr_table.primary_key.parents) > 1:
+        table_links.insert(0, curr_table.primary_key)
 
-            if type in limited_sets:
-                query = f"SELECT COUNT(DISTINCT {column.id}) FROM {table.id}"
-                results_dict = sql_handle.execute_query(query)[0]
+    for link in table_links:
+        if target_table in link.parents:
+            path = current_path.copy()
+            path.append([target_table.id, link.id])
 
-                if results_dict[f"COUNT(DISTINCT {column.id})"] < 200:
-                    column.group = "limited_set"
-
-class SchemaGraph: 
-    """Object which stores a DatabaseNode object as the root of a Tree."""
-    def __init__(self, sql_handle):
-        """Intitializes a SchemaGraph object.
-
-        :param sql_handle:
-            Input a validated MySQLConnectionHandler object.
-        :type sql_handle: MySQLConnectionHandler
-        """
-        self.sql_handle = sql_handle 
-        self.db_node = DatabaseNode(sql_handle.database)
-        
-        setup_db_tree_leaves(sql_handle, self.db_node)                
-        setup_db_tree_webs(sql_handle, self.db_node) 
-
-        setup_grouping_options(sql_handle, self.db_node)
-
-    def get_table(self, table):
-        """Function that returns a TableNode connected to the DatabaseNode.
-
-        :param table:
-            Input the name of a TableNode as a string.
-        :type table: str
-        :returns self.db_node.get_table(table)
-            Calls a function of the DatabaseNode to retrieve a TableNode.
-        :type self.db_node.get_table(table): TableNode
-        """
-        return self.db_node.get_table(table)
-
-    def has_table(self, table):
-        """Function that returns a boolean of if a TableNode exists.
-        
-        :param table:
-            Input the name of a TableNode as a string.
-        :type_ table: str
-        :returns self.db_node.has_table(table)
-            Calls a function of the DatabaseNode to return a boolean.
-        :type self.db_node.has_table(table): Boolean
-        """
-        return self.db_node.has_table(table)
-
-    def show_tables(self):
-        """Function that returns a list representing the TableNodes attatched.
-
-        :returns self.db_node.show_tables()
-            Calls a function of the DatabaseNode to return a list of strings.
-        :type self.db_node.show_tables(): List[str]
-        """
-        return self.db_node.show_tables()
-
-    def print_info(self):
-        """Function to display information about a MySQL SchemaGraph.
-
-        :param db_node:
-            Input a DatabaseNode root of a SchemaGraph.
-        :type db_node: DatabaseNode
-        """
-        for table in self.db_node.children:
-            print("|" + table.id + ": |")
-            table.print_columns_info()
-            print("\n")
-
-    def get_root(self):
-        """Function that allows access to the DatabaseNode.
-
-        :returns self.db_node
-            Returns the stored DatabaseNode representing a MySQLDB Tree.
-        :type self.db_node: DatabaseNode
-        """
-        return self.db_node
-
-    def traverse(self, curr_table, target_table, current_path=None):
-        """Recursive function that finds a path between two TableNodes.
-
-        :param curr_table:
-            Input a starting TableNode under a DatabaseNode.
-        :type curr_table: TableNode
-        :param target_table:
-            Input a target TableNode under a DatabaseNode.
-        :type target_table: TableNode
-        :param current_path:
-            Input a 2-D array containing the traversed nodes in a path.
-        :returns current_path:
-            Returns a 2-D array containing the tables and keys in the path.
-        :type current_path: List[List[str]] 
-        """
-        if current_path == None:
-            current_path = []
-
-        previous_tables = []
-
-        for previous in current_path:
-            previous_tables.append(previous[0])
-
-        if curr_table == target_table:
-            return current_path
-
-        table_links = curr_table.get_foreign_keys()
-        if len(curr_table.primary_key.parents) > 1:
-            table_links.insert(0, curr_table.primary_key)
-
-        for link in table_links:
-            if target_table in link.parents:
+            return path
+        for table in link.parents:
+            if table.id not in previous_tables and table != curr_table:
                 path = current_path.copy()
-                path.append([target_table.id, link.id])
-                return path
-            for table in link.parents:
-                if table.id not in previous_tables and table != curr_table:
-                    path = current_path.copy()
-                    path.append([table.id, link.id])
-                    path = self.traverse(table, target_table, path)
-                    if path != None:
-                        if (path[-1])[0] == target_table.id:
-                            return path
-  
-    def get_values(self, table, column, values_column=None,
-                     queries=[], values=[]):
-        """Function to query a MySQL database for a set of column values.
-        
-        :param table:
-            Input the name of a TableNode as a string.
-        :type table: str
-        :param column:
-            Input the name of a column of a TableNode as a string.
-        :type column: str
-        :param values_column:
-            Input the name of a column for the intersecting values.
-        :type values_column: str
-        :param queries:
-            Input a list of MySQL comparison statements.
-        :type queries: List[str]
-        :param values:
-            Input a list of existing values as strings.
-        :type values: List[str]
-        :returns values:
-            Returns a list of column values as strings.
-        :type values: List[str]
-        """
-        table_node = self.get_table(table)
-        if table_node == None:
-            raise ValueError
+                path.append([table.id, link.id])
 
-        query = f"SELECT {column} FROM {table} "
+                path = traverse(table, target_table, path)
+                if path != None:
+                    if (path[-1])[0] == target_table.id:
+                        return path
 
-        if values_column == None:
-            values_column = table_node.primary_key.id
-
-        if queries or values:
-            query = query + self.build_query_conditionals(values_column,
-                                                          queries=queries,
-                                                          values=values)
-
-        values = []
-        
-        try:
-            for result in self.sql_handle.execute_query(query):
-                values.append(str(result[column]))
-
-        except TypeError:
-            print(query)
-            raise TypeError("MySQL query failed to execute.") 
-
-        return values
-
-    def get_distinct(self, table, column, values_column=None,
-                              queries=[], values=[]):
-        """Function to query a MySQL database for distinct field values.
-        
-        :param table:
-            Input the name of a TableNode as a string.
-        :type table: str
-        :param distinct_field:
-            Input the name of a column or SQL expression.
-        :type distinct_field: str
-        :param values_column:
-            Input the name of a column for the intersecting values.
-        :type values_column: str
-        :param queries:
-            Input a list of MySQL comparison statements.
-        :type queries: List[str]
-        :param values:
-            Input a list of existing values as strings.
-        :type values: List[str]
-        :returns values:
-            Returns a list of column values as strings.
-        :type values: List[str]
-        """
-       
-        table_node = self.get_table(table)
-        if table_node == None:
-            raise ValueError
-
-        query = f"SELECT DISTINCT {column} FROM {table} "
-
-        if values_column == None:
-            values_column = table_node.primary_key.id
-        
-        if queries or values:
-            query = query + self.build_query_conditionals(values_column,
-                                                          queries=queries,
-                                                          values=values)
-       
-        values = []
-
-        try:
-            for result in self.sql_handle.execute_query(query):
-                values.append(str(result[column]))
-        
-        except TypeError:
-            print(query)
-            raise TypeError("MySQL query failed to execute.")
-
-        return values
-
-    def get_count(self, table, count_field="*", values_column=None,
-            queries=[], values=[]):
-        """Function to query a MySQL database for distinct field values.
-        
-        :param table:
-            Input the name of a TableNode as a string.
-        :type table: str
-        :param distinct_field:
-            Input the name of a column or SQL expression.
-        :type distinct_field: str
-        :param values_column:
-            Input the name of a column for the intersecting values.
-        :type values_column: str
-        :param queries:
-            Input a list of MySQL comparison statements.
-        :type queries: List[str]
-        :param values:
-            Input a list of existing values as strings.
-        :type values: List[str]
-        :returns values:
-            Returns a list of column values as strings.
-        :type values: List[str]
-        """
-        table_node = self.get_table(table)
-        if table_node == None:
-            raise ValueError
-
-        query = f"SELECT Count({count_field}) FROM {table} "
-
-        if values_column == None:
-            values_column = table_node.primary_key.id
-
-        if queries or values:
-            query = query + self.build_query_conditionals(values_column,
-                                                          queries=queries,
-                                                          values=values)
-        
-        try: 
-            result = self.sql_handle.execute_query(query)[0]
-
-        except TypeError:
-            print(query)
-            raise TypeError("MySQL query failed to execute.")
-        return result[f"Count({count_field})"]
-
-    def build_query_conditionals(self, values_column, queries=[], values=[]):
-        """Builds the query conditionals from a list of predefined
-        query filters and values.
-        :param values_column:
-            Input the name of a column for the intersecting values.
-        :type values_column: str
-        :param queries:
-            Input a list of MySQL comparison statements.
-        :type queries: List[str]
-        :param values:
-            Input a list of existing values as strings.
-        :type values: List[str]
-        :returns conditional:
-            Returns the query conditionals expression as a string.
-        :type conditional: str
-        """
-        conditional = "WHERE "
-
-        if queries:
-            conditional = conditional + " and ".join(queries)
-            if values:
-                conditional = conditional + " and "
-
-        if values:
-            conditional = conditional + f"{values_column} IN ('" +\
-                              "','".join(values) + "')"
-       
-        return conditional
-
-    def transpose_values(self, start_table, target_table, values, 
-                         start_column=None, target_column=None):
-        """Takes a set of column values and uses foreign-keys 
-        between tables to get the corresponding set of values in another table.
-
-        :param start_table:
-            Input a case-sensitive string for a TableNode id.
-        :type table: str
-        :param values:
-            Input a list of column values for the corresponding table.
-        :type values: List[str]
-        :return current_values:
-            Returns a list of column values for another table.
-        :type current_values: List[str]
-        """
-        if not values:
-            return []
-
-        start_table_node = self.get_table(start_table)
-        if start_column == None:
-            start_column = start_table_node.primary_key.id
-        target_table_node = self.get_table(target_table)
-        if target_column == None:
-            target_column = target_table_node.primary_key.id
-
-        traversal_path = self.traverse(start_table_node, target_table_node)
-
-        if not traversal_path and start_table != target_table:
-            raise ValueError (
-                    f"Table {start_table} is not connected to {self.table} "
-                     "by foreign keys.")
-
-        current_table = start_table
-        current_values = values
-        current_key = start_column
-
-        for connection_key in traversal_path:
-            if current_key != connection_key[1]:
-                current_values = self.get_values(
-                                    current_table, connection_key[1],
-                                    values_column=current_key,
-                                    values=current_values)
-            current_key = connection_key[1]
-            current_table = connection_key[0] 
-       
-        if current_key != target_column:
-            current_values = self.get_values(
-                                    current_table, 
-                                    target_column,
-                                    values_column=current_key,
-                                    values=current_values)
-
-        return list(set(current_values))
-
-    def sort_values(self, table, column, values, 
-                    sort_column=None): 
-        """Sorts values list for the Filter object by a field key.
-
-        :param sort_column:
-            Input a case-insensitive string for a ColumnNode id.
-        :type sort_column: str
-        :param verbose:
-            Set a boolean to control terminal output.
-        :type verbose: Boolean
-        """
-        if not values:
-            return []
-       
-        if sort_column == None:
-            sort_column = column
-
-        table_node = self.get_table(table)
-        if table_node == None:
-            raise ValueError
-
-        query = (f"SELECT {column} "
-                 f"FROM {table} WHERE {column} IN "
-                  "('" + "','".join(values) + "') "
-                 f"ORDER BY {sort_column}")
-        
-        values = []
-
-        try:
-            for result in self.sql_handle.execute_query(query):
-                values.append(str(result[column]))
-
-        except TypeError:
-            print(query)
-            raise TypeError("MySQL query failed to execute.")
-        
-        return values
-
-    def get_data(self, table, value, attributes=["*"]):
-        """Function that collects data for a primary_key in a table
-
-        :param table:
-            Input the table to collect data of a single entry from.
-        :type table: str
-        :param value:
-            Input the primary key value to collect data for the single entry.
-        :type value: str
-        :param attributes:
-            Input a list of data attributes to return data for.
-        :return data:
-            Returns data attributes for the selected value.
-        :type data: Dict{str}
-        """
-
-        table_node = self.get_table(table)
-        if table_node == None:
-            raise ValueError(f"Table {table} not in database.")
-
-        for attribute in attributes:
-            if attribute != "*":
-                if not table_node.has_column(attribute):
-                    raise ValueError(f"Column {attribute} not in {table}.")
-
-        primary_key = table_node.primary_key.id
-        query = ("SELECT " + ",".join(attributes) +\
-               f" FROM {table} WHERE {primary_key}='{value}'")
-
-        try:
-            data = self.sql_handle.execute_query(query)[0]
-
-        except TypeError:
-            print(query)
-            raise TypeError("MySQL query failed to execute.")
-        return data 
-         
 class Node:
     """Object which can store other Node objects and an id."""
 
@@ -771,11 +395,11 @@ class Node:
 
         return child_node
 
-class DatabaseNode(Node):
+class SchemaGraph(Node):
     """Object which can store TableNode objects and an id """
-    def __init__(self, id, parents=None, children=None):
-        super(DatabaseNode, self).__init__(
-                                    id, parents=parents, children=children)
+    def __init__(self, id, table_nodes=None):
+        super(SchemaGraph, self).__init__(id, parents=None, 
+                                               children=table_nodes)
 
     def add_table(self, table_node):
         """Function to link an existing TableNode object as a child.
@@ -839,14 +463,36 @@ class DatabaseNode(Node):
         """
         return self.get_child(table)
 
+    def print_info(self):
+        """Function to display information about a MySQL SchemaGraph.
+
+        :param db_node:
+            Input a DatabaseNode root of a SchemaGraph.
+        :type db_node: DatabaseNode
+        """
+        for table in self.children:
+            print("| " + table.id + " |")
+            table.print_columns_info()
+            print("\n")
+    
+    def traverse(self, curr_table, target_table):
+        path = traverse(curr_table, target_table)
+        return path
+
+    def setup(self, metadata):
+        setup_graph_nodes(self, metadata)
+        setup_graph_edges(self, metadata)
+
 class TableNode(Node):
     """Object which can store ColumnNode objects, an id, and table info."""
 
-    def __init__(self, id, parents=None, children=None):
-        super(TableNode, self).__init__(
-                                    id, parents=parents, children=children)
+    def __init__(self, id, database_nodes=None, column_nodes=None, table=None):
+        super(TableNode, self).__init__(id, parents=database_nodes, 
+                                            children=column_nodes)
 
         self.primary_key = None
+
+        self.table = table
 
     def add_column(self, column_node):
         """Function to link an existing Node object as a child.
@@ -903,16 +549,17 @@ class TableNode(Node):
 
         print(" " + "_"*61 + " ")
         print("|" + " "*61 + "|")
-        print("| %-16s | %-10s | %-12s | %-6s | %s |" % \
-                         ("Field", "Type", "Quality", "Null", "Key"))
+        print("| %-16s | %-10s | %-12s | %-5s | %-4s |" % \
+              ("Field", "Type", "Grouping", "Null", "Pri"))
      
         print("|" + "-"*61 + "|")
         for column in self.show_columns_info():
-            key = column[4]
-            if key == "":
-                key = "   "
-            print("| %-16s | %-10s | %-12s | %-6s | %s |" % \
-                         (column[0], column[1], column[2], column[3], key))
+            primary = "    "
+            if column[4]:
+                primary = True
+
+            print("| %-16s | %-10s | %-12s | %-5s | %-4s |" % \
+            (column[0], column[1], column[2], column[3], primary))
 
         print("|" + "_"*61 + "|")
 
@@ -959,8 +606,9 @@ class TableNode(Node):
 
         return foreign_keys
 
-    def get_foreign_keys(self):
-        """Function that returns a list of connected Foreign Key ColumnNodes.
+    def get_linked_keys(self):
+        """Function that returns a list of ColumnNodes connected
+        to other tables.
 
         :returns foreign_keys:
             Returns a list of attatched Foreign Key ColumnNodes.
@@ -990,16 +638,18 @@ class TableNode(Node):
         return ""
 
 class ColumnNode(Node):
-    def __init__(self, id, parents=None, children=None, 
-                 type="", Null=None, key=None):
-        super(ColumnNode, self).__init__(
-                                    id, parents=parents, children=children)
+    def __init__(self, id, table_nodes=None, column=None,
+                 type="", nullable=None, primary_key=False, group="Undefined"):
+        super(ColumnNode, self).__init__(id, parents=table_nodes, 
+                                             children=None)
         
         self.type = type
-        self.null = Null
-        self.key = key
+        self.nullable = nullable
+        self.primary_key = primary_key
 
-        self.group = "Undefined"
+        self.group = group
+
+        self.column = column
     
     def add_table(self, table_node):
         """Function to link an existing TableNode object as a parent.
@@ -1046,11 +696,15 @@ class ColumnNode(Node):
             Returns the a truncated version of the column type as a string.
         :type type: str
         """
-        type = self.type.split("(")
-        type = type[0].split(" ")[0]
-       
-        return type
+        column_type = str(self.type)
 
+        type_format = re.compile("\w+")
+        if re.match(type_format, column_type) != None:
+            parsed_type = (re.split("\W+", column_type))
+
+
+        return parsed_type[0]
+       
     def show_info(self):
         """Function that returns a list of the info in the ColumnNode.
 
@@ -1058,13 +712,7 @@ class ColumnNode(Node):
             Returns a list of all the info in the ColumnNode as strings.
         :type info: List[str]
         """
-        info = [self.id, self.parse_type(), self.group, self.null, self.key]
+        info = [self.id, self.parse_type(), self.group, 
+                         self.nullable, self.primary_key]
         return info        
 
-if __name__ == "__main__":
-    sql_handle = MySQLConnectionHandler()
-    sql_handle.database = input("Please enter database name: ")
-    sql_handle.get_credentials()
-    sql_handle.validate_credentials()
-    db_tree = SchemaGraph(sql_handle)
-    db_tree.print_info()
