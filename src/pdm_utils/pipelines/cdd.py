@@ -7,12 +7,13 @@ from subprocess import Popen, PIPE
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbirpsblastCommandline
 
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
+from pdm_utils.functions import mysqldb
 from pdm_utils.functions.basic import expand_path
 from pdm_utils.functions.parallelize import *
 
 # SQL QUERIES
-GET_GENES_FOR_CDD = "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0"
+GET_GENES_FOR_CDD = (
+    "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0")
 GET_UNIQUE_HIT_IDS = "SELECT HitID FROM domain"
 
 # SQL COMMANDS
@@ -27,9 +28,10 @@ def setup_argparser():
     :return:
     """
     # Pipeline description
-    description = "Uses rpsblast to search the NCBI conserved domain database " \
-                  "for significant domain hits in all new proteins of a " \
-                  "MySQL database."
+    description = (
+        "Uses rpsblast to search the NCBI conserved domain database "
+        "for significant domain hits in all new proteins of a "
+        "MySQL database.")
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
@@ -185,33 +187,29 @@ def main(argument_list):
                   f"cdd pipeline.")
             return
 
-        # If we didn't return, we have a command. Run it, and PIPE stdout into rpsblast_path
+        # If we didn't return, we have a command.
+        # Run it, and PIPE stdout into rpsblast_path
         with Popen(args=command, stdout=PIPE) as proc:
             rpsblast = proc.stdout.read().decode("utf-8").rstrip("\n")
 
-        # If empty string, rpsblast not found in globally available executables, otherwise proceed with value
+        # If empty string, rpsblast not found in globally
+        # available executables, otherwise proceed with value.
         if rpsblast == "":
-            print("No rpsblast binary found. If you have rpsblast on your machine, please try again with the "
-                  "'--rpsblast' flag and provide the full path to your rpsblast binary.")
+            print("No rpsblast binary found. "
+                  "If you have rpsblast on your machine, please try "
+                  "again with the '--rpsblast' flag and provide the "
+                  "full path to your rpsblast binary.")
             return
         else:
             print(f"Found rpsblast binary at '{rpsblast}'...")
 
-    # Use MySQLConnectionHandler to query for translations that need to be
-    # put through this pipeline
-    mysql_handler = MySQLConnectionHandler()
-    mysql_handler.database = database
-    mysql_handler.open_connection()     # Automatically prompts for user/pass
-
-    # If user entered the wrong credentials too many times
-    if mysql_handler.connection_status() is not True:
-        print("For your safety, only 3 MySQL login attempts are permitted at"
-              " once. Please verify your login credentials and database name, "
-              "and try again.")
-        return
-
-    cdd_genes = mysql_handler.execute_query(GET_GENES_FOR_CDD)
-    mysql_handler.close_connection()
+    engine = mysqldb.connect_to_db(database)
+    result = engine.execute(GET_GENES_FOR_CDD)
+    cdd_genes = []
+    for row in result:
+        row_as_dict = dict(row)
+        cdd_genes.append(row_as_dict)
+    engine.dispose()
 
     # Print number of genes to process
     print(f"{len(cdd_genes)} genes to search for conserved domains...")
@@ -224,13 +222,14 @@ def main(argument_list):
         # Build jobs list
         jobs = []
         for cdd_gene in cdd_genes:
-            jobs.append((rpsblast, cdd_name, tmp_dir, evalue, cdd_gene["GeneID"], cdd_gene["Translation"]))
+            jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
+                         cdd_gene["GeneID"], cdd_gene["Translation"]))
 
         results = parallelize(jobs, threads, search_and_process)
         print("\n")
 
-        mysql_handler.open_connection()
         for result in results:
-            mysql_handler.execute_transaction(result)
+            mysqldb.execute_transaction(engine, result)
+        engine.dispose()
 
     return

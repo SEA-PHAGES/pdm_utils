@@ -1,48 +1,47 @@
 """Pipeline to freeze a database for publication."""
 
 import argparse
-import sys
-import os
-import pathlib
-import subprocess
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb
-from pdm_utils.classes import mysqlconnectionhandler as mch
 
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main freeze database pipeline."""
     args = parse_args(unparsed_args_list)
-    sql_handle1 = mysqldb.connect_to_db(args.database)
+    engine1, msg = mysqldb.get_engine(database=args.database, echo=False)
 
     # Get the number of draft genomes.
-    query = "SELECT count(*) FROM phage WHERE Status != 'draft'"
-    result = sql_handle1.execute_query(query)
-    phage_count = result[0]["count(*)"]
+    query = "SELECT count(*) as count FROM phage WHERE Status != 'draft'"
+    result = engine1.execute(query).fetchall()
+    phage_count = result[0]["count"]
 
     # Create the new frozen database folder e.g. Actinobacteriophage_XYZ.
     prefix = get_prefix()
     new_database = f"{prefix}_{phage_count}"
 
     # Create the new database
-    result = mysqldb.drop_create_db(sql_handle1, new_database)
+    result = mysqldb.drop_create_db(engine1, new_database)
 
     # Copy database.
     if result == 0:
-        result = mysqldb.copy_db(sql_handle1, new_database)
+        result = mysqldb.copy_db(engine1, new_database)
         if result == 0:
             print(f"Deleting 'draft' genomes...")
-            # Create a new connection to the new database.
-            sql_handle2 = mysqldb.setup_sql_handle2(
-                            username=sql_handle1.username,
-                            password=sql_handle1.password,
-                            database=new_database)
+            engine2, msg = mysqldb.get_engine(
+                                username=engine1.url.username,
+                                password=engine1.url.password,
+                                database=new_database)
+
             statement3 = "DELETE FROM phage WHERE Status = 'draft'"
-            sql_handle2.execute_transaction([statement3])
+            engine2.execute(statement3)
             statement4 = "UPDATE version SET Version = 0"
-            sql_handle2.execute_transaction([statement4])
+            engine2.execute(statement4)
+            # Close up all connections in the connection pool.
+            engine2.dispose()
         else:
             print("Unable to copy the database.")
+        # Close up all connections in the connection pool.
+        engine1.dispose()
     else:
         print(f"Error creating new database: {new_database}.")
     print("Freeze database script completed.")

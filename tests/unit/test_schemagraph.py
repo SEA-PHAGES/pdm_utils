@@ -2,7 +2,7 @@
 
 from pdm_utils.classes.schemagraph import  Node, \
                                            DatabaseNode, TableNode, ColumnNode
-from pdm_utils.classes import schemagraph, mysqlconnectionhandler
+from pdm_utils.classes import schemagraph
 from unittest.mock import Mock, patch
 import unittest
 
@@ -17,7 +17,7 @@ class TestNode(unittest.TestCase):
         self.assertEqual(self.node.id, "test")
         self.assertEqual(self.node.parents, [])
         self.assertEqual(self.node.children, [])
-        
+
     def test_init_2(self):
         "Verify attribute boolean expressions function as expected."
 
@@ -25,14 +25,14 @@ class TestNode(unittest.TestCase):
 
         self.assertTrue(not node.parents)
         self.assertTrue(not node.children)
-        self.assertFalse(node == self.node) 
+        self.assertFalse(node == self.node)
 
     def test_init_3(self):
         "Verify Node id type check raises TypeError as expected."
 
         with self.assertRaises(TypeError):
             node = Node([])
- 
+
     def test_show_parents_1(self):
         "Verify show_parents() creates return list as expected."
 
@@ -48,7 +48,7 @@ class TestNode(unittest.TestCase):
         self.assertTrue("1" in parents)
         self.assertTrue("2" in parents)
         self.assertTrue("3" in parents)
-    
+
     def test_show_children_1(self):
         "Verify show_children() creates return list as expected."
 
@@ -70,11 +70,11 @@ class TestNode(unittest.TestCase):
 
         parent_node = Node("parent")
         random_node = Node("random")
-        self.node.parents.append(parent_node) 
+        self.node.parents.append(parent_node)
 
         self.assertTrue(self.node.has_parent("parent"))
         self.assertFalse(self.node.has_parent("random"))
-   
+
     def test_has_parent_2(self):
         "Verify has_parent() type check raises TypeError as expected."
 
@@ -104,7 +104,7 @@ class TestNode(unittest.TestCase):
         random_node = Node("random")
         self.node.parents.append(parent_node)
 
-        self.assertEqual(parent_node, 
+        self.assertEqual(parent_node,
                          self.node.get_parent("parent"))
         self.assertEqual(None,
                          self.node.get_parent("random"))
@@ -138,7 +138,7 @@ class TestNode(unittest.TestCase):
 
         parent_node = Node("parent")
         self.node.add_parent(parent_node)
-        
+
         self.assertTrue(parent_node in self.node.parents)
         self.assertTrue(self.node in parent_node.children)
 
@@ -173,13 +173,13 @@ class TestNode(unittest.TestCase):
 
         child_node = Node("child")
         self.node.add_child(child_node)
-        
+
         self.assertTrue(child_node in self.node.children)
         self.assertTrue(self.node in child_node.parents)
-    
+
     def test_add_child_2(self):
         "Verify add_child() type check raises Type Error as expected."
-        
+
         with self.assertRaises(TypeError):
             self.node.add_child([])
 
@@ -195,7 +195,7 @@ class TestNode(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.node.add_child(child_node)
             self.node.add_child(duplicate_child)
-    
+
     @patch("pdm_utils.classes.schemagraph.Node.has_child")
     def test_add_child_4(self, HasChild):
         "Verify add_child() calls has_child() as expected."
@@ -250,7 +250,7 @@ class TestNode(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             self.node.create_child([])
-    
+
     @patch("pdm_utils.classes.schemagraph.Node.add_child")
     def test_create_child_4(self, AddChild):
         "Verify create_child() calls add_child() as expected."
@@ -262,10 +262,10 @@ class TestNode(unittest.TestCase):
     def test_remove_parent_1(self):
         "Verify remove_parent() removes from Node attributes as expected."
 
-        parent_node = Node("parent") 
+        parent_node = Node("parent")
         self.node.parents.append(parent_node)
         parent_node.children.append(self.node)
-        
+
         self.assertEqual(parent_node, self.node.remove_parent(parent_node))
 
         self.assertFalse(parent_node in self.node.parents)
@@ -319,7 +319,7 @@ class TestDatabaseNode(unittest.TestCase):
         self.assertTrue(isinstance(table_node, TableNode))
 
     def create_table_2(self):
-        "Verify create_table() type check raises a TypeError as expected."    
+        "Verify create_table() type check raises a TypeError as expected."
         with self.assertRaises(TypeError):
             self.db_node.create_table([])
 
@@ -337,7 +337,7 @@ class TestDatabaseNode(unittest.TestCase):
 
         ShowChildren.assert_called()
 
-    @patch("pdm_utils.classes.schemagraph.DatabaseNode.has_child")       
+    @patch("pdm_utils.classes.schemagraph.DatabaseNode.has_child")
     def has_table_1(self, HasChild):
         "Verify has_table() calls has_child() as expected."
         self.db_node.has_table("table")
@@ -352,7 +352,7 @@ class TestDatabaseNode(unittest.TestCase):
         GetChild.assert_called_with("table")
 
 class TestTableNode(unittest.TestCase):
-    "Unittests for the TableNode class." 
+    "Unittests for the TableNode class."
     def setUp(self):
         self.table_node = TableNode("test")
 
@@ -364,7 +364,7 @@ class TestTableNode(unittest.TestCase):
     def test_add_column_1(self, AddChild):
         "Verify add_column() calls add_child() as expected."
         column_node = ColumnNode("column")
-        self.table_node.add_column(column_node) 
+        self.table_node.add_column(column_node)
 
         AddChild.assert_called_with(column_node)
 
@@ -376,7 +376,7 @@ class TestTableNode(unittest.TestCase):
     def test_create_column_1(self):
         "Verify create_column() creates a ColumnNode as expected."
         column_node = self.table_node.create_column("column")
-        
+
         self.assertTrue(isinstance(column_node, ColumnNode))
 
     def test_create_column_2(self):
@@ -387,11 +387,11 @@ class TestTableNode(unittest.TestCase):
     @patch("pdm_utils.classes.schemagraph.TableNode.add_column")
     def test_create_column_3(self, AddColumn):
         "Verify create_column() calls add_column() as expected."
-        column_node = self.table_node.create_column("column") 
+        column_node = self.table_node.create_column("column")
 
         AddColumn.assert_called_with(column_node)
 
-    @patch("pdm_utils.classes.schemagraph.TableNode.show_children")     
+    @patch("pdm_utils.classes.schemagraph.TableNode.show_children")
     def test_show_columns_1(self, AddChildren):
         "Verify show_columns() calls show_children() as expected."
         self.table_node.show_columns()
@@ -403,7 +403,7 @@ class TestTableNode(unittest.TestCase):
         "Verify show_columns_info() calls ColumnNode.show_info() as expected."
         column_node = ColumnNode("column")
         self.table_node.children.append(column_node)
-        
+
         self.table_node.show_columns_info()
 
         ShowColumnsInfo.assert_called_once()
@@ -436,24 +436,24 @@ class TestTableNode(unittest.TestCase):
         "Verify show_foreign_keys() returns a list as expected."
         other_table = TableNode("other")
 
-        column_node_1 = ColumnNode("1", parents=[other_table, self.table_node]) 
+        column_node_1 = ColumnNode("1", parents=[other_table, self.table_node])
         column_node_2 = ColumnNode("2", parents=[self.table_node])
         column_node_3 = ColumnNode("3", parents=[other_table, self.table_node])
 
         self.table_node.children.append(column_node_1)
         self.table_node.children.append(column_node_2)
         self.table_node.children.append(column_node_3)
-        
+
         foreign_keys = self.table_node.show_foreign_keys()
         self.assertTrue(isinstance(foreign_keys, list))
         self.assertTrue("1" in foreign_keys)
         self.assertFalse("2" in foreign_keys)
         self.assertTrue("3" in foreign_keys)
-    
+
     def test_show_foreign_keys_2(self):
         "Verify show_foreign_keys() type check raises TypeError as expected."
         self.table_node.children.append([])
-        
+
         with self.assertRaises(TypeError):
             self.table_node.show_foreign_keys()
 
@@ -461,14 +461,14 @@ class TestTableNode(unittest.TestCase):
         "Verify get_foreign_keys() returns a list as expected."
         other_table = TableNode("other")
 
-        column_node_1 = ColumnNode("1", parents=[other_table, self.table_node]) 
+        column_node_1 = ColumnNode("1", parents=[other_table, self.table_node])
         column_node_2 = ColumnNode("2", parents=[self.table_node])
         column_node_3 = ColumnNode("3", parents=[other_table, self.table_node])
 
         self.table_node.children.append(column_node_1)
         self.table_node.children.append(column_node_2)
         self.table_node.children.append(column_node_3)
-        
+
         foreign_keys = self.table_node.get_foreign_keys()
         self.assertTrue(isinstance(foreign_keys, list))
         self.assertTrue(column_node_1 in foreign_keys)
@@ -478,7 +478,7 @@ class TestTableNode(unittest.TestCase):
     def test_get_foreign_keys_2(self):
         "Verify get_foreign_keys() type check raises TypeError as expected."
         self.table_node.children.append([])
-        
+
         with self.assertRaises(TypeError):
             self.table_node.get_foreign_keys()
 
@@ -493,7 +493,7 @@ class TestTableNode(unittest.TestCase):
     def test_show_primary_key_2(self):
         "Verify show_primary_key handles None primary_key as expected."
         self.assertEqual(self.table_node.show_primary_key(), "")
-        
+
 class TestColumnNode(unittest.TestCase):
     "Unittests for the ColumnNode class."
     def setUp(self):
@@ -547,7 +547,7 @@ class TestColumnNode(unittest.TestCase):
 
     def test_parse_type_1(self):
         "Verify parse_type() returns a string as expected."
-        type = self.column_node.parse_type() 
+        type = self.column_node.parse_type()
         self.assertEqual(type, "")
 
         self.column_node.type = "varchar (5)"

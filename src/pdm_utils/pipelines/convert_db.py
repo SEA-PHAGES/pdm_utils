@@ -57,16 +57,14 @@ def parse_args(unparsed_args_list):
 
 
 # TODO unittest.
-def main(unparsed_args_list, sql_handle1=None):
+def main(unparsed_args_list, engine1=None):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
-
-    if sql_handle1 is None:
-        sql_handle1 = mysqldb.connect_to_db(args.database)
-
+    if engine1 is None:
+        engine1 = mysqldb.connect_to_db(args.database)
     target = args.schema_version
-    actual = mysqldb.get_schema_version(sql_handle1)
+    actual = mysqldb.get_schema_version(engine1)
     steps, dir = get_conversion_direction(actual, target)
 
     # Iterate through list of versions and implement SQL files.
@@ -80,15 +78,16 @@ def main(unparsed_args_list, sql_handle1=None):
     if convert == True:
         if (args.new_database_name is not None and
                 args.new_database_name != args.database):
-            result = mysqldb.drop_create_db(sql_handle1, args.new_database_name)
+            result = mysqldb.drop_create_db(engine1, args.new_database_name)
             if result == 0:
-                result = mysqldb.copy_db(sql_handle1, args.new_database_name)
+                result = mysqldb.copy_db(engine1, args.new_database_name)
                 if result == 0:
                     # Create a new connection to the new database.
-                    sql_handle2 = mysqldb.setup_sql_handle2(
-                                    username=sql_handle1.username,
-                                    password=sql_handle1.password,
-                                    database=args.new_database_name)
+                    engine2, msg = mysqldb.get_engine(
+                                        database=args.new_database_name,
+                                        username=engine1.url.username,
+                                        password=engine1.url.password,
+                                        echo=False)
                 else:
                     print("Error: Unable to copy the database for conversion.")
                     convert = False
@@ -96,11 +95,12 @@ def main(unparsed_args_list, sql_handle1=None):
                 print("Error: Unable to create the new database for conversion.")
                 convert = False
         else:
-            sql_handle2 = sql_handle1
+            engine2 = engine1
 
         if convert == True:
-            stop_step, summary = convert_schema(sql_handle2, actual, dir,
+            stop_step, summary = convert_schema(engine2, actual, dir,
                                                 steps, verbose=args.verbose)
+            engine2.dispose()
             if stop_step == target:
                 if args.verbose == True:
                     print("\n\nThe database schema conversion was successful.")
@@ -110,7 +110,7 @@ def main(unparsed_args_list, sql_handle1=None):
                       f"Unable to proceed past schema version {stop_step}.")
             if args.verbose == True:
                 print_summary(summary)
-
+    engine1.dispose()
 
 # TODO unittest.
 def get_conversion_direction(actual, target):
@@ -129,7 +129,7 @@ def get_conversion_direction(actual, target):
 
 
 # TODO unittest.
-def convert_schema(sql_handle, actual, dir, steps, verbose=False):
+def convert_schema(engine, actual, dir, steps, verbose=False):
     """Iterate through conversion steps and convert database schema."""
     summary = {} #Key = conversion step. Value = summary dictionary.
     index = 0
@@ -145,7 +145,7 @@ def convert_schema(sql_handle, actual, dir, steps, verbose=False):
         commands = [i for i in commands if i != ""]
         commands = [i for i in commands if i != "\n"]
         # Try to convert the schema.
-        result = sql_handle.execute_transaction(commands)
+        result = mysqldb.execute_transaction(engine, commands)
         if result == 1:
             convert = False
             print("Error encountered while executing MySQL statements.")

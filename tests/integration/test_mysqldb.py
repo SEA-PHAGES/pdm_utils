@@ -2,24 +2,27 @@
 
 
 import unittest
+import sqlalchemy
 from pdm_utils.functions import mysqldb
 from pdm_utils.classes import genome
 from pdm_utils.classes import cds
 from pdm_utils.constants import constants
-from pdm_utils.classes import mysqlconnectionhandler
-import subprocess, os
+import subprocess
 import pymysql
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from pathlib import Path
-from unittest.mock import patch, Mock
-import shutil
+from unittest.mock import patch
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
 user = "pdm_anon"
 pwd = "pdm_anon"
 db = "test_db"
+db2 = "Actinobacteriophage"
+engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
+engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
+
 
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
@@ -36,13 +39,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         expected schema.
         Each unittest will populate the empty database as needed."""
 
-
-
-        self.sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        self.sql_handle.username = user
-        self.sql_handle.password = pwd
-        self.sql_handle.database = db
-
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
         connection = pymysql.connect(host = "localhost",
                                         user = user,
@@ -76,6 +73,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
     def tearDown(self):
+        self.engine.dispose()
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
@@ -97,25 +95,21 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id in input_phage_ids:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id}', '', '', '', '', 1, 1, 'final', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id}', '', '', '', '', 1, 1, 'final', "
                 f"'{constants.EMPTY_DATE}', 1, 1);"
+                )
 
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result = mysqldb.create_phage_id_set(sql_handle)
+        result = mysqldb.create_phage_id_set(self.engine)
         self.assertEqual(len(result), 3)
-
 
 
 
@@ -141,11 +135,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
             cur.execute(sql)
         connection.commit()
         connection.close()
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result = mysqldb.create_accession_set(sql_handle)
+        result = mysqldb.create_accession_set(self.engine)
         self.assertEqual(len(result), 3)
 
 
@@ -176,16 +166,11 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result = mysqldb.create_seq_set(sql_handle)
+        result = mysqldb.create_seq_set(self.engine)
         with self.subTest():
             self.assertEqual(len(result), 3)
         with self.subTest():
             self.assertTrue(Seq("ATCG", IUPAC.ambiguous_dna) in result)
-
 
 
 
@@ -204,28 +189,25 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                + " Cluster, DateLastModified, Accession, Subcluster," \
-                + " AnnotationAuthor, RetrieveRecord" \
-                + " FROM phage"
+        query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                " Cluster, DateLastModified, Accession, Subcluster,"
+                " AnnotationAuthor, RetrieveRecord"
+                " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         result_list = mysqldb.retrieve_data(
-                        sql_handle, column="PhageID",
+                        self.engine, column="PhageID",
                         phage_id_list=["L5"], query=query)
         with self.subTest():
             self.assertEqual(len(result_list[0].keys()), 11)
@@ -246,28 +228,25 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                + " Cluster, DateLastModified, Accession, Subcluster," \
-                + " AnnotationAuthor, RetrieveRecord" \
-                + " FROM phage"
+        query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                " Cluster, DateLastModified, Accession, Subcluster,"
+                " AnnotationAuthor, RetrieveRecord"
+                " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         result_list = mysqldb.retrieve_data(
-                        sql_handle, column="PhageID",
+                        self.engine, column="PhageID",
                         phage_id_list=["EagleEye"], query=query)
         self.assertEqual(len(result_list), 0)
 
@@ -287,28 +266,25 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
                 "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                + " Cluster, DateLastModified, Accession, Subcluster," \
-                + " AnnotationAuthor, RetrieveRecord" \
-                + " FROM phage"
+        query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                " Cluster, DateLastModified, Accession, Subcluster,"
+                " AnnotationAuthor, RetrieveRecord"
+                " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         result_list = mysqldb.retrieve_data(
-                        sql_handle, column="PhageID",
+                        self.engine, column="PhageID",
                         phage_id_list=["L5","Trixie"], query=query)
         self.assertEqual(len(result_list), 2)
 
@@ -328,28 +304,25 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                + " Cluster, DateLastModified, Accession, Subcluster," \
-                + " AnnotationAuthor, RetrieveRecord" \
-                + " FROM phage"
+        query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                " Cluster, DateLastModified, Accession, Subcluster,"
+                " AnnotationAuthor, RetrieveRecord"
+                " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         result_list = mysqldb.retrieve_data(
-                        sql_handle, column="PhageID",
+                        self.engine, column="PhageID",
                         phage_id_list=["L5","Trixie","EagleEye","D29"],
                         query=query)
         self.assertEqual(len(result_list), 3)
@@ -370,28 +343,24 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                + " Cluster, DateLastModified, Accession, Subcluster," \
-                + " AnnotationAuthor, RetrieveRecord" \
-                + " FROM phage"
+        query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                " Cluster, DateLastModified, Accession, Subcluster,"
+                " AnnotationAuthor, RetrieveRecord"
+                " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result_list = mysqldb.retrieve_data(
-                        sql_handle, query=query)
+        result_list = mysqldb.retrieve_data(self.engine, query=query)
         self.assertEqual(len(result_list), 3)
 
 
@@ -411,38 +380,36 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
                 "1000, '', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        query = "SELECT" \
-                + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " Translation, Orientation, Notes, LocusTag" \
-                + " FROM gene"
+        query = ("SELECT"
+                " GeneID, PhageID, Start, Stop, Length, Name,"
+                " Translation, Orientation, Notes, LocusTag"
+                " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         result_list = mysqldb.retrieve_data(
-                        sql_handle, column="PhageID",
+                        self.engine, column="PhageID",
                         phage_id_list=["L5"], query=query)
         with self.subTest():
             self.assertEqual(len(result_list), 3)
@@ -465,38 +432,36 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
                 "1000, '', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        query = "SELECT" \
-                + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " Translation, Orientation, Notes, LocusTag" \
-                + " FROM gene"
+        query = ("SELECT"
+                " GeneID, PhageID, Start, Stop, Length, Name,"
+                " Translation, Orientation, Notes, LocusTag"
+                " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         result_list = mysqldb.retrieve_data(
-                        sql_handle, column="PhageID",
+                        self.engine, column="PhageID",
                         phage_id_list=["Trixie"], query=query)
         self.assertEqual(len(result_list), 0)
 
@@ -523,38 +488,35 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', "
                 f"1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
                 "1000, '', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        query = "SELECT" \
-                + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " Translation, Orientation, Notes, LocusTag" \
-                + " FROM gene"
+        query = ("SELECT"
+                " GeneID, PhageID, Start, Stop, Length, Name,"
+                " Translation, Orientation, Notes, LocusTag"
+                " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        result_list = mysqldb.retrieve_data(
-                        sql_handle, query=query)
+        result_list = mysqldb.retrieve_data(self.engine, query=query)
         self.assertEqual(len(result_list), 5)
 
 
@@ -582,38 +544,36 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                " VALUES (" + \
-                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
-                f" '{id_and_seq[1]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                " VALUES ("
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', "
+                f" '{id_and_seq[1]}', "
                 f" 1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
                 "1000, '', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                      + " Cluster, DateLastModified, Accession, Subcluster," \
-                      + " AnnotationAuthor, RetrieveRecord" \
-                      + " FROM phage"
+        phage_query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                      " Cluster, DateLastModified, Accession, Subcluster,"
+                      " AnnotationAuthor, RetrieveRecord"
+                      " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        genome_list = mysqldb.parse_genome_data(sql_handle,
+        genome_list = mysqldb.parse_genome_data(self.engine,
                         phage_id_list=["L5"], phage_query=phage_query,
                         gnm_type="mysql")
         with self.subTest():
@@ -645,29 +605,26 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, " + \
-                "AnnotationAuthor) VALUES (" + \
-                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
-                f"'{id_and_seq[1]}', " + \
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, "
+                "AnnotationAuthor) VALUES ("
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', "
+                f"'{id_and_seq[1]}', "
                 f" 1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                      + " Cluster, DateLastModified, Accession, Subcluster," \
-                      + " AnnotationAuthor, RetrieveRecord" \
-                      + " FROM phage"
+        phage_query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                      " Cluster, DateLastModified, Accession, Subcluster,"
+                      " AnnotationAuthor, RetrieveRecord"
+                      " FROM phage")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         genome_list = mysqldb.parse_genome_data(
-                          sql_handle, phage_id_list=["EagleEye"],
+                          self.engine, phage_id_list=["EagleEye"],
                           phage_query=phage_query)
         self.assertEqual(len(genome_list), 0)
 
@@ -693,42 +650,40 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, " + \
-                "AnnotationAuthor) VALUES (" + \
-                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
-                f"'{id_and_seq[1]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, "
+                "AnnotationAuthor) VALUES ("
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', "
+                f"'{id_and_seq[1]}', "
                 f"1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
                 "'', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                      + " Cluster, DateLastModified, Accession, Subcluster," \
-                      + " AnnotationAuthor, RetrieveRecord" \
-                      + " FROM phage"
-        gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
-                     + " Translation, Orientation, Notes, LocusTag" \
-                     + " FROM gene"
+        phage_query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                      " Cluster, DateLastModified, Accession, Subcluster,"
+                      " AnnotationAuthor, RetrieveRecord"
+                      " FROM phage")
+        gene_query = ("SELECT GeneID, PhageID, Start, Stop, Length, Name,"
+                     " Translation, Orientation, Notes, LocusTag"
+                     " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         genome_list = mysqldb.parse_genome_data(
-                        sql_handle, phage_id_list=["L5"], phage_query=phage_query,
+                        self.engine, phage_id_list=["L5"], phage_query=phage_query,
                         gene_query=gene_query)
         with self.subTest():
             self.assertEqual(len(genome_list), 1)
@@ -767,42 +722,40 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, " + \
-                "AnnotationAuthor) VALUES (" + \
-                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', " + \
-                f"'{id_and_seq[1]}', " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, "
+                "AnnotationAuthor) VALUES ("
+                f"'{id_and_seq[0]}', 'ABC123', '', 'Mycobacterium', "
+                f"'{id_and_seq[1]}', "
                 f" 1, 10.10, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
                 "'', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        phage_query = "SELECT PhageID, Name, HostGenus, Sequence, Status," \
-                      + " Cluster, DateLastModified, Accession, Subcluster," \
-                      + " AnnotationAuthor, RetrieveRecord" \
-                      + " FROM phage"
-        gene_query = "SELECT GeneID, PhageID, Start, Stop, Length, Name," \
-                     + " Translation, Orientation, Notes, LocusTag" \
-                     + " FROM gene"
+        phage_query = ("SELECT PhageID, Name, HostGenus, Sequence, Status,"
+                      " Cluster, DateLastModified, Accession, Subcluster,"
+                      " AnnotationAuthor, RetrieveRecord"
+                      " FROM phage")
+        gene_query = ("SELECT GeneID, PhageID, Start, Stop, Length, Name,"
+                     " Translation, Orientation, Notes, LocusTag"
+                     " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
         genome_list = mysqldb.parse_genome_data(
-                        sql_handle, phage_query=phage_query,
+                        self.engine, phage_query=phage_query,
                         gene_query=gene_query)
 
         genome_dict = {}
@@ -846,37 +799,35 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, "
                 f" 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
                 "'', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        query = "SELECT" \
-                + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " Translation, Orientation, Notes, LocusTag" \
-                + " FROM gene"
+        query = ("SELECT"
+                " GeneID, PhageID, Start, Stop, Length, Name,"
+                " Translation, Orientation, Notes, LocusTag"
+                " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        cds_list = mysqldb.parse_cds_data(sql_handle, column="PhageID",
+        cds_list = mysqldb.parse_cds_data(self.engine, column="PhageID",
                                              phage_id_list=["L5"], query=query)
         with self.subTest():
             self.assertEqual(len(cds_list), 1)
@@ -900,36 +851,34 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, "
                 f" 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
                 "'', '', 'F', '', '');"
+                )
             cur.execute(sql2)
         connection.commit()
         connection.close()
 
-        query = "SELECT" \
-                + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " Translation, Orientation, Notes, LocusTag" \
-                + " FROM gene"
+        query = ("SELECT"
+                " GeneID, PhageID, Start, Stop, Length, Name,"
+                " Translation, Orientation, Notes, LocusTag"
+                " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        cds_list = mysqldb.parse_cds_data(sql_handle,
+        cds_list = mysqldb.parse_cds_data(self.engine,
                                              column="PhageID",
                                              phage_id_list=["Trixie"],
                                              query=query)
@@ -950,37 +899,35 @@ class TestMysqldbFunctions1(unittest.TestCase):
                                      cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
         for id_and_seq in input_phage_ids_and_seqs:
-            sql1 = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, " + \
+            sql1 = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "VALUES ("
+                f"'{id_and_seq[0]}', '', '', '', '{id_and_seq[1]}', 1, "
                 f" 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+                )
             cur.execute(sql1)
 
         for cds_data in input_cds_data:
-            sql2 = "INSERT INTO gene " + \
-                "(GeneID, PhageID, Start, Stop, Length, Name, " + \
-                "Translation, Orientation, Notes, LocusTag) " + \
-                "VALUES " + \
-                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, " + \
+            sql2 = ("INSERT INTO gene "
+                "(GeneID, PhageID, Start, Stop, Length, Name, "
+                "Translation, Orientation, Notes, LocusTag) "
+                "VALUES "
+                f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
                 "'', '', 'F', '', '');"
+                )
             cur.execute(sql2)
 
         connection.commit()
         connection.close()
 
-        query = "SELECT" \
-                + " GeneID, PhageID, Start, Stop, Length, Name," \
-                + " Translation, Orientation, Notes, LocusTag" \
-                + " FROM gene"
+        query = ("SELECT"
+                " GeneID, PhageID, Start, Stop, Length, Name,"
+                " Translation, Orientation, Notes, LocusTag"
+                " FROM gene")
 
-        sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-        sql_handle.username = user
-        sql_handle.password = pwd
-        sql_handle.database = db
-        cds_list = mysqldb.parse_cds_data(sql_handle, query=query)
+        cds_list = mysqldb.parse_cds_data(self.engine, query=query)
 
         with self.subTest():
             self.assertEqual(len(cds_list), 2)
@@ -1075,7 +1022,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
     def test_get_phage_table_count_1(self):
         """Verify the correct number of phages is returned when
         the database is empty."""
-        count = mysqldb.get_phage_table_count(self.sql_handle)
+        count = mysqldb.get_phage_table_count(self.engine)
         self.assertEqual(count, 0)
 
 
@@ -1101,7 +1048,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cur.execute(insert1)
         connection.commit()
         connection.close()
-        count = mysqldb.get_phage_table_count(self.sql_handle)
+        count = mysqldb.get_phage_table_count(self.engine)
         self.assertEqual(count, 1)
 
 
@@ -1120,7 +1067,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cur.execute(statement)
         connection.commit()
         connection.close()
-        mysqldb.change_version(self.sql_handle)
+        mysqldb.change_version(self.engine)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1133,6 +1080,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.close()
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 11)
+
+
 
     def test_change_version_2(self):
         """Verify the version is incremented by 5."""
@@ -1147,7 +1096,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cur.execute(statement)
         connection.commit()
         connection.close()
-        mysqldb.change_version(self.sql_handle, amount=5)
+        mysqldb.change_version(self.engine, amount=5)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1160,6 +1109,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.close()
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 15)
+
 
     def test_change_version_3(self):
         """Verify the version is decremented by 5."""
@@ -1174,7 +1124,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cur.execute(statement)
         connection.commit()
         connection.close()
-        mysqldb.change_version(self.sql_handle, amount=-5)
+        mysqldb.change_version(self.engine, amount=-5)
         connection = pymysql.connect(host="localhost",
                                      user=user,
                                      password=pwd,
@@ -1187,6 +1137,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         connection.close()
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 5)
+
 
 
 
@@ -1249,17 +1200,19 @@ class TestMysqldbFunctions2(unittest.TestCase):
         connection.commit()
         connection.close()
 
-        self.std_phage_query = \
-            ("SELECT PhageID, Accession, Name, "
+        self.std_phage_query = (
+             "SELECT PhageID, Accession, Name, "
              "HostGenus, Sequence, Length, GC, Status, "
              "DateLastModified, RetrieveRecord, "
              "AnnotationAuthor, Cluster, Subcluster "
              "FROM phage WHERE PhageID = 'L5'")
 
-        self.std_cds_query = \
-            ("SELECT GeneID, PhageID, Start, Stop, Length, Name, "
+        self.std_cds_query = (
+             "SELECT GeneID, PhageID, Start, Stop, Length, Name, "
              "Translation, Orientation, Notes, LocusTag FROM gene "
              "WHERE PhageID = 'L5'")
+
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
 
     def tearDown(self):
@@ -1271,7 +1224,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cur.execute(f"DROP DATABASE {db}")
         connection.commit()
         connection.close()
-
+        self.engine.dispose()
 
 
 
@@ -1599,141 +1552,208 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
 
 
+    def test_execute_transaction_1(self):
+        """Valid everything should result in creation of cursor and execution
+        of all statements in the transaction - return code 0."""
+        valid1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('D29', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        valid2 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('Trixie', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        valid_stmts = [valid1, valid2]
+        return_code = mysqldb.execute_transaction(self.engine, valid_stmts)
+        query = "SELECT COUNT(PhageID) FROM phage"
+        result_list = self.engine.execute(query).fetchall()
+        count = result_list[0][0]
+        with self.subTest():
+            self.assertEqual(count, 3)
+        with self.subTest():
+            self.assertEqual(return_code, 0)
+
+    def test_execute_transaction_2(self):
+        """Valid connection but invalid transaction should return code 1."""
+        valid1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('D29', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        invalid1 = ("INSERT INTO phage "
+                   "(PhageID, Accession, Name, HostGenus, Sequence, "
+                   "Length, GC, Status, DateLastModified, "
+                   "RetrieveRecord, AnnotationAuthor,"
+                   "Cluster, Subcluster) "
+                   "VALUES ('L5', 'ABC123', 'L5_Draft', 'Mycobacterium', "
+                   "'ATCG', 4, 0.5001, 'final', "
+                   f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
+        invalid_stmts = [valid1, invalid1]
+        return_code = mysqldb.execute_transaction(self.engine, invalid_stmts)
+        query = "SELECT COUNT(PhageID) FROM phage"
+        result_list = self.engine.execute(query).fetchall()
+        count = result_list[0][0]
+        with self.subTest():
+            self.assertEqual(count, 1)
+        with self.subTest():
+            self.assertEqual(return_code, 1)
+
+    def test_execute_transaction_3(self):
+        """Everything ok but no transaction should return 0."""
+        return_code = mysqldb.execute_transaction(self.engine)
+        self.assertEqual(return_code, 0)
+
+
+
+
 class TestMysqldbFunctions3(unittest.TestCase):
     def setUp(self):
         self.database = "Actinobacteriophage"
 
-    # setup_sql_handle() calls MySQLConnectionHandler.open_connection(),
-    # which uses getpass.getpass() to get the username and password.
     @patch("getpass.getpass")
-    def test_setup_sql_handle_1(self, getpass_mock):
-        """Verify that handle returned with valid info
+    def test_get_engine_1(self, getpass_mock):
+        """Verify that engine returned with valid info
         when database is provided."""
         getpass_mock.side_effect = [user, pwd]
-        sql_handle, msg = mysqldb.setup_sql_handle("Actinobacteriophage")
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage")
         with self.subTest():
             self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNotNone(sql_handle)
-        with self.subTest():
-            self.assertTrue(sql_handle.credential_status)
-        with self.subTest():
-            self.assertTrue(sql_handle._database_status)
+            self.assertIsNotNone(engine)
 
-    # setup_sql_handle() calls MySQLConnectionHandler.open_connection(),
-    # which uses getpass.getpass() to get the username and password.
     @patch("getpass.getpass")
-    def test_setup_sql_handle_2(self, getpass_mock):
-        """Verify that handle returned with valid info
+    def test_get_engine_2(self, getpass_mock):
+        """Verify that engine returned with valid info
         when database is not provided."""
         getpass_mock.side_effect = [user, pwd]
-        sql_handle, msg = mysqldb.setup_sql_handle()
+        engine, msg = mysqldb.get_engine(database="")
         with self.subTest():
             self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNotNone(sql_handle)
-        with self.subTest():
-            self.assertTrue(sql_handle.credential_status)
-        with self.subTest():
-            self.assertTrue(sql_handle._database_status)
+            self.assertIsNotNone(engine)
 
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_setup_sql_handle_3(self, mch_mock):
-        """Verify that no handle is returned when database is provided and
-        credential_status = False."""
-        sql_handle_mock = Mock()
-        sql_handle_mock.database = self.database
-        sql_handle_mock.credential_status = False
-        sql_handle_mock._database_status = True
-        mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = mysqldb.setup_sql_handle(self.database)
+    @patch("getpass.getpass")
+    def test_get_engine_3(self, getpass_mock):
+        """Verify that no engine is returned when database is provided and
+        invalid username."""
+        getpass_mock.side_effect = ["invalid", pwd]
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage", attempts=1)
         with self.subTest():
-            self.assertTrue(mch_mock.called)
+            self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNone(sql_handle)
+            self.assertIsNone(engine)
 
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_setup_sql_handle_4(self, mch_mock):
-        """Verify that no handle is returned when database is provided and
-        _database_status = False."""
-        sql_handle_mock = Mock()
-        sql_handle_mock.database = self.database
-        sql_handle_mock.credential_status = True
-        sql_handle_mock._database_status = False
-        mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = mysqldb.setup_sql_handle(self.database)
+    @patch("getpass.getpass")
+    def test_get_engine_4(self, getpass_mock):
+        """Verify that no engine is returned when database is provided and
+        invalid password."""
+        getpass_mock.side_effect = [user, "invalid"]
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage", attempts=1)
         with self.subTest():
-            self.assertTrue(mch_mock.called)
+            self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNone(sql_handle)
+            self.assertIsNone(engine)
 
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_setup_sql_handle_5(self, mch_mock):
-        """Verify that no handle is returned when database is provided and
-        credential_status = False and _database_status = False."""
-        sql_handle_mock = Mock()
-        sql_handle_mock.database = self.database
-        sql_handle_mock.credential_status = False
-        sql_handle_mock._database_status = False
-        mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = mysqldb.setup_sql_handle(self.database)
+    @patch("getpass.getpass")
+    def test_get_engine_5(self, getpass_mock):
+        """Verify that no engine is returned when
+        invalid database is provided."""
+        getpass_mock.side_effect = [user, pwd]
+        engine, msg = mysqldb.get_engine(database="invalid", attempts=1)
         with self.subTest():
-            self.assertTrue(mch_mock.called)
+            self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNone(sql_handle)
+            self.assertIsNone(engine)
 
-    @patch("pdm_utils.classes.mysqlconnectionhandler.MySQLConnectionHandler")
-    def test_setup_sql_handle_6(self, mch_mock):
-        """Verify that no handle is returned when database is not provided and
-        credential_status = False and _database_status = False."""
-        sql_handle_mock = Mock()
-        sql_handle_mock.credential_status = False
-        sql_handle_mock._database_status = True
-        mch_mock.return_value = sql_handle_mock
-        sql_handle, msg = mysqldb.setup_sql_handle()
+    @patch("getpass.getpass")
+    def test_get_engine_6(self, getpass_mock):
+        """Verify that no engine is returned when database is not provided and
+        invalid user."""
+        getpass_mock.side_effect = ["invalid", pwd]
+        engine, msg = mysqldb.get_engine(database="", attempts=1)
         with self.subTest():
-            self.assertTrue(mch_mock.called)
+            self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNone(sql_handle)
+            self.assertIsNone(engine)
+
+    @patch("getpass.getpass")
+    def test_get_engine_7(self, getpass_mock):
+        """Verify that engine is returned when database is provided and
+        more than one attempt is needed for username."""
+        getpass_mock.side_effect = ["invalid", pwd, user, pwd]
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage", attempts=3)
+        with self.subTest():
+            self.assertTrue(getpass_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(engine)
+
+    @patch("getpass.getpass")
+    def test_get_engine_8(self, getpass_mock):
+        """Verify that engine is returned when database is provided and
+        more than one attempt is needed for password."""
+        getpass_mock.side_effect = [user, "invalid", user, pwd]
+        engine, msg = mysqldb.get_engine(database="Actinobacteriophage", attempts=3)
+        with self.subTest():
+            self.assertTrue(getpass_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(engine)
+
+    @patch("builtins.input")
+    def test_get_engine_9(self, input_mock):
+        """Verify that engine is returned when database is provided by input."""
+        input_mock.side_effect = ["Actinobacteriophage"]
+        engine, msg = mysqldb.get_engine(username=user, password=pwd, attempts=1)
+        with self.subTest():
+            self.assertTrue(input_mock.called)
+        with self.subTest():
+            self.assertIsNotNone(engine)
+
+    @patch("builtins.input")
+    def test_get_engine_10(self, input_mock):
+        """Verify that engine is returned when database is provided and
+        more than one attempt is needed for database."""
+        input_mock.side_effect = ["invalid", "Actinobacteriophage"]
+        engine, msg = mysqldb.get_engine(username=user, password=pwd, attempts=3)
+        with self.subTest():
+            self.assertIsNotNone(engine)
 
 
 
 class TestMysqldbFunctions4(unittest.TestCase):
-    def setUp(self):
 
-        self.sql_handle_1 = mysqlconnectionhandler.MySQLConnectionHandler()
-        self.sql_handle_1.database = "Actinobacteriophage"
-        self.sql_handle_1.username = user
-        self.sql_handle_1.password = pwd
-
-        self.sql_handle_2 = mysqlconnectionhandler.MySQLConnectionHandler()
-        self.sql_handle_2.database = "Actinobacteriophage"
-        self.sql_handle_2.username = user
-        self.sql_handle_2.password = pwd
-        self.sql_handle_2.credential_status = False
-        self.sql_handle_2._database_status = False
-
-
-    @patch("pdm_utils.functions.mysqldb.setup_sql_handle")
-    def test_connect_to_db_1(self, setup_sql_mock):
-        """Verify that sql_handle returned when valid info provided."""
-        setup_sql_mock.return_value = (self.sql_handle_1, "")
-        sql_handle = mysqldb.connect_to_db("Actinobacteriophage")
+    @patch("getpass.getpass")
+    def test_connect_to_db_1(self, getpass_mock):
+        """Verify that engine returned when valid info provided."""
+        getpass_mock.side_effect = [user, pwd]
+        engine = mysqldb.connect_to_db("Actinobacteriophage")
         with self.subTest():
-            self.assertTrue(setup_sql_mock.called)
+            self.assertTrue(getpass_mock.called)
         with self.subTest():
-            self.assertIsNotNone(sql_handle)
+            self.assertIsNotNone(engine)
+
 
     @patch("sys.exit")
-    @patch("pdm_utils.functions.mysqldb.setup_sql_handle")
-    def test_connect_to_db_2(self, setup_sql_mock, sys_exit_mock):
-        """Verify that sys exit is called when sql_handle is None."""
-        setup_sql_mock.return_value = (None, "")
-        sql_handle = mysqldb.connect_to_db("Actinobacteriophage")
+    @patch("pdm_utils.functions.mysqldb.get_engine")
+    def test_connect_to_db_2(self, get_engine_mock, sys_exit_mock):
+        """Verify that sys exit is called when engine is None."""
+        get_engine_mock.return_value = (None, "")
+        engine = mysqldb.connect_to_db("Actinobacteriophage")
         with self.subTest():
-            self.assertTrue(setup_sql_mock.called)
+            self.assertTrue(get_engine_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
+
 
 
 

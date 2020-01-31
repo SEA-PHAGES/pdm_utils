@@ -7,8 +7,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
 from pdm_utils.classes import genome, filter
 from pdm_utils.pipelines import export_db
-from pdm_utils.classes import mysqlconnectionhandler
-
+import sqlalchemy
 from pathlib import Path
 from unittest.mock import patch, Mock, call, MagicMock
 import os, sys, unittest, shutil, csv, pymysql
@@ -33,12 +32,10 @@ class TestFileExport(unittest.TestCase):
         cur.execute("CREATE DATABASE test_db;")
         (self.connection).commit()
         (self.connection).close
-        #Creates valid MySqlConnectionHandler
-        mch = mysqlconnectionhandler.MySQLConnectionHandler()
-        mch._username = "pdm_anon"
-        mch._password = "pdm_anon"
-        mch.database = "test_db"
-        self.sql_handle = mch
+
+        engine_string = f"mysql+pymysql://pdm_anon:pdm_anon@localhost/test_db"
+        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
         #Creates Genome object
         gnm = genome.Genome()
         gnm.id = "TestID"
@@ -143,62 +140,6 @@ class TestFileExport(unittest.TestCase):
         csv_path.unlink()
         self.assertFalse(csv_path.exists())
 
-    #Patches get_credentials()
-    #Tests mysqlconnectionhandler return type
-    #Tests valid connection
-    @patch("pdm_utils.classes.mysqlconnectionhandler."
-                                                "MySQLConnectionHandler."
-                                                "ask_username_and_password")
-    def test_establish_database_connection(self, GetPasswordMock):
-        """
-        Unittest that tests export_db.establish_connection()
-            -Tests for valid and invalid mysqlconnectionhandler objects
-        """
-        #Sub test to test functionality with a valid mysqlconnectionhandler
-        with self.subTest(valid_mysqlconnectionhandler=True, input_type="Str"):
-            #Patches mysqlconnectionhandler in context to return a valid
-            #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.export_db."
-                       "mysqlconnectionhandler.MySQLConnectionHandler") \
-                                                        as MCHMock:
-                #Asserts establish_database_connection functionality
-                MCHMock.return_value = self.sql_handle
-                test_sql_handle = export_db.establish_database_connection(
-                                                            "test_db")
-                self.assertEqual(test_sql_handle, self.sql_handle)
-                GetPasswordMock.assert_called_once()
-                GetPasswordMock.reset_mock()
-        #Sub test to test functionality with an invalid mysqlconnectionhandler
-        with self.subTest(valid_mysqlconnectionhandler=False, input_type="Str"):
-            #Patches mysqlconnectionhandler in context to return an invalid
-            #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.export_db."
-                       "mysqlconnectionhandler.MySQLConnectionHandler") \
-                                                        as MCHMock:
-                #Creates faulty MySQLConnectionHandler object
-                mch = mysqlconnectionhandler.MySQLConnectionHandler()
-                mch._username = "invalid"
-                mch._password = "invalid"
-                MCHMock.return_value = mch
-                #Asserts establish_database_connection() functionality
-                export_db.establish_database_connection("test_db")
-                #self.assertEqual(GetPasswordMock.call_count, 4)
-                GetPasswordMock.assert_not_called()
-                GetPasswordMock.reset_mock()
-        #Sub test to test establish_database_connection raises exception
-        with self.subTest(valid_mysqlconnectionhandler=True, input_type=None):
-            #Patches mysqlconnectionhandler in context to return an invalid
-            #MySQLConnectionHandler object
-            with patch("pdm_utils.pipelines.export_db."
-                       "mysqlconnectionhandler.MySQLConnectionHandler") \
-                                                        as MCHMock:
-                #Creates valid MySQLConnectionHandler object
-                MCHMock.return_value = self.sql_handle
-                #Asserts establish_database_connection() raises exception
-                with self.assertRaises(TypeError):
-                    export_db.establish_database_connection(None)
-                GetPasswordMock.assert_not_called()
-                GetPasswordMock.reset_mock()
 
     def test_write_csv(self):
         """
@@ -229,7 +170,7 @@ class TestFileExport(unittest.TestCase):
         version_path = db_path.with_name("test_db.version")
 
         #Assert write_database() correctly created files
-        export_db.write_database(self.sql_handle, 1, self.test_cwd)
+        export_db.write_database(self.engine, 1, self.test_cwd)
         self.assertTrue(folder_path.exists())
         self.assertTrue(db_path.exists())
         self.assertTrue(version_path.exists())

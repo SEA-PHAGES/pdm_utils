@@ -6,11 +6,9 @@ import argparse
 import csv
 from datetime import datetime, date
 import logging
-import os
 import pathlib
 import shutil
 import sys
-# import time
 from tabulate import tabulate
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
@@ -21,7 +19,6 @@ from pdm_utils.classes import bundle
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
-from pdm_utils.classes import mysqlconnectionhandler as mch
 
 # Add a logger named after this module. Then add a null handler, which
 # suppresses any output statements. This allows other modules that call this
@@ -59,11 +56,13 @@ def main(unparsed_args_list):
     logger.info("Folder and file arguments verified.")
 
     # Get connection to database.
-    sql_handle = mysqldb.connect_to_db(args.database)
+    engine = mysqldb.connect_to_db(args.database)
+
+
     logger.info(f"Connected to database: {args.database}.")
 
     # If everything checks out, pass on args for data input/output:
-    data_io(sql_handle=sql_handle,
+    data_io(engine=engine,
             genome_folder=args.input_folder,
             import_table_file=args.import_table,
             genome_id_field=args.genome_id_field,
@@ -169,7 +168,7 @@ def parse_args(unparsed_args_list):
 
 
 
-def data_io(sql_handle=None, genome_folder=pathlib.Path(),
+def data_io(engine=None, genome_folder=pathlib.Path(),
     import_table_file=pathlib.Path(), genome_id_field="", host_genus_field="",
     prod_run=False, description_field="", run_mode="",
     output_folder=pathlib.Path(), interactive=False):
@@ -203,18 +202,18 @@ def data_io(sql_handle=None, genome_folder=pathlib.Path(),
         logger.info("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
 
-    start_count = mysqldb.get_phage_table_count(sql_handle)
+    start_count = mysqldb.get_phage_table_count(engine)
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(
                         ticket_dict, files_to_process,
-                        sql_handle=sql_handle,
+                        engine=engine,
                         prod_run=prod_run,
                         genome_id_field=genome_id_field,
                         host_genus_field=host_genus_field,
                         interactive=interactive)
 
-    final_count = mysqldb.get_phage_table_count(sql_handle)
+    final_count = mysqldb.get_phage_table_count(engine)
 
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
@@ -373,7 +372,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         logger.info("Tickets were successfully generated from import table.")
         return ticket_dict
 
-def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
+def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               prod_run=False, genome_id_field="",
                               host_genus_field="", interactive=False):
     """Process GenBank-formatted flat files.
@@ -386,10 +385,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     :type ticket_dict: dict
     :param files_in_folder: A list of filepaths to be parsed.
     :type files_in_folder: list
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param prod_run:
         Indicates whether the database should be updated from the
         import tickets.
@@ -432,7 +431,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         replace_gnm_pair_key = file_ref + "_" + retain_ref
         logger.info(f"Preparing data for file: {filepath.name}.")
         bndl = prepare_bundle(filepath=filepath, ticket_dict=ticket_dict,
-                              sql_handle=sql_handle,
+                              engine=engine,
                               genome_id_field=genome_id_field,
                               host_genus_field=host_genus_field,
                               id=bundle_count,
@@ -444,9 +443,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         # Since data from each parsed flat file is imported into the
         # database one file at a time, these sets are not static.
         # So these sets should be recomputed for every flat file evaluated.
-        phamerator_phage_id_set = mysqldb.create_phage_id_set(sql_handle)
-        phamerator_seq_set = mysqldb.create_seq_set(sql_handle)
-        phamerator_accession_set = mysqldb.create_accession_set(sql_handle)
+        phamerator_phage_id_set = mysqldb.create_phage_id_set(engine)
+        phamerator_seq_set = mysqldb.create_seq_set(engine)
+        phamerator_accession_set = mysqldb.create_accession_set(engine)
         logger.info(f"Checking file: {filepath.name}.")
         run_checks(bndl,
                    accession_set=phamerator_accession_set,
@@ -473,7 +472,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
         # evaluation_dict[bndl.id] = bndl.get_evaluations()
 
 
-        result = import_into_db(bndl, sql_handle=sql_handle,
+        result = import_into_db(bndl, engine=engine,
                                 gnm_key=file_ref, prod_run=prod_run)
         if result:
             success_ticket_list.append(bndl.ticket.data_dict)
@@ -488,9 +487,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
     # to flat files. If there are any tickets left, errors need to be counted.
     if len(ticket_dict.keys()) > 0:
         logger.info("Processing unmatched tickets.")
-        phamerator_phage_id_set = mysqldb.create_phage_id_set(sql_handle)
-        phamerator_seq_set = mysqldb.create_seq_set(sql_handle)
-        phamerator_accession_set = mysqldb.create_accession_set(sql_handle)
+        phamerator_phage_id_set = mysqldb.create_phage_id_set(engine)
+        phamerator_seq_set = mysqldb.create_seq_set(engine)
+        phamerator_accession_set = mysqldb.create_accession_set(engine)
         key_list = list(ticket_dict.keys())
         for key in key_list:
             bndl = bundle.Bundle()
@@ -515,7 +514,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, sql_handle=None,
             failed_filepath_list, evaluation_dict)
 
 
-def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
+def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
                    genome_id_field="", host_genus_field="", id=None,
                    file_ref="", ticket_ref="", retrieve_ref="", retain_ref="",
                    id_conversion_dict={}, interactive=False):
@@ -525,10 +524,10 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
     :type filepath: Path
     :param ticket_dict: A dictionary of Tickets.
     :type ticket_dict: dict
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param id: Identifier to be assigned to the bundled dataset.
     :type id: int
     :returns:
@@ -603,7 +602,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
             # from the MySQL genome.
             if bndl.ticket.type == "replace":
 
-                if sql_handle is None:
+                if engine is None:
                     logger.info(
                           f"Ticket {bndl.ticket.id} is a 'replace' ticket "
                           "but no details about how to connect to the "
@@ -612,7 +611,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, sql_handle=None,
                 else:
                     query = "SELECT * FROM phage"
                     pmr_genomes =  mysqldb.parse_genome_data(
-                                       sql_handle=sql_handle,
+                                       engine=engine,
                                        phage_id_list=[ff_gnm.id],
                                        phage_query=query,
                                        gnm_type=retain_ref)
@@ -1167,7 +1166,7 @@ def check_trna(trna_obj, eval_flags):
     pass
 
 
-def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
+def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
     """Import data into the MySQL database."""
     IMPORT_DATE = datetime.today().replace(hour=0,
                                            minute=0,
@@ -1190,7 +1189,7 @@ def import_into_db(bndl, sql_handle=None, gnm_key="", prod_run=False):
         bndl.sql_statements = mysqldb.create_genome_statements(
                                 import_gnm, bndl.ticket.type)
         if prod_run:
-            result = sql_handle.execute_transaction(bndl.sql_statements)
+            result = mysqldb.execute_transaction(engine, bndl.sql_statements)
             if result == 1:
                 logger.info("Error executing statements to import data.")
                 result = False

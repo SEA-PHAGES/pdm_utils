@@ -1,31 +1,28 @@
 """ Module containing various data structure objects for the handling
 and mapping of the characteristics and relationships of a MySQL database.
 """
-
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 import re
+from pdm_utils.functions import mysqldb
 
-def setup_db_tree_leaves(sql_handle, db_node):
+def setup_db_tree_leaves(engine, db_node):
     """Function to create structures to mimic a MySQL database.
 
-    :param sql_handle:
-        Input a validated MySQLConnectionHandler object.
-    :type sql_handle: MySQLConnectionHandler
+    :param engine:
+        Input a validated SQLAlchemy Engine object.
+    :type engine: Engine
     :param db_node:
         Input an empty DatabaseNode.
     :type db_node: DatabaseNode
     """
     table_query = (
         "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-       f"WHERE TABLE_SCHEMA='{sql_handle.database}'")
-    table_dicts = sql_handle.execute_query(table_query)
-
+       f"WHERE TABLE_SCHEMA='{engine.url.database}'")
+    table_dicts = mysqldb.query_dict_list(engine, table_query)
     for data_dict in table_dicts:
         table_node = TableNode(data_dict["TABLE_NAME"])
         db_node.add_table(table_node)
-        
         column_query = f"SHOW columns IN {data_dict['TABLE_NAME']}"
-        column_dicts = sql_handle.execute_query(column_query)
+        column_dicts = mysqldb.query_dict_list(engine, column_query)
         for column_dict in column_dicts:
             if column_dict["Null"] == "YES":
                 Null = True
@@ -40,12 +37,12 @@ def setup_db_tree_leaves(sql_handle, db_node):
             if(column_dict["Key"] == "PRI"):
                 table_node.primary_key = column_node
 
-def setup_db_tree_webs(sql_handle, db_node):
+def setup_db_tree_webs(engine, db_node):
     """Function to modify and link structures to mimic a MySQL database.
 
-    :param sql_handle:
-        Input a validated MySQLConnectionHandler object.
-    :type sql_handle: MySQLConnectionHandler object.
+    :param engine:
+        Input a validated SQLAlchemy Engine object.
+    :type engine: Engine
     :param db_node:
         Input a DatabaseNode populated with TableNodes and ColumnNodes.
     """
@@ -54,9 +51,9 @@ def setup_db_tree_webs(sql_handle, db_node):
               f"SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, "
                "REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME "
                "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
-              f"WHERE REFERENCED_TABLE_SCHEMA='{sql_handle.database}' AND "
+              f"WHERE REFERENCED_TABLE_SCHEMA='{engine.url.database}' AND "
                     f"REFERENCED_TABLE_NAME='{table.id}'")
-        foreign_key_results = sql_handle.execute_query(foreign_key_query)
+        foreign_key_results = mysqldb.query_dict_list(engine, foreign_key_query)
         if foreign_key_results != ():
             for dict in foreign_key_results:
                 primary_key_node = table.get_column(
@@ -67,7 +64,7 @@ def setup_db_tree_webs(sql_handle, db_node):
                                              dict["COLUMN_NAME"])
 
                 primary_key_node.add_table(ref_table)
-                
+
                 if foreign_key_node == ref_table.primary_key:
                     ref_table.primary_key = primary_key_node
 
@@ -76,12 +73,12 @@ def setup_db_tree_webs(sql_handle, db_node):
                         parent.remove_column(foreign_key_node)
                         primary_key_node.add_table(parent)
 
-def setup_grouping_options(sql_handle, db_node):
+def setup_grouping_options(engine, db_node):
     """Function to categorize structures to mimic a MySQL database.
 
-    :param sql_handle:
-        Input a validated MySQLConnectionHandler object.
-    :type sql_handle: MySQLConnectionHandler
+    :param engine:
+        Input a validated SQLAlchemy Engine object.
+    :type engine: Engine
     :param db_node:
         Input a DatabaseNode populated with TableNodes and ColumnNodes.
     :type db_node: DatabaseNode
@@ -108,27 +105,26 @@ def setup_grouping_options(sql_handle, db_node):
 
             if type in limited_sets:
                 query = f"SELECT COUNT(DISTINCT {column.id}) FROM {table.id}"
-                results_dict = sql_handle.execute_query(query)[0]
-
+                results_dict = mysqldb.query_dict_list(engine, query)[0]
                 if results_dict[f"COUNT(DISTINCT {column.id})"] < 200:
                     column.group = "limited_set"
 
-class SchemaGraph: 
+class SchemaGraph:
     """Object which stores a DatabaseNode object as the root of a Tree."""
-    def __init__(self, sql_handle):
+    def __init__(self, engine):
         """Intitializes a SchemaGraph object.
 
-        :param sql_handle:
-            Input a validated MySQLConnectionHandler object.
-        :type sql_handle: MySQLConnectionHandler
+        :param engine:
+            Input a validated SQLAlchemy Engine object.
+        :type engine: Engine
         """
-        self.sql_handle = sql_handle 
-        self.db_node = DatabaseNode(sql_handle.database)
-        
-        setup_db_tree_leaves(sql_handle, self.db_node)                
-        setup_db_tree_webs(sql_handle, self.db_node) 
+        self.engine = engine
+        self.db_node = DatabaseNode(engine.url.database)
 
-        setup_grouping_options(sql_handle, self.db_node)
+        setup_db_tree_leaves(engine, self.db_node)
+        setup_db_tree_webs(engine, self.db_node)
+
+        setup_grouping_options(engine, self.db_node)
 
     def get_table(self, table):
         """Function that returns a TableNode connected to the DatabaseNode.
@@ -144,7 +140,7 @@ class SchemaGraph:
 
     def has_table(self, table):
         """Function that returns a boolean of if a TableNode exists.
-        
+
         :param table:
             Input the name of a TableNode as a string.
         :type_ table: str
@@ -197,7 +193,7 @@ class SchemaGraph:
             Input a 2-D array containing the traversed nodes in a path.
         :returns current_path:
             Returns a 2-D array containing the tables and keys in the path.
-        :type current_path: List[List[str]] 
+        :type current_path: List[List[str]]
         """
         if current_path == None:
             current_path = []
@@ -227,11 +223,11 @@ class SchemaGraph:
                     if path != None:
                         if (path[-1])[0] == target_table.id:
                             return path
-  
+
     def get_values(self, table, column, values_column=None,
                      queries=[], values=[]):
         """Function to query a MySQL database for a set of column values.
-        
+
         :param table:
             Input the name of a TableNode as a string.
         :type table: str
@@ -266,21 +262,22 @@ class SchemaGraph:
                                                           values=values)
 
         values = []
-        
+
         try:
-            for result in self.sql_handle.execute_query(query):
+            list_of_dicts = mysqldb.query_dict_list(engine, query)
+            for result in list_of_dicts:
                 values.append(str(result[column]))
 
         except TypeError:
             print(query)
-            raise TypeError("MySQL query failed to execute.") 
+            raise TypeError("MySQL query failed to execute.")
 
         return values
 
     def get_distinct(self, table, column, values_column=None,
                               queries=[], values=[]):
         """Function to query a MySQL database for distinct field values.
-        
+
         :param table:
             Input the name of a TableNode as a string.
         :type table: str
@@ -300,7 +297,7 @@ class SchemaGraph:
             Returns a list of column values as strings.
         :type values: List[str]
         """
-       
+
         table_node = self.get_table(table)
         if table_node == None:
             raise ValueError
@@ -309,18 +306,19 @@ class SchemaGraph:
 
         if values_column == None:
             values_column = table_node.primary_key.id
-        
+
         if queries or values:
             query = query + self.build_query_conditionals(values_column,
                                                           queries=queries,
                                                           values=values)
-       
+
         values = []
 
         try:
-            for result in self.sql_handle.execute_query(query):
+            list_of_dicts = mysqldb.query_dict_list(engine, query)
+            for result in list_of_dicts:
                 values.append(str(result[column]))
-        
+
         except TypeError:
             print(query)
             raise TypeError("MySQL query failed to execute.")
@@ -330,7 +328,7 @@ class SchemaGraph:
     def get_count(self, table, count_field="*", values_column=None,
             queries=[], values=[]):
         """Function to query a MySQL database for distinct field values.
-        
+
         :param table:
             Input the name of a TableNode as a string.
         :type table: str
@@ -363,9 +361,9 @@ class SchemaGraph:
             query = query + self.build_query_conditionals(values_column,
                                                           queries=queries,
                                                           values=values)
-        
-        try: 
-            result = self.sql_handle.execute_query(query)[0]
+
+        try:
+            result = mysqldb.query_dict_list(engine, query)[0]
 
         except TypeError:
             print(query)
@@ -398,12 +396,12 @@ class SchemaGraph:
         if values:
             conditional = conditional + f"{values_column} IN ('" +\
                               "','".join(values) + "')"
-       
+
         return conditional
 
-    def transpose_values(self, start_table, target_table, values, 
+    def transpose_values(self, start_table, target_table, values,
                          start_column=None, target_column=None):
-        """Takes a set of column values and uses foreign-keys 
+        """Takes a set of column values and uses foreign-keys
         between tables to get the corresponding set of values in another table.
 
         :param start_table:
@@ -444,19 +442,19 @@ class SchemaGraph:
                                     values_column=current_key,
                                     values=current_values)
             current_key = connection_key[1]
-            current_table = connection_key[0] 
-       
+            current_table = connection_key[0]
+
         if current_key != target_column:
             current_values = self.get_values(
-                                    current_table, 
+                                    current_table,
                                     target_column,
                                     values_column=current_key,
                                     values=current_values)
 
         return list(set(current_values))
 
-    def sort_values(self, table, column, values, 
-                    sort_column=None): 
+    def sort_values(self, table, column, values,
+                    sort_column=None):
         """Sorts values list for the Filter object by a field key.
 
         :param sort_column:
@@ -468,7 +466,7 @@ class SchemaGraph:
         """
         if not values:
             return []
-       
+
         if sort_column == None:
             sort_column = column
 
@@ -480,17 +478,18 @@ class SchemaGraph:
                  f"FROM {table} WHERE {column} IN "
                   "('" + "','".join(values) + "') "
                  f"ORDER BY {sort_column}")
-        
+
         values = []
 
         try:
-            for result in self.sql_handle.execute_query(query):
+            list_of_dicts = mysqldb.query_dict_list(engine, query)
+            for result in list_of_dicts:
                 values.append(str(result[column]))
 
         except TypeError:
             print(query)
             raise TypeError("MySQL query failed to execute.")
-        
+
         return values
 
     def get_data(self, table, value, attributes=["*"]):
@@ -523,13 +522,13 @@ class SchemaGraph:
                f" FROM {table} WHERE {primary_key}='{value}'")
 
         try:
-            data = self.sql_handle.execute_query(query)[0]
+            data = mysqldb.query_dict_list(engine, query)[0]
 
         except TypeError:
             print(query)
             raise TypeError("MySQL query failed to execute.")
-        return data 
-         
+        return data
+
 class Node:
     """Object which can store other Node objects and an id."""
 
@@ -646,12 +645,12 @@ class Node:
 
     def show_children(self):
         """Function that returns a list representing all the children Nodes.
-        
+
         :returns children:
             Returns a list of IDs representing the children Nodes.
         :type children: List[str]
         """
-        children = []  
+        children = []
         for child in self.children:
             children.append(child.id)
 
@@ -666,7 +665,7 @@ class Node:
         """
         if not isinstance(parent_node, Node):
             raise TypeError("parent_node parameter must be a Node object.")
-        
+
         if parent_node in self.parents:
             raise ValueError(
             "parent_node cannot be a duplicate of an existing parent Node.")
@@ -718,7 +717,7 @@ class Node:
 
     def create_child(self, child_id):
         """Function to create and link a new Node object as a child.
-        
+
         :param child_id:
             Input an ID for the new Node object as a string.
         :type child_id: str
@@ -732,7 +731,7 @@ class Node:
         child_node = Node(child_id)
         self.add_child(child_node)
         return child_node
-  
+
     def remove_parent(self, parent_node):
         """Function that disconnects a connected parent Node.
 
@@ -790,7 +789,7 @@ class DatabaseNode(Node):
 
     def create_table(self, table):
         """Function to create and link a new TableNode object as a child.
-        
+
         :param table:
             Input an ID for the new TableNode object as a string.
         :type table: str
@@ -805,10 +804,10 @@ class DatabaseNode(Node):
         self.add_table(table_node)
 
         return table_node
- 
+
     def show_tables(self):
         """Function that returns a list representing all the TableNodes.
-        
+
         :returns children:
             Returns a list of IDs representing the TableNodes.
         :type children: List[str]
@@ -878,7 +877,7 @@ class TableNode(Node):
 
     def show_columns(self):
         """Function that returns a list representing all the ColumnNodes.
-        
+
         :returns children:
             Returns a list of IDs representing the ColumnNodes.
         :type children: List[str]
@@ -897,7 +896,7 @@ class TableNode(Node):
             columns_info.append(columns.show_info())
 
         return columns_info
-    
+
     def print_columns_info(self):
         """"Function that formats and prints a list of Columns' info."""
 
@@ -905,7 +904,7 @@ class TableNode(Node):
         print("|" + " "*61 + "|")
         print("| %-16s | %-10s | %-12s | %-6s | %s |" % \
                          ("Field", "Type", "Quality", "Null", "Key"))
-     
+
         print("|" + "-"*61 + "|")
         for column in self.show_columns_info():
             key = column[4]
@@ -926,7 +925,7 @@ class TableNode(Node):
             Returns a boolean expression of if a ID matches any ColumnNode.
         :type (child in children): Boolean
         """
-        return self.has_child(column) 
+        return self.has_child(column)
 
     def get_column(self, column):
         """Function that returns a connected ColumnNode.
@@ -943,7 +942,7 @@ class TableNode(Node):
 
     def show_foreign_keys(self):
         """Function that returns a list representing Foreign Key ColumnNodes.
-        
+
         :returns foreign_keys:
             Returns a list of Foreign Key ColumnNode names as strings.
         :type foreign_keys: List[str]
@@ -990,17 +989,17 @@ class TableNode(Node):
         return ""
 
 class ColumnNode(Node):
-    def __init__(self, id, parents=None, children=None, 
+    def __init__(self, id, parents=None, children=None,
                  type="", Null=None, key=None):
         super(ColumnNode, self).__init__(
                                     id, parents=parents, children=children)
-        
+
         self.type = type
         self.null = Null
         self.key = key
 
         self.group = "Undefined"
-    
+
     def add_table(self, table_node):
         """Function to link an existing TableNode object as a parent.
 
@@ -1012,7 +1011,7 @@ class ColumnNode(Node):
             raise TypeError("table_node parameter must be a TableNode object.")
 
         self.add_parent(table_node)
-    
+
     def create_table(self, table):
         """Function to create and link a new TableNode object as a parent.
 
@@ -1026,7 +1025,7 @@ class ColumnNode(Node):
         if not isinstance(table, str):
             raise TypeError("table parameter must be a string object.")
         table_node = TableNode(table)
-        self.add_table(table_node) 
+        self.add_table(table_node)
 
         return table_node
 
@@ -1038,7 +1037,7 @@ class ColumnNode(Node):
         :type type: str
         """
         return self.type
-   
+
     def parse_type(self):
         """Function that returns a truncated version of the column type.
 
@@ -1048,7 +1047,7 @@ class ColumnNode(Node):
         """
         type = self.type.split("(")
         type = type[0].split(" ")[0]
-       
+
         return type
 
     def show_info(self):
@@ -1059,12 +1058,4 @@ class ColumnNode(Node):
         :type info: List[str]
         """
         info = [self.id, self.parse_type(), self.group, self.null, self.key]
-        return info        
-
-if __name__ == "__main__":
-    sql_handle = MySQLConnectionHandler()
-    sql_handle.database = input("Please enter database name: ")
-    sql_handle.get_credentials()
-    sql_handle.validate_credentials()
-    db_tree = SchemaGraph(sql_handle)
-    db_tree.print_info()
+        return info

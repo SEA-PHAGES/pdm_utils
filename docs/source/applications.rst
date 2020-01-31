@@ -15,5 +15,4 @@ Applications
    Maintaining database compatibility with downstream tools <./applications/compatibility>
    Creating custom data analysis tools <./applications/library>
 
-.. Using the MySQLConnectionHandler <>
 .. Retrieving all data from the database <>

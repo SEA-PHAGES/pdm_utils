@@ -1,15 +1,27 @@
 """Functions to interact with MySQL."""
 
+from Bio.Alphabet import IUPAC
+from Bio.Seq import Seq
+import getpass
 import subprocess
 import sys
+import sqlalchemy
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import cds
 from pdm_utils.functions import basic
-from Bio.Alphabet import IUPAC
-from Bio.Seq import Seq
-from pdm_utils.classes import mysqlconnectionhandler as mch
 
+
+
+# TODO unittest.
+def query_dict_list(engine, query):
+    """Get the results of a MySQL query as a list of dictionaries."""
+    result_list = engine.execute(query).fetchall()
+    result_dict_list = []
+    for row in result_list:
+        row_as_dict = dict(row)
+        result_dict_list.append(row_as_dict)
+    return result_dict_list
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     """Parse a MySQL database dictionary to create a Genome object.
@@ -182,15 +194,15 @@ def parse_gene_table_data(data_dict, trans_table=11):
     return cds_ftr
 
 
-def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
+def retrieve_data(engine, column=None, query=None, phage_id_list=None):
     """Retrieve genome data from a MySQL database for a single genome.
 
     The query is modified to include one or more PhageIDs
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param query:
         A MySQL query that selects valid, specific columns
         from the a valid table without conditioning on a PhageID
@@ -215,18 +227,17 @@ def retrieve_data(sql_handle, column=None, query=None, phage_id_list=None):
                 + "','".join(phage_id_list) \
                 + "')"
     query = query + ";"
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    return result_list
+    result_dict_list = query_dict_list(engine, query)
+    return result_dict_list
 
 
-def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
+def parse_cds_data(engine, column=None, phage_id_list=None, query=None):
     """Returns Cds objects containing data parsed from a
     MySQL database.
 
-    :param sql_handle:
+    :param engine:
         This parameter is passed directly to the 'retrieve_data' function.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param query:
         This parameter is passed directly to the 'retrieve_data' function.
     :type query: str
@@ -241,7 +252,7 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
     """
     cds_list = []
     result_list = retrieve_data(
-                    sql_handle, column=column, query=query,
+                    engine, column=column, query=query,
                     phage_id_list=phage_id_list)
     for data_dict in result_list:
         cds_ftr = parse_gene_table_data(data_dict)
@@ -249,14 +260,14 @@ def parse_cds_data(sql_handle, column=None, phage_id_list=None, query=None):
     return cds_list
 
 
-def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
+def parse_genome_data(engine, phage_id_list=None, phage_query=None,
                       gene_query=None, trna_query=None, gnm_type=""):
     """Returns a list of Genome objects containing data parsed from a MySQL
     database.
 
-    :param sql_handle:
+    :param engine:
         This parameter is passed directly to the 'retrieve_data' function.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :param phage_query:
         This parameter is passed directly to the 'retrieve_data' function
         to retrieve data from the phage table.
@@ -286,13 +297,13 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
     :rtype: list
     """
     genome_list = []
-    result_list1 = retrieve_data(sql_handle, column="PhageID",
-                                             phage_id_list=phage_id_list,
-                                             query=phage_query)
+    result_list1 = retrieve_data(engine, column="PhageID",
+                                 phage_id_list=phage_id_list,
+                                 query=phage_query)
     for data_dict in result_list1:
         gnm = parse_phage_table_data(data_dict, gnm_type=gnm_type)
         if gene_query is not None:
-            cds_list = parse_cds_data(sql_handle, column="PhageID",
+            cds_list = parse_cds_data(engine, column="PhageID",
                                       phage_id_list=[gnm.id],
                                       query=gene_query)
             x = 0
@@ -310,77 +321,65 @@ def parse_genome_data(sql_handle, phage_id_list=None, phage_query=None,
 
 
 
-# TODO this can be improved if the MCH.execute_query() method
-# is able to switch to a standard cursor instead of only using
-# dictcursor.
-def create_phage_id_set(sql_handle):
+def create_phage_id_set(engine):
     """Create set of phage_ids currently in a MySQL database.
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :returns: A set of PhageIDs.
     :rtype: set
     """
     query = "SELECT PhageID FROM phage"
-    # Returns a list of items, where each item is a dictionary of
-    # SQL data for each row in the table.
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    # Convert to a set of PhageIDs.
-    result_set = set([])
-    for dict in result_list:
-        result_set.add(dict["PhageID"])
+    result_set = query_set(engine, query)
     return result_set
 
 
-def create_seq_set(sql_handle):
+def create_seq_set(engine):
     """Create set of genome sequences currently in a MySQL database.
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :returns: A set of genome sequences.
     :rtype: set
     """
     query = "SELECT Sequence FROM phage"
-    # Returns a list of items, where each item is a dictionary of
+
+    # Returns a list of items, where each item is a tuple of
     # SQL data for each row in the table.
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
+    result_list = engine.execute(query).fetchall()
+
     # Convert to a set of sequences.
     # Sequence data is stored as MEDIUMBLOB, so data is returned as bytes
     # "b'AATT", "b'TTCC", etc.
-    result_set = set([])
-    for dict in result_list:
-        # result_set.add(dict["Sequence"].decode("utf-8"))
-        gnm_seq = dict["Sequence"].decode("utf-8")
+    result_set = set()
+    for tup in result_list:
+        gnm_seq = tup[0].decode("utf-8")
         gnm_seq = Seq(gnm_seq, IUPAC.ambiguous_dna).upper()
         result_set.add(gnm_seq)
     return result_set
 
 
-def create_accession_set(sql_handle):
+
+
+
+
+
+def create_accession_set(engine):
     """Create set of accessions currently in a MySQL database.
 
-    :param sql_handle:
-        A pdm_utils MySQLConnectionHandler object containing
+    :param engine:
+        A sqlalchemy Engine object containing
         information on which database to connect to.
-    :type sql_handle: MySQLConnectionHandler
+    :type engine: Engine
     :returns: A set of accessions.
     :rtype: set
     """
     query = "SELECT Accession FROM phage"
-    # Returns a list of items, where each item is a dictionary of
-    # SQL data for each row in the table.
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    # Convert to a set of accessions.
-    result_set = set([])
-    for dict in result_list:
-        result_set.add(dict["Accession"])
+    result_set = query_set(engine, query)
     return result_set
 
 
@@ -512,137 +511,106 @@ def create_genome_statements(gnm, tkt_type=""):
     return sql_statements
 
 
-def get_phage_table_count(sql_handle):
+def get_phage_table_count(engine):
     """Get the current number of genomes in the database."""
     query = "SELECT COUNT(*) FROM phage"
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    count = result_list[0]["COUNT(*)"]
+    result_list = engine.execute(query).fetchall()
+    count = result_list[0][0]
     return count
 
 
-def setup_sql_handle(database=None):
-    """Connect to a MySQL database."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.open_connection()
-    msg = "Setting up MySQL connection. "
-    status = True
-    if sql_handle.credential_status == False:
-        msg = msg + "Invalid username or password. "
-        status = False
-    if sql_handle._database_status == False:
-        msg = msg + f"Invalid database: {database}."
-        status = False
-    if status == True:
-        msg = msg + f"Connected to the database: {database}."
-    else:
-        sql_handle = None
-    return (sql_handle, msg)
-
-
-# TODO can probably be merged with setup_sql_handle()
-# TODO unittest.
-def setup_sql_handle2(username=None, password=None, database=None):
-    """Connect to a MySQL database without requiring user input."""
-    sql_handle = mch.MySQLConnectionHandler()
-    sql_handle.database = database
-    sql_handle.username = username
-    sql_handle.password = password
-    return sql_handle
-
-
-
-def change_version(sql_handle, amount=1):
+def change_version(engine, amount=1):
     """Change the database version number."""
-    query = ("SELECT Version from version")
-    result = sql_handle.execute_query(query)
-    current = result[0]["Version"]
+    result = get_version_table_data(engine)
+    current = result["Version"]
     new = current + amount
     print(f"Updating version from {current} to {new}.")
     statement = (f"UPDATE version SET Version = {new}")
-    sql_handle.execute_transaction([statement])
+    engine.execute(statement)
 
 
 # TODO originally coded in export pipeline, so ensure that function is removed.
 # TODO unittest.
-def get_version_table_data(sql_handle):
+def get_version_table_data(engine):
     """Retrieves data from the version table.
 
-    :param sql_database_handle:
-        Input a mysqlconnectionhandler object.
-    :type sql_database_handle: mysqlconnectionhandler
+    :param engine:
+        Input a sqlalchemy engine object.
+    :type engine: Engine
     :returns:
         database_versions_list(dictionary) is a dictionary
         of size 2 that contains values tied to keys
         "Version" and "SchemaVersion"
     """
-    result_list = retrieve_data(sql_handle, query="SELECT * FROM version")
-    return result_list[0]
+    query = "SELECT * FROM version"
+    result_dict_list = query_dict_list(engine, query)
+    return result_dict_list[0]
 
 
 # TODO unittest.
-def get_mysql_dbs(sql_handle):
+def get_mysql_dbs(engine):
     """Retrieve database names from MySQL.
 
     Returns a set of database names."""
     query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    databases = basic.get_values_from_dict_list(result_list)
+    databases = query_set(engine, query)
     return databases
 
 
 # TODO unittest.
-def get_db_tables(sql_handle, database):
+def get_db_tables(engine, database):
     """Retrieve tables names from the database.
 
     Returns a set of table names."""
     query = ("SELECT table_name FROM information_schema.tables "
              f"WHERE table_schema = '{database}'")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    db_tables = basic.get_values_from_dict_list(result_list)
+    db_tables = query_set(engine, query)
     return db_tables
 
 
 # TODO unittest.
-def get_table_columns(sql_handle, database, table_name):
-    """Retrieve columns names from the phage table.
+def get_table_columns(engine, database, table_name):
+    """Retrieve columns names from a table.
 
     Returns a set of column names."""
     query = ("SELECT column_name FROM information_schema.columns WHERE "
               f"table_schema = '{database}' AND "
               f"table_name = '{table_name}'")
-    result_list = sql_handle.execute_query(query)
-    sql_handle.close_connection()
-    columns = basic.get_values_from_dict_list(result_list)
+    columns = query_set(engine, query)
     return columns
 
 
+
+def query_set(engine, query):
+    """Retrieve set of data from MySQL query."""
+    result_list = engine.execute(query).fetchall()
+    set_of_data = basic.get_values_from_tuple_list(result_list)
+    return set_of_data
+
+
 # TODO unittest.
-def get_schema_version(sql_handle):
+def get_schema_version(engine):
     """Identify the schema version of the database_versions_list."""
     # If version table does not exist, schema_version = 0.
     # If no schema_version or SchemaVersion field,
     # it is either schema_version = 1 or 2.
     # If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
     # columns are in phage table, schema_version = 2.
-    db_tables = get_db_tables(sql_handle, sql_handle.database)
+    db_tables = get_db_tables(engine, engine.url.database)
     if "version" in db_tables:
         version_table = True
     else:
         version_table = False
 
     if version_table == True:
-        version_columns = get_version_table_data(sql_handle)
+        version_columns = get_version_table_data(engine)
         if "schema_version" in version_columns.keys():
             schema_version = version_columns["schema_version"]
         elif "SchemaVersion" in version_columns.keys():
             schema_version = version_columns["SchemaVersion"]
         else:
             phage_columns = get_table_columns(
-                                sql_handle, sql_handle.database, "phage")
+                                engine, engine.url.database, "phage")
             expected = {"AnnotationAuthor", "Program",
                         "AnnotationQC", "RetrieveRecord"}
             diff = expected - phage_columns
@@ -656,53 +624,56 @@ def get_schema_version(sql_handle):
 
 
 # TODO unittest.
-def drop_create_db(sql_handle, database):
+def drop_create_db(engine, database):
     """Creates a new, empty database."""
     # First, test if the database already exists within mysql.
     # If there is, delete it so that a new database is installed.
-    databases = get_mysql_dbs(sql_handle)
+    databases = get_mysql_dbs(engine)
     if database in databases:
-        result = drop_db(sql_handle, database)
+        result = drop_db(engine, database)
     else:
         result = 0
     if result == 0:
-        result = create_db(sql_handle, database)
+        result = create_db(engine, database)
     return result
 
 
 # TODO unittest.
-def drop_db(sql_handle, database):
+def drop_db(engine, database):
     """Drops a database."""
-    statement = [f"DROP DATABASE {database}"]
-    result = sql_handle.execute_transaction(statement)
-    sql_handle.close_connection()
-    return result
-
+    statement = f"DROP DATABASE {database}"
+    try:
+        engine.execute(statement)
+        return 0
+    except:
+        return 1
 
 # TODO unittest.
-def create_db(sql_handle, database):
+def create_db(engine, database):
     """Create a new, empty database."""
-    statement = [f"CREATE DATABASE {database}"]
-    result = sql_handle.execute_transaction(statement)
-    sql_handle.close_connection()
-    return result
+    statement = f"CREATE DATABASE {database}"
+    try:
+        engine.execute(statement)
+        return 0
+    except:
+        return 1
 
 
 # TODO unittest.
-def copy_db(sql_handle, new_database):
+def copy_db(engine, new_database):
     """Copies a database.
 
-    The sql_handle contains pointer to the name of the database
+    The engine contains pointer to the name of the database
     that will be copied into the new_database parameter.
     """
     #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
     command_string1 = ("mysqldump "
-                      f"-u {sql_handle.username} "
-                      f"-p{sql_handle.password} "
-                      f"{sql_handle.database}")
+                      f"-u {engine.url.username} "
+                      f"-p{engine.url.password} "
+                      f"{engine.url.database}")
     command_string2 = ("mysql -u "
-                      f"{sql_handle.username} "
-                      f"-p{sql_handle.password} "
+                      f"{engine.url.username} "
+                      f"-p{engine.url.password} "
                       f"{new_database}")
     command_list1 = command_string1.split(" ")
     command_list2 = command_string2.split(" ")
@@ -720,28 +691,26 @@ def copy_db(sql_handle, new_database):
         print("Copy complete.")
         result = 0
     except:
-        print(f"Unable to copy {sql_handle.database} to {new_database} in MySQL.")
+        print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
         result = 1
     return result
 
 
 def connect_to_db(database):
     """Connect to a MySQL database."""
-    sql_handle, msg = setup_sql_handle(database)
-    if sql_handle is None:
+    engine, msg = get_engine(database=database, echo=False)
+    if engine is None:
         print(msg)
         sys.exit(1)
     else:
-        return sql_handle
-
-
+        return engine
 
 
 # TODO unittest.
-def install_db(sql_handle, schema_filepath):
+def install_db(engine, schema_filepath):
     """Install a MySQL file into the indicated database."""
-    command_string = (f"mysql -u {sql_handle.username} "
-                      f"-p{sql_handle.password} {sql_handle.database}")
+    command_string = (f"mysql -u {engine.url.username} "
+                      f"-p{engine.url.password} {engine.url.database}")
     command_list = command_string.split(" ")
     with schema_filepath.open("r") as fh:
         try:
@@ -750,6 +719,106 @@ def install_db(sql_handle, schema_filepath):
             print("Installation complete.")
         except:
             print(f"Unable to install {schema_filepath.name} in MySQL.")
+
+
+# TODO function is to replace MySQLConnectionHandler usage.
+def get_engine(username=None, password=None, database=None, echo=True, attempts=5):
+    """Create SQLAlchemy Engine object."""
+    attempt = 0
+    valid = False
+    msg = "Setting up MySQL connection. "
+    while (attempt < attempts and valid == False):
+        # The value provided by getpass needs to be distinct from
+        # the function parameter. With this setup, if the user inputs
+        # an incorrect value using getpass, they can try again.
+        # But if the user passes an incorrect value as a parameter,
+        # getpass is not called.
+        if username is None:
+            input_username = getpass.getpass(prompt="MySQL username: ")
+        else:
+            input_username = username
+        if password is None:
+            input_password = getpass.getpass(prompt="MySQL password: ")
+        else:
+            input_password = password
+        if database is None:
+            input_database = input("Database: ")
+        else:
+            input_database = database
+        engine_string = construct_engine_string(
+                            username=input_username,
+                            password=input_password,
+                            database=input_database)
+        engine = sqlalchemy.create_engine(engine_string, echo=echo)
+        try:
+            conn = engine.connect()
+            conn.close()
+            valid = True
+            msg = msg + "Valid MySQL login credentials. "
+        except:
+            valid = False
+            print("Invalid login credentials.")
+        attempt += 1
+
+    if valid != True:
+        engine = None
+        msg = msg + "Invalid MySQL login credentials. "
+        if attempt == attempts:
+            msg = msg + (f"For security purposes, only {attempts} MySQL "
+                         "login attempt(s) are permitted at once. "
+                         "Please verify your login credentials and "
+                         "database name, and try again.")
+    return (engine, msg)
+
+
+def construct_engine_string(db_type="mysql", driver="pymysql",
+                            username="", password="", database=""):
+    engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
+    return engine_string
+
+
+# Copied and modeled from MySQLConnectionHandler.execute_transaction,
+# but simplified since Engine does the work of connecting to the database.
+def execute_transaction(engine, statement_list=list()):
+    """Execute list of MySQL statements within a single defined transaction.
+
+    :param engine:
+        a sqlalchemy Engine object containing
+        information on which database to connect to.
+    :type engine: Engine
+    :param statement_list:
+        a list of any number of MySQL statements with
+        no expectation that anything will return
+    :return: 0 or 1 status code. 0 means no problems, 1 means problems
+    :rtype: int
+    """
+
+    connection = engine.connect()
+    trans = connection.begin()
+    try:
+        for statement in statement_list:
+            connection.execute(statement)
+        trans.commit()
+        result = 0
+    except:
+        print("Error executing MySQL statements.")
+        print("Rolling back transaction...")
+        trans.rollback()
+        result = 1
+        # Raising the exception will cause the code to break.
+        # raise
+    return result
+
+    # Code block below does same thing, but doesn't return a value based if there is an error.
+    # with engine.begin() as connection:
+    #     for statement in statement_list:
+    #         r1 = connection.execute(statement)
+
+
+
+
+
+
 
 
 
