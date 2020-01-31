@@ -1,18 +1,11 @@
+"""Primary pipeline to group related gene products into phamilies."""
+
 import argparse
-import sys
 import datetime
 import os
 import shutil
-
-try:
-    import pymysql as pms
-except ImportError:
-    print("Failed to import pymysql. Please install it and try again.")
-    sys.exit(1)
-
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.functions.phameration import *
-
+from pdm_utils.functions import mysqldb
 
 def setup_argparser():
     """
@@ -62,18 +55,8 @@ def main(argument_list):
     program = args.program
     temp_dir = args.temp_dir
 
-
-    # Initialize MySQLConnectionHandler with database provided at CLI
-    mysql_handler = MySQLConnectionHandler()
-    mysql_handler.database = args.db
-
-    # Use open_connection() method to simultaneously get user credentials
-    # and test database access
-    mysql_handler.open_connection()
-
-    # Handle possibility that connection failed (bad database or user/pass)
-    if mysql_handler.connection_status() is not True:
-        sys.exit(1)
+    # Initialize SQLAlchemy engine with database provided at CLI
+    engine = mysqldb.connect_to_db(args.db)
 
     # If we made it past the above connection_status() check, database access
     # works (user at least has SELECT privileges on the indicated database).
@@ -96,13 +79,13 @@ def main(argument_list):
         return
 
     # Get old pham data and un-phamerated genes
-    old_phams = get_pham_geneids(mysql_handler)
-    old_colors = get_pham_colors(mysql_handler)
-    unphamerated = get_new_geneids(mysql_handler)
+    old_phams = get_pham_geneids(engine)
+    old_colors = get_pham_colors(engine)
+    unphamerated = get_new_geneids(engine)
 
     # Get GeneIDs & translations, and translation groups
-    genes_and_trans = map_geneids_to_translations(mysql_handler)
-    translation_groups = map_translations_to_geneids(mysql_handler)
+    genes_and_trans = map_geneids_to_translations(engine)
+    translation_groups = map_translations_to_geneids(engine)
 
     # Write input fasta file
     write_fasta(translation_groups, temp_dir)
@@ -131,13 +114,14 @@ def main(argument_list):
     # Clear old pham data - auto commits at end of transaction - this will also
     # set all PhamID values in gene table to NULL
     commands = ["DELETE FROM pham"]
-    mysql_handler.execute_transaction(commands)
+    mysqldb.execute_transaction(engine, commands)
+
 
     # Insert new pham/color data
-    reinsert_pham_data(new_phams, new_colors, mysql_handler)
+    reinsert_pham_data(new_phams, new_colors, engine)
 
     # Fix miscolored phams/orphams
-    fix_miscolored_phams(mysql_handler)
+    fix_miscolored_phams(engine)
 
     # Record stop time
     stop = datetime.datetime.now()

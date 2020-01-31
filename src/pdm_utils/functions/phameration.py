@@ -7,7 +7,7 @@ import random
 import colorsys
 
 from pdm_utils.constants.constants import BLASTCLUST_PATH
-
+from pdm_utils.functions import mysqldb
 
 def get_program_params(program, args):
     program_params = dict()
@@ -62,16 +62,16 @@ def get_mmseqs_params(args):
     return mmseqs_params
 
 
-def get_pham_geneids(mysql_handler):
+def get_pham_geneids(engine):
     """
     Queries the database for those genes that are already phamerated.
-    :param mysql_handler: the Engine allowing access to the database
+    :param engine: the Engine allowing access to the database
     :return: pham_geneids
     """
     pham_geneids = dict()
 
     geneid_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
-    geneid_results = mysql_handler.execute_query(geneid_query)
+    geneid_results = mysqldb.query_dict_list(engine, geneid_query)
 
     print(f"Found {len(geneid_results)} genes in phams...")
 
@@ -87,16 +87,18 @@ def get_pham_geneids(mysql_handler):
     return pham_geneids
 
 
-def get_pham_colors(mysql_handler):
+def get_pham_colors(engine):
     """
     Queries the database for the colors of existing phams
-    :param mysql_handler: the Engine allowing access to the database
+    :param engine: the Engine allowing access to the database
     :return: pham_colors
     """
     pham_colors = dict()
 
     color_query = "SELECT PhamID, Color FROM pham"
-    color_results = mysql_handler.execute_query(color_query)
+    color_results = mysqldb.query_dict_list(engine, color_query)
+
+
 
     print(f"Found colors for {len(color_results)} phams...")
 
@@ -109,16 +111,17 @@ def get_pham_colors(mysql_handler):
     return pham_colors
 
 
-def get_new_geneids(mysql_handler):
+def get_new_geneids(engine):
     """
     Queries the database for those genes that are not yet phamerated.
-    :param mysql_handler: the Engine allowing access to the database
+    :param engine: the Engine allowing access to the database
     :return: new_geneids
     """
     new_geneids = set()
 
     gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
-    gene_results = mysql_handler.execute_query(gene_query)
+    gene_results = mysqldb.query_dict_list(engine, gene_query)
+
 
     print(f"Found {len(new_geneids)} genes not in phams...")
 
@@ -129,16 +132,17 @@ def get_new_geneids(mysql_handler):
     return new_geneids
 
 
-def map_geneids_to_translations(mysql_handler):
+def map_geneids_to_translations(engine):
     """
     Constructs a dictionary mapping all geneids to their translations.
-    :param mysql_handler: the Engine allowing access to the database
+    :param engine: the Engine allowing access to the database
     :return: gs_to_ts
     """
     gs_to_ts = dict()
 
     query = "SELECT GeneID, Translation FROM gene"
-    results = mysql_handler.execute_query(query)
+    results = mysqldb.query_dict_list(engine, query)
+
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
@@ -150,17 +154,17 @@ def map_geneids_to_translations(mysql_handler):
     return gs_to_ts
 
 
-def map_translations_to_geneids(mysql_handler):
+def map_translations_to_geneids(engine):
     """
     Constructs a dictionary mapping all unique translations to their
     groups of geneids
-    :param mysql_handler: the Engine allowing access to the database
+    :param engine: the Engine allowing access to the database
     :return: ts_to_gs
     """
     ts_to_gs = dict()
 
     query = "SELECT GeneID, Translation FROM gene"
-    results = mysql_handler.execute_query(query)
+    results = mysqldb.query_dict_list(engine, query)
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
@@ -543,12 +547,12 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
     return final_phams, final_colors
 
 
-def reinsert_pham_data(new_phams, new_colors, mysql_handler):
+def reinsert_pham_data(new_phams, new_colors, engine):
     """
     Puts pham data back into the database
     :param new_phams:
     :param new_colors:
-    :param mysql_handler:
+    :param engine:
     :return:
     """
     # Colors have to go first, since PhamID column in gene table references
@@ -558,17 +562,19 @@ def reinsert_pham_data(new_phams, new_colors, mysql_handler):
         commands.append(f"INSERT INTO pham (PhamID, Color) VALUES ({key}, "
                         f"'{new_colors[key]}')")
 
-    mysql_handler.execute_transaction(commands)
+    mysqldb.execute_transaction(engine, commands)
+
+
 
     commands = []
     for key in new_phams.keys():
         for gene in new_phams[key]:
             commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = '{gene}'")
 
-    mysql_handler.execute_transaction(commands)
+    mysqldb.execute_transaction(engine, commands)
 
 
-def fix_miscolored_phams(mysql_handler):
+def fix_miscolored_phams(engine):
     print("Phixing Phalsely Hued Phams...")
     # Phams which are colored as though they are orphams, when really
     # they are multi-member phams
@@ -577,7 +583,8 @@ def fix_miscolored_phams(mysql_handler):
             "= p.PhamID GROUP BY PhamID) AS c WHERE Color = '#FFFFFF' "\
             "AND count > 1"
 
-    results = mysql_handler.execute_query(query)
+    results = mysqldb.query_dict_list(engine, query)
+
 
     print(f"Found {len(results)} miscolored phams to fix")
 
@@ -600,7 +607,8 @@ def fix_miscolored_phams(mysql_handler):
         new_color = hexrgb
         commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE PhamID = '{pham_id}'")
 
-    mysql_handler.execute_transaction(commands)
+    mysqldb.execute_transaction(engine, commands)
+
 
     print("Phixing Phalsely Phlagged Orphams...")
     # Phams which are colored as though they are multi-member phams
@@ -610,8 +618,7 @@ def fix_miscolored_phams(mysql_handler):
             "=p.PhamID GROUP BY PhamID) AS c WHERE Color != '#FFFFFF' "\
             "AND count = 1"
 
-    results = mysql_handler.execute_query(query)
-
+    results = mysqldb.query_dict_list(engine, query)
     print(f"Found {len(results)} miscolored orphams to fix...")
 
     commands = []
@@ -622,4 +629,4 @@ def fix_miscolored_phams(mysql_handler):
         new_color = "#FFFFFF"
         commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE PhamID = '{pham_id}'")
 
-    mysql_handler.execute_transaction(commands)
+    mysqldb.execute_transaction(engine, commands)

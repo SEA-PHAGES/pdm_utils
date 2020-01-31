@@ -16,37 +16,39 @@ DELETE FROM pham WHERE PhamID NOT IN (SELECT DISTINCT PhamID FROM gene);
 DELETE FROM domain WHERE HitID NOT IN (SELECT DISTINCT HitID FROM gene_domain);
 """
 
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.functions.phameration import *
+from pdm_utils.functions import mysqldb
 import os
 import shutil
 import unittest
+import sqlalchemy
 
+user = "pdm_anon"
+pwd = "pdm_anon"
+db = "test_db"
+engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
 
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
-        self.handler = MySQLConnectionHandler(username="pdm_anon",
-                                              password="pdm_anon",
-                                              database="test_db")
-        self.handler.open_connection()
+        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.temp_dir = "/tmp/phamerate"
 
     def test_1_get_pham_geneids(self):
         """Verify we get back a dictionary"""
-        old_phams = get_pham_geneids(self.handler)
+        old_phams = get_pham_geneids(self.engine)
         # old_phams should be a dict
         self.assertEqual(type(old_phams), type(dict()))
 
     def test_2_get_pham_colors(self):
         """Verify we get back a dictionary"""
-        old_colors = get_pham_colors(self.handler)
+        old_colors = get_pham_colors(self.engine)
         # old_colors should be a dict
         self.assertEqual(type(old_colors), type(dict()))
 
     def test_3_get_pham_geneids_and_colors(self):
         """Verify both dictionaries have the same keys"""
-        old_phams = get_pham_geneids(self.handler)
-        old_colors = get_pham_colors(self.handler)
+        old_phams = get_pham_geneids(self.engine)
+        old_colors = get_pham_colors(self.engine)
 
         # Can't have same keys without the same number of keys...
         with self.subTest():
@@ -58,7 +60,7 @@ class TestPhamerationFunctions(unittest.TestCase):
 
     def test_4_get_unphamerated_genes(self):
         """Verify we get back a set of length 0"""
-        unphamerated = get_new_geneids(self.handler)
+        unphamerated = get_new_geneids(self.engine)
         # unphamerated should be a set
         with self.subTest():
             self.assertEqual(type(unphamerated), type(set()))
@@ -68,10 +70,10 @@ class TestPhamerationFunctions(unittest.TestCase):
 
     def test_5_map_geneids_to_translations(self):
         """Verify we get back a dictionary"""
-        gs_to_ts = map_geneids_to_translations(self.handler)
+        gs_to_ts = map_geneids_to_translations(self.engine)
 
         command = "SELECT distinct(GeneID) FROM gene"
-        results = self.handler.execute_query(command)
+        results = mysqldb.query_dict_list(self.engine, command)
 
         # gs_to_ts should be a dictionary
         with self.subTest():
@@ -82,10 +84,11 @@ class TestPhamerationFunctions(unittest.TestCase):
 
     def test_6_map_translations_to_geneids(self):
         """Verify we get back a dictionary"""
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
 
         command = "SELECT distinct(Translation) FROM gene"
-        results = self.handler.execute_query(command)
+        results = mysqldb.query_dict_list(self.engine, command)
+
 
         # ts_to_gs should be a dictionary
         with self.subTest():
@@ -130,7 +133,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         refresh_tempdir(self.temp_dir)
 
         # Get translations to geneid mappings
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
 
         # Write fasta
         write_fasta(ts_to_gs, self.temp_dir)
@@ -154,7 +157,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         refresh_tempdir(self.temp_dir)
         db_file = f"{self.temp_dir}/sequenceDB"
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("blast", self.temp_dir)
@@ -169,7 +172,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         refresh_tempdir(self.temp_dir)
         db_file = f"{self.temp_dir}/sequenceDB"
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("mmseqs", self.temp_dir)
@@ -182,7 +185,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         refresh_tempdir(self.temp_dir)
         db_file = f"{self.temp_dir}/sequenceDB"
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("unknown", self.temp_dir)
@@ -195,7 +198,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we can phamerate with blastclust"""
         refresh_tempdir(self.temp_dir)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("blast", self.temp_dir)
@@ -209,7 +212,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we can phamerate with mmseqs2"""
         refresh_tempdir(self.temp_dir)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("mmseqs", self.temp_dir)
@@ -223,7 +226,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we cannot phamerate with unknown"""
         refresh_tempdir(self.temp_dir)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("unknown", self.temp_dir)
@@ -238,7 +241,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we can open and parse blastclust output"""
         refresh_tempdir(self.temp_dir)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("blast", self.temp_dir)
@@ -260,7 +263,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we can open and parse MMseqs2 output"""
         refresh_tempdir(self.temp_dir)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("mmseqs", self.temp_dir)
@@ -282,7 +285,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we cannot open and parse unknown output"""
         refresh_tempdir(self.temp_dir)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("unknown", self.temp_dir)
@@ -301,9 +304,9 @@ class TestPhamerationFunctions(unittest.TestCase):
     def test_19_reintroduce_duplicates(self):
         """Verify that we can put de-duplicated GeneIDs back together"""
         refresh_tempdir(self.temp_dir)
-        gs_to_ts = map_geneids_to_translations(self.handler)
+        gs_to_ts = map_geneids_to_translations(self.engine)
 
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        ts_to_gs = map_translations_to_geneids(self.engine)
         write_fasta(ts_to_gs, self.temp_dir)
 
         create_clusterdb("mmseqs", self.temp_dir)
@@ -326,12 +329,12 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify that pham preservation seems to be working"""
         refresh_tempdir(self.temp_dir)
 
-        old_phams = get_pham_geneids(self.handler)
-        old_colors = get_pham_colors(self.handler)
-        unphamerated = get_new_geneids(self.handler)
+        old_phams = get_pham_geneids(self.engine)
+        old_colors = get_pham_colors(self.engine)
+        unphamerated = get_new_geneids(self.engine)
 
-        gs_to_ts = map_geneids_to_translations(self.handler)
-        ts_to_gs = map_translations_to_geneids(self.handler)
+        gs_to_ts = map_geneids_to_translations(self.engine)
+        ts_to_gs = map_translations_to_geneids(self.engine)
 
         write_fasta(ts_to_gs, self.temp_dir)
 
