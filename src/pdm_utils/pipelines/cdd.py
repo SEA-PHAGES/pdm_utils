@@ -228,8 +228,34 @@ def main(argument_list):
         results = parallelize(jobs, threads, search_and_process)
         print("\n")
 
-        for result in results:
-            mysqldb.execute_transaction(engine, result)
-        engine.dispose()
 
+        rolled_back = 0
+        for result in results:
+            exe_result = mysqldb.execute_transaction(engine, result)
+
+            # Some CDD descriptions contain '%', which throws an error
+            # when SQLAlchemy's engine.Connection.execute() is used.
+            # The string gets passed to a pymysql.cursor function which
+            # interprets the % as a string formatting operator,
+            # and since there is no value to insert and format,
+            # the MySQL statement failes and the
+            # entire transactions is rolled back.
+            # For these edge cases, one way around this is to
+            # attempt to replace all '%' with '%%'.
+            # if exe_result == 1:
+            #     index = 0
+            #     while index < len(result):
+            #         statement = result[index]
+            #         statement = statement.replace("%", "%%")
+            #         result[index] = statement
+            #         index += 1
+            #     exe_result = mysqldb.execute_transaction(engine, result)
+
+            rolled_back += exe_result
+
+        if rolled_back > 0:
+            print(f"\n\n\nError executing {rolled_back} transaction(s). "
+                  "Unable to complete pipeline. "
+                  "Some genes may still contain unidentified domains.")
+        engine.dispose()
     return
