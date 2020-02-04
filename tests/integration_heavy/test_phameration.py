@@ -22,16 +22,63 @@ import os
 import shutil
 import unittest
 import sqlalchemy
+import pymysql
+import subprocess
+from pathlib import Path
 
 user = "pdm_anon"
 pwd = "pdm_anon"
 db = "test_db"
 engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
 
+unittest_file = Path(__file__)
+unittest_dir = unittest_file.parent
+schema_file = "test_db.sql"
+schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+
+
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.temp_dir = "/tmp/phamerate"
+
+        connection = pymysql.connect(host="localhost", user=user, password=pwd,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+
+        # First, test if a test database already exists within mysql.
+        # If there is, delete it so that a fresh test database is installed.
+        sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
+              f"WHERE SCHEMA_NAME = '{db}'"
+        cur.execute(sql)
+        result = cur.fetchall()
+
+        if len(result) != 0:
+            cur.execute(f"DROP DATABASE {db}")
+            connection.commit()
+
+        # Next, create the database within mysql.
+        cur.execute(f"CREATE DATABASE {db}")
+        connection.commit()
+        connection.close()
+
+        # Now import the empty schema from file.
+        # Seems like pymysql has trouble with this step, so use subprocess.
+        handle = open(schema_filepath, "r")
+        command_string = f"mysql -u {user} -p{pwd} {db} --execute 'SOURCE " \
+                         f"filename'"
+        command_list = command_string.split(" ")
+        proc = subprocess.check_call(command_list, stdin=handle)
+        handle.close()
+
+    def tearDown(self):
+        self.engine.dispose()
+        connection = pymysql.connect(host="localhost", user=user, password=pwd,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(f"DROP DATABASE {db}")
+        connection.commit()
+        connection.close()
 
     def test_1_get_pham_geneids(self):
         """Verify we get back a dictionary"""

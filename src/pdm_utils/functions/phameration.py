@@ -98,8 +98,6 @@ def get_pham_colors(engine):
     color_query = "SELECT PhamID, Color FROM pham"
     color_results = mysqldb.query_dict_list(engine, color_query)
 
-
-
     print(f"Found colors for {len(color_results)} phams...")
 
     for dictionary in color_results:
@@ -122,12 +120,11 @@ def get_new_geneids(engine):
     gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
     gene_results = mysqldb.query_dict_list(engine, gene_query)
 
-
-    print(f"Found {len(new_geneids)} genes not in phams...")
-
     for dictionary in gene_results:
         geneid = dictionary["GeneID"]
         new_geneids = new_geneids | {geneid}
+
+    print(f"Found {len(new_geneids)} genes not in phams...")
 
     return new_geneids
 
@@ -142,7 +139,6 @@ def map_geneids_to_translations(engine):
 
     query = "SELECT GeneID, Translation FROM gene"
     results = mysqldb.query_dict_list(engine, query)
-
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
@@ -362,38 +358,28 @@ def parse_mmseqs(wd):
         # pham by repeating the pham representative's identifier in
         # two adjacent lines - need references to the prior line as
         # well as the current one.
-        prior = fh.readline()
-        current = fh.readline()
+        prior_line = fh.readline()
+        current_line = fh.readline()
 
         # While not EOF, iterate through lines
-        while current:
-            # If two adjacent lines are the same - new pham
-            if prior == current:
-                # remove the last geneid added to the pham
-                try:
-                    pham_geneids.pop(-1)
-                except IndexError:
-                    # first pham will fail b/c pham_geneids is empty
-                    pass
-                # dump stored geneids into the dictionary
-                parsed_phams[pham_name] = pham_geneids
-                # increment the pham name
-                pham_name += 1
-                # the current geneid is the start of the next pham
-                pham_geneids = [current.lstrip(">").rstrip()]
-            # If we got here and line starts with ">", we're a geneid
-            elif current.startswith(">"):
-                # Add geneid to current working pham
-                pham_geneids.append(current.lstrip(">").rstrip())
-            # Otherwise, we're a translation
+        while current_line:
+            if current_line.startswith(">"):
+                if prior_line.startswith(">"):
+                    try:
+                        pham_geneids.pop(-1)
+                    except IndexError:
+                        # First pham should fail because pham_geneids is empty
+                        pass
+                    parsed_phams[pham_name] = pham_geneids
+                    pham_name += 1
+                    pham_geneids = [current_line.lstrip(">").rstrip()]
+                else:
+                    pham_geneids.append(current_line.lstrip(">").rstrip())
             else:
-                # Skip
+                # Translation, skip
                 pass
-
-            # The current line is the next loop's prior
-            prior = current
-            # Read in the next line
-            current = fh.readline()
+            # prior gets current's value, current gets new line
+            prior_line, current_line = current_line, fh.readline()
 
         # Dump the last working pham into the dictionary
         parsed_phams[pham_name] = pham_geneids
@@ -402,6 +388,7 @@ def parse_mmseqs(wd):
     parsed_phams.pop(0)
 
     print("Finish parsing MMseqs2 output...")
+    print(f"Genes were sorted into {len(parsed_phams)} phams...")
 
     return parsed_phams
 
@@ -425,6 +412,7 @@ def parse_blast(wd):
             parsed_phams[i + 1] = geneids
 
     print("Finish parsing blastclust output...")
+    print(f"Genes were sorted into {len(parsed_phams)} phams...")
 
     return parsed_phams
 
