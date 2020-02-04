@@ -65,8 +65,9 @@ class TestPhamerationFunctions(unittest.TestCase):
         # Now import the empty schema from file.
         # Seems like pymysql has trouble with this step, so use subprocess.
         handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {db} --execute 'SOURCE " \
-                         f"filename'"
+        command_string = f"mysql -u {user} -p{pwd} {db}"
+        # command_string = f"mysql -u {user} -p{pwd} {db} --execute 'SOURCE " \
+        #                  f"filename'"
         command_list = command_string.split(" ")
         proc = subprocess.check_call(command_list, stdin=handle)
         handle.close()
