@@ -3,7 +3,7 @@
 Anaconda
 ========
 
-There are several third-party Python packages required:
+``pdm_utils`` requires Python >=3.7 and several third-party Python packages:
 
     - :biopython:`Biopython <>`
     - :paramiko:`Paramiko <>`

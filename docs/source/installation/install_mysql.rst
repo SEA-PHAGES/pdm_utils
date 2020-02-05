@@ -9,6 +9,8 @@ MySQL
 MacOS installation
 ******************
 
+``pdm_utils`` is tested on MySQL 5.7.27 on MacOS 10.14, although it is expected to be compatible with MySQL >=5.7 and MacOS >=10.13.
+
 Installation
 ^^^^^^^^^^^^
 
@@ -21,6 +23,9 @@ Installation
 #. By default, the most recent version of MySQL Community Server (version 8.0) is displayed for download. Select the 'Looking for previous GA versions?' option. Verify that version 5.7 is now displayed.
 
 #. Download the 'macOS DMG Archive'.
+
+    .. note::
+        Only the most recent version of 5.7 is available on this page. However, if you are using an older version of MacOS, there may be compatibility issues. If this is the case: select the 'Archives' tab, verify 'macOS' is selected from 'Operating System', and find the MySQL version from 'Product Version' that is compatible with your MacOS version as indicated further below on the page. Download the DMG archive.
 
 #. Follow the graphical installation instructions:
 
@@ -61,7 +66,7 @@ Installation
 
     Enter password: <temporary password>
 
-#. At the mysql prompt, change the password for the root user::
+#. At the MySQL prompt, change the password for the root user::
 
     mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY '<new password>';
     mysql> exit
@@ -124,7 +129,7 @@ If the automatic option is not selected, anytime your Mac is restarted the serve
 Ubuntu installation
 *******************
 
-Installing MySQL on Ubuntu is more straightforward. MySQL 5.7 can be downloaded through either the Ubuntu repositories or the official MySQL repositories. Installing MySQL using the Ubuntu repositories is outlined below:
+``pdm_utils`` is tested on MySQL 5.7.29 on Ubuntu 18.04.3, although it is expected to be compatible with MySQL >=5.7 and Ubuntu >=16. MySQL 5.7 can be downloaded through either the Ubuntu repositories or the official MySQL repositories. Installing MySQL using the Ubuntu repositories is outlined below:
 
 #. Open a Terminal window.
 #. Update all available repositories (provide the computer login password when prompted)::
