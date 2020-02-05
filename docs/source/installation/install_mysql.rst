@@ -9,7 +9,7 @@ MySQL
 MacOS installation
 ******************
 
-``pdm_utils`` is tested on MySQL 5.7.27 on MacOS 10.14, although it is expected to be compatible with MySQL >=5.7 and MacOS >=10.13.
+``pdm_utils`` is tested on MySQL 5.7.27 on MacOS 10.14, although it is expected to be compatible with MySQL >=5.7, <8.0 and MacOS >=10.13.
 
 Installation
 ^^^^^^^^^^^^
@@ -129,7 +129,7 @@ If the automatic option is not selected, anytime your Mac is restarted the serve
 Ubuntu installation
 *******************
 
-``pdm_utils`` is tested on MySQL 5.7.29 on Ubuntu 18.04.3, although it is expected to be compatible with MySQL >=5.7 and Ubuntu >=16. MySQL 5.7 can be downloaded through either the Ubuntu repositories or the official MySQL repositories. Installing MySQL using the Ubuntu repositories is outlined below:
+``pdm_utils`` is tested on MySQL 5.7.29 on Ubuntu 18.04.3, although it is expected to be compatible with MySQL >=5.7, <8.0 and Ubuntu >=16. MySQL 5.7 can be downloaded through either the Ubuntu repositories or the official MySQL repositories. Installing MySQL using the Ubuntu repositories is outlined below:
 
 #. Open a Terminal window.
 #. Update all available repositories (provide the computer login password when prompted)::
