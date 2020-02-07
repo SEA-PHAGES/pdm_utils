@@ -72,6 +72,7 @@ def main(unparsed_args_list):
             run_mode=args.run_mode,
             output_folder=args.output_folder,
             interactive=args.interactive)
+
     logger.info("Import complete.")
 
 
@@ -266,8 +267,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         f"\n{len(failed_filepath_list)} genome(s) NOT imported. ")
         )
 
-
-
+    # Close all connections in the connection pool.
+    engine.dispose()
 
 
 

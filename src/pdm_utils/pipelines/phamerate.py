@@ -123,6 +123,9 @@ def main(argument_list):
     # Fix miscolored phams/orphams
     fix_miscolored_phams(engine)
 
+    # Close all connections in the connection pool.
+    engine.dispose()
+
     # Record stop time
     stop = datetime.datetime.now()
 

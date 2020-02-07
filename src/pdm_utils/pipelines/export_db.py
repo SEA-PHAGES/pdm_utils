@@ -84,6 +84,9 @@ def run_export(unparsed_args_list):
     else:
         pass
 
+    # Close all connections in the connection pool.
+    engine.dispose()
+
 def parse_export(unparsed_args_list):
     """Parses export_db arguments and stores them with an argparse object.
 
