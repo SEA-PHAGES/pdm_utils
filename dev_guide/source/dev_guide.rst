@@ -86,6 +86,10 @@ contributors.txt
 A list of developers who have contributed to this repository.
 
 
+change_version.py
+****************
+
+Script to change the version number in several locations in the repository at one time.
 
 
 
@@ -195,12 +199,18 @@ Build the PyPI package
 
 Follow the steps below to push a new version of the ``pdm_utils`` package to PyPI:
 
-    1. Increment the version number in four separate locations:
-        - setup.py (used by PyPI for tracking package versions)
-        - src/pdm_utils/__init__.py (can be accessed after installation)
-        - docs/conf.py (for Sphinx documentation)
-            - version number
-            - release number
+    1. Increment the version number:
+
+        - In the top-level directory, run the following command::
+
+            > python3 ./change_version.py <major, minor, or micro>
+
+        - This updates the version in four separate locations:
+            - setup.py (used by PyPI for tracking package versions)
+            - src/pdm_utils/__init__.py (can be accessed after installation)
+            - docs/conf.py (for Sphinx documentation)
+                - version number
+                - release number
 
 
     .. warning::
