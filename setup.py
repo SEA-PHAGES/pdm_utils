@@ -14,10 +14,25 @@ setuptools.setup(
     url="https://github.com/SEA-PHAGES/pdm_utils",
     packages=setuptools.find_packages(where="src"),
     package_dir={"":"src"},
+    install_requires=[
+       'biopython',
+       'pymysql',
+       'paramiko',
+       'tabulate',
+       'sqlalchemy'
+    ],
+    project_urls={
+        'Documentation': 'https://pdm-utils.readthedocs.io/en/latest/',
+        'Source': 'https://github.com/SEA-PHAGES/pdm_utils/',
+    },
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: Unix",
+        "Operating System :: MacOS",
+        "Operating System :: POSIX :: Linux",
+        "Intended Audience :: Science/Research",
+        "Topic :: Database",
+        "Topic :: Scientific/Engineering :: Bio-Informatics"
     ],
     python_requires='>=3.6'
 )
