@@ -19,17 +19,17 @@ def main(unparsed_args):
     version = get_current_version(INIT_PATH)
     major, minor, micro = split_components(version)
     if args.component == "major":
-        new_major = update_value(major, args.value)
+        new_major = update_value(major, args.increment)
         new_minor = update_value(minor, -1 * minor)
         new_micro = update_value(micro, -1 * micro)
     elif args.component == "minor":
         new_major = major
-        new_minor = update_value(minor, args.value)
+        new_minor = update_value(minor, args.increment)
         new_micro = update_value(micro, -1 * micro)
     else:
         new_major = major
         new_minor = minor
-        new_micro = update_value(micro, args.value)
+        new_micro = update_value(micro, args.increment)
 
     new_version = join_components(new_major, new_minor, new_micro)
     write_out(INIT_PATH, new_version)
@@ -87,14 +87,15 @@ def write_out(file_path, new_version):
 
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for changing the version."""
-    CONTROL_VERSION_HELP = ("Script to change the version number in all locations.")
-    COMPONENT_HELP = ("Part of the version to change.")
-    VALUE_HELP = ("Amt to change the component.")
-    parser = argparse.ArgumentParser(description=CONTROL_VERSION_HELP)
+    CHANGE_VERSION_HELP = ("Script to change the package version "
+                            "number in all locations at once.")
+    COMPONENT_HELP = ("The part of the version to change.")
+    INCREMENT_HELP = ("Amount that version component should be incremented.")
+    parser = argparse.ArgumentParser(description=CHANGE_VERSION_HELP)
     parser.add_argument("component", type=str,
         choices=["major", "minor", "micro"], help=COMPONENT_HELP)
-    parser.add_argument("-v", "--value", type=int,
-        default=1, help=VALUE_HELP)
+    parser.add_argument("-i", "--increment", type=int,
+        default=1, help=INCREMENT_HELP)
 
     # Assumed command line arg structure:
     # python3 ./control_version.py component -v 1
