@@ -1,7 +1,151 @@
-from sqlalchemy import select, MetaData, join, Column
-from sqlalchemy.sql import func, distinct
+from sqlalchemy import Column
+from sqlalchemy import join
+from sqlalchemy import MetaData
+from sqlalchemy import select
+from sqlalchemy.sql import distinct
+from sqlalchemy.sql import func
+from sqlalchemy.sql import functions
+import re
 
-def get_table_set(columns):
+#Global file constants
+COMPARATIVE_OPERATORS = [">", ">=", "<", "<="]
+COMPARABLE_TYPES      = ["int", "decimal",
+                         "mediumint", "float",
+                         "datetime", "double"]
+OPERATOR_OPTIONS      = ["=", "!="] + COMPARATIVE_OPERATORS
+GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
+
+def translate_table(db_graph, raw_table):
+    """Parses a case-insensitive string to match a case-sensitive 
+    table_node id string.
+
+    :param raw_table:
+        Input a case-insensitive string for a TableNode id.
+    :type raw_table: str
+    :param verbose:
+        Set a boolean to control terminal output.
+    :type verbose: Boolean
+    :return table:
+        Returns a case-sensitive string for a TableNode id.
+    :type table: str
+    """
+    for table in db_graph.show_tables():
+        if table.lower() == raw_table.lower():
+            return table
+
+    raise ValueError(f"Table '{raw_table}' requested to be filtered "
+                     f"is not in '{self.sql_handle.database}'")
+
+def translate_column(db_graph, raw_column, table_object):
+    """Parses a case-insensitive string to match a case-sensitive
+    column_node id string.
+
+    :param raw_field:
+        Input a raw string for a ColumnNode id.
+    :type raw_field: str
+    :param table:
+        Input a case-sensitive string for a TableNode id.
+    :type table: str
+    :param verbose:
+        Set a boolean to control the terminal output.
+    :type verbose: Boolean
+    :return field:
+        Returns a case-sensitive string for a ColumnNode id.
+    """
+    for column in table_object.columns.keys():
+        if column.lower() == raw_column.lower():
+            return column
+    
+    raise ValueError(f"Field '{raw_field}' requested to be filtered"
+                     f" is not in '{table_node.id}'")
+
+def check_operator(operator, column_object):
+    """Parses a operator string to match a MySQL query operators.
+
+    :param operator:
+        Input a raw operator string for an accepted MySQL query operator.
+    :type operator: str
+    :param table:
+        Input a case-sensitive string for a TableNode id.
+    :type table: str
+    :param field:
+        Input a case-sensitive string for a ColumnNode id.
+    :type field: str
+    :param verbose:
+        Set a boolean to control the terminal output.
+    :type verbose: Boolean
+    """
+    #if operator not in OPERATOR_OPTIONS:
+    #    raise ValueError
+
+    #type = column_node.parse_type()
+    #if operator in COMPARATIVE_OPERATORS and \
+    #        type not in COMPARABLE_TYPES:
+    #    print(f"Field ' {field}' requested to be filtered "
+    #          f"is not comparable (Operator: {operator})")
+    #    raise ValueError
+    pass
+
+def parse_filter(unparsed_filter):
+    """Helper function to return a two-dimensional array of filter parameters.
+
+    :param unparsed_filters:
+        Input a list of filter expressions to parse and split.
+    :type unparsed_filters: List[str]
+    :return filters:
+        Returns a two-dimensional array of filter parameters.
+    :type filters: List[List[str]]
+    """
+    filter_format = re.compile("\w+\.\w+[=<>!]+\w+", re.IGNORECASE)
+
+    if re.match(filter_format, unparsed_filter) != None:
+        filter = (re.split("\W+", unparsed_filter) +\
+                        re.findall("[!=<>]+", unparsed_filter))
+    else:
+        raise ValueError(f"Unsupported filtering format: '{unparsed_filter}'")
+                
+    return filter
+
+def build_whereclause(db_graph, filter_expression): 
+    filter_params = parse_filter(filter_expression)
+
+    table = translate_table(db_graph, filter_params[0])
+    table_object = db_graph.get_table(table)
+
+    column = translate_column(db_graph, filter_params[1], table_object)  
+    column_object = table_object.columns[column]
+ 
+    check_operator(filter_params[3], column_object)
+
+    whereclause = None
+
+    if filter_params[3] == "==":
+        whereclause = column_object == filter_params[2]
+    elif filter_params[3] == "!=":
+        whereclause = column_object != filter_params[2]
+    elif filter_params[3] == ">" :
+        whereclause = column_object >  filter_params[2]
+    elif filter_params[3] == ">=":
+        whereclause = column_object >= filter_params[2]
+    elif filter_params[3] == "<" :
+        whereclause = column_object <  filter_params[2]
+    elif filter_params[3] == "<=":
+        whereclause = column_object <= filter_params[2]
+
+    return whereclause 
+
+def build_onclause(db_graph, source_table, adjacent_table):
+    edge = db_graph[source_table][adjacent_table]
+    foreign_key = edge["key"]
+
+    referent_column = foreign_key.column
+    referenced_column = foreign_key.parent
+    onclause = referent_column == referenced_column
+
+    return onclause
+ 
+
+def get_table_list(columns):
     table_set = set()
     for column in  columns:
         if isinstance(column, Column): 
@@ -12,93 +156,88 @@ def get_table_set(columns):
         else:
             raise TypeError(f"Column {column} is not a SqlAlchemy Column.")
                             
+    table_list = list(table_set)
+    return table_list
 
-    return table_set
-
-def get_table_nodes(db_graph, table_set):
-    table_nodes = []
-    for table in table_set:
-        table_node = db_graph.get_table(table.name)
-
-        if not table_node:
-            raise ValueError(f"Table {table} is not in {db_graph.id}")
-
-        table_nodes.append(table_node)
-
-    return table_nodes
-
-def get_table_pathing(db_graph, table_nodes, center_table=None):
+def get_table_pathing(db_graph, table_list, center_table=None):
     if not center_table:
-        center_table = table_nodes[0]
+        center_table = table_list[0]
 
-    table_nodes = table_nodes[1:]
+    table_list = table_list[1:]
 
     table_paths = []
-    for table_node in table_nodes:
-        path = db_graph.traverse(center_table, table_node)
+    for table in table_list:
+        path = db_graph.traverse(center_table.name, table.name)
 
         if not path:
             raise ValueError(f"Table {table_node} is not connected by any "
                              f"foreign keys to table {center_table}.")
+        table_paths.append(path)
 
-        truncated_path = []
-        for stop in path:
-            truncated_path.append(stop[0])
-        truncated_path.remove(truncated_path[0])
-
-        table_paths.append(truncated_path)
-   
-    pathing = [center_table, table_paths]
-    return pathing
+    table_pathing = [center_table, table_paths]
+    return table_pathing
 
 def join_pathed_tables(db_graph, table_pathing):
-    joined_table = table_pathing[0].table
+    center_table = table_pathing[0]
+    joined_tables = center_table
 
     joined_table_set = set()
+    joined_table_set.add(center_table.name)
+
     for path in table_pathing[1]:
-        for table in path:
+        for index in range(len(path)):
+            table = path[index]
+            previous_table = path[index-1]
             if table not in joined_table_set:
                 joined_table_set.add(table)
-                table_node = db_graph.get_table(table)
+                table_object = db_graph.get_table(table)
 
-                if not table_node:
-                    raise ValueError(f"Table {table} is not in {db_graph.id}")
-    
-                joined_table = join(joined_table, table_node.table, isouter=True)
+                onclause = build_onclause(db_graph, previous_table, table)
+                joined_tables = join(joined_tables, table_object, 
+                                                            isouter=True, 
+                                                            onclause=onclause)
 
-    return joined_table
+    return joined_tables
 
 def build_fromclause(db_graph, columns):
-    table_set = get_table_set(columns)
-    table_nodes = get_table_nodes(db_graph, table_set)
-    table_pathing = get_table_pathing(db_graph, table_nodes)
+    table_list = get_table_list(columns)
+    table_pathing = get_table_pathing(db_graph, table_list)
     joined_table = join_pathed_tables(db_graph, table_pathing)
 
     return joined_table
 
-def build_select(db_graph, columns, where_clause=None, order_by_clause=None):
+def build_select(db_graph, columns, where_clause=None, order_byclause=None):
     fromclause = build_fromclause(db_graph, columns) 
 
-    select_query = select(columns).\
-                                select_from(fromclause).\
-                                where(where_clause).\
-                                order_by(order_by_clause)
+    select_query = select(columns).select_from(fromclause)
+    
+    if where_clause:
+        for clause in where_clause:
+            select_query = select_query.where(clause)
+
+    if order_byclause:
+        for clause in order_by_clause:
+            select_query = select_query.order_by(clause)
 
     return select_query
 
 def build_count(db_graph, columns, where_clause=None, order_by_clause=None):    
     fromclause = build_fromclause(db_graph, columns) 
 
-
     column_params = []
     for column_param in columns:
         column_params.append(func.count(column_param))
 
-    count_query = select(column_params).\
-                                select_from(fromclause).\
-                                where(where_clause).\
-                                order_by(order_by_clause)
+    count_query = select(column_params).select_from(fromclause)
 
+    if where_clause:
+        for clause in where_clause:
+            count_query = select_query.where(clause)
+
+    if order_byclause:
+        for clause in order_by_clause:
+            count_query = select_query.order_by(clause)
+    
     return count_query
 
 def build_distinct(db_graph, columns, where_clause=None, order_by_clause=None):

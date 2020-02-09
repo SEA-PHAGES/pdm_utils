@@ -1,11 +1,13 @@
 import sqlalchemy
 import pymysql
 from getpass import getpass
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
+from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 from pdm_utils.functions import cartography
 from pdm_utils.classes.schemagraph import SchemaGraph
+from pdm_utils.functions import querying
 
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None, 
@@ -177,7 +179,7 @@ class AlchemyHandler:
             if not self.build_metadata():
                 return False
 
-        graph = SchemaGraph("database")
+        graph = SchemaGraph()
         graph.setup(self.metadata)
         self.graph = graph
         
@@ -194,15 +196,17 @@ class AlchemyHandler:
         self.session = session_maker(bind=self.engine)
         return True
 
-    def connect(self, database=None):
+    def connect(self, database=True):
         if database:
-            self.database = database
+            self.ask_database()
+        else:
+            self.database = None
 
         if not self.has_credentials:
             self.ask_credentials()
 
-        attempts = 0
-        connected = False
+        attempts = 1
+        connected = self.build_engine()
         while(not connected and attempts < self.login_attempts):
             connected = self.build_engine()
             attempts += 1
@@ -213,3 +217,76 @@ class AlchemyHandler:
                   "Please check your credentials and try again")
             exit(1)
 
+    def select(self, columns, where_clause=None, order_by_clause=None):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+
+        return querying.build_select(self.graph, columns,
+                                            where_clause=where_clause,
+                                            order_by_clause=order_by_clause)
+
+    def count(self, columns, where_clause=None, order_by_clause=None):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+
+        return querying.build_count(self.graph, columns,
+                                            where_clause=where_clause,
+                                            order_by_clause=order_by_clause)
+
+    def distinct(self, columns, where_clause=None, order_by_clause=None):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+
+        return querying.build_distinct(self.graph, columns,
+                                            where_clause=where_clause,
+                                            order_by_clause=order_by_clause)
+
+    def execute(self, excutable, return_dict=True):
+        if not self.engine:
+            if not self.build_engine():
+                return None
+
+        proxy = self.engine.execute(executable)
+
+        results = proxy.fetchall()
+
+        if return_dict:
+            results_dicts = []
+            for result in results:
+                results_dicts.append(dict(result))
+
+            results = results_dicts 
+
+        return results
+
+    def show_tables(self):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+
+        return self.graph.show_tables()
+
+    def get_table_node(self, table):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+        
+        return self.graph.get_table(table)
+        
+    def get_table(self, table):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+
+        table_node = self.graph.get_table(table)
+        
+        alchemy_table = None
+
+        if table_node:
+            alchemy_table = table_node.table
+
+        return alchemy_table
+        
