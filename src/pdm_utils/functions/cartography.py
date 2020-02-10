@@ -1,5 +1,6 @@
 import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, String, Text, Table
+from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String, Text, Table
 from sqlalchemy.types import LargeBinary
 from sqlalchemy import MetaData, select, ForeignKey, join
 from sqlalchemy.orm import sessionmaker, mapper, column_property, relationship

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
+from sqlalchemy.sql.elements import UnaryExpression
 import re
 
 #Global file constants
@@ -144,7 +145,6 @@ def build_onclause(db_graph, source_table, adjacent_table):
 
     return onclause
  
-
 def get_table_list(columns):
     table_set = set()
     for column in  columns:
@@ -153,6 +153,8 @@ def get_table_list(columns):
         elif isinstance(column, functions.count):
             for column_clause in column.clauses.clauses:
                 table_set.add(column_clause.table)
+        elif isinstance(column, UnaryExpression):
+            table_set.add(column.element.table)
         else:
             raise TypeError(f"Column {column} is not a SqlAlchemy Column.")
                             
@@ -206,23 +208,37 @@ def build_fromclause(db_graph, columns):
 
     return joined_table
 
-def build_select(db_graph, columns, where_clause=None, order_byclause=None):
-    fromclause = build_fromclause(db_graph, columns) 
+def build_select(db_graph, columns, where_clause=None, order_by_clause=None):
+    where_columns = []
+    for clause in where_clause:
+        where_columns.append(clause.left) 
+
+    order_by_columns = []
+
+    total_columns = columns + where_columns + order_by_columns
+    fromclause = build_fromclause(db_graph, total_columns) 
 
     select_query = select(columns).select_from(fromclause)
-    
+
     if where_clause:
         for clause in where_clause:
             select_query = select_query.where(clause)
 
-    if order_byclause:
+    if order_by_clause:
         for clause in order_by_clause:
             select_query = select_query.order_by(clause)
 
     return select_query
 
 def build_count(db_graph, columns, where_clause=None, order_by_clause=None):    
-    fromclause = build_fromclause(db_graph, columns) 
+    where_columns = []
+    for clause in where_clause:
+        where_columns.append(clause.left) 
+
+    order_by_columns = []
+
+    total_columns = columns + where_columns + order_by_columns
+    fromclause = build_fromclause(db_graph, total_columns)
 
     column_params = []
     for column_param in columns:
@@ -232,11 +248,11 @@ def build_count(db_graph, columns, where_clause=None, order_by_clause=None):
 
     if where_clause:
         for clause in where_clause:
-            count_query = select_query.where(clause)
+            count_query = count_query.where(clause)
 
-    if order_byclause:
+    if order_by_clause:
         for clause in order_by_clause:
-            count_query = select_query.order_by(clause)
+            count_query = count_query.order_by(clause)
     
     return count_query
 

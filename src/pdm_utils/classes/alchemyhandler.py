@@ -217,6 +217,14 @@ class AlchemyHandler:
                   "Please check your credentials and try again")
             exit(1)
 
+    def where(self, filter_expression):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
+         
+        return querying.build_whereclause(self.graph, filter_expression)
+
+
     def select(self, columns, where_clause=None, order_by_clause=None):
         if not self.graph:
             if not self.build_schemagraph():
@@ -244,7 +252,7 @@ class AlchemyHandler:
                                             where_clause=where_clause,
                                             order_by_clause=order_by_clause)
 
-    def execute(self, excutable, return_dict=True):
+    def execute(self, executable, return_dict=True):
         if not self.engine:
             if not self.build_engine():
                 return None
@@ -262,6 +270,17 @@ class AlchemyHandler:
 
         return results
 
+    def scalar(self, executable):
+        if not self.engine:
+            if not self.build_engine():
+                return None
+
+        proxy = self.engine.execute(executable)
+
+        scalar = proxy.scalar()
+
+        return scalar
+
     def show_tables(self):
         if not self.graph:
             if not self.build_schemagraph():
@@ -269,24 +288,16 @@ class AlchemyHandler:
 
         return self.graph.show_tables()
 
-    def get_table_node(self, table):
-        if not self.graph:
-            if not self.build_schemagraph():
-                return None
-        
-        return self.graph.get_table(table)
-        
     def get_table(self, table):
         if not self.graph:
             if not self.build_schemagraph():
                 return None
 
-        table_node = self.graph.get_table(table)
-        
-        alchemy_table = None
+        return self.graph.get_table(table)
 
-        if table_node:
-            alchemy_table = table_node.table
+    def get_column(self, column):
+        if not self.graph:
+            if not self.build_schemagraph():
+                return None
 
-        return alchemy_table
-        
+        return self.graph.get_column(column)
