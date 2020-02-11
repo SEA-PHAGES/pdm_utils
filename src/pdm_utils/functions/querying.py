@@ -6,14 +6,15 @@ from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import UnaryExpression
+from datetime import datetime
+from decimal import Decimal
 import re
 
 #Global file constants
 COMPARATIVE_OPERATORS = [">", ">=", "<", "<="]
-COMPARABLE_TYPES      = ["int", "decimal",
-                         "mediumint", "float",
-                         "datetime", "double"]
-OPERATOR_OPTIONS      = ["=", "!="] + COMPARATIVE_OPERATORS
+OPERATORS             = ["=", "!="] + COMPARATIVE_OPERATORS
+COMPARABLE_TYPES      = [int, Decimal, float, datetime]
+TYPES                 = [str, bytes] + COMPARABLE_TYPES
 GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
 def translate_table(db_graph, raw_table):
@@ -76,16 +77,19 @@ def check_operator(operator, column_object):
         Set a boolean to control the terminal output.
     :type verbose: Boolean
     """
-    #if operator not in OPERATOR_OPTIONS:
-    #    raise ValueError
+    if operator not in OPERATORS:
+        raise ValueError(f"Operator {operator} is not supported.")
 
-    #type = column_node.parse_type()
-    #if operator in COMPARATIVE_OPERATORS and \
-    #        type not in COMPARABLE_TYPES:
-    #    print(f"Field ' {field}' requested to be filtered "
-    #          f"is not comparable (Operator: {operator})")
-    #    raise ValueError
-    pass
+    column_type = column_object.type.python_type
+
+    if column_type not in TYPES:
+        raise ValueError(f"Column '{column_object.name}' "
+                         f"has an unsupported type, {column_type}.")
+    if operator in COMPARATIVE_OPERATORS and \
+       column_type not in COMPARABLE_TYPES:
+        raise ValueError(f"Column '{column_object.name}' "
+                         f"is not comparable with operator '{operator}'.")
+
 
 def parse_filter(unparsed_filter):
     """Helper function to return a two-dimensional array of filter parameters.
@@ -120,7 +124,7 @@ def build_whereclause(db_graph, filter_expression):
 
     whereclause = None
 
-    if filter_params[3] == "==":
+    if filter_params[3] == "=":
         whereclause = column_object == filter_params[2]
     elif filter_params[3] == "!=":
         whereclause = column_object != filter_params[2]
