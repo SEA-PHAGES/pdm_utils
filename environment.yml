@@ -2,23 +2,23 @@ name: pdm_utils-dev
 channels:
   - defaults
 dependencies:
-  - alabaster=0.7.12=py_0
-  - asn1crypto=1.3.0=py38_0
+  - alabaster=0.7.12=py37_0
+  - asn1crypto=1.3.0=py37_0
   - babel=2.8.0=py_0
-  - bcrypt=3.1.7=py38h1de35cc_0
-  - biopython=1.74=py38h1de35cc_0
+  - bcrypt=3.1.7=py37h1de35cc_0
+  - biopython=1.74=py37h1de35cc_0
   - blas=1.0=mkl
-  - bleach=3.1.0=py_0
+  - bleach=3.1.0=py37_0
   - ca-certificates=2020.1.1=0
-  - certifi=2019.11.28=py38_0
-  - cffi=1.13.2=py38hb5b8e2f_0
-  - chardet=3.0.4=py38_1003
-  - cmarkgfm=0.4.2=py38h1de35cc_0
-  - cryptography=2.8=py38ha12b0ac_0
+  - certifi=2019.11.28=py37_0
+  - cffi=1.14.0=py37hb5b8e2f_0
+  - chardet=3.0.4=py37_1003
+  - cmarkgfm=0.4.2=py37h1de35cc_0
+  - cryptography=2.8=py37ha12b0ac_0
   - curl=7.68.0=ha441bb4_0
-  - docutils=0.16=py38_0
-  - future=0.18.2=py38_0
-  - idna=2.8=py38_1000
+  - docutils=0.16=py37_0
+  - future=0.18.2=py37_0
+  - idna=2.8=py37_0
   - imagesize=1.2.0=py_0
   - intel-openmp=2020.0=166
   - jinja2=2.11.1=py_0
@@ -31,36 +31,36 @@ dependencies:
   - libgfortran=3.0.1=h93005f0_2
   - libsodium=1.0.16=h3efe00b_0
   - libssh2=1.8.2=ha12b0ac_0
-  - markupsafe=1.1.1=py38h1de35cc_0
-  - mkl=2020.0=166
-  - mkl-service=2.3.0=py38hfbe908c_0
-  - mkl_fft=1.0.15=py38h5e564d8_0
-  - mkl_random=1.1.0=py38h6440ff4_0
+  - markupsafe=1.1.1=py37h1de35cc_0
+  - mkl=2019.4=233
+  - mkl-service=2.3.0=py37hfbe908c_0
+  - mkl_fft=1.0.15=py37h5e564d8_0
+  - mkl_random=1.1.0=py37ha771720_0
   - ncurses=6.1=h0a44026_1
-  - numpy=1.18.1=py38h7241aed_0
-  - numpy-base=1.18.1=py38h6575580_1
-  - openssl=1.1.1d=h1de35cc_3
+  - numpy=1.18.1=py37h7241aed_0
+  - numpy-base=1.18.1=py37h6575580_1
+  - openssl=1.1.1d=h1de35cc_4
   - packaging=20.1=py_0
-  - paramiko=2.6.0=py38_0
-  - pip=20.0.2=py38_1
-  - pkginfo=1.5.0.1=py38_0
-  - pycparser=2.19=py_0
+  - paramiko=2.6.0=py37_0
+  - pip=20.0.2=py37_1
+  - pkginfo=1.5.0.1=py37_0
+  - pycparser=2.19=py37_0
   - pygments=2.5.2=py_0
-  - pymysql=0.9.2=py38_0
-  - pynacl=1.3.0=py38h1de35cc_0
-  - pyopenssl=19.1.0=py38_0
+  - pymysql=0.9.3=py37_0
+  - pynacl=1.3.0=py37h1de35cc_0
+  - pyopenssl=19.1.0=py37_0
   - pyparsing=2.4.6=py_0
-  - pysocks=1.7.1=py38_0
-  - python=3.8.1=h359304d_1
+  - pysocks=1.7.1=py37_0
+  - python=3.7.6=h359304d_2
   - pytz=2019.3=py_0
   - readline=7.0=h1de35cc_5
-  - readme_renderer=24.0=py38_0
-  - requests=2.22.0=py38_1
+  - readme_renderer=24.0=py37_0
+  - requests=2.22.0=py37_1
   - requests-toolbelt=0.9.1=py_0
-  - setuptools=45.1.0=py38_0
-  - six=1.14.0=py38_0
+  - setuptools=45.2.0=py37_0
+  - six=1.14.0=py37_0
   - snowballstemmer=2.0.0=py_0
-  - sphinx=2.3.1=py_0
+  - sphinx=2.4.0=py_0
   - sphinx_rtd_theme=0.4.3=py_0
   - sphinxcontrib-applehelp=1.0.1=py_0
   - sphinxcontrib-devhelp=1.0.1=py_0
@@ -68,15 +68,15 @@ dependencies:
   - sphinxcontrib-jsmath=1.0.1=py_0
   - sphinxcontrib-qthelp=1.0.2=py_0
   - sphinxcontrib-serializinghtml=1.1.3=py_0
-  - sqlalchemy=1.3.13=py38h1de35cc_0
+  - sqlalchemy=1.3.13=py37h1de35cc_0
   - sqlite=3.31.1=ha441bb4_0
-  - tabulate=0.8.3=py38_0
+  - tabulate=0.8.3=py37_0
   - tk=8.6.8=ha441bb4_0
-  - tqdm=4.42.0=py_0
+  - tqdm=4.42.1=py_0
   - twine=2.0.0=py_0
-  - urllib3=1.25.8=py38_0
-  - webencodings=0.5.1=py38_1
-  - wheel=0.34.2=py38_0
+  - urllib3=1.25.8=py37_0
+  - webencodings=0.5.1=py37_1
+  - wheel=0.34.2=py37_0
   - xz=5.2.4=h1de35cc_4
   - zlib=1.2.11=h1de35cc_3
 
