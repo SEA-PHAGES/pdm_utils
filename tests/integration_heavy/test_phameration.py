@@ -80,6 +80,11 @@ class TestPhamerationFunctions(unittest.TestCase):
         cur.execute(f"DROP DATABASE {db}")
         connection.commit()
         connection.close()
+        run_dir = Path.cwd()
+        err_file = run_dir.joinpath("error.log")
+        if err_file.exists():
+            print("Found leftover blastclust file... removing")
+            err_file.unlink()
 
     def test_1_get_pham_geneids(self):
         """Verify we get back a dictionary"""
