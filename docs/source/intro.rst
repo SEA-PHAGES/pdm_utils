@@ -1,9 +1,7 @@
 Introduction
 ============
 
-``pdm_utils`` is a Python package designed to facilitate the creation, management, and manipulation of MySQL phage genomics databases in the :seaphages:`SEA-PHAGES program <>`.
-
-``pdm_utils`` contains several types of tools:
+``pdm_utils`` is a Python package designed in combination with a pre-defined MySQL database schema in order to facilitate the creation, management, and manipulation of phage genomics databases in the :seaphages:`SEA-PHAGES program <>`. The package is directly connected to the structure of the MySQL database, and it provides several types of functionality:
 
     1. Python library including:
 
@@ -11,7 +9,7 @@ Introduction
 
         b. Functions and methods to manipulate those classes as well as interact with several databases and servers, including PhagesDB, GenBank, PECAAN, and MySQL.
 
-    2. A data processing toolkit to maintain a phage genomics database.
+    2. A command line toolkit to process data and maintain a phage genomics database.
 
 ``pdm_utils`` is useful for:
 
