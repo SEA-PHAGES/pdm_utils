@@ -11,10 +11,10 @@ ________
 .. toctree::
   :hidden:
 
-  MySQL <./installation/install_mysql>
-  Anaconda <./installation/install_conda>
-  pdm_utils Python package <./installation/install_pdm_utils_package>
-  MySQL phage genomics database instance <./installation/install_database>
+  ./installation/install_mysql
+  ./installation/install_conda
+  ./installation/install_pdm_utils_package
+  ./installation/install_database
 
 The following software should be installed in the order indicated:
 
@@ -31,10 +31,11 @@ ________
 .. toctree::
   :hidden:
 
-  MMseqs2 <./installation/install_mmseqs2>
-  NCBI Blast+ <./installation/install_ncbi_tools>
-  NCBI Conserved Domain Database <./installation/install_ncbi_tools>
-  pdm_utils repository <./installation/install_pdm_utils_repo>
+  ./installation/install_mmseqs2
+  ./installation/install_ncbi_tools
+  ./installation/install_ncbi_tools
+  ./installation/install_legacy_blast
+  ./installation/install_pdm_utils_repo
 
 Several ``pdm_utils`` tools have specific dependencies. Install the following software as needed:
 
@@ -42,4 +43,5 @@ Several ``pdm_utils`` tools have specific dependencies. Install the following so
 - :ref:`MMseqs2 (creating gene phamilies) <install_mmseqs2>`
 - :ref:`NCBI Blast+ (finding conserved domains) <install_ncbi_tools>`
 - :ref:`NCBI Conserved Domain Database (finding conserved domains) <install_ncbi_tools>`
+- :ref:`NCBI Legacy Blast (creating gene phamilies) <install_legacy_blast>`
 - :ref:`pdm_utils repository (source code, MySQL scripts, tests) <install_pdm_utils_repo>`
