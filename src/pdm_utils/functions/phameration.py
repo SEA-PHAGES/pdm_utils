@@ -222,8 +222,13 @@ def blastdb_command(wd):
     :param wd: the temporary working directory for phameration
     :return:
     """
+    # -i: fasta file to be converted to blastdb <filepath>
+    # -p: is it a protein? <boolean T/F>
+    # -o: parse/index sequence IDs? <boolean T/F>
+    # -n: database name </path/to/name>
+    # -l: log file <filepath>
     command = f"{BLASTCLUST_PATH}/formatdb -i {wd}/input.fasta " \
-              f"-p T -o T -n {wd}/sequenceDB"
+              f"-p T -o T -n {wd}/sequenceDB -l {wd}/formatdb.log"
 
     print("Build blast protein database for blastclust...")
 
@@ -278,8 +283,10 @@ def blast_phamerate_command(parameters, wd):
     :param wd: the temporary working directory for phameration
     :return: command
     """
-    command = f"{BLASTCLUST_PATH}/blastclust -i {wd}/input.fasta -d "\
-              f"{wd}/sequenceDB -o {wd}/output.txt"
+    # -d: database to cluster </path/to/name>
+    # -o: output file <filepath>
+    command = f"{BLASTCLUST_PATH}/blastclust -d {wd}/sequenceDB " \
+              f"-o {wd}/output.txt"
 
     for parameter in parameters.keys():
         command += f" {parameter} {parameters[parameter]}"
