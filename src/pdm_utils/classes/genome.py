@@ -460,7 +460,7 @@ class Genome:
             sorted_list[index].id = self.id + delimiter + str(index + 1)
             index += 1
 
-
+    # TODO add parameters to specify which feature types (e.g. cds=True, trna=True, ...)
     def clear_locus_tags(self):
         """Resets locus_tags to empty string."""
         x = 0
@@ -485,7 +485,8 @@ class Genome:
 
 
     # Evaluations.
-    def check_attribute(self, attribute, check_set, expect=False, eval_id=None):
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
+                        success="correct", fail="error"):
         """Check that the id is valid.
 
         :param attribute: Name of the genome object attribute to evaluate.
@@ -512,10 +513,10 @@ class Genome:
                         value1, check_set, expect)
             if value2:
                 result = f"The {attribute} is valid."
-                status = "correct"
+                status = success
             else:
                 result = f"The {attribute} is not valid."
-                status = "error"
+                status = fail
         else:
             result = f"The {attribute} was not evaluated."
             status = "untested"
@@ -525,7 +526,8 @@ class Genome:
 
 
     def compare_two_attributes(self, attribute1, attribute2,
-                               expect_same=False, eval_id=None):
+                               expect_same=False, eval_id=None,
+                               success="correct", fail="error"):
         """Determine if two attributes are the same.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -552,13 +554,13 @@ class Genome:
             result = f"The two attributes have {result1} values, "
             if actual_same and expect_same:
                 result = result + "as expected."
-                status = "correct"
+                status = success
             elif not actual_same and not expect_same:
                 result = result + "as expected."
-                status = "correct"
+                status = success
             else:
                 result = result + "which is not expected."
-                status = "error"
+                status = fail
         else:
             result = f"The attribute comparison was not evaluated."
             status = "untested"
@@ -567,7 +569,8 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_cluster_structure(self, eval_id=None):
+    def check_cluster_structure(self, eval_id=None, success="correct",
+                                fail="error"):
         """Check whether the cluster attribute is structured appropriately.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -578,10 +581,10 @@ class Genome:
 
             if (right != "" or left.isalpha() == False):
                 result = "Cluster is not structured correctly."
-                status = "error"
+                status = fail
             else:
                 result = "Cluster is structured correctly."
-                status = "correct"
+                status = success
         else:
             result = "Cluster is empty."
             status = "untested"
@@ -590,7 +593,8 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_subcluster_structure(self, eval_id=None):
+    def check_subcluster_structure(self, eval_id=None, success="correct",
+                                   fail="error"):
         """Check whether the subcluster attribute is structured appropriately.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -600,10 +604,10 @@ class Genome:
             left, right = basic.split_string(self.subcluster)
             if (left.isalpha() == False or right.isdigit() == False):
                 result = "Subcluster is not structured correctly."
-                status = "error"
+                status = fail
             else:
                 result = "Subcluster is structured correctly."
-                status = "correct"
+                status = success
         else:
             result = "Subcluster is empty."
             status = "untested"
@@ -612,7 +616,8 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_compatible_cluster_and_subcluster(self, eval_id=None):
+    def check_compatible_cluster_and_subcluster(self, eval_id=None,
+                                            success="correct", fail="error"):
         """Check compatibility of cluster and subcluster attributes.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -621,16 +626,17 @@ class Genome:
         output = basic.compare_cluster_subcluster(self.cluster, self.subcluster)
         if not output:
             result = "Cluster and Subcluster designations are not compatible."
-            status = "error"
+            status = fail
         else:
             result = "Cluster and Subcluster designations are compatible."
-            status = "correct"
+            status = success
         definition = "Check for compatibility between Cluster and Subcluster."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_nucleotides(self, check_set=set(), eval_id=None):
+    def check_nucleotides(self, check_set=set(), eval_id=None,
+                          success="correct", fail="error"):
         """Check if all nucleotides in the sequence are expected.
 
         :param check_set:
@@ -659,18 +665,19 @@ class Genome:
         if len(nucleotide_error_set) > 0:
             result = ("There are unexpected nucleotides in the sequence: "
                       f"{str(nucleotide_error_set)}")
-            status = "error"
+            status = fail
 
         else:
             result = "There are no unexpected nucleotides in the sequence."
-            status = "correct"
+            status = success
 
         definition = "Check if all nucleotides in the sequence are expected."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_authors(self, check_set=set(), expect=True, eval_id=None):
+    def check_authors(self, check_set=set(), expect=True, eval_id=None,
+                      success="correct", fail="error"):
         """Check author list.
 
         Evaluates whether at least one author in the in the list of
@@ -697,23 +704,24 @@ class Genome:
         if len(mutual_authors_set) == 0:
             if expect:
                 result = "The expected authors are not listed."
-                status = "error"
+                status = fail
             else:
                 result = "The authorship is as expected."
-                status = "correct"
+                status = success
         else:
             if expect:
                 result = "The authorship is as expected."
-                status = "correct"
+                status = success
             else:
                 result = "The authors are not expected to be present."
-                status = "error"
+                status = fail
         definition = "Check authorship."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_magnitude(self, attribute, expect, ref_value, eval_id=None):
+    def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
+                        success="correct", fail="error"):
         """
         expect = (>, =, <).
 
@@ -740,9 +748,9 @@ class Genome:
                 result2 = "less than "
             result = result1 + result2 + f"{ref_value}."
             if compare == expect:
-                status = "correct"
+                status = success
             else:
-                status = "error"
+                status = fail
         else:
             result = f"The {attribute} was not evaluated."
             status = "untested"
@@ -753,7 +761,8 @@ class Genome:
 
 
 
-    def check_cds_start_end_ids(self, eval_id=None):
+    def check_cds_start_end_ids(self, eval_id=None, success="correct",
+                                fail="error"):
         """Check if there are any duplicate start-end coordinates.
 
         Duplicated start-end coordinates may represent
@@ -766,18 +775,19 @@ class Genome:
         if len(self._cds_duplicate_start_end_ids) > 0:
             result = ("There are multiple CDS features with the same "
                       "start and end coordinates.")
-            status = "error"
+            status = fail
         else:
             result = ("All CDS features contain unique start and "
                       "end coordinate information.")
-            status = "correct"
+            status = success
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their start and end coordinates.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_cds_end_orient_ids(self, eval_id=None):
+    def check_cds_end_orient_ids(self, eval_id=None, success="correct",
+                                 fail="error"):
         """Check if there are any duplicate transcription end-orientation coordinates.
 
         Duplicated transcription end-orientation coordinates may represent
@@ -791,11 +801,11 @@ class Genome:
         if len(self._cds_duplicate_end_orient_ids) > 0:
             result = ("There are multiple CDS features with the same "
                       "transcription end coordinate and orientation.")
-            status = "error"
+            status = fail
         else:
             result = ("All CDS features contain unique orientation and "
                       "transcription end coordinate information.")
-            status = "correct"
+            status = success
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their orientation and transcription end "
                       "coordinate.")
@@ -803,7 +813,8 @@ class Genome:
         self.evaluations.append(evl)
 
 
-    def check_value_flag(self, expect=False, eval_id=None):
+    def check_value_flag(self, expect=False, eval_id=None,
+                         success="correct", fail="error"):
         """Check if there all attributes are populated as expected.
 
         :param expect: Indicates the expected status of the value flag.
@@ -814,24 +825,25 @@ class Genome:
         if self._value_flag:
             if expect:
                 result = "All attributes are populated."
-                status = "correct"
+                status = success
             else:
                 result = "Some attributes are not populated."
-                status = "error"
+                status = fail
         else:
             if not expect:
                 result = "All attributes are populated."
-                status = "correct"
+                status = success
             else:
                 result = "Some attributes are not populated."
-                status = "error"
+                status = fail
         definition = "Check if there are any attributes that are set correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
     def check_feature_coordinates(self, cds_ftr=False, trna_ftr=False,
-                tmrna=False, other=None, strand=False, eval_id=None):
+                tmrna=False, other=None, strand=False, eval_id=None,
+                success="correct", fail="error"):
         """Identify overlapping, duplicated, or partially-duplicated
         features.
 
@@ -918,10 +930,10 @@ class Genome:
                 index += 1
         if len(msgs) > 1:
             result = " ".join(msgs)
-            status = "error"
+            status = fail
         else:
             result = "The feature coordinates are correct."
-            status = "correct"
+            status = success
         definition = ("Check if there are any errors with the "
                       "genome's feature coordinates.")
         evl = eval.Eval(eval_id, definition, result, status)

@@ -383,7 +383,8 @@ class GenomePair:
 
     # Evaluations
 
-    def compare_attribute(self, attribute, expect_same=False, eval_id=None):
+    def compare_attribute(self, attribute, expect_same=False, eval_id=None,
+                          success="correct", fail="error"):
         """Compare specified attribute of each genome.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -411,13 +412,13 @@ class GenomePair:
 
             if actual_same and expect_same:
                 result = result + "as expected."
-                status = "correct"
+                status = success
             elif not actual_same and not expect_same:
                 result = result + "as expected."
-                status = "correct"
+                status = success
             else:
                 result = result + "which is not expected."
-                status = "error"
+                status = fail
         else:
             result = f"The {attribute} was not evaluated."
             status = "untested"
@@ -585,7 +586,7 @@ class GenomePair:
 
     def compare_annotation_status(self, attribute, ref_name, query_name,
                                   ref_check_value, query_check_value,
-                                  eval_id=None):
+                                  eval_id=None, success="correct", fail="error"):
         """Compare the annotation_status of each genome.
 
         :param attribute:
@@ -628,10 +629,10 @@ class GenomePair:
             if (ref_genome.annotation_status == ref_check_value and \
                     query_genome.annotation_status == query_check_value):
                 result = "The annotation_status of each genome is correct."
-                status = "correct"
+                status = success
             else:
                 result = "The annotation_status of each genome is not correct."
-                status = "error"
+                status = fail
         else:
             result = "The annotation_status was not evaluated."
             status = "untested"
@@ -640,7 +641,7 @@ class GenomePair:
         self.evaluations.append(evl)
 
 
-    def compare_date(self, expect, eval_id=None):
+    def compare_date(self, expect, eval_id=None, success="correct", fail="error"):
         """Compare the annotation_status of each genome.
 
         :param expect:
@@ -659,10 +660,10 @@ class GenomePair:
         if expect in set(["newer", "equal", "older"]):
             if actual == expect:
                 result = "The age of the query genome is expected."
-                status = "correct"
+                status = success
             else:
                 result = "The age of the query genome is not expected."
-                status = "error"
+                status = fail
         else:
             result = "An invalid comparison was selected."
             status = "untested"

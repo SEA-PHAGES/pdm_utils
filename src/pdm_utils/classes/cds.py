@@ -440,7 +440,8 @@ class Cds:
 
     # Evaluations.
 
-    def check_translation_table(self, check_table=11, eval_id=None):
+    def check_translation_table(self, check_table=11, eval_id=None,
+                                success="correct", fail="error"):
         """Check that the translation table is correct.
 
         :param check_table: Translation table used to check the translation.
@@ -451,16 +452,17 @@ class Cds:
 
         if self.translation_table == check_table:
             result = "The translation table is correct."
-            status = "correct"
+            status = success
         else:
             result = "The translation table is not correct."
-            status = "error"
+            status = fail
         definition = "Check that the translation table is correct."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_translation_present(self, eval_id=None):
+    def check_translation_present(self, eval_id=None,
+                                  success="correct", fail="error"):
         """Confirm that a translation is present.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -468,17 +470,17 @@ class Cds:
         """
         if self.translation_length < 1:
             result = "A translation is not present."
-            status = "error"
+            status = fail
         else:
             result = "A translation is present."
-            status = "correct"
+            status = success
 
         definition = "Check that there is a translation present."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_translation(self, eval_id=None):
+    def check_translation(self, eval_id=None, success="correct", fail="error"):
         """Check that the current and expected translations match.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -490,24 +492,25 @@ class Cds:
         if self.translation_length < exp_len:
             result = (f"The translation length ({self.translation_length}) "
                      f"is shorter than expected ({exp_len}).")
-            status = "error"
+            status = fail
         elif self.translation_length > exp_len:
             result = (f"The translation length ({self.translation_length}) "
                      f"is longer than expected ({exp_len}).")
-            status = "error"
+            status = fail
         elif self.translation != translation:
             result = (f"The translation ({self.translation})is different "
                      f"than expected ({translation}).")
-            status = "error"
+            status = fail
         else:
             result = "The translation is correct."
-            status = "correct"
+            status = success
         definition = "Check that the feature contains the expected translation."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_amino_acids(self, check_set=set(), eval_id=None):
+    def check_amino_acids(self, check_set=set(), eval_id=None,
+                          success="correct", fail="error"):
         """Check whether all amino acids in the translation are valid.
 
         :param check_set: Set of valid amino acids.
@@ -521,17 +524,18 @@ class Cds:
         if len(amino_acid_error_set) > 0:
             result = "There are unexpected amino acids in the translation: " \
                 + str(amino_acid_error_set)
-            status = "error"
+            status = fail
         else:
             result = "There are no unexpected amino acid residues."
-            status = "correct"
+            status = success
 
         definition = "Check validity of amino acid residues."
         evl = eval.Eval(eval_id, definition, result, status = status)
         self.evaluations.append(evl)
 
 
-    def check_orientation(self, format="fr_short", case=True, eval_id=None):
+    def check_orientation(self, format="fr_short", case=True, eval_id=None,
+                          success="correct", fail="error"):
         """Check if orientation is set appropriately.
 
         Relies on the `reformat_strand` function to manage orientation data.
@@ -548,16 +552,16 @@ class Cds:
                                                 case=case)
         if self.orientation == expected_orient:
             result = "The feature orientation is correct."
-            status = "correct"
+            status = success
         else:
             result = "The feature orientation is not correct."
-            status = "error"
+            status = fail
         definition = "Check if the orientation is set appropriately."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_coordinates(self, eval_id=None):
+    def check_coordinates(self, eval_id=None, success="correct", fail="error"):
         """Check if coordinates are exact.
 
         This method assumes that if the coordinates are not exact, they
@@ -569,14 +573,14 @@ class Cds:
         if not (isinstance(self.start, int) and isinstance(self.stop, int)):
             result = ("The feature coordinates are not integers: "
                       + str((self.start, self.stop)))
-            status = "error"
+            status = fail
         elif (self.start == -1 or self.stop == -1):
             result = ("The feature coordinates are not determined: "
                       + str((self.start, self.stop)))
-            status = "error"
+            status = fail
         else:
             result = "Feature coordinates are exact."
-            status = "correct"
+            status = success
 
         definition = ("Check if the start and stop boundary coordinates "
                       "are exact or fuzzy.")
@@ -584,7 +588,8 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    def check_locus_tag_present(self, expect=True, eval_id=None):
+    def check_locus_tag_present(self, expect=True, eval_id=None,
+                                success="correct", fail="error"):
         """Check if status of locus tag matches expectations.
 
         :param expect:
@@ -602,24 +607,25 @@ class Cds:
         if expect:
             if present:
                 result = "The locus_tag qualifier is present."
-                status = "correct"
+                status = success
             else:
                 result = "The locus_tag qualifier is not present."
-                status = "error"
+                status = fail
         else:
             if present:
                 result = "The locus_tag qualifier is present."
-                status = "error"
+                status = fail
             else:
                 result = "The locus_tag qualifier is not present."
-                status = "correct"
+                status = success
         definition = "Check if the locus_tag qualifier status is expected."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
-                                  prefix_set=set(), case=True, eval_id=None):
+                                  prefix_set=set(), case=True, eval_id=None,
+                                  success="correct", fail="error"):
         """Check if the locus_tag is structured correctly.
 
         :param check_value:
@@ -665,11 +671,11 @@ class Cds:
                 results.append("The locus_tag does not contain three parts.")
         if len(results) == 0:
             result = "The locus_tag qualifier is structured correctly."
-            status = "correct"
+            status = success
         else:
             result = "The locus_tag qualifier is not structured correctly." \
                      + " ".join(results)
-            status = "error"
+            status = fail
         definition = "Check if the locus_tag qualifier is structured correctly."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
@@ -700,7 +706,8 @@ class Cds:
     #     self.evaluations.append(evl)
 
 
-    def check_gene_present(self, expect=True, eval_id=None):
+    def check_gene_present(self, expect=True, eval_id=None,
+                           success="correct", fail="error"):
         """Check if the status of gene matches expectations.
 
         :param expect:
@@ -719,23 +726,23 @@ class Cds:
         if expect:
             if present:
                 result = "The gene qualifier is present."
-                status = "correct"
+                status = success
             else:
                 result = "The gene qualifier is not present."
-                status = "error"
+                status = fail
         else:
             if present:
                 result = "The gene qualifier is present."
-                status = "error"
+                status = fail
             else:
                 result = "The gene qualifier is not present."
-                status = "correct"
+                status = success
         definition = "Check if the gene status is expected."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_gene_structure(self, eval_id=None):
+    def check_gene_structure(self, eval_id=None, success="correct", fail="error"):
         """Check if the gene qualifier contains an integer.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -749,16 +756,17 @@ class Cds:
 
         if isinstance(value, int):
             result = "The gene qualifier contains an integer."
-            status = "correct"
+            status = success
         else:
             result = "The gene qualifier does not contain an integer."
-            status = "error"
+            status = fail
         definition = "Check if the gene qualifier contains an integer."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_compatible_gene_and_locus_tag(self, eval_id=None):
+    def check_compatible_gene_and_locus_tag(self, eval_id=None,
+                                            success="correct", fail="error"):
         """Check if the gene and locus_tag attributes contain the same
         gene number.
 
@@ -767,16 +775,17 @@ class Cds:
         """
         if self.gene == self._locus_tag_num:
             result = "The gene and locus_tag numbers are consistent."
-            status = "correct"
+            status = success
         else:
             result = "The gene and locus_tag numbers are not consistent."
-            status = "error"
+            status = fail
         definition = "Check if the gene and locus_tag numbers are consistent."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_description_field(self, attribute="product", eval_id=None):
+    def check_description_field(self, attribute="product", eval_id=None,
+                                success="correct", fail="error"):
         """Check if there are CDS descriptions in unexpected fields.
 
         Evaluates whether the indicated attribute is empty or generic,
@@ -814,10 +823,10 @@ class Cds:
 
         if (description == "" and len(description_set) > 0):
             result = "The description is not in the expected field."
-            status = "error"
+            status = fail
         else:
             result = "The description is in the expected field."
-            status = "correct"
+            status = success
 
         definition = \
             "Check if there is a discrepancy between description fields."
@@ -825,7 +834,8 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    def check_generic_data(self, attribute=None, eval_id=None):
+    def check_generic_data(self, attribute=None, eval_id=None,
+                           success="correct", fail="error"):
         """Check if the indicated attribute contains generic data.
 
         :param attribute:
@@ -851,10 +861,10 @@ class Cds:
 
         if original == processed:
             result = f"The '{attribute}' field is correct."
-            status = "correct"
+            status = success
         else:
             result = f"The '{attribute}' field is not correct."
-            status = "error"
+            status = fail
         definition = f"Check if the '{attribute}' field contains generic data."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)

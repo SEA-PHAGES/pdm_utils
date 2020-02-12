@@ -78,7 +78,8 @@ class GenomeTicket:
 
 
     # Evaluations
-    def check_attribute(self, attribute, check_set, expect=False, eval_id=None):
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
+                        success="correct", fail="error"):
         """Check that the id is valid.
 
         :param attribute: Name of the ticket object attribute to evaluate.
@@ -105,10 +106,10 @@ class GenomeTicket:
                         value1, check_set, expect)
             if value2:
                 result = f"The {attribute} is valid."
-                status = "correct"
+                status = success
             else:
                 result = f"The {attribute} is not valid."
-                status = "error"
+                status = fail
         else:
             result = f"The {attribute} was not evaluated."
             status = "untested"
@@ -117,7 +118,8 @@ class GenomeTicket:
         self.evaluations.append(evl)
 
 
-    def check_eval_flags(self, expect=True, eval_id=None):
+    def check_eval_flags(self, expect=True, eval_id=None,
+                         success="correct", fail="error"):
         """Check that the eval_flags is valid.
 
         :param expect:
@@ -136,16 +138,17 @@ class GenomeTicket:
 
         if output:
             result = "The field is populated correctly."
-            status = "correct"
+            status = success
         else:
             result = "The field is not populated correctly."
-            status = "error"
+            status = fail
         definition = "Check if eval_flags field is correctly populated."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_compatible_type_and_data_retain(self, eval_id=None):
+    def check_compatible_type_and_data_retain(self, eval_id=None,
+                                              success="correct", fail="error"):
         """Check if the ticket type and data_retain are compatible.
 
         If the ticket type is 'add', then the data_retain set is not
@@ -158,17 +161,18 @@ class GenomeTicket:
             result = ("The ticket type indicates that a genome "
                      "that will be added should also retain data, "
                      "from a genome in the database, which is not expected.")
-            status = "error"
+            status = fail
         else:
             result = "The ticket type and data_retain set are expected."
-            status = "correct"
+            status = success
         definition = ("Check if the ticket type and data_retain "
                       "are compatible.")
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_valid_data_source(self, ref_set_attr, check_set, eval_id=None):
+    def check_valid_data_source(self, ref_set_attr, check_set, eval_id=None,
+                                success="correct", fail="error"):
         """Check that the values in the specified attribute are valid.
 
         :param ref_set_attr:
@@ -192,16 +196,16 @@ class GenomeTicket:
             invalid_values = ref_set - check_set
             if len(invalid_values) == 0:
                 result = "The field is populated correctly."
-                status = "correct"
+                status = success
             else:
                 result = (
                     "The field is not populated correctly. The following "
                     f"values are not permitted in '{ref_set_attr}': "
                     f"{list(invalid_values)}")
-                status = "error"
+                status = fail
         else:
             result = "Invalid field to be evaluated."
-            status = "error"
+            status = fail
 
         definition = f"Check if {ref_set_attr} field is correctly populated."
         evl = eval.Eval(eval_id, definition, result, status)

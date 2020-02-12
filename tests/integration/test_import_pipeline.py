@@ -2933,10 +2933,11 @@ class TestImportGenomeMain2(unittest.TestCase):
         """Test pipeline with:
         Same test as in test_replacement_25, except
         the 'interactive' flag is selected allowing user to review evaluations.
-        The evaluation review is patch, and no errors are downgraded."""
+        The evaluation review is patched, and
+        all 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_26")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = False
+        ask_mock.return_value = True
         clear_descriptions(self.alice_record)
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
@@ -2959,10 +2960,11 @@ class TestImportGenomeMain2(unittest.TestCase):
         """Test pipeline with:
         Same test as in test_replacement_25, except
         the 'interactive' flag is selected allowing user to review evaluations.
-        The evaluation review is patch, and ALL errors are downgraded."""
+        The evaluation review is patched, and
+        NO 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_27")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = True
+        ask_mock.return_value = False
         clear_descriptions(self.alice_record)
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
@@ -2991,10 +2993,11 @@ class TestImportGenomeMain2(unittest.TestCase):
     def test_replacement_28(self, getpass_mock, ask_mock):
         """Test pipeline with:
         'Final' genome but adding instead of replacing.
-        Use 'interactive' but no errors are downgraded."""
+        Use 'interactive' and
+        all 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_28")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = False
+        ask_mock.return_value = True
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_ticket["type"] = "add"
         create_import_table([self.alice_ticket], import_table)
@@ -3012,10 +3015,11 @@ class TestImportGenomeMain2(unittest.TestCase):
     @patch("getpass.getpass")
     def test_replacement_29(self, getpass_mock, ask_mock):
         """Test pipeline with:
-        Same test as in test_replacement_28, but ALL errors are downgraded."""
+        Same test as in test_replacement_28, but
+        NO 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_29")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = True
+        ask_mock.return_value = False
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_ticket["type"] = "add"
         create_import_table([self.alice_ticket], import_table)

@@ -50,7 +50,8 @@ class Source:
 
 
     # Evaluations
-    def check_attribute(self, attribute, check_set, expect=False, eval_id=None):
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
+                        success="correct", fail="error"):
         """Check that the id is valid.
 
         :param attribute: Name of the source feature object attribute to evaluate.
@@ -77,10 +78,10 @@ class Source:
                         value1, check_set, expect)
             if value2:
                 result = f"The {attribute} is valid."
-                status = "correct"
+                status = success
             else:
                 result = f"The {attribute} is not valid."
-                status = "error"
+                status = fail
         else:
             result = f"The {attribute} was not evaluated."
             status = "untested"

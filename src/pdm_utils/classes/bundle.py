@@ -55,7 +55,7 @@ class Bundle:
 
     # Evaluations.
 
-    def check_ticket(self, eval_id=None):
+    def check_ticket(self, eval_id=None, success="correct", fail="error"):
         """Check for whether a Ticket object is present.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -63,16 +63,17 @@ class Bundle:
         """
         if self.ticket is not None:
             result = "A ticket has been matched."
-            status = "correct"
+            status = success
         else:
             result = "No ticket has been matched."
-            status = "error"
+            status = fail
         definition = "Check if a ticket has been matched."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
-    def check_genome_dict(self, key, expect=True, eval_id=None):
+    def check_genome_dict(self, key, expect=True, eval_id=None,
+                          success="correct", fail="error"):
         """Check if a genome is present in the genome dictionary.
 
         :param key:
@@ -90,21 +91,22 @@ class Bundle:
         if key in self.genome_dict.keys():
             result = f"The {key} genome is present."
             if expect:
-                status = "correct"
+                status = success
             else:
-                status = "error"
+                status = fail
         else:
             result = f"The {key} genome is not present."
             if not expect:
-                status = "correct"
+                status = success
             else:
-                status = "error"
+                status = fail
 
         definition = f"Check if the {key} genome is present."
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
-    def check_genome_pair_dict(self, key, expect=True, eval_id=None):
+    def check_genome_pair_dict(self, key, expect=True, eval_id=None,
+                               success="correct", fail="error"):
         """Check if a genome_pair is present in the genome_pair dictionary.
 
         :param key:
@@ -122,15 +124,15 @@ class Bundle:
         if key in self.genome_pair_dict.keys():
             result = f"The {key} genome_pair is present."
             if expect:
-                status = "correct"
+                status = success
             else:
-                status = "error"
+                status = fail
         else:
             result = f"The {key} genome_pair is not present."
             if not expect:
-                status = "correct"
+                status = success
             else:
-                status = "error"
+                status = fail
 
         definition = f"Check if the {key} genome_pair is present."
         evl = eval.Eval(eval_id, definition, result, status)
@@ -218,7 +220,8 @@ class Bundle:
 
 
 
-    def check_compatible_type_and_annotation_status(self, gnm_type, eval_id=None):
+    def check_compatible_type_and_annotation_status(self, gnm_type, eval_id=None,
+                                                success="correct", fail="error"):
         """Check if the ticket type and annotation_status are compatible.
 
         If the ticket type is 'add', then the annotation_status is not
@@ -235,15 +238,15 @@ class Bundle:
             result = ("The ticket type indicates that a genome "
                      "with 'final' annotation_status will be added, "
                      "which is not expected.")
-            status = "error"
+            status = fail
         elif (tkt_type == "replace" and annotation_status == "draft"):
             result = ("The ticket type indicates that a genome "
                      "with 'draft' annotation_status will be replaced, "
                      "which is not expected.")
-            status = "error"
+            status = fail
         else:
             result = "The ticket type and annotation_status are expected."
-            status = "correct"
+            status = success
         definition = ("Check if the ticket type and annotation_status "
                      "are compatible.")
         evl = eval.Eval(eval_id, definition, result, status)
