@@ -23,18 +23,13 @@ EVAL_FLAGS = {
 
 # Run mode definitions.
 RUN_MODES = {
-    "pecaan": ("Relaxed evaluations for draft genome annotations "
-               "retrieved from PECAAN since some data has not yet been "
-               "manually reviewed (such as locus_tags)."),
-    "phagesdb": ("Most stringent evaluations for final genome annotations "
-                 "retrieved from PhagesDB since this data will be "
-                 "submitted to GenBank."),
-    "sea_auto": ("Relaxed evaluations for genome annotations generated "
-                 "through SEA-PHAGES but retrieved from GenBank since "
-                 "some of this data can no longer be modified."),
-    "misc": ("Very relaxed evaluations for genome annotations "
-             "not generated through SEA-PHAGES, since the data cannot be "
-             "modified."),
+    "draft": ("Relaxed evaluations for automatically generated draft "
+              "genome annotations since data have not been manually reviewed."),
+    "final": ("Stringent evaluations for manual genome annotations."),
+    "auto": ("Relaxed evaluations for genome annotations "
+             "automatically retrieved from GenBank for routine replacement."),
+    "misc": ("Relaxed evaluations for genome annotations "
+             "that have been generated from external sources."),
     "custom": ("User-defined evaluations for customized import.")
     }
 
@@ -46,7 +41,7 @@ def get_eval_flag_dict(run_mode):
         dict[key] = True
 
     # Auto-annotations.
-    if run_mode == "pecaan":
+    if run_mode == "draft":
         dict["check_locus_tag"] = False
         dict["check_trna"] = False
         dict["import_locus_tag"] = False
@@ -56,11 +51,11 @@ def get_eval_flag_dict(run_mode):
         dict["check_description"] = False
 
     # Manual annotations.
-    elif run_mode == "phagesdb":
+    elif run_mode == "final":
         dict["import_locus_tag"] = False
 
     # SEA-PHAGES GenBank records.
-    elif run_mode == "sea_auto":
+    elif run_mode == "auto":
         dict["check_locus_tag"] = False
         dict["check_description_field"] = False
         dict["check_replace"] = False

@@ -127,7 +127,7 @@ API_SUFFIX = "/?format=json"
 API_HOST_GENERA = "https://phagesdb.org/api/host_genera/"
 API_CLUSTERS = "https://phagesdb.org/api/clusters/"
 
-# API at phagesdb has you specify how many results to return.
+# API at PhagesDB has you specify how many results to return.
 # 1 page at length 100000 will return everything.
 SEQUENCED_PAGE = 1
 SEQUENCED_SIZE = 100000

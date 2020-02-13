@@ -25,7 +25,7 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict1["type"] = "add"
         self.ticket_dict1["phage_id"] = "Trixie"
         self.ticket_dict1["description_field"] = "product"
-        self.ticket_dict1["run_mode"] = "phagesdb"
+        self.ticket_dict1["run_mode"] = "final"
         self.ticket_dict1["host_genus"] = "retrieve"
         self.ticket_dict1["cluster"] = "retain"
         self.ticket_dict1["subcluster"] = "A2"
@@ -36,7 +36,7 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict3["type"] = "ADD"
         self.ticket_dict3["phage_id"] = "Trixie"
         self.ticket_dict3["description_field"] = "PRODUCT"
-        self.ticket_dict3["run_mode"] = "PHAGESDB"
+        self.ticket_dict3["run_mode"] = "FINAL"
         self.ticket_dict3["host_genus"] = "RETRIEVE"
         self.ticket_dict3["subcluster"] = None
 
@@ -78,7 +78,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.ticket_dict3["description_field"], "product")
         with self.subTest():
-            self.assertEqual(self.ticket_dict3["run_mode"], "phagesdb")
+            self.assertEqual(self.ticket_dict3["run_mode"], "final")
 
 
 
@@ -93,7 +93,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.description_field, "product")
         with self.subTest():
-            self.assertEqual(tkt.run_mode, "phagesdb")
+            self.assertEqual(tkt.run_mode, "final")
         with self.subTest():
             self.assertEqual(len(tkt.data_dict.keys()), 7)
         with self.subTest():
@@ -187,7 +187,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(list_of_tickets[0].id, 1)
         with self.subTest():
-            self.assertEqual(list_of_tickets[0].run_mode, "phagesdb")
+            self.assertEqual(list_of_tickets[0].run_mode, "final")
         with self.subTest():
             self.assertEqual(list_of_tickets[0].description_field, "product")
         with self.subTest():
@@ -224,13 +224,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tkt_dict1["type"] = "add"
         tkt_dict1["phage_id"] = "Trixie"
         tkt_dict1["description_field"] = "product"
-        tkt_dict1["run_mode"] = "phagesdb"
+        tkt_dict1["run_mode"] = "final"
 
         tkt_dict2 = {}
         tkt_dict2["type"] = "add"
         tkt_dict2["phage_id"] = "L5"
         tkt_dict2["description_field"] = "product"
-        tkt_dict2["run_mode"] = "phagesdb"
+        tkt_dict2["run_mode"] = "final"
 
         tkt_dict3 = {}
         tkt_dict3["type"] = "add"
@@ -501,7 +501,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket = ticket.GenomeTicket()
         self.add_ticket.type = "add"
         self.add_ticket.phage_id = "Trixie_Draft"
-        self.add_ticket.run_mode = "phagesdb"
+        self.add_ticket.run_mode = "final"
         self.add_ticket.description_field = "product"
         self.add_ticket.host_genus = "Mycobacterium smegmatis"
         self.add_ticket.cluster = "A"
@@ -517,7 +517,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket = ticket.GenomeTicket()
         self.remove_ticket.type = "replace"
         self.remove_ticket.phage_id = "Trixie_Draft"
-        self.remove_ticket.run_mode = "phagesdb"
+        self.remove_ticket.run_mode = "final"
         self.remove_ticket.description_field = "product"
         self.remove_ticket.host_genus = "Mycobacterium smegmatis"
         self.remove_ticket.cluster = "A"
@@ -536,7 +536,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket = ticket.GenomeTicket()
         self.invalid_ticket.type = "invalid"
         self.invalid_ticket.phage_id = "Trixie_Draft"
-        self.invalid_ticket.run_mode = "phagesdb"
+        self.invalid_ticket.run_mode = "final"
         self.invalid_ticket.description_field = "product"
         self.invalid_ticket.host_genus = "Mycobacterium smegmatis"
         self.invalid_ticket.cluster = "A"

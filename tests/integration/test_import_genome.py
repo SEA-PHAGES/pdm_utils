@@ -133,7 +133,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.id = 1
         self.tkt1.type = "add"
         self.tkt1.phage_id = "L5"
-        self.tkt1.run_mode = "phagesdb"
+        self.tkt1.run_mode = "final"
         self.tkt1.description_field = "product"
         self.tkt1.eval_flags = self.eval_flags
         self.tkt1.data_dict = self.data_dict
@@ -163,7 +163,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'add' ticket, no phagesdb data."""
+        one record, one 'add' ticket, no PhagesDB data."""
         # Omit cluster to verify that only attributes in the data_add set
         # are copied.
         self.tkt1.data_add = set(["host_genus", "subcluster",
@@ -244,7 +244,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_4(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'add' ticket, no data_add, no phagesdb data."""
+        one record, one 'add' ticket, no data_add, no PhagesDB data."""
         self.tkt1.data_add = set()
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
@@ -262,7 +262,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_5(self):
         """Verify bundle is returned from a flat file with:
-        one record, one 'add' ticket, with phagesdb data."""
+        one record, one 'add' ticket, with PhagesDB data."""
         # Use cluster and host_genus to confirm that only attributes
         # within the data_retrieve set are copied.
         self.tkt1.data_add = set(["cluster", "subcluster",
@@ -292,7 +292,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_6(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with MySQL data,
-        and no phagesdb data."""
+        and no PhagesDB data."""
         # Use host_genus and accession to confirm that only attributes
         # in the data_retain set are copied.
         l5_data = ["L5", "EFG789", "L5_Draft", "Gordonia", "ATCG",
@@ -355,7 +355,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_7(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, no MySQL data,
-        and no phagesdb data."""
+        and no PhagesDB data."""
 
         l5_data = ["L5x", "ABC123", "L5_Draft", "Gordonia", "ATCG",
                    4, 1, "draft", constants.EMPTY_DATE, 1, 1]
@@ -408,7 +408,7 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_prepare_bundle_8(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with MySQL data,
-        no MySQL engine, and no phagesdb data."""
+        no MySQL engine, and no PhagesDB data."""
 
         l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",
                    4, 1, "draft", constants.EMPTY_DATE, 1, 1]
@@ -560,7 +560,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertFalse(args.prod_run)
         with self.subTest():
-            self.assertEqual(args.run_mode, "phagesdb")
+            self.assertEqual(args.run_mode, "final")
         with self.subTest():
             self.assertEqual(args.description_field, "product")
         with self.subTest():
@@ -586,7 +586,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         log_file = "logfile.txt"
         self.args_list.extend(["-g", "FILENAME",
                                "-p",
-                               "-r", "PECAAN",
+                               "-r", "DRAFT",
                                "-d", "FUNCTION",
                                "-o", output_folder,
                                "-l", log_file,
@@ -598,7 +598,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertTrue(args.prod_run)
         with self.subTest():
-            self.assertEqual(args.run_mode, "pecaan")
+            self.assertEqual(args.run_mode, "draft")
         with self.subTest():
             self.assertEqual(args.description_field, "function")
         with self.subTest():
@@ -616,7 +616,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         log_file = "logfile.txt"
         self.args_list.extend(["--genome_id_field", "FILENAME",
                                "--prod_run",
-                               "--run_mode", "PECAAN",
+                               "--run_mode", "DRAFT",
                                "--description_field", "FUNCTION",
                                "--output_folder", output_folder,
                                "--log_file", log_file,
@@ -628,7 +628,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertTrue(args.prod_run)
         with self.subTest():
-            self.assertEqual(args.run_mode, "pecaan")
+            self.assertEqual(args.run_mode, "draft")
         with self.subTest():
             self.assertEqual(args.description_field, "function")
         with self.subTest():
@@ -662,7 +662,7 @@ class TestImportGenomeMain3(unittest.TestCase):
                           str(self.import_table),
                           "-g", "FILENAME",
                           "-p",
-                          "-r", "PECAAN",
+                          "-r", "DRAFT",
                           "-d", "FUNCTION",
                           "-o", str(self.output_folder),
                           "-l", str(self.log_file)
@@ -744,7 +744,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         self.data_dict1["type"] = "replace"
         self.data_dict1["phage_id"] = "Trixie"
         self.data_dict1["description_field"] = "product"
-        self.data_dict1["run_mode"] = "phagesdb"
+        self.data_dict1["run_mode"] = "final"
         self.data_dict1["host_genus"] = "retrieve"
         self.data_dict1["cluster"] = "retain"
 
@@ -753,7 +753,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         self.data_dict2["type"] = "replace"
         self.data_dict2["phage_id"] = "L5"
         self.data_dict2["description_field"] = "product"
-        self.data_dict2["run_mode"] = "phagesdb"
+        self.data_dict2["run_mode"] = "final"
         self.data_dict2["host_genus"] = "retrieve"
         self.data_dict2["cluster"] = "retain"
 
@@ -868,7 +868,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict1["type"] = "replace"
         self.data_dict1["phage_id"] = "L5"
         self.data_dict1["description_field"] = "product"
-        self.data_dict1["run_mode"] = "phagesdb"
+        self.data_dict1["run_mode"] = "final"
         self.data_dict1["host_genus"] = "Mycobacterium"
         self.data_dict1["cluster"] = "A"
         self.data_dict1["annotation_status"] = "draft"
@@ -876,7 +876,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt1 = ticket.GenomeTicket()
         self.tkt1.id = 1
         self.tkt1.phage_id = "L5"
-        self.tkt1.run_mode = "phagesdb"
+        self.tkt1.run_mode = "final"
         self.tkt1.description_field = "product"
         self.tkt1.eval_flags = self.eval_flags
         self.tkt1.data_dict = self.data_dict1
@@ -886,14 +886,14 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2["id"] = 1
         self.data_dict2["phage_id"] = "Trixie"
         self.data_dict2["description_field"] = "product"
-        self.data_dict2["run_mode"] = "phagesdb"
+        self.data_dict2["run_mode"] = "final"
         self.data_dict2["host_genus"] = "Gordonia"
         self.data_dict2["cluster"] = "B"
 
         self.tkt2 = ticket.GenomeTicket()
         self.tkt2.id = 2
         self.tkt2.phage_id = "Trixie"
-        self.tkt2.run_mode = "phagesdb"
+        self.tkt2.run_mode = "final"
         self.tkt2.description_field = "product"
         self.tkt2.eval_flags = self.eval_flags
         self.tkt2.data_dict = self.data_dict2

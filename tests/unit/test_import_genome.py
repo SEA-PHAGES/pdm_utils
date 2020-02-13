@@ -57,7 +57,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.tkt.id = 1
         self.tkt.type = "replace"
         self.tkt.phage_id = "Trixie"
-        self.tkt.run_mode = "phagesdb"
+        self.tkt.run_mode = "final"
         self.tkt.description_field = "product"
         self.tkt.data_dict = self.data_dict
         self.tkt.eval_flags = {"a":1, "b":2}

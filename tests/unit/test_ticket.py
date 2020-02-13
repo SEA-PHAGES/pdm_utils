@@ -45,9 +45,9 @@ class TestGenomeTicketClass(unittest.TestCase):
 
     def test_set_run_mode_1(self):
         """Check that value is lowercased when not 'none'."""
-        value = "PhagesDB"
+        value = "Final"
         self.tkt.set_run_mode(value)
-        self.assertEqual(self.tkt.run_mode, "phagesdb")
+        self.assertEqual(self.tkt.run_mode, "final")
 
     def test_set_run_mode_2(self):
         """Check that value is lowercased when 'none'."""

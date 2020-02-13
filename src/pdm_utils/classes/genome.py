@@ -80,7 +80,7 @@ class Genome:
         # from various data sources.
         self.filename = "" # The file name from which the data is derived
         self.type = "" # Identifier to describes how this genome is used
-                       # (e.g. import, MySQL database, phagesdb, etc.)
+                       # (e.g. import, MySQL database, PhagesDB, etc.)
         self.evaluations = [] # List of warnings and errors about the data
         self._value_flag = False
         self.misc = None # Unstructured attribute to store misc. data not

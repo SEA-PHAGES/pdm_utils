@@ -439,7 +439,7 @@ def get_alice_ticket_data_complete():
         "annotation_status": "draft",
         "annotation_author": 1,
         "retrieve_record": 1,
-        "run_mode": "pecaan"
+        "run_mode": "draft"
         }
     return dict
 
@@ -514,7 +514,7 @@ def get_unparsed_draft_import_args():
                       str(import_table),
                       "-g", "_organism_name",
                       "-p",
-                      "-r", "pecaan",
+                      "-r", "draft",
                       "-d", "product",
                       "-o", str(output_folder),
                       "-l", str(log_file)
@@ -524,7 +524,7 @@ def get_unparsed_draft_import_args():
 def get_unparsed_final_import_args():
     """Returns list of command line arguments to import 'final' Alice genome."""
     unparsed_args = get_unparsed_draft_import_args()
-    unparsed_args[9] = "phagesdb"
+    unparsed_args[9] = "final"
     return unparsed_args
 
 
@@ -1856,9 +1856,9 @@ class TestImportGenomeMain1(unittest.TestCase):
         SeqIO.write(self.alice_record, l5_flat_file_path, "genbank")
         l5_ticket = get_alice_ticket_data_complete()
         l5_ticket["phage_id"] = "L5"
-        # By changing run_mode to 'phagesdb',
+        # By changing run_mode to 'final',
         # the flat file will fail certain checks.
-        l5_ticket["run_mode"] = "phagesdb"
+        l5_ticket["run_mode"] = "final"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -1887,14 +1887,14 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_add_38(self, getpass_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
-        command line args select invalid run_mode 'phagesdb', but ticket
-        contains correct valid run_mode 'pecaan'."""
+        command line args select invalid run_mode 'final', but ticket
+        contains correct valid run_mode 'draft'."""
         logging.info("test_add_38")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        # self.alice_ticket = 'pecaan' run_mode
+        # self.alice_ticket = 'draft' run_mode
         create_import_table([self.alice_ticket], import_table)
-        # unparsed_args = 'phagesdb' run_mode
+        # unparsed_args = 'final' run_mode
         unparsed_args = get_unparsed_final_import_args()
         run.main(unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -1912,10 +1912,10 @@ class TestImportGenomeMain1(unittest.TestCase):
         logging.info("test_add_39")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        # self.alice_ticket = 'phagesdb' run_mode
-        self.alice_ticket["run_mode"] = "phagesdb"
+        # self.alice_ticket = 'final' run_mode
+        self.alice_ticket["run_mode"] = "final"
         create_import_table([self.alice_ticket], import_table)
-        # unparsed_args = 'pecaan' run_mode
+        # unparsed_args = 'draft' run_mode
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
         gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
@@ -2191,7 +2191,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         self.alice_ticket["type"] = "replace"
         self.alice_ticket["accession"] = "JF704092"
         self.alice_ticket["annotation_status"] = "final"
-        self.alice_ticket["run_mode"] = "phagesdb"
+        self.alice_ticket["run_mode"] = "final"
 
         # Get data to run the entire pipeline.
         self.unparsed_args = get_unparsed_final_import_args()
@@ -2592,7 +2592,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     @patch("getpass.getpass")
     def test_replacement_12(self, getpass_mock):
         """Test pipeline with:
-        valid replace ticket for final genome using 'phagesdb' run mode,
+        valid replace ticket for final genome using 'final' run mode,
         valid flat file,
         Alice data already in the database and is 'final',
         and annotation_status remains 'final'."""
@@ -2622,7 +2622,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     @patch("getpass.getpass")
     def test_replacement_13(self, getpass_mock):
         """Identical to test_replacement_12,
-        except using 'sea_auto' run mode."""
+        except using 'auto' run mode."""
         logging.info("test_replacement_13")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
@@ -2630,7 +2630,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
         insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
-        self.alice_ticket["run_mode"] = "sea_auto"
+        self.alice_ticket["run_mode"] = "auto"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)

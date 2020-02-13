@@ -144,7 +144,7 @@ def parse_args(unparsed_args_list):
     parser.add_argument("-p", "--prod_run", action="store_true",
         default=False, help=PROD_RUN_HELP)
     parser.add_argument("-r", "--run_mode", type=str.lower,
-        choices=list(run_modes.RUN_MODES.keys()), default="phagesdb",
+        choices=list(run_modes.RUN_MODES.keys()), default="final",
         help=RUN_MODE_HELP)
     parser.add_argument("-d", "--description_field", type=str.lower,
         default="product", choices=list(constants.DESCRIPTION_FIELD_SET),
@@ -410,9 +410,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
 
     # TODO should add some sort of flag to set default empty values
-    # for phagesdb sets to account for creation of databases that
-    # do not rely on phagesdb?
-    # Retrieve data from phagesdb to create sets of
+    # for PhagesDB sets to account for creation of databases that
+    # do not rely on PhagesDB?
+    # Retrieve data from PhagesDB to create sets of
     # valid host genera, clusters, and subclusters.
     # Cluster "UNK" may or may not already be present, but it is valid.
     # If there is no subcluster, value may be empty string or "none".
@@ -574,7 +574,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
                     setattr(ff_gnm, attr, attr_value)
 
             # Check to see if there is any missing data for each genome, and
-            # retrieve it from phagesdb.
+            # retrieve it from PhagesDB.
             # If the ticket genome has fields set to 'retrieve', data is
             # retrieved from PhagesDB and populates a new Genome object.
             if len(bndl.ticket.data_retrieve) > 0:
@@ -1196,7 +1196,7 @@ def compare_genomes(genome_pair, eval_flags):
             # TODO this is tricky. Yes, if replacing, you only expect a
             # final -> final, or unknown -> unknown. However, if the
             # check_replace = True, such as when a new final is available from
-            # phagesdb, then you only expect to go from draft -> final,
+            # PhagesDB, then you only expect to go from draft -> final,
             # and you don't expect the current MySQL genome to be final.
             genome_pair.compare_attribute("annotation_status",
                 expect_same=True, eval_id="GP_014", fail="warning")

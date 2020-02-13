@@ -316,8 +316,12 @@ def convert_tickets_to_dict(list_of_tickets, old_format=False):
         tkt_data["accession"] = tkt.data_dict["accession"]
 
         if old_format == True:
-            if tkt.run_mode == "sea_auto":
+            if tkt.run_mode == "auto":
                 tkt_data["run_mode"] = "ncbi_auto"
+            elif tkt.run_mode == "draft":
+                tkt_data["run_mode"] = "pecaan"
+            elif tkt.run_mode == "final":
+                tkt_data["run_mode"] = "phagesdb"
             else:
                 tkt_data["run_mode"] = tkt.run_mode
         else:
@@ -389,7 +393,7 @@ def get_final_data(output_folder, matched_genomes):
                 tkt.data_dict["annotation_author"] = 1
                 tkt.description_field = "product"
                 tkt.data_dict["accession"] = "retrieve"
-                tkt.run_mode = "phagesdb"
+                tkt.run_mode = "final"
                 # TODO secondary_phage_id data is for old ticket format.
                 tkt.data_dict["secondary_phage_id"] = mysqldb_gnm.id
                 tkt.data_dict["retrieve_record"] = 1
@@ -715,7 +719,7 @@ def check_record_date(record_list, accession_dict):
         # for them. If the genome is currently a draft annotation, create
         # an import ticket for replacement regardless of the date in
         # the Genbank record. This ensures that if a user fails to
-        # upload a manual annotation to phagesdb, once the Genbank
+        # upload a manual annotation to PhagesDB, once the Genbank
         # accession becomes active MySQL database will get the new version.
         # This should always happen, since we've only retrieved new records.
         if (date > gnm.date or gnm.annotation_status == "draft"):
@@ -760,7 +764,7 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
         tkt.data_dict["annotation_author"] = gnm.annotation_author
         tkt.description_field = "product"
         tkt.data_dict["accession"] = gnm.accession
-        tkt.run_mode = "sea_auto"
+        tkt.run_mode = "auto"
         # TODO secondary_phage_id data is for old ticket format.
         tkt.data_dict["secondary_phage_id"] = gnm.id
         tkt.data_dict["retrieve_record"] = 1
@@ -817,7 +821,7 @@ def get_draft_data(output_path, phage_id_set):
 
     if len(phage_id_set) > 0:
         phage_id_list = list(phage_id_set)
-        pecaan_folder = pathlib.Path(output_path, f"pecaan")
+        pecaan_folder = pathlib.Path(output_path, "pecaan")
         pecaan_folder.mkdir()
         retrieve_drafts(pecaan_folder, phage_id_list)
     else:
@@ -862,7 +866,7 @@ def retrieve_drafts(output_folder, phage_list):
             tkt.data_dict["annotation_author"] = 1
             tkt.description_field = "product"
             tkt.data_dict["accession"] = "none"
-            tkt.run_mode = "pecaan"
+            tkt.run_mode = "draft"
             # TODO secondary_phage_id data is for old ticket format.
             tkt.data_dict["secondary_phage_id"] = "none"
             tkt.data_dict["retrieve_record"] = 1

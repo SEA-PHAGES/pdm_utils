@@ -15,18 +15,18 @@ class TestConstants(unittest.TestCase):
             self.assertTrue(dict["check_locus_tag"])
 
     def test_get_eval_flag_dict_2(self):
-        """Verify 'pecaan' eval dictionary is returned."""
-        dict = run_modes.get_eval_flag_dict("pecaan")
+        """Verify 'draft' eval dictionary is returned."""
+        dict = run_modes.get_eval_flag_dict("draft")
         self.assertFalse(dict["check_locus_tag"])
 
     def test_get_eval_flag_dict_3(self):
-        """Verify 'phagesdb' eval dictionary is returned."""
-        dict = run_modes.get_eval_flag_dict("phagesdb")
+        """Verify 'final' eval dictionary is returned."""
+        dict = run_modes.get_eval_flag_dict("final")
         self.assertFalse(dict["import_locus_tag"])
 
     def test_get_eval_flag_dict_4(self):
-        """Verify 'sea_auto' eval dictionary is returned."""
-        dict = run_modes.get_eval_flag_dict("sea_auto")
+        """Verify 'auto' eval dictionary is returned."""
+        dict = run_modes.get_eval_flag_dict("auto")
         self.assertFalse(dict["check_locus_tag"])
 
     def test_get_eval_flag_dict_5(self):
