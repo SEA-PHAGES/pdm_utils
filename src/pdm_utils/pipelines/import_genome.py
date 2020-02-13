@@ -82,12 +82,9 @@ def parse_args(unparsed_args_list):
     IMPORT_HELP = ("Pipeline to import new genome data into "
                    "a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database to import the genomes."
-    INPUT_FOLDER_HELP = ("Path to the folder containing files to be processed.")
+    INPUT_FOLDER_HELP = ("Path to the folder containing GenBank-formatted "
+                         "flat files to be processed.")
     OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
-    IMPORT_GENOME_FOLDER_HELP = """
-        Path to the folder containing
-        GenBank-formatted flat files
-        to be processed."""
     IMPORT_TABLE_HELP = """
         Path to the CSV-formatted table containing
         instructions to process each genome.
@@ -663,6 +660,9 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                           description_field=tkt.description_field)
                 x += 1
 
+            # TODO this check_trna flag should be moved within
+            # the check_trna function. Eventually, the default should be to
+            # check trna features.
             # Check tRNA features.
             if eval_flags["check_trna"]:
                 y = 0
@@ -677,15 +677,18 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                              host_genus=gnm.host_genus)
                 z += 1
 
+        if retain_ref in bndl.genome_dict.keys():
+            gnm2 = bndl.genome_dict[retain_ref]
+            check_retain_genome(gnm2, tkt.type, eval_flags)
 
-# TODO unittest interactive=False
+
 def review_evaluations(bndl, interactive=False):
     """Iterate through all objects stored in the bundle.
     If there are warnings, review whether status should be changed."""
     print(f"\n\nReviewing evaluations for bundle: {bndl.id}")
     review_evaluation_list(bndl.evaluations, interactive=interactive)
     if bndl.ticket is not None:
-        print(f"nReviewing evaluations for ticket: {bndl.ticket.id}, "
+        print(f"Reviewing evaluations for ticket: {bndl.ticket.id}, "
               f"{bndl.ticket.type}, {bndl.ticket.phage_id}.")
         review_evaluation_list(bndl.ticket.evaluations, interactive=interactive)
     for key in bndl.genome_dict.keys():
@@ -718,7 +721,7 @@ def review_evaluations(bndl, interactive=False):
         review_evaluation_list(genome_pair.evaluations,
             interactive=interactive)
 
-# TODO unittest interactive=False
+
 def review_evaluation_list(evaluation_list, interactive=False):
     """Iterate through all evaluations and review 'warning' results.
     """
@@ -741,13 +744,16 @@ def review_evaluation_list(evaluation_list, interactive=False):
                     exit = True
                 elif result is True:
                     evl.status = "error"
-                    evl.result = evl.result + " Changed from 'warning' status."
+                    evl.result = evl.result + \
+                                 " Manually changed from 'warning' status."
                 else:
                     pass
             else:
                 # If interactive is set to False,
                 # change all 'warnings' to 'errors'.
                 evl.status = "error"
+                evl.result = evl.result + \
+                            " Automatically changed from 'warning' status."
         x += 1
     return exit
 
@@ -808,9 +814,6 @@ def review_cds_descriptions(feature_list, description_field):
 
 
 
-
-
-
 def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref=""):
     """Check a Bundle for errors.
 
@@ -823,26 +826,25 @@ def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref="
     :type bndl: Bundle
     """
     logger.info(f"Checking bundle: {bndl.id}.")
+
+    # Log file of genome, if applicable.
+    if file_ref in bndl.genome_dict.keys():
+        gnm = bndl.genome_dict[file_ref]
+        logger.info(f"Genome from file: {gnm.filename}.")
+
     bndl.check_ticket(eval_id="BNDL_001")
     if bndl.ticket is not None:
-
+        logger.info(f"Ticket: {bndl.ticket.type}, {bndl.ticket.phage_id}.")
         bndl.check_genome_dict(file_ref, expect=True, eval_id="BNDL_002")
-        if file_ref in bndl.genome_dict.keys():
-            bndl.check_compatible_type_and_annotation_status(
-                    file_ref, eval_id="BNDL_003", fail="warning")
-
         tkt = bndl.ticket
         if len(tkt.data_add) > 0:
             bndl.check_genome_dict(ticket_ref, expect=True, eval_id="BNDL_004")
-
         # There may or may not be data retrieved from PhagesDB.
         if len(tkt.data_retrieve) > 0:
             bndl.check_genome_dict(retrieve_ref,
                                    expect=True, eval_id="BNDL_005")
-
         if tkt.type == "replace":
             bndl.check_genome_dict(retain_ref, expect=True, eval_id="BNDL_006")
-
             # There should be a genome_pair between the current MySQL
             # genome and the new flat_file genome.
             pair_key = f"{file_ref}_{retain_ref}"
@@ -941,6 +943,9 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                             expect=False, eval_id="GNM_002")
         gnm.check_attribute("seq", seq_set | {constants.EMPTY_GENOME_SEQ},
                             expect=False, eval_id="GNM_003")
+        gnm.check_attribute("annotation_status", {"final"},
+                            expect=False, eval_id="GNM_004", fail="warning")
+
 
 
         # If the genome is being added, and if it has an accession,
@@ -950,14 +955,17 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         # accession data, so no need to check for 'replace' tickets.
         if gnm.accession != "":
             gnm.check_attribute("accession", accession_set,
-                                expect=False, eval_id="GNM_004")
+                                expect=False, eval_id="GNM_005")
 
     # 'replace' ticket checks.
     else:
         gnm.check_attribute("id", phage_id_set,
-                            expect=True, eval_id="GNM_005")
-        gnm.check_attribute("seq", seq_set,
                             expect=True, eval_id="GNM_006")
+        gnm.check_attribute("seq", seq_set,
+                            expect=True, eval_id="GNM_007")
+        gnm.check_attribute("annotation_status", {"draft"},
+                            expect=False, eval_id="GNM_008", fail="warning")
+
 
     # Depending on the annotation_status of the genome,
     # CDS features are expected to contain or not contain descriptions.
@@ -972,63 +980,63 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
     if gnm.annotation_status == "draft":
         gnm.check_attribute("name", {check_name}, expect=True,
-                            eval_id="GNM_007", fail="warning")
-        gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0,
-                            eval_id="GNM_008", fail="warning")
-        gnm.check_attribute("accession", {""}, expect=True,
                             eval_id="GNM_009", fail="warning")
+        gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0,
+                            eval_id="GNM_010", fail="warning")
+        gnm.check_attribute("accession", {""}, expect=True,
+                            eval_id="GNM_011", fail="warning")
 
     elif gnm.annotation_status == "final":
         gnm.check_attribute("name", {check_name}, expect=False,
-                            eval_id="GNM_010", fail="warning")
+                            eval_id="GNM_012", fail="warning")
         gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
-                            eval_id="GNM_011", fail="warning")
+                            eval_id="GNM_013", fail="warning")
 
     else:
         pass
 
     check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)
     gnm.check_attribute("id", {check_id}, expect=False,
-                        eval_id="GNM_012", fail="warning")
+                        eval_id="GNM_014", fail="warning")
     gnm.check_attribute("annotation_status", constants.ANNOTATION_STATUS_SET,
-                        expect=True, eval_id="GNM_013")
-    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET,
-                        expect=True, eval_id="GNM_014")
-    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET,
                         expect=True, eval_id="GNM_015")
+    gnm.check_attribute("annotation_author", constants.ANNOTATION_AUTHOR_SET,
+                        expect=True, eval_id="GNM_016")
+    gnm.check_attribute("retrieve_record", constants.RETRIEVE_RECORD_SET,
+                        expect=True, eval_id="GNM_017")
     gnm.check_attribute("cluster", cluster_set,
-                        expect=True, eval_id="GNM_016", fail="warning")
+                        expect=True, eval_id="GNM_018", fail="warning")
     gnm.check_attribute("subcluster", subcluster_set | {"none"},
-                        expect=True, eval_id="GNM_017", fail="warning")
-    gnm.check_attribute("translation_table", {11},
                         expect=True, eval_id="GNM_019", fail="warning")
-    gnm.check_attribute("host_genus", host_genus_set,
+    gnm.check_attribute("translation_table", {11},
                         expect=True, eval_id="GNM_020", fail="warning")
-    gnm.check_cluster_structure(eval_id="GNM_021", fail="warning")
-    gnm.check_subcluster_structure(eval_id="GNM_022", fail="warning")
-    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_023")
-    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_024")
-    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_025")
-    gnm.check_magnitude("gc", "<", 100.0001, eval_id="GNM_026")
-    gnm.check_magnitude("length", ">", 0, eval_id="GNM_027")
-    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_028",
+    gnm.check_attribute("host_genus", host_genus_set,
+                        expect=True, eval_id="GNM_021", fail="warning")
+    gnm.check_cluster_structure(eval_id="GNM_022", fail="warning")
+    gnm.check_subcluster_structure(eval_id="GNM_023", fail="warning")
+    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_024")
+    gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_025")
+    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_026")
+    gnm.check_magnitude("gc", "<", 100.0001, eval_id="GNM_027")
+    gnm.check_magnitude("length", ">", 0, eval_id="GNM_028")
+    gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_029",
                         fail="warning")
 
     # TODO set trna=True and tmrna=True after they are implemented.
     gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna=False,
-                                  strand=False, eval_id="GNM_029")
+                                  strand=False, eval_id="GNM_030")
 
     if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,
-                              eval_id="GNM_030", fail="warning")
+                              eval_id="GNM_031", fail="warning")
 
     if eval_flags["check_id_typo"]:
         gnm.compare_two_attributes("id", "_description_name", expect_same=True,
-                                   eval_id="GNM_031", fail="warning")
-        gnm.compare_two_attributes("id", "_source_name", expect_same=True,
                                    eval_id="GNM_032", fail="warning")
-        gnm.compare_two_attributes("id", "_organism_name", expect_same=True,
+        gnm.compare_two_attributes("id", "_source_name", expect_same=True,
                                    eval_id="GNM_033", fail="warning")
+        gnm.compare_two_attributes("id", "_organism_name", expect_same=True,
+                                   eval_id="GNM_034", fail="warning")
 
     if eval_flags["check_host_typo"]:
 
@@ -1036,26 +1044,42 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         # Get a set of host genus synonyms and use check_attribute()
 
         gnm.compare_two_attributes("host_genus", "_description_host_genus",
-                                   expect_same=True, eval_id="GNM_034",
-                                   fail="warning")
-        gnm.compare_two_attributes("host_genus", "_source_host_genus",
                                    expect_same=True, eval_id="GNM_035",
                                    fail="warning")
-        gnm.compare_two_attributes("host_genus", "_organism_host_genus",
+        gnm.compare_two_attributes("host_genus", "_source_host_genus",
                                    expect_same=True, eval_id="GNM_036",
+                                   fail="warning")
+        gnm.compare_two_attributes("host_genus", "_organism_host_genus",
+                                   expect_same=True, eval_id="GNM_037",
                                    fail="warning")
 
     if eval_flags["check_author"]:
         if gnm.annotation_author == 1:
             gnm.check_authors(check_set=constants.AUTHOR_SET,
-                              expect=True, eval_id="GNM_037", fail="warning")
+                              expect=True, eval_id="GNM_038", fail="warning")
             gnm.check_authors(check_set=set(["lastname", "firstname"]),
-                              expect=False, eval_id="GNM_038", fail="warning")
+                              expect=False, eval_id="GNM_039", fail="warning")
         else:
             gnm.check_authors(check_set=constants.AUTHOR_SET,
-                              expect=False, eval_id="GNM_039", fail="warning")
+                              expect=False, eval_id="GNM_040", fail="warning")
 
 
+
+
+# TODO unittest.
+# This function is meant to check the current genome in mysql.
+def check_retain_genome(gnm, tkt_type, eval_flags):
+    """Check a Genome object for errors.
+
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :param tkt: A pdm_utils Ticket object.
+    :type tkt: Ticket
+    """
+    logger.info(f"Checking genome: {gnm.id}, {gnm.type}.")
+    if eval_flags["check_author"]:
+        gnm.check_attribute("annotation_status", {"draft"},
+                            expect=True, eval_id="GNM2_001", fail="warning")
 
 
 def check_source(src_ftr, eval_flags, host_genus=""):
@@ -1168,6 +1192,12 @@ def compare_genomes(genome_pair, eval_flags):
         else:
             genome_pair.compare_attribute("name",
                 expect_same=True, eval_id="GP_013", fail="warning")
+
+            # TODO this is tricky. Yes, if replacing, you only expect a
+            # final -> final, or unknown -> unknown. However, if the
+            # check_replace = True, such as when a new final is available from
+            # phagesdb, then you only expect to go from draft -> final,
+            # and you don't expect the current MySQL genome to be final.
             genome_pair.compare_attribute("annotation_status",
                 expect_same=True, eval_id="GP_014", fail="warning")
             genome_pair.compare_attribute("accession",

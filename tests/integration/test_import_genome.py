@@ -1600,8 +1600,6 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.bndl = bundle.Bundle()
 
 
-
-
     def test_review_evaluation_list_1(self):
         """Verify no need for user input if there are no 'warning' evals."""
         eval_list = [self.eval_correct1, self.eval_correct2, self.eval_correct3]
@@ -1631,8 +1629,19 @@ class TestImportGenomeMain7(unittest.TestCase):
         with self.subTest():
             self.assertFalse(exit)
 
-
-
+    def test_review_evaluation_list_3(self):
+        """Verify no call for user input, and
+        verify change to status when interactive=False."""
+        eval_list = [self.eval_correct1, self.eval_warning1, self.eval_correct2]
+        exit = import_genome.review_evaluation_list(eval_list, interactive=False)
+        with self.subTest():
+            self.assertEqual(self.eval_correct1.status, "correct")
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertEqual(self.eval_correct3.status, "correct")
+        with self.subTest():
+            self.assertFalse(exit)
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_list_4(self, ask_mock):
@@ -1649,7 +1658,6 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertEqual(self.eval_warning2.status, "error")
         with self.subTest():
             self.assertFalse(exit)
-
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_list_5(self, ask_mock):
@@ -1678,6 +1686,8 @@ class TestImportGenomeMain7(unittest.TestCase):
         no genomes in genome_dict,
         no genome_pairs in genome_pair_dict."""
         import_genome.review_evaluations(self.bndl, interactive=True)
+        # The only thing tested is that the function still runs
+        # when there is no data provided.
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
@@ -1690,8 +1700,17 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 
+    def test_review_evaluations_3(self):
+        """Verify results when bundle has:
+        one error evaluation;
+        interactive=False."""
+        self.bndl.evaluations = [self.eval_warning1]
+        import_genome.review_evaluations(self.bndl, interactive=False)
+        self.assertEqual(self.bndl.evaluations[0].status, "error")
+
+
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_3(self, ask_mock):
+    def test_review_evaluations_4(self, ask_mock):
         """Verify results when bundle has:
         a ticket with one error evaluation."""
         ask_mock.side_effect = [True]
@@ -1702,7 +1721,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_4(self, ask_mock):
+    def test_review_evaluations_5(self, ask_mock):
         """Verify results when bundle has:
         three genomes, two with one error evaluation."""
         ask_mock.side_effect = [True, True]
@@ -1725,7 +1744,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_5(self, ask_mock):
+    def test_review_evaluations_6(self, ask_mock):
         """Verify results when bundle has:
         one genome with three CDS features, two with one error evaluation."""
         ask_mock.side_effect = [True, True]
@@ -1747,7 +1766,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_6(self, ask_mock):
+    def test_review_evaluations_7(self, ask_mock):
         """Verify results when bundle has:
         one genome with three source features, two with one error evaluation."""
         ask_mock.side_effect = [True, True]
@@ -1769,7 +1788,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_7(self, ask_mock):
+    def test_review_evaluations_8(self, ask_mock):
         """Verify results when bundle has:
         three genome_pairs, two with one error evaluation."""
         ask_mock.side_effect = [True, True]
@@ -1792,7 +1811,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_8(self, ask_mock):
+    def test_review_evaluations_9(self, ask_mock):
         """Verify results when bundle has:
         one ticket with four evaluations, three that are errors,
         three CDS features, each with one error evaluation, and

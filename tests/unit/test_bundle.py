@@ -403,61 +403,6 @@ class TestBundleClass2(unittest.TestCase):
 
 
 
-class TestBundleClass3(unittest.TestCase):
-
-
-    def setUp(self):
-        self.bndl = bundle.Bundle()
-        self.tkt = ticket.GenomeTicket()
-        self.gnm = genome.Genome()
-        self.bndl.genome_dict["flat_file"] = self.gnm
-        self.bndl.ticket = self.tkt
-
-
-
-
-    def test_check_compatible_type_and_annotation_status_1(self):
-        """Verify that no error is produced with "add" type and "draft"
-        annotation_status."""
-        self.tkt.type = "add"
-        self.gnm.annotation_status = "draft"
-        self.bndl.check_compatible_type_and_annotation_status("flat_file",
-            eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.bndl.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
-
-    def test_check_compatible_type_and_annotation_status_2(self):
-        """Verify that an error is produced with "add" type and "final"
-        annotation_status."""
-        self.tkt.type = "add"
-        self.gnm.annotation_status = "final"
-        self.bndl.check_compatible_type_and_annotation_status("flat_file")
-        with self.subTest():
-            self.assertEqual(self.bndl.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.bndl.evaluations[0].id)
-
-    def test_check_compatible_type_and_annotation_status_3(self):
-        """Verify that no error is produced with "replace" type and "final"
-        annotation_status."""
-        self.tkt.type = "replace"
-        self.gnm.annotation_status = "final"
-        self.bndl.check_compatible_type_and_annotation_status("flat_file")
-        self.assertEqual(self.bndl.evaluations[0].status, "correct")
-
-    def test_check_compatible_type_and_annotation_status_4(self):
-        """Verify that an error is produced with "replace" type and "draft"
-        annotation_status."""
-        self.tkt.type = "replace"
-        self.gnm.annotation_status = "draft"
-        self.bndl.check_compatible_type_and_annotation_status("flat_file")
-        self.assertEqual(self.bndl.evaluations[0].status, "error")
-
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
