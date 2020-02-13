@@ -725,6 +725,8 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.assertTrue(sys_exit_mock.called)
 
 
+    # TODO no tests for main() when output_folder is invalid
+    # TODO no tests for main() when log_file is invalid
 
 
 class TestImportGenomeMain4(unittest.TestCase):
@@ -1234,7 +1236,7 @@ class TestImportGenomeMain6(unittest.TestCase):
                                             "test_import_table_1.csv")
         self.invalid_import_table_file = Path(test_files_path,
                                             "test_import_table_2.csv")
-        self.output_folder = Path(self.base_dir, "output_folder")
+        self.output_folder = Path(self.base_dir, import_genome.RESULTS_FOLDER)
 
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
@@ -1251,15 +1253,17 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
 
         self.date = time.strftime("%Y%m%d")
-        self.results_folder1 = "{}_results".format(self.date)
-        self.results_folder2 = "{}_results_1".format(self.date)
-        self.results_folder3 = "{}_results_2".format(self.date)
+        # self.results_folder1 = "{}_results".format(self.date)
+        # self.results_folder2 = "{}_results_1".format(self.date)
+        # self.results_folder3 = "{}_results_2".format(self.date)
+        # self.exp_success = Path(self.output_folder, self.results_folder1, "success")
 
-        self.exp_success = Path(self.output_folder, self.results_folder1, "success")
+
+        self.exp_success = Path(self.output_folder, "success")
         self.exp_success_tkt_table = Path(self.exp_success, "import_tickets.csv")
         self.exp_success_genomes = Path(self.exp_success, "genomes")
 
-        self.exp_fail = Path(self.output_folder, self.results_folder1, "fail")
+        self.exp_fail = Path(self.output_folder, "fail")
         self.exp_fail_tkt_table = Path(self.exp_fail, "import_tickets.csv")
         self.exp_fail_genomes = Path(self.exp_fail, "genomes")
 
@@ -1429,85 +1433,86 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertTrue(self.exp_fail_genomes.exists())
 
 
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
-    @patch("sys.exit")
-    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_4(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
-        """Verify data_io is successful with two previously-existing
-        results folders and no items in any output dataset."""
-        self.genome_folder.mkdir()
-        self.output_folder.mkdir()
-        self.flat_file1.touch()
-        self.flat_file2.touch()
-
-        self.results_folder1 = Path(self.output_folder, self.results_folder1)
-        self.results_folder1.mkdir()
-        self.results_folder2 = Path(self.output_folder, self.results_folder2)
-        self.results_folder2.mkdir()
-        self.results_folder3 = Path(self.output_folder, self.results_folder3)
-        get_count_mock.return_value = 0
-        pft_mock.return_value = ([], [], [], [], {})
-        import_genome.data_io(engine=self.engine,
-            genome_folder=self.genome_folder,
-            import_table_file=self.valid_import_table_file,
-            output_folder=self.output_folder)
-
-        input_genomes_count = 0
-        for item in self.genome_folder.iterdir():
-            input_genomes_count += 1
-
-        with self.subTest():
-            self.assertTrue(pft_mock.called)
-        with self.subTest():
-            self.assertFalse(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
-        with self.subTest():
-            self.assertTrue(self.results_folder3.exists())
-        with self.subTest():
-            self.assertFalse(self.exp_success_tkt_table.exists())
-        with self.subTest():
-            self.assertFalse(self.exp_fail_tkt_table.exists())
-        with self.subTest():
-            self.assertFalse(self.exp_success_genomes.exists())
-        with self.subTest():
-            self.assertFalse(self.exp_fail_genomes.exists())
-        with self.subTest():
-            self.assertEqual(input_genomes_count, 2)
-
-
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
-    @patch("sys.exit")
-    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
-        """Verify data_io is not successful when results folder is invalid."""
-        self.genome_folder.mkdir()
-        self.output_folder.mkdir()
-        self.flat_file1.touch()
-        self.flat_file2.touch()
-
-        self.results_folder1 = Path(self.output_folder, self.results_folder1)
-        self.results_folder1.mkdir()
-        self.results_folder2 = Path(self.output_folder, self.results_folder2)
-        self.results_folder2.mkdir()
-        self.results_folder3 = Path(self.output_folder, self.results_folder3)
-        self.results_folder3.mkdir()
-        get_count_mock.return_value = 0
-        pft_mock.return_value = ([], [], [], [], {})
-        import_genome.data_io(engine=self.engine,
-            genome_folder=self.genome_folder,
-            import_table_file=self.valid_import_table_file,
-            output_folder=self.output_folder)
-        with self.subTest():
-            self.assertTrue(pft_mock.called)
-        with self.subTest():
-            self.assertTrue(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
+    # TODO probably no longer needed. The folder testing has been moved to main()
+    # # TODO remove log_evaluations patch if it is no longer called in data_io.
+    # @patch("pdm_utils.pipelines.import_genome.log_evaluations")
+    # @patch("sys.exit")
+    # @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
+    # @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    # def test_data_io_4(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
+    #     """Verify data_io is successful with two previously-existing
+    #     results folders and no items in any output dataset."""
+    #     self.genome_folder.mkdir()
+    #     self.output_folder.mkdir()
+    #     self.flat_file1.touch()
+    #     self.flat_file2.touch()
+    #
+    #     self.results_folder1 = Path(self.output_folder, self.results_folder1)
+    #     self.results_folder1.mkdir()
+    #     self.results_folder2 = Path(self.output_folder, self.results_folder2)
+    #     self.results_folder2.mkdir()
+    #     self.results_folder3 = Path(self.output_folder, self.results_folder3)
+    #     get_count_mock.return_value = 0
+    #     pft_mock.return_value = ([], [], [], [], {})
+    #     import_genome.data_io(engine=self.engine,
+    #         genome_folder=self.genome_folder,
+    #         import_table_file=self.valid_import_table_file,
+    #         output_folder=self.output_folder)
+    #
+    #     input_genomes_count = 0
+    #     for item in self.genome_folder.iterdir():
+    #         input_genomes_count += 1
+    #
+    #     with self.subTest():
+    #         self.assertTrue(pft_mock.called)
+    #     with self.subTest():
+    #         self.assertFalse(sys_exit_mock.called)
+    #     # with self.subTest():
+    #     #     self.assertTrue(log_eval_mock.called)
+    #     with self.subTest():
+    #         self.assertTrue(self.results_folder3.exists())
+    #     with self.subTest():
+    #         self.assertFalse(self.exp_success_tkt_table.exists())
+    #     with self.subTest():
+    #         self.assertFalse(self.exp_fail_tkt_table.exists())
+    #     with self.subTest():
+    #         self.assertFalse(self.exp_success_genomes.exists())
+    #     with self.subTest():
+    #         self.assertFalse(self.exp_fail_genomes.exists())
+    #     with self.subTest():
+    #         self.assertEqual(input_genomes_count, 2)
+    #
+    #
+    # # TODO remove log_evaluations patch if it is no longer called in data_io.
+    # @patch("pdm_utils.pipelines.import_genome.log_evaluations")
+    # @patch("sys.exit")
+    # @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
+    # @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    # def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
+    #     """Verify data_io is not successful when results folder is invalid."""
+    #     self.genome_folder.mkdir()
+    #     self.output_folder.mkdir()
+    #     self.flat_file1.touch()
+    #     self.flat_file2.touch()
+    #
+    #     self.results_folder1 = Path(self.output_folder, self.results_folder1)
+    #     self.results_folder1.mkdir()
+    #     self.results_folder2 = Path(self.output_folder, self.results_folder2)
+    #     self.results_folder2.mkdir()
+    #     self.results_folder3 = Path(self.output_folder, self.results_folder3)
+    #     self.results_folder3.mkdir()
+    #     get_count_mock.return_value = 0
+    #     pft_mock.return_value = ([], [], [], [], {})
+    #     import_genome.data_io(engine=self.engine,
+    #         genome_folder=self.genome_folder,
+    #         import_table_file=self.valid_import_table_file,
+    #         output_folder=self.output_folder)
+    #     with self.subTest():
+    #         self.assertTrue(pft_mock.called)
+    #     with self.subTest():
+    #         self.assertTrue(sys_exit_mock.called)
+    #     # with self.subTest():
+    #     #     self.assertTrue(log_eval_mock.called)
 
 
     # TODO remove log_evaluations patch if it is no longer called in data_io.

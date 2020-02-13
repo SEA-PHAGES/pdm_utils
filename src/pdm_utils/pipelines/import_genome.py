@@ -28,7 +28,8 @@ from pdm_utils.functions import run_modes
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-
+CURRENT_DATE = date.today().strftime("%Y%m%d")
+RESULTS_FOLDER = f"{CURRENT_DATE}_results"
 
 
 def main(unparsed_args_list):
@@ -46,19 +47,28 @@ def main(unparsed_args_list):
                                         expect=True)
     args.import_table = basic.set_path(args.import_table, kind="file",
                                        expect=True)
-    args.log_file = pathlib.Path(args.output_folder, args.log_file)
-    args.log_file = basic.set_path(args.log_file, kind="file", expect=False)
+
+    results_folder = pathlib.Path(RESULTS_FOLDER)
+    results_path = basic.make_new_dir(args.output_folder,
+                                      results_folder, attempt=10)
+    if results_path is None:
+        print("Unable to create output_folder.")
+        sys.exit(1)
+
+    args.log_file = pathlib.Path(results_path, args.log_file)
+
+    # TODO no longer needed since log file is created within results folder,
+    # which has already been validated and newly-created.
+    # args.log_file = basic.set_path(args.log_file, kind="file", expect=False)
 
     # Set up root logger.
     logging.basicConfig(filename=args.log_file, filemode="w",
                         level=logging.DEBUG,
                         format="%(name)s - %(levelname)s - %(message)s")
-    logger.info("Folder and file arguments verified.")
+    logger.info("Command line arguments verified.")
 
     # Get connection to database.
     engine = mysqldb.connect_to_db(args.database)
-
-
     logger.info(f"Connected to database: {args.database}.")
 
     # If everything checks out, pass on args for data input/output:
@@ -70,7 +80,7 @@ def main(unparsed_args_list):
             prod_run=args.prod_run,
             description_field=args.description_field,
             run_mode=args.run_mode,
-            output_folder=args.output_folder,
+            output_folder=results_path,
             interactive=args.interactive)
 
     logger.info("Import complete.")
@@ -174,13 +184,13 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     # Create output directories
 
     logger.info("Setting up environment.")
-    CURRENT_DATE = date.today().strftime("%Y%m%d")
-    results_folder = f"{CURRENT_DATE}_results"
-    results_folder = pathlib.Path(results_folder)
-    results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
-    if results_path is None:
-        logger.info("Unable to create output_folder.")
-        sys.exit(1)
+
+    # results_folder = f"{CURRENT_DATE}_results"
+    # results_folder = pathlib.Path(results_folder)
+    # results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
+    # if results_path is None:
+    #     logger.info("Unable to create output_folder.")
+    #     sys.exit(1)
 
     # Get the files to process.
     files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
@@ -223,7 +233,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     logger.info("Logging successful tickets and files.")
     headers = constants.IMPORT_TABLE_STRUCTURE["order"]
     if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
-        success_path = pathlib.Path(results_path, "success")
+        success_path = pathlib.Path(output_folder, "success")
         success_path.mkdir()
         if len(success_ticket_list) > 0:
             success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
@@ -238,7 +248,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     logger.info("Logging failed tickets and files.")
     if (len(failed_ticket_list) > 0 or len(failed_filepath_list) > 0):
-        failed_path = pathlib.Path(results_path, "fail")
+        failed_path = pathlib.Path(output_folder, "fail")
         failed_path.mkdir()
         if len(failed_ticket_list) > 0:
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
@@ -290,9 +300,14 @@ def log_evaluations(dict_of_dict_of_lists):
             for evl in evl_list:
                 msg3 = (f"Evaluation: {evl.id}. "
                         f"Status: {evl.status}. "
-                        f"Definition: {evl.definition}. "
-                        f"Result: {evl.result}.")
-                logger.info(msg3)
+                        f"Definition: {evl.definition} "
+                        f"Result: {evl.result}")
+                if evl.status == "warning":
+                    logger.warning(msg3)
+                elif evl.status == "error":
+                    logger.error(msg3)
+                else:
+                    logger.info(msg3)
 
 
 
@@ -340,7 +355,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         tkt_summary = (f"ID: {tkt.id}. "
                        f"Type: {tkt.type}. "
                        f"PhageID: {tkt.phage_id}.")
-        logger.info(f"Checking ticket structure for: {tkt_summary}.")
+        logger.info(f"Checking ticket structure for: {tkt_summary}")
         check_ticket(tkt,
                      type_set=constants.IMPORT_TICKET_TYPE_SET,
                      description_field_set=constants.DESCRIPTION_FIELD_SET,
@@ -353,8 +368,8 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         for evl in tkt.evaluations:
             evl_summary = (f"Evaluation: {evl.id}. "
                            f"Status: {evl.status}. "
-                           f"Definition: {evl.definition}. "
-                           f"Result: {evl.result}.")
+                           f"Definition: {evl.definition} "
+                           f"Result: {evl.result}")
             if evl.status == "error":
                 tkt_errors += 1
                 logger.error(evl_summary)
@@ -364,7 +379,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         x += 1
 
     if tkt_errors > 0:
-        logger.info("Error generating tickets from import table.")
+        logger.error("Error generating tickets from import table.")
         return None
     else:
         logger.info("Tickets were successfully generated from import table.")
@@ -458,7 +473,6 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
         review_evaluations(bndl, interactive=interactive)
         bndl.check_for_errors()
 
-        logger.info("Logging evaluations.")
         dict_of_eval_lists = bndl.get_evaluations()
         log_evaluations({bndl.id: dict_of_eval_lists})
         evaluation_dict[bndl.id] = dict_of_eval_lists
