@@ -23,8 +23,8 @@ from pdm_utils.functions import run_modes
 # Add a logger named after this module. Then add a null handler, which
 # suppresses any output statements. This allows other modules that call this
 # module to define the handler and output formats. If this module is the
-# main module being called, the top level main function instantiates
-# the root logger and configuration.
+# main module being called, the top level main function configures
+# the root logger and primary file handle.
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -195,8 +195,11 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     # Get the files to process.
     files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
     if len(files_to_process) == 0:
-        logger.info("There are no flat files to evaluate.")
+        logger.error("There are no flat files to evaluate.")
         sys.exit(1)
+    else:
+        log_folder_path = pathlib.Path(output_folder, "file_logs")
+        log_folder_path.mkdir()
 
     # Get the tickets.
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
@@ -207,10 +210,11 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                                   constants.IMPORT_TABLE_STRUCTURE)
 
     if ticket_dict is None:
-        logger.info("Invalid import table. Unable to evaluate flat files.")
+        logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
 
     start_count = mysqldb.get_phage_table_count(engine)
+
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(
@@ -219,7 +223,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                         prod_run=prod_run,
                         genome_id_field=genome_id_field,
                         host_genus_field=host_genus_field,
-                        interactive=interactive)
+                        interactive=interactive,
+                        log_folder_path=log_folder_path)
 
     final_count = mysqldb.get_phage_table_count(engine)
 
@@ -279,7 +284,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
 
 
-def log_evaluations(dict_of_dict_of_lists):
+def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
     """Export evaluations to log.
     """
     # Structure of the evaluation dictionary:
@@ -287,6 +292,15 @@ def log_evaluations(dict_of_dict_of_lists):
     #          "ticket": [eval_object1, ...],
     #          "genome": [eval_object1, ...]},
     #      2: {...}}
+
+    # Create a new logging filehandle to only capture errors
+    # specific to the particular flatfile.
+    if logfile_path is not None:
+        flatfile_logger = logging.FileHandler(logfile_path, mode="w")
+        flatfile_logger.setLevel(logging.ERROR)
+        formatter = logging.Formatter('%(levelname)s: %(message)s')
+        flatfile_logger.setFormatter(formatter)
+        logger.addHandler(flatfile_logger)
 
     logger.info("Logging all evaluations.")
     for key1 in dict_of_dict_of_lists:
@@ -298,16 +312,21 @@ def log_evaluations(dict_of_dict_of_lists):
             logger.info(msg2)
             evl_list = dict_of_lists[key2]
             for evl in evl_list:
-                msg3 = (f"Evaluation: {evl.id}. "
-                        f"Status: {evl.status}. "
-                        f"Definition: {evl.definition} "
-                        f"Result: {evl.result}")
+                msg3 = str(evl)
+                # msg3 = (f"Evaluation: {evl.id}. "
+                #         f"Status: {evl.status}. "
+                #         f"Definition: {evl.definition} "
+                #         f"Result: {evl.result}")
                 if evl.status == "warning":
                     logger.warning(msg3)
                 elif evl.status == "error":
                     logger.error(msg3)
                 else:
                     logger.info(msg3)
+
+    if logfile_path is not None:
+        flatfile_logger.close()
+        logger.removeHandler(flatfile_logger)
 
 
 
@@ -385,9 +404,11 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         logger.info("Tickets were successfully generated from import table.")
         return ticket_dict
 
+# TODO unittest log_folder_path parameter that has been added.
 def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               prod_run=False, genome_id_field="",
-                              host_genus_field="", interactive=False):
+                              host_genus_field="", interactive=False,
+                              log_folder_path=None):
     """Process GenBank-formatted flat files.
 
     :param ticket_dict:
@@ -474,7 +495,21 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
         bndl.check_for_errors()
 
         dict_of_eval_lists = bndl.get_evaluations()
-        log_evaluations({bndl.id: dict_of_eval_lists})
+
+        #HERE
+        # Output to new file: logfile='<path>/filepath.stem + .log'
+        if log_folder_path is not None:
+            if file_ref in bndl.genome_dict.keys():
+                gnm = bndl.genome_dict[file_ref]
+                gnm_id = gnm.id
+            else:
+                gnm_id = ""
+            logfile_path = pathlib.Path(log_folder_path,
+                                        gnm_id + "__" + filepath.stem + ".log")
+        else:
+            logfile_path = None
+
+        log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
         evaluation_dict[bndl.id] = dict_of_eval_lists
         # evaluation_dict[bndl.id] = bndl.get_evaluations()
 
@@ -516,6 +551,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
             evaluation_dict[bndl.id] = bndl.get_evaluations()
             failed_ticket_list.append(bndl.ticket.data_dict)
             bundle_count += 1
+
+        # TODO add step to log which tickets are unmatched?
+        # Or has this already been done above?
 
     return (success_ticket_list, failed_ticket_list, success_filepath_list,
             failed_filepath_list, evaluation_dict)
@@ -1230,10 +1268,8 @@ def check_trna(trna_obj, eval_flags):
 
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
     """Import data into the MySQL database."""
-    IMPORT_DATE = datetime.today().replace(hour=0,
-                                           minute=0,
-                                           second=0,
-                                           microsecond=0)
+    IMPORT_DATE = datetime.today().replace(hour=0, minute=0,
+                                           second=0, microsecond=0)
 
     if bndl._errors == 0:
         import_gnm = bndl.genome_dict[gnm_key]

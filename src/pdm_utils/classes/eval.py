@@ -8,3 +8,9 @@ class Eval:
         self.status = status # untested, ignored, correct, warning, error.
         self.result = result # Customized message reporting details of
                              # the evaluation.
+
+    def __str__(self):
+        return (f"Evaluation ID: {self.id}. "
+                f"Status: {self.status}. "
+                f"Definition: {self.definition} "
+                f"Result: {self.result}")
