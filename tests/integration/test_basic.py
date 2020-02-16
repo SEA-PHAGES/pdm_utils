@@ -2,29 +2,29 @@
 
 import argparse
 import csv
-from datetime import datetime
-import os
 from pathlib import Path
-import shutil
+import tempfile
 import unittest
 from unittest.mock import patch
 from pdm_utils.functions import basic
 
+unittest_file = Path(__file__)
+unittest_dir = unittest_file.parent
 
-
+TMPDIR_PREFIX = "import_"
+# Can set TMPDIR_BASE to string such as "/tmp/" to track tmp directory location.
+TMPDIR_BASE = None
 
 
 class TestBasicFunctions1(unittest.TestCase):
 
     def setUp(self):
-        self.test_filepath1 = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_flat_file_1.gb")
 
-        self.test_directory1 = \
-            os.path.join(os.path.dirname(__file__), \
-            "test_files/test_directory1")
+        self.test_filepath1 = Path(unittest_dir,
+                                "test_files/test_flat_file_1.gb")
 
+        self.test_directory1 = Path(unittest_dir,
+                                "test_files/test_directory1")
 
 
 
@@ -90,15 +90,14 @@ class TestBasicFunctions1(unittest.TestCase):
         partial_path = "/fake/path"
         input_path = "~" + partial_path
         expanded_path = basic.expand_path(input_path)
-        home_dir = os.path.expanduser("~")
-        expected_path = home_dir + partial_path
+        home_dir = Path("~").expanduser()
+        expected_path = str(home_dir) + partial_path
         self.assertEqual(expanded_path, expected_path)
 
     def test_expand_path_2(self):
         """Verify no change when an absoluate path is provided."""
         input_path = "/fake/path"
         expanded_path = basic.expand_path(input_path)
-        home_dir = os.path.expanduser("~")
         expected_path = input_path
         self.assertEqual(expanded_path, expected_path)
 
@@ -107,8 +106,8 @@ class TestBasicFunctions1(unittest.TestCase):
         partial_path = "/fake/path"
         input_path = "." + partial_path
         expanded_path = basic.expand_path(input_path)
-        local_path = os.path.abspath(".")
-        expected_path = local_path + partial_path
+        local_path = Path(".").resolve()
+        expected_path = str(local_path) + partial_path
         self.assertEqual(expanded_path, expected_path)
 
 
@@ -121,37 +120,37 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_verify_path_2(self):
         """Verify a fake file produces an error when 'file' is indicated."""
-        result = basic.verify_path(self.test_filepath1 + "abcxyz", "file")
+        result = basic.verify_path(str(self.test_filepath1) + "abcxyz", "file")
         self.assertFalse(result)
 
     def test_verify_path_3(self):
         """Verify a true directory produces no error when
         'directory' is indicated."""
-        result = basic.verify_path(self.test_directory1, "dir")
+        result = basic.verify_path(str(self.test_directory1), "dir")
         self.assertTrue(result)
 
     def test_verify_path_4(self):
         """Verify a fake directory produces an error when
         'directory' is indicated."""
-        result = basic.verify_path(self.test_directory1 + "abcxyz", "dir")
+        result = basic.verify_path(str(self.test_directory1) + "abcxyz", "dir")
         self.assertFalse(result)
 
     def test_verify_path_5(self):
         """Verify a true directory produces no error when
         'None' is indicated."""
-        result = basic.verify_path(self.test_directory1)
+        result = basic.verify_path(str(self.test_directory1))
         self.assertTrue(result)
 
     def test_verify_path_6(self):
         """Verify a fake directory produces an error when
         'None' is indicated."""
-        result = basic.verify_path(self.test_directory1 + "abcxyz")
+        result = basic.verify_path(str(self.test_directory1) + "abcxyz")
         self.assertFalse(result)
 
     def test_verify_path_7(self):
         """Verify a true directory produces an error when
         'invalid' is indicated."""
-        result = basic.verify_path(self.test_directory1, "invalid")
+        result = basic.verify_path(str(self.test_directory1), "invalid")
         self.assertFalse(result)
 
 
@@ -159,8 +158,7 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_parse_flag_file_1(self):
         """Verify that all three rows are parsed correctly."""
-        flag_file = os.path.join(os.path.dirname(__file__),
-                                 "test_files/test_flag_file_1.csv")
+        flag_file = Path(unittest_dir, "test_files/test_flag_file_1.csv")
         flag_dict = basic.parse_flag_file(flag_file)
         with self.subTest():
             self.assertEqual(len(flag_dict.keys()), 3)
@@ -173,8 +171,7 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_parse_flag_file_2(self):
         """Verify that only one row is parsed correctly."""
-        flag_file = os.path.join(os.path.dirname(__file__),
-                                 "test_files/test_flag_file_2.csv")
+        flag_file = Path(unittest_dir, "test_files/test_flag_file_2.csv")
         flag_dict = basic.parse_flag_file(flag_file)
         self.assertEqual(len(flag_dict.keys()), 1)
 
@@ -197,21 +194,22 @@ class TestBasicFunctions1(unittest.TestCase):
 class TestBasicFunctions2(unittest.TestCase):
 
     def setUp(self):
-        self.base_dir = \
-            os.path.join(os.path.dirname(__file__),
-            "test_wd/new_dir")
-        os.mkdir(self.base_dir)
+        self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,
+                                                  dir=TMPDIR_BASE)
+        self.base_dir = Path(self.tmpdir.name)
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
 
 
 
 
     def test_make_new_dir_1(self):
         """Verify new directory is created."""
-        base = Path(self.base_dir)
         test_dir = Path("test_dir")
-        output_path = basic.make_new_dir(base, test_dir)
+        output_path = basic.make_new_dir(self.base_dir, test_dir)
         exp_dir = "test_dir"
-        exp_path = Path(base, exp_dir)
+        exp_path = Path(self.base_dir, exp_dir)
         with self.subTest():
             self.assertTrue(exp_path.is_dir())
         with self.subTest():
@@ -220,21 +218,19 @@ class TestBasicFunctions2(unittest.TestCase):
     def test_make_new_dir_2(self):
         """Verify no new directory is created when a directory already
         exists and attempt = 1."""
-        base = Path(self.base_dir)
         new_dir = Path("test_dir")
-        Path(base, new_dir).mkdir()
-        output_path = basic.make_new_dir(base, new_dir)
+        Path(self.base_dir, new_dir).mkdir()
+        output_path = basic.make_new_dir(self.base_dir, new_dir)
         self.assertIsNone(output_path)
 
     def test_make_new_dir_3(self):
         """Verify new directory is created when a directory already
         exists and attempt = 2."""
-        base = Path(self.base_dir)
         new_dir = Path("test_dir")
-        Path(base, new_dir).mkdir()
-        output_path = basic.make_new_dir(base, new_dir, attempt=2)
+        Path(self.base_dir, new_dir).mkdir()
+        output_path = basic.make_new_dir(self.base_dir, new_dir, attempt=2)
         exp_dir = Path("test_dir_1")
-        exp_path = Path(base, exp_dir)
+        exp_path = Path(self.base_dir, exp_dir)
         with self.subTest():
             self.assertTrue(exp_path.is_dir())
         with self.subTest():
@@ -243,15 +239,14 @@ class TestBasicFunctions2(unittest.TestCase):
     def test_make_new_dir_4(self):
         """Verify new directory is created when two directories already
         exists and attempt = 3."""
-        base = Path(self.base_dir)
         new_dir = Path("test_dir")
-        Path(base, new_dir).mkdir()
-        Path(base, new_dir.stem + "_1").mkdir()
-        output_path = basic.make_new_dir(base, new_dir, attempt=3)
+        Path(self.base_dir, new_dir).mkdir()
+        Path(self.base_dir, new_dir.stem + "_1").mkdir()
+        output_path = basic.make_new_dir(self.base_dir, new_dir, attempt=3)
         exp_dir = Path("test_dir_2")
         exp_path = Path(self.base_dir, exp_dir)
         with self.subTest():
-            self.assertTrue(os.path.isdir(exp_path))
+            self.assertTrue(exp_path.is_dir())
         with self.subTest():
             self.assertEqual(exp_dir.stem, output_path.stem)
 
@@ -260,28 +255,23 @@ class TestBasicFunctions2(unittest.TestCase):
     def test_identify_files_1(self):
         """Verify the correct number of elements are returned when
         no ignore set is provided."""
-        base = Path(self.base_dir)
-        Path(base, "new_dir").mkdir()
-        Path(base, "file1.txt").touch()
-        Path(base, ".DS_Store").touch()
-        list_of_files = basic.identify_files(base)
+        Path(self.base_dir, "new_dir").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
+        list_of_files = basic.identify_files(self.base_dir)
         exp_num_files = 2
         self.assertEqual(len(list_of_files), exp_num_files)
 
     def test_identify_files_2(self):
         """Verify the correct number of elements are returned when
         an ignore set is provided."""
-        base = Path(self.base_dir)
-        Path(base, "new_dir").mkdir()
-        Path(base, "file1.txt").touch()
-        Path(base, ".DS_Store").touch()
+        Path(self.base_dir, "new_dir").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
         suffix_set = set([".DS_Store"])
-        list_of_files = basic.identify_files(base, suffix_set)
+        list_of_files = basic.identify_files(self.base_dir, suffix_set)
         exp_num_files = 1
         self.assertEqual(len(list_of_files), exp_num_files)
-
-    def tearDown(self):
-        shutil.rmtree(self.base_dir)
 
 
 
@@ -289,15 +279,14 @@ class TestBasicFunctions2(unittest.TestCase):
 class TestBasicFunctions3(unittest.TestCase):
 
     def setUp(self):
-        self.test_directory1 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_wd/test_dir")
-        os.mkdir(self.test_directory1)
+        self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,
+                                                  dir=TMPDIR_BASE)
+        self.test_directory1 = Path(self.tmpdir.name)
         self.file = Path(self.test_directory1, "new_file.txt")
         self.dir = Path(self.test_directory1, "new_dir")
 
     def tearDown(self):
-        shutil.rmtree(self.test_directory1)
+        self.tmpdir.cleanup()
 
 
 
@@ -541,30 +530,27 @@ class TestBasicFunctions4(unittest.TestCase):
 
 
 
-
-
-
-
-# TODO moved from import_genome.
 class TestBasicFunctions5(unittest.TestCase):
 
     def setUp(self):
-        self.test_directory1 = \
-            os.path.join(os.path.dirname(__file__),
-            "test_wd/test_dir")
-        os.mkdir(self.test_directory1)
+        self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,
+                                                  dir=TMPDIR_BASE)
+        self.test_directory1 = Path(self.tmpdir.name)
         self.file = Path(self.test_directory1, "new_file.txt")
         self.dir = Path(self.test_directory1, "new_dir")
         self.parser = argparse.ArgumentParser()
 
-
     def tearDown(self):
-        shutil.rmtree(self.test_directory1)
+        self.tmpdir.cleanup()
 
 
     def test_set_path_1(self):
         """Verify output when file exists and is expected to exist."""
         self.file.touch()
+        # Since using tempfile, there is an added quirk.
+        # the tempfile path may be a symlink, so passing it through set path
+        # will resolve the symlink, changing the path, and breaking the test.
+        self.file = self.file.resolve()
         output = basic.set_path(self.file, kind="file", expect=True)
         with self.subTest():
             self.assertIsInstance(output, Path)
@@ -578,7 +564,6 @@ class TestBasicFunctions5(unittest.TestCase):
         output = basic.set_path(self.file, kind="file", expect=True)
         self.assertTrue(sys_exit_mock.called)
 
-
     @patch("pdm_utils.functions.basic.verify_path2")
     def test_set_path_3(self, verify_path2_mock):
         """Verify home directory expansion."""
@@ -590,7 +575,6 @@ class TestBasicFunctions5(unittest.TestCase):
         exp = Path(home, "path/to/file.txt")
         self.assertEqual(output, exp)
 
-
     @patch("pdm_utils.functions.basic.verify_path2")
     def test_set_path_4(self, verify_path2_mock):
         """Verify '..' directory resolution."""
@@ -599,7 +583,6 @@ class TestBasicFunctions5(unittest.TestCase):
         output = basic.set_path(test_file, kind="file", expect=True)
         exp = Path("/dir1/file.txt")
         self.assertEqual(output, exp)
-
 
     @patch("pdm_utils.functions.basic.verify_path2")
     def test_set_path_5(self, verify_path2_mock):
@@ -615,27 +598,22 @@ class TestBasicFunctions5(unittest.TestCase):
 
 
 
-
 class TestBasicFunctions6(unittest.TestCase):
 
 
     def setUp(self):
-
-        self.unittest_file = Path(__file__)
-        self.unittest_dir = self.unittest_file.parent
-        self.test_import_table_1 = Path(self.unittest_dir,
+        self.test_import_table_1 = Path(unittest_dir,
                                      "test_files/test_import_table_1.csv")
-        self.base_dir = Path(self.unittest_dir, "test_files/test_tickets")
-        self.base_dir.mkdir()
-
         self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}
         self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
-
+        self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,
+                                                  dir=TMPDIR_BASE)
+        self.base_dir = Path(self.tmpdir.name)
         self.export_file = Path(self.base_dir, "table.csv")
 
-
     def tearDown(self):
-        shutil.rmtree(self.base_dir)
+        self.tmpdir.cleanup()
+
 
 
 
