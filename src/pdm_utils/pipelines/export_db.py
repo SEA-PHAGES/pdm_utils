@@ -18,8 +18,10 @@ from typing import List, Dict
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature
-from pdm_utils.classes import genome, cds, mysqlconnectionhandler, filter
-from pdm_utils.functions import flat_files, mysqldb 
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions import basic
+from pdm_utils.functions import flat_files
+from pdm_utils.functions import mysqldb
 
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
@@ -44,7 +46,7 @@ def run_export(unparsed_args_list):
     args = parse_export(unparsed_args_list)
     if args.verbose:
         print("Please input database credentials:")
-    sql_handle = establish_database_connection(args.database)
+    alchemist = establish_database_connection(args.database)
 
 
     csvx = False
@@ -54,7 +56,7 @@ def run_export(unparsed_args_list):
 
     values_list = None
     filters = None
-    group = None
+    groups = None
 
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values_list = parse_value_list_input(args.input)
@@ -75,7 +77,7 @@ def run_export(unparsed_args_list):
         raise ValueError
 
     if not ix:
-        execute_export(sql_handle, args.output_path, args.output_name,
+        execute_export(alchemist, args.output_path, args.output_name,
                             values_list=values_list, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
                             table=args.table,
@@ -214,7 +216,7 @@ def parse_export(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[3:])
     return parsed_args
 
-def execute_export(sql_handle, output_path, output_name,
+def execute_export(alchemist, output_path, output_name,
                         values_list=[], verbose=False,
                         csv_export=False, ffile_export=None, db_export=False,
                         table="phage", filters=[], groups=[]):
@@ -252,34 +254,25 @@ def execute_export(sql_handle, output_path, output_name,
     :type groups: List[str]
     """
 
-    if verbose:
-        print("Retrieving database version...")
-    db_version = mysqldb.get_version_table_data(sql_handle)
+    #if verbose:
+    #    print("Retrieving database version...")
+    #db_version = mysqldb.get_version_table_data(alchemist.engine)
+    db_version = {"Version" : ""}
 
     if verbose:
         print("Creating export folder...")
+
     export_path = output_path.joinpath(output_name)
-
-    if(export_path.is_dir()):
-        export_version = 1
-        while(export_path.is_dir()):
-            export_version += 1
-            export_name = f"{output_name}_{export_version}"
-            export_path = export_path.with_name(export_name)
-    else:
-        export_name = output_name
-
+    export_path = basic.make_new_dir(output_path, export_path, attempt=50)
+    
     if db_export:
         if verbose:
             print("Writing SQL database file...")
-        write_database(sql_handle, db_version["Version"],
-                        output_path, output_name=export_name)
+        write_database(alchemist, db_version["Version"], export_path)
 
     if csv_export or ffile_export:
-        db_filter = build_filter(sql_handle, table, values_list, 
-                                 filters, verbose=verbose)
         if csv_export:
-            file_name = f"{sql_handle.database}_{table}"
+            file_name = f"{alchemist.database}_{table}"
             execute_csv_export(db_filter, sql_handle,
                                output_path, export_name, 
                                csv_name=file_name, table=table,
@@ -448,29 +441,6 @@ def ffx_grouping(sql_handle, group_path, group_list, db_filter,
                                data_name=f"{current_group[1]}='{group}'", 
                                table=table)
 
-def build_filter(sql_handle, table, values_list, filters, verbose=False):
-    if verbose:
-        print("Building SQL data handlers...")
-    db_filter = filter.Filter(sql_handle, table=table)
-    if values_list:
-        db_filter.set_values(values_list)
-
-    for filter_list in filters:
-        db_filter.add_filter(filter_list[0], filter_list[1],
-                             filter_list[3], filter_list[2],
-                             verbose=verbose)
-
-    if not db_filter.updated:
-        db_filter.update(verbose=verbose)
-        if db_filter.hits(verbose=verbose) == 0:
-            print("Database returned no results.")
-            exit(1)
-        if verbose:
-            print("")
-    db_filter.sort(db_filter.key)
-
-    return db_filter
-
 def convert_path(path: str):
     """Function to convert a string to a working Path object.
 
@@ -568,19 +538,13 @@ def establish_database_connection(database_name: str):
     if not isinstance(database_name, str):
         print("establish_database_connection requires string input")
         raise TypeError
-    sql_handle = mysqlconnectionhandler.MySQLConnectionHandler()
-    sql_handle.database = database_name
-    sql_handle.get_credentials()
-    try:
-        sql_handle.open_connection()
-    except:
-        print(f"SQL connection to database {database_name}"
-            "with username and password failed")
-        raise RuntimeError
+    alchemist = AlchemyHandler()
+    alchemist.database = database_name
+    alchemist.connect(ask_database=True)
 
-    return sql_handle
+    return alchemist
 
-def set_cds_seqfeatures(phage_genome: genome.Genome):
+def set_cds_seqfeatures(phage_genome):
     """Helper function that queries for and returns
     cds data from a SQL database for a specific phage
 
@@ -715,13 +679,7 @@ def write_csv(csv_data, output_path, output_name="export",csv_name="database",
         for row in csv_data:
             csvwriter.writerow(row)
 
-def write_database(sql_handle, version, output_path,
-                    output_name="export"):
-
-    export_path = output_path.joinpath(output_name)
-
-    if not export_path.exists():
-        export_path.mkdir()
+def write_database(alchemist, version, export_path):
 
     # TODO this is probably the long term preferred code:
     # sql_path = export_path.joinpath(f"{sql_handle.database}_v{version}.sql")
@@ -732,10 +690,10 @@ def write_database(sql_handle, version, output_path,
     # version_path.write_text(f"{version}")
 
     # TODO this is a current temporary fix.
-    sql_path = export_path.joinpath(f"{sql_handle.database}.sql")
-    os.system(f"mysqldump -u {sql_handle._username} -p{sql_handle._password} "
-              f"--skip-comments {sql_handle.database} > {str(sql_path)}")
-    version_path = sql_path.with_name(f"{sql_handle.database}.version")
+    sql_path = export_path.joinpath(f"{alchemist.database}.sql")
+    os.system(f"mysqldump -u {alchemist.username} -p{alchemist.password} "
+              f"--skip-comments {alchemist.database} > {str(sql_path)}")
+    version_path = sql_path.with_name(f"{alchemist.database}.version")
     version_path.touch()
     version_path.write_text(f"{version}")
 
@@ -921,7 +879,6 @@ def parse_cds_data_from_geneid(sql_handle, geneid_list):
 
     return cds_list
 
-if __name__ == "__main__":
 
     args = sys.argv
     args.insert(0, "blank_argument")

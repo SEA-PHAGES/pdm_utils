@@ -4,10 +4,11 @@ from getpass import getpass
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
-from pdm_utils.functions import cartography
 from pdm_utils.classes.schemagraph import SchemaGraph
 from pdm_utils.functions import querying
+from pdm_utils.functions import cartography
 
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None, 
@@ -69,7 +70,7 @@ class AlchemyHandler:
  
         self._username = username
 
-        if self.password:
+        if self._password != None:
             self.has_credentials = True
         self.connected = False
 
@@ -95,7 +96,7 @@ class AlchemyHandler:
 
         self._password = password
 
-        if self.username:
+        if self._username != None:
             self.has_credentials = True
         self.connected = False
 
@@ -132,7 +133,7 @@ class AlchemyHandler:
 
     def build_engine(self):
         if self.connected:
-            return self.engine
+            return
 
         if not self.has_credentials:
             self.ask_credentials()
@@ -150,18 +151,46 @@ class AlchemyHandler:
 
             self.metadata = None
             self.graph = None
-            return self.engine
+            return
 
         except OperationalError: 
-            return False
+            raise
 
-    def build_metadata(self):
-        if not self.has_database:
-            return False
+    def connect(self, ask_database=False):
+        if ask_database:
+            if not self.has_database:
+                self.ask_database()
+
+        if not self.has_credentials:
+            self.ask_credentials()
+
+        attempts = 1
+        try:
+            self.build_engine()
+            self.connected=True
+            return
+        except:
+            pass
+
+        while(not self.connected and attempts < self.login_attempts):
+            try:
+                self.build_engine()
+            except:
+                pass
+
+            attempts += 1
+            self.ask_credentials()
 
         if not self.connected:
-            if not self.build_engine():
-                return False
+            print("Maximum logout attempts reached.\n"
+                  "Please check your credentials and try again")
+            exit(1)
+    def build_metadata(self):
+        if not self.has_database:
+            self.ask_database()
+
+        if not self.connected:
+            self.build_engine()
 
         self.metadata = MetaData(bind=self.engine)
         self.metadata.reflect()
@@ -169,15 +198,13 @@ class AlchemyHandler:
 
     def get_map(self, template):
         if not self.metadata:
-            if not self.build_metadata():
-                return None
+            self.build_metadata()
 
         return cartography.get_map(self.metadata, template)
 
     def build_schemagraph(self):
         if not self.metadata:
-            if not self.build_metadata():
-                return False
+            self.build_metadata()
 
         graph = SchemaGraph()
         graph.setup(self.metadata)
@@ -187,75 +214,57 @@ class AlchemyHandler:
 
     def build_session(self):
         if not self.has_database:
-            return False
+            raise
         if not self.connected:
-            if not self.build_engine():
-                return False
+            self.build_engine()
+            
 
         session_maker = sessionmaker()
         self.session = session_maker(bind=self.engine)
-        return True
-
-    def connect(self, database=True):
-        if database:
-            self.ask_database()
-        else:
-            self.database = None
-
-        if not self.has_credentials:
-            self.ask_credentials()
-
-        attempts = 1
-        connected = self.build_engine()
-        while(not connected and attempts < self.login_attempts):
-            connected = self.build_engine()
-            attempts += 1
-            self.ask_credentials()
-
-        if not connected:
-            print("Maximum logout attempts reached.\n"
-                  "Please check your credentials and try again")
-            exit(1)
+        return 
 
     def where(self, filter_expression):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
          
         return querying.build_whereclause(self.graph, filter_expression)
 
-
-    def select(self, columns, where_clause=None, order_by_clause=None):
+    def build_select(self, columns, where=None, order_by=None,
+                                                        from_=None, in_=None):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
 
         return querying.build_select(self.graph, columns,
-                                            where_clause=where_clause,
-                                            order_by_clause=order_by_clause)
+                                                        where=where,
+                                                        order_by=order_by,
+                                                        from_=from_,
+                                                        in_=in_)
 
-    def count(self, columns, where_clause=None, order_by_clause=None):
+    def build_count(self, columns, where=None, order_by=None,
+                                                        from_=None, in_=None):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
 
         return querying.build_count(self.graph, columns,
-                                            where_clause=where_clause,
-                                            order_by_clause=order_by_clause)
+                                                        where=where,
+                                                        order_by=order_by,
+                                                        from_=from_,
+                                                        in_=in_)
 
-    def distinct(self, columns, where_clause=None, order_by_clause=None):
+    def build_distinct(self, columns, where=None, order_by=None,
+                                                        from_=None, in_=None):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
 
         return querying.build_distinct(self.graph, columns,
-                                            where_clause=where_clause,
-                                            order_by_clause=order_by_clause)
+                                                        where=where,
+                                                        order_by=order_by,
+                                                        from_=None,
+                                                        in_=None)
 
     def execute(self, executable, return_dict=True):
         if not self.engine:
-            if not self.build_engine():
-                return None
+            self.build_engine()
 
         proxy = self.engine.execute(executable)
 
@@ -272,8 +281,7 @@ class AlchemyHandler:
 
     def scalar(self, executable):
         if not self.engine:
-            if not self.build_engine():
-                return None
+            self.build_engine()
 
         proxy = self.engine.execute(executable)
 
@@ -283,21 +291,18 @@ class AlchemyHandler:
 
     def show_tables(self):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
 
         return self.graph.show_tables()
 
     def get_table(self, table):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
 
         return self.graph.get_table(table)
 
     def get_column(self, column):
         if not self.graph:
-            if not self.build_schemagraph():
-                return None
+            self.build_schemagraph()
 
         return self.graph.get_column(column)

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
+from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import UnaryExpression
 from datetime import datetime
 from decimal import Decimal
@@ -90,7 +91,6 @@ def check_operator(operator, column_object):
         raise ValueError(f"Column '{column_object.name}' "
                          f"is not comparable with operator '{operator}'.")
 
-
 def parse_filter(unparsed_filter):
     """Helper function to return a two-dimensional array of filter parameters.
 
@@ -159,6 +159,13 @@ def get_table_list(columns):
                 table_set.add(column_clause.table)
         elif isinstance(column, UnaryExpression):
             table_set.add(column.element.table)
+        elif isinstance(column, BinaryExpression):
+            expression = column.left
+            if isinstance(expression, UnaryExpression):
+                table_set.add(unary_expression.element.table)
+            elif isinstance(expression, Column):
+                table_set.add(expression.table)
+
         else:
             raise TypeError(f"Column {column} is not a SqlAlchemy Column.")
                             
@@ -212,37 +219,45 @@ def build_fromclause(db_graph, columns):
 
     return joined_table
 
-def build_select(db_graph, columns, where_clause=None, order_by_clause=None):
-    where_columns = []
-    for clause in where_clause:
-        where_columns.append(clause.left) 
+def build_select(db_graph, columns, where=None, order_by=None, 
+                                                    from_=None, in_=None):
+    if from_ == None:
+        where_columns = []
+        for clause in where:
+            where_columns.append(clause.left) 
 
-    order_by_columns = []
+        order_by_columns = []
 
-    total_columns = columns + where_columns + order_by_columns
-    fromclause = build_fromclause(db_graph, total_columns) 
+        total_columns = columns + where_columns + order_by_columns
+        fromclause = build_fromclause(db_graph, total_columns) 
+    else:
+        fromclause = from_
 
     select_query = select(columns).select_from(fromclause)
 
-    if where_clause:
-        for clause in where_clause:
+    if where:
+        for clause in where:
             select_query = select_query.where(clause)
 
-    if order_by_clause:
-        for clause in order_by_clause:
+    if order_by:
+        for clause in order_by:
             select_query = select_query.order_by(clause)
 
     return select_query
 
-def build_count(db_graph, columns, where_clause=None, order_by_clause=None):    
-    where_columns = []
-    for clause in where_clause:
-        where_columns.append(clause.left) 
+def build_count(db_graph, columns, where=None, order_by=None, 
+                                                    from_=None, in_=None):    
+    if from_ == None:
+        where_columns = []
+        for clause in where:
+            where_columns.append(clause.left) 
 
-    order_by_columns = []
+        order_by_columns = []
 
-    total_columns = columns + where_columns + order_by_columns
-    fromclause = build_fromclause(db_graph, total_columns)
+        total_columns = columns + where_columns + order_by_columns
+        fromclause = build_fromclause(db_graph, total_columns)
+    else:
+        fromclause = from_
 
     column_params = []
     for column_param in columns:
@@ -250,19 +265,22 @@ def build_count(db_graph, columns, where_clause=None, order_by_clause=None):
 
     count_query = select(column_params).select_from(fromclause)
 
-    if where_clause:
-        for clause in where_clause:
+    if where:
+        for clause in where:
             count_query = count_query.where(clause)
 
-    if order_by_clause:
-        for clause in order_by_clause:
+    if order_by:
+        for clause in order_by:
             count_query = count_query.order_by(clause)
     
     return count_query
 
-def build_distinct(db_graph, columns, where_clause=None, order_by_clause=None):
-    query = build_select(db_graph, columns, where_clause=where_clause, 
-                                            order_by_clause=order_by_clause)
+def build_distinct(db_graph, columns, where=None, order_by=None, 
+                                                    from_=None, in_=None):
+    query = build_select(db_graph, columns, where=where, 
+                                                    order_by=order_by,
+                                                    from_=from_,
+                                                    in_=in_)
 
     distinct_query = query.distinct()
     return distinct_query
