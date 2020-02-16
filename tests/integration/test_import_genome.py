@@ -1311,8 +1311,6 @@ class TestImportGenomeMain6(unittest.TestCase):
 
         input_genomes_count = 0
         for item in self.genome_folder.iterdir():
-            print(item)
-            input("check")
             input_genomes_count += 1
 
         success_genomes_count = 0
@@ -1335,7 +1333,7 @@ class TestImportGenomeMain6(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(exp_fail_tkts[0].keys()), 11)
         with self.subTest():
-            self.assertEqual(input_genomes_count, 0)
+            self.assertEqual(input_genomes_count, 2)
         with self.subTest():
             self.assertEqual(success_genomes_count, 1)
         with self.subTest():

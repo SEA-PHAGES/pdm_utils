@@ -189,13 +189,6 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     logger.info("Setting up environment.")
 
-    # results_folder = f"{CURRENT_DATE}_results"
-    # results_folder = pathlib.Path(results_folder)
-    # results_path = basic.make_new_dir(output_folder, results_folder, attempt=3)
-    # if results_path is None:
-    #     logger.info("Unable to create output_folder.")
-    #     sys.exit(1)
-
     # Get the files to process.
     files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
     if len(files_to_process) == 0:
@@ -217,11 +210,6 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
 
-###TODO testing
-    # print(ticket_dict.keys())
-    # print(len(ticket_dict.keys()))
-    # input("check")
-###
     start_count = mysqldb.get_phage_table_count(engine)
 
 
@@ -258,9 +246,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             success_genomes_path.mkdir()
             for file in success_filepath_list:
                 new_file = pathlib.Path(success_genomes_path, file.name)
-
-                # TODO change to copy
-                shutil.move(str(file), str(new_file))
+                shutil.copy(str(file), str(new_file))
 
     logger.info("Logging failed tickets and files.")
     if (len(failed_ticket_list) > 0 or len(failed_filepath_list) > 0):
@@ -275,8 +261,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             failed_genomes_path.mkdir()
             for file in failed_filepath_list:
                 new_file = pathlib.Path(failed_genomes_path, file.name)
-                # TODO change to copy
-                shutil.move(str(file), str(new_file))
+                shutil.copy(str(file), str(new_file))
 
     logger.info(
         ("Summary of import: "

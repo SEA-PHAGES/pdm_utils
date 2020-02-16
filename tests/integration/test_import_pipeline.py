@@ -1017,7 +1017,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gene_table_results), 4)
         with self.subTest():
-            self.assertFalse(alice_flat_file_path.exists())
+            self.assertTrue(alice_flat_file_path.exists())
         with self.subTest():
             self.assertTrue(success_alice_path.exists())
         with self.subTest():
@@ -1418,7 +1418,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gene_table_results), 0)
         with self.subTest():
-            self.assertFalse(alice_flat_file_path.exists())
+            self.assertTrue(alice_flat_file_path.exists())
         with self.subTest():
             self.assertFalse(success_path.exists())
         with self.subTest():
@@ -1811,7 +1811,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gene_table_results), 8)
         with self.subTest():
-            self.assertFalse(alice_flat_file_path.exists())
+            self.assertTrue(alice_flat_file_path.exists())
         with self.subTest():
             self.assertTrue(success_alice_path.exists())
         with self.subTest():
@@ -1819,7 +1819,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertFalse(fail_path.exists())
         with self.subTest():
-            self.assertFalse(l5_flat_file_path.exists())
+            self.assertTrue(l5_flat_file_path.exists())
         with self.subTest():
             self.assertTrue(success_l5_path.exists())
 
@@ -1869,7 +1869,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gene_table_results), 4)
         with self.subTest():
-            self.assertFalse(alice_flat_file_path.exists())
+            self.assertTrue(alice_flat_file_path.exists())
         with self.subTest():
             self.assertTrue(success_alice_path.exists())
         with self.subTest():
@@ -1877,7 +1877,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(phage_table_results[0]["PhageID"], "Alice")
         with self.subTest():
-            self.assertFalse(l5_flat_file_path.exists())
+            self.assertTrue(l5_flat_file_path.exists())
         with self.subTest():
             self.assertTrue(fail_l5_path.exists())
         with self.subTest():
@@ -2454,7 +2454,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome_errors, 0)
         with self.subTest():
-            self.assertFalse(alice_flat_file_path.exists())
+            self.assertTrue(alice_flat_file_path.exists())
         with self.subTest():
             self.assertFalse(success_path.exists())
         with self.subTest():
@@ -2494,7 +2494,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome_errors, 0)
         with self.subTest():
-            self.assertFalse(alice_flat_file_path.exists())
+            self.assertTrue(alice_flat_file_path.exists())
         with self.subTest():
             self.assertFalse(success_path.exists())
         with self.subTest():
