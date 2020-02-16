@@ -401,7 +401,7 @@ def trim_characters(string):
     return string
 
 
-# TODO this can probably be improved.
+# TODO this function needs to be improved.
 def parse_names_from_record_field(description):
     """Parse string of text to identify the phage name and host genus.
 
@@ -458,13 +458,23 @@ def parse_names_from_record_field(description):
                 name = word
             else:
                 pass
-
-        # Sometimes the phage name is the word following 'phage' or 'virus'.
-        # e.g. 'Mycobacterium phage Trixie' or 'Mycobacteriophage Trixie'
-        if index < (len(split_description) - 1):
-            if (word_lower[-5:] == "phage" or \
-                word_lower[-5:] == "virus"):
-                name = split_description[index + 1]
+        else:
+            if index < (len(split_description) - 1):
+                if (word_lower[-5:] == "phage" or
+                        word_lower[-5:] == "virus"):
+                    # Sometimes the phage name follows 'phage' or 'virus'.
+                    # e.g. 'Mycobacterium phage Trixie' or
+                    # 'Mycobacteriophage Trixie'
+                    name = split_description[index + 1]
+                elif len(split_description) == 2:
+                    # Sometimes phage name precedes 'Unclassified'.
+                    # e.g. 'Trixie_Draft Unclassified'
+                    next_lower = split_description[index + 1].lower()
+                    if (word_lower not in generic_words and
+                            next_lower == "unclassified"):
+                        name = word
+                else:
+                    pass
         index += 1
     return (name, host_genus)
 

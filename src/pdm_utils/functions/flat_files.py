@@ -393,6 +393,7 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
 
     # Now that record fields are parsed, set the genome name, id,
     # and host_genus.
+
     gnm.name = getattr(gnm, genome_id_field)
     gnm.set_id(value=gnm.name)
     gnm.set_host_genus(attribute=host_genus_field)
@@ -446,7 +447,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
 
     # TODO set tRNA feature ids.
     #gnm.set_feature_ids(use_type=True, use_trna=True)
-
     return gnm
 
 

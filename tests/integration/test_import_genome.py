@@ -1271,12 +1271,10 @@ class TestImportGenomeMain6(unittest.TestCase):
         shutil.rmtree(self.base_dir)
         self.engine.dispose()
 
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_1(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
+    def test_data_io_1(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io runs correctly when there are no errors."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
@@ -1313,6 +1311,8 @@ class TestImportGenomeMain6(unittest.TestCase):
 
         input_genomes_count = 0
         for item in self.genome_folder.iterdir():
+            print(item)
+            input("check")
             input_genomes_count += 1
 
         success_genomes_count = 0
@@ -1342,12 +1342,10 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertEqual(fail_genomes_count, 1)
 
 
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_2(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
+    def test_data_io_2(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is successful with
         success tickets but no success files, and
         fail tickets but no fail files."""
@@ -1376,8 +1374,6 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertTrue(self.exp_success_tkt_table.exists())
         with self.subTest():
@@ -1388,12 +1384,10 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertFalse(self.exp_fail_genomes.exists())
 
 
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_3(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
+    def test_data_io_3(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is successful with
         success files but no success tickets, and
         fail files but no fail tickets."""
@@ -1416,13 +1410,10 @@ class TestImportGenomeMain6(unittest.TestCase):
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
-
         with self.subTest():
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertFalse(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
         with self.subTest():
             self.assertFalse(self.exp_success_tkt_table.exists())
         with self.subTest():
@@ -1433,95 +1424,12 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertTrue(self.exp_fail_genomes.exists())
 
 
-    # TODO probably no longer needed. The folder testing has been moved to main()
-    # # TODO remove log_evaluations patch if it is no longer called in data_io.
-    # @patch("pdm_utils.pipelines.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    # @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    # def test_data_io_4(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is successful with two previously-existing
-    #     results folders and no items in any output dataset."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #
-    #     self.results_folder1 = Path(self.output_folder, self.results_folder1)
-    #     self.results_folder1.mkdir()
-    #     self.results_folder2 = Path(self.output_folder, self.results_folder2)
-    #     self.results_folder2.mkdir()
-    #     self.results_folder3 = Path(self.output_folder, self.results_folder3)
-    #     get_count_mock.return_value = 0
-    #     pft_mock.return_value = ([], [], [], [], {})
-    #     import_genome.data_io(engine=self.engine,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #
-    #     input_genomes_count = 0
-    #     for item in self.genome_folder.iterdir():
-    #         input_genomes_count += 1
-    #
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertFalse(sys_exit_mock.called)
-    #     # with self.subTest():
-    #     #     self.assertTrue(log_eval_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(self.results_folder3.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_success_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_fail_tkt_table.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_success_genomes.exists())
-    #     with self.subTest():
-    #         self.assertFalse(self.exp_fail_genomes.exists())
-    #     with self.subTest():
-    #         self.assertEqual(input_genomes_count, 2)
-    #
-    #
-    # # TODO remove log_evaluations patch if it is no longer called in data_io.
-    # @patch("pdm_utils.pipelines.import_genome.log_evaluations")
-    # @patch("sys.exit")
-    # @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    # @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    # def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
-    #     """Verify data_io is not successful when results folder is invalid."""
-    #     self.genome_folder.mkdir()
-    #     self.output_folder.mkdir()
-    #     self.flat_file1.touch()
-    #     self.flat_file2.touch()
-    #
-    #     self.results_folder1 = Path(self.output_folder, self.results_folder1)
-    #     self.results_folder1.mkdir()
-    #     self.results_folder2 = Path(self.output_folder, self.results_folder2)
-    #     self.results_folder2.mkdir()
-    #     self.results_folder3 = Path(self.output_folder, self.results_folder3)
-    #     self.results_folder3.mkdir()
-    #     get_count_mock.return_value = 0
-    #     pft_mock.return_value = ([], [], [], [], {})
-    #     import_genome.data_io(engine=self.engine,
-    #         genome_folder=self.genome_folder,
-    #         import_table_file=self.valid_import_table_file,
-    #         output_folder=self.output_folder)
-    #     with self.subTest():
-    #         self.assertTrue(pft_mock.called)
-    #     with self.subTest():
-    #         self.assertTrue(sys_exit_mock.called)
-    #     # with self.subTest():
-    #     #     self.assertTrue(log_eval_mock.called)
-
-
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
-    @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_6(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
-        """Verify data_io is not successful when there are no files to process."""
+    @patch("sys.exit")
+    def test_data_io_6(self, sys_exit_mock, get_count_mock, pft_mock):
+        """Verify data_io is not successful when there
+        are no files to process."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
         get_count_mock.return_value = 0
@@ -1530,21 +1438,16 @@ class TestImportGenomeMain6(unittest.TestCase):
             genome_folder=self.genome_folder,
             import_table_file=self.valid_import_table_file,
             output_folder=self.output_folder)
-
         with self.subTest():
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
 
 
-    # TODO remove log_evaluations patch if it is no longer called in data_io.
-    @patch("pdm_utils.pipelines.import_genome.log_evaluations")
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock, log_eval_mock):
+    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is not successful when there are no tickets to process."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
@@ -1556,13 +1459,10 @@ class TestImportGenomeMain6(unittest.TestCase):
             genome_folder=self.genome_folder,
             import_table_file=self.invalid_import_table_file,
             output_folder=self.output_folder)
-
         with self.subTest():
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
-        # with self.subTest():
-        #     self.assertTrue(log_eval_mock.called)
 
 
 

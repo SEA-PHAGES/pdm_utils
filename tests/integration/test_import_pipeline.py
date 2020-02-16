@@ -69,6 +69,7 @@ from unittest.mock import patch
 from pdm_utils import run
 from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
+from pdm_utils.pipelines import import_genome
 
 
 # Set up a log file to catch all logging for review.
@@ -85,7 +86,7 @@ current_date = datetime.today().replace(hour=0, minute=0,
 
 # How the output folder is named.
 results_folder_date = date.today().strftime("%Y%m%d")
-results_folder = Path(f"{results_folder_date}_results")
+results_folder = Path(import_genome.RESULTS_FOLDER)
 default_output_path = Path("/tmp/", results_folder)
 
 pipeline = "import_dev"

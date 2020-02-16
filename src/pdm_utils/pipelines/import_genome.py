@@ -10,6 +10,7 @@ import pathlib
 import shutil
 import sys
 from tabulate import tabulate
+import pdm_utils # to get version number.
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
@@ -29,8 +30,8 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 CURRENT_DATE = date.today().strftime("%Y%m%d")
-RESULTS_FOLDER = f"{CURRENT_DATE}_results"
-
+RESULTS_FOLDER = f"{CURRENT_DATE}_import"
+VERSION = pdm_utils.__version__
 
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
@@ -57,15 +58,18 @@ def main(unparsed_args_list):
 
     args.log_file = pathlib.Path(results_path, args.log_file)
 
-    # TODO no longer needed since log file is created within results folder,
-    # which has already been validated and newly-created.
-    # args.log_file = basic.set_path(args.log_file, kind="file", expect=False)
-
     # Set up root logger.
     logging.basicConfig(filename=args.log_file, filemode="w",
                         level=logging.DEBUG,
-                        format="%(name)s - %(levelname)s - %(message)s")
+                        format="pdm_utils import: %(levelname)s: %(message)s")
+                        # format="%(name)s - %(levelname)s - %(message)s")
+
+    logger.info(f"pdm_utils version: {VERSION}")
+    logger.info(f"Import run date: {CURRENT_DATE}")
+    logger.info(f"Command line arguments: {' '.join(unparsed_args_list)}")
+    logger.info(f"Results directory: {results_path}")
     logger.info("Command line arguments verified.")
+
 
     # Get connection to database.
     engine = mysqldb.connect_to_db(args.database)
@@ -197,9 +201,9 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     if len(files_to_process) == 0:
         logger.error("There are no flat files to evaluate.")
         sys.exit(1)
-    else:
-        log_folder_path = pathlib.Path(output_folder, "file_logs")
-        log_folder_path.mkdir()
+
+    log_folder_path = pathlib.Path(output_folder, "file_logs")
+    log_folder_path.mkdir()
 
     # Get the tickets.
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
@@ -213,6 +217,11 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
 
+###TODO testing
+    # print(ticket_dict.keys())
+    # print(len(ticket_dict.keys()))
+    # input("check")
+###
     start_count = mysqldb.get_phage_table_count(engine)
 
 
@@ -249,6 +258,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             success_genomes_path.mkdir()
             for file in success_filepath_list:
                 new_file = pathlib.Path(success_genomes_path, file.name)
+
+                # TODO change to copy
                 shutil.move(str(file), str(new_file))
 
     logger.info("Logging failed tickets and files.")
@@ -264,10 +275,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             failed_genomes_path.mkdir()
             for file in failed_filepath_list:
                 new_file = pathlib.Path(failed_genomes_path, file.name)
+                # TODO change to copy
                 shutil.move(str(file), str(new_file))
-
-    # logger.info("Logging evaluations.")
-    # log_evaluations(evaluation_dict)
 
     logger.info(
         ("Summary of import: "
@@ -313,10 +322,6 @@ def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
             evl_list = dict_of_lists[key2]
             for evl in evl_list:
                 msg3 = str(evl)
-                # msg3 = (f"Evaluation: {evl.id}. "
-                #         f"Status: {evl.status}. "
-                #         f"Definition: {evl.definition} "
-                #         f"Result: {evl.result}")
                 if evl.status == "warning":
                     logger.warning(msg3)
                 elif evl.status == "error":
