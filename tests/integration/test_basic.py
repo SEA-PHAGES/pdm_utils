@@ -11,7 +11,7 @@ from pdm_utils.functions import basic
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
 
-TMPDIR_PREFIX = "pdm_utils_basic_tests_"
+TMPDIR_PREFIX = "pdm_utils_tests_basic_"
 # Can set TMPDIR_BASE to string such as "/tmp/" to track tmp directory location.
 TMPDIR_BASE = "/tmp"
 
@@ -19,12 +19,14 @@ TMPDIR_BASE = "/tmp"
 class TestBasicFunctions1(unittest.TestCase):
 
     def setUp(self):
-
         self.test_filepath1 = Path(unittest_dir,
                                 "test_files/test_flat_file_1.gb")
+        self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,
+                                                  dir=TMPDIR_BASE)
+        self.test_directory1 = Path(self.tmpdir.name).resolve()
 
-        self.test_directory1 = Path(unittest_dir,
-                                "test_files/test_directory1")
+    def tearDown(self):
+        self.tmpdir.cleanup()
 
 
 
@@ -199,8 +201,6 @@ class TestBasicFunctions2(unittest.TestCase):
         self.base_dir = Path(self.tmpdir.name)
 
     def tearDown(self):
-        print(self.tmpdir.name)
-        input("check")
         self.tmpdir.cleanup()
 
 

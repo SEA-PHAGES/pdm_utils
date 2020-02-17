@@ -78,7 +78,7 @@ current_date = datetime.today().replace(hour=0, minute=0,
 
 # Create the main test directory in which all files will be
 # created and managed.
-test_root_dir = Path("/tmp", "pdm_utils_import_pipeline_tests")
+test_root_dir = Path("/tmp", "pdm_utils_tests_import2")
 if test_root_dir.exists() == True:
     shutil.rmtree(test_root_dir)
 test_root_dir.mkdir()

@@ -18,7 +18,7 @@ from pdm_utils.pipelines import import_genome
 
 # Create the main test directory in which all files will be
 # created and managed.
-test_root_dir = Path("/tmp", "pdm_utils_import_tests")
+test_root_dir = Path("/tmp", "pdm_utils_tests_import1")
 if test_root_dir.exists() == True:
     shutil.rmtree(test_root_dir)
 test_root_dir.mkdir()

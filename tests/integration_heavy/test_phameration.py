@@ -40,7 +40,7 @@ schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
-        self.temp_dir = "/tmp/phamerate"
+        self.temp_dir = "/tmp/pdm_utils_tests_phamerate"
 
         connection = pymysql.connect(host="localhost", user=user, password=pwd,
                                      cursorclass=pymysql.cursors.DictCursor)
