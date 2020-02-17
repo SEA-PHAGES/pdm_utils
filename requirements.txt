@@ -9,6 +9,7 @@ cffi==1.14.0
 chardet==3.0.4
 cmarkgfm==0.4.2
 cryptography==2.8
+decorator==4.4.1
 docutils==0.16
 future==0.18.2
 idna==2.8
@@ -18,6 +19,7 @@ MarkupSafe==1.1.1
 mkl-fft==1.0.15
 mkl-random==1.1.0
 mkl-service==2.3.0
+networkx==2.4
 numpy==1.18.1
 packaging==20.1
 paramiko==2.6.0

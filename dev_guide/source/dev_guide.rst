@@ -109,7 +109,7 @@ The Sphinx documentation provides a list of python and binary dependencies to us
 
 All python code in the repo can be executed using the following Conda environment 'pdm_utils-dev'. First install Anaconda locally. Then execute the following commands::
 
-    > conda create --name pdm_utils-dev python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine tabulate curl sqlalchemy
+    > conda create --name pdm_utils-dev python pip biopython pymysql paramiko sphinx sphinx_rtd_theme twine tabulate curl sqlalchemy networkx
     > conda activate pdm_utils-dev
 
 
@@ -118,13 +118,6 @@ Here's a list of some of the current software versions used for development:
     - conda 4.5.11
     - mysql  Ver 14.14 Distrib 5.7.24, for osx10.9 (x86_64)
     - Python 3.7.3
-
-
-To add ``pdm_utils`` module to python's syspath in a shell environment on-the-fly, use the following command, edited so that it points to your local repo::
-
-    > export PYTHONPATH="${PYTHONPATH}:/path/to/pdm_utils/src/"
-
-
 
 To create a list of pinned Python and non-Python packages and binaries installed in the conda environment::
 
@@ -135,6 +128,10 @@ To create a list of just the pinned Python packages installed in the conda envir
 
     (pdm_utils-dev)> pip freeze > requirements.txt
 
+
+To add ``pdm_utils`` module to python's syspath in a shell environment on-the-fly, use the following command, edited so that it points to your local repo::
+
+    > export PYTHONPATH="${PYTHONPATH}:/path/to/pdm_utils/src/"
 
 
 Running the test suites
