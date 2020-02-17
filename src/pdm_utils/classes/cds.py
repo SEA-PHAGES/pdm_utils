@@ -12,8 +12,6 @@ import re
 from collections import OrderedDict
 
 
-
-
 class Cds:
     """Class to hold data about a CDS feature."""
 
@@ -439,6 +437,11 @@ class Cds:
 
 
     # Evaluations.
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
 
     def check_translation_table(self, check_table=11, eval_id=None,
                                 success="correct", fail="error"):
@@ -457,8 +460,7 @@ class Cds:
             result = "The translation table is not correct."
             status = fail
         definition = "Check that the translation table is correct."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_translation_present(self, eval_id=None,
@@ -476,8 +478,7 @@ class Cds:
             status = success
 
         definition = "Check that there is a translation present."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_translation(self, eval_id=None, success="correct", fail="error"):
@@ -505,8 +506,7 @@ class Cds:
             result = "The translation is correct."
             status = success
         definition = "Check that the feature contains the expected translation."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_amino_acids(self, check_set=set(), eval_id=None,
@@ -530,8 +530,7 @@ class Cds:
             status = success
 
         definition = "Check validity of amino acid residues."
-        evl = eval.Eval(eval_id, definition, result, status = status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_orientation(self, format="fr_short", case=True, eval_id=None,
@@ -557,8 +556,7 @@ class Cds:
             result = "The feature orientation is not correct."
             status = fail
         definition = "Check if the orientation is set appropriately."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_coordinates(self, eval_id=None, success="correct", fail="error"):
@@ -584,8 +582,7 @@ class Cds:
 
         definition = ("Check if the start and stop boundary coordinates "
                       "are exact or fuzzy.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_locus_tag_present(self, expect=True, eval_id=None,
@@ -619,8 +616,7 @@ class Cds:
                 result = "The locus_tag qualifier is not present."
                 status = success
         definition = "Check if the locus_tag qualifier status is expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
@@ -677,8 +673,7 @@ class Cds:
                      + " ".join(results)
             status = fail
         definition = "Check if the locus_tag qualifier is structured correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     # TODO is this needed? CDS ids are not directly parsed from file.
@@ -738,8 +733,7 @@ class Cds:
                 result = "The gene qualifier is not present."
                 status = success
         definition = "Check if the gene status is expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_gene_structure(self, eval_id=None, success="correct", fail="error"):
@@ -761,8 +755,7 @@ class Cds:
             result = "The gene qualifier does not contain an integer."
             status = fail
         definition = "Check if the gene qualifier contains an integer."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_compatible_gene_and_locus_tag(self, eval_id=None,
@@ -780,8 +773,7 @@ class Cds:
             result = "The gene and locus_tag numbers are not consistent."
             status = fail
         definition = "Check if the gene and locus_tag numbers are consistent."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_description_field(self, attribute="product", eval_id=None,
@@ -830,8 +822,7 @@ class Cds:
 
         definition = \
             "Check if there is a discrepancy between description fields."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_generic_data(self, attribute=None, eval_id=None,
@@ -866,8 +857,7 @@ class Cds:
             result = f"The '{attribute}' field is not correct."
             status = fail
         definition = f"Check if the '{attribute}' field contains generic data."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
 

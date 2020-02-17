@@ -485,6 +485,12 @@ class Genome:
 
 
     # Evaluations.
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
+
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
                         success="correct", fail="error"):
         """Check that the id is valid.
@@ -521,8 +527,7 @@ class Genome:
             result = f"The {attribute} was not evaluated."
             status = "untested"
         definition = f"Check the {attribute} attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def compare_two_attributes(self, attribute1, attribute2,
@@ -565,8 +570,7 @@ class Genome:
             result = f"The attribute comparison was not evaluated."
             status = "untested"
         definition = f"Compare '{attribute1}' and '{attribute2}' attributes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_cluster_structure(self, eval_id=None, success="correct",
@@ -589,8 +593,7 @@ class Genome:
             result = "Cluster is empty."
             status = "untested"
         definition = "Check if cluster attribute is structured correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_subcluster_structure(self, eval_id=None, success="correct",
@@ -612,8 +615,7 @@ class Genome:
             result = "Subcluster is empty."
             status = "untested"
         definition = "Check if subcluster attribute is structured correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_compatible_cluster_and_subcluster(self, eval_id=None,
@@ -631,8 +633,7 @@ class Genome:
             result = "Cluster and Subcluster designations are compatible."
             status = success
         definition = "Check for compatibility between Cluster and Subcluster."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_nucleotides(self, check_set=set(), eval_id=None,
@@ -672,8 +673,7 @@ class Genome:
             status = success
 
         definition = "Check if all nucleotides in the sequence are expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_authors(self, check_set=set(), expect=True, eval_id=None,
@@ -716,8 +716,7 @@ class Genome:
                 result = "The authors are not expected to be present."
                 status = fail
         definition = "Check authorship."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
@@ -755,10 +754,7 @@ class Genome:
             result = f"The {attribute} was not evaluated."
             status = "untested"
         definition = f"Check that the magnitude of {attribute} is as expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_cds_start_end_ids(self, eval_id=None, success="correct",
@@ -782,8 +778,7 @@ class Genome:
             status = success
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their start and end coordinates.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_cds_end_orient_ids(self, eval_id=None, success="correct",
@@ -809,8 +804,7 @@ class Genome:
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their orientation and transcription end "
                       "coordinate.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_value_flag(self, expect=False, eval_id=None,
@@ -837,8 +831,7 @@ class Genome:
                 result = "Some attributes are not populated."
                 status = fail
         definition = "Check if there are any attributes that are set correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_feature_coordinates(self, cds_ftr=False, trna_ftr=False,
@@ -936,11 +929,4 @@ class Genome:
             status = success
         definition = ("Check if there are any errors with the "
                       "genome's feature coordinates.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-
-
-
-###
+        self.set_eval(eval_id, definition, result, status)

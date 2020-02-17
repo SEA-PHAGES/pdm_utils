@@ -50,6 +50,12 @@ class Source:
 
 
     # Evaluations
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
+
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
                         success="correct", fail="error"):
         """Check that the id is valid.
@@ -86,8 +92,7 @@ class Source:
             result = f"The {attribute} was not evaluated."
             status = "untested"
         definition = f"Check the {attribute} attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
 

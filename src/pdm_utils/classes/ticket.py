@@ -78,6 +78,12 @@ class GenomeTicket:
 
 
     # Evaluations
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
+
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
                         success="correct", fail="error"):
         """Check that the id is valid.
@@ -114,8 +120,7 @@ class GenomeTicket:
             result = f"The {attribute} was not evaluated."
             status = "untested"
         definition = f"Check the {attribute} attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_eval_flags(self, expect=True, eval_id=None,
@@ -143,8 +148,7 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = fail
         definition = "Check if eval_flags field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_compatible_type_and_data_retain(self, eval_id=None,
@@ -167,8 +171,7 @@ class GenomeTicket:
             status = success
         definition = ("Check if the ticket type and data_retain "
                       "are compatible.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_valid_data_source(self, ref_set_attr, check_set, eval_id=None,
@@ -208,6 +211,4 @@ class GenomeTicket:
             status = fail
 
         definition = f"Check if {ref_set_attr} field is correctly populated."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-###
+        self.set_eval(eval_id, definition, result, status)

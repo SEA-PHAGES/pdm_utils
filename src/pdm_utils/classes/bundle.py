@@ -54,6 +54,10 @@ class Bundle:
 
 
     # Evaluations.
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
     def check_ticket(self, eval_id=None, success="correct", fail="error"):
         """Check for whether a Ticket object is present.
@@ -68,9 +72,7 @@ class Bundle:
             result = "No ticket has been matched."
             status = fail
         definition = "Check if a ticket has been matched."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
+        self.set_eval(eval_id, definition, result, status)
 
     def check_genome_dict(self, key, expect=True, eval_id=None,
                           success="correct", fail="error"):
@@ -102,8 +104,7 @@ class Bundle:
                 status = fail
 
         definition = f"Check if the {key} genome is present."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
     def check_genome_pair_dict(self, key, expect=True, eval_id=None,
                                success="correct", fail="error"):
@@ -135,8 +136,7 @@ class Bundle:
                 status = fail
 
         definition = f"Check if the {key} genome_pair is present."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        self.set_eval(eval_id, definition, result, status)
 
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle
