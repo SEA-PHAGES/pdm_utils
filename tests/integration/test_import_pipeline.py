@@ -64,7 +64,6 @@ from pathlib import Path
 import pymysql
 import shutil
 import subprocess
-import tempfile
 import unittest
 from unittest.mock import patch
 from pdm_utils import run

@@ -16,6 +16,13 @@ from pdm_utils.functions import basic, mysqldb
 from pdm_utils.pipelines import import_genome
 
 
+# Create the main test directory in which all files will be
+# created and managed.
+test_root_dir = Path("/tmp", "pdm_utils_import_tests")
+if test_root_dir.exists() == True:
+    shutil.rmtree(test_root_dir)
+test_root_dir.mkdir()
+
 def count_status(item, *args):
     count = 0
     status_set = set()
@@ -94,9 +101,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         proc = subprocess.check_call(command_list, stdin = handle)
         handle.close()
 
-
-
-        self.base_dir = Path(unittest_dir,"test_wd/test_import")
+        self.base_dir = Path(test_root_dir, "test_import")
         self.base_dir.mkdir()
 
         self.genome_folder = Path(self.base_dir,"genome_folder")
@@ -529,7 +534,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     def setUp(self):
 
         self.test_filepath1 = Path(test_files_path, "test_flat_file_1.gb")
-        self.test_directory1 = Path(unittest_dir, "test_wd/test_dir")
+        self.test_directory1 = Path(test_root_dir, "test_dir")
         self.test_directory1.mkdir()
 
         # Minimum args list
@@ -646,7 +651,7 @@ class TestImportGenomeMain3(unittest.TestCase):
     def setUp(self):
 
         self.import_table = Path(test_files_path, "test_import_table_1.csv")
-        self.base_dir = Path(unittest_dir, "test_wd/test_folder")
+        self.base_dir = Path(test_root_dir, "test_folder")
         self.base_dir.mkdir()
 
         self.input_folder = Path(self.base_dir, "input_folder")
@@ -1224,7 +1229,7 @@ class TestImportGenomeMain6(unittest.TestCase):
 
     def setUp(self):
 
-        self.base_dir = Path(unittest_dir,"test_wd/test_import")
+        self.base_dir = Path(test_root_dir,"test_import")
         self.base_dir.mkdir()
 
         self.genome_folder = Path(self.base_dir, "genomes")
