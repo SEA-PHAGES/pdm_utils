@@ -980,14 +980,23 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     logger.info(f"Checking genome: {gnm.id}, {gnm.type}.")
 
     if tkt_type == "add":
+        pfx = "A genome that needs to be added "
         gnm.check_attribute("id", phage_id_set | {""},
-                            expect=False, eval_id="GNM_001")
+                            expect=False, eval_id="GNM_001",
+                            def=(pfx + "cannot have a PhageID that is already "
+                                 "in the database or is ''."))
         gnm.check_attribute("name", phage_id_set | {""},
-                            expect=False, eval_id="GNM_002")
+                            expect=False, eval_id="GNM_002",
+                            def=(pfx + "cannot have a Name that is already "
+                                 "in the database or is ''."))
         gnm.check_attribute("seq", seq_set | {constants.EMPTY_GENOME_SEQ},
-                            expect=False, eval_id="GNM_003")
+                            expect=False, eval_id="GNM_003",
+                            def=(pfx + "cannot have a nucleotide sequence "
+                                 "that is already in the database or is ''."))
         gnm.check_attribute("annotation_status", {"final"},
-                            expect=False, eval_id="GNM_004", fail="warning")
+                            expect=False, eval_id="GNM_004", fail="warning",
+                            def=(pfx + "is not expected to have a 'final' "
+                                 "annotation status."))
 
 
 
@@ -998,7 +1007,9 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         # accession data, so no need to check for 'replace' tickets.
         if gnm.accession != "":
             gnm.check_attribute("accession", accession_set,
-                                expect=False, eval_id="GNM_005")
+                                expect=False, eval_id="GNM_005",
+                                def=(pfx + "cannot have an Accession that "
+                                     "is already in the database."))
 
     # 'replace' ticket checks.
     else:
