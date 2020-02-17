@@ -32,6 +32,7 @@ logger.addHandler(logging.NullHandler())
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_import"
 VERSION = pdm_utils.__version__
+DEFAULT_OUTPUT_FOLDER = "/tmp/"
 
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
@@ -164,7 +165,7 @@ def parse_args(unparsed_args_list):
         default="product", choices=list(constants.DESCRIPTION_FIELD_SET),
         help=DESCRIPTION_FIELD_HELP)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
-        default=pathlib.Path("/tmp/"), help=OUTPUT_FOLDER_HELP)
+        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
     parser.add_argument("-l", "--log_file", type=str, default="import.log",
         help=LOG_FILE_HELP)
     parser.add_argument("-i", "--interactive", action="store_true",

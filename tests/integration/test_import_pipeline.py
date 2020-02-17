@@ -64,6 +64,7 @@ from pathlib import Path
 import pymysql
 import shutil
 import subprocess
+import tempfile
 import unittest
 from unittest.mock import patch
 from pdm_utils import run
@@ -71,23 +72,39 @@ from pdm_utils.constants import constants
 from pdm_utils.functions import run_modes
 from pdm_utils.pipelines import import_genome
 
+# Format of the date the script imports into the database.
+current_date = datetime.today().replace(hour=0, minute=0,
+                                        second=0, microsecond=0)
+#folder_date = date.today().strftime("%Y%m%d")
+
+# Create the main test directory in which all files will be
+# created and managed.
+test_root_dir = Path("/tmp", "pdm_utils_import_pipeline_tests")
+if test_root_dir.exists() == True:
+    shutil.rmtree(test_root_dir)
+test_root_dir.mkdir()
+
+# How the output folder is named.
+results_folder = Path(import_genome.RESULTS_FOLDER)
+
+# The import pipeline specifies the default output folder,
+# if no output folder is indicated at the command line.
+# Some tests below do not specify the output folder.
+# If it already exists, remove it prior to tests
+# (if it already exists, the import pipeline will need to
+# append an integer to the end of the folder name, and that will not
+# be reflected in the RESULTS_FOLDER global variable.)
+default_results_path = Path(import_genome.DEFAULT_OUTPUT_FOLDER, results_folder)
+if default_results_path.exists() == True:
+    shutil.rmtree(default_results_path)
 
 # Set up a log file to catch all logging for review.
 # Note: this should overwrite logging output file in import_genome pipeline.
-import_pipeline_test_log = Path("/tmp/pdm_utils_test_log.txt")
+import_pipeline_test_log = Path(test_root_dir, "test_log.txt")
 import_pipeline_test_log = import_pipeline_test_log.expanduser()
 import_pipeline_test_log = import_pipeline_test_log.resolve()
 logging.basicConfig(filename=import_pipeline_test_log, filemode="w",
                     level=logging.DEBUG)
-
-# Format of the date the script imports into the database.
-current_date = datetime.today().replace(hour=0, minute=0,
-                                        second=0, microsecond=0)
-
-# How the output folder is named.
-results_folder_date = date.today().strftime("%Y%m%d")
-results_folder = Path(import_genome.RESULTS_FOLDER)
-default_output_path = Path("/tmp/", results_folder)
 
 pipeline = "import_dev"
 
@@ -104,9 +121,7 @@ schema_filepath = Path(unittest_dir, "test_files/", schema_file)
 # Alice ("test_flat_file_10.gb"),
 base_flat_file = Path("test_flat_file_10.gb")
 base_flat_file_path = Path(unittest_dir, "test_files/", base_flat_file)
-
-# Set up paths for all primary input and output folders.
-base_dir = Path(unittest_dir, "test_wd/test_import")
+base_dir = Path(test_root_dir, "test_import")
 import_table_name = Path("import_table.csv")
 import_table = Path(base_dir, import_table_name)
 genome_folder = Path(base_dir, "genome_folder")
@@ -994,8 +1009,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         # This removes the default output folder in the 'tmp'
         # directory, which gets created if no output folder is
         # indicated at the command line, which occurs in some tests below.
-        if default_output_path.exists() == True:
-            shutil.rmtree(default_output_path)
+        if default_results_path.exists() == True:
+            shutil.rmtree(default_results_path)
 
 
 
@@ -2589,7 +2604,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome_errors, 0)
 
-    #HERE
+
     @patch("getpass.getpass")
     def test_replacement_12(self, getpass_mock):
         """Test pipeline with:
