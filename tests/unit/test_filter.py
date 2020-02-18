@@ -1,243 +1,110 @@
-"""Unit unittests for the filter module."""
-
-from pdm_utils.classes.filter import HistoryNode, Filter, CmdFilter
-import sqlalchemy
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.elements import BinaryExpression
+from pdm_utils.classes.filter import Filter
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes.schemagraph import SchemaGraph
 from unittest.mock import patch, Mock, PropertyMock
 import unittest
 
 class TestFilter(unittest.TestCase):
-    @patch("pdm_utils.classes.schemagraph.SchemaGraph")
-    def setUp(self, SchemaGraphMock):
-        SchemaGraphMock.return_value.\
-                show_tables.return_value = ["phage"]
+    def setUp(self):
+        mock_alchemist = AlchemyHandler()
+        mock_alchemist.username="root"
+        mock_alchemist.password="phage"
+        mock_alchemist.database="Actinobacteriophage"
+        mock_alchemist.connect()
+        mock_alchemist.build_schemagraph()
+        self.alchemist = mock_alchemist
+        self.db_filter = Filter(loader=self.alchemist)
 
-        self.db_graph_mock = SchemaGraphMock
-        engine_string = ("mysql+pymysql://"
-                         "pdm_anon:pdm_anon@localhost/"
-                         "actinobacteriophage")
-        self.engine = sqlalchemy.create_engine(engine_string, echo=True)
-        self.db_filter = Filter(self.engine)
+    def test_constructor_1(self): 
+        db_filter = Filter(loader=self.alchemist)
 
-    def test_translate_table_1(self):
-        "Verify translate_table() returns id match as expected."
-        print(self.db_filter.db_graph.show_tables())
-        table = self.db_filter.translate_table("phage")
-        self.assertEqual(table, "phage")
-        table = self.db_filter.translate_table("pHaGe")
-        self.assertEqual(table, "phage")
+    def test_constructor_2(self):
+        db_filter = Filter(loader=self.alchemist.engine)
 
-    def test_translate_table_2(self):
-        "Verify translate_table() raises ValueError as expected."
-        with self.assertRaises(ValueError):
-            self.db_filter.translate_table("test")
+    def test_constructor_2(self):
+        self.assertTrue(isinstance(self.db_filter.graph, SchemaGraph)) 
+        self.assertTrue(isinstance(self.db_filter.engine, Engine))
 
-    def test_translate_field_1(self):
-        "Verify translate_field() returns id match as expected."
-        self.db_graph_mock.return_value.\
-                get_table.return_value.\
-                show_columns.return_value = ["phageID"]
+    def test_values_1(self):
+        self.db_filter.values = ["Test1", "Test2"]
+        self.assertFalse(self.db_filter.values_valid)
 
-        field = self.db_filter.translate_field("phageID", "phage")
-        self.assertEqual(field, "phageID")
-        field = self.db_filter.translate_field("pHaGeiD", "phage")
-        self.assertEqual(field, "phageID")
+    def test_values_2(self):
+        with self.assertRaises(TypeError):
+            self.db_filter.values = "Hello"
 
-    def test_translate_field_2(self):
-        "Verify translate_field() raises ValueError as expected."
-        self.db_graph_mock.return_value.\
-                get_table.return_value.\
-                show_columns.return_value = ["phageID"]
+    def test_add_1(self):
+        self.db_filter.add("phage.PhageID=Trixie")
+        self.assertTrue("phage.PhageID=" in self.db_filter.filters.keys())
 
-        with self.assertRaises(ValueError):
-            self.db_filter.translate_field("gene", "phage")
+    def test_add_2(self):
+        self.db_filter.add("phage.PhageID=Trixie")
+        where_clauses = self.db_filter.filters["phage.PhageID="]
+        self.assertTrue(isinstance(where_clauses, list))
+        self.assertTrue(isinstance(where_clauses[0], BinaryExpression))
 
-    def test_check_operator_1(self):
-        "Verify as expected."
-        self.db_graph_mock.return_value.\
-                get_table.return_value.\
-                show_columns.return_value = [""]
+    def test_add_3(self):
+        self.db_filter.add("phage.PhageID=Trixie")
+        self.db_filter.add("phage.PhageID=D29")
+        where_clauses = self.db_filter.filters["phage.PhageID="]
+        self.assertEqual(len(where_clauses), 2)
 
-        self.db_graph_mock.return_value.\
-                get_table.return_value.\
-                show_columns.return_value = ["phageID"]
+    def test_remove_1(self):
+        self.db_filter.add("phage.PhageID=Trixie")
+        self.db_filter.remove("phage.PhageID=Trixie")
+        self.assertEqual(self.db_filter.filters, {})
+    
+    def test_remove_2(self):
+        self.db_filter.add("phage.PhageID=Trixie")
+        self.db_filter.add("phage.PhageID=D29")
+        self.db_filter.remove("phage.PhageID=Trixie")
+        where_clauses = self.db_filter.filters["phage.PhageID="]
+        self.assertTrue(len(where_clauses) == 1)
+        self.assertEqual(where_clauses[0].right.value, "D29")
+    
+    def test_build_where_clauses_1(self):
+        self.db_filter.add("phage.PhageID=Trixie")
+        self.db_filter.add("phage.PhageID=D29")
 
-    def test_build_queries_1(self):
-        "Verify as expected."
-        pass
+        queries = self.db_filter.build_where_clauses()
+        self.assertEqual(len(queries), 2)
 
-    def test_transpose_1(self):
-        "Verify as expected."
-        pass
+    def test_build_values(self):
+        phageid = self.alchemist.get_column("phage.PhageID")        
+        self.db_filter.key = phageid
 
-    def test_add_history_1(self):
-        "Verify as expected."
-        pass
+        self.db_filter.values = ["Trixie", "D29"]
+        values = self.db_filter.build_values()
 
-    def test_undo_1(self):
-        "Verify as expected."
-        pass
+        self.assertTrue("Trixie" in values)
+        self.assertTrue("D29" in values)
 
-    def test_refresh_1(self):
-        "Verify as expected."
-        pass
+    def test_refresh(self):
+        phageid = self.alchemist.get_column("phage.PhageID")        
+        self.db_filter.key = phageid
+        self.db_filter.values = ["Trixie", "D29", "Sheetz"]
+        self.db_filter.refresh()
 
-    def test_switch_table_1(self):
-        "Verify as expected."
-        pass
-
-    def test_add_filter_1(self):
-        "Verify as expected."
-        pass
-
-    def test_set_values_1(self):
-        "Verify as expected."
-        pass
-
-    def test_update_1(self):
-        "Verify as expected."
-        pass
+        self.assertTrue("Trixie" in self.db_filter.values)
+        self.assertTrue("D29" in self.db_filter.values)
+        self.assertFalse("Sheetz" in self.db_filter.values)
 
     def test_sort(self):
-        "Verify as expected."
-        pass
+        phageid = self.alchemist.get_column("phage.PhageID")        
+        self.db_filter.key = phageid
+        self.db_filter.values = ["Trixie", "D29"]
+        self.db_filter.sort(phageid)
 
-    def test_reset_1(self):
-        "Verify as expected."
-        pass
+        self.assertTrue("Trixie" in self.db_filter.values)
+        self.assertTrue("D29" in self.db_filter.values)
+        self.assertEqual(self.db_filter.values[0], "D29")
 
-    def test_results_1(self):
-        "Verify as expected."
-        pass
-
-    def test_hits_1(self):
-        "Verify as expected."
-        pass
-
-    def test_group_1(self):
-        "Verify as expected."
-        pass
-
-    def test_build_groups_1(self):
-        "Verify as expected."
-        pass
-
-    def test_group_transpose_1(self):
-        "Verify as expected."
-        pass
-
-    def test_large_num_set_distinct_query_1(self):
-        "Verify as expected."
-        pass
-
-    def test_copy_1(self):
-        "Verify as expected."
-        pass
-
-    def test_copy_values_1(self):
-        "Verify as expected."
-        pass
-
-    def test_write_csv(self):
-        "Verify as expected."
-        pass
-
-class TestHistoryNode(unittest.TestCase):
-    def setUp(self):
-        "Verify as expected."
-        pass
-
-    def test_init_1(self):
-        "Verify as expected."
-        pass
-
-    def test_get_id_1(self):
-        "Verify as expected."
-        pass
-
-    def test_get_history_1(self):
-        "Verify as expected."
-        pass
-
-    def test_has_next_1(self):
-        "Verify as expected."
-        pass
-
-    def test_get_next_1(self):
-        "Verify as expected."
-        pass
-
-    def test_add_next_1(self):
-        "Verify as expected."
-        pass
-
-    def test_create_next_1(self):
-        "Verify as expected."
-        pass
-
-    def test_remove_next_1(self):
-        "Verify as expected."
-        pass
-
-class TestCmdFilter(unittest.TestCase):
-    def setUp(self):
-        "Verify as expected."
-        pass
-
-    def test_preloop_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_add_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_update_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_group_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_results_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_hits_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_switch_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_reset_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_dump_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_set_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_show_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_undo_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_clear_1(self):
-        "Verify as expected."
-        pass
-
-    def test_do_exit_1(self):
-        "Verify as expected."
-        pass
+    def test_random(self):
+        pass 
 
 if __name__ == "__main__":
     unittest.main()
+        
+
