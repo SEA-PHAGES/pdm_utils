@@ -54,13 +54,6 @@ Each submodule contains a specific class.
    :undoc-members:
    :show-inheritance:
 
-``mysqlconnectionhandler``
---------------------------
-
-.. automodule:: pdm_utils.classes.mysqlconnectionhandler
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 ``source``
 ----------
