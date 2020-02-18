@@ -20,7 +20,6 @@ from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
-from pdm_utils.classes.mysqlconnectionhandler import MySQLConnectionHandler
 from pdm_utils.functions import basic
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
@@ -49,10 +48,7 @@ def run_export(unparsed_args_list):
     if args.verbose:
         print("Please input database credentials:")
     alchemist = establish_database_connection(args.database)
-    engine = MySQLConnectionHandler(database=args.database,
-                                    username=alchemist.username,
-                                    password=alchemist.password)
-    engine.validate_credentials()
+    engine = alchemist.engine
 
     csvx = False
     ffx = None
@@ -184,7 +180,7 @@ def parse_export(unparsed_args_list):
     parser.add_argument("-v", "--verbose", action="store_true",
                         help=VERBOSE_HELP)
 
- 
+
     if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
         table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage"])
         table_choices.update({"csv": ["domain", "gene", "gene_domain",
@@ -227,8 +223,8 @@ def execute_export(engine, alchemist, output_path, output_name,
     """Executes the entirety of the file export pipeline.
 
     :param sql_handle:
-        Input a valid MySqlConnectionHandler object.
-    :type sql_handle: MySqlConnectionHandler:
+        Input a valid SQLAlchemy Engine object.
+    :type sql_handle: Engine:
     :param export_path:
         Input a valid path to place export folder.
     :type export_path: Path
@@ -267,7 +263,7 @@ def execute_export(engine, alchemist, output_path, output_name,
 
     export_path = output_path.joinpath(output_name)
     export_path = basic.make_new_dir(output_path, export_path, attempt=50)
-    
+
     if db_export:
         if verbose:
             print("Writing SQL database file...")
@@ -281,7 +277,7 @@ def execute_export(engine, alchemist, output_path, output_name,
         db_filter = Filter(loader=alchemist, key=primary_key)
         db_filter.values = values
         for filter in filters:
-            db_filter.add(filter)  
+            db_filter.add(filter)
         db_filter.update()
 
         if filters and not db_filter.values:
@@ -299,23 +295,23 @@ def execute_export(engine, alchemist, output_path, output_name,
             values = values_map[export_path]
 
             if csv_export:
-                execute_csv_export(alchemist, engine, 
+                execute_csv_export(alchemist, engine,
                                         export_path,
                                         table=table, values=values,
                                         verbose=verbose)
 
             elif ffile_export != None:
-                execute_ffx_export(engine, 
+                execute_ffx_export(engine,
                                         export_path, ffile_export,
                                         db_version,
                                         table=table, values=values,
                                         verbose=verbose)
 
 def build_groups_map(db_filter, export_path, groups=[], values_map={},
-                                                       verbose=False): 
+                                                       verbose=False):
     db_filter = db_filter.copy()
 
-    current_group = groups.pop(0) 
+    current_group = groups.pop(0)
     groups_dict = db_filter.group(current_group)
 
     for group in groups_dict.keys():
@@ -329,7 +325,7 @@ def build_groups_map(db_filter, export_path, groups=[], values_map={},
         else:
             values_map.update({group_path : groups_dict[group]})
 
-def execute_csv_export(alchemist, engine, export_path, 
+def execute_csv_export(alchemist, engine, export_path,
                                         table="phage", values=[],
                                         verbose=False):
     remove_fields = {"phage"           : ["Sequence"],
@@ -348,9 +344,9 @@ def execute_csv_export(alchemist, engine, export_path,
     headers = []
     for column in table_obj.columns:
         if column.name not in remove_fields[table]:
-            select_columns.append(column) 
+            select_columns.append(column)
             headers.append(column.name)
-   
+
     for column in table_obj.primary_key.columns:
         primary_key = column
 
@@ -360,9 +356,9 @@ def execute_csv_export(alchemist, engine, export_path,
         query = query.where(primary_key.in_(values))
 
     results = alchemist.execute(query)
-    
+
     file_path = export_path.joinpath(f"{table}.csv")
-    basic.export_data_dict(results, file_path, headers, 
+    basic.export_data_dict(results, file_path, headers,
                                                include_headers=True)
 
 def execute_ffx_export(engine, output_path, file_format,
@@ -463,7 +459,7 @@ def convert_file_path(path: str):
     else:
         print("Path input does not direct to a file")
         raise ValueError
-            
+
 @singledispatch
 def parse_value_list_input(value_list_input):
     """Helper function to populate the filter list for a SQL query.
@@ -506,8 +502,8 @@ def set_cds_seqfeatures(phage_genome):
         Input a genome object to query cds data for.
     :type phage_genome: genome
     :param sql_database_handle:
-        Input a mysqlconnectionhandler object.
-    :type sql_database_handle: mysqlconnectionhandler
+        Input a SQLAlchemy Engine object.
+    :type sql_database_handle: Engine
     """
 
     try:
