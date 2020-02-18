@@ -2,6 +2,7 @@
 
 from pdm_utils.classes import eval
 from pdm_utils.classes import ticket
+from pdm_utils.functions import basic
 
 class Bundle:
 
@@ -59,7 +60,7 @@ class Bundle:
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
-    def check_ticket(self, eval_id=None, success="correct", fail="error"):
+    def check_ticket(self, eval_id=None, success="correct", fail="error", eval_def=None):
         """Check for whether a Ticket object is present.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -72,10 +73,11 @@ class Bundle:
             result = "No ticket has been matched."
             status = fail
         definition = "Check if a ticket has been matched."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
     def check_genome_dict(self, key, expect=True, eval_id=None,
-                          success="correct", fail="error"):
+                          success="correct", fail="error", eval_def=None):
         """Check if a genome is present in the genome dictionary.
 
         :param key:
@@ -104,10 +106,11 @@ class Bundle:
                 status = fail
 
         definition = f"Check if the {key} genome is present."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
     def check_genome_pair_dict(self, key, expect=True, eval_id=None,
-                               success="correct", fail="error"):
+                               success="correct", fail="error", eval_def=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
 
         :param key:
@@ -136,6 +139,7 @@ class Bundle:
                 status = fail
 
         definition = f"Check if the {key} genome_pair is present."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
     def check_for_errors(self):

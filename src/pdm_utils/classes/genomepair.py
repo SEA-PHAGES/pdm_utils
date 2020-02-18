@@ -2,6 +2,7 @@
 perform comparisons between them to identify inconsistencies."""
 
 from pdm_utils.classes import eval
+from pdm_utils.functions import basic
 
 
 
@@ -389,7 +390,7 @@ class GenomePair:
 
 
     def compare_attribute(self, attribute, expect_same=False, eval_id=None,
-                          success="correct", fail="error"):
+                          success="correct", fail="error", eval_def=None):
         """Compare specified attribute of each genome.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -428,6 +429,7 @@ class GenomePair:
             result = f"The {attribute} was not evaluated."
             status = "untested"
         definition = f"Compare the {attribute} attribute of each genome."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
 
@@ -590,7 +592,7 @@ class GenomePair:
 
     def compare_annotation_status(self, attribute, ref_name, query_name,
                                   ref_check_value, query_check_value,
-                                  eval_id=None, success="correct", fail="error"):
+                                  eval_id=None, success="correct", fail="error", eval_def=None):
         """Compare the annotation_status of each genome.
 
         :param attribute:
@@ -641,9 +643,10 @@ class GenomePair:
             result = "The annotation_status was not evaluated."
             status = "untested"
         definition = "Compare the annotation_status of both genomes."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-    def compare_date(self, expect, eval_id=None, success="correct", fail="error"):
+    def compare_date(self, expect, eval_id=None, success="correct", fail="error", eval_def=None):
         """Compare the annotation_status of each genome.
 
         :param expect:
@@ -670,6 +673,7 @@ class GenomePair:
             result = "An invalid comparison was selected."
             status = "untested"
         definition = "Compare the age of both genomes."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
 

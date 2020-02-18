@@ -11,14 +11,6 @@ import re
 
 class TestBasicFunctions(unittest.TestCase):
 
-
-    def setUp(self):
-        pass
-
-
-
-
-
     def test_edit_suffix_1(self):
         """Verify '_Draft' suffix is removed."""
         new_value = basic.edit_suffix("Phage_Draft", "remove")
@@ -1509,6 +1501,53 @@ class TestBasicFunctions(unittest.TestCase):
                       {"name":"Trixie", "host":"Gordonia"}]
         output_dict = basic.convert_list_to_dict(input_list, "name")
         self.assertEqual(len(output_dict.keys()), 0)
+
+
+
+
+    def test_join_strings_1(self):
+        """Verify two strings joined as expected."""
+        input_list = ["string1", "string2"]
+        output = basic.join_strings(input_list)
+        expected = "string1 string2"
+        self.assertEqual(output, expected)
+
+    def test_join_strings_2(self):
+        """Verify empty and non-empty strings are joined as expected."""
+        input_list = ["", "string2"]
+        output = basic.join_strings(input_list)
+        expected = "string2"
+        self.assertEqual(output, expected)
+
+    def test_join_strings_3(self):
+        """Verify non-empty and empty strings are joined as expected."""
+        input_list = ["string1", ""]
+        output = basic.join_strings(input_list)
+        expected = "string1"
+        self.assertEqual(output, expected)
+
+    def test_join_strings_4(self):
+        """Verify None and string are joined as expected."""
+        input_list = [None, "string2"]
+        output = basic.join_strings(input_list)
+        expected = "string2"
+        self.assertEqual(output, expected)
+
+    def test_join_strings_5(self):
+        """Verify multiple values are joined as expected."""
+        input_list = ["", "string1", "", None, "string2"]
+        output = basic.join_strings(input_list)
+        expected = "string1 string2"
+        self.assertEqual(output, expected)
+
+    def test_join_strings_6(self):
+        """Verify delimiter change."""
+        input_list = ["string1", "string2"]
+        output = basic.join_strings(input_list, delimiter="; ")
+        expected = "string1; string2"
+        self.assertEqual(output, expected)
+
+
 
 if __name__ == '__main__':
     unittest.main()

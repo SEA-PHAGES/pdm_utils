@@ -85,7 +85,7 @@ class GenomeTicket:
 
 
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
-                        success="correct", fail="error"):
+                        success="correct", fail="error", eval_def=None):
         """Check that the id is valid.
 
         :param attribute: Name of the ticket object attribute to evaluate.
@@ -120,11 +120,12 @@ class GenomeTicket:
             result = f"The {attribute} was not evaluated."
             status = "untested"
         definition = f"Check the {attribute} attribute."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
 
     def check_eval_flags(self, expect=True, eval_id=None,
-                         success="correct", fail="error"):
+                         success="correct", fail="error", eval_def=None):
         """Check that the eval_flags is valid.
 
         :param expect:
@@ -148,11 +149,12 @@ class GenomeTicket:
             result = "The field is not populated correctly."
             status = fail
         definition = "Check if eval_flags field is correctly populated."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
 
     def check_compatible_type_and_data_retain(self, eval_id=None,
-                                              success="correct", fail="error"):
+                                              success="correct", fail="error", eval_def=None):
         """Check if the ticket type and data_retain are compatible.
 
         If the ticket type is 'add', then the data_retain set is not
@@ -171,11 +173,12 @@ class GenomeTicket:
             status = success
         definition = ("Check if the ticket type and data_retain "
                       "are compatible.")
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
 
     def check_valid_data_source(self, ref_set_attr, check_set, eval_id=None,
-                                success="correct", fail="error"):
+                                success="correct", fail="error", eval_def=None):
         """Check that the values in the specified attribute are valid.
 
         :param ref_set_attr:
@@ -211,4 +214,5 @@ class GenomeTicket:
             status = fail
 
         definition = f"Check if {ref_set_attr} field is correctly populated."
+        definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)

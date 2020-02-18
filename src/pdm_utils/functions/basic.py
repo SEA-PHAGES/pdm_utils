@@ -1201,3 +1201,26 @@ def retrieve_data_dict(filepath):
         for dict in file_reader:
             data_dicts.append(dict)
     return data_dicts
+
+
+def join_strings(input_list, delimiter=" "):
+    concat_list = []
+    for value in input_list:
+        if (value is not None and value != ""):
+            concat_list.append(value)
+    if len(concat_list) > 0:
+        string = delimiter.join(concat_list)
+    else:
+        string = ""
+    return string
+
+# def join_strings(delimiter=" ", *args):
+#     string = ""
+#     concat_list = []
+#     for arg in args:
+#         if (arg is not None and arg != ""):
+#             if string != "":
+#                 string = string + delimiter + arg
+#             else:
+#                 string = arg
+#     return string
