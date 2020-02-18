@@ -23,11 +23,17 @@ class AlchemyHandler:
         self.metadata = None
         self.graph = None
         self.session = None
-
+            
         self.connected = False
         self.has_database = False
         self.has_credentials = False
-   
+  
+        if database != None:
+            self.has_database = True
+
+        if username != None and password != None:
+            self.has_credentials = True
+
     @property
     def database(self):
         database = self._database

@@ -59,8 +59,8 @@ def translate_column(db_graph, raw_column, table_object):
         if column.lower() == raw_column.lower():
             return column
     
-    raise ValueError(f"Field '{raw_field}' requested to be filtered"
-                     f" is not in '{table_node.id}'")
+    raise ValueError(f"Field '{raw_column}' requested to be filtered"
+                     f" is not in '{table_object.name}'")
 
 def check_operator(operator, column_object):
     """Parses a operator string to match a MySQL query operators.
@@ -223,8 +223,9 @@ def build_select(db_graph, columns, where=None, order_by=None,
                                                     from_=None, in_=None):
     if from_ == None:
         where_columns = []
-        for clause in where:
-            where_columns.append(clause.left) 
+        if where != None:
+            for clause in where:
+                where_columns.append(clause.left) 
 
         order_by_columns = []
 
@@ -235,11 +236,11 @@ def build_select(db_graph, columns, where=None, order_by=None,
 
     select_query = select(columns).select_from(fromclause)
 
-    if where:
+    if where != None:
         for clause in where:
             select_query = select_query.where(clause)
 
-    if order_by:
+    if order_by != None:
         for clause in order_by:
             select_query = select_query.order_by(clause)
 
@@ -249,8 +250,10 @@ def build_count(db_graph, columns, where=None, order_by=None,
                                                     from_=None, in_=None):    
     if from_ == None:
         where_columns = []
-        for clause in where:
-            where_columns.append(clause.left) 
+
+        if where != None:
+            for clause in where:
+                where_columns.append(clause.left) 
 
         order_by_columns = []
 
@@ -265,11 +268,11 @@ def build_count(db_graph, columns, where=None, order_by=None,
 
     count_query = select(column_params).select_from(fromclause)
 
-    if where:
+    if where != None:
         for clause in where:
             count_query = count_query.where(clause)
 
-    if order_by:
+    if order_by != None:
         for clause in order_by:
             count_query = count_query.order_by(clause)
     

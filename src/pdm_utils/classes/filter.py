@@ -50,8 +50,8 @@ class Filter:
        
         load_filter(self, loader)        
         
-        if key:
-            self._key = None
+        if isinstance(key, Column):
+            self._key = key
         else:
             self._key = None
 
@@ -210,7 +210,11 @@ class Filter:
         if not self.values:
             return 
         
-        if not isinstance(column, Column):
+        if isinstance(column, str):
+            column = self.graph.get_column(column)
+        elif isinstance(column, Column):
+            pass
+        else:
             raise TypeError
 
         where_clause = (self.key.in_(self.values))
@@ -316,12 +320,19 @@ class Filter:
             print(f"Database hits: {len(self.values)}")
         return len(self._values)    
 
-    def group(self, group_column):
-        groups = self.transpose(group_column)
+    def group(self, column): 
+        if isinstance(column, str):
+            column = self.graph.get_column(column)
+        elif isinstance(column, Column):
+            pass
+        else:
+            raise TypeError
+
+        groups = self.transpose(column)
 
         group_results = {}
         for group in groups:
-            where_clause = (group_column == group) 
+            where_clause = (column == group) 
             values = self.build_values(where=[where_clause])
             group_results.update({group : values})
 
