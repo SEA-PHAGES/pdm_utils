@@ -16,6 +16,9 @@ from pdm_utils.functions import mysqldb
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import tickets
 
+# TODO toggles whether both ticket table files are generated.
+BOTH = True
+
 # TODO update column headers for import table
 # Old format
 IMPORT_COLUMNS1 = ["type",
@@ -404,14 +407,16 @@ def get_final_data(output_folder, matched_genomes):
     if count1 > 0:
         print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
         filepath = basic.prepare_filepath(phagesdb_folder, "import_table.csv")
-        import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
-        basic.export_data_dict(import_tickets, filepath, IMPORT_COLUMNS1)
+        import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
+        basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
-        # filepath2 = basic.prepare_filepath(phagesdb_folder, "import_table2.csv")
-        # phagesdb_ticket_list3 = convert_tickets_to_dict(import_tickets)
-        # basic.export_data_dict(phagesdb_ticket_list3, filepath2, IMPORT_COLUMNS2, include_headers=True)
+        if BOTH:
+            filepath2 = basic.prepare_filepath(phagesdb_folder, "import_table2.csv")
+            import_tickets2 = convert_tickets_to_dict(import_tickets)
+            basic.export_data_dict(import_tickets2, filepath2,
+                                   IMPORT_COLUMNS2, include_headers=True)
 
     if len(failed_list) > 0:
         print(f"{len(failed_list)} phage(s) failed to be retrieved:")
@@ -773,14 +778,16 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
     # Now make the import table.
     if len(import_tickets) > 0:
         filepath = basic.prepare_filepath(output_folder, "import_table.csv")
-        import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
-        basic.export_data_dict(import_tickets, filepath, IMPORT_COLUMNS1)
+        import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
+        basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
-        # filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
-        # import_tickets = convert_tickets_to_dict(import_tickets)
-        # basic.export_data_dict(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
+        if BOTH:
+            filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
+            import_tickets2 = convert_tickets_to_dict(import_tickets)
+            basic.export_data_dict(import_tickets2, filepath2,
+                                   IMPORT_COLUMNS2, include_headers=True)
 
 
 # TODO unittest.
@@ -878,14 +885,16 @@ def retrieve_drafts(output_folder, phage_list):
     # Now make the import table.
     if len(import_tickets) > 0:
         filepath = basic.prepare_filepath(output_folder, "import_table.csv")
-        import_tickets = convert_tickets_to_dict(import_tickets, old_format=True)
-        basic.export_data_dict(import_tickets, filepath, IMPORT_COLUMNS1)
+        import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
+        basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
-        # filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
-        # import_tickets = convert_tickets_to_dict(import_tickets)
-        # basic.export_data_dict(import_tickets, filepath2, IMPORT_COLUMNS2, include_headers=True)
+        if BOTH:
+            filepath2 = basic.prepare_filepath(output_folder, "import_table2.csv")
+            import_tickets2 = convert_tickets_to_dict(import_tickets)
+            basic.export_data_dict(import_tickets2, filepath2,
+                                   IMPORT_COLUMNS2, include_headers=True)
 
     # Report results
     if retrieved_tally > 0:
