@@ -120,7 +120,7 @@ def main(unparsed_args_list):
     args.output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
 
-    working_dir = pathlib.Path(f"{date}_new_data")
+    working_dir = pathlib.Path(f"{date}_get_data")
     working_path = basic.make_new_dir(args.output_folder, working_dir,
                                       attempt=10)
 
