@@ -1348,7 +1348,8 @@ class TestGenomeClass1(unittest.TestCase):
 
     def test_check_feature_coordinates_13(self):
         """Verify no error is produced when empty lists are passed through."""
-        self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True, tmrna=True, other=[])
+        self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True,
+                                           tmrna_ftr=True, other=[])
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_14(self):

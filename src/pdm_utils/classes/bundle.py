@@ -67,12 +67,15 @@ class Bundle:
         :type eval_id: str
         """
         if self.ticket is not None:
-            result = "A ticket has been matched."
+            result = ("A ticket is present. "
+                      f"ID: {self.ticket.id}. "
+                      f"Type: {self.ticket.type}. "
+                      f"PhageID: {self.ticket.phage_id}.")
             status = success
         else:
-            result = "No ticket has been matched."
+            result = "A ticket is not present."
             status = fail
-        definition = "Check if a ticket has been matched."
+        definition = "Check if a ticket is present."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -93,19 +96,19 @@ class Bundle:
         """
 
         if key in self.genome_dict.keys():
-            result = f"The {key} genome is present."
+            result = f"The '{key}' genome is present."
             if expect:
                 status = success
             else:
                 status = fail
         else:
-            result = f"The {key} genome is not present."
+            result = f"The '{key}' genome is not present."
             if not expect:
                 status = success
             else:
                 status = fail
 
-        definition = f"Check if the {key} genome is present."
+        definition = "Check if the a genome is present."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -126,19 +129,19 @@ class Bundle:
         """
 
         if key in self.genome_pair_dict.keys():
-            result = f"The {key} genome_pair is present."
+            result = f"The '{key}' genome_pair is present."
             if expect:
                 status = success
             else:
                 status = fail
         else:
-            result = f"The {key} genome_pair is not present."
+            result = f"The '{key}' genome_pair is not present."
             if not expect:
                 status = success
             else:
                 status = fail
 
-        definition = f"Check if the {key} genome_pair is present."
+        definition = "Check if the genome_pair is present."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 

@@ -72,10 +72,10 @@ EVAL_DESCRIPTIONS = {
     "GNM2_001": ("The genome to be replaced is only expected to have a 'draft' annotation status."),
 
     # Bundled data
-    "BNDL_001": (f"{pfx6} an import ticket."),
-    "BNDL_002": (f"{pfx6} genome data parsed from a file."),
-    "BNDL_003": (f"{pfx6} genome data parsed from an import ticket."),
-    "BNDL_004": (f"{pfx6} genome data parsed from PhagesDB."),
+    "BNDL_001": (f"{pfx6} an import ticket with instructions regarding how to import the genome data."),
+    "BNDL_002": (f"{pfx6} genome data parsed from a file that will be imported."),
+    "BNDL_003": (f"{pfx6} genome data parsed from an import ticket that is not present within the file."),
+    "BNDL_004": (f"{pfx6} genome data parsed from PhagesDB that is not present within the file."),
     "BNDL_005": (f"{pfx6} genome data parsed the MySQL database."),
     "BNDL_006": (f"{pfx6} paired genome data from a file and from a MySQL database."),
 

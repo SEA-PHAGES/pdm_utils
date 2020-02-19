@@ -1072,7 +1072,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                         fail="warning", eval_def=EDD["GNM_029"])
 
     # TODO set trna=True and tmrna=True after they are implemented.
-    gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna=False,
+    gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna_ftr=False,
                                   strand=False, eval_id="GNM_030",
                                   eval_def=EDD["GNM_030"])
 

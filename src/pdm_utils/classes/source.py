@@ -58,7 +58,7 @@ class Source:
 
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
                         success="correct", fail="error", eval_def=None):
-        """Check that the id is valid.
+        """Check that the attribute value is valid.
 
         :param attribute: Name of the source feature object attribute to evaluate.
         :type attribute: str
@@ -66,7 +66,7 @@ class Source:
             Set of reference values.
         :type check_set: set
         :param expect:
-            Indicates whether the id is expected to be present
+            Indicates whether the value is expected to be present
             in the check set.
         :type expect: bool
         :param eval_id:
@@ -80,18 +80,20 @@ class Source:
             test = False
             value1 = None
         if test:
+            value1_short = basic.truncate_value(str(value1), 30, "...")
+            msg = f"The {attribute} value '{value1_short}' is "
             value2 = basic.check_value_expected_in_set(
                         value1, check_set, expect)
             if value2:
-                result = f"The {attribute} is valid."
+                result = "valid."
                 status = success
             else:
-                result = f"The {attribute} is not valid."
+                result = "not valid."
                 status = fail
         else:
-            result = f"The {attribute} was not evaluated."
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check the {attribute} attribute."
+        definition = f"Check the value of the '{attribute}' attribute."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 

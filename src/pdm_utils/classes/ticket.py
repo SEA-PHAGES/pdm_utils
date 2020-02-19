@@ -135,6 +135,7 @@ class GenomeTicket:
         :type eval_id: str
         """
         keys = len(self.eval_flags)
+        msg = f"There are {keys} eval flags present, which is "
         if keys > 0 and expect:
             output = True
         elif keys == 0 and not expect:
@@ -143,12 +144,12 @@ class GenomeTicket:
             output = False
 
         if output:
-            result = "The field is populated correctly."
+            result = msg + "expected."
             status = success
         else:
-            result = "The field is not populated correctly."
+            result = msg + "not expected."
             status = fail
-        definition = "Check if eval_flags field is correctly populated."
+        definition = "Check if there are eval flags."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -163,15 +164,16 @@ class GenomeTicket:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
+        msg = (f"The ticket type is '{self.type}' and "
+               f"there are {len(self.data_retain)} values in the database "
+               "that are set to be retained, which is ")
         if (self.type == "add" and len(self.data_retain) > 0):
-            result = ("The ticket type indicates that a genome "
-                     "that will be added should also retain data, "
-                     "from a genome in the database, which is not expected.")
+            result = msg + "not expected."
             status = fail
         else:
-            result = "The ticket type and data_retain set are expected."
+            result = msg + "expected."
             status = success
-        definition = ("Check if the ticket type and data_retain "
+        definition = ("Check if the ticket type and data_retain setting "
                       "are compatible.")
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
@@ -200,17 +202,20 @@ class GenomeTicket:
             ref_set = None
         if ref_set is not None:
             invalid_values = ref_set - check_set
+            msg = f"The '{ref_set_attr}' field is ."
             if len(invalid_values) == 0:
-                result = "The field is populated correctly."
+                result = "populated correctly."
                 status = success
             else:
+                invalid_string = basic.join_strings(invalid_values,
+                                                    delimiter=", ")
                 result = (
-                    "The field is not populated correctly. The following "
+                    "not populated correctly. The following "
                     f"values are not permitted in '{ref_set_attr}': "
-                    f"{list(invalid_values)}")
+                    f"{invalid_string}")
                 status = fail
         else:
-            result = "Invalid field to be evaluated."
+            result = f"'{ref_set_attr}' is not a valid attribute to be evaluated."
             status = fail
 
         definition = f"Check if {ref_set_attr} field is correctly populated."
