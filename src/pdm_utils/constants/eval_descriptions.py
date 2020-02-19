@@ -56,7 +56,7 @@ EVAL_DESCRIPTIONS = {
     "GNM_027": (f"{pfx3} GC content equal to or less than 100."),
     "GNM_028": (f"{pfx3} a length greater than 0."),
     "GNM_029": (f"{pfx3} 1 or more annotated CDS features."),
-    "GNM_030": (f"{pfx3} 0 overlapping, duplicated, or partially-duplicated annotated features."),
+    "GNM_030": (f"{pfx3} 0 features that are nested within another feature, that contain the same start and stop coordinates as another feature, or that contain the same stop coordinate as another feature."),
     "GNM_031": (f"{pfx4} any ambiguous nucleotides or gaps."),
     "GNM_032": (f"{pfx4} any PhageID typos in the Description field."),
     "GNM_033": (f"{pfx4} any PhageID typos in the Source field."),

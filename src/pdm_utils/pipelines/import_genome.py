@@ -1018,7 +1018,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     # Depending on the annotation_status of the genome,
     # CDS features are expected to contain or not contain descriptions.
     # Draft genomes should not have any descriptions.
-    # Final genomes should not have any descriptions.
+    # Final genomes should have any descriptions.
     # There are no expectations for other types of genomes.
 
     # Also, Draft annotations should not have accession data.
@@ -1034,14 +1034,17 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         gnm.check_attribute("accession", {""}, expect=True,
                             eval_id="GNM_011", fail="warning", eval_def=EDD["GNM_011"])
 
-    elif gnm.annotation_status == "final":
-        gnm.check_attribute("name", {check_name}, expect=False,
-                            eval_id="GNM_012", fail="warning", eval_def=EDD["GNM_012"])
-        gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
-                            eval_id="GNM_013", fail="warning", eval_def=EDD["GNM_013"])
-
     else:
-        pass
+        # TODO set trna=True and tmrna=True after they are implemented.
+        gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna_ftr=False,
+                                      strand=False, eval_id="GNM_030",
+                                      eval_def=EDD["GNM_030"], fail="warning")
+
+        if gnm.annotation_status == "final":
+            gnm.check_attribute("name", {check_name}, expect=False,
+                                eval_id="GNM_012", fail="warning", eval_def=EDD["GNM_012"])
+            gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
+                                eval_id="GNM_013", fail="warning", eval_def=EDD["GNM_013"])
 
     check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)
     gnm.check_attribute("id", {check_id}, expect=False,
@@ -1070,11 +1073,6 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     gnm.check_magnitude("length", ">", 0, eval_id="GNM_028", eval_def=EDD["GNM_028"])
     gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_029",
                         fail="warning", eval_def=EDD["GNM_029"])
-
-    # TODO set trna=True and tmrna=True after they are implemented.
-    gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna_ftr=False,
-                                  strand=False, eval_id="GNM_030",
-                                  eval_def=EDD["GNM_030"])
 
     if eval_flags["check_seq"]:
         gnm.check_nucleotides(check_set=constants.DNA_ALPHABET,

@@ -598,7 +598,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
 
     def test_check_genome_2(self):
         """Verify correct number of evaluations are produced using:
@@ -611,7 +611,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
 
     def test_check_genome_3(self):
         """Verify correct number of evaluations are produced using:
@@ -626,7 +626,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
 
     def test_check_genome_4(self):
         """Verify correct number of evaluations are produced using:
@@ -671,7 +671,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
 
     def test_check_genome_7(self):
         """Verify correct number of evaluations are produced using:
@@ -686,7 +686,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 4)
 
     def test_check_genome_8(self):
         """Verify correct number of evaluations are produced using:
@@ -701,7 +701,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 4)
 
     def test_check_genome_9(self):
         """Verify correct number of evaluations are produced using:
@@ -716,7 +716,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
 
     def test_check_genome_10(self):
         """Verify correct number of evaluations are produced using:
@@ -731,7 +731,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
 
     def test_check_genome_11(self):
         """Verify correct number of errors are produced using:
@@ -959,6 +959,26 @@ class TestImportGenomeClass4(unittest.TestCase):
     def test_check_genome_28(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
+        duplicated feature coordinates."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm.name = "Trixie"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        self.cds2.start = 10
+        self.cds2.stop = 20
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        count = count_status(self.gnm, "error", "warning")
+        self.assertEqual(count, 1)
+
+    def test_check_genome_29(self):
+        """Verify correct number of errors are produced using:
+        'final' annotation_status, and
         'name' contains '_Draft' suffix."""
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
@@ -974,7 +994,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_29(self):
+    def test_check_genome_30(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
         '_cds_processed_descriptions_tally' == 0."""
@@ -992,7 +1012,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_30(self):
+    def test_check_genome_31(self):
         """Verify correct number of errors are produced using:
         ticket type = 'add', id contains '_Draft' suffix.
         'annotation_status' = 'draft',
@@ -1010,7 +1030,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_31(self):
+    def test_check_genome_32(self):
         """Verify correct number of errors are produced using:
         invalid 'annotation_status'."""
         self.gnm.annotation_status = "invalid"
@@ -1021,7 +1041,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_32(self):
+    def test_check_genome_33(self):
         """Verify correct number of errors are produced using:
         invalid 'annotation_author'."""
         self.gnm.annotation_author = -1
@@ -1033,7 +1053,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_33(self):
+    def test_check_genome_34(self):
         """Verify correct number of errors are produced using:
         invalid 'retrieve_record'."""
         self.gnm.retrieve_record = -1
@@ -1044,7 +1064,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_34(self):
+    def test_check_genome_35(self):
         """Verify correct number of errors are produced using:
         'cluster' not in cluster_set."""
         self.gnm.cluster = "Z"
@@ -1057,7 +1077,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_35(self):
+    def test_check_genome_36(self):
         """Verify correct number of errors are produced using:
         'subcluster' not in subcluster_set."""
         self.gnm.cluster = "Z"
@@ -1070,7 +1090,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_36(self):
+    def test_check_genome_37(self):
         """Verify correct number of errors are produced using:
         'subcluster' = 'none'."""
         self.gnm.subcluster = "none"
@@ -1081,8 +1101,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 0)
 
-
-    def test_check_genome_37(self):
+    def test_check_genome_38(self):
         """Verify correct number of errors are produced using:
         invalid 'translation_table'."""
         self.gnm.translation_table = 1
@@ -1093,7 +1112,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_38(self):
+    def test_check_genome_39(self):
         """Verify correct number of errors are produced using:
         'host_genus' not in host_set."""
         self.host_set = {"Gordonia"}
@@ -1104,7 +1123,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_39(self):
+    def test_check_genome_40(self):
         """Verify correct number of errors are produced using:
         'cluster' structured incorrectly."""
         self.gnm.cluster = "Z1"
@@ -1118,7 +1137,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_genome_40(self):
+    def test_check_genome_41(self):
         """Verify correct number of errors are produced using:
         'subcluster' structured incorrectly."""
         self.gnm.cluster = "Z"
@@ -1132,7 +1151,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_genome_41(self):
+    def test_check_genome_42(self):
         """Verify correct number of errors are produced using:
         incompatible 'cluster' and 'subcluster'."""
         self.gnm.cluster = "Z"
@@ -1146,7 +1165,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_42(self):
+    def test_check_genome_43(self):
         """Verify correct number of errors are produced using:
         invalid 'date'."""
         self.gnm.date = constants.EMPTY_DATE
@@ -1157,7 +1176,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_43(self):
+    def test_check_genome_44(self):
         """Verify correct number of errors are produced using:
         'gc' < 0."""
         self.gnm.gc = -1
@@ -1168,7 +1187,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_44(self):
+    def test_check_genome_45(self):
         """Verify correct number of errors are produced using:
         'gc' > 100."""
         self.gnm.gc = 101
@@ -1179,7 +1198,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_45(self):
+    def test_check_genome_46(self):
         """Verify correct number of errors are produced using:
         'length' = 0."""
         self.gnm.length = 0
@@ -1190,22 +1209,10 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_46(self):
+    def test_check_genome_47(self):
         """Verify correct number of errors are produced using:
         '_cds_features_tally' = 0."""
         self.gnm._cds_features_tally = 0
-        import_genome.check_genome(
-            self.gnm, self.tkt.type, self.tkt.eval_flags,
-            self.id_set, self.seq_set, self.host_set,
-            self.cluster_set, self.subcluster_set, self.accession_set)
-        count = count_status(self.gnm, "error", "warning")
-        self.assertEqual(count, 1)
-
-    def test_check_genome_47(self):
-        """Verify correct number of errors are produced using:
-        duplicated feature coordinates."""
-        self.cds2.start = 10
-        self.cds2.stop = 20
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,

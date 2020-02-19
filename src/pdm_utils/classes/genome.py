@@ -869,7 +869,7 @@ class Genome:
     def check_feature_coordinates(self, cds_ftr=False, trna_ftr=False,
                 tmrna_ftr=False, other=None, strand=False, eval_id=None,
                 success="correct", fail="error", eval_def=None):
-        """Identify overlapping, duplicated, or partially-duplicated
+        """Identify nested, duplicated, or partially-duplicated
         features.
 
         :param cds_ftr: Indicates whether ids of CDS features should be included.
@@ -901,7 +901,7 @@ class Genome:
             ftr_types.add("other")
             unsorted_features.extend(other)
         if strand:
-            s_info = "with"
+            s_info = "were"
             unsorted_f_features = [] # Forward orientation
             unsorted_r_features = [] # Reverse orientation
             index = 0
@@ -917,11 +917,15 @@ class Genome:
             unsorted_feature_lists.append(unsorted_f_features)
             unsorted_feature_lists.append(unsorted_r_features)
         else:
-            s_info = "without"
+            s_info = "were not"
             unsorted_feature_lists.append(unsorted_features)
         ft_string = basic.join_strings(ftr_types, delimiter=", ")
-        result = (f"The following types of features were evaluated {s_info} "
-                  f"regard to feature orientation: {ft_string}. ")
+        result = (f"The following types of features were evaluated: {ft_string}. "
+                  f"Features {ft_string} separately grouped "
+                  "by orientation for evaluation. ")
+
+        # result = (f"The following types of features were evaluated {s_info} "
+        #           f"regard to feature orientation: {ft_string}. ")
 
         msgs = ["There are one or more errors with the feature coordinates."]
         for unsorted_features in unsorted_feature_lists:
@@ -931,9 +935,19 @@ class Genome:
             while index < len(sorted_features) - 1:
                 current = sorted_features[index]
                 next = sorted_features[index + 1]
+                ftrs = (f"Feature1 ID: {current.id}, "
+                        f"start coordinate: {current.start}, "
+                        f"stop coordinate: {current.stop}, "
+                        f"orientation: {current.orientation}. "
+                        f"Feature2 ID: {next.id}, "
+                        f"start coordinate: {next.start}, "
+                        f"stop coordinate: {next.stop}, "
+                        f"orientation: {next.orientation}. ")
+
                 if (current.start == next.start and current.stop == next.stop):
-                    msgs.append("Features contain identical start and "
-                                "stop coordinates.")
+                    msgs.append(ftrs)
+                    msgs.append("Feature1 and Feature2 contain identical "
+                                "start and stop coordinates.")
 
                 # To identify nested features, the following tests
                 # avoid false errors due to genes that may wrap around the
@@ -942,25 +956,24 @@ class Genome:
                       current.start < next.stop and
                       current.stop > next.start and
                       current.stop > next.stop):
-                    msgs.append((f"Feature {next.id}, with "
-                                 f"start coordinate: {next.start} and "
-                                 f"stop coordinate: {next.stop} "
-                                 f"is nested within feature {current.id}, with "
-                                 f"start coordinate: {current.start} and "
-                                 f"stop coordinate: {current.stop}.")
-                                 )
+                    msgs.append(ftrs)
+                    msgs.append("Feature2 is nested within Feature1.")
                 elif (current.start == next.start and
                         basic.reformat_strand(current.orientation,
                             format="fr_short") == "r" and
                         basic.reformat_strand(next.orientation,
                             format="fr_short") == "r"):
-                    msgs.append("Features contain the same stop coordinate.")
+                    msgs.append(ftrs)
+                    msgs.append(("Feature1 and Feature2 contain "
+                                 "identical stop coordinate."))
                 elif (current.stop == next.stop and
                         basic.reformat_strand(current.orientation,
                             format="fr_short") == "f" and
                         basic.reformat_strand(next.orientation,
                             format="fr_short") == "f"):
-                    msgs.append("Features contain the same stop coordinate.")
+                    msgs.append(ftrs)
+                    msgs.append(("Feature1 and Feature2 contain "
+                                 "identical stop coordinate."))
                 else:
                     pass
                 index += 1
@@ -970,7 +983,6 @@ class Genome:
         else:
             result = result + "The feature coordinates are correct."
             status = success
-        definition = ("Check if there are any duplication errors with "
-                      "feature coordinates.")
+        definition = ("Check if there are any feature coordinate conflicts.")
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
