@@ -193,7 +193,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     logger.info("Setting up environment.")
 
     # Get the files to process.
-    files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
+    files_to_process = basic.identify_contents(genome_folder, kind="file",
+                                               ignore_set=set([".DS_Store"]))
     file_msg = f"There are {len(files_to_process)} flat files to evaluate."
     if len(files_to_process) == 0:
         logger.error(file_msg)
@@ -201,6 +202,9 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     else:
         logger.info(file_msg)
 
+
+    #HERE
+    # TODO there should now be two log foler paths, one for fail and one for success.
     log_folder_path = pathlib.Path(output_folder, "file_logs")
     log_folder_path.mkdir()
 
@@ -220,8 +224,20 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         print(progress)
         logger.info(progress)
 
-    start_count = mysqldb.get_phage_table_count(engine)
+    # Set up output folders. Creating all folders in advance, since
+    # logging the flatfile log files need a valid path.
+    success_path = pathlib.Path(output_folder, "success")
+    success_genomes_path = pathlib.Path(success_path, "genomes")
+    success_logs_path = pathlib.Path(success_path, "logs")
+    failed_path = pathlib.Path(output_folder, "fail")
+    failed_genomes_path = pathlib.Path(failed_path, "genomes")
+    failed_logs_path = pathlib.Path(failed_path, "logs")
+    output_folders = [success_path, success_genomes_path, success_logs_path,
+                      failed_path, failed_genomes_path, failed_logs_path]
+    for folder in output_folders:
+        folder.mkdir()
 
+    start_count = mysqldb.get_phage_table_count(engine)
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(
@@ -253,23 +269,17 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     headers = constants.IMPORT_TABLE_STRUCTURE["order"]
     if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
-        success_path = pathlib.Path(output_folder, "success")
-        success_path.mkdir()
         if len(success_ticket_list) > 0:
             success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
             basic.export_data_dict(success_ticket_list, success_tkt_file,
                                        headers, include_headers=True)
         if len(success_filepath_list) > 0:
-            success_genomes_path = pathlib.Path(success_path, "genomes")
-            success_genomes_path.mkdir()
             for file in success_filepath_list:
                 new_file = pathlib.Path(success_genomes_path, file.name)
                 shutil.copy(str(file), str(new_file))
 
     logger.info("Logging failed tickets and files.")
     if (len(failed_ticket_list) > 0 or len(failed_filepath_list) > 0):
-        failed_path = pathlib.Path(output_folder, "fail")
-        failed_path.mkdir()
         if len(failed_ticket_list) > 0:
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
             basic.export_data_dict(failed_ticket_list, failed_tkt_file,
@@ -281,14 +291,19 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                 summary.append(f"{tkt_summary}")
 
         if len(failed_filepath_list) > 0:
-            failed_genomes_path = pathlib.Path(failed_path, "genomes")
-            failed_genomes_path.mkdir()
             for file in failed_filepath_list:
                 new_file = pathlib.Path(failed_genomes_path, file.name)
                 shutil.copy(str(file), str(new_file))
             summary.append(f"{len(failed_filepath_list)} genome(s) NOT imported:")
             for file in failed_filepath_list:
                 summary.append(f"{file.name}")
+
+    # Now check which folders are empty and remove them.
+    # List needs to be reversed. For instance, the main 'success' folder
+    # can't be removed until the 'genomes' and 'logs' folders are removed.
+    for folder in reversed(output_folders):
+        if len(basic.identify_contents(folder, kind=None)) == 0:
+            folder.rmdir()
 
     print("\n\n\n")
     for line in summary:

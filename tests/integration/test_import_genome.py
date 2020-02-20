@@ -1442,7 +1442,7 @@ class TestImportGenomeMain6(unittest.TestCase):
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
     @patch("sys.exit")
-    def test_data_io_6(self, sys_exit_mock, get_count_mock, pft_mock):
+    def test_data_io_4(self, sys_exit_mock, get_count_mock, pft_mock):
         """Verify data_io is not successful when there
         are no files to process."""
         self.genome_folder.mkdir()
@@ -1462,7 +1462,7 @@ class TestImportGenomeMain6(unittest.TestCase):
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock):
+    def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is not successful when there are no tickets to process."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()

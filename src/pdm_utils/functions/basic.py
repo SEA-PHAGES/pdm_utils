@@ -789,23 +789,41 @@ def ask_yes_no(prompt="", response_attempt=1):
     return response
 
 
-def identify_files(path_to_folder, ignore_set=set()):
-    """Create a list of filenames from an indicated directory.
+def identify_contents(path_to_folder, kind=None, ignore_set=set()):
+    """Create a list of filenames and/or folders from an indicated directory.
 
     :param path_to_folder: A valid directory path.
     :type path_to_folder: Path
+    :param kind:
+
+        ("file", "dir"), corresponding with paths to be
+        checked as either files or directories.
+    :type kind: str
     :param ignore_set:
-        A set of strings representing filenames to ignore.
+        A set of strings representing file or folder names to ignore.
     :type ignore_set: set
-    :returns: List of valid files in the directory.
+    :returns: List of valid contents in the directory.
     :rtype: list
     """
-    files_in_folder = []
+    contents = []
     for item in path_to_folder.iterdir():
         item_path = Path(path_to_folder, item)
-        if (item_path.is_file() and item.name not in ignore_set):
-            files_in_folder.append(item)
-    return files_in_folder
+        if kind == "file":
+            if (item_path.is_file() and item.name not in ignore_set):
+                contents.append(item)
+        elif kind == "dir":
+            if (item_path.is_dir() and item.name not in ignore_set):
+                contents.append(item)
+        elif kind == None:
+            if item.name not in ignore_set:
+                contents.append(item)
+        else:
+            msg = (f"{kind} is not a valid kind (None, dir, file) "
+                  "for this function.")
+            print(msg)
+            # Returns None so that it is clear it wasn't evaluated.
+            contents = None
+    return contents
 
 
 def expand_path(input_path):
