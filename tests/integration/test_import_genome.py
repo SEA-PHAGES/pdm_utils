@@ -499,14 +499,17 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_prepare_bundle_10(self, ask_mock, choose_mock):
         """Verify bundle is returned with the CDS descriptions derived
-        from 'function' instead of 'product', after it is
-        interactively selected using interactive = True."""
+        from 'product' instead of 'function', after it is
+        interactively selected using interactive = True.
+        There are 0 'function' descriptions.
+        There are ~30 of 'product' descriptions."""
         self.tkt1.data_add = set(["host_genus", "subcluster",
                                   "annotation_status", "annotation_author",
                                   "retrieve_record", "accession"])
+        self.tkt1.description_field = "function"
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         ask_mock.side_effect = [False]
-        choose_mock.side_effect = ["function"]
+        choose_mock.side_effect = ["product"]
         bndl = import_genome.prepare_bundle(
                     filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
@@ -520,11 +523,10 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl_tkt = bndl.ticket
         with self.subTest():
             self.assertTrue(ff_gnm._cds_processed_descriptions_tally != \
-                            ff_gnm._cds_processed_products_tally)
+                            ff_gnm._cds_processed_functions_tally)
         with self.subTest():
             self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
-                             ff_gnm._cds_processed_functions_tally)
-
+                             ff_gnm._cds_processed_products_tally)
 
 
 
@@ -1116,8 +1118,12 @@ class TestImportGenomeMain5(unittest.TestCase):
 
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
+    # Since interactive=True and there are evals with 'error' status,
+    # need to patch input to proceed.
+    @patch("builtins.input")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_8(self, ask_mock, execute_mock):
+    def test_process_files_and_tickets_8(self, ask_mock, input_mock,
+                                         execute_mock):
         """Verify correct output using:
         one file with matched ticket,
         one error evaluation in ticket (ensuring at least one error
@@ -1147,8 +1153,12 @@ class TestImportGenomeMain5(unittest.TestCase):
 
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
+    # Since interactive=True and there are evals with 'error' status,
+    # need to patch input to proceed.
+    @patch("builtins.input")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_9(self, ask_mock, execute_mock):
+    def test_process_files_and_tickets_9(self, ask_mock, input_mock,
+                                         execute_mock):
         """Verify correct output using:
         one file with matched ticket,
         one error evaluation in ticket (ensuring at least one error
@@ -1185,7 +1195,7 @@ class TestImportGenomeMain5(unittest.TestCase):
                                           ask_mock, execute_mock):
         """Verify correct output using:
         two files with matched tickets,
-        one error evaluation in ticket (ensuring at least one error
+        one warning evaluation in ticket (ensuring at least one warning
         in all evaluations),
         interactive = True,
         with all 'warning' status corrections to 'error' in first file
@@ -1511,7 +1521,8 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     def test_review_evaluation_list_1(self):
-        """Verify no need for user input if there are no 'warning' evals."""
+        """Verify no need for user input if there are "
+        "no 'warning' or 'error' evals."""
         eval_list = [self.eval_correct1, self.eval_correct2, self.eval_correct3]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():

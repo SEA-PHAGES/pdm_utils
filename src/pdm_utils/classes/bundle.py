@@ -108,7 +108,7 @@ class Bundle:
             else:
                 status = fail
 
-        definition = "Check if the a genome is present."
+        definition = "Check if a genome is present."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -141,7 +141,7 @@ class Bundle:
             else:
                 status = fail
 
-        definition = "Check if the genome_pair is present."
+        definition = "Check if a genome_pair is present."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 

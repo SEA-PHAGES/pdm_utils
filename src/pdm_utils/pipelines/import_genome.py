@@ -216,7 +216,9 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
     else:
-        logger.info(f"There are {len(ticket_dict.keys())} import tickets.")
+        progress = f"There are {len(ticket_dict.keys())} import tickets."
+        print(progress)
+        logger.info(progress)
 
     start_count = mysqldb.get_phage_table_count(engine)
 
@@ -241,11 +243,13 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     # Output data.
     logger.info("Logging successful tickets and files.")
-    summary = ["Summary of import: "]
-    summary.append(f"{start_count} genome(s) in the database before import.")
-    summary.append(f"{final_count} genome(s) in the database after import.")
-    summary.append(f"{len(success_ticket_list)} ticket(s) successfully processed.")
-    summary.append(f"{len(success_filepath_list)} genome(s) successfully imported.")
+    summary = [
+        "Summary of import: ",
+        f"{start_count} genome(s) in the database before import.",
+        f"{final_count} genome(s) in the database after import.",
+        f"{len(success_ticket_list)} ticket(s) successfully processed.",
+        f"{len(success_filepath_list)} genome(s) successfully processed."
+        ]
 
     headers = constants.IMPORT_TABLE_STRUCTURE["order"]
     if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
@@ -286,6 +290,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             for file in failed_filepath_list:
                 summary.append(f"{file.name}")
 
+    print("\n\n\n")
     for line in summary:
         print(line)
         logger.info(line)
@@ -471,7 +476,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     file_count = 1
     for filepath in files_in_folder:
         replace_gnm_pair_key = file_ref + "_" + retain_ref
-        logger.info(f"Preparing data for file #{file_count}: {filepath.name}.")
+        progress = f"Preparing data for file #{file_count}: {filepath.name}."
+        print("\n\n" + progress)
+        logger.info(progress)
         bndl = prepare_bundle(filepath=filepath, ticket_dict=ticket_dict,
                               engine=engine,
                               genome_id_field=genome_id_field,
@@ -504,8 +511,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
         dict_of_eval_lists = bndl.get_evaluations()
 
-        #HERE
-        # Output to new file: logfile='<path>/filepath.stem + .log'
+        # TODO unit test logfile?
         if log_folder_path is not None:
             if file_ref in bndl.genome_dict.keys():
                 gnm = bndl.genome_dict[file_ref]
@@ -519,9 +525,6 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
         log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
         evaluation_dict[bndl.id] = dict_of_eval_lists
-        # evaluation_dict[bndl.id] = bndl.get_evaluations()
-
-
         result = import_into_db(bndl, engine=engine,
                                 gnm_key=file_ref, prod_run=prod_run)
         if result:
@@ -561,8 +564,15 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
             failed_ticket_list.append(bndl.ticket.data_dict)
             bundle_count += 1
 
-        # TODO add step to log which tickets are unmatched?
-        # Or has this already been done above?
+        # TODO unit test logfile?
+        if log_folder_path is not None:
+            logfile_path = pathlib.Path(log_folder_path,
+                                        bndl.ticket.phage_id + "__unmatched_ticket.log")
+        else:
+            logfile_path = None
+        dict_of_eval_lists = bndl.get_evaluations()
+        log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
+        evaluation_dict[bndl.id] = dict_of_eval_lists
 
     return (success_ticket_list, failed_ticket_list, success_filepath_list,
             failed_filepath_list, evaluation_dict)
@@ -790,15 +800,16 @@ def review_evaluation_list(evaluation_list, interactive=False):
     x = 0
     while (exit is False and x < len(evaluation_list)):
         evl = evaluation_list[x]
+        summary = (f"Evaluation ID: {evl.id}."
+                   f"\nStatus: {evl.status}."
+                   f"\nDefinition: {evl.definition}"
+                   f"\nResult: {evl.result}")
         if evl.status == "warning":
             if interactive == True:
                 # If interactive is set to True, ask user if 'warning'
                 # is correct, and change the status as needed.
                 print("\n\nThe following evaluation is set to 'warning':")
-                print(f"Evaluation ID: {evl.id}")
-                print(f"Status: {evl.status}")
-                print(f"Definition: {evl.definition}")
-                print(f"Result: {evl.result}")
+                print(summary)
                 prompt = ("\nThis evaluation will remain as a 'warning' "
                           "(instead of it being changed to an 'error'). "
                           "Is this correct? ")
@@ -817,6 +828,16 @@ def review_evaluation_list(evaluation_list, interactive=False):
                 evl.status = "error"
                 evl.result = evl.result + \
                             " Status automatically changed from 'warning'."
+
+        # TODO unittest this elif block.
+        elif evl.status == "error":
+            if interactive == True:
+                # Notify user an error was encountered.
+                print("\n\nThe following evaluation is set to 'error':")
+                print(summary)
+                input("\nPress ENTER to continue.")
+        else:
+            pass
         x += 1
     return exit
 
@@ -834,6 +855,7 @@ def set_cds_descriptions(gnm, tkt, interactive=False):
     gnm.tally_cds_descriptions()
 
 
+# TODO improve unittests since the function has become more complicated.
 def review_cds_descriptions(feature_list, description_field):
     """Iterate through all CDS features and review descriptions.
     """
@@ -841,7 +863,10 @@ def review_cds_descriptions(feature_list, description_field):
     summary = []
     x = 20
     y = "..."
+    mod_field = "processed_" + description_field
+    tally = 0
     for cds in feature_list:
+        # Get truncated descriptions to report to user.
         short_product = basic.truncate_value(cds.processed_product, x, y)
         short_function = basic.truncate_value(cds.processed_function, x, y)
         short_note = basic.truncate_value(cds.processed_note, x, y)
@@ -854,10 +879,27 @@ def review_cds_descriptions(feature_list, description_field):
                 "Note": short_note
                 }
         summary.append(dict)
-    print(tabulate(summary, headers="keys"))
-    print(f"Descriptions in the {description_field} field will be imported.")
-    prompt = "Is this correct? "
-    result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+
+        # Count the number of descriptions that are not
+        # in the selected description field.
+        if (mod_field != "processed_product" and len(short_product) > 0):
+            tally += 1
+        if (mod_field != "processed_function" and len(short_function) > 0):
+            tally += 1
+        if (mod_field != "processed_note" and len(short_note) > 0):
+            tally += 1
+
+
+    # If there are > 0 descriptions present in unselected description fields,
+    # print results and confirm with user.
+    result = True
+    if tally > 0:
+        print(tabulate(summary, headers="keys"))
+        print(f"Descriptions in the {description_field} qualifier "
+              f"will be imported, but there are {tally} description(s) "
+              "detected in other qualifiers.")
+        prompt = "Is this correct? "
+        result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
 
     # If the data is not correct, let the user select which description
     # field is most appropriate.

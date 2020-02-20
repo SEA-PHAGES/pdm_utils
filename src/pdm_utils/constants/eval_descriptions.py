@@ -3,10 +3,11 @@ from pdm_utils.constants import constants
 
 
 def get_string(value_set):
-    string = ""
-    for value in value_set:
-        string = string + ", " + str(value)
-    return value
+    value_list = list(value_set)
+    value_list.sort()
+    value_list = [str(x) for x in value_list]
+    string = ", ".join(value_list)
+    return string
 
 suffix = constants.NAME_SUFFIX
 statuses = get_string(constants.ANNOTATION_STATUS_SET)
