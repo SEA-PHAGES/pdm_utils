@@ -2983,7 +2983,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         all 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_28")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = True
+        ask_mock.return_value = False
         clear_descriptions(self.alice_record)
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
@@ -3010,7 +3010,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         NO 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_29")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = False
+        ask_mock.return_value = True
         clear_descriptions(self.alice_record)
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
@@ -3043,7 +3043,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         all 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_30")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = True
+        ask_mock.return_value = False
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_ticket["type"] = "add"
         create_import_table([self.alice_ticket], import_table)
@@ -3065,7 +3065,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         NO 'warnings' are changed to 'errors'."""
         logging.info("test_replacement_31")
         getpass_mock.side_effect = [user, pwd]
-        ask_mock.return_value = False
+        ask_mock.return_value = True
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_ticket["type"] = "add"
         create_import_table([self.alice_ticket], import_table)

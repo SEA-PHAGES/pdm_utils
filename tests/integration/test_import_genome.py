@@ -1125,7 +1125,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         interactive = True,
         with no 'warning' status corrections."""
         self.tkt1.evaluations = [eval.Eval(status="error")]
-        ask_mock.return_value = False
+        ask_mock.return_value = True
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
@@ -1156,7 +1156,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         interactive = True,
         with all 'warning' status changes to 'error'."""
         self.tkt1.evaluations = [eval.Eval(status="error")]
-        ask_mock.return_value = True
+        ask_mock.return_value = False
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
@@ -1208,7 +1208,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         bndl2.genome_dict["flat_file"] = gnm2
 
         prep_mock.side_effect = [bndl1, bndl2]
-        ask_mock.side_effect = [True, False]
+        ask_mock.side_effect = [False, True]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",
@@ -1525,7 +1525,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluation_list_2(self, ask_mock):
         """Verify only one call for user input, and
         verify no changes to status."""
-        ask_mock.side_effect = [False]
+        ask_mock.side_effect = [True]
         eval_list = [self.eval_correct1, self.eval_warning1, self.eval_correct2]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
@@ -1555,7 +1555,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluation_list_4(self, ask_mock):
         """Verify two calls for user input, and
         verify change to status."""
-        ask_mock.side_effect = [True, True]
+        ask_mock.side_effect = [False, False]
         eval_list = [self.eval_warning1, self.eval_correct1, self.eval_warning2]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
@@ -1572,7 +1572,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         """Verify only two calls for user input, with
         change to first status, no change for second, and
         exit before third."""
-        ask_mock.side_effect = [True, None, True]
+        ask_mock.side_effect = [False, None, False]
         eval_list = [self.eval_warning1, self.eval_warning2, self.eval_warning3]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
@@ -1602,7 +1602,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluations_2(self, ask_mock):
         """Verify results when bundle has:
         one error evaluation."""
-        ask_mock.side_effect = [True]
+        ask_mock.side_effect = [False]
         self.bndl.evaluations = [self.eval_warning1]
         import_genome.review_evaluations(self.bndl, interactive=True)
         self.assertEqual(self.bndl.evaluations[0].status, "error")
@@ -1621,7 +1621,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluations_4(self, ask_mock):
         """Verify results when bundle has:
         a ticket with one error evaluation."""
-        ask_mock.side_effect = [True]
+        ask_mock.side_effect = [False]
         self.tkt.evaluations = [self.eval_warning1]
         self.bndl.ticket = self.tkt
         import_genome.review_evaluations(self.bndl, interactive=True)
@@ -1632,7 +1632,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluations_5(self, ask_mock):
         """Verify results when bundle has:
         three genomes, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        ask_mock.side_effect = [False, False]
         self.gnm1.evaluations = [self.eval_warning1]
         self.gnm2.evaluations = [self.eval_correct1]
         self.gnm3.evaluations = [self.eval_warning2]
@@ -1655,7 +1655,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluations_6(self, ask_mock):
         """Verify results when bundle has:
         one genome with three CDS features, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        ask_mock.side_effect = [False, False]
         self.cds1.evaluations = [self.eval_warning1]
         self.cds2.evaluations = [self.eval_correct1]
         self.cds3.evaluations = [self.eval_warning2]
@@ -1677,7 +1677,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluations_7(self, ask_mock):
         """Verify results when bundle has:
         one genome with three source features, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        ask_mock.side_effect = [False, False]
         self.src1.evaluations = [self.eval_warning1]
         self.src2.evaluations = [self.eval_correct1]
         self.src3.evaluations = [self.eval_warning2]
@@ -1699,7 +1699,7 @@ class TestImportGenomeMain7(unittest.TestCase):
     def test_review_evaluations_8(self, ask_mock):
         """Verify results when bundle has:
         three genome_pairs, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        ask_mock.side_effect = [False, False]
         self.genome_pair1.evaluations = [self.eval_warning1]
         self.genome_pair2.evaluations = [self.eval_correct1]
         self.genome_pair3.evaluations = [self.eval_warning2]
@@ -1736,7 +1736,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.gnm1.source_features = [self.src1]
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        ask_mock.side_effect = [True, None, True, None, True]
+        ask_mock.side_effect = [False, None, False, None, False]
         import_genome.review_evaluations(self.bndl, interactive=True)
         tkt_list = self.bndl.ticket.evaluations
         cds1_list = self.bndl.genome_dict["gnm1"].cds_features[0].evaluations

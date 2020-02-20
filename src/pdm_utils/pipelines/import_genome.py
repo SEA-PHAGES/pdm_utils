@@ -783,14 +783,16 @@ def review_evaluation_list(evaluation_list, interactive=False):
                 print(f"Status: {evl.status}")
                 print(f"Definition: {evl.definition}")
                 print(f"Result: {evl.result}")
-                prompt = "\nShould this evaluation be changed to 'error'? "
+                prompt = ("\nThis evaluation will remain as a 'warning' "
+                          "(instead of it being changed to an 'error'). "
+                          "Is this correct? ")
                 result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
                 if result is None:
                     exit = True
-                elif result is True:
+                elif result is False:
                     evl.status = "error"
                     evl.result = evl.result + \
-                                 " Manually changed from 'warning' status."
+                                 " Status manually changed from 'warning'."
                 else:
                     pass
             else:
@@ -798,7 +800,7 @@ def review_evaluation_list(evaluation_list, interactive=False):
                 # change all 'warnings' to 'errors'.
                 evl.status = "error"
                 evl.result = evl.result + \
-                            " Automatically changed from 'warning' status."
+                            " Status automatically changed from 'warning'."
         x += 1
     return exit
 
