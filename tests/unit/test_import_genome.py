@@ -5,6 +5,7 @@ import unittest
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from datetime import datetime
+import pathlib
 import sqlalchemy
 from unittest.mock import patch
 from pdm_utils.classes import bundle
@@ -2150,11 +2151,123 @@ class TestImportGenomeClass9(unittest.TestCase):
 
 
 
+class TestImportGenomeClass10(unittest.TestCase):
+
+    def setUp(self):
+        self.tkt = ticket.GenomeTicket()
+        self.tkt.type = "replace"
+        self.tkt.phage_id = "Trixie_tkt"
+        self.gnm = genome.Genome()
+        self.gnm.id = "Trixie_gnm"
+        self.gnm.filename = "Trixie_file"
+        self.bndl = bundle.Bundle()
+        self.bndl._errors = 0
+        self.success_path = pathlib.Path("success_folder")
+        self.fail_path = pathlib.Path("fail_folder")
+        self.paths_dict = {"success": self.success_path,
+                           "fail": self.fail_path}
+        self.flatfile_path = pathlib.Path("/folder/to/Trixie_flatfile.txt")
 
 
 
 
+    def test_get_logfile_path_1(self):
+        """Verify returned path when:
+        bundle has 0 errors, paths_dict is provided, genome is provided,
+        filepath is provided, file_ref is provided,
+        and ticket is not provided."""
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = self.gnm.id + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.success_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
 
+    def test_get_logfile_path_2(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, genome is provided,
+        filepath is provided, file_ref is provided,
+        and ticket is not provided."""
+        self.bndl._errors = 1
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = self.gnm.id + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_3(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, ticket is provided,
+        filepath is not provided, file_ref is not provided,
+        and genome is not provided."""
+        self.bndl._errors = 1
+        self.bndl.ticket = self.tkt
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict, filepath=None,
+                            file_ref=None)
+        exp_name = (self.tkt.phage_id + "__" + "none" + ".log")
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_4(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, genome is not provided,
+        filepath is provided, file_ref is provided,
+        and ticket is not provided."""
+        self.bndl._errors = 1
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = "none" + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_5(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, genome is provided,
+        filepath is provided, file_ref is provided, and ticket is provided."""
+        self.bndl._errors = 1
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = self.gnm.id + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_6(self):
+        """Verify returned path when:
+        bundle has 1 errors, genome is provided, paths_dict is provided,
+        filepath is not provided, file_ref is provided,
+        and ticket is provided."""
+        self.bndl._errors = 1
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict, filepath=None,
+                            file_ref="flat_file")
+        exp_name = (self.tkt.phage_id + "__" + "none" + ".log")
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_7(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is not provided, genome is not provided,
+        filepath is not provided, file_ref is not provided,
+        and ticket is not provided."""
+        self.bndl._errors = 1
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=None, filepath=None,
+                            file_ref=None)
+        self.assertIsNone(logfile_path)
 
 
 if __name__ == '__main__':

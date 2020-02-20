@@ -203,10 +203,6 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         logger.info(file_msg)
 
 
-    #HERE
-    # TODO there should now be two log foler paths, one for fail and one for success.
-    log_folder_path = pathlib.Path(output_folder, "file_logs")
-    log_folder_path.mkdir()
 
     # Get the tickets.
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
@@ -237,6 +233,13 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     for folder in output_folders:
         folder.mkdir()
 
+
+    #HERE
+    # TODO there should now be two log folder paths, one for fail and one for success.
+    # log_folder_paths = pathlib.Path(output_folder, "file_logs")
+    # log_folder_paths.mkdir()
+    log_folder_paths_dict = {"success": success_logs_path,
+                             "fail": failed_logs_path}
     start_count = mysqldb.get_phage_table_count(engine)
 
     # Evaluate files and tickets.
@@ -247,7 +250,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                         genome_id_field=genome_id_field,
                         host_genus_field=host_genus_field,
                         interactive=interactive,
-                        log_folder_path=log_folder_path)
+                        log_folder_paths_dict=log_folder_paths_dict)
 
     final_count = mysqldb.get_phage_table_count(engine)
 
@@ -314,7 +317,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     engine.dispose()
 
 
-
+# TODO improve unittests
 def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
     """Export evaluations to log.
     """
@@ -431,11 +434,11 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         logger.info("Tickets were successfully generated from import table.")
         return ticket_dict
 
-# TODO unittest log_folder_path parameter that has been added.
+# TODO unittest log_folder_paths_dict parameter that has been added.
 def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               prod_run=False, genome_id_field="",
                               host_genus_field="", interactive=False,
-                              log_folder_path=None):
+                              log_folder_paths_dict=None):
     """Process GenBank-formatted flat files.
 
     :param ticket_dict:
@@ -523,20 +526,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
         review_evaluations(bndl, interactive=interactive)
         bndl.check_for_errors()
-
         dict_of_eval_lists = bndl.get_evaluations()
 
-        # TODO unit test logfile?
-        if log_folder_path is not None:
-            if file_ref in bndl.genome_dict.keys():
-                gnm = bndl.genome_dict[file_ref]
-                gnm_id = gnm.id
-            else:
-                gnm_id = ""
-            logfile_path = pathlib.Path(log_folder_path,
-                                        gnm_id + "__" + filepath.stem + ".log")
-        else:
-            logfile_path = None
+        logfile_path = get_logfile_path(bndl, paths_dict=log_folder_paths_dict,
+                                        filepath=filepath, file_ref=file_ref)
 
         log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
         evaluation_dict[bndl.id] = dict_of_eval_lists
@@ -575,22 +568,54 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                       subcluster_set=phagesdb_subcluster_set,
                       file_ref=file_ref, ticket_ref=ticket_ref,
                       retrieve_ref=retrieve_ref, retain_ref=retain_ref)
-            evaluation_dict[bndl.id] = bndl.get_evaluations()
+
+            # TODO slight revamping - will probably need to be unittested.
+            bndl.check_for_errors()
+            # evaluation_dict[bndl.id] = bndl.get_evaluations()
+            dict_of_eval_lists = bndl.get_evaluations()
+
+            # TODO unit test logfile
+            logfile_path = get_logfile_path(bndl,
+                                            paths_dict=log_folder_paths_dict,
+                                            filepath=None, file_ref=None)
+            log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
+            evaluation_dict[bndl.id] = dict_of_eval_lists
             failed_ticket_list.append(bndl.ticket.data_dict)
             bundle_count += 1
 
-        # TODO unit test logfile?
-        if log_folder_path is not None:
-            logfile_path = pathlib.Path(log_folder_path,
-                                        bndl.ticket.phage_id + "__unmatched_ticket.log")
-        else:
-            logfile_path = None
-        dict_of_eval_lists = bndl.get_evaluations()
-        log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
-        evaluation_dict[bndl.id] = dict_of_eval_lists
-
     return (success_ticket_list, failed_ticket_list, success_filepath_list,
             failed_filepath_list, evaluation_dict)
+
+
+def get_logfile_path(bndl, paths_dict=None, filepath=None, file_ref=None):
+    """Choose the path to output the file-specific log."""
+    # Filename refers to the file that was attempted to be parsed.
+    # The genome object contains the filename data only if the file was
+    # successfully parsed. If it is not successfully parsed, there would
+    # be no genome object to retrieve the filename.
+    if paths_dict is not None:
+        if bndl._errors > 0:
+            log_folder_path = paths_dict["fail"]
+        else:
+            log_folder_path = paths_dict["success"]
+
+        if filepath is None:
+            # If there is no filepath, then it is an unmatched ticket.
+            id = bndl.ticket.phage_id
+            filename = "none"
+        else:
+            # If there is a filepath, get the parsed genome id.
+            filename = filepath.stem
+            if file_ref in bndl.genome_dict.keys():
+                gnm = bndl.genome_dict[file_ref]
+                id = gnm.id
+            else:
+                id = "none"
+        new_file_name = id + "__" + filename + ".log"
+        logfile_path = pathlib.Path(log_folder_path, new_file_name)
+    else:
+        logfile_path = None
+    return logfile_path
 
 
 def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,

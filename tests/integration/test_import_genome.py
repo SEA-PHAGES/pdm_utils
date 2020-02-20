@@ -66,7 +66,11 @@ test_files_path = Path(unittest_dir, "test_files")
 schema_file = "test_schema7.sql"
 schema_filepath = Path(test_files_path, schema_file)
 
-
+def count_contents(path_to_folder):
+    count = 0
+    for item in path_to_folder.iterdir():
+        count += 1
+    return count
 
 class TestImportGenomeMain1(unittest.TestCase):
 
@@ -907,8 +911,19 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt2.eval_flags = self.eval_flags
         self.tkt2.data_dict = self.data_dict2
 
+        # To test how log files are managed:
+        self.success_path = Path(test_root_dir, "success_folder")
+        self.success_path.mkdir()
+        self.fail_path = Path(test_root_dir, "fail_folder")
+        self.fail_path.mkdir()
+        self.paths_dict = {"success": self.success_path,
+                           "fail": self.fail_path}
+
     def tearDown(self):
         self.engine.dispose()
+        shutil.rmtree(self.success_path)
+        shutil.rmtree(self.fail_path)
+
 
 
 
@@ -937,26 +952,36 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(evaluation_dict.keys()), 0)
 
-
+    #HERE
+    # TODO - in the process of checking how file-specific log files are managed.
     # Patching so avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
-    def test_process_files_and_tickets_2(self, import_into_db_mock):
+    # Patching glp since the bundled data is incomplete,
+    # bndl.check_for_errors() will always throw an error.
+    @patch("pdm_utils.pipelines.import_genome.get_logfile_path")
+    def test_process_files_and_tickets_2(self, glp_mock, import_into_db_mock):
         """Verify correct output using:
         two files with no tickets,
         unsuccessful import,
-        no unmatched tickets."""
+        no unmatched tickets.
+        Also testing that file-specific log files are generated."""
         ticket_dict = {}
         files = [self.flat_file_l5, self.flat_file_trixie]
+        log_l5 = Path(self.success_path, self.flat_file_l5.stem)
+        log_trixie = Path(self.success_path, self.flat_file_trixie.stem)
+        glp_mock.side_effect = [log_l5, log_trixie]
         import_into_db_mock.side_effect = [False, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
-                            prod_run=False, genome_id_field="_organism_name")
-
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=self.paths_dict)
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
         failed_filename_list = results_tuple[3]
         evaluation_dict = results_tuple[4]
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
         with self.subTest():
             self.assertEqual(len(success_ticket_list), 0)
         with self.subTest():
@@ -967,6 +992,10 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(len(failed_filename_list), 2)
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+        with self.subTest():
+            self.assertEqual(s_count, 2)
+        with self.subTest():
+            self.assertEqual(f_count, 0)
 
 
     # Patching so avoid an attempt to add data to the database.
@@ -975,19 +1004,24 @@ class TestImportGenomeMain5(unittest.TestCase):
         """Verify correct output using:
         two files with matched tickets,
         successful import,
-        no unmatched tickets."""
+        no unmatched tickets.
+        Also testing that NO file-specific log files are generated when
+        no paths_dict is provided."""
         ticket_dict = {self.tkt1.phage_id: self.tkt1,
                        self.tkt2.phage_id: self.tkt2}
         files = [self.flat_file_l5, self.flat_file_trixie]
         import_into_db_mock.side_effect = [True, True]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
-                            prod_run=False, genome_id_field="_organism_name")
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=None)
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
         failed_filename_list = results_tuple[3]
         evaluation_dict = results_tuple[4]
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
         with self.subTest():
             self.assertEqual(len(success_ticket_list), 2)
         with self.subTest():
@@ -998,6 +1032,10 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(len(failed_filename_list), 0)
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+        with self.subTest():
+            self.assertEqual(s_count, 0)
+        with self.subTest():
+            self.assertEqual(f_count, 0)
 
 
     # Patching so avoid an attempt to add data to the database.
@@ -1030,7 +1068,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
 
-
+    #HERE
     def test_process_files_and_tickets_5(self):
         """Verify correct output using:
         no files,
@@ -1040,12 +1078,15 @@ class TestImportGenomeMain5(unittest.TestCase):
         files = []
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
-                            prod_run=False, genome_id_field="_organism_name")
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=self.paths_dict)
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
         failed_filename_list = results_tuple[3]
         evaluation_dict = results_tuple[4]
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
         with self.subTest():
             self.assertEqual(len(success_ticket_list), 0)
         with self.subTest():
@@ -1056,6 +1097,10 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(len(failed_filename_list), 0)
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+        with self.subTest():
+            self.assertEqual(s_count, 0)
+        with self.subTest():
+            self.assertEqual(f_count, 2)
 
 
     # Patching to avoid an attempt to add data to the database.
