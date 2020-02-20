@@ -1254,8 +1254,10 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.tkt2.phage_id = "Trixie"
         self.tkt2.host_genus = "Mycobacterium"
 
-        self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}
-        self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
+        self.tkt_dict1 = {"type": "add", "phage_id": "L5",
+                          "host_genus": "Mycobacterium"}
+        self.tkt_dict2 = {"type": "replace", "phage_id": "Trixie",
+                          "host_genus": "Mycobacterium"}
 
         self.date = time.strftime("%Y%m%d")
         # self.results_folder1 = "{}_results".format(self.date)

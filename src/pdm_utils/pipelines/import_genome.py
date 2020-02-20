@@ -194,9 +194,12 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     # Get the files to process.
     files_to_process = basic.identify_files(genome_folder, set([".DS_Store"]))
+    file_msg = f"There are {len(files_to_process)} flat files to evaluate."
     if len(files_to_process) == 0:
-        logger.error("There are no flat files to evaluate.")
+        logger.error(file_msg)
         sys.exit(1)
+    else:
+        logger.info(file_msg)
 
     log_folder_path = pathlib.Path(output_folder, "file_logs")
     log_folder_path.mkdir()
@@ -212,6 +215,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     if ticket_dict is None:
         logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
+    else:
+        logger.info(f"There are {len(ticket_dict.keys())} import tickets.")
 
     start_count = mysqldb.get_phage_table_count(engine)
 
@@ -236,6 +241,12 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     # Output data.
     logger.info("Logging successful tickets and files.")
+    summary = ["Summary of import: "]
+    summary.append(f"{start_count} genome(s) in the database before import.")
+    summary.append(f"{final_count} genome(s) in the database after import.")
+    summary.append(f"{len(success_ticket_list)} ticket(s) successfully processed.")
+    summary.append(f"{len(success_filepath_list)} genome(s) successfully imported.")
+
     headers = constants.IMPORT_TABLE_STRUCTURE["order"]
     if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
         success_path = pathlib.Path(output_folder, "success")
@@ -259,22 +270,25 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
             basic.export_data_dict(failed_ticket_list, failed_tkt_file,
                                        headers, include_headers=True)
+            summary.append(f"{len(failed_ticket_list)} ticket(s) NOT processed:")
+            for tkt in failed_ticket_list:
+                tkt_summary = (f"Ticket Type: {tkt['type']}. "
+                               f"PhageID: {tkt['phage_id']}.")
+                summary.append(f"{tkt_summary}")
+
         if len(failed_filepath_list) > 0:
             failed_genomes_path = pathlib.Path(failed_path, "genomes")
             failed_genomes_path.mkdir()
             for file in failed_filepath_list:
                 new_file = pathlib.Path(failed_genomes_path, file.name)
                 shutil.copy(str(file), str(new_file))
+            summary.append(f"{len(failed_filepath_list)} genome(s) NOT imported:")
+            for file in failed_filepath_list:
+                summary.append(f"{file.name}")
 
-    logger.info(
-        ("Summary of import: "
-        f"\n{start_count} genome(s) in the database before import. "
-        f"\n{final_count} genome(s) in the database after import. "
-        f"\n{len(success_ticket_list)} ticket(s) successfully processed. "
-        f"\n{len(failed_ticket_list)} ticket(s) NOT processed. "
-        f"\n{len(success_filepath_list)} genome(s) successfully imported. "
-        f"\n{len(failed_filepath_list)} genome(s) NOT imported. ")
-        )
+    for line in summary:
+        print(line)
+        logger.info(line)
 
     # Close all connections in the connection pool.
     engine.dispose()
@@ -454,9 +468,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
     # To minimize memory usage, each flat_file is evaluated one by one.
     bundle_count = 1
+    file_count = 1
     for filepath in files_in_folder:
         replace_gnm_pair_key = file_ref + "_" + retain_ref
-        logger.info(f"Preparing data for file: {filepath.name}.")
+        logger.info(f"Preparing data for file #{file_count}: {filepath.name}.")
         bndl = prepare_bundle(filepath=filepath, ticket_dict=ticket_dict,
                               engine=engine,
                               genome_id_field=genome_id_field,
@@ -517,6 +532,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                 failed_ticket_list.append(bndl.ticket.data_dict)
             failed_filepath_list.append(filepath)
         bundle_count += 1
+        file_count += 1
 
     # Tickets were popped off the ticket dictionary as they were matched
     # to flat files. If there are any tickets left, errors need to be counted.
