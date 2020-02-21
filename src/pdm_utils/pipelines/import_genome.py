@@ -29,12 +29,15 @@ from pdm_utils.functions import run_modes
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+DEFAULT_OUTPUT_FOLDER = "/tmp/"
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_import"
+SUCCESS_FOLDER = "success"
+FAIL_FOLDER = "fail"
+GENOMES_FOLDER = "genomes"
+LOGS_FOLDER = "logs"
 VERSION = pdm_utils.__version__
-DEFAULT_OUTPUT_FOLDER = "/tmp/"
 EDD = eval_descriptions.EVAL_DESCRIPTIONS
-
 
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
@@ -188,10 +191,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     prod_run=False, description_field="", run_mode="",
     output_folder=pathlib.Path(), interactive=False):
     """Set up output directories, log files, etc. for import."""
-    # Create output directories
 
     logger.info("Setting up environment.")
-
     # Get the files to process.
     files_to_process = basic.identify_contents(genome_folder, kind="file",
                                                ignore_set=set([".DS_Store"]))
@@ -202,8 +203,6 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     else:
         logger.info(file_msg)
 
-
-
     # Get the tickets.
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
     run_mode_eval_dict = {"run_mode": run_mode, "eval_flag_dict": eval_flags}
@@ -211,7 +210,6 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                                   run_mode_eval_dict,
                                   description_field,
                                   constants.IMPORT_TABLE_STRUCTURE)
-
     if ticket_dict is None:
         logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
@@ -222,24 +220,20 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
     # Set up output folders. Creating all folders in advance, since
     # logging the flatfile log files need a valid path.
-    success_path = pathlib.Path(output_folder, "success")
-    success_genomes_path = pathlib.Path(success_path, "genomes")
-    success_logs_path = pathlib.Path(success_path, "logs")
-    failed_path = pathlib.Path(output_folder, "fail")
-    failed_genomes_path = pathlib.Path(failed_path, "genomes")
-    failed_logs_path = pathlib.Path(failed_path, "logs")
+    success_path = pathlib.Path(output_folder, SUCCESS_FOLDER)
+    success_genomes_path = pathlib.Path(success_path, GENOMES_FOLDER)
+    success_logs_path = pathlib.Path(success_path, LOGS_FOLDER)
+
+    failed_path = pathlib.Path(output_folder, FAIL_FOLDER)
+    failed_genomes_path = pathlib.Path(failed_path, GENOMES_FOLDER)
+    failed_logs_path = pathlib.Path(failed_path, LOGS_FOLDER)
+
     output_folders = [success_path, success_genomes_path, success_logs_path,
                       failed_path, failed_genomes_path, failed_logs_path]
     for folder in output_folders:
         folder.mkdir()
-
-
-    #HERE
-    # TODO there should now be two log folder paths, one for fail and one for success.
-    # log_folder_paths = pathlib.Path(output_folder, "file_logs")
-    # log_folder_paths.mkdir()
-    log_folder_paths_dict = {"success": success_logs_path,
-                             "fail": failed_logs_path}
+    log_folder_paths_dict = {SUCCESS_FOLDER: success_logs_path,
+                             FAIL_FOLDER: failed_logs_path}
     start_count = mysqldb.get_phage_table_count(engine)
 
     # Evaluate files and tickets.
@@ -251,14 +245,13 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                         host_genus_field=host_genus_field,
                         interactive=interactive,
                         log_folder_paths_dict=log_folder_paths_dict)
-
-    final_count = mysqldb.get_phage_table_count(engine)
-
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
     success_filepath_list = results_tuple[2]
     failed_filepath_list = results_tuple[3]
     evaluation_dict = results_tuple[4]
+
+    final_count = mysqldb.get_phage_table_count(engine)
 
     # Output data.
     logger.info("Logging successful tickets and files.")
@@ -317,7 +310,6 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     engine.dispose()
 
 
-# TODO improve unittests
 def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
     """Export evaluations to log.
     """
@@ -434,7 +426,6 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         logger.info("Tickets were successfully generated from import table.")
         return ticket_dict
 
-# TODO unittest log_folder_paths_dict parameter that has been added.
 def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               prod_run=False, genome_id_field="",
                               host_genus_field="", interactive=False,
@@ -569,12 +560,8 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                       file_ref=file_ref, ticket_ref=ticket_ref,
                       retrieve_ref=retrieve_ref, retain_ref=retain_ref)
 
-            # TODO slight revamping - will probably need to be unittested.
             bndl.check_for_errors()
-            # evaluation_dict[bndl.id] = bndl.get_evaluations()
             dict_of_eval_lists = bndl.get_evaluations()
-
-            # TODO unit test logfile
             logfile_path = get_logfile_path(bndl,
                                             paths_dict=log_folder_paths_dict,
                                             filepath=None, file_ref=None)
@@ -595,9 +582,9 @@ def get_logfile_path(bndl, paths_dict=None, filepath=None, file_ref=None):
     # be no genome object to retrieve the filename.
     if paths_dict is not None:
         if bndl._errors > 0:
-            log_folder_path = paths_dict["fail"]
+            log_folder_path = paths_dict[FAIL_FOLDER]
         else:
-            log_folder_path = paths_dict["success"]
+            log_folder_path = paths_dict[SUCCESS_FOLDER]
 
         if filepath is None:
             # If there is no filepath, then it is an unmatched ticket.

@@ -1811,45 +1811,8 @@ class TestImportGenomeClass6(unittest.TestCase):
 
 
 
+
 class TestImportGenomeClass7(unittest.TestCase):
-    def setUp(self):
-        self.evl1 = eval.Eval()
-        self.evl1.id = "GNM0001"
-        self.evl1.definition = "temp"
-        self.evl1.status = "error"
-        self.evl1.result = "Failed evaluation."
-
-        self.evl2 = eval.Eval()
-        self.evl2.id = "GNM0002"
-        self.evl2.definition = "temp"
-        self.evl2.status = "error"
-        self.evl2.result = "Failed evaluation."
-
-        self.evl3 = eval.Eval()
-        self.evl3.id = "GNM0003"
-        self.evl3.definition = "temp"
-        self.evl3.status = "correct"
-        self.evl3.result = "Failed evaluation."
-
-
-    def test_log_evaluations(self):
-        """Verify function executes."""
-        evaluation_dict = {1:{"bundle": [self.evl1],
-                              "ticket": [self.evl2]},
-                           2:{"genome": [self.evl3]}}
-        import_genome.log_evaluations(evaluation_dict)
-
-
-
-
-
-
-
-
-
-
-
-class TestImportGenomeClass8(unittest.TestCase):
 
 
     def setUp(self):
@@ -2026,7 +1989,7 @@ class TestImportGenomeClass8(unittest.TestCase):
 
 
 
-class TestImportGenomeClass9(unittest.TestCase):
+class TestImportGenomeClass8(unittest.TestCase):
 
 
     def setUp(self):
@@ -2151,7 +2114,7 @@ class TestImportGenomeClass9(unittest.TestCase):
 
 
 
-class TestImportGenomeClass10(unittest.TestCase):
+class TestImportGenomeClass9(unittest.TestCase):
 
     def setUp(self):
         self.tkt = ticket.GenomeTicket()

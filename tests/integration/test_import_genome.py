@@ -912,17 +912,18 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt2.data_dict = self.data_dict2
 
         # To test how log files are managed:
-        self.success_path = Path(test_root_dir, "success_folder")
+        self.base_dir = Path(test_root_dir,"test_import")
+        self.base_dir.mkdir()
+        self.success_path = Path(self.base_dir, "success_folder")
         self.success_path.mkdir()
-        self.fail_path = Path(test_root_dir, "fail_folder")
+        self.fail_path = Path(self.base_dir, "fail_folder")
         self.fail_path.mkdir()
         self.paths_dict = {"success": self.success_path,
                            "fail": self.fail_path}
 
     def tearDown(self):
         self.engine.dispose()
-        shutil.rmtree(self.success_path)
-        shutil.rmtree(self.fail_path)
+        shutil.rmtree(self.base_dir)
 
 
 
@@ -952,8 +953,6 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(evaluation_dict.keys()), 0)
 
-    #HERE
-    # TODO - in the process of checking how file-specific log files are managed.
     # Patching so avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
     # Patching glp since the bundled data is incomplete,
@@ -1068,11 +1067,12 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
 
-    #HERE
     def test_process_files_and_tickets_5(self):
         """Verify correct output using:
         no files,
-        two unmatched tickets."""
+        two unmatched tickets.
+        Also testing that ticket-specific log files are generated when
+        paths_dict is provided."""
         ticket_dict = {self.tkt1.phage_id: self.tkt1,
                        self.tkt2.phage_id: self.tkt2}
         files = []
@@ -1103,9 +1103,29 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(f_count, 2)
 
 
+    def test_process_files_and_tickets_6(self):
+        """Same test as test_process_files_and_tickets_5, except that
+        NO ticket-specific log files are generated when
+        paths_dict is NOT provided."""
+        ticket_dict = {self.tkt1.phage_id: self.tkt1,
+                       self.tkt2.phage_id: self.tkt2}
+        files = []
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, engine=self.engine,
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=None)
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
+        with self.subTest():
+            self.assertEqual(s_count, 0)
+        with self.subTest():
+            self.assertEqual(f_count, 0)
+
+
+
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
-    def test_process_files_and_tickets_6(self, import_into_db_mock):
+    def test_process_files_and_tickets_7(self, import_into_db_mock):
         """Verify correct output using:
         one file matched to ticket with successful import,
         one file unmatched to ticket with unsuccessful import,
@@ -1138,7 +1158,7 @@ class TestImportGenomeMain5(unittest.TestCase):
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_7(self, ask_mock, execute_mock):
+    def test_process_files_and_tickets_8(self, ask_mock, execute_mock):
         """Verify correct output using:
         one file with matched ticket,
         one error evaluation in ticket (ensuring at least one error
@@ -1167,7 +1187,7 @@ class TestImportGenomeMain5(unittest.TestCase):
     # need to patch input to proceed.
     @patch("builtins.input")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_8(self, ask_mock, input_mock,
+    def test_process_files_and_tickets_9(self, ask_mock, input_mock,
                                          execute_mock):
         """Verify correct output using:
         one file with matched ticket,
@@ -1202,7 +1222,7 @@ class TestImportGenomeMain5(unittest.TestCase):
     # need to patch input to proceed.
     @patch("builtins.input")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_9(self, ask_mock, input_mock,
+    def test_process_files_and_tickets_10(self, ask_mock, input_mock,
                                          execute_mock):
         """Verify correct output using:
         one file with matched ticket,
@@ -1236,7 +1256,7 @@ class TestImportGenomeMain5(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     @patch("pdm_utils.pipelines.import_genome.run_checks")
     @patch("pdm_utils.pipelines.import_genome.prepare_bundle")
-    def test_process_files_and_tickets_10(self, prep_mock, run_checks_mock,
+    def test_process_files_and_tickets_11(self, prep_mock, run_checks_mock,
                                           ask_mock, execute_mock):
         """Verify correct output using:
         two files with matched tickets,
@@ -1315,23 +1335,22 @@ class TestImportGenomeMain6(unittest.TestCase):
                           "host_genus": "Mycobacterium"}
 
         self.date = time.strftime("%Y%m%d")
-        # self.results_folder1 = "{}_results".format(self.date)
-        # self.results_folder2 = "{}_results_1".format(self.date)
-        # self.results_folder3 = "{}_results_2".format(self.date)
-        # self.exp_success = Path(self.output_folder, self.results_folder1, "success")
-
 
         self.exp_success = Path(self.output_folder, "success")
         self.exp_success_tkt_table = Path(self.exp_success, "import_tickets.csv")
         self.exp_success_genomes = Path(self.exp_success, "genomes")
+        self.exp_success_logs = Path(self.exp_success, "logs")
 
         self.exp_fail = Path(self.output_folder, "fail")
         self.exp_fail_tkt_table = Path(self.exp_fail, "import_tickets.csv")
         self.exp_fail_genomes = Path(self.exp_fail, "genomes")
+        self.exp_fail_logs = Path(self.exp_fail, "logs")
+
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
         self.engine.dispose()
+
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
@@ -1382,6 +1401,16 @@ class TestImportGenomeMain6(unittest.TestCase):
         for item in self.exp_fail_genomes.iterdir():
             fail_genomes_count += 1
 
+        # Unable to check how many log files are present -
+        # the log folders don't exist because process_files_and_tickets()
+        # was patched, so no log files created, so data_io() removes the folders.
+        # success_log_files_count = 0
+        # for item in self.exp_success_logs.iterdir():
+        #     success_log_files_count += 1
+        # fail_log_files_count = 0
+        # for item in self.exp_fail_logs.iterdir():
+        #     fail_log_files_count += 1
+
         with self.subTest():
             self.assertTrue(pft_mock.called)
         with self.subTest():
@@ -1400,6 +1429,12 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertEqual(success_genomes_count, 1)
         with self.subTest():
             self.assertEqual(fail_genomes_count, 1)
+        # Since pft was patched, file-specific log files were not created,
+        # so the log folders should be removed:
+        with self.subTest():
+            self.assertFalse(self.exp_fail_logs.is_dir())
+        with self.subTest():
+            self.assertFalse(self.exp_success_logs.is_dir())
 
 
     @patch("sys.exit")
@@ -1523,6 +1558,80 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertTrue(pft_mock.called)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
+
+
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    def test_data_io_6(self, get_count_mock, pft_mock, sys_exit_mock):
+        """Verify data_io runs correctly when there are
+        successful tickets and genomes, and no failed tickets or genomes."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        success_ticket_list = [self.tkt_dict1]
+        failed_ticket_list = []
+        success_filename_list = [self.flat_file1]
+        failed_filename_list = []
+        evaluation_dict = {}
+        get_count_mock.return_value = 0
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(engine=self.engine,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(self.exp_success_tkt_table.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_success_genomes.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_fail.exists())
+
+
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock):
+        """Verify data_io runs correctly when there are
+        failed tickets and genomes, and no successful tickets or genomes."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        success_ticket_list = []
+        failed_ticket_list = [self.tkt_dict1]
+        success_filename_list = []
+        failed_filename_list = [self.flat_file1]
+        evaluation_dict = {}
+        get_count_mock.return_value = 0
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(engine=self.engine,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(self.exp_fail_tkt_table.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_fail_genomes.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_success.exists())
 
 
 
@@ -1931,6 +2040,106 @@ class TestImportGenomeMain8(unittest.TestCase):
             self.assertEqual(self.cds3.processed_description, "lysB")
         with self.subTest():
             self.assertEqual(self.tkt.description_field, "function")
+
+
+
+
+class TestImportGenomeClass9(unittest.TestCase):
+    def setUp(self):
+        self.evl1 = eval.Eval()
+        self.evl1.id = "GNM0001"
+        self.evl1.definition = "temp"
+        self.evl1.status = "error"
+        self.evl1.result = "Failed evaluation."
+
+        self.evl2 = eval.Eval()
+        self.evl2.id = "GNM0002"
+        self.evl2.definition = "temp"
+        self.evl2.status = "error"
+        self.evl2.result = "Failed evaluation."
+
+        self.evl3 = eval.Eval()
+        self.evl3.id = "GNM0003"
+        self.evl3.definition = "temp"
+        self.evl3.status = "correct"
+        self.evl3.result = "Failed evaluation."
+
+        self.base_dir = Path(test_root_dir, "test_folder")
+        self.base_dir.mkdir()
+        self.log_file1 = Path(self.base_dir, "test_log1.txt")
+        self.log_file2 = Path(self.base_dir, "test_log2.txt")
+
+    def tearDown(self):
+        shutil.rmtree(self.base_dir)
+
+
+    def test_log_evaluations_1(self):
+        """Verify function executes when logfile_path is None."""
+        # Nothing really to test.
+        evaluation_dict = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict, logfile_path=None)
+        self.assertFalse(self.log_file1.exists())
+
+
+    def test_log_evaluations_2(self):
+        """Verify file-specific log file is created when
+        logfile_path is not None."""
+        # Nothing really to test.
+        evaluation_dict = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict,
+                                      logfile_path=self.log_file1)
+
+        # Confirm how many evaluations were logged.
+        with open(self.log_file1,'r') as file:
+            lines = file.readlines()
+
+        with self.subTest():
+            self.assertTrue(self.log_file1.exists())
+        with self.subTest():
+            self.assertEqual(len(lines), 2)
+
+
+    def test_log_evaluations_3(self):
+        """Verify file-specific log file is created new each time the
+        function is called."""
+        # Nothing really to test.
+        evaluation_dict1 = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict1,
+                                      logfile_path=self.log_file1)
+
+        evaluation_dict2 = {1:{"bundle": [self.evl1]}}
+        import_genome.log_evaluations(evaluation_dict2,
+                                      logfile_path=self.log_file2)
+
+        # Confirm how many evaluations were logged.
+        with open(self.log_file1,'r') as file:
+            lines1 = file.readlines()
+        with open(self.log_file2,'r') as file:
+            lines2 = file.readlines()
+
+        with self.subTest():
+            self.assertTrue(self.log_file1.exists())
+        with self.subTest():
+            self.assertTrue(self.log_file2.exists())
+        with self.subTest():
+            self.assertEqual(len(lines1), 2)
+        with self.subTest():
+            self.assertEqual(len(lines2), 1)
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
