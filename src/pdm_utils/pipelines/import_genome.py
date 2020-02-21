@@ -199,9 +199,10 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     file_msg = f"There are {len(files_to_process)} flat files to evaluate."
     if len(files_to_process) == 0:
         logger.error(file_msg)
+        print(file_msg)
         sys.exit(1)
     else:
-        logger.info(file_msg)
+        log_and_print(file_msg, True)
 
     # Get the tickets.
     eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
@@ -214,9 +215,8 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         logger.error("Invalid import table. Unable to evaluate flat files.")
         sys.exit(1)
     else:
-        progress = f"There are {len(ticket_dict.keys())} import tickets."
-        print(progress)
-        logger.info(progress)
+        progress = f"There are {len(ticket_dict.keys())} import ticket(s)."
+        log_and_print(progress, True)
 
     # Set up output folders. Creating all folders in advance, since
     # logging the flatfile log files need a valid path.
@@ -780,93 +780,387 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
             check_retain_genome(gnm2, tkt.type, eval_flags)
 
 
+
+# TODO delete after tests for new review_evaluations() are written.
+# def review_evaluations(bndl, interactive=False):
+#     """Iterate through all objects stored in the bundle.
+#     If there are warnings, review whether status should be changed."""
+#
+#     # Bundle-level evaluations.
+#     partial_msg = f"Reviewing evaluations for bundle: {bndl.id}"
+#     if len(bndl.evaluations) > 0:
+#         log_and_print("Reviewing " + partial_msg, interactive)
+#         review_evaluation_list(bndl.evaluations, interactive=interactive)
+#     else:
+#         log_and_print("No " + partial_msg, False)
+#
+#     # Ticket check.
+#     partial_msg = " evaluations for ticket."
+#     if bndl.ticket is not None:
+#         # Ticket-level evaluations.
+#         tkt = bndl.ticket
+#         partial_msg = (f" evaluations for ticket: {tkt.id}, "
+#                        f"{tkt.type}, {tkt.phage_id}.")
+#         if len(tkt.evaluations) > 0:
+#             log_and_print("Reviewing " + partial_msg, interactive)
+#             review_evaluation_list(tkt.evaluations, interactive=interactive)
+#         else:
+#             log_and_print("No " + partial_msg, False)
+#     else:
+#         log_and_print("No " + partial_msg, False)
+#
+#
+#     # Genome check.
+#     partial_msg = " evaluations for genomes."
+#     if len(bndl.genome_dict.keys()) > 0:
+#         log_and_print("Reviewing " + partial_msg, interactive)
+#
+#         for key in bndl.genome_dict.keys():
+#             gnm = bndl.genome_dict[key]
+#
+#             # Genome-level evaluations.
+#             partial_msg = f" evaluations for genome: {gnm.id}, {gnm.type}."
+#             if len(gnm.evaluations) > 0:
+#                 log_and_print("Reviewing " + partial_msg, interactive)
+#                 review_evaluation_list(gnm.evaluations, interactive=interactive)
+#             else:
+#                 log_and_print("No " + partial_msg, False)
+#
+#
+#             # CDS feature check.
+#             partial_msg = " evaluations for CDS features."
+#             if len(gnm.cds_features) > 0:
+#                 log_and_print("Reviewing " + partial_msg, interactive)
+#                 if interactive:
+#                     print("Enter 'yes'/'no' to answer. "
+#                           "\nEnter 'exit' to exit from CDS review.")
+#
+#                 # Capture the exit status for each CDS feature. If user exits
+#                 # the review at any point, skip all of the other CDS features.
+#                 exit = False
+#                 x = 0
+#                 while (exit is False and x < len(gnm.cds_features)):
+#
+#                     # CDS-level evaluations.
+#                     cds_ftr = gnm.cds_features[x]
+#                     partial_msg = (f" evaluations for CDS Feature ID: {cds_ftr.id}, "
+#                            f"Start: {cds_ftr.start}, Stop: {cds_ftr.stop}, "
+#                            f"Orientation: {cds_ftr.orientation}.")
+#
+#                     if len(cds_ftr.evaluations) > 0:
+#                         log_and_print("Reviewing " + partial_msg, interactive)
+#                         exit = review_evaluation_list(cds_ftr.evaluations,
+#                                     interactive=interactive)
+#                     else:
+#                         log_and_print("No " + partial_msg, False)
+#                     x += 1
+#             else:
+#                 log_and_print("No " + partial_msg, False)
+#
+#
+#             # Source feature check.
+#             partial_msg = " evaluations for source features."
+#             if len(gnm.source_features) > 0:
+#                 log_and_print("Reviewing " + partial_msg, interactive)
+#
+#                 for source_ftr in gnm.source_features:
+#                     # Source-level evaluations.
+#                     partial_msg = f" evaluations for Source Feature ID: {source_ftr.id}."
+#                     if len(source_ftr.evaluations) > 0:
+#                         log_and_print("Reviewing " + partial_msg, interactive)
+#                         review_evaluation_list(source_ftr.evaluations,
+#                             interactive=interactive)
+#                     else:
+#                         log_and_print("No " + partial_msg, False)
+#             else:
+#                 log_and_print("No " + partial_msg, False)
+#
+#             # TODO implement trna and tmrna features
+#     else:
+#         log_and_print("No " + partial_msg, False)
+#
+#     # Genome-pair check.
+#     partial_msg = " evaluations for paired genomes."
+#     if len(bndl.genome_pair_dict.keys()) > 0:
+#         log_and_print("Reviewing " + partial_msg, interactive)
+#         for key in bndl.genome_pair_dict.keys():
+#             genome_pair = bndl.genome_pair_dict[key]
+#
+#             # Genome-pair-level evaluations.
+#             partial_msg = f" evaluations for Genome Pair ID: {key}."
+#             if len(genome_pair.evaluations) > 0:
+#                 log_and_print("Reviewing " + partial_msg, interactive)
+#                 review_evaluation_list(genome_pair.evaluations,
+#                     interactive=interactive)
+#             else:
+#                 log_and_print("No " + partial_msg, False)
+#     else:
+#         log_and_print("No " + partial_msg, False)
+
+
+
+# TODO unittest, fixing broken tests that already exist.
+# TODO rename to review_bundled_objects()?
 def review_evaluations(bndl, interactive=False):
     """Iterate through all objects stored in the bundle.
     If there are warnings, review whether status should be changed."""
-    print(f"\n\nReviewing evaluations for bundle: {bndl.id}")
-    review_evaluation_list(bndl.evaluations, interactive=interactive)
-    if bndl.ticket is not None:
-        print(f"Reviewing evaluations for ticket: {bndl.ticket.id}, "
-              f"{bndl.ticket.type}, {bndl.ticket.phage_id}.")
-        review_evaluation_list(bndl.ticket.evaluations, interactive=interactive)
-    for key in bndl.genome_dict.keys():
-        gnm = bndl.genome_dict[key]
-        print(f"Reviewing evaluations for genome: {gnm.id}, {gnm.type}.")
-        review_evaluation_list(gnm.evaluations, interactive=interactive)
 
+    # Bundle-level evaluations.
+    review_object_list([bndl], "Bundle", ["id"], interactive=interactive)
+
+    # Ticket-level evaluations.
+    review_object_list([bndl.ticket], "Ticket", ["id", "type", "phage_id"],
+                       interactive=interactive)
+
+    # Genome check.
+    if len(bndl.genome_dict.keys()) > 0:
+        for key in bndl.genome_dict.keys():
+            gnm = bndl.genome_dict[key]
+
+            # Genome-level evaluations.
+            # Instead of passing all genomes from the genome_dict at one time,
+            # it makes more sense to evaluate only one genome.evaluations list
+            # at the same time as its cds_features.evaluations,
+            # source.evaluations, etc.
+            review_object_list([gnm], "Genome", ["id", "type"],
+                               interactive=interactive)
+
+            # CDS feature check.
+            review_object_list(gnm.cds_features, "CDS feature",
+                          ["id", "start", "stop", "orientation"],
+                          interactive=interactive)
+
+            # Source feature check.
+            review_object_list(gnm.source_features, "Source feature",
+                          ["id"], interactive=interactive)
+
+            # # TODO implement trna features
+            # review_object_list(gnm.trna_features, "tRNA feature",
+            #               ["id", "start", "stop", "orientation"],
+            #               interactive=interactive)
+            # # TODO implement tmrna features.
+            # review_object_list(gnm.tmrna_features, "tmRNA feature",
+            #               ["id", "start", "stop", "orientation"],
+            #               interactive=interactive)
+
+    else:
+        log_and_print("No " + partial_msg, False)
+
+    # Genome-pair check.
+    genome_pair_list = list(bndl.genome_pair_dict.values())
+    review_object_list(genome_pair_list, "Genome pair",
+                       ["genome1","genome2"], interactive=interactive)
+
+
+
+# TODO unittest.
+def log_and_print(msg, terminal=False):
+    """Print message to terminal in addition to logger if needed."""
+    logger.info(msg)
+    if terminal:
+        print(f"{msg}")
+
+
+
+
+
+# TODO in progress
+# TODO unittest.
+# TODO rename function?
+#HERE
+def review_object_list(object_list, type, attr_list, interactive=False):
+    """."""
+    # Test for None, since tkt data can be missing and be None.
+    if (len(object_list) > 0 and object_list[0] is not None):
         # Capture the exit status for each CDS feature. If user exits
         # the review at any point, skip all of the other CDS features.
-        print("Reviewing evaluations for CDS features.")
-        print("Answer 'yes'/'no', or 'exit' to exit from review.")
         exit = False
         x = 0
-        while (exit is False and x < len(gnm.cds_features)):
-            cds_ftr = gnm.cds_features[x]
-            exit = review_evaluation_list(cds_ftr.evaluations,
-                        interactive=interactive)
+        while (exit is False and x < len(object_list)):
+            object = object_list[x]
+            # Compile description of the object being reviewed.
+            strings = []
+            for attr in attr_list:
+                attr_value = getattr(object, attr)
+                strings.append(attr + ": " + str(attr_value))
+            string = ", ".join(strings)
+            partial_msg = f"evaluations for {type}: {string}."
+            if len(object.evaluations) > 0:
+                log_and_print("Reviewing " + partial_msg, interactive)
+                exit = review_evaluation_list(object.evaluations,
+                            interactive=interactive)
+            else:
+                log_and_print("No " + partial_msg, False)
             x += 1
-
-        print(f"Reviewing evaluations for source features.")
-        for source_ftr in gnm.source_features:
-            review_evaluation_list(source_ftr.evaluations,
-                interactive=interactive)
-
-        # TODO implement trna and tmrna features
-
-    print(f"Reviewing evaluations for paired genomes.")
-    for key in bndl.genome_pair_dict.keys():
-        genome_pair = bndl.genome_pair_dict[key]
-        review_evaluation_list(genome_pair.evaluations,
-            interactive=interactive)
+        if exit:
+            msg = ("Not all evaluations were reviewed, "
+                            "since the review was exited.")
+            log_and_print(msg, False)
+    else:
+        log_and_print(f"No evaluations for {type}(s)", False)
 
 
+
+
+
+
+
+
+# TODO can be removed once new version of the function is tested.
+# def review_evaluation_list(evaluation_list, interactive=False):
+#     """Iterate through all evaluations and review 'warning' results.
+#     """
+#     exit = False
+#     x = 0
+#     y = 0
+#     while (exit is False and x < len(evaluation_list)):
+#         evl = evaluation_list[x]
+#         summary = (f"Evaluation ID: {evl.id}."
+#                    f"\nStatus: {evl.status}."
+#                    f"\nDefinition: {evl.definition}"
+#                    f"\nResult: {evl.result}")
+#         if evl.status == "warning":
+#             y += 1
+#             if interactive == True:
+#                 # If interactive is set to True, ask user if 'warning'
+#                 # is correct, and change the status as needed.
+#                 print("\n\nThe following evaluation is set to 'warning':")
+#                 print(summary)
+#                 prompt = ("\nThis evaluation will remain as a 'warning' "
+#                           "(instead of it being changed to an 'error'). "
+#                           "Is this correct? (yes/no/exit) ")
+#                 result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+#                 if result is None:
+#                     exit = True
+#                 elif result is False:
+#                     evl.status = "error"
+#                     evl.result = evl.result + \
+#                                  " Status manually changed from 'warning'."
+#                 else:
+#                     pass
+#             else:
+#                 # If interactive is set to False,
+#                 # change all 'warnings' to 'errors'.
+#                 evl.status = "error"
+#                 evl.result = evl.result + \
+#                             " Status automatically changed from 'warning'."
+#
+#         # TODO unittest this elif block.
+#         elif evl.status == "error":
+#             y += 1
+#             if interactive == True:
+#                 # Notify user an error was encountered.
+#                 print("\n\nThe following evaluation is set to 'error':")
+#                 print(summary)
+#                 input("\nPress ENTER to continue.")
+#         else:
+#             pass
+#         x += 1
+#     # TODO test this block?
+#     if y == 0:
+#         log_and_print(f"No warnings or errors encountered.", interactive)
+#     return exit
+
+
+
+
+
+# TODO refactoring in progress.
 def review_evaluation_list(evaluation_list, interactive=False):
     """Iterate through all evaluations and review 'warning' results.
     """
     exit = False
     x = 0
-    while (exit is False and x < len(evaluation_list)):
+    y = 0
+    # TODO remove block after new tests
+    # while (exit is False and x < len(evaluation_list)):
+    #     evl = evaluation_list[x]
+    #     exit, correct = review_evaluation(evl, interactive=interactive)
+    #     if not correct:
+    #         y += 1
+    #     x += 1
+    while x < len(evaluation_list):
         evl = evaluation_list[x]
-        summary = (f"Evaluation ID: {evl.id}."
-                   f"\nStatus: {evl.status}."
-                   f"\nDefinition: {evl.definition}"
-                   f"\nResult: {evl.result}")
-        if evl.status == "warning":
-            if interactive == True:
-                # If interactive is set to True, ask user if 'warning'
-                # is correct, and change the status as needed.
-                print("\n\nThe following evaluation is set to 'warning':")
-                print(summary)
-                prompt = ("\nThis evaluation will remain as a 'warning' "
-                          "(instead of it being changed to an 'error'). "
-                          "Is this correct? ")
-                result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
-                if result is None:
-                    exit = True
-                elif result is False:
-                    evl.status = "error"
-                    evl.result = evl.result + \
-                                 " Status manually changed from 'warning'."
-                else:
-                    pass
-            else:
-                # If interactive is set to False,
-                # change all 'warnings' to 'errors'.
-                evl.status = "error"
-                evl.result = evl.result + \
-                            " Status automatically changed from 'warning'."
-
-        # TODO unittest this elif block.
-        elif evl.status == "error":
-            if interactive == True:
-                # Notify user an error was encountered.
-                print("\n\nThe following evaluation is set to 'error':")
-                print(summary)
-                input("\nPress ENTER to continue.")
+        if exit == False:
+            exit, correct = review_evaluation(evl, interactive=interactive)
         else:
-            pass
+            exit2, correct = review_evaluation(evl, interactive=False)
+        if not correct:
+            y += 1
         x += 1
+
+    if y == 0:
+        log_and_print(f"No warnings or errors encountered.", interactive)
     return exit
+
+
+
+
+
+
+
+# TODO in progress.
+# TODO unittest.
+def review_evaluation(evl, interactive=False):
+    """Review an evaluation object.
+    """
+    exit = False
+    msg = "Status was {} changed from 'warning'."
+    summary = (f"Evaluation ID: {evl.id}."
+               f"\nStatus: {evl.status}."
+               f"\nDefinition: {evl.definition}"
+               f"\nResult: {evl.result}")
+    if evl.status == "warning":
+        correct = False
+        if interactive == True:
+            # If interactive is set to True, ask user if 'warning'
+            # is correct, and change the status as needed.
+            print("\n\nThe following evaluation is set to 'warning':")
+            print(summary)
+            prompt = ("\nThis evaluation will remain as a 'warning' "
+                      "(instead of it being changed to an 'error'). "
+                      "Is this correct? (yes/no/exit) ")
+            result = basic.ask_yes_no(prompt=prompt, response_attempt=3)
+            if result is None:
+                exit = True
+            elif result is False:
+                evl.status = "error"
+                evl.result = evl.result + msg.format("manually")
+            else:
+                pass
+        else:
+            # If interactive is set to False,
+            # change all 'warnings' to 'errors'.
+            evl.status = "error"
+            evl.result = evl.result + msg.format("automatically")
+
+    # TODO unittest this elif block.
+    elif evl.status == "error":
+        correct = False
+        if interactive == True:
+            # Report that an error was encountered.
+            print("\n\nThe following evaluation is set to 'error':")
+            print(summary)
+            input("\nPress ENTER to continue.")
+    else:
+        correct = True
+    return exit, correct
+
+
+
+
+
+
+
+
+###
+
+
+
+
+
+
+
 
 
 def set_cds_descriptions(gnm, tkt, interactive=False):
