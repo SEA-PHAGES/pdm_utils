@@ -1,23 +1,20 @@
 import sqlalchemy
 import pymysql
 from getpass import getpass
+from networkx import Graph
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
-from pdm_utils.classes.schemagraph import SchemaGraph
 from pdm_utils.functions import querying
 from pdm_utils.functions import cartography
 
 class AlchemyHandler:
-    def __init__(self, database=None, username=None, password=None, 
-                 attempts=5, verbose=False):
-
+    def __init__(self, database=None, username=None, password=None):
         self._database = database
         self._username = username
         self._password = password
-        self._login_attempts = attempts
 
         self._engine = None
         self.metadata = None
@@ -122,7 +119,18 @@ class AlchemyHandler:
             self.connected = False
             return 
 
+        if not isinstance(engine, Engine):
+            raise TypeError
+
         self._engine = engine
+        self.connected = True
+
+    @property
+    def tables(self):
+        if not self.metadata:
+            self.build_metadata()
+           
+        return self.metadata.tables
 
     def ask_database(self):
         self._database = input("MySQL database: ")
@@ -150,8 +158,8 @@ class AlchemyHandler:
             if self.has_database:
                 login_string = login_string + f"/{self.database}"
 
-            self.engine = sqlalchemy.create_engine(login_string)
-            self.engine.connect()
+            self._engine = sqlalchemy.create_engine(login_string)
+            self._engine.connect()
             
             self.connected = True
 
@@ -162,7 +170,7 @@ class AlchemyHandler:
         except OperationalError: 
             raise
 
-    def connect(self, ask_database=False):
+    def connect(self, ask_database=False, login_attempts=5):
         if ask_database:
             if not self.has_database:
                 self.ask_database()
@@ -178,7 +186,7 @@ class AlchemyHandler:
         except:
             pass
 
-        while(not self.connected and attempts < self.login_attempts):
+        while(not self.connected and attempts < login_attempts):
             try:
                 self.build_engine()
             except:
@@ -191,82 +199,6 @@ class AlchemyHandler:
             print("Maximum logout attempts reached.\n"
                   "Please check your credentials and try again")
             exit(1)
-    def build_metadata(self):
-        if not self.has_database:
-            self.ask_database()
-
-        if not self.connected:
-            self.build_engine()
-
-        self.metadata = MetaData(bind=self.engine)
-        self.metadata.reflect()
-        return True 
-
-    def get_map(self, template):
-        if not self.metadata:
-            self.build_metadata()
-
-        return cartography.get_map(self.metadata, template)
-
-    def build_schemagraph(self):
-        if not self.metadata:
-            self.build_metadata()
-
-        graph = SchemaGraph()
-        graph.setup(self.metadata)
-        self.graph = graph
-        
-        return True
-
-    def build_session(self):
-        if not self.has_database:
-            raise
-        if not self.connected:
-            self.build_engine()
-            
-
-        session_maker = sessionmaker()
-        self.session = session_maker(bind=self.engine)
-        return 
-
-    def where(self, filter_expression):
-        if not self.graph:
-            self.build_schemagraph()
-         
-        return querying.build_whereclause(self.graph, filter_expression)
-
-    def build_select(self, columns, where=None, order_by=None,
-                                                        from_=None, in_=None):
-        if not self.graph:
-            self.build_schemagraph()
-
-        return querying.build_select(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by,
-                                                        from_=from_,
-                                                        in_=in_)
-
-    def build_count(self, columns, where=None, order_by=None,
-                                                        from_=None, in_=None):
-        if not self.graph:
-            self.build_schemagraph()
-
-        return querying.build_count(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by,
-                                                        from_=from_,
-                                                        in_=in_)
-
-    def build_distinct(self, columns, where=None, order_by=None,
-                                                        from_=None, in_=None):
-        if not self.graph:
-            self.build_schemagraph()
-
-        return querying.build_distinct(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by,
-                                                        from_=None,
-                                                        in_=None)
 
     def execute(self, executable, return_dict=True):
         if not self.engine:
@@ -295,20 +227,121 @@ class AlchemyHandler:
 
         return scalar
 
-    def show_tables(self):
-        if not self.graph:
-            self.build_schemagraph()
+    def build_metadata(self):
+        if not self.has_database:
+            self.ask_database()
 
-        return self.graph.show_tables()
+        if not self.connected:
+            self.build_engine()
 
-    def get_table(self, table):
-        if not self.graph:
-            self.build_schemagraph()
+        self.metadata = MetaData(bind=self.engine)
+        self.metadata.reflect()
+        return True 
 
-        return self.graph.get_table(table)
+    def translate_table(self, raw_table): 
+        if not self.metadata:
+            self.build_metadata()
+
+        for table in self.metadata.tables.keys():
+            if table.lower() == raw_table.lower():
+                return table
+
+        raise ValueError(f"Table '{raw_table}' requested to be filtered "
+                         f"is not in '{self.sql_handle.database}'")
+
+    def translate_column(self, raw_column):
+        parsed_column = querying.parse_column(raw_column)
+
+        table = self.translate_table([0])
+        table_obj = self[table]["table"]
+        for column in table_obj.columns.keys():
+            if column.lower() == raw_column.lower():
+                return column
+
+        raise ValueError(f"Field '{raw_column}' requested to be filtered"
+                         f" is not in '{table_object.name}'")
+
+    def get_table(self, table): 
+        table = self.translate_table(table)
+        return self.metadata.tables[table]
 
     def get_column(self, column):
-        if not self.graph:
-            self.build_schemagraph()
+        parsed_column = querying.parse_column(column)
+        table = self.get_table(parsed_column[0])
 
-        return self.graph.get_column(column)
+        columns_dict = dict(table.columns)
+        column = columns_dict[parsed_column[1]]
+
+        return column
+
+    def get_map(self, template):
+        if not self.metadata:
+            self.build_metadata()
+
+        return cartography.get_map(self.metadata, template)
+
+    def build_graph(self):
+        if not self.metadata:
+            self.build_metadata()
+        
+        graph = Graph()
+        for table in self.metadata.tables.keys():
+            table_object = self.metadata.tables[table]
+            graph.add_node(table_object.name, table=table_object) 
+
+        for target_table in self.metadata.tables.keys():
+            target_table_obj  = self.metadata.tables[target_table]
+        
+            for foreign_key in target_table_obj.foreign_keys:   
+                referent_column = foreign_key.column
+                referent_table_obj = referent_column.table
+                referent_table = referent_table_obj.name
+
+                graph.add_edge(target_table, referent_table, 
+                                             key=foreign_key)
+
+        self.graph = graph
+        
+        return True
+
+    def build_where(self, filter_expression):
+        if not self.graph:
+            self.build_graph()
+         
+        return querying.build_whereclause(self.graph, filter_expression)
+
+    def build_select(self, columns, where=None, order_by=None):
+        if not self.graph:
+            self.build_graph()
+
+        return querying.build_select(self.graph, columns,
+                                                        where=where,
+                                                        order_by=order_by)
+
+    def build_count(self, columns, where=None, order_by=None):
+        if not self.graph:
+            self.build_graph()
+
+        return querying.build_count(self.graph, columns,
+                                                        where=where,
+                                                        order_by=order_by)
+
+    def build_distinct(self, columns, where=None, order_by=None):
+        if not self.graph:
+            self.build_graph()
+
+        return querying.build_distinct(self.graph, columns,
+                                                        where=where,
+                                                        order_by=order_by)
+
+    def build_session(self):
+        if not self.has_database:
+            raise
+        if not self.connected:
+            self.build_engine()
+            
+
+        session_maker = sessionmaker()
+        self.session = session_maker(bind=self.engine)
+        return 
+  

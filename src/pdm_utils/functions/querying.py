@@ -1,3 +1,4 @@
+from networkx import shortest_path
 from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
@@ -18,78 +19,25 @@ COMPARABLE_TYPES      = [int, Decimal, float, datetime]
 TYPES                 = [str, bytes] + COMPARABLE_TYPES
 GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
-def translate_table(db_graph, raw_table):
-    """Parses a case-insensitive string to match a case-sensitive 
-    table_node id string.
+def parse_column(unparsed_column):
+    """Helper function to return a two-dimensional array of group parameters.
 
-    :param raw_table:
-        Input a case-insensitive string for a TableNode id.
-    :type raw_table: str
-    :param verbose:
-        Set a boolean to control terminal output.
-    :type verbose: Boolean
-    :return table:
-        Returns a case-sensitive string for a TableNode id.
-    :type table: str
+    :param unparsed_groups:
+        Input a list of group expressions to parse and split.
+    :type unparsed_groups: List[str]
+    :return groups:
+        Returns a two-dimensional array of group parameters.
+    :type groups: List[List[str]]
     """
-    for table in db_graph.show_tables():
-        if table.lower() == raw_table.lower():
-            return table
+    column_format = re.compile("\w+\.\w+", re.IGNORECASE)
 
-    raise ValueError(f"Table '{raw_table}' requested to be filtered "
-                     f"is not in '{self.sql_handle.database}'")
+    if re.match(column_format, unparsed_column) != None:
+        column = re.split("\W+", unparsed_column)
+    else:
+        raise ValueError(f"Unsupported table/column format: "
+                         f"'{unparsed_column}'")
 
-def translate_column(db_graph, raw_column, table_object):
-    """Parses a case-insensitive string to match a case-sensitive
-    column_node id string.
-
-    :param raw_field:
-        Input a raw string for a ColumnNode id.
-    :type raw_field: str
-    :param table:
-        Input a case-sensitive string for a TableNode id.
-    :type table: str
-    :param verbose:
-        Set a boolean to control the terminal output.
-    :type verbose: Boolean
-    :return field:
-        Returns a case-sensitive string for a ColumnNode id.
-    """
-    for column in table_object.columns.keys():
-        if column.lower() == raw_column.lower():
-            return column
-    
-    raise ValueError(f"Field '{raw_column}' requested to be filtered"
-                     f" is not in '{table_object.name}'")
-
-def check_operator(operator, column_object):
-    """Parses a operator string to match a MySQL query operators.
-
-    :param operator:
-        Input a raw operator string for an accepted MySQL query operator.
-    :type operator: str
-    :param table:
-        Input a case-sensitive string for a TableNode id.
-    :type table: str
-    :param field:
-        Input a case-sensitive string for a ColumnNode id.
-    :type field: str
-    :param verbose:
-        Set a boolean to control the terminal output.
-    :type verbose: Boolean
-    """
-    if operator not in OPERATORS:
-        raise ValueError(f"Operator {operator} is not supported.")
-
-    column_type = column_object.type.python_type
-
-    if column_type not in TYPES:
-        raise ValueError(f"Column '{column_object.name}' "
-                         f"has an unsupported type, {column_type}.")
-    if operator in COMPARATIVE_OPERATORS and \
-       column_type not in COMPARABLE_TYPES:
-        raise ValueError(f"Column '{column_object.name}' "
-                         f"is not comparable with operator '{operator}'.")
+    return column
 
 def parse_filter(unparsed_filter):
     """Helper function to return a two-dimensional array of filter parameters.
@@ -111,14 +59,40 @@ def parse_filter(unparsed_filter):
                 
     return filter
 
+def check_operator(operator, column_object):
+        """Parses a operator string to match a MySQL query operators.
+
+        :param operator:
+            Input a raw operator string for an accepted MySQL operator.
+        :type operator: str
+        :param table:
+            Input a case-sensitive string for a TableNode id.
+        :type table: str
+        :param field:
+            Input a case-sensitive string for a ColumnNode id.
+        :type field: str
+        :param verbose:
+            Set a boolean to control the terminal output.
+        :type verbose: Boolean
+        """
+        if operator not in OPERATORS:
+            raise ValueError(f"Operator {operator} is not supported.")
+
+        column_type = column_object.type.python_type
+
+        if column_type not in TYPES:
+            raise ValueError(f"Column '{column_object.name}' "
+                             f"has an unsupported type, {column_type}.")
+        if operator in COMPARATIVE_OPERATORS and \
+           column_type not in COMPARABLE_TYPES:
+            raise ValueError(f"Column '{column_object.name}' "
+                             f"is not comparable with '{operator}'.")
+
 def build_whereclause(db_graph, filter_expression): 
     filter_params = parse_filter(filter_expression)
 
-    table = translate_table(db_graph, filter_params[0])
-    table_object = db_graph.get_table(table)
-
-    column = translate_column(db_graph, filter_params[1], table_object)  
-    column_object = table_object.columns[column]
+    table_object = db_graph.nodes[filter_params[0]]["table"]
+    column_object = table_object.columns[filter_params[1]]
  
     check_operator(filter_params[3], column_object)
 
@@ -180,7 +154,7 @@ def get_table_pathing(db_graph, table_list, center_table=None):
 
     table_paths = []
     for table in table_list:
-        path = db_graph.traverse(center_table.name, table.name)
+        path = shortest_path(db_graph, center_table.name, table.name)
 
         if not path:
             raise ValueError(f"Table {table_node} is not connected by any "
@@ -203,7 +177,7 @@ def join_pathed_tables(db_graph, table_pathing):
             previous_table = path[index-1]
             if table not in joined_table_set:
                 joined_table_set.add(table)
-                table_object = db_graph.get_table(table)
+                table_object = db_graph.nodes[table]["table"]
 
                 onclause = build_onclause(db_graph, previous_table, table)
                 joined_tables = join(joined_tables, table_object, 
@@ -219,20 +193,16 @@ def build_fromclause(db_graph, columns):
 
     return joined_table
 
-def build_select(db_graph, columns, where=None, order_by=None, 
-                                                    from_=None, in_=None):
-    if from_ == None:
-        where_columns = []
-        if where != None:
-            for clause in where:
-                where_columns.append(clause.left) 
+def build_select(db_graph, columns, where=None, order_by=None):
+    where_columns = []
+    if where != None:
+        for clause in where:
+            where_columns.append(clause.left) 
 
-        order_by_columns = []
+    order_by_columns = []
 
-        total_columns = columns + where_columns + order_by_columns
-        fromclause = build_fromclause(db_graph, total_columns) 
-    else:
-        fromclause = from_
+    total_columns = columns + where_columns + order_by_columns
+    fromclause = build_fromclause(db_graph, total_columns) 
 
     select_query = select(columns).select_from(fromclause)
 
@@ -246,21 +216,17 @@ def build_select(db_graph, columns, where=None, order_by=None,
 
     return select_query
 
-def build_count(db_graph, columns, where=None, order_by=None, 
-                                                    from_=None, in_=None):    
-    if from_ == None:
-        where_columns = []
+def build_count(db_graph, columns, where=None, order_by=None):
+    where_columns = []
 
-        if where != None:
-            for clause in where:
-                where_columns.append(clause.left) 
+    if where != None:
+        for clause in where:
+            where_columns.append(clause.left) 
 
-        order_by_columns = []
+    order_by_columns = []
 
-        total_columns = columns + where_columns + order_by_columns
-        fromclause = build_fromclause(db_graph, total_columns)
-    else:
-        fromclause = from_
+    total_columns = columns + where_columns + order_by_columns
+    fromclause = build_fromclause(db_graph, total_columns)
 
     column_params = []
     for column_param in columns:
@@ -278,12 +244,9 @@ def build_count(db_graph, columns, where=None, order_by=None,
     
     return count_query
 
-def build_distinct(db_graph, columns, where=None, order_by=None, 
-                                                    from_=None, in_=None):
+def build_distinct(db_graph, columns, where=None, order_by=None):
     query = build_select(db_graph, columns, where=where, 
-                                                    order_by=order_by,
-                                                    from_=from_,
-                                                    in_=in_)
+                                                    order_by=order_by)
 
     distinct_query = query.distinct()
     return distinct_query

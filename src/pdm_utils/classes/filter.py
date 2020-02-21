@@ -10,9 +10,9 @@ import string
 import math
 import time
 import csv
+from networkx import Graph
 from pathlib import Path
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.classes.schemagraph import SchemaGraph
 from pdm_utils.functions import querying as q
 from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
@@ -24,7 +24,7 @@ def load_filter(db_filter, loader):
                 loader.connect(ask_database=True)
 
             if loader.graph == None:
-                loader.build_schemagraph()
+                loader.build_graph()
             
             db_filter.engine = loader.engine
             db_filter.graph = loader.graph
@@ -34,7 +34,7 @@ def load_filter(db_filter, loader):
             alchemist = AlchemyHandler()
             alchemist.engine = loader
 
-            alchemist.build_schemagraph()
+            alchemist.build_graph()
             db_filter.graph = alchemist.graph
             
         else:
@@ -94,7 +94,7 @@ class Filter:
 
     @graph.setter
     def graph(self, graph):
-        if not isinstance(graph, SchemaGraph):
+        if not isinstance(graph, Graph):
             raise TypeError
 
         self._graph = graph
