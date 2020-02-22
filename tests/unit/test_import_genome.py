@@ -67,6 +67,31 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.tkt.data_add = set(["retrieve_record"])
 
 
+    @patch("builtins.print")
+    def test_log_and_print_1(self, p_mock):
+        """Verify print is called."""
+        import_genome.log_and_print("empty", terminal=True)
+        self.assertTrue(p_mock.called)
+
+    @patch("builtins.print")
+    def test_log_and_print_2(self, p_mock):
+        """Verify print is not called."""
+        import_genome.log_and_print("empty", terminal=False)
+        self.assertFalse(p_mock.called)
+
+
+
+
+    def test_get_result_string_1(self):
+        """Verify string is constructed correctly."""
+        attr_list = ["type", "phage_id", "run_mode"]
+        string = import_genome.get_result_string(self.tkt, attr_list)
+        exp = "type: replace, phage_id: Trixie, run_mode: final"
+        self.assertEqual(string, exp)
+
+
+
+
     def test_check_ticket_1(self):
         """Verify no error is produced with a correctly structured
         'replace' ticket."""

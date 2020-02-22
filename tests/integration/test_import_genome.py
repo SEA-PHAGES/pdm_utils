@@ -72,6 +72,17 @@ def count_contents(path_to_folder):
         count += 1
     return count
 
+
+
+
+
+
+
+
+
+###TODO uncomment!
+
+
 class TestImportGenomeMain1(unittest.TestCase):
 
 
@@ -1635,13 +1646,12 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
 
-
 class TestImportGenomeMain7(unittest.TestCase):
 
 
     def setUp(self):
 
-        self.eval_warning1 = eval.Eval(status="warning")
+        self.eval_warning1 = eval.Eval(status="warning", result="temp")
         self.eval_warning2 = eval.Eval(status="warning")
         self.eval_warning3 = eval.Eval(status="warning")
         self.eval_warning4 = eval.Eval(status="warning")
@@ -1651,13 +1661,36 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.eval_correct1 = eval.Eval(status="correct")
         self.eval_correct2 = eval.Eval(status="correct")
         self.eval_correct3 = eval.Eval(status="correct")
+        self.eval_error1 = eval.Eval(status="error")
+
 
         self.tkt = ticket.GenomeTicket()
 
         self.cds1 = cds.Cds()
+        self.cds1.id = "CDS1"
+        self.cds1.start = 1
+        self.cds1.stop = 2
+        self.cds1.orientation = "F"
+
         self.cds2 = cds.Cds()
+        self.cds2.id = "CDS2"
+        self.cds2.start = 3
+        self.cds2.stop = 4
+        self.cds2.orientation = "F"
+
         self.cds3 = cds.Cds()
+        self.cds3.id = "CDS3"
+        self.cds3.start = 5
+        self.cds3.stop = 6
+        self.cds3.orientation = "R"
+
         self.cds4 = cds.Cds()
+        self.cds4.id = "CDS4"
+        self.cds4.start = 7
+        self.cds4.stop = 8
+        self.cds4.orientation = "R"
+
+
 
         self.src1 = source.Source()
         self.src2 = source.Source()
@@ -1674,7 +1707,158 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.bndl = bundle.Bundle()
 
 
-    def test_review_evaluation_list_1(self):
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_1(self, ask_mock):
+        """Verify values and no need for user input with:
+        interactive=False and 'warning' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=False)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertFalse(ask_mock.called)
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_2(self, ask_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, response=True."""
+        ask_mock.side_effect = [True]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "warning")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("temp"))
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_3(self, ask_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, response=False."""
+        ask_mock.side_effect = [False]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertFalse(self.eval_warning1.result.startswith("Status"))
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("manually."))
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_4(self, ask_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, response=None."""
+        ask_mock.side_effect = [None]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertTrue(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertFalse(self.eval_warning1.result.startswith("Status"))
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("exit."))
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_5(self, input_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, 3 invalid responses."""
+        input_mock.side_effect = ["invalid", "invalid", "invalid"]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertTrue(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(input_mock.called)
+        with self.subTest():
+            self.assertFalse(self.eval_warning1.result.startswith("Status"))
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("exit."))
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_6(self, input_mock):
+        """Verify values and need for user input with:
+        interactive=True and 'error' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_error1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_error1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(input_mock.called)
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_7(self, input_mock):
+        """Verify values and no need for user input with:
+        interactive=False and 'error' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_error1,
+                                                        interactive=False)
+        with self.subTest():
+            self.assertEqual(self.eval_error1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertFalse(input_mock.called)
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_8(self, input_mock):
+        """Verify values and no need for user input with
+        interactive=True and 'correct' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_correct1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_correct1.status, "correct")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertTrue(correct)
+        with self.subTest():
+            self.assertFalse(input_mock.called)
+
+
+
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    def test_review_evaluation_list_1(self, lp_mock):
         """Verify no need for user input if there are "
         "no 'warning' or 'error' evals."""
         eval_list = [self.eval_correct1, self.eval_correct2, self.eval_correct3]
@@ -1687,118 +1871,257 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertEqual(self.eval_correct3.status, "correct")
         with self.subTest():
             self.assertFalse(exit)
-
-    @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluation_list_2(self, ask_mock):
-        """Verify only one call for user input, and
-        verify no changes to status."""
-        ask_mock.side_effect = [True]
-        eval_list = [self.eval_correct1, self.eval_warning1, self.eval_correct2]
-        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
-            self.assertEqual(self.eval_correct1.status, "correct")
+            self.assertTrue(lp_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_list_2(self, ask_mock, lp_mock):
+        """Verify values when interactive=True, two 'warning' evals,
+        and response=True."""
+        ask_mock.side_effect = [True, True]
+        eval_list = [self.eval_warning1, self.eval_correct2, self.eval_warning2]
+        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
             self.assertEqual(self.eval_warning1.status, "warning")
         with self.subTest():
-            self.assertEqual(self.eval_correct3.status, "correct")
+            self.assertEqual(self.eval_correct2.status, "correct")
+        with self.subTest():
+            self.assertEqual(self.eval_warning2.status, "warning")
         with self.subTest():
             self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
 
-    def test_review_evaluation_list_3(self):
-        """Verify no call for user input, and
-        verify change to status when interactive=False."""
-        eval_list = [self.eval_correct1, self.eval_warning1, self.eval_correct2]
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    def test_review_evaluation_list_3(self, lp_mock):
+        """Verify values when interactive=False, two 'warning' evals."""
+        eval_list = [self.eval_warning1, self.eval_correct2, self.eval_warning2]
         exit = import_genome.review_evaluation_list(eval_list, interactive=False)
         with self.subTest():
-            self.assertEqual(self.eval_correct1.status, "correct")
-        with self.subTest():
             self.assertEqual(self.eval_warning1.status, "error")
         with self.subTest():
-            self.assertEqual(self.eval_correct3.status, "correct")
-        with self.subTest():
-            self.assertFalse(exit)
-
-    @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluation_list_4(self, ask_mock):
-        """Verify two calls for user input, and
-        verify change to status."""
-        ask_mock.side_effect = [False, False]
-        eval_list = [self.eval_warning1, self.eval_correct1, self.eval_warning2]
-        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
-        with self.subTest():
-            self.assertEqual(self.eval_warning1.status, "error")
-        with self.subTest():
-            self.assertEqual(self.eval_correct1.status, "correct")
+            self.assertEqual(self.eval_correct2.status, "correct")
         with self.subTest():
             self.assertEqual(self.eval_warning2.status, "error")
         with self.subTest():
             self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
 
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluation_list_5(self, ask_mock):
-        """Verify only two calls for user input, with
-        change to first status, no change for second, and
-        exit before third."""
-        ask_mock.side_effect = [False, None, False]
-        eval_list = [self.eval_warning1, self.eval_warning2, self.eval_warning3]
+    def test_review_evaluation_list_4(self, ask_mock, lp_mock):
+        """Verify values when interactive=True, two 'warning' evals,
+        and response=False and True."""
+        ask_mock.side_effect = [False, True]
+        eval_list = [self.eval_warning1, self.eval_correct2, self.eval_warning2]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
             self.assertEqual(self.eval_warning1.status, "error")
         with self.subTest():
+            self.assertEqual(self.eval_correct2.status, "correct")
+        with self.subTest():
             self.assertEqual(self.eval_warning2.status, "warning")
         with self.subTest():
-            self.assertEqual(self.eval_warning3.status, "warning")
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_list_5(self, ask_mock, lp_mock):
+        """Verify values when interactive=True, three 'warning' evals,
+        and response=True, exit."""
+        ask_mock.side_effect = [True, None]
+        eval_list = [self.eval_warning1, self.eval_warning2, self.eval_warning3]
+        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "warning")
+        with self.subTest():
+            self.assertEqual(self.eval_warning2.status, "error")
+        with self.subTest():
+            self.assertEqual(self.eval_warning3.status, "error")
         with self.subTest():
             self.assertTrue(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
 
 
 
 
-    def test_review_evaluations_1(self):
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_object_list_1(self, rel_mock):
+        """Verify results for list of 0 features."""
+        import_genome.review_object_list([], "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        self.assertFalse(rel_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_object_list_2(self, rel_mock):
+        """Verify results for list of 1 None feature."""
+        import_genome.review_object_list([None], "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        self.assertFalse(rel_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_object_list_3(self, rel_mock):
+        """Verify results for list of three CDS features,
+        each with 0 evaluations, interactive=False."""
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        self.assertFalse(rel_mock.called)
+
+
+    def test_review_object_list_4(self):
+        """Verify results for list of three CDS features,
+        one with three warning evaluations,
+        and two with one warning evaluation, interactive=False."""
+        self.cds1.evaluations = [self.eval_warning1,
+                                 self.eval_warning2,
+                                 self.eval_warning3]
+        self.cds2.evaluations = [self.eval_warning4]
+        self.cds3.evaluations = [self.eval_warning5]
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        w1 = cds_features[0].evaluations[0]
+        w2 = cds_features[0].evaluations[1]
+        w3 = cds_features[0].evaluations[2]
+        w4 = cds_features[1].evaluations[0]
+        w5 = cds_features[2].evaluations[0]
+        with self.subTest():
+            self.assertEqual(w1.status, "error")
+        with self.subTest():
+            self.assertEqual(w2.status, "error")
+        with self.subTest():
+            self.assertEqual(w3.status, "error")
+        with self.subTest():
+            self.assertEqual(w4.status, "error")
+        with self.subTest():
+            self.assertEqual(w5.status, "error")
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_object_list_5(self, ask_mock):
+        """Verify results for list of three CDS features,
+        one with three warning evaluations,
+        and two with one warning evaluation, interactive=True,
+        response=True, False, True, False, True."""
+        ask_mock.side_effect = [True, False, True, False, True]
+        self.cds1.evaluations = [self.eval_warning1,
+                                 self.eval_warning2,
+                                 self.eval_warning3]
+        self.cds2.evaluations = [self.eval_warning4]
+        self.cds3.evaluations = [self.eval_warning5]
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=True)
+        w1 = cds_features[0].evaluations[0]
+        w2 = cds_features[0].evaluations[1]
+        w3 = cds_features[0].evaluations[2]
+        w4 = cds_features[1].evaluations[0]
+        w5 = cds_features[2].evaluations[0]
+        with self.subTest():
+            self.assertEqual(w1.status, "warning")
+        with self.subTest():
+            self.assertEqual(w2.status, "error")
+        with self.subTest():
+            self.assertEqual(w3.status, "warning")
+        with self.subTest():
+            self.assertEqual(w4.status, "error")
+        with self.subTest():
+            self.assertEqual(w5.status, "warning")
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_object_list_6(self, ask_mock):
+        """Verify results for list of three CDS features,
+        one with three warning evaluations,
+        and two with one warning evaluation, interactive=True,
+        response=True, exit."""
+        ask_mock.side_effect = [True, None]
+        self.cds1.evaluations = [self.eval_warning1,
+                                 self.eval_warning2,
+                                 self.eval_warning3]
+        self.cds2.evaluations = [self.eval_warning4]
+        self.cds3.evaluations = [self.eval_warning5]
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=True)
+        w1 = cds_features[0].evaluations[0]
+        w2 = cds_features[0].evaluations[1]
+        w3 = cds_features[0].evaluations[2]
+        w4 = cds_features[1].evaluations[0]
+        w5 = cds_features[2].evaluations[0]
+        with self.subTest():
+            self.assertEqual(w1.status, "warning")
+        with self.subTest():
+            self.assertEqual(w2.status, "error")
+        with self.subTest():
+            self.assertEqual(w3.status, "error")
+        with self.subTest():
+            self.assertEqual(w4.status, "error")
+        with self.subTest():
+            self.assertEqual(w5.status, "error")
+
+
+
+
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_bundled_objects_1(self, rel_mock):
         """Verify results when bundle has:
         no bundle evaluations,
         no ticket,
         no genomes in genome_dict,
         no genome_pairs in genome_pair_dict."""
-        import_genome.review_evaluations(self.bndl, interactive=True)
-        # The only thing tested is that the function still runs
-        # when there is no data provided.
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
+        self.assertFalse(rel_mock.called)
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_2(self, ask_mock):
+    def test_review_bundled_objects_2(self, ask_mock):
         """Verify results when bundle has:
-        one error evaluation."""
+        one warning evaluation,
+        interactive=True."""
         ask_mock.side_effect = [False]
         self.bndl.evaluations = [self.eval_warning1]
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 
-    def test_review_evaluations_3(self):
+    def test_review_bundled_objects_3(self):
         """Verify results when bundle has:
-        one error evaluation;
+        one warning evaluation,
         interactive=False."""
         self.bndl.evaluations = [self.eval_warning1]
-        import_genome.review_evaluations(self.bndl, interactive=False)
+        import_genome.review_bundled_objects(self.bndl, interactive=False)
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_4(self, ask_mock):
+    def test_review_bundled_objects_4(self, ask_mock):
         """Verify results when bundle has:
-        a ticket with one error evaluation."""
+        a ticket with one warning evaluation,
+        interactive=False."""
         ask_mock.side_effect = [False]
         self.tkt.evaluations = [self.eval_warning1]
         self.bndl.ticket = self.tkt
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         self.assertEqual(self.bndl.ticket.evaluations[0].status, "error")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_5(self, ask_mock):
+    def test_review_bundled_objects_5(self, ask_mock):
         """Verify results when bundle has:
-        three genomes, two with one error evaluation."""
+        three genomes, two with one warning evaluation."""
         ask_mock.side_effect = [False, False]
         self.gnm1.evaluations = [self.eval_warning1]
         self.gnm2.evaluations = [self.eval_correct1]
@@ -1806,7 +2129,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.bndl.genome_dict["gnm1"] = self.gnm1
         self.bndl.genome_dict["gnm2"] = self.gnm2
         self.bndl.genome_dict["gnm3"] = self.gnm3
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_dict["gnm1"].evaluations
         evl_list2 = self.bndl.genome_dict["gnm2"].evaluations
         evl_list3 = self.bndl.genome_dict["gnm3"].evaluations
@@ -1819,43 +2142,46 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_6(self, ask_mock):
+    def test_review_bundled_objects_6(self, ask_mock):
         """Verify results when bundle has:
-        one genome with three CDS features, two with one error evaluation."""
-        ask_mock.side_effect = [False, False]
+        one genome with three CDS features, two with one warning evaluation,
+        one with two warning evaluations."""
+        ask_mock.side_effect = [True, None]
         self.cds1.evaluations = [self.eval_warning1]
-        self.cds2.evaluations = [self.eval_correct1]
-        self.cds3.evaluations = [self.eval_warning2]
+        self.cds2.evaluations = [self.eval_warning2, self.eval_warning3]
+        self.cds3.evaluations = [self.eval_warning3]
         self.gnm1.cds_features = [self.cds1, self.cds2, self.cds3]
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_dict["gnm1"].cds_features[0].evaluations
         evl_list2 = self.bndl.genome_dict["gnm1"].cds_features[1].evaluations
         evl_list3 = self.bndl.genome_dict["gnm1"].cds_features[2].evaluations
         with self.subTest():
-            self.assertEqual(evl_list1[0].status, "error")
+            self.assertEqual(evl_list1[0].status, "warning")
         with self.subTest():
-            self.assertEqual(evl_list2[0].status, "correct")
+            self.assertEqual(evl_list2[0].status, "error")
+        with self.subTest():
+            self.assertEqual(evl_list2[1].status, "error")
         with self.subTest():
             self.assertEqual(evl_list3[0].status, "error")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_7(self, ask_mock):
+    def test_review_bundled_objects_7(self, ask_mock):
         """Verify results when bundle has:
-        one genome with three source features, two with one error evaluation."""
-        ask_mock.side_effect = [False, False]
+        one genome with three source features, two with one warning evaluation."""
+        ask_mock.side_effect = [True, False]
         self.src1.evaluations = [self.eval_warning1]
         self.src2.evaluations = [self.eval_correct1]
         self.src3.evaluations = [self.eval_warning2]
         self.gnm1.source_features = [self.src1, self.src2, self.src3]
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_dict["gnm1"].source_features[0].evaluations
         evl_list2 = self.bndl.genome_dict["gnm1"].source_features[1].evaluations
         evl_list3 = self.bndl.genome_dict["gnm1"].source_features[2].evaluations
         with self.subTest():
-            self.assertEqual(evl_list1[0].status, "error")
+            self.assertEqual(evl_list1[0].status, "warning")
         with self.subTest():
             self.assertEqual(evl_list2[0].status, "correct")
         with self.subTest():
@@ -1863,17 +2189,17 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_8(self, ask_mock):
+    def test_review_bundled_objects_8(self, ask_mock):
         """Verify results when bundle has:
-        three genome_pairs, two with one error evaluation."""
-        ask_mock.side_effect = [False, False]
+        three genome_pairs, two with one warning evaluation."""
+        ask_mock.side_effect = [False, True]
         self.genome_pair1.evaluations = [self.eval_warning1]
         self.genome_pair2.evaluations = [self.eval_correct1]
         self.genome_pair3.evaluations = [self.eval_warning2]
         self.bndl.genome_pair_dict["gnm_pr1"] = self.genome_pair1
         self.bndl.genome_pair_dict["gnm_pr2"] = self.genome_pair2
         self.bndl.genome_pair_dict["gnm_pr3"] = self.genome_pair3
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_pair_dict["gnm_pr1"].evaluations
         evl_list2 = self.bndl.genome_pair_dict["gnm_pr2"].evaluations
         evl_list3 = self.bndl.genome_pair_dict["gnm_pr3"].evaluations
@@ -1882,17 +2208,17 @@ class TestImportGenomeMain7(unittest.TestCase):
         with self.subTest():
             self.assertEqual(evl_list2[0].status, "correct")
         with self.subTest():
-            self.assertEqual(evl_list3[0].status, "error")
+            self.assertEqual(evl_list3[0].status, "warning")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_9(self, ask_mock):
+    def test_review_bundled_objects_9(self, ask_mock):
         """Verify results when bundle has:
         one ticket with four evaluations, three that are errors,
         three CDS features, each with one error evaluation, and
         one source feature with one error,
-        but with user quitting ticket review after first ticket error review
-        and quitting after first CDS feature error review."""
+        but with user exiting review after first ticket error review
+        and exiting after first CDS feature error review."""
         self.tkt.evaluations = [self.eval_warning1, self.eval_correct1,
                                 self.eval_warning2, self.eval_warning3]
         self.cds1.evaluations = [self.eval_warning4]
@@ -1903,8 +2229,12 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.gnm1.source_features = [self.src1]
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        ask_mock.side_effect = [False, None, False, None, False]
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        ask_mock.side_effect = [False, # tkt evl1
+                                None, # tkt evl3
+                                True, # cds1 evl1
+                                None, # cds2 evl1
+                                True] # src evl1
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         tkt_list = self.bndl.ticket.evaluations
         cds1_list = self.bndl.genome_dict["gnm1"].cds_features[0].evaluations
         cds2_list = self.bndl.genome_dict["gnm1"].cds_features[1].evaluations
@@ -1915,17 +2245,17 @@ class TestImportGenomeMain7(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt_list[1].status, "correct")
         with self.subTest():
-            self.assertEqual(tkt_list[2].status, "warning")
+            self.assertEqual(tkt_list[2].status, "error")
         with self.subTest():
-            self.assertEqual(tkt_list[3].status, "warning")
+            self.assertEqual(tkt_list[3].status, "error")
         with self.subTest():
-            self.assertEqual(cds1_list[0].status, "error")
+            self.assertEqual(cds1_list[0].status, "warning")
         with self.subTest():
-            self.assertEqual(cds2_list[0].status, "warning")
+            self.assertEqual(cds2_list[0].status, "error")
         with self.subTest():
-            self.assertEqual(cds3_list[0].status, "warning")
+            self.assertEqual(cds3_list[0].status, "error")
         with self.subTest():
-            self.assertEqual(src1_list[0].status, "error")
+            self.assertEqual(src1_list[0].status, "warning")
 
 
 
