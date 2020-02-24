@@ -5,6 +5,7 @@ import unittest
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from datetime import datetime
+import pathlib
 import sqlalchemy
 from unittest.mock import patch
 from pdm_utils.classes import bundle
@@ -64,6 +65,31 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.tkt.data_retain = set(["host_genus"])
         self.tkt.data_retrieve = set(["cluster"])
         self.tkt.data_add = set(["retrieve_record"])
+
+
+    @patch("builtins.print")
+    def test_log_and_print_1(self, p_mock):
+        """Verify print is called."""
+        import_genome.log_and_print("empty", terminal=True)
+        self.assertTrue(p_mock.called)
+
+    @patch("builtins.print")
+    def test_log_and_print_2(self, p_mock):
+        """Verify print is not called."""
+        import_genome.log_and_print("empty", terminal=False)
+        self.assertFalse(p_mock.called)
+
+
+
+
+    def test_get_result_string_1(self):
+        """Verify string is constructed correctly."""
+        attr_list = ["type", "phage_id", "run_mode"]
+        string = import_genome.get_result_string(self.tkt, attr_list)
+        exp = "type: replace, phage_id: Trixie, run_mode: final"
+        self.assertEqual(string, exp)
+
+
 
 
     def test_check_ticket_1(self):
@@ -598,7 +624,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
 
     def test_check_genome_2(self):
         """Verify correct number of evaluations are produced using:
@@ -611,7 +637,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
 
     def test_check_genome_3(self):
         """Verify correct number of evaluations are produced using:
@@ -626,7 +652,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
 
     def test_check_genome_4(self):
         """Verify correct number of evaluations are produced using:
@@ -671,7 +697,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
 
     def test_check_genome_7(self):
         """Verify correct number of evaluations are produced using:
@@ -686,7 +712,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 4)
 
     def test_check_genome_8(self):
         """Verify correct number of evaluations are produced using:
@@ -701,7 +727,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 4)
 
     def test_check_genome_9(self):
         """Verify correct number of evaluations are produced using:
@@ -716,7 +742,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 3)
 
     def test_check_genome_10(self):
         """Verify correct number of evaluations are produced using:
@@ -731,7 +757,7 @@ class TestImportGenomeClass4(unittest.TestCase):
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
             self.cluster_set, self.subcluster_set, self.accession_set)
-        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 1)
+        self.assertEqual(len(self.gnm.evaluations), self.check_sum - 2)
 
     def test_check_genome_11(self):
         """Verify correct number of errors are produced using:
@@ -959,6 +985,26 @@ class TestImportGenomeClass4(unittest.TestCase):
     def test_check_genome_28(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
+        duplicated feature coordinates."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm.name = "Trixie"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        self.cds2.start = 10
+        self.cds2.stop = 20
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        count = count_status(self.gnm, "error", "warning")
+        self.assertEqual(count, 1)
+
+    def test_check_genome_29(self):
+        """Verify correct number of errors are produced using:
+        'final' annotation_status, and
         'name' contains '_Draft' suffix."""
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
@@ -974,7 +1020,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_29(self):
+    def test_check_genome_30(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
         '_cds_processed_descriptions_tally' == 0."""
@@ -992,7 +1038,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_30(self):
+    def test_check_genome_31(self):
         """Verify correct number of errors are produced using:
         ticket type = 'add', id contains '_Draft' suffix.
         'annotation_status' = 'draft',
@@ -1010,7 +1056,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_31(self):
+    def test_check_genome_32(self):
         """Verify correct number of errors are produced using:
         invalid 'annotation_status'."""
         self.gnm.annotation_status = "invalid"
@@ -1021,7 +1067,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_32(self):
+    def test_check_genome_33(self):
         """Verify correct number of errors are produced using:
         invalid 'annotation_author'."""
         self.gnm.annotation_author = -1
@@ -1033,7 +1079,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_33(self):
+    def test_check_genome_34(self):
         """Verify correct number of errors are produced using:
         invalid 'retrieve_record'."""
         self.gnm.retrieve_record = -1
@@ -1044,7 +1090,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_34(self):
+    def test_check_genome_35(self):
         """Verify correct number of errors are produced using:
         'cluster' not in cluster_set."""
         self.gnm.cluster = "Z"
@@ -1057,7 +1103,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_35(self):
+    def test_check_genome_36(self):
         """Verify correct number of errors are produced using:
         'subcluster' not in subcluster_set."""
         self.gnm.cluster = "Z"
@@ -1070,7 +1116,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_36(self):
+    def test_check_genome_37(self):
         """Verify correct number of errors are produced using:
         'subcluster' = 'none'."""
         self.gnm.subcluster = "none"
@@ -1081,8 +1127,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 0)
 
-
-    def test_check_genome_37(self):
+    def test_check_genome_38(self):
         """Verify correct number of errors are produced using:
         invalid 'translation_table'."""
         self.gnm.translation_table = 1
@@ -1093,7 +1138,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_38(self):
+    def test_check_genome_39(self):
         """Verify correct number of errors are produced using:
         'host_genus' not in host_set."""
         self.host_set = {"Gordonia"}
@@ -1104,7 +1149,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_39(self):
+    def test_check_genome_40(self):
         """Verify correct number of errors are produced using:
         'cluster' structured incorrectly."""
         self.gnm.cluster = "Z1"
@@ -1118,7 +1163,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_genome_40(self):
+    def test_check_genome_41(self):
         """Verify correct number of errors are produced using:
         'subcluster' structured incorrectly."""
         self.gnm.cluster = "Z"
@@ -1132,7 +1177,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_genome_41(self):
+    def test_check_genome_42(self):
         """Verify correct number of errors are produced using:
         incompatible 'cluster' and 'subcluster'."""
         self.gnm.cluster = "Z"
@@ -1146,7 +1191,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_42(self):
+    def test_check_genome_43(self):
         """Verify correct number of errors are produced using:
         invalid 'date'."""
         self.gnm.date = constants.EMPTY_DATE
@@ -1157,7 +1202,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_43(self):
+    def test_check_genome_44(self):
         """Verify correct number of errors are produced using:
         'gc' < 0."""
         self.gnm.gc = -1
@@ -1168,7 +1213,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_44(self):
+    def test_check_genome_45(self):
         """Verify correct number of errors are produced using:
         'gc' > 100."""
         self.gnm.gc = 101
@@ -1179,7 +1224,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_45(self):
+    def test_check_genome_46(self):
         """Verify correct number of errors are produced using:
         'length' = 0."""
         self.gnm.length = 0
@@ -1190,22 +1235,10 @@ class TestImportGenomeClass4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_46(self):
+    def test_check_genome_47(self):
         """Verify correct number of errors are produced using:
         '_cds_features_tally' = 0."""
         self.gnm._cds_features_tally = 0
-        import_genome.check_genome(
-            self.gnm, self.tkt.type, self.tkt.eval_flags,
-            self.id_set, self.seq_set, self.host_set,
-            self.cluster_set, self.subcluster_set, self.accession_set)
-        count = count_status(self.gnm, "error", "warning")
-        self.assertEqual(count, 1)
-
-    def test_check_genome_47(self):
-        """Verify correct number of errors are produced using:
-        duplicated feature coordinates."""
-        self.cds2.start = 10
-        self.cds2.stop = 20
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
@@ -1803,45 +1836,8 @@ class TestImportGenomeClass6(unittest.TestCase):
 
 
 
+
 class TestImportGenomeClass7(unittest.TestCase):
-    def setUp(self):
-        self.evl1 = eval.Eval()
-        self.evl1.id = "GNM0001"
-        self.evl1.definition = "temp"
-        self.evl1.status = "error"
-        self.evl1.result = "Failed evaluation."
-
-        self.evl2 = eval.Eval()
-        self.evl2.id = "GNM0002"
-        self.evl2.definition = "temp"
-        self.evl2.status = "error"
-        self.evl2.result = "Failed evaluation."
-
-        self.evl3 = eval.Eval()
-        self.evl3.id = "GNM0003"
-        self.evl3.definition = "temp"
-        self.evl3.status = "correct"
-        self.evl3.result = "Failed evaluation."
-
-
-    def test_log_evaluations(self):
-        """Verify function executes."""
-        evaluation_dict = {1:{"bundle": [self.evl1],
-                              "ticket": [self.evl2]},
-                           2:{"genome": [self.evl3]}}
-        import_genome.log_evaluations(evaluation_dict)
-
-
-
-
-
-
-
-
-
-
-
-class TestImportGenomeClass8(unittest.TestCase):
 
 
     def setUp(self):
@@ -2018,7 +2014,7 @@ class TestImportGenomeClass8(unittest.TestCase):
 
 
 
-class TestImportGenomeClass9(unittest.TestCase):
+class TestImportGenomeClass8(unittest.TestCase):
 
 
     def setUp(self):
@@ -2143,11 +2139,123 @@ class TestImportGenomeClass9(unittest.TestCase):
 
 
 
+class TestImportGenomeClass9(unittest.TestCase):
+
+    def setUp(self):
+        self.tkt = ticket.GenomeTicket()
+        self.tkt.type = "replace"
+        self.tkt.phage_id = "Trixie_tkt"
+        self.gnm = genome.Genome()
+        self.gnm.id = "Trixie_gnm"
+        self.gnm.filename = "Trixie_file"
+        self.bndl = bundle.Bundle()
+        self.bndl._errors = 0
+        self.success_path = pathlib.Path("success_folder")
+        self.fail_path = pathlib.Path("fail_folder")
+        self.paths_dict = {"success": self.success_path,
+                           "fail": self.fail_path}
+        self.flatfile_path = pathlib.Path("/folder/to/Trixie_flatfile.txt")
 
 
 
 
+    def test_get_logfile_path_1(self):
+        """Verify returned path when:
+        bundle has 0 errors, paths_dict is provided, genome is provided,
+        filepath is provided, file_ref is provided,
+        and ticket is not provided."""
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = self.gnm.id + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.success_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
 
+    def test_get_logfile_path_2(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, genome is provided,
+        filepath is provided, file_ref is provided,
+        and ticket is not provided."""
+        self.bndl._errors = 1
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = self.gnm.id + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_3(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, ticket is provided,
+        filepath is not provided, file_ref is not provided,
+        and genome is not provided."""
+        self.bndl._errors = 1
+        self.bndl.ticket = self.tkt
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict, filepath=None,
+                            file_ref=None)
+        exp_name = (self.tkt.phage_id + "__" + "none" + ".log")
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_4(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, genome is not provided,
+        filepath is provided, file_ref is provided,
+        and ticket is not provided."""
+        self.bndl._errors = 1
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = "none" + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_5(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is provided, genome is provided,
+        filepath is provided, file_ref is provided, and ticket is provided."""
+        self.bndl._errors = 1
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict,
+                            filepath=self.flatfile_path,
+                            file_ref="flat_file")
+        exp_name = self.gnm.id + "__" + self.flatfile_path.stem + ".log"
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_6(self):
+        """Verify returned path when:
+        bundle has 1 errors, genome is provided, paths_dict is provided,
+        filepath is not provided, file_ref is provided,
+        and ticket is provided."""
+        self.bndl._errors = 1
+        self.bndl.ticket = self.tkt
+        self.bndl.genome_dict["flat_file"] = self.gnm
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=self.paths_dict, filepath=None,
+                            file_ref="flat_file")
+        exp_name = (self.tkt.phage_id + "__" + "none" + ".log")
+        exp_path = pathlib.Path(self.fail_path, exp_name)
+        self.assertEqual(logfile_path, exp_path)
+
+    def test_get_logfile_path_7(self):
+        """Verify returned path when:
+        bundle has 1 errors, paths_dict is not provided, genome is not provided,
+        filepath is not provided, file_ref is not provided,
+        and ticket is not provided."""
+        self.bndl._errors = 1
+        logfile_path = import_genome.get_logfile_path(self.bndl,
+                            paths_dict=None, filepath=None,
+                            file_ref=None)
+        self.assertIsNone(logfile_path)
 
 
 if __name__ == '__main__':

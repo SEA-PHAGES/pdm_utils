@@ -818,11 +818,11 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "error")
         with self.subTest():
-            self.assertTrue(results[1].strip().startswith("The prefix"))
+            self.assertTrue(results[2].strip().startswith("The prefix"))
         with self.subTest():
-            self.assertTrue(results[2].strip().startswith("The genome"))
+            self.assertTrue(results[3].strip().startswith("The genome"))
         with self.subTest():
-            self.assertTrue(results[3].strip().startswith("The feature"))
+            self.assertTrue(results[4].strip().startswith("The feature"))
 
     def test_check_locus_tag_structure_14(self):
         """Verify an error is produced when the locus_tag has an

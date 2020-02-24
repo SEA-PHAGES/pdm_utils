@@ -15,8 +15,8 @@ def main(unparsed_args_list):
     if args.directory is not None:
         args.directory = basic.set_path(args.directory,
                                               kind="dir", expect=True)
-        folder_files = basic.identify_files(args.directory,
-                                            set([".DS_Store"]))
+        folder_files = basic.identify_contents(args.directory, kind="file",
+                                               ignore_set=set([".DS_Store"]))
         file_list.extend(folder_files)
     if args.file is not None:
         args.file = basic.set_path(args.file, kind="file", expect=True)

@@ -66,6 +66,21 @@ test_files_path = Path(unittest_dir, "test_files")
 schema_file = "test_schema7.sql"
 schema_filepath = Path(test_files_path, schema_file)
 
+def count_contents(path_to_folder):
+    count = 0
+    for item in path_to_folder.iterdir():
+        count += 1
+    return count
+
+
+
+
+
+
+
+
+
+###TODO uncomment!
 
 
 class TestImportGenomeMain1(unittest.TestCase):
@@ -499,14 +514,17 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_prepare_bundle_10(self, ask_mock, choose_mock):
         """Verify bundle is returned with the CDS descriptions derived
-        from 'function' instead of 'product', after it is
-        interactively selected using interactive = True."""
+        from 'product' instead of 'function', after it is
+        interactively selected using interactive = True.
+        There are 0 'function' descriptions.
+        There are ~30 of 'product' descriptions."""
         self.tkt1.data_add = set(["host_genus", "subcluster",
                                   "annotation_status", "annotation_author",
                                   "retrieve_record", "accession"])
+        self.tkt1.description_field = "function"
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         ask_mock.side_effect = [False]
-        choose_mock.side_effect = ["function"]
+        choose_mock.side_effect = ["product"]
         bndl = import_genome.prepare_bundle(
                     filepath=self.test_flat_file1,
                     ticket_dict=tkt_dict, id=1,
@@ -520,11 +538,10 @@ class TestImportGenomeMain1(unittest.TestCase):
         bndl_tkt = bndl.ticket
         with self.subTest():
             self.assertTrue(ff_gnm._cds_processed_descriptions_tally != \
-                            ff_gnm._cds_processed_products_tally)
+                            ff_gnm._cds_processed_functions_tally)
         with self.subTest():
             self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
-                             ff_gnm._cds_processed_functions_tally)
-
+                             ff_gnm._cds_processed_products_tally)
 
 
 
@@ -905,8 +922,20 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt2.eval_flags = self.eval_flags
         self.tkt2.data_dict = self.data_dict2
 
+        # To test how log files are managed:
+        self.base_dir = Path(test_root_dir,"test_import")
+        self.base_dir.mkdir()
+        self.success_path = Path(self.base_dir, "success_folder")
+        self.success_path.mkdir()
+        self.fail_path = Path(self.base_dir, "fail_folder")
+        self.fail_path.mkdir()
+        self.paths_dict = {"success": self.success_path,
+                           "fail": self.fail_path}
+
     def tearDown(self):
         self.engine.dispose()
+        shutil.rmtree(self.base_dir)
+
 
 
 
@@ -935,26 +964,34 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(evaluation_dict.keys()), 0)
 
-
     # Patching so avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
-    def test_process_files_and_tickets_2(self, import_into_db_mock):
+    # Patching glp since the bundled data is incomplete,
+    # bndl.check_for_errors() will always throw an error.
+    @patch("pdm_utils.pipelines.import_genome.get_logfile_path")
+    def test_process_files_and_tickets_2(self, glp_mock, import_into_db_mock):
         """Verify correct output using:
         two files with no tickets,
         unsuccessful import,
-        no unmatched tickets."""
+        no unmatched tickets.
+        Also testing that file-specific log files are generated."""
         ticket_dict = {}
         files = [self.flat_file_l5, self.flat_file_trixie]
+        log_l5 = Path(self.success_path, self.flat_file_l5.stem)
+        log_trixie = Path(self.success_path, self.flat_file_trixie.stem)
+        glp_mock.side_effect = [log_l5, log_trixie]
         import_into_db_mock.side_effect = [False, False]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
-                            prod_run=False, genome_id_field="_organism_name")
-
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=self.paths_dict)
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
         failed_filename_list = results_tuple[3]
         evaluation_dict = results_tuple[4]
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
         with self.subTest():
             self.assertEqual(len(success_ticket_list), 0)
         with self.subTest():
@@ -965,6 +1002,10 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(len(failed_filename_list), 2)
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+        with self.subTest():
+            self.assertEqual(s_count, 2)
+        with self.subTest():
+            self.assertEqual(f_count, 0)
 
 
     # Patching so avoid an attempt to add data to the database.
@@ -973,19 +1014,24 @@ class TestImportGenomeMain5(unittest.TestCase):
         """Verify correct output using:
         two files with matched tickets,
         successful import,
-        no unmatched tickets."""
+        no unmatched tickets.
+        Also testing that NO file-specific log files are generated when
+        no paths_dict is provided."""
         ticket_dict = {self.tkt1.phage_id: self.tkt1,
                        self.tkt2.phage_id: self.tkt2}
         files = [self.flat_file_l5, self.flat_file_trixie]
         import_into_db_mock.side_effect = [True, True]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
-                            prod_run=False, genome_id_field="_organism_name")
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=None)
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
         failed_filename_list = results_tuple[3]
         evaluation_dict = results_tuple[4]
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
         with self.subTest():
             self.assertEqual(len(success_ticket_list), 2)
         with self.subTest():
@@ -996,6 +1042,10 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(len(failed_filename_list), 0)
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+        with self.subTest():
+            self.assertEqual(s_count, 0)
+        with self.subTest():
+            self.assertEqual(f_count, 0)
 
 
     # Patching so avoid an attempt to add data to the database.
@@ -1028,22 +1078,26 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
 
-
     def test_process_files_and_tickets_5(self):
         """Verify correct output using:
         no files,
-        two unmatched tickets."""
+        two unmatched tickets.
+        Also testing that ticket-specific log files are generated when
+        paths_dict is provided."""
         ticket_dict = {self.tkt1.phage_id: self.tkt1,
                        self.tkt2.phage_id: self.tkt2}
         files = []
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
-                            prod_run=False, genome_id_field="_organism_name")
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=self.paths_dict)
         success_ticket_list = results_tuple[0]
         failed_ticket_list = results_tuple[1]
         success_filename_list = results_tuple[2]
         failed_filename_list = results_tuple[3]
         evaluation_dict = results_tuple[4]
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
         with self.subTest():
             self.assertEqual(len(success_ticket_list), 0)
         with self.subTest():
@@ -1054,11 +1108,35 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(len(failed_filename_list), 0)
         with self.subTest():
             self.assertEqual(evaluation_dict.keys(), set([1, 2]))
+        with self.subTest():
+            self.assertEqual(s_count, 0)
+        with self.subTest():
+            self.assertEqual(f_count, 2)
+
+
+    def test_process_files_and_tickets_6(self):
+        """Same test as test_process_files_and_tickets_5, except that
+        NO ticket-specific log files are generated when
+        paths_dict is NOT provided."""
+        ticket_dict = {self.tkt1.phage_id: self.tkt1,
+                       self.tkt2.phage_id: self.tkt2}
+        files = []
+        results_tuple = import_genome.process_files_and_tickets(ticket_dict,
+                            files, engine=self.engine,
+                            prod_run=False, genome_id_field="_organism_name",
+                            log_folder_paths_dict=None)
+        s_count = count_contents(self.success_path)
+        f_count = count_contents(self.fail_path)
+        with self.subTest():
+            self.assertEqual(s_count, 0)
+        with self.subTest():
+            self.assertEqual(f_count, 0)
+
 
 
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
-    def test_process_files_and_tickets_6(self, import_into_db_mock):
+    def test_process_files_and_tickets_7(self, import_into_db_mock):
         """Verify correct output using:
         one file matched to ticket with successful import,
         one file unmatched to ticket with unsuccessful import,
@@ -1091,7 +1169,7 @@ class TestImportGenomeMain5(unittest.TestCase):
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_7(self, ask_mock, execute_mock):
+    def test_process_files_and_tickets_8(self, ask_mock, execute_mock):
         """Verify correct output using:
         one file with matched ticket,
         one error evaluation in ticket (ensuring at least one error
@@ -1116,8 +1194,12 @@ class TestImportGenomeMain5(unittest.TestCase):
 
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
+    # Since interactive=True and there are evals with 'error' status,
+    # need to patch input to proceed.
+    @patch("builtins.input")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_8(self, ask_mock, execute_mock):
+    def test_process_files_and_tickets_9(self, ask_mock, input_mock,
+                                         execute_mock):
         """Verify correct output using:
         one file with matched ticket,
         one error evaluation in ticket (ensuring at least one error
@@ -1125,7 +1207,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         interactive = True,
         with no 'warning' status corrections."""
         self.tkt1.evaluations = [eval.Eval(status="error")]
-        ask_mock.return_value = False
+        ask_mock.return_value = True
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
@@ -1147,8 +1229,12 @@ class TestImportGenomeMain5(unittest.TestCase):
 
     # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
+    # Since interactive=True and there are evals with 'error' status,
+    # need to patch input to proceed.
+    @patch("builtins.input")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_process_files_and_tickets_9(self, ask_mock, execute_mock):
+    def test_process_files_and_tickets_10(self, ask_mock, input_mock,
+                                         execute_mock):
         """Verify correct output using:
         one file with matched ticket,
         one error evaluation in ticket (ensuring at least one error
@@ -1156,7 +1242,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         interactive = True,
         with all 'warning' status changes to 'error'."""
         self.tkt1.evaluations = [eval.Eval(status="error")]
-        ask_mock.return_value = True
+        ask_mock.return_value = False
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
@@ -1181,11 +1267,11 @@ class TestImportGenomeMain5(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     @patch("pdm_utils.pipelines.import_genome.run_checks")
     @patch("pdm_utils.pipelines.import_genome.prepare_bundle")
-    def test_process_files_and_tickets_10(self, prep_mock, run_checks_mock,
+    def test_process_files_and_tickets_11(self, prep_mock, run_checks_mock,
                                           ask_mock, execute_mock):
         """Verify correct output using:
         two files with matched tickets,
-        one error evaluation in ticket (ensuring at least one error
+        one warning evaluation in ticket (ensuring at least one warning
         in all evaluations),
         interactive = True,
         with all 'warning' status corrections to 'error' in first file
@@ -1208,7 +1294,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         bndl2.genome_dict["flat_file"] = gnm2
 
         prep_mock.side_effect = [bndl1, bndl2]
-        ask_mock.side_effect = [True, False]
+        ask_mock.side_effect = [False, True]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",
@@ -1254,27 +1340,28 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.tkt2.phage_id = "Trixie"
         self.tkt2.host_genus = "Mycobacterium"
 
-        self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}
-        self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
+        self.tkt_dict1 = {"type": "add", "phage_id": "L5",
+                          "host_genus": "Mycobacterium"}
+        self.tkt_dict2 = {"type": "replace", "phage_id": "Trixie",
+                          "host_genus": "Mycobacterium"}
 
         self.date = time.strftime("%Y%m%d")
-        # self.results_folder1 = "{}_results".format(self.date)
-        # self.results_folder2 = "{}_results_1".format(self.date)
-        # self.results_folder3 = "{}_results_2".format(self.date)
-        # self.exp_success = Path(self.output_folder, self.results_folder1, "success")
-
 
         self.exp_success = Path(self.output_folder, "success")
         self.exp_success_tkt_table = Path(self.exp_success, "import_tickets.csv")
         self.exp_success_genomes = Path(self.exp_success, "genomes")
+        self.exp_success_logs = Path(self.exp_success, "logs")
 
         self.exp_fail = Path(self.output_folder, "fail")
         self.exp_fail_tkt_table = Path(self.exp_fail, "import_tickets.csv")
         self.exp_fail_genomes = Path(self.exp_fail, "genomes")
+        self.exp_fail_logs = Path(self.exp_fail, "logs")
+
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
         self.engine.dispose()
+
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
@@ -1325,6 +1412,16 @@ class TestImportGenomeMain6(unittest.TestCase):
         for item in self.exp_fail_genomes.iterdir():
             fail_genomes_count += 1
 
+        # Unable to check how many log files are present -
+        # the log folders don't exist because process_files_and_tickets()
+        # was patched, so no log files created, so data_io() removes the folders.
+        # success_log_files_count = 0
+        # for item in self.exp_success_logs.iterdir():
+        #     success_log_files_count += 1
+        # fail_log_files_count = 0
+        # for item in self.exp_fail_logs.iterdir():
+        #     fail_log_files_count += 1
+
         with self.subTest():
             self.assertTrue(pft_mock.called)
         with self.subTest():
@@ -1343,6 +1440,12 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertEqual(success_genomes_count, 1)
         with self.subTest():
             self.assertEqual(fail_genomes_count, 1)
+        # Since pft was patched, file-specific log files were not created,
+        # so the log folders should be removed:
+        with self.subTest():
+            self.assertFalse(self.exp_fail_logs.is_dir())
+        with self.subTest():
+            self.assertFalse(self.exp_success_logs.is_dir())
 
 
     @patch("sys.exit")
@@ -1430,7 +1533,7 @@ class TestImportGenomeMain6(unittest.TestCase):
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
     @patch("sys.exit")
-    def test_data_io_6(self, sys_exit_mock, get_count_mock, pft_mock):
+    def test_data_io_4(self, sys_exit_mock, get_count_mock, pft_mock):
         """Verify data_io is not successful when there
         are no files to process."""
         self.genome_folder.mkdir()
@@ -1450,7 +1553,7 @@ class TestImportGenomeMain6(unittest.TestCase):
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
-    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock):
+    def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is not successful when there are no tickets to process."""
         self.genome_folder.mkdir()
         self.output_folder.mkdir()
@@ -1468,6 +1571,79 @@ class TestImportGenomeMain6(unittest.TestCase):
             self.assertTrue(sys_exit_mock.called)
 
 
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    def test_data_io_6(self, get_count_mock, pft_mock, sys_exit_mock):
+        """Verify data_io runs correctly when there are
+        successful tickets and genomes, and no failed tickets or genomes."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        success_ticket_list = [self.tkt_dict1]
+        failed_ticket_list = []
+        success_filename_list = [self.flat_file1]
+        failed_filename_list = []
+        evaluation_dict = {}
+        get_count_mock.return_value = 0
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(engine=self.engine,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(self.exp_success_tkt_table.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_success_genomes.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_fail.exists())
+
+
+    @patch("sys.exit")
+    @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
+    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock):
+        """Verify data_io runs correctly when there are
+        failed tickets and genomes, and no successful tickets or genomes."""
+        self.genome_folder.mkdir()
+        self.output_folder.mkdir()
+        self.flat_file1.touch()
+        success_ticket_list = []
+        failed_ticket_list = [self.tkt_dict1]
+        success_filename_list = []
+        failed_filename_list = [self.flat_file1]
+        evaluation_dict = {}
+        get_count_mock.return_value = 0
+        pft_mock.return_value = (success_ticket_list,
+                                 failed_ticket_list,
+                                 success_filename_list,
+                                 failed_filename_list,
+                                 evaluation_dict)
+        import_genome.data_io(engine=self.engine,
+            genome_folder=self.genome_folder,
+            import_table_file=self.valid_import_table_file,
+            output_folder=self.output_folder)
+
+        with self.subTest():
+            self.assertTrue(pft_mock.called)
+        with self.subTest():
+            self.assertFalse(sys_exit_mock.called)
+        with self.subTest():
+            self.assertTrue(self.exp_fail_tkt_table.exists())
+        with self.subTest():
+            self.assertTrue(self.exp_fail_genomes.exists())
+        with self.subTest():
+            self.assertFalse(self.exp_success.exists())
+
 
 
 class TestImportGenomeMain7(unittest.TestCase):
@@ -1475,7 +1651,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
     def setUp(self):
 
-        self.eval_warning1 = eval.Eval(status="warning")
+        self.eval_warning1 = eval.Eval(status="warning", result="temp")
         self.eval_warning2 = eval.Eval(status="warning")
         self.eval_warning3 = eval.Eval(status="warning")
         self.eval_warning4 = eval.Eval(status="warning")
@@ -1485,13 +1661,36 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.eval_correct1 = eval.Eval(status="correct")
         self.eval_correct2 = eval.Eval(status="correct")
         self.eval_correct3 = eval.Eval(status="correct")
+        self.eval_error1 = eval.Eval(status="error")
+
 
         self.tkt = ticket.GenomeTicket()
 
         self.cds1 = cds.Cds()
+        self.cds1.id = "CDS1"
+        self.cds1.start = 1
+        self.cds1.stop = 2
+        self.cds1.orientation = "F"
+
         self.cds2 = cds.Cds()
+        self.cds2.id = "CDS2"
+        self.cds2.start = 3
+        self.cds2.stop = 4
+        self.cds2.orientation = "F"
+
         self.cds3 = cds.Cds()
+        self.cds3.id = "CDS3"
+        self.cds3.start = 5
+        self.cds3.stop = 6
+        self.cds3.orientation = "R"
+
         self.cds4 = cds.Cds()
+        self.cds4.id = "CDS4"
+        self.cds4.start = 7
+        self.cds4.stop = 8
+        self.cds4.orientation = "R"
+
+
 
         self.src1 = source.Source()
         self.src2 = source.Source()
@@ -1508,8 +1707,160 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.bndl = bundle.Bundle()
 
 
-    def test_review_evaluation_list_1(self):
-        """Verify no need for user input if there are no 'warning' evals."""
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_1(self, ask_mock):
+        """Verify values and no need for user input with:
+        interactive=False and 'warning' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=False)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertFalse(ask_mock.called)
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_2(self, ask_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, response=True."""
+        ask_mock.side_effect = [True]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "warning")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("temp"))
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_3(self, ask_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, response=False."""
+        ask_mock.side_effect = [False]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertFalse(self.eval_warning1.result.startswith("Status"))
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("manually."))
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_4(self, ask_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, response=None."""
+        ask_mock.side_effect = [None]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertTrue(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertFalse(self.eval_warning1.result.startswith("Status"))
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("exit."))
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_5(self, input_mock):
+        """Verify values and need for user input with:
+        interactive=True, 'warning' eval, 3 invalid responses."""
+        input_mock.side_effect = ["invalid", "invalid", "invalid"]
+        exit, correct = import_genome.review_evaluation(self.eval_warning1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "error")
+        with self.subTest():
+            self.assertTrue(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(input_mock.called)
+        with self.subTest():
+            self.assertFalse(self.eval_warning1.result.startswith("Status"))
+        with self.subTest():
+            self.assertTrue(self.eval_warning1.result.endswith("exit."))
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_6(self, input_mock):
+        """Verify values and need for user input with:
+        interactive=True and 'error' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_error1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_error1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertTrue(input_mock.called)
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_7(self, input_mock):
+        """Verify values and no need for user input with:
+        interactive=False and 'error' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_error1,
+                                                        interactive=False)
+        with self.subTest():
+            self.assertEqual(self.eval_error1.status, "error")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(correct)
+        with self.subTest():
+            self.assertFalse(input_mock.called)
+
+
+    @patch("builtins.input")
+    def test_review_evaluation_8(self, input_mock):
+        """Verify values and no need for user input with
+        interactive=True and 'correct' eval."""
+        exit, correct = import_genome.review_evaluation(self.eval_correct1,
+                                                        interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_correct1.status, "correct")
+        with self.subTest():
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertTrue(correct)
+        with self.subTest():
+            self.assertFalse(input_mock.called)
+
+
+
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    def test_review_evaluation_list_1(self, lp_mock):
+        """Verify no need for user input if there are "
+        "no 'warning' or 'error' evals."""
         eval_list = [self.eval_correct1, self.eval_correct2, self.eval_correct3]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
@@ -1520,126 +1871,265 @@ class TestImportGenomeMain7(unittest.TestCase):
             self.assertEqual(self.eval_correct3.status, "correct")
         with self.subTest():
             self.assertFalse(exit)
-
-    @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluation_list_2(self, ask_mock):
-        """Verify only one call for user input, and
-        verify no changes to status."""
-        ask_mock.side_effect = [False]
-        eval_list = [self.eval_correct1, self.eval_warning1, self.eval_correct2]
-        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
-            self.assertEqual(self.eval_correct1.status, "correct")
+            self.assertTrue(lp_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_list_2(self, ask_mock, lp_mock):
+        """Verify values when interactive=True, two 'warning' evals,
+        and response=True."""
+        ask_mock.side_effect = [True, True]
+        eval_list = [self.eval_warning1, self.eval_correct2, self.eval_warning2]
+        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
             self.assertEqual(self.eval_warning1.status, "warning")
         with self.subTest():
-            self.assertEqual(self.eval_correct3.status, "correct")
+            self.assertEqual(self.eval_correct2.status, "correct")
+        with self.subTest():
+            self.assertEqual(self.eval_warning2.status, "warning")
         with self.subTest():
             self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
 
-    def test_review_evaluation_list_3(self):
-        """Verify no call for user input, and
-        verify change to status when interactive=False."""
-        eval_list = [self.eval_correct1, self.eval_warning1, self.eval_correct2]
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    def test_review_evaluation_list_3(self, lp_mock):
+        """Verify values when interactive=False, two 'warning' evals."""
+        eval_list = [self.eval_warning1, self.eval_correct2, self.eval_warning2]
         exit = import_genome.review_evaluation_list(eval_list, interactive=False)
         with self.subTest():
-            self.assertEqual(self.eval_correct1.status, "correct")
-        with self.subTest():
             self.assertEqual(self.eval_warning1.status, "error")
         with self.subTest():
-            self.assertEqual(self.eval_correct3.status, "correct")
-        with self.subTest():
-            self.assertFalse(exit)
-
-    @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluation_list_4(self, ask_mock):
-        """Verify two calls for user input, and
-        verify change to status."""
-        ask_mock.side_effect = [True, True]
-        eval_list = [self.eval_warning1, self.eval_correct1, self.eval_warning2]
-        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
-        with self.subTest():
-            self.assertEqual(self.eval_warning1.status, "error")
-        with self.subTest():
-            self.assertEqual(self.eval_correct1.status, "correct")
+            self.assertEqual(self.eval_correct2.status, "correct")
         with self.subTest():
             self.assertEqual(self.eval_warning2.status, "error")
         with self.subTest():
             self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
 
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluation_list_5(self, ask_mock):
-        """Verify only two calls for user input, with
-        change to first status, no change for second, and
-        exit before third."""
-        ask_mock.side_effect = [True, None, True]
-        eval_list = [self.eval_warning1, self.eval_warning2, self.eval_warning3]
+    def test_review_evaluation_list_4(self, ask_mock, lp_mock):
+        """Verify values when interactive=True, two 'warning' evals,
+        and response=False and True."""
+        ask_mock.side_effect = [False, True]
+        eval_list = [self.eval_warning1, self.eval_correct2, self.eval_warning2]
         exit = import_genome.review_evaluation_list(eval_list, interactive=True)
         with self.subTest():
             self.assertEqual(self.eval_warning1.status, "error")
         with self.subTest():
+            self.assertEqual(self.eval_correct2.status, "correct")
+        with self.subTest():
             self.assertEqual(self.eval_warning2.status, "warning")
         with self.subTest():
-            self.assertEqual(self.eval_warning3.status, "warning")
+            self.assertFalse(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.log_and_print")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_evaluation_list_5(self, ask_mock, lp_mock):
+        """Verify values when interactive=True, three 'warning' evals,
+        and response=True, exit."""
+        ask_mock.side_effect = [True, None]
+        eval_list = [self.eval_warning1, self.eval_warning2, self.eval_warning3]
+        exit = import_genome.review_evaluation_list(eval_list, interactive=True)
+        with self.subTest():
+            self.assertEqual(self.eval_warning1.status, "warning")
+        with self.subTest():
+            self.assertEqual(self.eval_warning2.status, "error")
+        with self.subTest():
+            self.assertEqual(self.eval_warning3.status, "error")
         with self.subTest():
             self.assertTrue(exit)
+        with self.subTest():
+            self.assertFalse(lp_mock.called)
 
 
 
 
-    def test_review_evaluations_1(self):
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_object_list_1(self, rel_mock):
+        """Verify results for list of 0 features."""
+        import_genome.review_object_list([], "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        self.assertFalse(rel_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_object_list_2(self, rel_mock):
+        """Verify results for list of 1 None feature."""
+        import_genome.review_object_list([None], "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        self.assertFalse(rel_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_object_list_3(self, rel_mock):
+        """Verify results for list of three CDS features,
+        each with 0 evaluations, interactive=False."""
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        self.assertFalse(rel_mock.called)
+
+
+    def test_review_object_list_4(self):
+        """Verify results for list of three CDS features,
+        one with three warning evaluations,
+        and two with one warning evaluation, interactive=False."""
+        self.cds1.evaluations = [self.eval_warning1,
+                                 self.eval_warning2,
+                                 self.eval_warning3]
+        self.cds2.evaluations = [self.eval_warning4]
+        self.cds3.evaluations = [self.eval_warning5]
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=False)
+        w1 = cds_features[0].evaluations[0]
+        w2 = cds_features[0].evaluations[1]
+        w3 = cds_features[0].evaluations[2]
+        w4 = cds_features[1].evaluations[0]
+        w5 = cds_features[2].evaluations[0]
+        with self.subTest():
+            self.assertEqual(w1.status, "error")
+        with self.subTest():
+            self.assertEqual(w2.status, "error")
+        with self.subTest():
+            self.assertEqual(w3.status, "error")
+        with self.subTest():
+            self.assertEqual(w4.status, "error")
+        with self.subTest():
+            self.assertEqual(w5.status, "error")
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_object_list_5(self, ask_mock):
+        """Verify results for list of three CDS features,
+        one with three warning evaluations,
+        and two with one warning evaluation, interactive=True,
+        response=True, False, True, False, True."""
+        ask_mock.side_effect = [True, False, True, False, True]
+        self.cds1.evaluations = [self.eval_warning1,
+                                 self.eval_warning2,
+                                 self.eval_warning3]
+        self.cds2.evaluations = [self.eval_warning4]
+        self.cds3.evaluations = [self.eval_warning5]
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=True)
+        w1 = cds_features[0].evaluations[0]
+        w2 = cds_features[0].evaluations[1]
+        w3 = cds_features[0].evaluations[2]
+        w4 = cds_features[1].evaluations[0]
+        w5 = cds_features[2].evaluations[0]
+        with self.subTest():
+            self.assertEqual(w1.status, "warning")
+        with self.subTest():
+            self.assertEqual(w2.status, "error")
+        with self.subTest():
+            self.assertEqual(w3.status, "warning")
+        with self.subTest():
+            self.assertEqual(w4.status, "error")
+        with self.subTest():
+            self.assertEqual(w5.status, "warning")
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_object_list_6(self, ask_mock):
+        """Verify results for list of three CDS features,
+        one with three warning evaluations,
+        and two with one warning evaluation, interactive=True,
+        response=True, exit."""
+        ask_mock.side_effect = [True, None]
+        self.cds1.evaluations = [self.eval_warning1,
+                                 self.eval_warning2,
+                                 self.eval_warning3]
+        self.cds2.evaluations = [self.eval_warning4]
+        self.cds3.evaluations = [self.eval_warning5]
+        cds_features = [self.cds1, self.cds2, self.cds3]
+        import_genome.review_object_list(cds_features, "CDS",
+            ["id", "start", "stop", "orientation"], interactive=True)
+        w1 = cds_features[0].evaluations[0]
+        w2 = cds_features[0].evaluations[1]
+        w3 = cds_features[0].evaluations[2]
+        w4 = cds_features[1].evaluations[0]
+        w5 = cds_features[2].evaluations[0]
+        with self.subTest():
+            self.assertEqual(w1.status, "warning")
+        with self.subTest():
+            self.assertEqual(w2.status, "error")
+        with self.subTest():
+            self.assertEqual(w3.status, "error")
+        with self.subTest():
+            self.assertEqual(w4.status, "error")
+        with self.subTest():
+            self.assertEqual(w5.status, "error")
+
+
+
+
+    @patch("pdm_utils.pipelines.import_genome.review_evaluation_list")
+    def test_review_bundled_objects_1(self, rel_mock):
         """Verify results when bundle has:
         no bundle evaluations,
         no ticket,
         no genomes in genome_dict,
         no genome_pairs in genome_pair_dict."""
-        import_genome.review_evaluations(self.bndl, interactive=True)
-        # The only thing tested is that the function still runs
-        # when there is no data provided.
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
+        self.assertFalse(rel_mock.called)
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_2(self, ask_mock):
+    def test_review_bundled_objects_2(self, ask_mock):
         """Verify results when bundle has:
-        one error evaluation."""
-        ask_mock.side_effect = [True]
+        one warning evaluation,
+        interactive=True."""
+        ask_mock.side_effect = [False]
         self.bndl.evaluations = [self.eval_warning1]
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 
-    def test_review_evaluations_3(self):
+    def test_review_bundled_objects_3(self):
         """Verify results when bundle has:
-        one error evaluation;
+        one warning evaluation,
         interactive=False."""
         self.bndl.evaluations = [self.eval_warning1]
-        import_genome.review_evaluations(self.bndl, interactive=False)
+        import_genome.review_bundled_objects(self.bndl, interactive=False)
         self.assertEqual(self.bndl.evaluations[0].status, "error")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_4(self, ask_mock):
+    def test_review_bundled_objects_4(self, ask_mock):
         """Verify results when bundle has:
-        a ticket with one error evaluation."""
-        ask_mock.side_effect = [True]
+        a ticket with one warning evaluation,
+        interactive=False."""
+        ask_mock.side_effect = [False]
         self.tkt.evaluations = [self.eval_warning1]
         self.bndl.ticket = self.tkt
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         self.assertEqual(self.bndl.ticket.evaluations[0].status, "error")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_5(self, ask_mock):
+    def test_review_bundled_objects_5(self, ask_mock):
         """Verify results when bundle has:
-        three genomes, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        three genomes, two with one warning evaluation."""
+        ask_mock.side_effect = [False, False]
         self.gnm1.evaluations = [self.eval_warning1]
         self.gnm2.evaluations = [self.eval_correct1]
         self.gnm3.evaluations = [self.eval_warning2]
         self.bndl.genome_dict["gnm1"] = self.gnm1
         self.bndl.genome_dict["gnm2"] = self.gnm2
         self.bndl.genome_dict["gnm3"] = self.gnm3
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_dict["gnm1"].evaluations
         evl_list2 = self.bndl.genome_dict["gnm2"].evaluations
         evl_list3 = self.bndl.genome_dict["gnm3"].evaluations
@@ -1652,43 +2142,46 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_6(self, ask_mock):
+    def test_review_bundled_objects_6(self, ask_mock):
         """Verify results when bundle has:
-        one genome with three CDS features, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        one genome with three CDS features, two with one warning evaluation,
+        one with two warning evaluations."""
+        ask_mock.side_effect = [True, None]
         self.cds1.evaluations = [self.eval_warning1]
-        self.cds2.evaluations = [self.eval_correct1]
-        self.cds3.evaluations = [self.eval_warning2]
+        self.cds2.evaluations = [self.eval_warning2, self.eval_warning3]
+        self.cds3.evaluations = [self.eval_warning3]
         self.gnm1.cds_features = [self.cds1, self.cds2, self.cds3]
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_dict["gnm1"].cds_features[0].evaluations
         evl_list2 = self.bndl.genome_dict["gnm1"].cds_features[1].evaluations
         evl_list3 = self.bndl.genome_dict["gnm1"].cds_features[2].evaluations
         with self.subTest():
-            self.assertEqual(evl_list1[0].status, "error")
+            self.assertEqual(evl_list1[0].status, "warning")
         with self.subTest():
-            self.assertEqual(evl_list2[0].status, "correct")
+            self.assertEqual(evl_list2[0].status, "error")
+        with self.subTest():
+            self.assertEqual(evl_list2[1].status, "error")
         with self.subTest():
             self.assertEqual(evl_list3[0].status, "error")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_7(self, ask_mock):
+    def test_review_bundled_objects_7(self, ask_mock):
         """Verify results when bundle has:
-        one genome with three source features, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        one genome with three source features, two with one warning evaluation."""
+        ask_mock.side_effect = [True, False]
         self.src1.evaluations = [self.eval_warning1]
         self.src2.evaluations = [self.eval_correct1]
         self.src3.evaluations = [self.eval_warning2]
         self.gnm1.source_features = [self.src1, self.src2, self.src3]
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_dict["gnm1"].source_features[0].evaluations
         evl_list2 = self.bndl.genome_dict["gnm1"].source_features[1].evaluations
         evl_list3 = self.bndl.genome_dict["gnm1"].source_features[2].evaluations
         with self.subTest():
-            self.assertEqual(evl_list1[0].status, "error")
+            self.assertEqual(evl_list1[0].status, "warning")
         with self.subTest():
             self.assertEqual(evl_list2[0].status, "correct")
         with self.subTest():
@@ -1696,17 +2189,17 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_8(self, ask_mock):
+    def test_review_bundled_objects_8(self, ask_mock):
         """Verify results when bundle has:
-        three genome_pairs, two with one error evaluation."""
-        ask_mock.side_effect = [True, True]
+        three genome_pairs, two with one warning evaluation."""
+        ask_mock.side_effect = [False, True]
         self.genome_pair1.evaluations = [self.eval_warning1]
         self.genome_pair2.evaluations = [self.eval_correct1]
         self.genome_pair3.evaluations = [self.eval_warning2]
         self.bndl.genome_pair_dict["gnm_pr1"] = self.genome_pair1
         self.bndl.genome_pair_dict["gnm_pr2"] = self.genome_pair2
         self.bndl.genome_pair_dict["gnm_pr3"] = self.genome_pair3
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         evl_list1 = self.bndl.genome_pair_dict["gnm_pr1"].evaluations
         evl_list2 = self.bndl.genome_pair_dict["gnm_pr2"].evaluations
         evl_list3 = self.bndl.genome_pair_dict["gnm_pr3"].evaluations
@@ -1715,17 +2208,17 @@ class TestImportGenomeMain7(unittest.TestCase):
         with self.subTest():
             self.assertEqual(evl_list2[0].status, "correct")
         with self.subTest():
-            self.assertEqual(evl_list3[0].status, "error")
+            self.assertEqual(evl_list3[0].status, "warning")
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_evaluations_9(self, ask_mock):
+    def test_review_bundled_objects_9(self, ask_mock):
         """Verify results when bundle has:
         one ticket with four evaluations, three that are errors,
         three CDS features, each with one error evaluation, and
         one source feature with one error,
-        but with user quitting ticket review after first ticket error review
-        and quitting after first CDS feature error review."""
+        but with user exiting review after first ticket error review
+        and exiting after first CDS feature error review."""
         self.tkt.evaluations = [self.eval_warning1, self.eval_correct1,
                                 self.eval_warning2, self.eval_warning3]
         self.cds1.evaluations = [self.eval_warning4]
@@ -1736,8 +2229,12 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.gnm1.source_features = [self.src1]
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["gnm1"] = self.gnm1
-        ask_mock.side_effect = [True, None, True, None, True]
-        import_genome.review_evaluations(self.bndl, interactive=True)
+        ask_mock.side_effect = [False, # tkt evl1
+                                None, # tkt evl3
+                                True, # cds1 evl1
+                                None, # cds2 evl1
+                                True] # src evl1
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
         tkt_list = self.bndl.ticket.evaluations
         cds1_list = self.bndl.genome_dict["gnm1"].cds_features[0].evaluations
         cds2_list = self.bndl.genome_dict["gnm1"].cds_features[1].evaluations
@@ -1748,17 +2245,17 @@ class TestImportGenomeMain7(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt_list[1].status, "correct")
         with self.subTest():
-            self.assertEqual(tkt_list[2].status, "warning")
+            self.assertEqual(tkt_list[2].status, "error")
         with self.subTest():
-            self.assertEqual(tkt_list[3].status, "warning")
+            self.assertEqual(tkt_list[3].status, "error")
         with self.subTest():
-            self.assertEqual(cds1_list[0].status, "error")
+            self.assertEqual(cds1_list[0].status, "warning")
         with self.subTest():
-            self.assertEqual(cds2_list[0].status, "warning")
+            self.assertEqual(cds2_list[0].status, "error")
         with self.subTest():
-            self.assertEqual(cds3_list[0].status, "warning")
+            self.assertEqual(cds3_list[0].status, "error")
         with self.subTest():
-            self.assertEqual(src1_list[0].status, "error")
+            self.assertEqual(src1_list[0].status, "warning")
 
 
 
@@ -1873,6 +2370,106 @@ class TestImportGenomeMain8(unittest.TestCase):
             self.assertEqual(self.cds3.processed_description, "lysB")
         with self.subTest():
             self.assertEqual(self.tkt.description_field, "function")
+
+
+
+
+class TestImportGenomeClass9(unittest.TestCase):
+    def setUp(self):
+        self.evl1 = eval.Eval()
+        self.evl1.id = "GNM0001"
+        self.evl1.definition = "temp"
+        self.evl1.status = "error"
+        self.evl1.result = "Failed evaluation."
+
+        self.evl2 = eval.Eval()
+        self.evl2.id = "GNM0002"
+        self.evl2.definition = "temp"
+        self.evl2.status = "error"
+        self.evl2.result = "Failed evaluation."
+
+        self.evl3 = eval.Eval()
+        self.evl3.id = "GNM0003"
+        self.evl3.definition = "temp"
+        self.evl3.status = "correct"
+        self.evl3.result = "Failed evaluation."
+
+        self.base_dir = Path(test_root_dir, "test_folder")
+        self.base_dir.mkdir()
+        self.log_file1 = Path(self.base_dir, "test_log1.txt")
+        self.log_file2 = Path(self.base_dir, "test_log2.txt")
+
+    def tearDown(self):
+        shutil.rmtree(self.base_dir)
+
+
+    def test_log_evaluations_1(self):
+        """Verify function executes when logfile_path is None."""
+        # Nothing really to test.
+        evaluation_dict = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict, logfile_path=None)
+        self.assertFalse(self.log_file1.exists())
+
+
+    def test_log_evaluations_2(self):
+        """Verify file-specific log file is created when
+        logfile_path is not None."""
+        # Nothing really to test.
+        evaluation_dict = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict,
+                                      logfile_path=self.log_file1)
+
+        # Confirm how many evaluations were logged.
+        with open(self.log_file1,'r') as file:
+            lines = file.readlines()
+
+        with self.subTest():
+            self.assertTrue(self.log_file1.exists())
+        with self.subTest():
+            self.assertEqual(len(lines), 2)
+
+
+    def test_log_evaluations_3(self):
+        """Verify file-specific log file is created new each time the
+        function is called."""
+        # Nothing really to test.
+        evaluation_dict1 = {1:{"bundle": [self.evl1],
+                              "ticket": [self.evl2]},
+                           2:{"genome": [self.evl3]}}
+        import_genome.log_evaluations(evaluation_dict1,
+                                      logfile_path=self.log_file1)
+
+        evaluation_dict2 = {1:{"bundle": [self.evl1]}}
+        import_genome.log_evaluations(evaluation_dict2,
+                                      logfile_path=self.log_file2)
+
+        # Confirm how many evaluations were logged.
+        with open(self.log_file1,'r') as file:
+            lines1 = file.readlines()
+        with open(self.log_file2,'r') as file:
+            lines2 = file.readlines()
+
+        with self.subTest():
+            self.assertTrue(self.log_file1.exists())
+        with self.subTest():
+            self.assertTrue(self.log_file2.exists())
+        with self.subTest():
+            self.assertEqual(len(lines1), 2)
+        with self.subTest():
+            self.assertEqual(len(lines2), 1)
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

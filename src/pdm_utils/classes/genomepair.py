@@ -2,6 +2,7 @@
 perform comparisons between them to identify inconsistencies."""
 
 from pdm_utils.classes import eval
+from pdm_utils.functions import basic
 
 
 
@@ -349,8 +350,6 @@ class GenomePair:
         # self.__ncbi_features_unmatched_in_phamerator_tally = len(self.__ncbi_features_unmatched_in_phamerator)
 
 
-
-
         # TODO make sure this below is accounted for. If there is no
         # matching genome...
         # #If there is no matching NCBI genome, assign all MySQL genes to Unmatched
@@ -360,32 +359,19 @@ class GenomePair:
         #     #The unmatched tally should reflect unmatched genes if there is actually a metching NCBI genome.
         #     self.__phamerator_features_unmatched_in_ncbi = g1_feature_list
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        # TODO above code is still in development.
 
 
     # Evaluations
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
 
     def compare_attribute(self, attribute, expect_same=False, eval_id=None,
-                          success="correct", fail="error"):
-        """Compare specified attribute of each genome.
+                          success="correct", fail="error", eval_def=None):
+        """Compare values of the specified attribute in each genome.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
@@ -405,10 +391,18 @@ class GenomePair:
             else:
                 actual_same = False
 
+            v1_short = basic.truncate_value(str(value1), 30, "...")
+            v2_short = basic.truncate_value(str(value2), 30, "...")
+            result = (f"The '{self.genome1.id}' genome '{attribute}' attribute "
+                   f" contains: '{v1_short}'. "
+                   f"The '{self.genome2.id}' genome '{attribute}' attribute "
+                   f" contains: '{v2_short}'. "
+                   "These two values are ")
+
             if actual_same:
-                result = f"The two genomes have identical {attribute} values, "
+                result = result + "identical, "
             else:
-                result = f"The two genomes have different {attribute} values, "
+                result = result + "different, "
 
             if actual_same and expect_same:
                 result = result + "as expected."
@@ -420,11 +414,11 @@ class GenomePair:
                 result = result + "which is not expected."
                 status = fail
         else:
-            result = f"The {attribute} was not evaluated."
+            result = f"'{attribute}' is not a valid field to be compared."
             status = "untested"
-        definition = f"Compare the {attribute} attribute of each genome."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = f"Compare values of the '{attribute}' attribute in each genome."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
 
@@ -584,9 +578,10 @@ class GenomePair:
     #     self.evaluations.append(evl)
 
 
+    # TODO this may no longer be needed.
     def compare_annotation_status(self, attribute, ref_name, query_name,
                                   ref_check_value, query_check_value,
-                                  eval_id=None, success="correct", fail="error"):
+                                  eval_id=None, success="correct", fail="error", eval_def=None):
         """Compare the annotation_status of each genome.
 
         :param attribute:
@@ -637,12 +632,12 @@ class GenomePair:
             result = "The annotation_status was not evaluated."
             status = "untested"
         definition = "Compare the annotation_status of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
-
-    def compare_date(self, expect, eval_id=None, success="correct", fail="error"):
-        """Compare the annotation_status of each genome.
+    def compare_date(self, expect, eval_id=None, success="correct",
+                     fail="error", eval_def=None):
+        """Compare the date of each genome.
 
         :param expect:
             Is the first genome expected to be "newer", "equal", or "older"
@@ -651,25 +646,37 @@ class GenomePair:
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
-        if self.genome1.date > self.genome2.date:
-            actual = "newer"
-        elif self.genome1.date == self.genome2.date:
-            actual = "equal"
-        else:
-            actual = "older"
+
         if expect in set(["newer", "equal", "older"]):
+            if self.genome1.date > self.genome2.date:
+                actual = "newer"
+                actual2 = actual + "than"
+            elif self.genome1.date == self.genome2.date:
+                actual = "equal"
+                actual2 = actual + "to"
+            else:
+                actual = "older"
+                actual2 = actual + "than"
+
+            msg = (f"The query genome '{self.genome1.id}' date "
+                   f"is '{self.genome1.date}'."
+                   f"The reference genome '{self.genome2.id}' date "
+                   f"is '{self.genome2.date}'."
+                   f"The date of query genome is {actual2} the "
+                   "date of the reference genome, which is ")
+
             if actual == expect:
-                result = "The age of the query genome is expected."
+                result = msg + "expected."
                 status = success
             else:
-                result = "The age of the query genome is not expected."
+                result = msg + "not expected."
                 status = fail
         else:
-            result = "An invalid comparison was selected."
+            result = f"'{expect}' is an invalid comparison."
             status = "untested"
-        definition = "Compare the age of both genomes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = "Compare the date of both genomes."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
 

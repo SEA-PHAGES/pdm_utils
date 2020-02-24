@@ -254,26 +254,84 @@ class TestBasicFunctions2(unittest.TestCase):
 
 
 
-    def test_identify_files_1(self):
-        """Verify the correct number of elements are returned when
+    def test_identify_contents_1(self):
+        """Verify the correct number of files are returned when
         no ignore set is provided."""
         Path(self.base_dir, "new_dir").mkdir()
         Path(self.base_dir, "file1.txt").touch()
         Path(self.base_dir, ".DS_Store").touch()
-        list_of_files = basic.identify_files(self.base_dir)
-        exp_num_files = 2
-        self.assertEqual(len(list_of_files), exp_num_files)
+        list_of_items = basic.identify_contents(self.base_dir, kind="file")
+        exp_num_items = 2
+        self.assertEqual(len(list_of_items), exp_num_items)
 
-    def test_identify_files_2(self):
-        """Verify the correct number of elements are returned when
+    def test_identify_contents_2(self):
+        """Verify the correct number of files are returned when
         an ignore set is provided."""
         Path(self.base_dir, "new_dir").mkdir()
         Path(self.base_dir, "file1.txt").touch()
         Path(self.base_dir, ".DS_Store").touch()
-        suffix_set = set([".DS_Store"])
-        list_of_files = basic.identify_files(self.base_dir, suffix_set)
-        exp_num_files = 1
-        self.assertEqual(len(list_of_files), exp_num_files)
+        ignore_set = set([".DS_Store"])
+        list_of_items = basic.identify_contents(self.base_dir, kind="file",
+                                                ignore_set=ignore_set)
+        exp_num_items = 1
+        self.assertEqual(len(list_of_items), exp_num_items)
+
+    def test_identify_contents_3(self):
+        """Verify the correct number of folders are returned when
+        no ignore set is provided."""
+        Path(self.base_dir, "new_dir1").mkdir()
+        Path(self.base_dir, "new_dir2").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
+        list_of_items = basic.identify_contents(self.base_dir, kind="dir")
+        exp_num_items = 2
+        self.assertEqual(len(list_of_items), exp_num_items)
+
+    def test_identify_contents_4(self):
+        """Verify the correct number of folders are returned when
+        an ignore set is provided."""
+        Path(self.base_dir, "new_dir1").mkdir()
+        Path(self.base_dir, "new_dir2").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
+        ignore_set = set(["new_dir2"])
+        list_of_items = basic.identify_contents(self.base_dir, kind="dir",
+                                                ignore_set=ignore_set)
+        exp_num_items = 1
+        self.assertEqual(len(list_of_items), exp_num_items)
+
+    def test_identify_contents_5(self):
+        """Verify the correct number of files and folders are returned when
+        no ignore set is provided."""
+        Path(self.base_dir, "new_dir1").mkdir()
+        Path(self.base_dir, "new_dir2").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
+        list_of_items = basic.identify_contents(self.base_dir, kind=None)
+        exp_num_items = 4
+        self.assertEqual(len(list_of_items), exp_num_items)
+
+    def test_identify_contents_6(self):
+        """Verify the correct number of files and folders are returned when
+        an ignore set is provided."""
+        Path(self.base_dir, "new_dir1").mkdir()
+        Path(self.base_dir, "new_dir2").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
+        ignore_set = set(["new_dir2"])
+        list_of_items = basic.identify_contents(self.base_dir, kind=None,
+                                                ignore_set=ignore_set)
+        exp_num_items = 3
+        self.assertEqual(len(list_of_items), exp_num_items)
+
+    def test_identify_contents_7(self):
+        """Verify None is returned due to incorrect kind."""
+        Path(self.base_dir, "new_dir1").mkdir()
+        Path(self.base_dir, "new_dir2").mkdir()
+        Path(self.base_dir, "file1.txt").touch()
+        Path(self.base_dir, ".DS_Store").touch()
+        list_of_items = basic.identify_contents(self.base_dir, kind="invalid")
+        self.assertIsNone(list_of_items)
 
 
 

@@ -2,6 +2,7 @@
 
 from pdm_utils.classes import eval
 from pdm_utils.classes import ticket
+from pdm_utils.functions import basic
 
 class Bundle:
 
@@ -54,26 +55,32 @@ class Bundle:
 
 
     # Evaluations.
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
-    def check_ticket(self, eval_id=None, success="correct", fail="error"):
+    def check_ticket(self, eval_id=None, success="correct", fail="error", eval_def=None):
         """Check for whether a Ticket object is present.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
         if self.ticket is not None:
-            result = "A ticket has been matched."
+            result = ("A ticket is present. "
+                      f"ID: {self.ticket.id}. "
+                      f"Type: {self.ticket.type}. "
+                      f"PhageID: {self.ticket.phage_id}.")
             status = success
         else:
-            result = "No ticket has been matched."
+            result = "A ticket is not present."
             status = fail
-        definition = "Check if a ticket has been matched."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
+        definition = "Check if a ticket is present."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
     def check_genome_dict(self, key, expect=True, eval_id=None,
-                          success="correct", fail="error"):
+                          success="correct", fail="error", eval_def=None):
         """Check if a genome is present in the genome dictionary.
 
         :param key:
@@ -89,24 +96,24 @@ class Bundle:
         """
 
         if key in self.genome_dict.keys():
-            result = f"The {key} genome is present."
+            result = f"The '{key}' genome is present."
             if expect:
                 status = success
             else:
                 status = fail
         else:
-            result = f"The {key} genome is not present."
+            result = f"The '{key}' genome is not present."
             if not expect:
                 status = success
             else:
                 status = fail
 
-        definition = f"Check if the {key} genome is present."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = "Check if a genome is present."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
     def check_genome_pair_dict(self, key, expect=True, eval_id=None,
-                               success="correct", fail="error"):
+                               success="correct", fail="error", eval_def=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
 
         :param key:
@@ -122,21 +129,21 @@ class Bundle:
         """
 
         if key in self.genome_pair_dict.keys():
-            result = f"The {key} genome_pair is present."
+            result = f"The '{key}' genome_pair is present."
             if expect:
                 status = success
             else:
                 status = fail
         else:
-            result = f"The {key} genome_pair is not present."
+            result = f"The '{key}' genome_pair is not present."
             if not expect:
                 status = success
             else:
                 status = fail
 
-        definition = f"Check if the {key} genome_pair is present."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = "Check if a genome_pair is present."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle

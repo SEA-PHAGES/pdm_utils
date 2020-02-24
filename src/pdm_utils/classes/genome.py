@@ -485,9 +485,15 @@ class Genome:
 
 
     # Evaluations.
+    def set_eval(self, eval_id, definition, result, status):
+        """Constructs and adds an Eval object to the evaluations list."""
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
+
     def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
-                        success="correct", fail="error"):
-        """Check that the id is valid.
+                        success="correct", fail="error", eval_def=None):
+        """Check that the attribute value is valid.
 
         :param attribute: Name of the genome object attribute to evaluate.
         :type attribute: str
@@ -495,7 +501,7 @@ class Genome:
             Set of reference ids.
         :type check_set: set
         :param expect:
-            Indicates whether the id is expected to be present
+            Indicates whether the attribute value is expected to be present
             in the check set.
         :type expect: bool
         :param eval_id:
@@ -509,25 +515,28 @@ class Genome:
             test = False
             value1 = None
         if test:
+            value1_short = basic.truncate_value(str(value1), 30, "...")
+            result = f"The {attribute} value '{value1_short}' is "
+
             value2 = basic.check_value_expected_in_set(
                         value1, check_set, expect)
             if value2:
-                result = f"The {attribute} is valid."
+                result = result + "valid."
                 status = success
             else:
-                result = f"The {attribute} is not valid."
+                result = result + "not valid."
                 status = fail
         else:
-            result = f"The {attribute} was not evaluated."
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check the {attribute} attribute."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = f"Check the value of the '{attribute}' attribute."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def compare_two_attributes(self, attribute1, attribute2,
                                expect_same=False, eval_id=None,
-                               success="correct", fail="error"):
+                               success="correct", fail="error", eval_def=None):
         """Determine if two attributes are the same.
 
         :param eval_id: Unique identifier for the evaluation.
@@ -547,11 +556,17 @@ class Genome:
             else:
                 actual_same = False
 
+            v1_short = basic.truncate_value(str(value1), 30, "...")
+            v2_short = basic.truncate_value(str(value2), 30, "...")
+            result = (f"The '{attribute1}' attribute contains: '{v1_short}'. "
+                      f"The '{attribute2}' attribute contains: '{v2_short}'. "
+                      "These two values are ")
+
             if actual_same:
-                result1 = "identical"
+                result = result + "identical, "
             else:
-                result1 = "different"
-            result = f"The two attributes have {result1} values, "
+                result = result + "different, "
+
             if actual_same and expect_same:
                 result = result + "as expected."
                 status = success
@@ -562,81 +577,88 @@ class Genome:
                 result = result + "which is not expected."
                 status = fail
         else:
-            result = f"The attribute comparison was not evaluated."
+            result = (f"'{attribute1}' and/or '{attribute2}' is "
+                      "not a valid field to be compared.")
             status = "untested"
-        definition = f"Compare '{attribute1}' and '{attribute2}' attributes."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = f"Compare values of '{attribute1}' and '{attribute2}' attributes."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_cluster_structure(self, eval_id=None, success="correct",
-                                fail="error"):
+                                fail="error", eval_def=None):
         """Check whether the cluster attribute is structured appropriately.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
+        result = f"The Cluster is '{self.cluster}'. "
         if self.cluster != "none":
+            result = result + "It is structured "
             left, right = basic.split_string(self.cluster)
 
             if (right != "" or left.isalpha() == False):
-                result = "Cluster is not structured correctly."
+                result = result + "incorrectly."
                 status = fail
             else:
-                result = "Cluster is structured correctly."
+                result = result + "correctly."
                 status = success
         else:
-            result = "Cluster is empty."
+            result = result + "It is empty."
             status = "untested"
-        definition = "Check if cluster attribute is structured correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = "Check if the Cluster attribute is structured correctly."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_subcluster_structure(self, eval_id=None, success="correct",
-                                   fail="error"):
+                                   fail="error", eval_def=None):
         """Check whether the subcluster attribute is structured appropriately.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
+        result = f"The Subcluster is '{self.subcluster}'. "
         if (self.subcluster != "none" and self.subcluster != ""):
+            result = result + "It is structured "
             left, right = basic.split_string(self.subcluster)
             if (left.isalpha() == False or right.isdigit() == False):
-                result = "Subcluster is not structured correctly."
+                result = result + "incorrectly."
                 status = fail
             else:
-                result = "Subcluster is structured correctly."
+                result = result + "correctly."
                 status = success
         else:
-            result = "Subcluster is empty."
+            result = result + "It is empty."
             status = "untested"
-        definition = "Check if subcluster attribute is structured correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = "Check if the Subcluster attribute is structured correctly."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_compatible_cluster_and_subcluster(self, eval_id=None,
-                                            success="correct", fail="error"):
+                                            success="correct", fail="error", eval_def=None):
         """Check compatibility of cluster and subcluster attributes.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
         """
+        result = (f"The Cluster is '{self.cluster}', "
+                  f"the Subcluster is '{self.subcluster}', and they are ")
         output = basic.compare_cluster_subcluster(self.cluster, self.subcluster)
         if not output:
-            result = "Cluster and Subcluster designations are not compatible."
+            result = result + "not compatible."
             status = fail
         else:
-            result = "Cluster and Subcluster designations are compatible."
+            result = result + "compatible."
             status = success
         definition = "Check for compatibility between Cluster and Subcluster."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_nucleotides(self, check_set=set(), eval_id=None,
-                          success="correct", fail="error"):
+                          success="correct", fail="error", eval_def=None):
         """Check if all nucleotides in the sequence are expected.
 
         :param check_set:
@@ -658,26 +680,23 @@ class Genome:
         # function though, it is not clear how stable/reliable it is.
         # Instead, Bio.Alphabet.IUPAC.unambiguous_dna alphabet can be passed
         # to the check_nucleotides method.
-
         nucleotide_set = set(self.seq)
         nucleotide_error_set = nucleotide_set - check_set
-
         if len(nucleotide_error_set) > 0:
+            nes_string = basic.join_strings(nucleotide_error_set, delimiter=", ")
             result = ("There are unexpected nucleotides in the sequence: "
-                      f"{str(nucleotide_error_set)}")
+                      f"{nes_string}")
             status = fail
-
         else:
             result = "There are no unexpected nucleotides in the sequence."
             status = success
-
         definition = "Check if all nucleotides in the sequence are expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_authors(self, check_set=set(), expect=True, eval_id=None,
-                      success="correct", fail="error"):
+                      success="correct", fail="error", eval_def=None):
         """Check author list.
 
         Evaluates whether at least one author in the in the list of
@@ -702,26 +721,32 @@ class Genome:
         authors_set = set(authors_list)
         mutual_authors_set = authors_set & check_set
         if len(mutual_authors_set) == 0:
+            missing_set = check_set - authors_set
+            missing_string = basic.join_strings(missing_set, delimiter=", ")
+            result = ("The following authors are not "
+                      f"listed: {missing_string}. This is ")
             if expect:
-                result = "The expected authors are not listed."
+                result = result + "not expected."
                 status = fail
             else:
-                result = "The authorship is as expected."
+                result = result + "expected."
                 status = success
         else:
+            mas_string = basic.join_strings(mutual_authors_set, delimiter=", ")
+            result = f"The following authors are listed: {mas_string}. This is "
             if expect:
-                result = "The authorship is as expected."
+                result = result + "expected."
                 status = success
             else:
-                result = "The authors are not expected to be present."
+                result = result + "not expected."
                 status = fail
         definition = "Check authorship."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
-                        success="correct", fail="error"):
+                        success="correct", fail="error", eval_def=None):
         """
         expect = (>, =, <).
 
@@ -736,33 +761,33 @@ class Genome:
             test = False
             query_value = None
         if test:
-            result1 = f"The {attribute} value {query_value} is "
+            result = f"The {attribute} value {query_value} is "
             if query_value > ref_value:
                 compare = ">"
-                result2 = "greater than "
+                result = result + "greater than "
             elif query_value == ref_value:
                 compare = "="
-                result2 = "equal to "
+                result = result + "equal to "
             else:
                 compare = "<"
-                result2 = "less than "
-            result = result1 + result2 + f"{ref_value}."
+                result = result + "less than "
+            result = result + f"{ref_value}, which is "
             if compare == expect:
+                result = result + "expected."
                 status = success
             else:
+                result = result + "not expected."
                 status = fail
         else:
-            result = f"The {attribute} was not evaluated."
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check that the magnitude of {attribute} is as expected."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = f"Check the magnitude of the '{attribute}' attribute."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
-
-
-
+    # TODO this may no longer be needed.
     def check_cds_start_end_ids(self, eval_id=None, success="correct",
-                                fail="error"):
+                                fail="error", eval_def=None):
         """Check if there are any duplicate start-end coordinates.
 
         Duplicated start-end coordinates may represent
@@ -782,12 +807,12 @@ class Genome:
             status = success
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their start and end coordinates.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
-
+    # TODO this may no longer be needed.
     def check_cds_end_orient_ids(self, eval_id=None, success="correct",
-                                 fail="error"):
+                                 fail="error", eval_def=None):
         """Check if there are any duplicate transcription end-orientation coordinates.
 
         Duplicated transcription end-orientation coordinates may represent
@@ -809,12 +834,12 @@ class Genome:
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their orientation and transcription end "
                       "coordinate.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
-
+    # TODO this may no longer be needed.
     def check_value_flag(self, expect=False, eval_id=None,
-                         success="correct", fail="error"):
+                         success="correct", fail="error", eval_def=None):
         """Check if there all attributes are populated as expected.
 
         :param expect: Indicates the expected status of the value flag.
@@ -837,22 +862,22 @@ class Genome:
                 result = "Some attributes are not populated."
                 status = fail
         definition = "Check if there are any attributes that are set correctly."
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
 
 
     def check_feature_coordinates(self, cds_ftr=False, trna_ftr=False,
-                tmrna=False, other=None, strand=False, eval_id=None,
-                success="correct", fail="error"):
-        """Identify overlapping, duplicated, or partially-duplicated
+                tmrna_ftr=False, other=None, strand=False, eval_id=None,
+                success="correct", fail="error", eval_def=None):
+        """Identify nested, duplicated, or partially-duplicated
         features.
 
         :param cds_ftr: Indicates whether ids of CDS features should be included.
         :type cds_ftr: bool
         :param trna_ftr: Indicates whether ids of tRNA features should be included.
         :type trna_ftr: bool
-        :param tmrna: Indicates whether ids of tmRNA features should be included.
-        :type tmrna: bool
+        :param tmrna_ftr: Indicates whether ids of tmRNA features should be included.
+        :type tmrna_ftr: bool
         :param other: List of features that should be included.
         :type other: list
         :param strand: Indicates if feature orientation should be included.
@@ -862,15 +887,21 @@ class Genome:
         """
         unsorted_feature_lists = []
         unsorted_features = []
+        ftr_types = set()
         if cds_ftr:
+            ftr_types.add("cds")
             unsorted_features.extend(self.cds_features)
         if trna_ftr:
+            ftr_types.add("trna")
             unsorted_features.extend(self.trna_features)
-        if tmrna:
+        if tmrna_ftr:
+            ftr_types.add("tmrna")
             unsorted_features.extend(self.tmrna_features)
         if other is not None:
+            ftr_types.add("other")
             unsorted_features.extend(other)
         if strand:
+            s_info = "were"
             unsorted_f_features = [] # Forward orientation
             unsorted_r_features = [] # Reverse orientation
             index = 0
@@ -886,7 +917,16 @@ class Genome:
             unsorted_feature_lists.append(unsorted_f_features)
             unsorted_feature_lists.append(unsorted_r_features)
         else:
+            s_info = "were not"
             unsorted_feature_lists.append(unsorted_features)
+        ft_string = basic.join_strings(ftr_types, delimiter=", ")
+        result = (f"The following types of features were evaluated: {ft_string}. "
+                  f"Features {ft_string} separately grouped "
+                  "by orientation for evaluation. ")
+
+        # result = (f"The following types of features were evaluated {s_info} "
+        #           f"regard to feature orientation: {ft_string}. ")
+
         msgs = ["There are one or more errors with the feature coordinates."]
         for unsorted_features in unsorted_feature_lists:
             sorted_features = sorted(unsorted_features,
@@ -895,9 +935,19 @@ class Genome:
             while index < len(sorted_features) - 1:
                 current = sorted_features[index]
                 next = sorted_features[index + 1]
+                ftrs = (f"Feature1 ID: {current.id}, "
+                        f"start coordinate: {current.start}, "
+                        f"stop coordinate: {current.stop}, "
+                        f"orientation: {current.orientation}. "
+                        f"Feature2 ID: {next.id}, "
+                        f"start coordinate: {next.start}, "
+                        f"stop coordinate: {next.stop}, "
+                        f"orientation: {next.orientation}. ")
+
                 if (current.start == next.start and current.stop == next.stop):
-                    msgs.append("Features contain identical start and "
-                                "stop coordinates.")
+                    msgs.append(ftrs)
+                    msgs.append("Feature1 and Feature2 contain identical "
+                                "start and stop coordinates.")
 
                 # To identify nested features, the following tests
                 # avoid false errors due to genes that may wrap around the
@@ -906,41 +956,33 @@ class Genome:
                       current.start < next.stop and
                       current.stop > next.start and
                       current.stop > next.stop):
-                    msgs.append((f"Feature {next.id}, with "
-                                 f"start coordinate: {next.start} and "
-                                 f"stop coordinate: {next.stop} "
-                                 f"is nested within feature {current.id}, with "
-                                 f"start coordinate: {current.start} and "
-                                 f"stop coordinate: {current.stop}.")
-                                 )
+                    msgs.append(ftrs)
+                    msgs.append("Feature2 is nested within Feature1.")
                 elif (current.start == next.start and
                         basic.reformat_strand(current.orientation,
                             format="fr_short") == "r" and
                         basic.reformat_strand(next.orientation,
                             format="fr_short") == "r"):
-                    msgs.append("Features contain the same stop coordinate.")
+                    msgs.append(ftrs)
+                    msgs.append(("Feature1 and Feature2 contain "
+                                 "identical stop coordinate."))
                 elif (current.stop == next.stop and
                         basic.reformat_strand(current.orientation,
                             format="fr_short") == "f" and
                         basic.reformat_strand(next.orientation,
                             format="fr_short") == "f"):
-                    msgs.append("Features contain the same stop coordinate.")
+                    msgs.append(ftrs)
+                    msgs.append(("Feature1 and Feature2 contain "
+                                 "identical stop coordinate."))
                 else:
                     pass
                 index += 1
         if len(msgs) > 1:
-            result = " ".join(msgs)
+            result = result + " ".join(msgs)
             status = fail
         else:
-            result = "The feature coordinates are correct."
+            result = result + "The feature coordinates are correct."
             status = success
-        definition = ("Check if there are any errors with the "
-                      "genome's feature coordinates.")
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-
-
-
-
-###
+        definition = ("Check if there are any feature coordinate conflicts.")
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
