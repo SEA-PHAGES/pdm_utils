@@ -115,7 +115,7 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.build_engine()
 
         AskCredentials.assert_called()
-        login_string = "mysql+pymysql://user:pass@localhost"
+        login_string = "mysql+pymysql://user:pass@localhost/"
         CreateEngine.assert_called_with(login_string)
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
@@ -187,6 +187,10 @@ class TestAlchemyHandler(unittest.TestCase):
         MockEngine.execute.assert_called_with("Executable")
         MockProxy.fetchall.assert_called()
         BuildEngine.assert_not_called() 
+   
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
+    def test_execute_2(self, BuildEngine):
+        pass
      
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
     def test_scalar_1(self, BuildEngine):
@@ -203,6 +207,10 @@ class TestAlchemyHandler(unittest.TestCase):
         MockEngine.execute.assert_called_with("Executable")
         MockProxy.scalar.assert_called()
         BuildEngine.assert_not_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
+    def test_scalar_2(self, BuildEngine):
+        pass
  
     @patch("pdm_utils.classes.alchemyhandler.MetaData")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
@@ -230,24 +238,117 @@ class TestAlchemyHandler(unittest.TestCase):
         BuildEngine.assert_not_called()
         MetaData.assert_called() 
 
-    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
-                                                          "translate_table")
-    def test_translate_table_1(self, TranslateTable):
-        pass
-
-    @patch("pdm_utils.classes.alchemyhandler.cartography.get_map")
+    @patch("pdm_utils.classes.alchemyhandler.querying.translate_table")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
-    def test_get_map_1(self, BuildMetadata, GetMap):
+    def test_translate_table_1(self, BuildMetadata, TranslateTable):
+        self.alchemist.metadata = "Metadata"
+
+        self.alchemist.translate_table("Test")
+
+        TranslateTable.assert_called_with("Metadata", "Test")
+        BuildMetadata.assert_not_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.translate_table")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_translate_table_2(self, BuildMetadata, TranslateTable):
         self.alchemist.metadata = None
 
-        self.alchemist.get_map("Test")
+        self.alchemist.translate_table("Test")
+
+        TranslateTable.assert_called_with(None, "Test")
+        BuildMetadata.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.translate_column") 
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_translate_column_1(self, BuildMetadata, TranslateColumn):
+        self.alchemist.metadata = "Metadata"
+
+        self.alchemist.translate_column("Test")
+
+        TranslateColumn.assert_called_with("Metadata", "Test")
+        BuildMetadata.assert_not_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.translate_column") 
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_translate_column_2(self, BuildMetadata, TranslateColumn):
+        self.alchemist.metadata = None
+
+        self.alchemist.translate_column("Test")
+
+        TranslateColumn.assert_called_with(None, "Test")
+        BuildMetadata.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.get_table")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_get_table_1(self, BuildMetadata, GetTable):
+        self.alchemist.metadata = "Metadata"
+
+        self.alchemist.get_table("Test")
+
+        GetTable.assert_called_with("Metadata", "Test")
+        BuildMetadata.assert_not_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.get_table")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_get_table_2(self, BuildMetadata, GetTable):
+        self.alchemist.metadata = None
+
+        self.alchemist.get_table("Test")
+
+        GetTable.assert_called_with(None, "Test")
+        BuildMetadata.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.get_column") 
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_get_column_1(self, BuildMetadata, GetColumn):
+        self.alchemist.metadata = "Metadata"
+
+        self.alchemist.get_column("Test")
+
+        GetColumn.assert_called_with("Metadata", "Test")
+        BuildMetadata.assert_not_called()
+        
+    @patch("pdm_utils.classes.alchemyhandler.querying.get_column") 
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_get_column_2(self, BuildMetadata, GetColumn):
+        self.alchemist.metadata = None
+
+        self.alchemist.get_column("Test")
+
+        GetColumn.assert_called_with(None, "Test")
+        BuildMetadata.assert_called()
+ 
+    @patch("pdm_utils.classes.alchemyhandler.querying.build_graph")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_build_graph_1(self, BuildMetadata, BuildGraph):
+        BuildGraph.return_value = "Graph"
+
+        self.alchemist.metadata = "Metadata"
+
+        self.alchemist.build_graph()
+
+        BuildMetadata.assert_not_called()
+        BuildGraph.assert_called_with("Metadata")
+        
+        self.assertEqual(self.alchemist.graph, "Graph")
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.build_graph")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_build_graph_2(self, BuildMetadata, BuildGraph):
+        BuildGraph.return_value = "Graph"
+
+        self.alchemist.metadata = None
+
+        self.alchemist.build_graph()
 
         BuildMetadata.assert_called()
-        GetMap.assert_called_with(None, "Test")
+        BuildGraph.assert_called_with(None)
+        
+        self.assertEqual(self.alchemist.graph, "Graph")
 
     @patch("pdm_utils.classes.alchemyhandler.cartography.get_map")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
-    def test_get_map_2(self, BuildMetadata, GetMap): 
+    def test_get_map_1(self, BuildMetadata, GetMap): 
         self.alchemist.metadata = "Metadata"
 
         self.alchemist.get_map("Test")
@@ -255,9 +356,15 @@ class TestAlchemyHandler(unittest.TestCase):
         BuildMetadata.assert_not_called()
         GetMap.assert_called_with("Metadata", "Test")
 
+    @patch("pdm_utils.classes.alchemyhandler.cartography.get_map")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
-    def test_build_schemagraph_1(self, BuildMetadata):
-        pass
+    def test_get_map_2(self, BuildMetadata, GetMap):
+        self.alchemist.metadata = None
+
+        self.alchemist.get_map("Test")
+
+        BuildMetadata.assert_called()
+        GetMap.assert_called_with(None, "Test") 
 
 if __name__ == "__main__":
     unittest.main()

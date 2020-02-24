@@ -348,7 +348,7 @@ def execute_csv_export(alchemist, export_path,
     for column in table_obj.primary_key.columns:
         primary_key = column
 
-    query = alchemist.build_select(select_columns)
+    query = querying.build_select(alchemist.graph, select_columns)
 
     if values:
         query = query.where(primary_key.in_(values))

@@ -1,3 +1,4 @@
+from networkx import Graph
 from networkx import shortest_path
 from sqlalchemy import Column
 from sqlalchemy import join
@@ -87,6 +88,60 @@ def check_operator(operator, column_object):
            column_type not in COMPARABLE_TYPES:
             raise ValueError(f"Column '{column_object.name}' "
                              f"is not comparable with '{operator}'.")
+
+def translate_table(metadata, raw_table):
+    for table in metadata.tables.keys():
+        if table.lower() == raw_table.lower():
+            return table
+
+    raise ValueError(f"Table '{raw_table}' requested to be filtered "
+                     f"is not in selected database.")
+
+def translate_column(metadata, raw_column):
+    parsed_column = parse_column(raw_column)
+
+    table = translate_table(metadata, parsed_column[0])
+    table_obj = metadata.tables[table]
+    for column in table_obj.columns.keys():
+        if column.lower() == parsed_column[1].lower():
+            return column
+
+    raise ValueError(f"Field '{parsed_column[1]}' requested to be filtered"
+                     f" is not in '{table_obj.name}'")
+
+def get_table(metadata, table):
+    table = translate_table(metadata, table)
+    table_obj = metadata.tables[table]
+    return table_obj
+
+def get_column(metadata, column):
+    parsed_column = parse_column(column)
+    table = get_table(metadata, parsed_column[0])
+    column = translate_column(metadata, column)
+
+    columns_dict = dict(table.columns)
+    column = columns_dict[parsed_column[1]]
+
+    return column
+
+def build_graph(metadata):
+    graph = Graph()
+    for table in metadata.tables.keys():
+        table_object = metadata.tables[table]
+        graph.add_node(table_object.name, table=table_object) 
+
+    for target_table in metadata.tables.keys():
+        target_table_obj  = metadata.tables[target_table]
+    
+        for foreign_key in target_table_obj.foreign_keys:   
+            referent_column = foreign_key.column
+            referent_table_obj = referent_column.table
+            referent_table = referent_table_obj.name
+
+            graph.add_edge(target_table, referent_table, 
+                                         key=foreign_key)
+
+    return graph
 
 def build_whereclause(db_graph, filter_expression): 
     filter_params = parse_filter(filter_expression)

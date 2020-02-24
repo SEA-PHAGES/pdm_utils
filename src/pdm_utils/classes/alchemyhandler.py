@@ -7,8 +7,9 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
-from pdm_utils.functions import querying
 from pdm_utils.functions import cartography
+from pdm_utils.functions import querying
+from pdm_utils.functions import mysqldb
 
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None):
@@ -152,11 +153,15 @@ class AlchemyHandler:
         if not self.has_credentials:
             self.ask_credentials()
 
-        try:
-            login_string = ("mysql+pymysql://"
-                           f"{self.username}:{self.password}@localhost")
+        try: 
+            database = ""
             if self.has_database:
-                login_string = login_string + f"/{self.database}"
+                database = self._database
+
+            login_string = mysqldb.construct_engine_string(
+                                            username=self._username,
+                                            password=self._password,
+                                            database=database)
 
             self._engine = sqlalchemy.create_engine(login_string)
             self._engine.connect()
@@ -242,106 +247,48 @@ class AlchemyHandler:
         if not self.metadata:
             self.build_metadata()
 
-        for table in self.metadata.tables.keys():
-            if table.lower() == raw_table.lower():
-                return table
-
-        raise ValueError(f"Table '{raw_table}' requested to be filtered "
-                         f"is not in '{self.sql_handle.database}'")
+        return querying.translate_table(self.metadata, raw_table)  
 
     def translate_column(self, raw_column):
-        parsed_column = querying.parse_column(raw_column)
+        if not self.metadata:
+            self.build_metadata()
 
-        table = self.translate_table([0])
-        table_obj = self[table]["table"]
-        for column in table_obj.columns.keys():
-            if column.lower() == raw_column.lower():
-                return column
-
-        raise ValueError(f"Field '{raw_column}' requested to be filtered"
-                         f" is not in '{table_object.name}'")
+        return querying.translate_column(self.metadata, raw_column) 
 
     def get_table(self, table): 
-        table = self.translate_table(table)
-        return self.metadata.tables[table]
+        if not self.metadata:
+            self.build_metadata() 
+
+        return querying.get_table(self.metadata, table)
 
     def get_column(self, column):
-        parsed_column = querying.parse_column(column)
-        table = self.get_table(parsed_column[0])
+        if not self.metadata:
+            self.build_metadata() 
 
-        columns_dict = dict(table.columns)
-        column = columns_dict[parsed_column[1]]
+        return querying.get_column(self.metadata, column) 
 
-        return column
+    def build_graph(self):
+        if not self.metadata:
+            self.build_metadata()
+       
+        self.graph = querying.build_graph(self.metadata)
 
+    #For when necessary
+    #def build_session(self):
+    #    if not self.has_database:
+    #        self.connect(ask_database=True)
+    #    if not self.connected:
+    #        self.build_engine()
+            
+
+    #    session_maker = sessionmaker()
+    #    self.session = session_maker(bind=self.engine)
+    #    return 
+    
     def get_map(self, template):
         if not self.metadata:
             self.build_metadata()
 
         return cartography.get_map(self.metadata, template)
 
-    def build_graph(self):
-        if not self.metadata:
-            self.build_metadata()
-        
-        graph = Graph()
-        for table in self.metadata.tables.keys():
-            table_object = self.metadata.tables[table]
-            graph.add_node(table_object.name, table=table_object) 
 
-        for target_table in self.metadata.tables.keys():
-            target_table_obj  = self.metadata.tables[target_table]
-        
-            for foreign_key in target_table_obj.foreign_keys:   
-                referent_column = foreign_key.column
-                referent_table_obj = referent_column.table
-                referent_table = referent_table_obj.name
-
-                graph.add_edge(target_table, referent_table, 
-                                             key=foreign_key)
-
-        self.graph = graph
-        
-        return True
-
-    def build_where(self, filter_expression):
-        if not self.graph:
-            self.build_graph()
-         
-        return querying.build_whereclause(self.graph, filter_expression)
-
-    def build_select(self, columns, where=None, order_by=None):
-        if not self.graph:
-            self.build_graph()
-
-        return querying.build_select(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by)
-
-    def build_count(self, columns, where=None, order_by=None):
-        if not self.graph:
-            self.build_graph()
-
-        return querying.build_count(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by)
-
-    def build_distinct(self, columns, where=None, order_by=None):
-        if not self.graph:
-            self.build_graph()
-
-        return querying.build_distinct(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by)
-
-    def build_session(self):
-        if not self.has_database:
-            raise
-        if not self.connected:
-            self.build_engine()
-            
-
-        session_maker = sessionmaker()
-        self.session = session_maker(bind=self.engine)
-        return 
-  

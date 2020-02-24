@@ -123,9 +123,9 @@ class Filter:
     def key(self, key):
         if not isinstance(key, Column):
             raise TypeError("Filter key value must be of type SqlAlchemy Column.")
-       
-        column_check = self._graph.get_column(str(key.table) + "." \
-                                               + (key.name))
+        
+        table = self._graph.nodes[key.table.name]["table"]
+        column = table.columns[key.name]
 
         self._key = key
 
@@ -337,18 +337,6 @@ class Filter:
             group_results.update({group : values})
 
         return group_results
-
-    def build_num_set_distinct(self, table, field):
-        #// TO BE REIMPLEMENTED
-        #range_query = (
-        #        f"SELECT round(log10(Max({field}) - Min({field}))) as pow "
-        #        f"FROM {table}")
-        #range_pow = int(self.sql_handle.execute_query(range_query)[0]["pow"])
-        #range_pow = 10**(range_pow-2)
-        #distinct_field = f"round({field}/{range_pow})*{range_pow}"
-        #return distinct_field
-        #// TO BE REIMPLEMENTED 
-        pass
 
     def copy(self):
         copy = Filter()
