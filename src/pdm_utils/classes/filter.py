@@ -13,6 +13,7 @@ import csv
 from networkx import Graph
 from pathlib import Path
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions import parsing
 from pdm_utils.functions import querying as q
 from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
@@ -143,9 +144,9 @@ class Filter:
 
     def add(self, filter):
         where_clause = q.build_whereclause(self.graph, filter)
-        parsed_filter = q.parse_filter(filter)
+        parsed_filter = parsing.parse_filter(filter)
         filter_left = parsed_filter[0] + "." + parsed_filter[1]\
-                    + parsed_filter[3]
+                    + parsed_filter[2]
         
         if filter_left not in self._filters.keys():
             self._filters.update({filter_left : [where_clause]}) 
@@ -156,9 +157,9 @@ class Filter:
         self._updated = False
 
     def remove(self, filter):
-        parsed_filter = q.parse_filter(filter)
+        parsed_filter = parsing.parse_filter(filter)
         filter_left = parsed_filter[0] + "." + parsed_filter[1]\
-                    + parsed_filter[3]
+                    + parsed_filter[2]
 
         if filter_left in self._filters.keys():
             filters = self._filters[filter_left]
@@ -167,7 +168,7 @@ class Filter:
 
             else:
                 for clause in filters:
-                    if clause.right.value == parsed_filter[2]:
+                    if clause.right.value == parsed_filter[3]:
                         filters.remove(clause)
         
         self._updated = False

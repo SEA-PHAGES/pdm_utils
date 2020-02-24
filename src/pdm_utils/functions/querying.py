@@ -1,5 +1,6 @@
 from networkx import Graph
 from networkx import shortest_path
+from pdm_utils.functions import parsing
 from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
@@ -13,111 +14,15 @@ from datetime import datetime
 from decimal import Decimal
 import re
 
-#Global file constants
-COMPARATIVE_OPERATORS = [">", ">=", "<", "<="]
-OPERATORS             = ["=", "!="] + COMPARATIVE_OPERATORS
-COMPARABLE_TYPES      = [int, Decimal, float, datetime]
-TYPES                 = [str, bytes] + COMPARABLE_TYPES
-GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
-
-def parse_column(unparsed_column):
-    """Helper function to return a two-dimensional array of group parameters.
-
-    :param unparsed_groups:
-        Input a list of group expressions to parse and split.
-    :type unparsed_groups: List[str]
-    :return groups:
-        Returns a two-dimensional array of group parameters.
-    :type groups: List[List[str]]
-    """
-    column_format = re.compile("\w+\.\w+", re.IGNORECASE)
-
-    if re.match(column_format, unparsed_column) != None:
-        column = re.split("\W+", unparsed_column)
-    else:
-        raise ValueError(f"Unsupported table/column format: "
-                         f"'{unparsed_column}'")
-
-    return column
-
-def parse_filter(unparsed_filter):
-    """Helper function to return a two-dimensional array of filter parameters.
-
-    :param unparsed_filters:
-        Input a list of filter expressions to parse and split.
-    :type unparsed_filters: List[str]
-    :return filters:
-        Returns a two-dimensional array of filter parameters.
-    :type filters: List[List[str]]
-    """
-    filter_format = re.compile("\w+\.\w+[=<>!]+\w+", re.IGNORECASE)
-
-    if re.match(filter_format, unparsed_filter) != None:
-        filter = (re.split("\W+", unparsed_filter) +\
-                        re.findall("[!=<>]+", unparsed_filter))
-    else:
-        raise ValueError(f"Unsupported filtering format: '{unparsed_filter}'")
-                
-    return filter
-
-def check_operator(operator, column_object):
-        """Parses a operator string to match a MySQL query operators.
-
-        :param operator:
-            Input a raw operator string for an accepted MySQL operator.
-        :type operator: str
-        :param table:
-            Input a case-sensitive string for a TableNode id.
-        :type table: str
-        :param field:
-            Input a case-sensitive string for a ColumnNode id.
-        :type field: str
-        :param verbose:
-            Set a boolean to control the terminal output.
-        :type verbose: Boolean
-        """
-        if operator not in OPERATORS:
-            raise ValueError(f"Operator {operator} is not supported.")
-
-        column_type = column_object.type.python_type
-
-        if column_type not in TYPES:
-            raise ValueError(f"Column '{column_object.name}' "
-                             f"has an unsupported type, {column_type}.")
-        if operator in COMPARATIVE_OPERATORS and \
-           column_type not in COMPARABLE_TYPES:
-            raise ValueError(f"Column '{column_object.name}' "
-                             f"is not comparable with '{operator}'.")
-
-def translate_table(metadata, raw_table):
-    for table in metadata.tables.keys():
-        if table.lower() == raw_table.lower():
-            return table
-
-    raise ValueError(f"Table '{raw_table}' requested to be filtered "
-                     f"is not in selected database.")
-
-def translate_column(metadata, raw_column):
-    parsed_column = parse_column(raw_column)
-
-    table = translate_table(metadata, parsed_column[0])
-    table_obj = metadata.tables[table]
-    for column in table_obj.columns.keys():
-        if column.lower() == parsed_column[1].lower():
-            return column
-
-    raise ValueError(f"Field '{parsed_column[1]}' requested to be filtered"
-                     f" is not in '{table_obj.name}'")
-
 def get_table(metadata, table):
-    table = translate_table(metadata, table)
+    table = parsing.translate_table(metadata, table)
     table_obj = metadata.tables[table]
     return table_obj
 
 def get_column(metadata, column):
-    parsed_column = parse_column(column)
+    parsed_column = parsing.parse_column(column)
     table = get_table(metadata, parsed_column[0])
-    column = translate_column(metadata, column)
+    column = parsing.translate_column(metadata, column)
 
     columns_dict = dict(table.columns)
     column = columns_dict[parsed_column[1]]
@@ -144,27 +49,27 @@ def build_graph(metadata):
     return graph
 
 def build_whereclause(db_graph, filter_expression): 
-    filter_params = parse_filter(filter_expression)
+    filter_params = parsing.parse_filter(filter_expression)
 
     table_object = db_graph.nodes[filter_params[0]]["table"]
     column_object = table_object.columns[filter_params[1]]
  
-    check_operator(filter_params[3], column_object)
+    parsing.check_operator(filter_params[2], column_object)
 
     whereclause = None
 
-    if filter_params[3] == "=":
-        whereclause = column_object == filter_params[2]
-    elif filter_params[3] == "!=":
-        whereclause = column_object != filter_params[2]
-    elif filter_params[3] == ">" :
-        whereclause = column_object >  filter_params[2]
-    elif filter_params[3] == ">=":
-        whereclause = column_object >= filter_params[2]
-    elif filter_params[3] == "<" :
-        whereclause = column_object <  filter_params[2]
-    elif filter_params[3] == "<=":
-        whereclause = column_object <= filter_params[2]
+    if filter_params[2] == "=":
+        whereclause = column_object == filter_params[3]
+    elif filter_params[2] == "!=":
+        whereclause = column_object != filter_params[3]
+    elif filter_params[2] == ">" :
+        whereclause = column_object >  filter_params[3]
+    elif filter_params[2] == ">=":
+        whereclause = column_object >= filter_params[3]
+    elif filter_params[2] == "<" :
+        whereclause = column_object <  filter_params[3]
+    elif filter_params[2] == "<=":
+        whereclause = column_object <= filter_params[3]
 
     return whereclause 
 

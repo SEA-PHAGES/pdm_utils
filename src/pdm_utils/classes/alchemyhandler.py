@@ -10,6 +10,7 @@ from sqlalchemy.exc import OperationalError
 from pdm_utils.functions import cartography
 from pdm_utils.functions import querying
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import parsing
 
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None):
@@ -247,13 +248,13 @@ class AlchemyHandler:
         if not self.metadata:
             self.build_metadata()
 
-        return querying.translate_table(self.metadata, raw_table)  
+        return parsing.translate_table(self.metadata, raw_table)  
 
     def translate_column(self, raw_column):
         if not self.metadata:
             self.build_metadata()
 
-        return querying.translate_column(self.metadata, raw_column) 
+        return parsing.translate_column(self.metadata, raw_column) 
 
     def get_table(self, table): 
         if not self.metadata:

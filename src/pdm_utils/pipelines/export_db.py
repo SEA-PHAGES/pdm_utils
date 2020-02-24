@@ -23,6 +23,7 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import querying
 
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
