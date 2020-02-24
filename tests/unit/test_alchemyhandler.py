@@ -238,7 +238,7 @@ class TestAlchemyHandler(unittest.TestCase):
         BuildEngine.assert_not_called()
         MetaData.assert_called() 
 
-    @patch("pdm_utils.classes.alchemyhandler.querying.translate_table")
+    @patch("pdm_utils.classes.alchemyhandler.parsing.translate_table")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
     def test_translate_table_1(self, BuildMetadata, TranslateTable):
         self.alchemist.metadata = "Metadata"
@@ -248,7 +248,7 @@ class TestAlchemyHandler(unittest.TestCase):
         TranslateTable.assert_called_with("Metadata", "Test")
         BuildMetadata.assert_not_called()
 
-    @patch("pdm_utils.classes.alchemyhandler.querying.translate_table")
+    @patch("pdm_utils.classes.alchemyhandler.parsing.translate_table")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
     def test_translate_table_2(self, BuildMetadata, TranslateTable):
         self.alchemist.metadata = None
@@ -258,7 +258,7 @@ class TestAlchemyHandler(unittest.TestCase):
         TranslateTable.assert_called_with(None, "Test")
         BuildMetadata.assert_called()
 
-    @patch("pdm_utils.classes.alchemyhandler.querying.translate_column") 
+    @patch("pdm_utils.classes.alchemyhandler.parsing.translate_column") 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
     def test_translate_column_1(self, BuildMetadata, TranslateColumn):
         self.alchemist.metadata = "Metadata"
@@ -268,7 +268,7 @@ class TestAlchemyHandler(unittest.TestCase):
         TranslateColumn.assert_called_with("Metadata", "Test")
         BuildMetadata.assert_not_called()
 
-    @patch("pdm_utils.classes.alchemyhandler.querying.translate_column") 
+    @patch("pdm_utils.classes.alchemyhandler.parsing.translate_column") 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
     def test_translate_column_2(self, BuildMetadata, TranslateColumn):
         self.alchemist.metadata = None
