@@ -104,7 +104,7 @@ EVAL_DESCRIPTIONS = {
     "CDS_002": ("The CDS feature's nucleotide and amino acid sequence are expected to be consistent."),
     "CDS_003": ("The CDS feature is expected to contain a Translation qualifier."),
     "CDS_004": ("The CDS feature's Translation_Table qualifier is expected to be 11."),
-    "CDS_005": ("The CDS feature is expected to have integer coordinates > 0."),
+    "CDS_005": ("The CDS feature is expected to have an integer start coordinate > 0."),
     "CDS_006": ("The CDS feature's orientation is expected to be either F or R."),
     "CDS_007": ("The CDS feature is expected to have a Locus_Tag qualifier."),
     "CDS_008": ("The CDS feature is not expected to have any PhageID typos in the Locus_Tag qualifier."),
@@ -112,6 +112,8 @@ EVAL_DESCRIPTIONS = {
     "CDS_010": ("The CDS feature's Gene qualifier is expected to be an integer."),
     "CDS_011": ("The CDS feature is expected to have the same integer in the Gene and Locus_Tag qualifiers."),
     "CDS_012": ("The CDS feature is not expected to have a description in any qualifiers other than the selected qualifier, if the selected qualifier has no description."),
+    "CDS_013": ("The CDS feature is expected to have an integer stop coordinate > 0."),
+
 
     # Paired genomes
     "GP_001": (f"{pfx5} the same PhageID."),

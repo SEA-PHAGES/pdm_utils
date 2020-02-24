@@ -436,6 +436,7 @@ class Cds:
 
 
 
+
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
         """Constructs and adds an Eval object to the evaluations list."""
@@ -443,43 +444,86 @@ class Cds:
         self.evaluations.append(evl)
 
 
-    def check_translation_table(self, check_table=11, eval_id=None,
-                                success="correct", fail="error", eval_def=None):
-        """Check that the translation table is correct.
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
+                        success="correct", fail="error", eval_def=None):
+        """Check that the attribute value is valid.
 
-        :param check_table: Translation table used to check the translation.
-        :type check_table: int
-        :param eval_id: Unique identifier for the evaluation.
+        :param attribute: Name of the CDS object attribute to evaluate.
+        :type attribute: str
+        :param check_set:
+            Set of reference ids.
+        :type check_set: set
+        :param expect:
+            Indicates whether the attribute value is expected to be present
+            in the check set.
+        :type expect: bool
+        :param eval_id:
+            Unique identifier for the evaluation.
         :type eval_id: str
         """
-        result = f"The translation table is {self.translation_table}, which is "
-        if self.translation_table == check_table:
-            result = result + "correct."
-            status = success
+        try:
+            test = True
+            value1 = getattr(self, attribute)
+        except:
+            test = False
+            value1 = None
+        if test:
+            value1_short = basic.truncate_value(str(value1), 30, "...")
+            result = f"The {attribute} value '{value1_short}' is "
+
+            value2 = basic.check_value_expected_in_set(
+                        value1, check_set, expect)
+            if value2:
+                result = result + "valid."
+                status = success
+            else:
+                result = result + "not valid."
+                status = fail
         else:
-            result = result + "not correct."
-            status = fail
-        definition = "Check that the translation table is correct."
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
+            status = "untested"
+        definition = f"Check the value of the '{attribute}' attribute."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
 
-    def check_translation_present(self, eval_id=None,
-                                  success="correct", fail="error", eval_def=None):
-        """Confirm that a translation is present.
+    def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
+                        success="correct", fail="error", eval_def=None):
+        """
+        expect = (>, =, <).
 
-        :param eval_id: Unique identifier for the evaluation.
+        :param eval_id:
+            Unique identifier for the evaluation.
         :type eval_id: str
         """
-        result = "A translation is "
-        if self.translation_length < 1:
-            result = result + "not present."
-            status = fail
+        try:
+            test = True
+            query_value = getattr(self, attribute)
+        except:
+            test = False
+            query_value = None
+        if test:
+            result = f"The {attribute} value {query_value} is "
+            if query_value > ref_value:
+                compare = ">"
+                result = result + "greater than "
+            elif query_value == ref_value:
+                compare = "="
+                result = result + "equal to "
+            else:
+                compare = "<"
+                result = result + "less than "
+            result = result + f"{ref_value}, which is "
+            if compare == expect:
+                result = result + "expected."
+                status = success
+            else:
+                result = result + "not expected."
+                status = fail
         else:
-            result = result + f"present, with length {self.translation_length}."
-            status = success
-
-        definition = "Check that there is a translation present."
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
+            status = "untested"
+        definition = f"Check the magnitude of the '{attribute}' attribute."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -567,71 +611,6 @@ class Cds:
         self.set_eval(eval_id, definition, result, status)
 
 
-    def check_coordinates(self, eval_id=None, success="correct", fail="error", eval_def=None):
-        """Check if coordinates are exact.
-
-        This method assumes that if the coordinates are not exact, they
-        have been set to -1 or are not integers.
-
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        result = (f"The start ({self.start}) and "
-                  f"stop ({self.stop}) coordinates are ")
-        if not (isinstance(self.start, int) and isinstance(self.stop, int)):
-            result = result + "not integers."
-            status = fail
-        elif (self.start == -1 or self.stop == -1):
-            result = result + "not determined."
-            status = fail
-        else:
-            result = result + "integers."
-            status = success
-
-        definition = ("Check if the start and stop coordinates "
-                      "are exact or fuzzy.")
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-
-
-    def check_locus_tag_present(self, expect=True, eval_id=None,
-                                success="correct", fail="error", eval_def=None):
-        """Check if status of locus tag matches expectations.
-
-        :param expect:
-            Indicates whether the locus_tag is expected to be present.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        result = f"The locus_tag qualifier is {self.locus_tag}. It is "
-        if self.locus_tag != "":
-            present = True
-            result = result + "present, which is "
-        else:
-            present = False
-            result = result + "not present, which is "
-
-        if expect:
-            if present:
-                result = result + "expected."
-                status = success
-            else:
-                result = result + "not expected."
-                status = fail
-        else:
-            if present:
-                result = result + "not expected."
-                status = fail
-            else:
-                result = result + "expected."
-                status = success
-        definition = "Check if the locus_tag qualifier is present."
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-
-
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
                                   prefix_set=set(), case=True, eval_id=None,
                                   success="correct", fail="error", eval_def=None):
@@ -714,44 +693,6 @@ class Cds:
     #     evl = eval.Eval(eval_id, definition, result, status)
     #     self.evaluations.append(evl)
 
-
-    def check_gene_present(self, expect=True, eval_id=None,
-                           success="correct", fail="error", eval_def=None):
-        """Check if the status of gene matches expectations.
-
-        :param expect:
-            Indicates whether the gene qualifier is expected to be present.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-
-        result = f"The gene qualifier is {self.gene}. It is "
-        if self.gene != "":
-            present = True
-            result = result + "present, which is "
-        else:
-            present = False
-            result = result + "not present, which is "
-
-        if expect:
-            if present:
-                result = result + "expected."
-                status = success
-            else:
-                result = result + "not expected."
-                status = fail
-        else:
-            if present:
-                result = result + "not expected."
-                status = fail
-            else:
-                result = result + "expected."
-                status = success
-        definition = "Check if the gene qualifier is present."
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
 
 
     def check_gene_structure(self, eval_id=None, success="correct", fail="error", eval_def=None):

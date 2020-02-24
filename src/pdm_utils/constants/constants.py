@@ -72,6 +72,7 @@ EMPTY_DATE = datetime.strptime("1/1/0001 00:00:00", "%m/%d/%Y %H:%M:%S")
 # Some locus tags have "PHIRE", but this should not be the case.
 LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI"])
 EMPTY_GENOME_SEQ = Seq("", IUPAC.ambiguous_dna)
+EMPTY_PROTEIN_SEQ = Seq("", IUPAC.protein)
 
 # Common list of values that represent empty or null values.
 EMPTY_SET = set(["",

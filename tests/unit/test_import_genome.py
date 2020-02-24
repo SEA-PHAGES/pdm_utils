@@ -1880,28 +1880,28 @@ class TestImportGenomeClass7(unittest.TestCase):
         """Verify correct number of evaluations are produced when
         none are False."""
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 12)
+        self.assertEqual(len(self.cds1.evaluations), 13)
 
     def test_check_cds_2(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = False."""
         self.eval_flags["check_locus_tag"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 9)
+        self.assertEqual(len(self.cds1.evaluations), 10)
 
     def test_check_cds_3(self):
         """Verify correct number of evaluations are produced when
         check_gene = False."""
         self.eval_flags["check_gene"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 9)
+        self.assertEqual(len(self.cds1.evaluations), 10)
 
     def test_check_cds_4(self):
         """Verify correct number of evaluations are produced when
         check_description = False."""
         self.eval_flags["check_description"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 12)
+        self.assertEqual(len(self.cds1.evaluations), 13)
 
     def test_check_cds_5(self):
         """Verify correct number of evaluations are produced when
@@ -1911,7 +1911,7 @@ class TestImportGenomeClass7(unittest.TestCase):
         self.eval_flags["check_description"] = False
         self.eval_flags["check_description_field"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 6)
+        self.assertEqual(len(self.cds1.evaluations), 7)
 
     def test_check_cds_6(self):
         """Verify correct number of errors with correct CDS feature."""
@@ -1935,7 +1935,7 @@ class TestImportGenomeClass7(unittest.TestCase):
 
     def test_check_cds_9(self):
         """Verify correct number of errors with missing translation."""
-        self.cds1.translation_length = 0
+        self.cds1.translation = constants.EMPTY_PROTEIN_SEQ
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error")
         self.assertEqual(count, 2)

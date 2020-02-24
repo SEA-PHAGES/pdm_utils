@@ -1335,22 +1335,30 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
     """Check a Cds object for errors."""
     logger.info(f"Checking CDS feature: {cds_ftr.id}.")
 
+    cds_ftr.check_attribute("translation", {constants.EMPTY_PROTEIN_SEQ},
+                            expect=False, eval_id="CDS_003",
+                            eval_def=EDD["CDS_003"])
     cds_ftr.check_amino_acids(check_set=constants.PROTEIN_ALPHABET,
                               eval_id="CDS_001", eval_def=EDD["CDS_001"])
     cds_ftr.check_translation(eval_id="CDS_002", eval_def=EDD["CDS_002"])
-    cds_ftr.check_translation_present(eval_id="CDS_003", eval_def=EDD["CDS_003"])
-    cds_ftr.check_translation_table(check_table=11, eval_id="CDS_004", fail="warning", eval_def=EDD["CDS_004"])
-    cds_ftr.check_coordinates(eval_id="CDS_005", eval_def=EDD["CDS_005"])
+    cds_ftr.check_attribute("translation_table", {11},
+                            expect=True, eval_id="CDS_004", fail="warning",
+                            eval_def=EDD["CDS_004"])
+    cds_ftr.check_magnitude("start", ">", 0, eval_id="CDS_005",
+                            eval_def=EDD["CDS_005"])
+    cds_ftr.check_magnitude("stop", ">", 0, eval_id="CDS_013",
+                            eval_def=EDD["CDS_013"])
     cds_ftr.check_orientation(format="fr_short", case=True, eval_id="CDS_006", eval_def=EDD["CDS_006"])
     if eval_flags["check_locus_tag"]:
-        cds_ftr.check_locus_tag_present(expect=True, eval_id="CDS_007",
-                                        fail="warning", eval_def=EDD["CDS_007"])
+        cds_ftr.check_attribute("locus_tag", {""}, expect=False, eval_id="CDS_007",
+                                fail="warning", eval_def=EDD["CDS_007"])
 
         # TODO this check could be improved to take into account the prefix.
         cds_ftr.check_locus_tag_structure(check_value=None, only_typo=True,
             case=True, eval_id="CDS_008", fail="warning", eval_def=EDD["CDS_008"])
     if eval_flags["check_gene"]:
-        cds_ftr.check_gene_present(expect=True, eval_id="CDS_009", fail="warning", eval_def=EDD["CDS_009"])
+        cds_ftr.check_attribute("gene", {""}, expect=False, eval_id="CDS_009",
+                                fail="warning", eval_def=EDD["CDS_009"])
         cds_ftr.check_gene_structure(eval_id="CDS_010", fail="warning", eval_def=EDD["CDS_010"])
     if (eval_flags["check_locus_tag"] and eval_flags["check_gene"]):
         cds_ftr.check_compatible_gene_and_locus_tag(eval_id="CDS_011",

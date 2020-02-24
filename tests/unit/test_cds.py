@@ -422,6 +422,99 @@ class TestCdsClass(unittest.TestCase):
 
 
 
+    def test_check_attribute_1(self):
+        """Verify no error is produced when the id
+        is in the check_set and is expected to be in the set."""
+        check_set = set(["Trixie_CDS_1", "L5_CDS_1"])
+        self.feature.id = "Trixie_CDS_1"
+        self.feature.check_attribute("id", check_set, True, "eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
+
+    def test_check_attribute_2(self):
+        """Verify an error is produced when the id
+        is not in the check_set and is expected to be in the set."""
+        check_set = set(["Trixie_CDS_1", "L5_CDS_1"])
+        self.feature.id = "Trixie_CDS_2"
+        self.feature.check_attribute("id", check_set, True)
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
+
+    def test_check_attribute_3(self):
+        """Verify no error is produced when the id
+        is not in the check_set and is not expected to be in the set."""
+        check_set = set(["Trixie_CDS_1", "L5_CDS_1"])
+        self.feature.id = "Trixie_CDS_2"
+        self.feature.check_attribute("id", check_set, False)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_attribute_4(self):
+        """Verify an error is produced when the id
+        is in the check_set and is not expected to be in the set."""
+        check_set = set(["Trixie_CDS_1", "L5_CDS_1"])
+        self.feature.id = "Trixie_CDS_1"
+        self.feature.check_attribute("id", check_set, False)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_attribute_5(self):
+        """Verify an error is produced when the translation
+        is in the check_set and is expected to be in the set."""
+        check_set = {Seq("MF", IUPAC.protein), Seq("MA", IUPAC.protein)}
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature.check_attribute("translation", check_set, True)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+
+
+
+    def test_check_magnitude_1(self):
+        """Verify no error is produced when
+        'start' is greater than 0, as expected."""
+        self.feature.start = 1000
+        self.feature.check_magnitude("start", ">", 0, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
+
+    def test_check_magnitude_2(self):
+        """Verify no error is produced when
+        'start' is equal to 0, as expected."""
+        self.feature.start = 0
+        self.feature.check_magnitude("start", "=", 0)
+        with self.subTest():
+            self.assertEqual(self.feature.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertIsNone(self.feature.evaluations[0].id)
+
+    def test_check_magnitude_3(self):
+        """Verify no error is produced when
+        'start' is less than 0, as expected."""
+        self.feature.start = -100
+        self.feature.check_magnitude("start", "<", 0)
+        self.assertEqual(self.feature.evaluations[0].status, "correct")
+
+    def test_check_magnitude_4(self):
+        """Verify an error is produced when
+        'start' is greater than 0, unexpectedly."""
+        self.feature.start = 100
+        self.feature.check_magnitude("start", "=", 0)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+    def test_check_magnitude_5(self):
+        """Verify an error is produced when
+        'start' is less than 0, unexpectedly."""
+        self.feature.start = -100
+        self.feature.check_magnitude("start", ">", 0)
+        self.assertEqual(self.feature.evaluations[0].status, "error")
+
+
+
+
     def test_check_orientation_1(self):
         """Verify no error is produced when the orientation is
         formatted correctly using default settings."""
@@ -454,127 +547,6 @@ class TestCdsClass(unittest.TestCase):
         formatted incorrectly using custom settings."""
         self.feature.orientation = "F"
         self.feature.check_orientation(format="numeric", case=False)
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-
-
-
-    def test_check_coordinates_1(self):
-        """Test correct boundaries."""
-        self.feature.start = 5
-        self.feature.stop = 10
-        self.feature.check_coordinates(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_coordinates_2(self):
-        """Test incorrect start boundary string."""
-        self.feature.start = "a"
-        self.feature.stop = 10
-        self.feature.check_coordinates()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-    def test_check_coordinates_3(self):
-        """Test incorrect stop boundary string."""
-        self.feature.start = 5
-        self.feature.stop = "a"
-        self.feature.check_coordinates()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-    def test_check_coordinates_4(self):
-        """Test incorrect start boundary int."""
-        self.feature.start = -1
-        self.feature.stop = 10
-        self.feature.check_coordinates()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-    def test_check_coordinates_5(self):
-        """Test incorrect stop boundary int."""
-        self.feature.start = 5
-        self.feature.stop = -1
-        self.feature.check_coordinates()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-    def test_check_coordinates_6(self):
-        """Test incorrect start and stop boundary ints."""
-        self.feature.start = -1
-        self.feature.stop = -1
-        self.feature.check_coordinates()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-
-
-
-
-
-
-
-    def test_check_locus_tag_present_1(self):
-        """Check if absent locus tag is expected to be absent."""
-        self.feature.locus_tag = ""
-        self.feature.check_locus_tag_present(False, eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_locus_tag_present_2(self):
-        """Check if absent locus tag is expected to be present."""
-        self.feature.locus_tag = ""
-        self.feature.check_locus_tag_present(True)
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-    def test_check_locus_tag_present_3(self):
-        """Check if present locus tag is expected to be present."""
-        self.feature.locus_tag = "ABCD"
-        self.feature.check_locus_tag_present(True)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
-
-    def test_check_locus_tag_present_4(self):
-        """Check if present locus tag is expected to be absent."""
-        self.feature.locus_tag = "ABCD"
-        self.feature.check_locus_tag_present(False)
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-
-
-
-    def test_check_gene_present_1(self):
-        """Check if absent gene is expected to be absent."""
-        self.feature.gene = ""
-        self.feature.check_gene_present(False, eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_gene_present_2(self):
-        """Check if absent gene is expected to be present."""
-        self.feature.gene = ""
-        self.feature.check_gene_present(True)
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-    def test_check_gene_present_3(self):
-        """Check if present gene is expected to be present."""
-        self.feature.gene = "ABCD"
-        self.feature.check_gene_present(True)
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
-
-    def test_check_gene_present_4(self):
-        """Check if present gene is expected to be absent."""
-        self.feature.gene = "ABCD"
-        self.feature.check_gene_present(False)
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
 
@@ -1066,33 +1038,6 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_check_translation_present_1(self):
-        """Verify a present translation does not produce an error."""
-        self.feature.translation_length = 1
-        self.feature.check_translation_present(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_translation_present_2(self):
-        """Verify a present translation does not produce an error."""
-        self.feature.translation_length = 100
-        self.feature.check_translation_present()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-    def test_check_translation_present_3(self):
-        """Verify that no translation produces an error."""
-        self.feature.translation_length = 0
-        self.feature.check_translation_present()
-        self.assertEqual(self.feature.evaluations[0].status, "error")
-
-
-
-
     def test_set_description_1(self):
         """Verify product description is assigned to primary description."""
         self.feature.product = "ABCD"
@@ -1132,34 +1077,6 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(self.feature.description, "")
         with self.subTest():
             self.assertEqual(self.feature.processed_description, "")
-
-
-
-
-    def test_check_translation_table_1(self):
-        """Verify no error is produced."""
-        self.feature.translation_table = 11
-        self.feature.check_translation_table(eval_id="eval_id")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].id, "eval_id")
-
-    def test_check_translation_table_2(self):
-        """Verify an error is produced."""
-        self.feature.translation_table = "11"
-        self.feature.check_translation_table()
-        with self.subTest():
-            self.assertEqual(self.feature.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.feature.evaluations[0].id)
-
-    def test_check_translation_table_3(self):
-        """Verify no error is produced when a modified translation
-        table is supplied."""
-        self.feature.translation_table = "11"
-        self.feature.check_translation_table("11")
-        self.assertEqual(self.feature.evaluations[0].status, "correct")
 
 
 
