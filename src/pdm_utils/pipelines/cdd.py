@@ -1,12 +1,18 @@
 import argparse
+import logging
 import os
+import pathlib
 import platform
 import shlex
+import sys
 from subprocess import Popen, PIPE
 
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbirpsblastCommandline
 
+import pdm_utils
+from pdm_utils.constants import constants
+from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions.basic import expand_path
 from pdm_utils.functions.parallelize import *
@@ -21,6 +27,19 @@ INSERT_INTO_DOMAIN = """INSERT IGNORE INTO domain (HitID, DomainID, Name, Descri
 INSERT_INTO_GENE_DOMAIN = """INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
 UPDATE_GENE = "UPDATE gene SET DomainStatus = 1 WHERE GeneID = '{}'"
 
+# MISC
+VERSION = pdm_utils.__version__
+RESULTS_FOLDER = f"{constants.CURRENT_DATE}_cdd"
+
+# LOGGING
+# Add a logger named after this module. Then add a null handler, which
+# suppresses any output statements. This allows other modules that call this
+# module to define the handler and output formats. If this module is the
+# main module being called, the top level main function configures
+# the root logger and primary file handle.
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def setup_argparser():
     """
@@ -32,6 +51,8 @@ def setup_argparser():
         "Uses rpsblast to search the NCBI conserved domain database "
         "for significant domain hits in all new proteins of a "
         "MySQL database.")
+    output_folder_help = "Directory where log data can be generated."
+    log_file_help = "Name of the log file generated."
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
@@ -47,6 +68,10 @@ def setup_argparser():
                         help="path to temporary directory for file I/O")
     parser.add_argument("--rpsblast", default="", type=str,
                         help="path to rpsblast(+) binary")
+    parser.add_argument("--output_folder", type=pathlib.Path,
+        default=pathlib.Path("/tmp/"), help=output_folder_help)
+    parser.add_argument("--log_file", type=str, default="cdd.log",
+        help=log_file_help)
     return parser
 
 
@@ -164,30 +189,43 @@ def main(argument_list):
     evalue = args.evalue
     rpsblast = args.rpsblast
     tmp_dir = args.tmp_dir
+    output_folder = args.output_folder
+    log_file = args.log_file
+
+    output_folder = basic.set_path(output_folder, kind="dir", expect=True)
+    results_folder = pathlib.Path(RESULTS_FOLDER)
+    results_path = basic.make_new_dir(output_folder, results_folder,
+                                      attempt=10)
+    if results_path is None:
+        print("Unable to create output_folder.")
+        sys.exit(1)
+
+    log_file = pathlib.Path(results_path, log_file)
+
+    # Set up root logger.
+    logging.basicConfig(filename=log_file, filemode="w",
+                        level=logging.DEBUG,
+                        format="pdm_utils cdd: %(levelname)s: %(message)s")
+    logger.info(f"pdm_utils version: {VERSION}")
+    logger.info(f"CDD run date: {constants.CURRENT_DATE}")
+    logger.info(f"Command line arguments: {' '.join(argument_list)}")
+    logger.info(f"Results directory: {results_path}")
 
     # Early exit if either 1) cdd_name == "" or 2) no rpsblast given and we are
     # unable to find one
     if cdd_name == "":
-        print(f"Unable to learn cdd database name. Make sure the files in "
+        msg = (f"Unable to learn cdd database name. Make sure the files in "
               f"{cdd_dir} all have the same basename.")
+        logger.error(msg)
+        print(msg)
         return
 
     if rpsblast == "":
-        # See if we're running on a Mac
-        if platform.system() == "Darwin":
-            print("Detected MacOS operating system...")
-            command = shlex.split("which rpsblast")
-        # Otherwise see if we're on a Linux machine
-        elif platform.system() == "Linux":
-            print("Detected Linux operating system...")
-            command = shlex.split("which rpsblast+")
-        # Windows or others - unsupported, leave early
-        else:
-            print(f"Unsupported system '{platform.system()}'; cannot run "
-                  f"cdd pipeline.")
-            return
 
-        # If we didn't return, we have a command.
+        # Get the rpsblast command.
+        command = get_rpsblast_command()
+
+        # If we didn't exit, we have a command.
         # Run it, and PIPE stdout into rpsblast_path
         with Popen(args=command, stdout=PIPE) as proc:
             rpsblast = proc.stdout.read().decode("utf-8").rstrip("\n")
@@ -195,27 +233,33 @@ def main(argument_list):
         # If empty string, rpsblast not found in globally
         # available executables, otherwise proceed with value.
         if rpsblast == "":
-            print("No rpsblast binary found. "
+            msg = ("No rpsblast binary found. "
                   "If you have rpsblast on your machine, please try "
                   "again with the '--rpsblast' flag and provide the "
                   "full path to your rpsblast binary.")
+            logger.error(msg)
+            print(msg)
             return
         else:
-            print(f"Found rpsblast binary at '{rpsblast}'...")
+            msg = f"Found rpsblast binary at '{rpsblast}'..."
+            logger.info(msg)
+            print(msg)
 
     engine = mysqldb.connect_to_db(database)
-    result = engine.execute(GET_GENES_FOR_CDD)
-    cdd_genes = []
-    for row in result:
-        row_as_dict = dict(row)
-        cdd_genes.append(row_as_dict)
-    engine.dispose()
+    logger.info("Command line arguments verified.")
 
-    # Print number of genes to process
-    print(f"{len(cdd_genes)} genes to search for conserved domains...")
+    # Get gene data that needs to be processed
+    # in dict format where key = column name, value = stored value.
+    # result = engine.execute(GET_GENES_FOR_CDD)
+    cdd_genes = mysqldb.query_dict_list(engine, GET_GENES_FOR_CDD)
+    msg = f"{len(cdd_genes)} genes to search for conserved domains..."
+    logger.info(msg)
+    print(msg)
 
     # Only run the pipeline if there are genes returned that need it
     if len(cdd_genes) > 0:
+        log_gene_ids(cdd_genes)
+
         # Create temp_dir
         make_tempdir(tmp_dir)
 
@@ -227,36 +271,90 @@ def main(argument_list):
 
         results = parallelize(jobs, threads, search_and_process)
         print("\n")
-
-        rolled_back = 0
-        for result in results:
-            exe_result = mysqldb.execute_transaction(engine, result)
-            if exe_result == 1:
-                # Some CDD descriptions contain '%', which throws an error
-                # when SQLAlchemy's engine.Connection.execute() is used.
-                # The string gets passed to a pymysql.cursor function which
-                # interprets the % as a string formatting operator,
-                # and since there is no value to insert and format,
-                # the MySQL statement fails and the
-                # entire transactions is rolled back.
-                # For these edge cases, one way around this is to
-                # attempt to replace all '%' with '%%'.
-                # SQLAlchemy provides several different ways to
-                # implement changes to the database, and another strategy
-                # is likely to get around this problem.
-                index = 0
-                while index < len(result):
-                    statement = result[index]
-                    statement = statement.replace("%", "%%")
-                    result[index] = statement
-                    index += 1
-                exe_result = mysqldb.execute_transaction(engine, result)
-            rolled_back += exe_result
-        if rolled_back > 0:
-            print(f"\n\n\nError executing {rolled_back} transaction(s). "
-                  "Unable to complete pipeline. "
-                  "Some genes may still contain unidentified domains.")
-        else:
-            print(f"\n\n\nAll genes successfully searched for conserved domains.")
+        insert_domain_data(engine, results)
         engine.dispose()
     return
+
+
+def get_rpsblast_command():
+    """Determine rpsblast+ command based on operating system."""
+    # See if we're running on a Mac
+    if platform.system() == "Darwin":
+        msg = "Detected MacOS operating system..."
+        logger.info(msg)
+        print(msg)
+        command = shlex.split("which rpsblast")
+    # Otherwise see if we're on a Linux machine
+    elif platform.system() == "Linux":
+        msg = "Detected Linux operating system..."
+        logger.info(msg)
+        print(msg)
+        command = shlex.split("which rpsblast+")
+    # Windows or others - unsupported, leave early
+    else:
+        msg = (f"Unsupported system '{platform.system()}'; cannot run "
+              f"cdd pipeline.")
+        logger.error(msg)
+        print(msg)
+        sys.exit(1)
+    return command
+
+
+def log_gene_ids(cdd_genes):
+    """Record names of the genes processed for reference."""
+    batch_indices = basic.create_indices(cdd_genes, 20)
+    for indices in batch_indices:
+        genes_subset = cdd_genes[indices[0]: indices[1]]
+        gene_ids = []
+        for gene in genes_subset:
+            gene_ids.append(gene["GeneID"])
+        logger.info("; ".join(gene_ids))
+
+
+def insert_domain_data(engine, results):
+    """Attempt to insert domain data into the database."""
+    rolled_back = 0
+    for result in results:
+        exe_result = mysqldb.execute_transaction(engine, result)
+        if exe_result == 1:
+            msg = "One of the following statements caused a rollback:"
+            logger.warning(msg)
+            print(msg)
+            for stmt in result:
+                logger.warning(stmt)
+            logger.warning("Attempting to resolve possible '%' error(s).")
+
+            # Some CDD descriptions contain '%', which throws an error
+            # when SQLAlchemy's engine.Connection.execute() is used.
+            # The string gets passed to a pymysql.cursor function which
+            # interprets the % as a string formatting operator,
+            # and since there is no value to insert and format,
+            # the MySQL statement fails and the
+            # entire transactions is rolled back.
+            # For these edge cases, one way around this is to
+            # attempt to replace all '%' with '%%'.
+            # SQLAlchemy provides several different ways to
+            # implement changes to the database, and another strategy
+            # is likely to get around this problem.
+            index = 0
+            while index < len(result):
+                statement = result[index]
+                statement = statement.replace("%", "%%")
+                result[index] = statement
+                index += 1
+            exe_result = mysqldb.execute_transaction(engine, result)
+            if exe_result == 0:
+                logger.info("'%' replacement resolved the error(s).")
+            else:
+                logger.error("Unable to resolve error.")
+        rolled_back += exe_result
+
+    if rolled_back > 0:
+        msg = (f"\n\n\nError executing {rolled_back} transaction(s). "
+              "Unable to complete pipeline. "
+              "Some genes may still contain unidentified domains.")
+        logger.error(msg)
+    else:
+        msg = "All genes successfully searched for conserved domains."
+        logger.info(msg)
+        print("\n\n\n" + msg)

@@ -3,11 +3,10 @@ database."""
 
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 
-
-
+CURRENT_DATE = date.today().strftime("%Y%m%d")
 
 IMPORT_TABLE_STRUCTURE = {
     "order": [
