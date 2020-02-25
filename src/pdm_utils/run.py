@@ -5,7 +5,7 @@ then passes all command line arguments to the main pipeline module.
 import argparse
 import sys
 
-from pdm_utils.pipelines import cdd
+from pdm_utils.pipelines import find_domains
 from pdm_utils.pipelines import compare_db
 from pdm_utils.pipelines import convert_db
 from pdm_utils.pipelines import export_db
@@ -36,7 +36,7 @@ def main(unparsed_args):
         "update",
         "import",
         "import_dev",
-        "cdd",
+        "find_domains",
         "phamerate",
         "export",
         "freeze",
@@ -65,8 +65,8 @@ def main(unparsed_args):
         import_phage.main(unparsed_args)
     elif args.pipeline == "import_dev":
         import_genome.main(unparsed_args)
-    elif args.pipeline == "cdd":
-        cdd.main(unparsed_args[unparsed_args.index("cdd") + 1:])
+    elif args.pipeline == "find_domains":
+        find_domains.main(unparsed_args[unparsed_args.index("find_domains") + 1:])
     elif args.pipeline == "phamerate":
         phamerate.main(unparsed_args[unparsed_args.index("phamerate") + 1:])
     elif args.pipeline == "export":

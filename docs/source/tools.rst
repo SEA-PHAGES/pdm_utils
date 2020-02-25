@@ -7,7 +7,7 @@ contains to analyze and manipulate data within a MySQL database:
 .. toctree::
    :maxdepth: 1
 
-   cdd <./tools/find_domains>
+   find_domains <./tools/find_domains>
    compare <./tools/compare>
    convert <./tools/convert>
    export <./tools/export>

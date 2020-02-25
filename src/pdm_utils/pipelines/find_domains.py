@@ -59,9 +59,9 @@ def setup_argparser():
     parser.add_argument("db", type=str,
                         help="name of database to phamerate")
     parser.add_argument("dir", type=str,
-                        help="path to local directory housing cdd database")
+                        help="path to local directory housing CDD database")
     parser.add_argument("--threads", default=mp.cpu_count(), type=int,
-                        help="number of concurrent cdd searches to run")
+                        help="number of concurrent CDD searches to run")
     parser.add_argument("--evalue", default=0.001, type=float,
                         help="evalue cutoff for rpsblast hits")
     parser.add_argument("--tmp_dir", default="/tmp/cdd", type=str,
@@ -70,7 +70,7 @@ def setup_argparser():
                         help="path to rpsblast(+) binary")
     parser.add_argument("--output_folder", type=pathlib.Path,
         default=pathlib.Path("/tmp/"), help=output_folder_help)
-    parser.add_argument("--log_file", type=str, default="cdd.log",
+    parser.add_argument("--log_file", type=str, default="find_domains.log",
         help=log_file_help)
     return parser
 
@@ -96,9 +96,9 @@ def make_tempdir(tmp_dir):
 def search_and_process(rpsblast, cdd_name, tmp_dir, evalue,
                        geneid, translation):
     """
-    Uses rpsblast to search indicated gene against the indicated cdd
+    Uses rpsblast to search indicated gene against the indicated CDD
     :param rpsblast: path to rpsblast binary
-    :param cdd_name: cdd database path/name
+    :param cdd_name: CDD database path/name
     :param tmp_dir: path to directory where I/O will take place
     :param evalue: evalue cutoff for rpsblast
     :param geneid: name of the gene to query
@@ -205,7 +205,7 @@ def main(argument_list):
     # Set up root logger.
     logging.basicConfig(filename=log_file, filemode="w",
                         level=logging.DEBUG,
-                        format="pdm_utils cdd: %(levelname)s: %(message)s")
+                        format="pdm_utils find_domains: %(levelname)s: %(message)s")
     logger.info(f"pdm_utils version: {VERSION}")
     logger.info(f"CDD run date: {constants.CURRENT_DATE}")
     logger.info(f"Command line arguments: {' '.join(argument_list)}")
@@ -214,7 +214,7 @@ def main(argument_list):
     # Early exit if either 1) cdd_name == "" or 2) no rpsblast given and we are
     # unable to find one
     if cdd_name == "":
-        msg = (f"Unable to learn cdd database name. Make sure the files in "
+        msg = (f"Unable to learn CDD database name. Make sure the files in "
               f"{cdd_dir} all have the same basename.")
         logger.error(msg)
         print(msg)
@@ -273,7 +273,7 @@ def get_rpsblast_command():
     # Windows or others - unsupported, leave early
     else:
         msg = (f"Unsupported system '{platform.system()}'; cannot run "
-              f"cdd pipeline.")
+              f"find_domains pipeline.")
         logger.error(msg)
         print(msg)
         sys.exit(1)

@@ -1,1 +1,1 @@
-Field,Data Type,Data originID,int(10) unsigned,MySQLGeneID,varchar(35),cddHitID,varchar(25),cddQueryStart,int(10) unsigned,cddQueryEnd,int(10) unsigned,cddExpect,double unsigned,cdd
+Field,Data Type,Data originID,int(10) unsigned,MySQLGeneID,varchar(35),find_domainsHitID,varchar(25),find_domainsQueryStart,int(10) unsigned,find_domainsQueryEnd,int(10) unsigned,find_domainsExpect,double unsigned,find_domains

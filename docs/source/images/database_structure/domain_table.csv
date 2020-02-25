@@ -1,1 +1,1 @@
-Field,Data Type,Data originID,int(10) unsigned,MySQLHitID,varchar(25),cddDescription,blob,cddDomainID,varchar(10),cddName,varchar(25),cdd
+Field,Data Type,Data originID,int(10) unsigned,MySQLHitID,varchar(25),find_domainsDescription,blob,find_domainsDomainID,varchar(10),find_domainsName,varchar(25),find_domains

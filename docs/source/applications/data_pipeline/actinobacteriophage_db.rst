@@ -102,7 +102,7 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
     6. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables::
 
-        > python3 -m pdm_utils cdd Actinobacteriophage ./cdd/
+        > python3 -m pdm_utils find_domains Actinobacteriophage ./cdd/
 
     7. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table::
 
