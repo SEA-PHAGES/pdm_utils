@@ -1477,12 +1477,18 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(output_value, input_value)
 
     def test_truncate_value_2(self):
-        """Verify long value is not changed."""
+        """Verify long value is changed with suffix shorter than max length."""
         input_value = "abcdefghijkl"
         output_value = basic.truncate_value(input_value, 6, "...")
-        exp_output_value = "abcdef..."
+        exp_output_value = "abc..."
         self.assertEqual(output_value, exp_output_value)
 
+    def test_truncate_value_3(self):
+        """Verify long value is changed with suffix longer than max length."""
+        input_value = "abcdefghijkl"
+        output_value = basic.truncate_value(input_value, 6, ".......")
+        exp_output_value = "......"
+        self.assertEqual(output_value, exp_output_value)
 
 
 

@@ -4,7 +4,9 @@ import os
 import pathlib
 import platform
 import shlex
+import sqlalchemy
 import sys
+# import warnings
 from subprocess import Popen, PIPE
 
 from Bio.Blast import NCBIXML
@@ -23,8 +25,8 @@ GET_GENES_FOR_CDD = (
 GET_UNIQUE_HIT_IDS = "SELECT HitID FROM domain"
 
 # SQL COMMANDS
-INSERT_INTO_DOMAIN = """INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ("{}", "{}", "{}", "{}")"""
-INSERT_INTO_GENE_DOMAIN = """INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
+INSERT_INTO_DOMAIN = """INSERT INTO domain (HitID, DomainID, Name, Description) VALUES ("{}", "{}", "{}", "{}")"""
+INSERT_INTO_GENE_DOMAIN = """INSERT INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
 UPDATE_GENE = "UPDATE gene SET DomainStatus = 1 WHERE GeneID = '{}'"
 
 # MISC
@@ -143,6 +145,12 @@ def search_and_process(rpsblast, cdd_name, tmp_dir, evalue,
                             else:
                                 domain_id = des_list[0].strip()
                                 name = des_list[1].strip()
+                                # Name is occassionally longer than permitted
+                                # in the database. Truncating avoids a
+                                # MySQL error.
+                                # TODO perhaps the database schema should be
+                                # changed to account for this.
+                                name = basic.truncate_value(name, 25, "...")
                                 description = ",".join(des_list[2:]).strip()
 
                             # Try to put domain into domain table
@@ -192,6 +200,7 @@ def main(argument_list):
     output_folder = args.output_folder
     log_file = args.log_file
 
+    # Set up directory.
     output_folder = basic.set_path(output_folder, kind="dir", expect=True)
     results_folder = pathlib.Path(RESULTS_FOLDER)
     results_path = basic.make_new_dir(output_folder, results_folder,
@@ -231,7 +240,6 @@ def main(argument_list):
     mysqldb.check_schema_compatibility(engine, "the find_domains pipeline")
     logger.info(f"Schema version is compatible.")
     logger.info("Command line arguments verified.")
-
 
 
     # Get gene data that needs to be processed
@@ -325,39 +333,9 @@ def log_gene_ids(cdd_genes):
 def insert_domain_data(engine, results):
     """Attempt to insert domain data into the database."""
     rolled_back = 0
+    connection = engine.connect()
     for result in results:
-        exe_result = mysqldb.execute_transaction(engine, result)
-        if exe_result == 1:
-            msg = "One of the following statements caused a rollback:"
-            logger.warning(msg)
-            print(msg)
-            for stmt in result:
-                logger.warning(stmt)
-            logger.warning("Attempting to resolve possible '%' error(s).")
-
-            # Some CDD descriptions contain '%', which throws an error
-            # when SQLAlchemy's engine.Connection.execute() is used.
-            # The string gets passed to a pymysql.cursor function which
-            # interprets the % as a string formatting operator,
-            # and since there is no value to insert and format,
-            # the MySQL statement fails and the
-            # entire transactions is rolled back.
-            # For these edge cases, one way around this is to
-            # attempt to replace all '%' with '%%'.
-            # SQLAlchemy provides several different ways to
-            # implement changes to the database, and another strategy
-            # is likely to get around this problem.
-            index = 0
-            while index < len(result):
-                statement = result[index]
-                statement = statement.replace("%", "%%")
-                result[index] = statement
-                index += 1
-            exe_result = mysqldb.execute_transaction(engine, result)
-            if exe_result == 0:
-                logger.info("'%' replacement resolved the error(s).")
-            else:
-                logger.error("Unable to resolve error.")
+        exe_result = execute_transaction(connection, result)
         rolled_back += exe_result
 
     if rolled_back > 0:
@@ -369,3 +347,110 @@ def insert_domain_data(engine, results):
         msg = "All genes successfully searched for conserved domains."
         logger.info(msg)
         print("\n\n\n" + msg)
+
+
+def execute_transaction(connection, statement_list=list()):
+    trans = connection.begin()
+    failed = 0
+    # Even though the execution of individual statements are handled within
+    # a try/exept block, this try/except block encapsulates all code
+    # that is executed while uncommitted changes have been made to the database.
+    # Without this encapsulation, even if all MySQL execution errors are caught,
+    # other types of errors generated while processing the results would
+    # crash the code and possibly result in changes made to the database
+    # that shouldn't be persisted.
+    try:
+        for i in range(len(statement_list)):
+            statement = statement_list[i]
+            stmt_result, type_error, msg = execute_statement(connection, statement)
+            msg = msg + "Statement: " + statement
+            if stmt_result == 0:
+                logger.info(msg)
+            else:
+                if type_error == False:
+                    logger.error(msg)
+                else:
+                    # If the insertion failed due to a TypeError, it could be
+                    # due to the fact that the string contains '%'.
+                    # Some CDD descriptions contain '%', which throws an error
+                    # when SQLAlchemy's engine.Connection.execute() is used.
+                    # The string gets passed to a pymysql.cursor function which
+                    # interprets the % as a string formatting operator,
+                    # and since there is no value to insert and format,
+                    # the MySQL statement fails and the
+                    # entire transactions is rolled back.
+                    # For these edge cases, one way around this is to
+                    # attempt to replace all '%' with '%%'.
+                    # SQLAlchemy provides several different ways to
+                    # implement changes to the database, and another strategy
+                    # is likely to get around this problem.
+                    if "%" not in statement:
+                        logger.error(msg)
+                    else:
+                        logger.warning(msg)
+                        logger.info("Attempting to resolve '%' error(s).")
+                        statement = statement.replace("%", "%%")
+                        stmt_result, type_error, msg = execute_statement(connection, statement)
+                        if stmt_result == 0:
+                            logger.info(("The '%' replacement resolved the "
+                               "error(s)."))
+                            logger.info(msg + statement)
+                        else:
+                            logger.info(("The '%' replacement failed to resolve the "
+                               "error(s)."))
+                            logger.error(msg + statement)
+            failed += stmt_result
+
+        msg = (f"There are {failed} statements that failed execution.")
+        if failed == 0:
+            logger.info(msg)
+            logger.info("Committing all changes.")
+            trans.commit()
+            txn_result = 0
+        else:
+            logger.error(msg)
+            logger.info("Rolling back transaction.")
+            trans.rollback()
+            txn_result = 1
+    except:
+        print("Error executing MySQL statements.")
+        print("Rolling back transaction...")
+        logger.error("Unable to execute MySQL statements.")
+        logger.info("Rolling back transaction.")
+        trans.rollback()
+        txn_result = 1
+
+    return txn_result
+
+
+def execute_statement(connection, statement):
+    result = 0
+    type_error = False
+    try:
+        connection.execute(statement)
+    except sqlalchemy.exc.DBAPIError as err:
+        err_stmt = err.statement
+        sqla_err_type = str(type(err))
+        pymysql_err_type = str(type(err.orig))
+        pymysql_err_code = err.orig.args[0]
+        pymysql_err_msg = err.orig.args[1]
+        msg = (f"SQLAlchemy Error type: {sqla_err_type}. "
+               f"PyMySQL Error type: {pymysql_err_type}. "
+               f"PyMYSQL Error code: {pymysql_err_code}. "
+               f"PyMySQL Error message: {pymysql_err_msg}.")
+        if pymysql_err_code == 1062:
+            msg = "Duplicate entry error ignored. " + msg
+        else:
+            msg = "Unable to execute MySQL statement. " + msg
+            result = 1
+    except TypeError as err:
+        type_error = True
+        msg = "Unable to execute statement due to a TypeError. "
+        result = 1
+    except:
+        msg = "Unable to execute statement. "
+        result = 1
+    else:
+        msg = "Successful statement execution. "
+
+    return result, type_error, msg
