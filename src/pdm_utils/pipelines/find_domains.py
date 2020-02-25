@@ -225,8 +225,14 @@ def main(argument_list):
         command = get_rpsblast_command()
         rpsblast = get_rpsblast_path(command)
 
+    # Verify database connection and schema compatibility.
     engine = mysqldb.connect_to_db(database)
+    logger.info(f"Connected to database: {database}.")
+    mysqldb.check_schema_compatibility(engine, "the find_domains pipeline")
+    logger.info(f"Schema version is compatible.")
     logger.info("Command line arguments verified.")
+
+
 
     # Get gene data that needs to be processed
     # in dict format where key = column name, value = stored value.

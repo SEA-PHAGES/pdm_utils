@@ -10,7 +10,13 @@ from pdm_utils.functions import basic, mysqldb
 def main(unparsed_args):
     """Runs the complete update pipeline."""
     args = parse_args(unparsed_args)
+
+    # Verify database connection and schema compatibility.
+    print("Connecting to the MySQL database...")
     engine = mysqldb.connect_to_db(args.database)
+    mysqldb.check_schema_compatibility(engine, "the update pipeline")
+
+
     if args.version == True:
         mysqldb.change_version(engine)
         print("Database version updated.")

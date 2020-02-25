@@ -8,7 +8,13 @@ from pdm_utils.functions import mysqldb
 def main(unparsed_args_list):
     """Run main freeze database pipeline."""
     args = parse_args(unparsed_args_list)
-    engine1, msg = mysqldb.get_engine(database=args.database, echo=False)
+    # engine1, msg = mysqldb.get_engine(database=args.database, echo=False)
+
+    # Verify database connection and schema compatibility.
+    print("Connecting to the MySQL database...")
+    engine1 = mysqldb.connect_to_db(args.database)
+    mysqldb.check_schema_compatibility(engine1, "the freeze pipeline")
+
 
     # Get the number of draft genomes.
     query = "SELECT count(*) as count FROM phage WHERE Status != 'draft'"

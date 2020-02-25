@@ -76,10 +76,11 @@ def main(unparsed_args_list):
     logger.info(f"Results directory: {results_path}")
     logger.info("Command line arguments verified.")
 
-
-    # Get connection to database.
+    # Verify database connection and schema compatibility.
     engine = mysqldb.connect_to_db(args.database)
     logger.info(f"Connected to database: {args.database}.")
+    mysqldb.check_schema_compatibility(engine, "the import pipeline")
+    logger.info(f"Schema version is compatible.")
 
     # If everything checks out, pass on args for data input/output:
     data_io(engine=engine,

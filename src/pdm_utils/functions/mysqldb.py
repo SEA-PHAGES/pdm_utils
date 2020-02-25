@@ -624,13 +624,14 @@ def get_schema_version(engine):
     return schema_version
 
 # TODO unittest.
-def check_schema_compatibility(engine):
+def check_schema_compatibility(engine, tool):
     """Confirm database schema is compatible with code."""
     schema_version = get_schema_version(engine)
     code_version = constants.CODE_SCHEMA_VERSION
     if code_version != schema_version:
-        print(f"The database schema version is {schema_version}, but the code "
-              f"is compatible with schema version {code_version}.'")
+        print(f"The database schema version is {schema_version}, but "
+              f"{tool} is compatible with "
+              f"schema version {code_version}.")
         sys.exit(1)
 
 

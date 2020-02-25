@@ -52,9 +52,15 @@ def main(unparsed_args_list):
         sys.exit(1)
     ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
 
+
+    # Verify database connection and schema compatibility.
+    print("Connecting to the MySQL database...")
+    engine = mysqldb.connect_to_db(args.database)
+    mysqldb.check_schema_compatibility(engine, "the get_gb_records pipeline")
+
+
     # Create data sets
     print("Retrieving accessions from the database...")
-    engine = mysqldb.connect_to_db(args.database)
     accessions = mysqldb.create_accession_set(engine)
     engine.dispose()
     if "" in accessions:

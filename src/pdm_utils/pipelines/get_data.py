@@ -139,10 +139,10 @@ def main(unparsed_args_list):
 
     ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
 
-    # Create data sets
+    # Verify database connection and schema compatibility.
     print("Preparing genome data sets from the MySQL database...")
     engine = mysqldb.connect_to_db(args.database)
-    mysqldb.check_schema_compatibility(engine)
+    mysqldb.check_schema_compatibility(engine, "the get_data pipeline")
 
     # Get existing data from MySQL to determine what needs to be updated.
     query = ("SELECT PhageID, Name, HostGenus, Status, Cluster, "
