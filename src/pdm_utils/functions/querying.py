@@ -59,17 +59,19 @@ def build_whereclause(db_graph, filter_expression):
     whereclause = None
 
     if filter_params[2] == "=":
-        whereclause = column_object == filter_params[3]
-    elif filter_params[2] == "!=":
-        whereclause = column_object != filter_params[3]
+        whereclause = (column_object  ==  filter_params[3])
+    elif filter_params[2] == "LIKE":
+        whereclause = (column_object.like(filter_params[3]))
+    elif filter_params[2] == "!=" or filter_params[2] == "IS NOT":
+        whereclause = (column_object  !=  filter_params[3])
     elif filter_params[2] == ">" :
-        whereclause = column_object >  filter_params[3]
+        whereclause = (column_object  >   filter_params[3])
     elif filter_params[2] == ">=":
-        whereclause = column_object >= filter_params[3]
+        whereclause = (column_object  >=  filter_params[3])
     elif filter_params[2] == "<" :
-        whereclause = column_object <  filter_params[3]
+        whereclause = (column_object  <   filter_params[3])
     elif filter_params[2] == "<=":
-        whereclause = column_object <= filter_params[3]
+        whereclause = (column_object  <=  filter_params[3])
 
     return whereclause 
 
