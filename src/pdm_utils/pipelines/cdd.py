@@ -220,30 +220,10 @@ def main(argument_list):
         print(msg)
         return
 
+    # Get the rpsblast command and path.
     if rpsblast == "":
-
-        # Get the rpsblast command.
         command = get_rpsblast_command()
-
-        # If we didn't exit, we have a command.
-        # Run it, and PIPE stdout into rpsblast_path
-        with Popen(args=command, stdout=PIPE) as proc:
-            rpsblast = proc.stdout.read().decode("utf-8").rstrip("\n")
-
-        # If empty string, rpsblast not found in globally
-        # available executables, otherwise proceed with value.
-        if rpsblast == "":
-            msg = ("No rpsblast binary found. "
-                  "If you have rpsblast on your machine, please try "
-                  "again with the '--rpsblast' flag and provide the "
-                  "full path to your rpsblast binary.")
-            logger.error(msg)
-            print(msg)
-            return
-        else:
-            msg = f"Found rpsblast binary at '{rpsblast}'..."
-            logger.info(msg)
-            print(msg)
+        rpsblast = get_rpsblast_path(command)
 
     engine = mysqldb.connect_to_db(database)
     logger.info("Command line arguments verified.")
@@ -298,6 +278,31 @@ def get_rpsblast_command():
         print(msg)
         sys.exit(1)
     return command
+
+
+def get_rpsblast_path(command):
+    """Determine rpsblast+ binary path."""
+
+    # If we didn't exit, we have a command.
+    # Run it, and PIPE stdout into rpsblast_path
+    with Popen(args=command, stdout=PIPE) as proc:
+        rpsblast = proc.stdout.read().decode("utf-8").rstrip("\n")
+
+    # If empty string, rpsblast not found in globally
+    # available executables, otherwise proceed with value.
+    if rpsblast == "":
+        msg = ("No rpsblast binary found. "
+              "If you have rpsblast on your machine, please try "
+              "again with the '--rpsblast' flag and provide the "
+              "full path to your rpsblast binary.")
+        logger.error(msg)
+        print(msg)
+        sys.exit(1)
+    else:
+        msg = f"Found rpsblast binary at '{rpsblast}'..."
+        logger.info(msg)
+        print(msg)
+        return rpsblast
 
 
 def log_gene_ids(cdd_genes):
