@@ -59,17 +59,20 @@ def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""
 
     RETRIEVE_HELP = ("Pipeline to retrieve new data to import into a "
-                            "MySQL database.")
+                     "MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
-    OUTPUT_FOLDER_HELP = ("Path to the directory where updates will be stored.")
+    OUTPUT_FOLDER_HELP = "Path to the directory where updates will be stored."
     UPDATES_HELP = ("Retrieve updates to HostGenus, Cluster, "
-                           "Subcluster, and Accession field data from PhagesDB.")
-    DRAFT_HELP = ("Retrieve auto-annotated 'draft' genomes from PECAAN.")
+                    "Subcluster, and Accession field data from PhagesDB.")
+    DRAFT_HELP = "Retrieve auto-annotated 'draft' genomes from PECAAN."
     FINAL_HELP = ("Retrieve new manually-annotated 'final' "
-                         "genomes from PhagesDB.")
-    GENBANK_HELP = ("Retrieve revised annotated genomes from GenBank.")
-    ALL_HELP = ("Retrieve all types of new data.")
-    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
+                  "genomes from PhagesDB.")
+    GENBANK_HELP = "Retrieve revised annotated genomes from GenBank."
+    ALL_HELP = "Retrieve all types of new data."
+    NCBI_CRED_FILE_HELP = "Path to the file containing NCBI credentials."
+    GENBANK_RESULTS_HELP = "Store results of Genbank record retrieval."
+
+
 
     parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
@@ -87,6 +90,8 @@ def parse_args(unparsed_args_list):
         default=False, help=ALL_HELP)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
         help=NCBI_CRED_FILE_HELP)
+    parser.add_argument("-gr", "--genbank_results", action="store_true",
+        default=False, help=GENBANK_RESULTS_HELP)
 
 
     # Assumed command line arg structure:
@@ -109,6 +114,7 @@ def parse_args(unparsed_args_list):
 
     if args.genbank == False:
         args.ncbi_credentials_file = None
+        args.genbank_results = False
 
     return args
 
@@ -177,7 +183,8 @@ def main(unparsed_args_list):
     if args.final is True:
         get_final_data(working_path, matched_genomes)
     if args.genbank is True:
-        get_genbank_data(working_path, mysqldb_genome_dict, ncbi_cred_dict)
+        get_genbank_data(working_path, mysqldb_genome_dict,
+                         ncbi_cred_dict, args.genbank_results)
     if args.draft is True:
         get_draft_data(working_path, unmatched_phagesdb_ids)
     print("\n\n\nRetrieve updates script completed.")
@@ -424,9 +431,11 @@ def get_final_data(output_folder, matched_genomes):
             print(element)
         input("\n\nPress ENTER to continue.")
 
-
-
-
+    # Now remove empty folders.
+    if len(basic.identify_contents(genome_folder, kind=None)) == 0:
+        genome_folder.rmdir()
+    if len(basic.identify_contents(phagesdb_folder, kind=None)) == 0:
+        phagesdb_folder.rmdir()
 
 
 # TODO unittest.
@@ -465,9 +474,9 @@ def set_phagesdb_gnm_file(gnm):
 
 
 # TODO unittest.
-def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={}):
+def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
+                     genbank_results=False):
     """Run sub-pipeline to retrieve genomes from GenBank."""
-
     # Flow of the NCBI record retrieval process:
     # 1 Create list of phages to check for updates at NCBI (completed above)
     # 2 Using esearch, verify which accessions are valid
@@ -524,10 +533,11 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={}):
     if len(new_record_list) > 0:
         save_files_and_tkts(new_record_list, unique_accession_dict, ncbi_folder)
 
-    # Record all results.
-    filepath3 = basic.prepare_filepath(ncbi_folder, "ncbi_results.csv")
-    basic.export_data_dict(ncbi_results_list, filepath3,
-                               NCBI_RESULTS_COLUMNS, include_headers=True)
+    # Record retrieval results for all phages.
+    if genbank_results == True:
+        filepath3 = basic.prepare_filepath(ncbi_folder, "genbank_results.csv")
+        basic.export_data_dict(ncbi_results_list, filepath3,
+                                   NCBI_RESULTS_COLUMNS, include_headers=True)
 
     # Print summary of script
     tallies["auto_updated"] = tallies["total"] - tallies["not_auto_updated"]
@@ -551,6 +561,12 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={}):
     print(f"{tallies['docsum_not_new']:>6}: retrieved but docsum not new")
     print(f"{tallies['record_not_new']:>6}: retrieved but record not new")
     print(f"{tallies['retrieved_for_import']:>6}: retrieved for import")
+
+    # Now remove empty folders.
+    if len(basic.identify_contents(ncbi_folder, kind=None)) == 0:
+        ncbi_folder.rmdir()
+
+
 
 
 # TODO unittest.
