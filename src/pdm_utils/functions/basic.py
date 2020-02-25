@@ -1231,14 +1231,3 @@ def join_strings(input_list, delimiter=" "):
     else:
         string = ""
     return string
-
-# def join_strings(delimiter=" ", *args):
-#     string = ""
-#     concat_list = []
-#     for arg in args:
-#         if (arg is not None and arg != ""):
-#             if string != "":
-#                 string = string + delimiter + arg
-#             else:
-#                 string = arg
-#     return string

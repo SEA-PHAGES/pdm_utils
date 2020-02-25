@@ -9,6 +9,7 @@ import sqlalchemy
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import cds
+from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
 
@@ -621,6 +622,16 @@ def get_schema_version(engine):
     else:
         schema_version = 0
     return schema_version
+
+# TODO unittest.
+def check_schema_compatibility(engine):
+    """Confirm database schema is compatible with code."""
+    schema_version = get_schema_version(engine)
+    code_version = constants.CODE_SCHEMA_VERSION
+    if code_version != schema_version:
+        print(f"The database schema version is {schema_version}, but the code "
+              f"is compatible with schema version {code_version}.'")
+        sys.exit(1)
 
 
 # TODO unittest.
