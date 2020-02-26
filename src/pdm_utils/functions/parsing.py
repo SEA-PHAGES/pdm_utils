@@ -19,7 +19,6 @@ def parse_out_ends(unparsed_string):
 
     return trimmed_string
 
-
 def parse_in_ends(unparsed_string_list):
     if not isinstance(unparsed_string_list, list):
         raise TypeError(f"Parameter type required is of type list.")
@@ -30,7 +29,7 @@ def parse_in_ends(unparsed_string_list):
 
     return joined_string
 
-def parse_cmd_filters(unparsed_cmd_string): 
+def parse_cmd_string(unparsed_cmd_string): 
     cmd_line_format = re.compile(".+ + AND|.+ + OR|.+")
     
     if re.match(cmd_line_format, unparsed_cmd_string) != None:
@@ -55,7 +54,7 @@ def parse_cmd_filters(unparsed_cmd_string):
 
     return or_splits
 
-def parse_cmd_line(unparsed_string_list):
+def parse_cmd_list(unparsed_string_list):
     joined_string = parse_in_ends(unparsed_string_list)
     parsed_cmd_filters = parse_cmd_filters(joined_string)
 

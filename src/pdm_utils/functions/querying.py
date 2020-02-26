@@ -56,22 +56,27 @@ def build_whereclause(db_graph, filter_expression):
  
     parsing.check_operator(filter_params[2], column_object)
 
+    right = filter_params[3]
+
+    if column_object.type.python_type == bytes:
+        right = right.encode("utf-8")
+
     whereclause = None
 
     if filter_params[2] == "=":
-        whereclause = (column_object  ==  filter_params[3])
+        whereclause = (column_object  ==  right)
     elif filter_params[2] == "LIKE":
-        whereclause = (column_object.like(filter_params[3]))
+        whereclause = (column_object.like(right))
     elif filter_params[2] == "!=" or filter_params[2] == "IS NOT":
-        whereclause = (column_object  !=  filter_params[3])
+        whereclause = (column_object  !=  right)
     elif filter_params[2] == ">" :
-        whereclause = (column_object  >   filter_params[3])
+        whereclause = (column_object  >   right)
     elif filter_params[2] == ">=":
-        whereclause = (column_object  >=  filter_params[3])
+        whereclause = (column_object  >=  right)
     elif filter_params[2] == "<" :
-        whereclause = (column_object  <   filter_params[3])
+        whereclause = (column_object  <   right)
     elif filter_params[2] == "<=":
-        whereclause = (column_object  <=  filter_params[3])
+        whereclause = (column_object  <=  right)
 
     return whereclause 
 

@@ -147,7 +147,7 @@ class Filter:
         parsed_filter = parsing.parse_filter(filter)
         filter_left = parsed_filter[0] + "." + parsed_filter[1]\
                     + parsed_filter[2]
-        
+       
         if filter_left not in self._filters.keys():
             self._filters.update({filter_left : [where_clause]}) 
             

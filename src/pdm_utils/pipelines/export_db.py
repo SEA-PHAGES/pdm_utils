@@ -62,8 +62,6 @@ def run_export(unparsed_args_list):
 
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values = parse_value_list_input(args.input)
-        #To be implemented when argparse functionality is updated
-                #filters = parsing.parse_cmd_line(args.filters)
         filters = args.filters
         groups = args.groups
 
@@ -197,7 +195,8 @@ def parse_export(unparsed_args_list):
         parser.add_argument("-in", "--import_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input",
                                 default=[])
-        parser.add_argument("-f", "--filter", nargs="*",
+        parser.add_argument("-f", "--filter", nargs="?",
+                                type=parsing.parse_cmd_string,
                                 help=FILTERS_HELP,
                                 dest="filters")
         parser.add_argument("-g", "--group", nargs="*",
@@ -279,12 +278,9 @@ def execute_export(alchemist, output_path, output_name,
         db_filter = Filter(loader=alchemist, key=primary_key)
         db_filter.values = values
 
-        #To be added when argparse functionality updated
-        #for or_filters in filters:
-        #    for filter in or_filters:
-        #        db_filter.add(filter)
-        for filter in filters:
-            db_filter.add(filter)
+        for or_filters in filters:
+            for filter in or_filters:
+                db_filter.add(filter)
 
         db_filter.update()
 
