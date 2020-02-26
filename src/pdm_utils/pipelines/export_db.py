@@ -23,6 +23,7 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
 
 # Valid file formats using Biopython
@@ -61,6 +62,8 @@ def run_export(unparsed_args_list):
 
     if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
         values = parse_value_list_input(args.input)
+        #To be implemented when argparse functionality is updated
+                #filters = parsing.parse_cmd_line(args.filters)
         filters = args.filters
         groups = args.groups
 
@@ -275,8 +278,14 @@ def execute_export(alchemist, output_path, output_name,
 
         db_filter = Filter(loader=alchemist, key=primary_key)
         db_filter.values = values
+
+        #To be added when argparse functionality updated
+        #for or_filters in filters:
+        #    for filter in or_filters:
+        #        db_filter.add(filter)
         for filter in filters:
             db_filter.add(filter)
+
         db_filter.update()
 
         if filters and not db_filter.values:
