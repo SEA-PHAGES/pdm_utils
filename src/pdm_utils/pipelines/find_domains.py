@@ -352,6 +352,7 @@ def insert_domain_data(engine, results):
 def execute_transaction(connection, statement_list=list()):
     trans = connection.begin()
     failed = 0
+    index = 0
     # Even though the execution of individual statements are handled within
     # a try/exept block, this try/except block encapsulates all code
     # that is executed while uncommitted changes have been made to the database.
@@ -360,9 +361,12 @@ def execute_transaction(connection, statement_list=list()):
     # crash the code and possibly result in changes made to the database
     # that shouldn't be persisted.
     try:
-        for i in range(len(statement_list)):
-            statement = statement_list[i]
-            stmt_result, type_error, msg = execute_statement(connection, statement)
+        # Try to execute statements as long as none of them failed.
+        # Once one statement fails, don't try to execute any other statements.
+        while (failed == 0 and index < len(statement_list)):
+            statement = statement_list[index]
+            stmt_result, type_error, msg = execute_statement(connection,
+                                                             statement)
             msg = msg + "Statement: " + statement
             if stmt_result == 0:
                 logger.info(msg)
@@ -390,16 +394,18 @@ def execute_transaction(connection, statement_list=list()):
                         logger.warning(msg)
                         logger.info("Attempting to resolve '%' error(s).")
                         statement = statement.replace("%", "%%")
-                        stmt_result, type_error, msg = execute_statement(connection, statement)
+                        stmt_result, type_error, msg = execute_statement(
+                                                        connection, statement)
                         if stmt_result == 0:
                             logger.info(("The '%' replacement resolved the "
-                               "error(s)."))
+                                         "error(s)."))
                             logger.info(msg + statement)
                         else:
-                            logger.info(("The '%' replacement failed to resolve the "
-                               "error(s)."))
+                            logger.info(("The '%' replacement failed to "
+                                         "resolve the error(s)."))
                             logger.error(msg + statement)
             failed += stmt_result
+            index += 1
 
         msg = (f"There are {failed} statements that failed execution.")
         if failed == 0:
@@ -424,7 +430,6 @@ def execute_transaction(connection, statement_list=list()):
 
 
 def execute_statement(connection, statement):
-    result = 0
     type_error = False
     try:
         connection.execute(statement)
@@ -440,6 +445,7 @@ def execute_statement(connection, statement):
                f"PyMySQL Error message: {pymysql_err_msg}.")
         if pymysql_err_code == 1062:
             msg = "Duplicate entry error ignored. " + msg
+            result = 0
         else:
             msg = "Unable to execute MySQL statement. " + msg
             result = 1
@@ -447,10 +453,13 @@ def execute_statement(connection, statement):
         type_error = True
         msg = "Unable to execute statement due to a TypeError. "
         result = 1
+    # TODO not sure how to test this block. Would need to construct a
+    # statement that causes a Python built-in exception other than TypeError.
     except:
         msg = "Unable to execute statement. "
         result = 1
     else:
         msg = "Successful statement execution. "
+        result = 0
 
     return result, type_error, msg
