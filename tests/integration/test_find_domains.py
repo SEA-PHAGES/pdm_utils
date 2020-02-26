@@ -560,7 +560,6 @@ class TestFindDomains1(unittest.TestCase):
 
 
 
-
 class TestFindDomains2(unittest.TestCase):
 
     def setUp(self):
@@ -571,18 +570,26 @@ class TestFindDomains2(unittest.TestCase):
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
         self.connection = self.engine.connect()
-        # self.trans = self.connection.begin()
 
 
     def tearDown(self):
         remove_db(db, user, pwd)
-        # self.trans.rollback()
         self.engine.dispose()
 
 
 
 
     def test_execute_transaction_1(self):
+        """Verify function runs with list of zero statements."""
+        result = find_domains.execute_transaction(self.connection)
+        domain_table_results = get_sql_data(db, user, pwd, domain_table_query)
+        with self.subTest():
+            self.assertEqual(len(domain_table_results), 0)
+        with self.subTest():
+            self.assertEqual(result, 0)
+
+
+    def test_execute_transaction_2(self):
         """Verify list of one valid statement can be inserted into domain table."""
         domain_data = get_trixie_domain_table_data_1()
         statement = get_domain_insert_statement(domain_data)
@@ -595,7 +602,7 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(result, 0)
 
 
-    def test_execute_transaction_2(self):
+    def test_execute_transaction_3(self):
         """Verify list of two valid statements can be inserted into
         domain and gene_domain tables"""
         domain_data = get_trixie_domain_table_data_1()
@@ -616,9 +623,9 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(result, 0)
 
 
-    def test_execute_transaction_3(self):
-        """Verify list of three statements, one with duplicated HitID though,
-        are inserted."""
+    def test_execute_transaction_4(self):
+        """Verify list of three statements (including one with
+        duplicated HitID) are inserted."""
         domain_data1 = get_trixie_domain_table_data_1()
         insert_data_into_domain_table(db, user, pwd, domain_data1)
         domain_table_results1 = get_sql_data(db, user, pwd,
@@ -652,7 +659,7 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(domain_status, 1)
 
 
-    def test_execute_transaction_4(self):
+    def test_execute_transaction_5(self):
         """Verify list of three valid statements and one invalid statement
         are NOT inserted. All statements rolled back."""
         # Valid
@@ -688,7 +695,7 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(domain_status, 0)
 
 
-    def test_execute_transaction_5(self):
+    def test_execute_transaction_6(self):
         """Verify list of three valid statements and one invalid statement
         (containing '%') are inserted (since '%' replaced with '%%')."""
         # Valid
@@ -732,7 +739,7 @@ class TestFindDomains2(unittest.TestCase):
     # actually made to the database. This test just confirms that the except
     # block is entered.
     @patch("pdm_utils.pipelines.find_domains.execute_statement")
-    def test_execute_transaction_6(self, es_mock):
+    def test_execute_transaction_7(self, es_mock):
         """Verify error inside try/except block is executed."""
         stmt_result1 = 0
         type_error1 = False
@@ -766,9 +773,6 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(result, 1)
         with self.subTest():
             self.assertEqual(es_mock.call_count, 2)
-
-
-
 
 
 if __name__ == '__main__':

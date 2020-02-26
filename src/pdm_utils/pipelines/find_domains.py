@@ -349,7 +349,7 @@ def insert_domain_data(engine, results):
         print("\n\n\n" + msg)
 
 
-def execute_transaction(connection, statement_list=list()):
+def execute_transaction(connection, statement_list=[]):
     trans = connection.begin()
     failed = 0
     index = 0
