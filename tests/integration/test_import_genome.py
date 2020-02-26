@@ -63,8 +63,73 @@ unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
 
 test_files_path = Path(unittest_dir, "test_files")
-schema_file = "test_schema7.sql"
+schema_version = constants.CODE_SCHEMA_VERSION
+schema_file = f"test_schema_{schema_version}.sql"
 schema_filepath = Path(test_files_path, schema_file)
+version_table_data = {"Version":1, "SchemaVersion":schema_version}
+
+
+def create_new_db(schema_filepath, db, user, pwd):
+    """Creates a new, empty database."""
+    connection = pymysql.connect(host = "localhost",
+                                 user = user,
+                                 password = pwd,
+                                 cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+
+    # First, test if a test database already exists within mysql.
+    # If there is, delete it so that a fresh test database is installed.
+    sql = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
+          f"WHERE SCHEMA_NAME = '{db}'")
+    cur.execute(sql)
+    result = cur.fetchall()
+    if len(result) != 0:
+        cur.execute(f"DROP DATABASE {db}")
+        connection.commit()
+
+    # Next, create the database within mysql.
+    cur.execute(f"CREATE DATABASE {db}")
+    connection.commit()
+    connection.close()
+
+    # Now import the empty schema from file.
+    # Seems like pymysql has trouble with this step, so use subprocess.
+    handle = open(schema_filepath, "r")
+    command_string = f"mysql -u {user} -p{pwd} {db}"
+    command_list = command_string.split(" ")
+    proc = subprocess.check_call(command_list, stdin = handle)
+    handle.close()
+
+
+def remove_db(db, user, pwd):
+    """Remove the MySQL database created for the test."""
+    connection = pymysql.connect(host="localhost",
+                                 user=user,
+                                 password=pwd,
+                                 cursorclass=pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    cur.execute(f"DROP DATABASE {db}")
+    connection.commit()
+    connection.close()
+
+def insert_data_into_version_table(db, user, pwd, data_dict):
+    """Insert data into the version table."""
+    connection = pymysql.connect(host = "localhost",
+                                 user = user,
+                                 password = pwd,
+                                 database = db,
+                                 cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    sql = (
+        "INSERT INTO version "
+        "(Version, SchemaVersion) "
+        "VALUES ("
+        f"'{data_dict['Version']}', '{data_dict['SchemaVersion']}');"
+        )
+    cur.execute(sql)
+    connection.commit()
+    connection.close()
+
 
 def count_contents(path_to_folder):
     count = 0
@@ -76,45 +141,12 @@ def count_contents(path_to_folder):
 
 
 
-
-
-
-
-###TODO uncomment!
-
-
 class TestImportGenomeMain1(unittest.TestCase):
 
 
     def setUp(self):
-        connection = pymysql.connect(host = "localhost",
-                                     user = user,
-                                     password = pwd,
-                                     cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-
-        # First, test if a test database already exists within mysql.
-        # If there is, delete it so that a fresh test database is installed.
-        sql = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
-              f"WHERE SCHEMA_NAME = '{db}'")
-        cur.execute(sql)
-        result = cur.fetchall()
-        if len(result) != 0:
-            cur.execute(f"DROP DATABASE {db}")
-            connection.commit()
-
-        # Next, create the database within mysql.
-        cur.execute(f"CREATE DATABASE {db}")
-        connection.commit()
-        connection.close()
-
-        # Now import the empty schema from file.
-        # Seems like pymysql has trouble with this step, so use subprocess.
-        handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {db}"
-        command_list = command_string.split(" ")
-        proc = subprocess.check_call(command_list, stdin = handle)
-        handle.close()
+        create_new_db(schema_filepath, db, user, pwd)
+        insert_data_into_version_table(db, user, pwd, version_table_data)
 
         self.base_dir = Path(test_root_dir, "test_import")
         self.base_dir.mkdir()
@@ -172,14 +204,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.engine.dispose()
 
         # Remove the MySQL database created for the test.
-        connection = pymysql.connect(host="localhost",
-                                     user=user,
-                                     password=pwd,
-                                     cursorclass=pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
+        remove_db(db, user, pwd)
 
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
@@ -695,8 +720,9 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.engine.dispose()
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("pdm_utils.functions.mysqldb.check_schema_compatibility")
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock, data_io_mock):
+    def test_main_1(self, ctd_mock, csc_mock, data_io_mock):
         """Verify that correct args calls data_io."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
@@ -730,9 +756,10 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("pdm_utils.functions.mysqldb.check_schema_compatibility")
     @patch("sys.exit")
     @patch("getpass.getpass")
-    def test_main_4(self, getpass_mock, sys_exit_mock, data_io_mock):
+    def test_main_4(self, getpass_mock, sys_exit_mock, csc_mock, data_io_mock):
         """Verify that invalid database calls sys exit."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()

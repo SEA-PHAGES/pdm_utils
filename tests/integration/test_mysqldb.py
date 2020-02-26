@@ -26,8 +26,56 @@ engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
 
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
-schema_file = "test_schema7.sql"
+schema_version = constants.CODE_SCHEMA_VERSION
+schema_file = f"test_schema_{schema_version}.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+
+
+def create_new_db(schema_filepath, db, user, pwd):
+    """Creates a new, empty database."""
+    connection = pymysql.connect(host = "localhost",
+                                 user = user,
+                                 password = pwd,
+                                 cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+
+    # First, test if a test database already exists within mysql.
+    # If there is, delete it so that a fresh test database is installed.
+    sql = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
+          f"WHERE SCHEMA_NAME = '{db}'")
+    cur.execute(sql)
+    result = cur.fetchall()
+    if len(result) != 0:
+        cur.execute(f"DROP DATABASE {db}")
+        connection.commit()
+
+    # Next, create the database within mysql.
+    cur.execute(f"CREATE DATABASE {db}")
+    connection.commit()
+    connection.close()
+
+    # Now import the empty schema from file.
+    # Seems like pymysql has trouble with this step, so use subprocess.
+    handle = open(schema_filepath, "r")
+    command_string = f"mysql -u {user} -p{pwd} {db}"
+    command_list = command_string.split(" ")
+    proc = subprocess.check_call(command_list, stdin = handle)
+    handle.close()
+
+
+def remove_db(db, user, pwd):
+    """Remove the MySQL database created for the test."""
+    connection = pymysql.connect(host="localhost",
+                                 user=user,
+                                 password=pwd,
+                                 cursorclass=pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    cur.execute(f"DROP DATABASE {db}")
+    connection.commit()
+    connection.close()
+
+
+
 
 
 
@@ -40,48 +88,13 @@ class TestMysqldbFunctions1(unittest.TestCase):
         Each unittest will populate the empty database as needed."""
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        create_new_db(schema_filepath, db, user, pwd)
 
-        connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-
-        # First, test if a test database already exists within mysql.
-        # If there is, delete it so that a fresh test database is installed.
-        sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              f"WHERE SCHEMA_NAME = '{db}'"
-        cur.execute(sql)
-        result = cur.fetchall()
-
-        if len(result) != 0:
-            cur.execute(f"DROP DATABASE {db}")
-            connection.commit()
-
-        # Next, create the database within mysql.
-        cur.execute(f"CREATE DATABASE {db}")
-        connection.commit()
-        connection.close()
-
-        # Now import the empty schema from file.
-        # Seems like pymysql has trouble with this step, so use subprocess.
-        handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {db}"
-        command_list = command_string.split(" ")
-        proc = subprocess.check_call(command_list, stdin = handle)
-        handle.close()
 
 
     def tearDown(self):
         self.engine.dispose()
-        connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
+        remove_db(db, user, pwd)
 
 
     def test_create_phage_id_set_1(self):
@@ -1150,36 +1163,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         expected schema.
         Each unittest will populate the empty database as needed."""
 
-
-        connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-
-        # First, test if a test database already exists within mysql.
-        # If there is, delete it so that a fresh test database is installed.
-        sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              f"WHERE SCHEMA_NAME = '{db}'"
-        cur.execute(sql)
-        result = cur.fetchall()
-
-        if len(result) != 0:
-            cur.execute(f"DROP DATABASE {db}")
-            connection.commit()
-
-        # Next, create the database within mysql.
-        cur.execute(f"CREATE DATABASE {db}")
-        connection.commit()
-        connection.close()
-
-        # Now import the empty schema from file.
-        # Seems like pymysql has trouble with this step, so use subprocess.
-        handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {db}"
-        command_list = command_string.split(" ")
-        proc = subprocess.check_call(command_list, stdin = handle)
-        handle.close()
+        create_new_db(schema_filepath, db, user, pwd)
 
         # Add the L5 genome to the phage table.
         insert1 = ("INSERT INTO phage "
@@ -1216,15 +1200,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
 
     def tearDown(self):
-        connection = pymysql.connect(host = "localhost",
-                                        user = user,
-                                        password = pwd,
-                                        cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
         self.engine.dispose()
+        remove_db(db, user, pwd)
 
 
 

@@ -353,3 +353,12 @@ Any changes made to the structure (schema) of the database (in the form of schem
         - page describing the current database
         - page describing prior schema version schema maps
         - page describing schema version changelog
+
+    15. Update files requires for integration tests:
+
+        1. Copy the new empty schema file to the following directory::
+
+            tests/integration/test_files/
+
+        2. Rename the file to 'test_schema_<schema_version>.sql'
+        3. Remove the test schema file of the prior version.

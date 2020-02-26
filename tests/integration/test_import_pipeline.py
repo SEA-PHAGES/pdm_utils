@@ -114,8 +114,11 @@ pwd = "pdm_anon"
 db = "test_db"
 unittest_file = Path(__file__)
 unittest_dir = unittest_file.parent
-schema_file = "test_schema7.sql"
+schema_version = constants.CODE_SCHEMA_VERSION
+schema_file = f"test_schema_{schema_version}.sql"
 schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+version_table_data = {"Version":1, "SchemaVersion":schema_version}
+
 
 # Alice ("test_flat_file_10.gb"),
 base_flat_file = Path("test_flat_file_10.gb")
@@ -144,7 +147,7 @@ fail_alice_path = Path(fail_genomes_path, alice_flat_file)
 fail_l5_path = Path(fail_genomes_path, l5_flat_file)
 
 
-def create_new_db(schema_file, db, user, pwd):
+def create_new_db(schema_filepath, db, user, pwd):
     """Creates a new, empty database."""
     connection = pymysql.connect(host = "localhost",
                                  user = user,
@@ -184,6 +187,25 @@ def remove_db(db, user, pwd):
                                  cursorclass=pymysql.cursors.DictCursor)
     cur = connection.cursor()
     cur.execute(f"DROP DATABASE {db}")
+    connection.commit()
+    connection.close()
+
+
+def insert_data_into_version_table(db, user, pwd, data_dict):
+    """Insert data into the version table."""
+    connection = pymysql.connect(host = "localhost",
+                                 user = user,
+                                 password = pwd,
+                                 database = db,
+                                 cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    sql = (
+        "INSERT INTO version "
+        "(Version, SchemaVersion) "
+        "VALUES ("
+        f"'{data_dict['Version']}', '{data_dict['SchemaVersion']}');"
+        )
+    cur.execute(sql)
     connection.commit()
     connection.close()
 
@@ -905,7 +927,8 @@ class TestImportGenomeMain1(unittest.TestCase):
     """
 
     def setUp(self):
-        create_new_db(schema_file, db, user, pwd)
+        create_new_db(schema_filepath, db, user, pwd)
+        insert_data_into_version_table(db, user, pwd, version_table_data)
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()
@@ -2088,7 +2111,8 @@ class TestImportGenomeMain2(unittest.TestCase):
 
 
     def setUp(self):
-        create_new_db(schema_file, db, user, pwd)
+        create_new_db(schema_filepath, db, user, pwd)
+        insert_data_into_version_table(db, user, pwd, version_table_data)
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()

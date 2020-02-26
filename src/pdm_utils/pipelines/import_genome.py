@@ -79,6 +79,8 @@ def main(unparsed_args_list):
     # Verify database connection and schema compatibility.
     engine = mysqldb.connect_to_db(args.database)
     logger.info(f"Connected to database: {args.database}.")
+
+    # TODO unittest schema compatibility.
     mysqldb.check_schema_compatibility(engine, "the import pipeline")
     logger.info(f"Schema version is compatible.")
 
