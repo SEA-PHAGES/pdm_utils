@@ -181,7 +181,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.data_dict["retrieve_record"] = 1
         self.data_dict["accession"] = "ABC123"
 
-        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1 = ticket.ImportTicket()
         self.tkt1.id = 1
         self.tkt1.type = "add"
         self.tkt1.phage_id = "L5"
@@ -190,7 +190,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.eval_flags = self.eval_flags
         self.tkt1.data_dict = self.data_dict
 
-        self.tkt2 = ticket.GenomeTicket()
+        self.tkt2 = ticket.ImportTicket()
 
         self.id_dict = constants.PHAGE_ID_DICT
 
@@ -939,7 +939,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict1["cluster"] = "A"
         self.data_dict1["annotation_status"] = "draft"
 
-        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1 = ticket.ImportTicket()
         self.tkt1.id = 1
         self.tkt1.phage_id = "L5"
         self.tkt1.run_mode = "final"
@@ -956,7 +956,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2["host_genus"] = "Gordonia"
         self.data_dict2["cluster"] = "B"
 
-        self.tkt2 = ticket.GenomeTicket()
+        self.tkt2 = ticket.ImportTicket()
         self.tkt2.id = 2
         self.tkt2.phage_id = "Trixie"
         self.tkt2.run_mode = "final"
@@ -1374,11 +1374,11 @@ class TestImportGenomeMain6(unittest.TestCase):
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
-        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1 = ticket.ImportTicket()
         self.tkt1.phage_id = "L5"
         self.tkt1.host_genus = "Mycobacterium"
 
-        self.tkt2 = ticket.GenomeTicket()
+        self.tkt2 = ticket.ImportTicket()
         self.tkt2.phage_id = "Trixie"
         self.tkt2.host_genus = "Mycobacterium"
 
@@ -1706,7 +1706,7 @@ class TestImportGenomeMain7(unittest.TestCase):
         self.eval_error1 = eval.Eval(status="error")
 
 
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
 
         self.cds1 = cds.Cds()
         self.cds1.id = "CDS1"
@@ -2336,7 +2336,7 @@ class TestImportGenomeMain8(unittest.TestCase):
         self.field = "product"
 
         self.gnm = genome.Genome()
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")

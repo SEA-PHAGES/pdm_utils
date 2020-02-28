@@ -201,7 +201,7 @@ class Bundle:
         eval_dict = {}
         if len(self.evaluations) > 0:
             eval_dict["bundle"] = self.evaluations
-        if isinstance(self.ticket, ticket.GenomeTicket):
+        if isinstance(self.ticket, ticket.ImportTicket):
             if len(self.ticket.evaluations) > 0:
                 eval_dict["ticket"] = self.ticket.evaluations
         for key in self.genome_dict.keys():

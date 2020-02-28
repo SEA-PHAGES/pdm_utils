@@ -15,7 +15,7 @@ class TestGenomePairClass(unittest.TestCase):
     def setUp(self):
         self.genome1 = genome.Genome()
         self.genome2 = genome.Genome()
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
         self.genome_pair = genomepair.GenomePair()
         self.genome_pair.genome1 = self.genome1
         self.genome_pair.genome2 = self.genome2

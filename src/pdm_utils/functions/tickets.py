@@ -87,7 +87,7 @@ def parse_import_ticket_data(data_dict):
     ticket_attributes = constants.IMPORT_TABLE_STRUCTURE["valid_ticket"]
     other_attributes = data_dict.keys() - ticket_attributes
 
-    tkt = ticket.GenomeTicket()
+    tkt = ticket.ImportTicket()
     tkt.data_dict = data_dict
     for attr in ticket_attributes:
         attr_value = data_dict[attr]

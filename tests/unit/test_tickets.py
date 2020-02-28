@@ -391,12 +391,12 @@ class TestTicketFunctions1(unittest.TestCase):
     def test_identify_duplicates_1(self):
         """Verify no duplicates are produced."""
 
-        ticket1 = ticket.GenomeTicket()
+        ticket1 = ticket.ImportTicket()
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
 
-        ticket2 = ticket.GenomeTicket()
+        ticket2 = ticket.ImportTicket()
         ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "L5"
@@ -416,12 +416,12 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify two tickets with 'none' duplicates
         do not generate an error."""
 
-        ticket1 = ticket.GenomeTicket()
+        ticket1 = ticket.ImportTicket()
         ticket1.id = "none"
         ticket1.type = "replace"
         ticket1.phage_id = "none"
 
-        ticket2 = ticket.GenomeTicket()
+        ticket2 = ticket.ImportTicket()
         ticket2.id = "none"
         ticket2.type = "replace"
         ticket2.phage_id = "none"
@@ -440,12 +440,12 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify two tickets with id duplicates
         do generate an error."""
 
-        ticket1 = ticket.GenomeTicket()
+        ticket1 = ticket.ImportTicket()
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "L5"
 
-        ticket2 = ticket.GenomeTicket()
+        ticket2 = ticket.ImportTicket()
         ticket2.id = 1
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
@@ -465,12 +465,12 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify two tickets with Primary Phage ID duplicates
         do generate an error."""
 
-        ticket1 = ticket.GenomeTicket()
+        ticket1 = ticket.ImportTicket()
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
 
-        ticket2 = ticket.GenomeTicket()
+        ticket2 = ticket.ImportTicket()
         ticket2.id = 2
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
@@ -489,12 +489,12 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify two tickets with multiple duplicates
         do generate multiple errors."""
 
-        ticket1 = ticket.GenomeTicket()
+        ticket1 = ticket.ImportTicket()
         ticket1.id = 1
         ticket1.type = "replace"
         ticket1.phage_id = "Trixie"
 
-        ticket2 = ticket.GenomeTicket()
+        ticket2 = ticket.ImportTicket()
         ticket2.id = 1
         ticket2.type = "replace"
         ticket2.phage_id = "Trixie"
@@ -514,8 +514,8 @@ class TestTicketFunctions2(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = ticket.GenomeTicket()
-        self.ticket2 = ticket.GenomeTicket()
+        self.ticket1 = ticket.ImportTicket()
+        self.ticket2 = ticket.ImportTicket()
 
         self.ticket1.phage_id = "Trixie"
         self.ticket2.phage_id = "L5"
@@ -533,10 +533,10 @@ class TestTicketFunctions3(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = ticket.GenomeTicket()
-        self.ticket2 = ticket.GenomeTicket()
-        self.ticket3 = ticket.GenomeTicket()
-        self.ticket4 = ticket.GenomeTicket()
+        self.ticket1 = ticket.ImportTicket()
+        self.ticket2 = ticket.ImportTicket()
+        self.ticket3 = ticket.ImportTicket()
+        self.ticket4 = ticket.ImportTicket()
 
         self.bundle1 = bundle.Bundle()
         self.bundle2 = bundle.Bundle()
@@ -623,7 +623,7 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
         # Add ticket.
-        self.add_ticket = ticket.GenomeTicket()
+        self.add_ticket = ticket.ImportTicket()
         self.add_ticket.type = "add"
         self.add_ticket.phage_id = "Trixie_Draft"
         self.add_ticket.run_mode = "final"
@@ -639,7 +639,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.bundle1.ticket = self.add_ticket
 
         # Remove ticket.
-        self.remove_ticket = ticket.GenomeTicket()
+        self.remove_ticket = ticket.ImportTicket()
         self.remove_ticket.type = "replace"
         self.remove_ticket.phage_id = "Trixie_Draft"
         self.remove_ticket.run_mode = "final"
@@ -658,7 +658,7 @@ class TestTicketFunctions4(unittest.TestCase):
 
 
         # Invalid ticket.
-        self.invalid_ticket = ticket.GenomeTicket()
+        self.invalid_ticket = ticket.ImportTicket()
         self.invalid_ticket.type = "invalid"
         self.invalid_ticket.phage_id = "Trixie_Draft"
         self.invalid_ticket.run_mode = "final"
@@ -722,7 +722,7 @@ class TestTicketFunctions5(unittest.TestCase):
         self.data_dict["subcluster"] = "A2"
         self.data_dict["annotation_author"] = 1
         self.data_dict["retrieve_record"] = 1
-        self.tkt1 = ticket.GenomeTicket()
+        self.tkt1 = ticket.ImportTicket()
         self.tkt1.phage_id = "Trixie_Draft"
         self.tkt1.data_dict = self.data_dict
 

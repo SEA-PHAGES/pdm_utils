@@ -394,7 +394,7 @@ def get_final_data(output_folder, matched_genomes):
                 # file is acquired through PhagesDB, both the
                 # Annotation status is expected to be 'final' and
                 # the Annotation author is expected to be 'hatfull'.
-                tkt = ticket.GenomeTicket()
+                tkt = ticket.ImportTicket()
                 tkt.type = "replace"
                 tkt.phage_id = mysqldb_gnm.id
                 tkt.data_dict["host_genus"] = "retrieve"
@@ -776,7 +776,7 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
         flatfile_path = pathlib.Path(genome_folder, ncbi_filename)
         SeqIO.write(record, str(flatfile_path), "genbank")
 
-        tkt = ticket.GenomeTicket()
+        tkt = ticket.ImportTicket()
         tkt.type = "replace"
         tkt.phage_id = gnm.id
         tkt.data_dict["host_genus"] = gnm.host_genus
@@ -880,7 +880,7 @@ def retrieve_drafts(output_folder, phage_list):
             with pecaan_filepath.open("w") as fh:
                 fh.write(response)
 
-            tkt = ticket.GenomeTicket()
+            tkt = ticket.ImportTicket()
             tkt.type = "add"
             tkt.phage_id = new_phage
             tkt.data_dict["host_genus"] = "retrieve"

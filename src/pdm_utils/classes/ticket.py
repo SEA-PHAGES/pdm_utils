@@ -7,7 +7,7 @@ from pdm_utils.functions import basic
 
 
 
-class GenomeTicket:
+class ImportTicket:
 
     # Initialize all attributes:
     def __init__(self):

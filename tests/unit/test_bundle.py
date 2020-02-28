@@ -21,7 +21,7 @@ class TestBundleClass1(unittest.TestCase):
         self.genome1.type = "flat_file"
         self.genome2 = genome.Genome()
         self.genome2.type = "mysql"
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
 
 
 
@@ -152,7 +152,7 @@ class TestBundleClass2(unittest.TestCase):
 
     def setUp(self):
 
-        self.ticket1 = ticket.GenomeTicket()
+        self.ticket1 = ticket.ImportTicket()
         self.src1 = source.Source()
         self.src1.id = "L5_SRC_1"
         self.src2 = source.Source()

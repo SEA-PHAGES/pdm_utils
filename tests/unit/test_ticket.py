@@ -3,12 +3,12 @@
 from pdm_utils.classes import ticket
 import unittest
 
-class TestGenomeTicketClass(unittest.TestCase):
+class TestImportTicketClass(unittest.TestCase):
 
     def setUp(self):
 
         # Empty ticket to test simple methods
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
 
 
 

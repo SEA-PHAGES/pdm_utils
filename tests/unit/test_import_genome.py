@@ -55,7 +55,7 @@ class TestImportGenomeClass1(unittest.TestCase):
             "accession": "ABC123.1"
             }
 
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
         self.tkt.id = 1
         self.tkt.type = "replace"
         self.tkt.phage_id = "Trixie"
@@ -283,7 +283,7 @@ class TestImportGenomeClass2(unittest.TestCase):
 
     def setUp(self):
 
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
         self.tkt.type = "add"
         self.tkt.eval_flags["check_seq"] = True
         self.tkt.eval_flags["check_id_typo"] = True
@@ -565,7 +565,7 @@ class TestImportGenomeClass4(unittest.TestCase):
                          "check_gene": True,
                          "check_seq": True}
 
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
         self.tkt.type = "add"
         self.tkt.phage_id = "Trixie"
         self.tkt.eval_flags = self.eval_dict
@@ -1376,7 +1376,7 @@ class TestImportGenomeClass4(unittest.TestCase):
 class TestImportGenomeClass5(unittest.TestCase):
 
     def setUp(self):
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
 
         self.tkt.type = "replace"
         self.tkt.data_retrieve = set(["cluster"])
@@ -1534,7 +1534,7 @@ class TestImportGenomeClass6(unittest.TestCase):
                          "check_gene": True,
                          "check_seq": True}
 
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
         self.tkt.phage_id = "Trixie"
         self.tkt.eval_flags = self.eval_dict
         self.tkt.description_field = "product"
@@ -2155,7 +2155,7 @@ class TestImportGenomeClass8(unittest.TestCase):
 class TestImportGenomeClass9(unittest.TestCase):
 
     def setUp(self):
-        self.tkt = ticket.GenomeTicket()
+        self.tkt = ticket.ImportTicket()
         self.tkt.type = "replace"
         self.tkt.phage_id = "Trixie_tkt"
         self.gnm = genome.Genome()
