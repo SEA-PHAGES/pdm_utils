@@ -25,6 +25,7 @@ class GenomeTicket:
         self.data_retrieve = set() # Data that should be retrieved from PhagesDB.
         self.data_retain = set() # Data that should be retained from the MySQL database.
         self.data_add = set() # Data to be added to genome from ticket.
+        self.data_parse = set() # Data that should be parsed from the flat file.
         self.data_dict = {} # Original data from import table.
 
         # Used to check the structure of the ticket data.
@@ -185,7 +186,7 @@ class GenomeTicket:
 
         :param ref_set_attr:
             Name of the data_dict in the ticket to be evaluated
-            (data_add, data_retain, data_retrieve)
+            (data_add, data_retain, data_retrieve, data_parse)
         :type ref_set_attr: str
         :param check_set: Set of valid field names.
         :type check_set: set
@@ -198,6 +199,8 @@ class GenomeTicket:
             ref_set = self.data_retain
         elif ref_set_attr == "data_retrieve":
             ref_set = self.data_retrieve
+        elif ref_set_attr == "data_parse":
+            ref_set = self.data_parse
         else:
             ref_set = None
         if ref_set is not None:

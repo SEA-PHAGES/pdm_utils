@@ -355,7 +355,6 @@ def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
 
 
 
-
 def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         description_field="", table_structure_dict={}):
     """Prepare dictionary of pdm_utils Tickets."""
@@ -376,6 +375,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
     valid_retain = table_structure_dict["valid_retain"]
     valid_retrieve = table_structure_dict["valid_retrieve"]
     valid_add = table_structure_dict["valid_add"]
+    valid_parse = table_structure_dict["valid_parse"]
 
     list_of_tkts = []
     tkt_errors = 0
@@ -408,7 +408,8 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
                      phage_id_dupe_set=phage_id_dupes,
                      retain_set=valid_retain,
                      retrieve_set=valid_retrieve,
-                     add_set=valid_add)
+                     add_set=valid_add,
+                     parse_set=valid_parse)
         for evl in tkt.evaluations:
             evl_summary = (f"Evaluation: {evl.id}. "
                            f"Status: {evl.status}. "
@@ -662,6 +663,10 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
             # With the flat file parsed and matched
             # to a ticket, use the ticket to populate specific
             # genome-level fields such as host, cluster, subcluster, etc.
+            # Genome attributes from the ticket table that should not be
+            # populated from the ticket, from PhagesDB, or from
+            # the MySQL database, are stored in data_parse.
+            # There is no need to evaluate what is stored in data_parse.
 
             if len(bndl.ticket.data_add) > 0:
                 tkt_gnm = tickets.get_genome(bndl.ticket, gnm_type=ticket_ref)
@@ -1070,7 +1075,7 @@ def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref="
 
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
         run_mode_set=set(), id_dupe_set=set(), phage_id_dupe_set=set(),
-        retain_set=set(), retrieve_set=set(), add_set=set()):
+        retain_set=set(), retrieve_set=set(), add_set=set(), parse_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
     the type of ticket.
@@ -1126,6 +1131,8 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
                                 eval_id="TKT_010", eval_def=EDD["TKT_010"])
     tkt.check_valid_data_source("data_retrieve", retrieve_set,
                                 eval_id="TKT_011", eval_def=EDD["TKT_011"])
+    tkt.check_valid_data_source("data_parse", parse_set,
+                                eval_id="TKT_012", eval_def=EDD["TKT_012"])
 
 
 def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),

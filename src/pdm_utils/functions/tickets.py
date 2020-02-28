@@ -6,7 +6,6 @@ from pdm_utils.functions import run_modes
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
-# TODO review unittests - are they sufficient?
 def modify_import_data(data_dict, required_keys, optional_keys, keywords):
     """Checks and modifies a data dictionary to conform to requirements
     for a ticket object.
@@ -29,6 +28,7 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
     # assigned "" by csv.DictReader.
     # "retrieve" = get data from PhagesDB.
     # "retain" = get data from current genome in the MySQL database.
+    # "parse" = get data from the flatfile itself (only for host_genus and accession)
     # "none" = there is no applicable data (only for accession and subcluster)
     # "" = source of data should be automatically determined (optional)
     if (len(missing_req_fields) == 0 and len(extra_fields) == 0):
@@ -60,6 +60,8 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
         return False
 
 
+
+# TODO test data_parse
 def parse_import_ticket_data(data_dict):
     """Converts import ticket data to a Ticket object.
 
@@ -94,6 +96,7 @@ def parse_import_ticket_data(data_dict):
     data_retrieve = set()
     data_retain = set()
     data_add = set()
+    data_parse = set()
 
     other_attributes = list(other_attributes)
     x = 0
@@ -104,12 +107,16 @@ def parse_import_ticket_data(data_dict):
             data_retrieve.add(attr)
         elif attr_value == "retain":
             data_retain.add(attr)
+        elif attr_value == "parse":
+            data_parse.add(attr)
         else:
             data_add.add(attr)
         x += 1
     tkt.data_retrieve = data_retrieve
     tkt.data_retain = data_retain
+    tkt.data_parse = data_parse
     tkt.data_add = data_add
+
     return tkt
 
 

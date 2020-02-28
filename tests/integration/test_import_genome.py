@@ -212,8 +212,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         # Omit cluster to verify that only attributes in the data_add set
         # are copied.
         self.tkt1.data_add = set(["host_genus", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
 
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
@@ -251,8 +251,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         """Verify bundle is returned from a flat file with:
         no record."""
         self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
                     filepath=self.test_flat_file2,
@@ -268,8 +268,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         """Verify bundle is returned from a flat file with:
         one record, no ticket."""
         self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
         tkt_dict = {"L5x":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
                     filepath=self.test_flat_file1,
@@ -311,8 +311,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         # Use cluster and host_genus to confirm that only attributes
         # within the data_retrieve set are copied.
         self.tkt1.data_add = set(["cluster", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
         self.tkt1.data_dict["host_genus"] = "retrieve"
         self.tkt1.data_retrieve = set(["host_genus"])
         tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
@@ -889,6 +889,21 @@ class TestImportGenomeMain4(unittest.TestCase):
                         table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
 
+
+    @patch("pdm_utils.functions.basic.retrieve_data_dict")
+    def test_prepare_tickets_6(self, mock_retrieve_tickets):
+        """Verify no dictionary is returned from one correct
+        data dictionary and one incorrect data dictionary with
+        invalid cluster (set to 'parse')."""
+
+        self.data_dict2["cluster"] = "parse"
+        mock_retrieve_tickets.return_value = self.dict1_dict2
+        tkt_dict = import_genome.prepare_tickets(
+                        import_table_file=self.test_import_table_1,
+                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        description_field="product",
+                        table_structure_dict=self.table_structure_dict)
+        self.assertIsNone(tkt_dict)
 
 
 

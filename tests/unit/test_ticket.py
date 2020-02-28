@@ -249,6 +249,14 @@ class TestGenomeTicketClass(unittest.TestCase):
         self.assertEqual(self.tkt.evaluations[0].status, "error")
 
     def test_check_valid_data_source_7(self):
+        """Check that error is produced if
+        data_parse is not empty and invalid and check_set is not empty."""
+        self.tkt.data_parse = set(["a", "c"])
+        check_set = set(["a", "b"])
+        self.tkt.check_valid_data_source("data_parse", check_set=check_set)
+        self.assertEqual(self.tkt.evaluations[0].status, "error")
+
+    def test_check_valid_data_source_8(self):
         """Check that error is produced if invalid ref_set_attr."""
         check_set = set(["a", "b"])
         self.tkt.check_valid_data_source("invalid", check_set=check_set)

@@ -29,6 +29,8 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict1["host_genus"] = "retrieve"
         self.ticket_dict1["cluster"] = "retain"
         self.ticket_dict1["subcluster"] = "A2"
+        self.ticket_dict1["accession"] = "parse"
+
 
         self.ticket_dict2 = {}
 
@@ -39,6 +41,8 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict3["run_mode"] = "FINAL"
         self.ticket_dict3["host_genus"] = "RETRIEVE"
         self.ticket_dict3["subcluster"] = None
+        self.ticket_dict3["accession"] = "PARSE"
+        self.ticket_dict3["retrieve_record"] = "RETAIN"
 
 
         self.ticket_dict4 = {}
@@ -62,23 +66,76 @@ class TestTicketFunctions1(unittest.TestCase):
 
 
     def test_modify_import_data_3(self):
-        """Verify returns True with completed dictionary."""
+        """Verify returns True with keywords identified and values lowercased."""
         result = tickets.modify_import_data(self.ticket_dict3,
                     self.required_keys, self.optional_keys, self.keywords)
         with self.subTest():
             self.assertTrue(result)
         with self.subTest():
-            self.assertEqual(self.ticket_dict3["subcluster"], "retrieve")
-        with self.subTest():
             self.assertEqual(self.ticket_dict3["host_genus"], "retrieve")
         with self.subTest():
-            self.assertEqual(self.ticket_dict3["annotation_author"], "1")
+            self.assertEqual(self.ticket_dict3["retrieve_record"], "retain")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["subcluster"], "retrieve")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict3["accession"], "parse")
         with self.subTest():
             self.assertEqual(self.ticket_dict3["type"], "add")
         with self.subTest():
             self.assertEqual(self.ticket_dict3["description_field"], "product")
         with self.subTest():
             self.assertEqual(self.ticket_dict3["run_mode"], "final")
+
+
+    def test_modify_import_data_4(self):
+        """Verify returns True with completed dictionary from a
+        minimal add ticket."""
+        self.ticket_dict4["description_field"] = "product"
+        self.ticket_dict4["run_mode"] = "final"
+        result = tickets.modify_import_data(self.ticket_dict4,
+                    self.required_keys, self.optional_keys, self.keywords)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["host_genus"], "retrieve")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["cluster"], "retrieve")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["subcluster"], "retrieve")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["annotation_author"], "1")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["retrieve_record"], "1")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["annotation_status"], "draft")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["accession"], "")
+
+
+    def test_modify_import_data_5(self):
+        """Verify returns True with completed dictionary from a
+        minimal replace ticket."""
+        self.ticket_dict4["type"] = "replace"
+        self.ticket_dict4["description_field"] = "product"
+        self.ticket_dict4["run_mode"] = "final"
+        result = tickets.modify_import_data(self.ticket_dict4,
+                    self.required_keys, self.optional_keys, self.keywords)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["host_genus"], "retain")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["cluster"], "retain")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["subcluster"], "retain")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["annotation_author"], "retain")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["retrieve_record"], "retain")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["annotation_status"], "final")
+        with self.subTest():
+            self.assertEqual(self.ticket_dict4["accession"], "retain")
 
 
 
@@ -95,13 +152,71 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.run_mode, "final")
         with self.subTest():
-            self.assertEqual(len(tkt.data_dict.keys()), 7)
+            self.assertEqual(len(tkt.data_dict.keys()), 8)
         with self.subTest():
             self.assertEqual(tkt.data_retrieve, set(["host_genus"]))
         with self.subTest():
             self.assertEqual(tkt.data_retain, set(["cluster"]))
         with self.subTest():
+            self.assertEqual(tkt.data_parse, set(["accession"]))
+        with self.subTest():
             self.assertEqual(tkt.data_add, set(["subcluster"]))
+
+    def test_parse_import_ticket_data_2(self):
+        """Verify ticket is generated from correct data dictionary with
+        no data in 'retain', 'retrieve', or 'parse' sets."""
+        self.ticket_dict1["host_genus"] = "Mycobacterium"
+        self.ticket_dict1["cluster"] = "A"
+        self.ticket_dict1["subcluster"] = "A2"
+        self.ticket_dict1["accession"] = "ABC123"
+        tkt = tickets.parse_import_ticket_data(self.ticket_dict1)
+        with self.subTest():
+            self.assertEqual(tkt.type, "add")
+        with self.subTest():
+            self.assertEqual(tkt.phage_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(tkt.description_field, "product")
+        with self.subTest():
+            self.assertEqual(tkt.run_mode, "final")
+        with self.subTest():
+            self.assertEqual(len(tkt.data_dict.keys()), 8)
+        with self.subTest():
+            self.assertEqual(tkt.data_retrieve, set())
+        with self.subTest():
+            self.assertEqual(tkt.data_retain, set())
+        with self.subTest():
+            self.assertEqual(tkt.data_parse, set())
+        with self.subTest():
+            self.assertEqual(tkt.data_add, set(["subcluster", "host_genus",
+                                                "cluster", "accession"]))
+
+    def test_parse_import_ticket_data_3(self):
+        """Verify ticket is generated from correct data dictionary with
+        no data in 'add' sets."""
+        self.ticket_dict1["host_genus"] = "retrieve"
+        self.ticket_dict1["cluster"] = "retrieve"
+        self.ticket_dict1["subcluster"] = "retrieve"
+        self.ticket_dict1["accession"] = "retrieve"
+        tkt = tickets.parse_import_ticket_data(self.ticket_dict1)
+        with self.subTest():
+            self.assertEqual(tkt.type, "add")
+        with self.subTest():
+            self.assertEqual(tkt.phage_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(tkt.description_field, "product")
+        with self.subTest():
+            self.assertEqual(tkt.run_mode, "final")
+        with self.subTest():
+            self.assertEqual(len(tkt.data_dict.keys()), 8)
+        with self.subTest():
+            self.assertEqual(tkt.data_retrieve, set(["subcluster", "host_genus",
+                                                "cluster", "accession"]))
+        with self.subTest():
+            self.assertEqual(tkt.data_retain, set())
+        with self.subTest():
+            self.assertEqual(tkt.data_parse, set())
+        with self.subTest():
+            self.assertEqual(tkt.data_add, set())
 
 
 
@@ -120,13 +235,23 @@ class TestTicketFunctions1(unittest.TestCase):
 
     def test_set_keywords_1(self):
         """Verify one value is lowercased."""
-        data_dict = {"type":"ADD","cluster":"RETRIEVE"}
+        data_dict = {"type":"ADD",
+                     "cluster":"RETRIEVE",
+                     "subcluster": "NONE",
+                     "host_genus": "PARSE",
+                     "retrieve_record": "RETAIN"}
         keywords = set(["retrieve", "retain"])
-        tickets.set_keywords(data_dict, keywords)
+        tickets.set_keywords(data_dict, self.keywords)
         with self.subTest():
             self.assertEqual(data_dict["type"], "ADD")
         with self.subTest():
             self.assertEqual(data_dict["cluster"], "retrieve")
+        with self.subTest():
+            self.assertEqual(data_dict["subcluster"], "none")
+        with self.subTest():
+            self.assertEqual(data_dict["host_genus"], "parse")
+        with self.subTest():
+            self.assertEqual(data_dict["retrieve_record"], "retain")
 
 
 

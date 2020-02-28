@@ -92,6 +92,7 @@ EVAL_DESCRIPTIONS = {
     "TKT_009": ("The import ticket is expected to have valid add data."),
     "TKT_010": ("The import ticket is expected to have valid retain data."),
     "TKT_011": ("The import ticket is expected to have valid retrieve data."),
+    "TKT_012": ("The import ticket is expected to have valid parse data."),
 
     # Source feature
     "SRC_001": (f"{pfx4} any PhageID typos in the Organism qualifier of the Source feature."),

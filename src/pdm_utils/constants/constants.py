@@ -62,7 +62,10 @@ IMPORT_TABLE_STRUCTURE = {
                         "annotation_status",
                         "accession",
                         "retrieve_record"]),
-    "keywords": set(["retrieve", "retain", "none"])
+    "valid_parse": set([
+                        "host_genus",
+                        "accession"]),
+    "keywords": set(["parse", "retrieve", "retain", "none"])
 }
 
 NAME_SUFFIX = "_Draft"
