@@ -77,6 +77,7 @@ extlinks = {
     'mysql': ('https://www.mysql.com/%s', ''),
     'mysql_docs': ('https://dev.mysql.com/doc/refman/5.7/en/%s', ''),
     'mmseqs2': ('https://github.com/soedinglab/MMseqs2%s', ''),
+    'networkx': ('https://networkx.github.io%s', ''),
     'ncbi': ('https://www.ncbi.nlm.nih.gov/%s', ''),
     'paramiko': ('http://www.paramiko.org/%s', ''),
     'pecaan': ('https://discover.kbrinsgd.org/%s', ''),

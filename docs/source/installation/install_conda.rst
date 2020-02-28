@@ -6,6 +6,7 @@ Anaconda
 ``pdm_utils`` requires Python >=3.7 and several third-party Python packages:
 
     - :biopython:`Biopython <>`
+    - :networkx:`NetworkX <>`
     - :paramiko:`Paramiko <>`
     - :pymysql:`PyMySQL <>`
     - :sqlalchemy:`SQLAlchemy <>`
