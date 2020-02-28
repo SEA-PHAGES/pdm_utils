@@ -1220,7 +1220,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cds1.type = "CDS"
         cds1.translation = "ACKLG"
         cds1.orientation = "F"
-        cds1.processed_description = "integrase"
+        cds1.description = "integrase"
         cds1.locus_tag = "TAG1"
         insert2 = mysqldb.create_gene_table_insert(cds1)
         connection = pymysql.connect(host="localhost",

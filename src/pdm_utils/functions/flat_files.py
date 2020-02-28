@@ -161,25 +161,25 @@ def parse_cds_seqfeature(seqfeature):
     cds_ftr.set_translation_table(translation_table)
 
     try:
-        cds_ftr.product, cds_ftr.processed_product = \
+        cds_ftr.raw_product, cds_ftr.product = \
             basic.reformat_description(seqfeature.qualifiers["product"][0])
     except:
+        cds_ftr.raw_product = ""
         cds_ftr.product = ""
-        cds_ftr.processed_product = ""
 
     try:
-        cds_ftr.function, cds_ftr.processed_function = \
+        cds_ftr.raw_function, cds_ftr.function = \
             basic.reformat_description(seqfeature.qualifiers["function"][0])
     except:
+        cds_ftr.raw_function = ""
         cds_ftr.function = ""
-        cds_ftr.processed_function = ""
 
     try:
-        cds_ftr.note, cds_ftr.processed_note = \
+        cds_ftr.raw_note, cds_ftr.note = \
             basic.reformat_description(seqfeature.qualifiers["note"][0])
     except:
+        cds_ftr.raw_note = ""
         cds_ftr.note = ""
-        cds_ftr.processed_note = ""
 
     try:
         cds_ftr.gene = seqfeature.qualifiers["gene"][0]

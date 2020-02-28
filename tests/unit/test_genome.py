@@ -21,16 +21,16 @@ class TestGenomeClass1(unittest.TestCase):
 
 
         self.cds1 = cds.Cds()
-        self.cds1.processed_description = ""
-        self.cds1.processed_product = ""
-        self.cds1.processed_function = ""
-        self.cds1.processed_note = ""
+        self.cds1.description = ""
+        self.cds1.product = ""
+        self.cds1.function = ""
+        self.cds1.note = ""
 
         self.cds2 = cds.Cds()
-        self.cds2.processed_description = ""
-        self.cds2.processed_product = ""
-        self.cds2.processed_function = ""
-        self.cds2.processed_note = ""
+        self.cds2.description = ""
+        self.cds2.product = ""
+        self.cds2.function = ""
+        self.cds2.note = ""
 
 
         self.cds3 = cds.Cds()
@@ -400,29 +400,29 @@ class TestGenomeClass1(unittest.TestCase):
 
     def test_set_cds_descriptions_1(self):
         """Check that descriptions are set from 'product' descriptions."""
-        self.cds1.processed_product = "lysB"
-        self.cds1.processed_function = "lysA"
-        self.cds2.processed_product = "rep"
-        self.cds2.processed_function = "repressor"
+        self.cds1.product = "lysB"
+        self.cds1.function = "lysA"
+        self.cds2.product = "rep"
+        self.cds2.function = "repressor"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.set_cds_descriptions("product")
         with self.subTest():
-            self.assertEqual(self.cds1.processed_description, "lysB")
+            self.assertEqual(self.cds1.description, "lysB")
         with self.subTest():
-            self.assertEqual(self.cds2.processed_description, "rep")
+            self.assertEqual(self.cds2.description, "rep")
 
     def test_set_cds_descriptions_2(self):
         """Check that descriptions are set from 'function' descriptions."""
-        self.cds1.processed_product = "lysB"
-        self.cds1.processed_function = "lysA"
-        self.cds2.processed_product = "rep"
-        self.cds2.processed_function = "repressor"
+        self.cds1.product = "lysB"
+        self.cds1.function = "lysA"
+        self.cds2.product = "rep"
+        self.cds2.function = "repressor"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.set_cds_descriptions("function")
         with self.subTest():
-            self.assertEqual(self.cds1.processed_description, "lysA")
+            self.assertEqual(self.cds1.description, "lysA")
         with self.subTest():
-            self.assertEqual(self.cds2.processed_description, "repressor")
+            self.assertEqual(self.cds2.description, "repressor")
 
 
 
@@ -431,126 +431,126 @@ class TestGenomeClass1(unittest.TestCase):
         """Check that all description tallies are reset to 0 and that
         no description tally is incremented."""
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm._cds_processed_descriptions_tally = 10
-        self.gnm._cds_processed_products_tally = 10
-        self.gnm._cds_processed_functions_tally = 10
-        self.gnm._cds_processed_notes_tally = 10
+        self.gnm._cds_descriptions_tally = 10
+        self.gnm._cds_products_tally = 10
+        self.gnm._cds_functions_tally = 10
+        self.gnm._cds_notes_tally = 10
         self.gnm.tally_cds_descriptions()
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 0)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 0)
+            self.assertEqual(self.gnm._cds_products_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 0)
+            self.assertEqual(self.gnm._cds_functions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 0)
+            self.assertEqual(self.gnm._cds_notes_tally, 0)
 
     def test_tally_cds_descriptions_2(self):
         """Check that processed primary description tally
         is incremented."""
-        self.cds1.processed_description = "abcd"
+        self.cds1.description = "abcd"
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm._cds_processed_descriptions_tally = 10
+        self.gnm._cds_descriptions_tally = 10
         self.gnm.tally_cds_descriptions()
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 1)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 1)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 0)
+            self.assertEqual(self.gnm._cds_products_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 0)
+            self.assertEqual(self.gnm._cds_functions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 0)
+            self.assertEqual(self.gnm._cds_notes_tally, 0)
 
     def test_tally_cds_descriptions_3(self):
         """Check that processed product description tally
         is incremented."""
-        self.cds1.processed_product = "abcd"
+        self.cds1.product = "abcd"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.tally_cds_descriptions()
 
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 0)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 1)
+            self.assertEqual(self.gnm._cds_products_tally, 1)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 0)
+            self.assertEqual(self.gnm._cds_functions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 0)
+            self.assertEqual(self.gnm._cds_notes_tally, 0)
 
     def test_tally_cds_descriptions_4(self):
         """Check that processed function description tally
         is incremented."""
-        self.cds1.processed_function = "abcd"
+        self.cds1.function = "abcd"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.tally_cds_descriptions()
 
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 0)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 0)
+            self.assertEqual(self.gnm._cds_products_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 1)
+            self.assertEqual(self.gnm._cds_functions_tally, 1)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 0)
+            self.assertEqual(self.gnm._cds_notes_tally, 0)
 
     def test_tally_cds_descriptions_5(self):
         """Check that processed note description tally
         is incremented."""
-        self.cds1.processed_note = "abcd"
+        self.cds1.note = "abcd"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.tally_cds_descriptions()
 
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 0)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 0)
+            self.assertEqual(self.gnm._cds_products_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 0)
+            self.assertEqual(self.gnm._cds_functions_tally, 0)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 1)
+            self.assertEqual(self.gnm._cds_notes_tally, 1)
 
     def test_tally_cds_descriptions_6(self):
         """Check that all description tallies are incremented."""
-        self.cds1.processed_description = "abcd"
-        self.cds1.processed_product = "efgh"
-        self.cds1.processed_function = "ijkl"
-        self.cds1.processed_note = "mnop"
+        self.cds1.description = "abcd"
+        self.cds1.product = "efgh"
+        self.cds1.function = "ijkl"
+        self.cds1.note = "mnop"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.tally_cds_descriptions()
 
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 1)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 1)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 1)
+            self.assertEqual(self.gnm._cds_products_tally, 1)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 1)
+            self.assertEqual(self.gnm._cds_functions_tally, 1)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 1)
+            self.assertEqual(self.gnm._cds_notes_tally, 1)
 
     def test_tally_cds_descriptions_7(self):
         """Check that all description tallies are incremented for
         all CDS features."""
-        self.cds1.processed_description = "abcd"
-        self.cds1.processed_product = "efgh"
-        self.cds1.processed_function = "ijkl"
-        self.cds1.processed_note = "mnop"
+        self.cds1.description = "abcd"
+        self.cds1.product = "efgh"
+        self.cds1.function = "ijkl"
+        self.cds1.note = "mnop"
 
-        self.cds2.processed_description = "ab"
-        self.cds2.processed_product = "cd"
-        self.cds2.processed_function = "ef"
-        self.cds2.processed_note = "gh"
+        self.cds2.description = "ab"
+        self.cds2.product = "cd"
+        self.cds2.function = "ef"
+        self.cds2.note = "gh"
 
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.tally_cds_descriptions()
 
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 2)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 2)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_products_tally, 2)
+            self.assertEqual(self.gnm._cds_products_tally, 2)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_functions_tally, 2)
+            self.assertEqual(self.gnm._cds_functions_tally, 2)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_notes_tally, 2)
+            self.assertEqual(self.gnm._cds_notes_tally, 2)
 
 
 

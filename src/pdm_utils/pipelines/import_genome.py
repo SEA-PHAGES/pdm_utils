@@ -984,9 +984,9 @@ def review_cds_descriptions(feature_list, description_field):
     tally = 0
     for cds in feature_list:
         # Get truncated descriptions to report to user.
-        short_product = basic.truncate_value(cds.processed_product, x, y)
-        short_function = basic.truncate_value(cds.processed_function, x, y)
-        short_note = basic.truncate_value(cds.processed_note, x, y)
+        short_product = basic.truncate_value(cds.product, x, y)
+        short_function = basic.truncate_value(cds.function, x, y)
+        short_note = basic.truncate_value(cds.note, x, y)
         dict = {"CDS ID": cds.id,
                 "Start": cds.start,
                 "Stop": cds.stop,
@@ -999,11 +999,11 @@ def review_cds_descriptions(feature_list, description_field):
 
         # Count the number of descriptions that are not
         # in the selected description field.
-        if (mod_field != "processed_product" and len(short_product) > 0):
+        if (mod_field != "product" and len(short_product) > 0):
             tally += 1
-        if (mod_field != "processed_function" and len(short_function) > 0):
+        if (mod_field != "function" and len(short_function) > 0):
             tally += 1
-        if (mod_field != "processed_note" and len(short_note) > 0):
+        if (mod_field != "note" and len(short_note) > 0):
             tally += 1
 
 
@@ -1208,7 +1208,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     if gnm.annotation_status == "draft":
         gnm.check_attribute("name", {check_name}, expect=True,
                             eval_id="GNM_009", fail="warning", eval_def=EDD["GNM_009"])
-        gnm.check_magnitude("_cds_processed_descriptions_tally", "=", 0,
+        gnm.check_magnitude("_cds_descriptions_tally", "=", 0,
                             eval_id="GNM_010", fail="warning", eval_def=EDD["GNM_010"])
         gnm.check_attribute("accession", {""}, expect=True,
                             eval_id="GNM_011", fail="warning", eval_def=EDD["GNM_011"])
@@ -1222,7 +1222,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         if gnm.annotation_status == "final":
             gnm.check_attribute("name", {check_name}, expect=False,
                                 eval_id="GNM_012", fail="warning", eval_def=EDD["GNM_012"])
-            gnm.check_magnitude("_cds_processed_descriptions_tally", ">", 0,
+            gnm.check_magnitude("_cds_descriptions_tally", ">", 0,
                                 eval_id="GNM_013", fail="warning", eval_def=EDD["GNM_013"])
 
     check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)

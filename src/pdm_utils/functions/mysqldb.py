@@ -459,7 +459,7 @@ def create_gene_table_insert(cds_ftr):
                  f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.start}, "
                  f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
                  f"'{cds_ftr.name}', '{cds_ftr.translation}', "
-                 f"'{cds_ftr.orientation}', '{cds_ftr.processed_description}', "
+                 f"'{cds_ftr.orientation}', '{cds_ftr.description}', "
                  f"'{cds_ftr.locus_tag}');"
                  )
     return statement

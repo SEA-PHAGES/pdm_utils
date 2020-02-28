@@ -601,7 +601,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.gnm.annotation_author = 1
         self.gnm.retrieve_record = 1
         self.gnm.translation_table = 11
-        self.gnm._cds_processed_descriptions_tally = 0
+        self.gnm._cds_descriptions_tally = 0
         self.gnm._cds_features_tally = 2
         self.gnm.description = "Mycobacterium phage Trixie"
         self.gnm._description_name = "Trixie"
@@ -858,7 +858,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.gnm.annotation_status = "final"
         # Since status is now 'final', the cds tally and name need to be
         # changed as well, so that only the status check will throw an error.
-        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm._cds_descriptions_tally = 1
         self.gnm.name = "Trixie"
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
@@ -897,7 +897,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm._cds_descriptions_tally = 1
         self.gnm.name = "Trixie"
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
@@ -914,7 +914,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm._cds_descriptions_tally = 1
         self.gnm.name = "L5"
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         import_genome.check_genome(
@@ -931,7 +931,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.gnm.name = "Trixie"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm._cds_descriptions_tally = 1
         self.gnm.seq = Seq("GGGG", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
         import_genome.check_genome(
@@ -949,7 +949,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         # changed as well, so that only the status check will throw an error.
         self.tkt.type = "replace"
         self.gnm.accession = ""
-        self.gnm._cds_processed_descriptions_tally = 0
+        self.gnm._cds_descriptions_tally = 0
         self.gnm.name = "Trixie_Draft"
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
@@ -975,8 +975,8 @@ class TestImportGenomeClass4(unittest.TestCase):
     def test_check_genome_26(self):
         """Verify correct number of errors are produced using:
         'draft' annotation_status, and
-        '_cds_processed_descriptions_tally' > 0."""
-        self.gnm._cds_processed_descriptions_tally = 1
+        '_cds_descriptions_tally' > 0."""
+        self.gnm._cds_descriptions_tally = 1
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
@@ -1002,7 +1002,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm._cds_descriptions_tally = 1
         self.gnm.name = "Trixie"
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
@@ -1022,7 +1022,7 @@ class TestImportGenomeClass4(unittest.TestCase):
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 1
+        self.gnm._cds_descriptions_tally = 1
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
         self.id_set.add("Trixie_Draft")
@@ -1036,11 +1036,11 @@ class TestImportGenomeClass4(unittest.TestCase):
     def test_check_genome_30(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
-        '_cds_processed_descriptions_tally' == 0."""
+        '_cds_descriptions_tally' == 0."""
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
-        self.gnm._cds_processed_descriptions_tally = 0
+        self.gnm._cds_descriptions_tally = 0
         self.gnm.name = "Trixie"
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
@@ -1871,17 +1871,17 @@ class TestImportGenomeClass7(unittest.TestCase):
         self.cds1.genome_id = "L5"
         self.cds1.genome_length = 50000
         self.cds1.pham = 100
-        self.cds1.description = "repressor protein"
-        self.cds1.processed_description = "repressor"
+        self.cds1.raw_description = "repressor protein"
+        self.cds1.description = "repressor"
         self.cds1.locus_tag = "SEA_L5_1"
         self.cds1._locus_tag_num = "1"
         self.cds1.gene = "1"
-        self.cds1.product = "repressor protein"
-        self.cds1.function = "hypothetical protein"
-        self.cds1.note = "protein"
-        self.cds1.processed_product = "repressor"
-        self.cds1.processed_function = ""
-        self.cds1.processed_note = ""
+        self.cds1.raw_product = "repressor protein"
+        self.cds1.raw_function = "hypothetical protein"
+        self.cds1.raw_note = "protein"
+        self.cds1.product = "repressor"
+        self.cds1.function = ""
+        self.cds1.note = ""
         self.cds1.type = "CDS"
 
         self.eval_flags = {"check_locus_tag": True,

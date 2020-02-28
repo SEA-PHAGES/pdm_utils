@@ -270,11 +270,11 @@ def convert_empty(input_value, format, upper=False):
     return new_value
 
 
-def reformat_description(description):
+def reformat_description(raw_description):
     """Reformat a gene description.
 
-    :param description: Input value to be reformatted.
-    :type description: str
+    :param raw_description: Input value to be reformatted.
+    :type raw_description: str
     :returns:
         tuple (description, processed_description)
         WHERE
@@ -284,10 +284,10 @@ def reformat_description(description):
         non-informative/generic data is removed.
     :rtype: tuple
     """
-    if description is None:
-        description = ""
-    description = description.strip()
-    processed_description = description.lower()
+    if raw_description is None:
+        raw_description = ""
+    raw_description = raw_description.strip()
+    processed_description = raw_description.lower()
     split_description = processed_description.split(" ")
     if processed_description == "hypothetical protein":
         processed_description = ""
@@ -311,7 +311,7 @@ def reformat_description(description):
             split_description[0][3:].isdigit():
             processed_description = ""
         else:
-            processed_description = description
+            processed_description = raw_description
     elif len(split_description) == 2:
         if split_description[0] == "gp" and \
             split_description[1].isdigit():
@@ -323,10 +323,10 @@ def reformat_description(description):
             split_description[1][:7] == "protein"):
             processed_description = ""
         else:
-            processed_description = description
+            processed_description = raw_description
     else:
-        processed_description = description
-    return (description, processed_description)
+        processed_description = raw_description
+    return (raw_description, processed_description)
 
 
 def identify_unique_items(complete_list):

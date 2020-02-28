@@ -508,17 +508,17 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.translation_table, 11)
         with self.subTest():
-            self.assertEqual(cds_ftr.product, "unknown")
+            self.assertEqual(cds_ftr.raw_product, "unknown")
         with self.subTest():
-            self.assertEqual(cds_ftr.processed_product, "")
+            self.assertEqual(cds_ftr.product, "")
         with self.subTest():
-            self.assertEqual(cds_ftr.function, "hypothetical protein")
+            self.assertEqual(cds_ftr.raw_function, "hypothetical protein")
         with self.subTest():
-            self.assertEqual(cds_ftr.processed_function, "")
+            self.assertEqual(cds_ftr.function, "")
         with self.subTest():
-            self.assertEqual(cds_ftr.note, "gp5")
+            self.assertEqual(cds_ftr.raw_note, "gp5")
         with self.subTest():
-            self.assertEqual(cds_ftr.processed_note, "")
+            self.assertEqual(cds_ftr.note, "")
         with self.subTest():
             self.assertEqual(cds_ftr.gene, "2")
         with self.subTest():
@@ -572,9 +572,9 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
-            self.assertEqual(cds_ftr.product, "")
+            self.assertEqual(cds_ftr.raw_product, "")
         with self.subTest():
-            self.assertEqual(cds_ftr.processed_product, "")
+            self.assertEqual(cds_ftr.product, "")
 
 
     def test_parse_cds_seqfeature_6(self):
@@ -584,9 +584,9 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
-            self.assertEqual(cds_ftr.function, "")
+            self.assertEqual(cds_ftr.raw_function, "")
         with self.subTest():
-            self.assertEqual(cds_ftr.processed_function, "")
+            self.assertEqual(cds_ftr.function, "")
 
 
     def test_parse_cds_seqfeature_7(self):
@@ -596,9 +596,9 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
-            self.assertEqual(cds_ftr.note, "")
+            self.assertEqual(cds_ftr.raw_note, "")
         with self.subTest():
-            self.assertEqual(cds_ftr.processed_note, "")
+            self.assertEqual(cds_ftr.note, "")
 
 
     def test_parse_cds_seqfeature_8(self):

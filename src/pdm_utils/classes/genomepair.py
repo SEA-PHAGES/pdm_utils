@@ -145,10 +145,10 @@ class GenomePair:
                 second._cds_start_end_ids = first._cds_start_end_ids
             if (second._cds_end_orient_ids == keyword or keyword is None):
                 second._cds_end_orient_ids = first._cds_end_orient_ids
-            if (second._cds_processed_descriptions_tally == keyword
+            if (second._cds_descriptions_tally == keyword
                     or keyword is None):
-                second._cds_processed_descriptions_tally = \
-                    first._cds_processed_descriptions_tally
+                second._cds_descriptions_tally = \
+                    first._cds_descriptions_tally
             if (second.trna_features == keyword or keyword is None):
                 second.trna_features = first.trna_features
             if (second._trna_features_tally == keyword or keyword is None):
@@ -169,18 +169,15 @@ class GenomePair:
                 second._source_host_genus = first._source_host_genus
             if (second._organism_host_genus == keyword or keyword is None):
                 second._organism_host_genus = first._organism_host_genus
-            if (second._cds_processed_products_tally == keyword
+            if (second._cds_products_tally == keyword
                     or keyword is None):
-                second._cds_processed_products_tally = \
-                    first._cds_processed_products_tally
-            if (second._cds_processed_functions_tally == keyword
+                second._cds_products_tally = first._cds_products_tally
+            if (second._cds_functions_tally == keyword
                     or keyword is None):
-                second._cds_processed_functions_tally = \
-                    first._cds_processed_functions_tally
-            if (second._cds_processed_notes_tally == keyword
+                second._cds_functions_tally = first._cds_functions_tally
+            if (second._cds_notes_tally == keyword
                     or keyword is None):
-                second._cds_processed_notes_tally = \
-                    first._cds_processed_notes_tally
+                second._cds_notes_tally = first._cds_notes_tally
             if (second._cds_unique_start_end_ids == keyword
                     or keyword is None):
                 second._cds_unique_start_end_ids = \

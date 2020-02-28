@@ -61,10 +61,10 @@ class Genome:
         self._cds_features_tally = 0
         self._cds_start_end_ids = []
         self._cds_end_orient_ids = []
-        self._cds_processed_descriptions_tally = 0
-        self._cds_processed_products_tally = 0
-        self._cds_processed_functions_tally = 0
-        self._cds_processed_notes_tally = 0
+        self._cds_descriptions_tally = 0
+        self._cds_products_tally = 0
+        self._cds_functions_tally = 0
+        self._cds_notes_tally = 0
         self._cds_unique_start_end_ids = set() # TODO still in development.
         self._cds_duplicate_start_end_ids = set() # TODO still in development.
         self._cds_unique_end_orient_ids = set() # TODO still in development.
@@ -346,19 +346,19 @@ class Genome:
 
     def tally_cds_descriptions(self):
         """Tally the non-generic CDS descriptions."""
-        self._cds_processed_descriptions_tally = 0
-        self._cds_processed_products_tally = 0
-        self._cds_processed_functions_tally = 0
-        self._cds_processed_notes_tally = 0
+        self._cds_descriptions_tally = 0
+        self._cds_products_tally = 0
+        self._cds_functions_tally = 0
+        self._cds_notes_tally = 0
         for cds_ftr in self.cds_features:
-            if cds_ftr.processed_description != "":
-                self._cds_processed_descriptions_tally += 1
-            if cds_ftr.processed_product != "":
-                self._cds_processed_products_tally += 1
-            if cds_ftr.processed_function != "":
-                self._cds_processed_functions_tally += 1
-            if cds_ftr.processed_note != "":
-                self._cds_processed_notes_tally += 1
+            if cds_ftr.description != "":
+                self._cds_descriptions_tally += 1
+            if cds_ftr.product != "":
+                self._cds_products_tally += 1
+            if cds_ftr.function != "":
+                self._cds_functions_tally += 1
+            if cds_ftr.note != "":
+                self._cds_notes_tally += 1
 
 
     def set_unique_cds_start_end_ids(self):

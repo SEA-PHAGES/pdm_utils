@@ -275,7 +275,7 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._cds_features_tally = 33
         self.genome1._cds_start_end_ids = 34
         self.genome1._cds_end_orient_ids = 35
-        self.genome1._cds_processed_descriptions_tally = 36
+        self.genome1._cds_descriptions_tally = 36
         self.genome1.trna_features = 37
         self.genome1._trna_features_tally = 38
         self.genome1.source_features = 39
@@ -286,9 +286,9 @@ class TestGenomePairClass(unittest.TestCase):
         self.genome1._description_host_genus = 45
         self.genome1._source_host_genus = 46
         self.genome1._organism_host_genus = 47
-        self.genome1._cds_processed_products_tally = 48
-        self.genome1._cds_processed_functions_tally = 49
-        self.genome1._cds_processed_notes_tally = 50
+        self.genome1._cds_products_tally = 48
+        self.genome1._cds_functions_tally = 49
+        self.genome1._cds_notes_tally = 50
         self.genome1._cds_unique_start_end_ids = 51
         self.genome1._cds_duplicate_start_end_ids = 52
         self.genome1._cds_unique_end_orient_ids = 53
@@ -350,7 +350,7 @@ class TestGenomePairClass(unittest.TestCase):
             self.assertEqual(self.genome_pair.genome2._cds_end_orient_ids, 35)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._cds_processed_descriptions_tally,
+                self.genome_pair.genome2._cds_descriptions_tally,
                 36)
         with self.subTest():
             self.assertEqual(self.genome_pair.genome2.trna_features, 37)
@@ -380,15 +380,15 @@ class TestGenomePairClass(unittest.TestCase):
                 self.genome_pair.genome2._organism_host_genus, 47)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._cds_processed_products_tally,
+                self.genome_pair.genome2._cds_products_tally,
                 48)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._cds_processed_functions_tally,
+                self.genome_pair.genome2._cds_functions_tally,
                 49)
         with self.subTest():
             self.assertEqual(
-                self.genome_pair.genome2._cds_processed_notes_tally,
+                self.genome_pair.genome2._cds_notes_tally,
                 50)
         with self.subTest():
             self.assertEqual(

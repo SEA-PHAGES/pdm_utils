@@ -511,108 +511,108 @@ class TestBasicFunctions(unittest.TestCase):
 
 
     def test_reformat_description_1(self):
-        """Verify 'None' description is converted."""
-        description = None
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'None' raw_description is converted."""
+        raw_description = None
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_2(self):
-        """Verify description is converted properly."""
-        description = " Hypothetical Protein "
-        value1, value2 = basic.reformat_description(description)
+        """Verify raw_description is converted properly."""
+        raw_description = " Hypothetical Protein "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "Hypothetical Protein")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_3(self):
-        """Verify description is converted properly."""
-        description = "\\N "
-        value1, value2 = basic.reformat_description(description)
+        """Verify raw_description is converted properly."""
+        raw_description = "\\N "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "\\N")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_4(self):
-        """Verify description is converted properly."""
-        description = " . "
-        value1, value2 = basic.reformat_description(description)
+        """Verify raw_description is converted properly."""
+        raw_description = " . "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, ".")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_5(self):
-        """Verify description is converted properly."""
-        description = " 1 "
-        value1, value2 = basic.reformat_description(description)
+        """Verify raw_description is converted properly."""
+        raw_description = " 1 "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "1")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_6(self):
-        """Verify 'gp' description is converted properly."""
-        description = " gp12345 "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'gp' raw_description is converted properly."""
+        raw_description = " gp12345 "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "gp12345")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_7(self):
-        """Verify 'gp' description is converted properly."""
-        description = " GP12345a "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'gp' raw_description is converted properly."""
+        raw_description = " GP12345a "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "GP12345a")
         with self.subTest():
             self.assertEqual(value2, "GP12345a")
 
     def test_reformat_description_8(self):
-        """Verify 'orf' description is converted properly."""
-        description = " orf12345 "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'orf' raw_description is converted properly."""
+        raw_description = " orf12345 "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "orf12345")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_9(self):
-        """Verify 'orf' description is converted properly."""
-        description = " ORF12345a "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'orf' raw_description is converted properly."""
+        raw_description = " ORF12345a "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "ORF12345a")
         with self.subTest():
             self.assertEqual(value2, "ORF12345a")
 
     def test_reformat_description_10(self):
-        """Verify 'gp' description is converted properly."""
-        description = " gp 12345 "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'gp' raw_description is converted properly."""
+        raw_description = " gp 12345 "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "gp 12345")
         with self.subTest():
             self.assertEqual(value2, "")
 
     def test_reformat_description_11(self):
-        """Verify 'gp' description is converted properly."""
-        description = " GP 12345a "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'gp' raw_description is converted properly."""
+        raw_description = " GP 12345a "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "GP 12345a")
         with self.subTest():
             self.assertEqual(value2, "GP 12345a")
 
     def test_reformat_description_12(self):
-        """Verify 'putative protein' description is converted properly."""
-        description = " Putative Protein12345 "
-        value1, value2 = basic.reformat_description(description)
+        """Verify 'putative protein' raw_description is converted properly."""
+        raw_description = " Putative Protein12345 "
+        value1, value2 = basic.reformat_description(raw_description)
         with self.subTest():
             self.assertEqual(value1, "Putative Protein12345")
         with self.subTest():

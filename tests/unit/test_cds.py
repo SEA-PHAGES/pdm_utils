@@ -597,9 +597,9 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_description_field_1(self):
         """Verify no error is produced when a description is present in
-        the processed_product as expected and the processed_function and
-        the processed_note are empty."""
-        self.feature.processed_product = "ABC"
+        the product as expected and the function and
+        the note are empty."""
+        self.feature.product = "ABC"
         self.feature.check_description_field(eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -608,9 +608,9 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_description_field_2(self):
         """Verify no error is produced when a description is present in
-        the processed_function as expected and the processed_product and
-        the processed_note are empty."""
-        self.feature.processed_function = "ABC"
+        the function as expected and the product and
+        the note are empty."""
+        self.feature.function = "ABC"
         self.feature.check_description_field(attribute="function")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -619,49 +619,49 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_description_field_3(self):
         """Verify no error is produced when a description is present in
-        the processed_note as expected and the processed_product and
-        the processed_function are empty."""
-        self.feature.processed_note = "ABC"
+        the note as expected and the product and
+        the function are empty."""
+        self.feature.note = "ABC"
         self.feature.check_description_field(attribute="note")
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_description_field_4(self):
         """Verify an error is produced when a description is not present in
-        the processed_product but there is a description in
-        the processed_function."""
-        self.feature.processed_function = "ABC"
+        the product but there is a description in
+        the function."""
+        self.feature.function = "ABC"
         self.feature.check_description_field()
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_description_field_5(self):
         """Verify an error is produced when a description is not present in
-        the processed_function but there is a description in
-        the processed_product."""
-        self.feature.processed_product = "ABC"
+        the function but there is a description in
+        the product."""
+        self.feature.product = "ABC"
         self.feature.check_description_field(attribute="function")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_description_field_6(self):
         """Verify an error is produced when a description is not present in
-        the processed_function but there is a description in
-        the processed_product."""
-        self.feature.processed_product = "ABC"
+        the function but there is a description in
+        the product."""
+        self.feature.product = "ABC"
         self.feature.check_description_field(attribute="note")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_description_field_7(self):
         """Verify an error is produced when a description is not present due
         to an invalid input but there is a description in
-        the processed_product."""
-        self.feature.processed_product = "ABC"
+        the product."""
+        self.feature.product = "ABC"
         self.feature.check_description_field(attribute="invalid")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_description_field_8(self):
         """Verify no error is produced when a description is present in
-        the processed_product as expected as well as the processed_function."""
-        self.feature.processed_product = "ABC"
-        self.feature.processed_function = "FGH"
+        the product as expected as well as the function."""
+        self.feature.product = "ABC"
+        self.feature.function = "FGH"
         self.feature.check_description_field()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
@@ -1040,43 +1040,43 @@ class TestCdsClass(unittest.TestCase):
 
     def test_set_description_1(self):
         """Verify product description is assigned to primary description."""
-        self.feature.product = "ABCD"
-        self.feature.processed_product = "EFGH"
+        self.feature.raw_product = "ABCD"
+        self.feature.product = "EFGH"
         self.feature.set_description("product")
         with self.subTest():
-            self.assertEqual(self.feature.description, "ABCD")
+            self.assertEqual(self.feature.raw_description, "ABCD")
         with self.subTest():
-            self.assertEqual(self.feature.processed_description, "EFGH")
+            self.assertEqual(self.feature.description, "EFGH")
 
     def test_set_description_2(self):
         """Verify function description is assigned to primary description."""
-        self.feature.function = "ABCD"
-        self.feature.processed_function = "EFGH"
+        self.feature.raw_function = "ABCD"
+        self.feature.function = "EFGH"
         self.feature.set_description("function")
         with self.subTest():
-            self.assertEqual(self.feature.description, "ABCD")
+            self.assertEqual(self.feature.raw_description, "ABCD")
         with self.subTest():
-            self.assertEqual(self.feature.processed_description, "EFGH")
+            self.assertEqual(self.feature.description, "EFGH")
 
     def test_set_description_3(self):
         """Verify note description is assigned to primary description."""
-        self.feature.note = "ABCD"
-        self.feature.processed_note = "EFGH"
+        self.feature.raw_note = "ABCD"
+        self.feature.note = "EFGH"
         self.feature.set_description("note")
         with self.subTest():
-            self.assertEqual(self.feature.description, "ABCD")
+            self.assertEqual(self.feature.raw_description, "ABCD")
         with self.subTest():
-            self.assertEqual(self.feature.processed_description, "EFGH")
+            self.assertEqual(self.feature.description, "EFGH")
 
     def test_set_description_4(self):
         """Verify no description is assigned to primary description."""
-        self.feature.note = "ABCD"
-        self.feature.processed_note = "EFGH"
+        self.feature.raw_note = "ABCD"
+        self.feature.note = "EFGH"
         self.feature.set_description("invalid")
         with self.subTest():
-            self.assertEqual(self.feature.description, "")
+            self.assertEqual(self.feature.raw_description, "")
         with self.subTest():
-            self.assertEqual(self.feature.processed_description, "")
+            self.assertEqual(self.feature.description, "")
 
 
 
@@ -1141,8 +1141,8 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_generic_data_1(self):
         """Verify no error is produced if the product contains valid data."""
+        self.feature.raw_product = "terminase"
         self.feature.product = "terminase"
-        self.feature.processed_product = "terminase"
         self.feature.check_generic_data("product", eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -1151,8 +1151,8 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_generic_data_2(self):
         """Verify no error is produced if the function contains valid data."""
+        self.feature.raw_function = "terminase"
         self.feature.function = "terminase"
-        self.feature.processed_function = "terminase"
         self.feature.check_generic_data("product")
         with self.subTest():
             self.assertEqual(self.feature.evaluations[0].status, "correct")
@@ -1161,22 +1161,22 @@ class TestCdsClass(unittest.TestCase):
 
     def test_check_generic_data_3(self):
         """Verify no error is produced if the note contains valid data."""
+        self.feature.raw_note = "terminase"
         self.feature.note = "terminase"
-        self.feature.processed_note = "terminase"
         self.feature.check_generic_data("product")
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 
     def test_check_generic_data_4(self):
         """Verify an error is produced if the product contains invalid data."""
-        self.feature.product = "gp104"
-        self.feature.processed_product = ""
+        self.feature.raw_product = "gp104"
+        self.feature.product = ""
         self.feature.check_generic_data("product")
         self.assertEqual(self.feature.evaluations[0].status, "error")
 
     def test_check_generic_data_5(self):
         """Verify no error is produced if no attribute is selected."""
-        self.feature.product = "gp104"
-        self.feature.processed_product = ""
+        self.feature.raw_product = "gp104"
+        self.feature.product = ""
         self.feature.check_generic_data()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
 

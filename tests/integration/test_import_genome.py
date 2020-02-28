@@ -241,10 +241,10 @@ class TestImportGenomeMain1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "L5")
         with self.subTest():
-            self.assertTrue(ff_gnm._cds_processed_descriptions_tally > 0)
+            self.assertTrue(ff_gnm._cds_descriptions_tally > 0)
         with self.subTest():
-            self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
-                             ff_gnm._cds_processed_products_tally)
+            self.assertEqual(ff_gnm._cds_descriptions_tally,
+                             ff_gnm._cds_products_tally)
 
 
     def test_prepare_bundle_2(self):
@@ -562,11 +562,11 @@ class TestImportGenomeMain1(unittest.TestCase):
         tkt_gnm = bndl.genome_dict["ticket"]
         bndl_tkt = bndl.ticket
         with self.subTest():
-            self.assertTrue(ff_gnm._cds_processed_descriptions_tally != \
-                            ff_gnm._cds_processed_functions_tally)
+            self.assertTrue(ff_gnm._cds_descriptions_tally != \
+                            ff_gnm._cds_functions_tally)
         with self.subTest():
-            self.assertEqual(ff_gnm._cds_processed_descriptions_tally,
-                             ff_gnm._cds_processed_products_tally)
+            self.assertEqual(ff_gnm._cds_descriptions_tally,
+                             ff_gnm._cds_products_tally)
 
 
 
@@ -2311,27 +2311,27 @@ class TestImportGenomeMain8(unittest.TestCase):
         self.cds1.start = 10
         self.cds1.stop = 20
         self.cds1.orientation = "F"
-        self.cds1.processed_product = "int"
-        self.cds1.processed_function = ""
-        self.cds1.processed_note = ""
+        self.cds1.product = "int"
+        self.cds1.function = ""
+        self.cds1.note = ""
 
         self.cds2 = cds.Cds()
         self.cds2.id = "L5_002"
         self.cds2.start = 12345
         self.cds2.stop = 12445
         self.cds2.orientation = "F"
-        self.cds2.processed_product = "capsid"
-        self.cds2.processed_function = ""
-        self.cds2.processed_note = "random"
+        self.cds2.product = "capsid"
+        self.cds2.function = ""
+        self.cds2.note = "random"
 
         self.cds3 = cds.Cds()
         self.cds3.id = "L5_001"
         self.cds3.start = 150000
         self.cds3.stop = 151000
         self.cds3.orientation = "R"
-        self.cds3.processed_product = "rep"
-        self.cds3.processed_function = "lysB"
-        self.cds3.processed_note = ""
+        self.cds3.product = "rep"
+        self.cds3.function = "lysB"
+        self.cds3.note = ""
 
         self.field = "product"
 
@@ -2384,13 +2384,13 @@ class TestImportGenomeMain8(unittest.TestCase):
         self.tkt.description_field = "product"
         import_genome.set_cds_descriptions(self.gnm, self.tkt, interactive=False)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 3)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 3)
         with self.subTest():
-            self.assertEqual(self.cds1.processed_description, "int")
+            self.assertEqual(self.cds1.description, "int")
         with self.subTest():
-            self.assertEqual(self.cds2.processed_description, "capsid")
+            self.assertEqual(self.cds2.description, "capsid")
         with self.subTest():
-            self.assertEqual(self.cds3.processed_description, "rep")
+            self.assertEqual(self.cds3.description, "rep")
 
     @patch("pdm_utils.functions.basic.choose_from_list")
     @patch("pdm_utils.functions.basic.ask_yes_no")
@@ -2403,13 +2403,13 @@ class TestImportGenomeMain8(unittest.TestCase):
         choose_mock.side_effect = ["function"]
         import_genome.set_cds_descriptions(self.gnm, self.tkt, interactive=True)
         with self.subTest():
-            self.assertEqual(self.gnm._cds_processed_descriptions_tally, 1)
+            self.assertEqual(self.gnm._cds_descriptions_tally, 1)
         with self.subTest():
-            self.assertEqual(self.cds1.processed_description, "")
+            self.assertEqual(self.cds1.description, "")
         with self.subTest():
-            self.assertEqual(self.cds2.processed_description, "")
+            self.assertEqual(self.cds2.description, "")
         with self.subTest():
-            self.assertEqual(self.cds3.processed_description, "lysB")
+            self.assertEqual(self.cds3.description, "lysB")
         with self.subTest():
             self.assertEqual(self.tkt.description_field, "function")
 

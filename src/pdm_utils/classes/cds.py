@@ -39,8 +39,8 @@ class Cds:
 
         # The following attributes are common to MySQL database.
         self.pham = 0 # TODO build method to implement this.
-        self.description = "" # Raw gene description
-        self.processed_description = "" # Non-generic gene descriptions
+        self.raw_description = "" # Raw gene description
+        self.description = "" # Non-generic gene descriptions
 
 
         # The following attributes are common to
@@ -48,12 +48,12 @@ class Cds:
         self.locus_tag = "" # Gene ID comprised of PhageID and Gene name
         self._locus_tag_num = "" # Should be digit, but keep as string.
         self.gene = "" # Tends to be an integer, but not guaranteed.
+        self.raw_product = ""
+        self.raw_function = ""
+        self.raw_note = ""
         self.product = ""
         self.function = ""
         self.note = ""
-        self.processed_product = ""
-        self.processed_function = ""
-        self.processed_note = ""
 
         # The following attributes are usefule for processing data
         # from various data sources.
@@ -148,7 +148,7 @@ class Cds:
 
 
     def set_description(self, value):
-        """Set the description and processed_description attributes.
+        """Set the description and description attributes.
 
         :param value:
             Indicates which reference attributes are used
@@ -157,14 +157,14 @@ class Cds:
         """
 
         if value == "product":
+            self.raw_description = self.raw_product
             self.description = self.product
-            self.processed_description = self.processed_product
         elif value == "function":
+            self.raw_description = self.raw_function
             self.description = self.function
-            self.processed_description = self.processed_function
         elif value == "note":
+            self.raw_description = self.raw_note
             self.description = self.note
-            self.processed_description = self.processed_note
         else:
             pass
 
@@ -427,8 +427,8 @@ class Cds:
         qualifiers["note"] = ["gp{}".format(self.name)]
         qualifiers["codon_start"] = ["1"]
         qualifiers["transl_table"] = ["11"]
-        if self.description != "":
-            qualifiers["product"] = [self.description]
+        if self.raw_description != "":
+            qualifiers["product"] = [self.raw_description]
         qualifiers["id"] = [self.id]
         qualifiers["translation"] = [self.translation]
 
@@ -760,22 +760,22 @@ class Cds:
         description_set = set()
 
         if attribute == "product":
-            description = self.processed_product
+            description = self.product
         else:
-            if self.processed_product != "":
-                description_set.add(self.processed_product)
+            if self.product != "":
+                description_set.add(self.product)
 
         if attribute == "function":
-            description = self.processed_function
+            description = self.function
         else:
-            if self.processed_function != "":
-                description_set.add(self.processed_function)
+            if self.function != "":
+                description_set.add(self.function)
 
         if attribute == "note":
-            description = self.processed_note
+            description = self.note
         else:
-            if self.processed_note != "":
-                description_set.add(self.processed_note)
+            if self.note != "":
+                description_set.add(self.note)
 
         result = f"The CDS description is '{description}', "
         if (description == "" and len(description_set) > 0):
@@ -807,14 +807,14 @@ class Cds:
         """
 
         if attribute == "product":
-            original = self.product
-            processed = self.processed_product
+            original = self.raw_product
+            processed = self.product
         elif attribute == "function":
-            original = self.function
-            processed = self.processed_function
+            original = self.raw_function
+            processed = self.function
         elif attribute == "note":
-            original = self.note
-            processed = self.processed_note
+            original = self.raw_note
+            processed = self.note
         else:
             original = ""
             processed = ""
