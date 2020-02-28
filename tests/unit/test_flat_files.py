@@ -869,9 +869,6 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.source_features[0].genome_id, "KatherineG")
         with self.subTest():
-            self.assertEqual(gnm.source_features[0].genome_host_genus,
-                             "Gordonia")
-        with self.subTest():
             self.assertEqual(gnm.source_features[0].start, 1)
         with self.subTest():
             self.assertEqual(gnm.source_features[0].stop, 11000)
@@ -1175,9 +1172,6 @@ class TestFlatFileFunctions3(unittest.TestCase):
             self.assertEqual(gnm.id, "L5")
         with self.subTest():
             self.assertEqual(gnm.host_genus, "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(gnm.source_features[0].genome_host_genus,
-                             "Mycobacterium")
 
 
 

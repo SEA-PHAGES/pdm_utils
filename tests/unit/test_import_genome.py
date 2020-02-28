@@ -2042,7 +2042,6 @@ class TestImportGenomeClass8(unittest.TestCase):
         self.src1.host = "Mycobacterium smegmatis mc1255"
         self.src1.lab_host = "Mycobacterium smegmatis mc1255"
         self.src1.genome_id = "L5"
-        self.src1.genome_host_genus = "Mycobacterium"
         self.src1._organism_name = "L5"
         self.src1._organism_host_genus = "Mycobacterium"
         self.src1._host_host_genus = "Mycobacterium"

@@ -20,7 +20,6 @@ class Source:
 
         # Data about the parent genome.
         self.genome_id = ""
-        self.genome_host_genus = ""
 
         self._organism_name = "" # Parsed from organism.
         self._organism_host_genus = "" # Parsed from organism.
@@ -96,92 +95,3 @@ class Source:
         definition = f"Check the value of the '{attribute}' attribute."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
-
-
-
-    # TODO this is probably no longer needed.
-    # def check_organism_name(self, eval_id=None):
-    #     """Check phage name spelling in the organism field.
-    #
-    #     :param eval_id: Unique identifier for the evaluation.
-    #     :type eval_id: str
-    #     """
-    #
-    #     if self.genome_id != self._organism_name:
-    #         result = ("The phage name in the organism field "
-    #                     "does not match the genome_id.")
-    #         status = "error"
-    #
-    #     else:
-    #         result = "The phage name is spelled correctly."
-    #         status = "correct"
-    #
-    #     definition = "Check phage name spelling in the organism field."
-    #     evl = eval.Eval(eval_id, definition, result, status)
-    #     self.evaluations.append(evl)
-
-
-    # TODO this is probably no longer needed.
-    # def check_organism_host_genus(self, eval_id=None):
-    #     """Check host_genus name spelling in the organism field.
-    #
-    #     :param eval_id: Unique identifier for the evaluation.
-    #     :type eval_id: str
-    #     """
-    #
-    #     if self.genome_host_genus != self._organism_host_genus:
-    #         result = ("The host_genus name in the organism field "
-    #                     "does not match the genome_host_genus.")
-    #         status = "error"
-    #
-    #     else:
-    #         result = "The host_genus name is spelled correctly."
-    #         status = "correct"
-    #
-    #     definition = "Check host_genus name spelling in the organism field."
-    #     evl = eval.Eval(eval_id, definition, result, status)
-    #     self.evaluations.append(evl)
-
-
-    # TODO this is probably no longer needed.
-    # def check_host_host_genus(self, eval_id=None):
-    #     """Check host_genus name spelling in the host field.
-    #
-    #     :param eval_id: Unique identifier for the evaluation.
-    #     :type eval_id: str
-    #     """
-    #
-    #     if self.genome_host_genus != self._host_host_genus:
-    #         result = ("The host_genus name in the host field "
-    #                     "does not match the genome_host_genus.")
-    #         status = "error"
-    #
-    #     else:
-    #         result = "The host_genus name is spelled correctly."
-    #         status = "correct"
-    #
-    #     definition = "Check host_genus name spelling in the host field."
-    #     evl = eval.Eval(eval_id, definition, result, status)
-    #     self.evaluations.append(evl)
-
-
-    # TODO this is probably no longer needed.
-    # def check_lab_host_host_genus(self, eval_id=None):
-    #     """Check host_genus name spelling in the lab_host field.
-    #
-    #     :param eval_id: Unique identifier for the evaluation.
-    #     :type eval_id: str
-    #     """
-    #
-    #     if self.genome_host_genus != self._lab_host_host_genus:
-    #         result = ("The host_genus name in the lab_host field "
-    #                     "does not match the genome_host_genus.")
-    #         status = "error"
-    #
-    #     else:
-    #         result = "The host_genus name is spelled correctly."
-    #         status = "correct"
-    #
-    #     definition = "Check host_genus name spelling in the lab_host field."
-    #     evl = eval.Eval(eval_id, definition, result, status)
-    #     self.evaluations.append(evl)

@@ -418,7 +418,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
         for seqfeature in seqfeature_dict["source"]:
             src_ftr = parse_source_seqfeature(seqfeature)
             src_ftr.genome_id = gnm.id
-            src_ftr.genome_host_genus = gnm.host_genus
             source_list.append(src_ftr)
 
     # TODO unit test after functions are constructed.
