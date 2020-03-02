@@ -220,7 +220,7 @@ def match_genomes(mysqldb_dict, phagesdb_dict):
         if gnm.annotation_author == 1:
             unmatched_mysqldb_authored_genomes[id] = gnm
 
-    print("\nSummary of genomes matched:")
+    print("\nSummary of genome matching:")
     print(f"{len(matched_ids):>6}: genome(s) matched.")
     print(f"{len(unmatched_mysqldb_ids):>6}: MySQL genome(s) not matched.")
     print(f"{len(unmatched_phagesdb_ids):>6}: PhagesDB genome(s) not matched.")
@@ -857,7 +857,7 @@ def get_draft_data(output_path, phage_id_set):
 def retrieve_drafts(output_folder, phage_list):
     """Retrieve auto-annotated 'draft' genomes from PECAAN."""
 
-    print("\n\nRetrieving new phages from PECAAN")
+    print(f"\n\nRetrieving {len(phage_list)} new phages from PECAAN")
     genome_folder = pathlib.Path(output_folder, GENOMES_DIR)
     genome_folder.mkdir()
 
