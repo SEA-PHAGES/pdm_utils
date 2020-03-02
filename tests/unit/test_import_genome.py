@@ -1870,7 +1870,7 @@ class TestImportGenomeClass7(unittest.TestCase):
         self.cds1.length = 9
         self.cds1.genome_id = "L5"
         self.cds1.genome_length = 50000
-        self.cds1.pham = 100
+        self.cds1.pham_id = 100
         self.cds1.raw_description = "repressor protein"
         self.cds1.description = "repressor"
         self.cds1.locus_tag = "SEA_L5_1"
@@ -1893,28 +1893,28 @@ class TestImportGenomeClass7(unittest.TestCase):
         """Verify correct number of evaluations are produced when
         none are False."""
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 13)
+        self.assertEqual(len(self.cds1.evaluations), 14)
 
     def test_check_cds_2(self):
         """Verify correct number of evaluations are produced when
         check_locus_tag = False."""
         self.eval_flags["check_locus_tag"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 10)
+        self.assertEqual(len(self.cds1.evaluations), 11)
 
     def test_check_cds_3(self):
         """Verify correct number of evaluations are produced when
         check_gene = False."""
         self.eval_flags["check_gene"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 10)
+        self.assertEqual(len(self.cds1.evaluations), 11)
 
     def test_check_cds_4(self):
         """Verify correct number of evaluations are produced when
         check_description = False."""
         self.eval_flags["check_description"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 13)
+        self.assertEqual(len(self.cds1.evaluations), 14)
 
     def test_check_cds_5(self):
         """Verify correct number of evaluations are produced when
@@ -1924,7 +1924,7 @@ class TestImportGenomeClass7(unittest.TestCase):
         self.eval_flags["check_description"] = False
         self.eval_flags["check_description_field"] = False
         import_genome.check_cds(self.cds1, self.eval_flags)
-        self.assertEqual(len(self.cds1.evaluations), 7)
+        self.assertEqual(len(self.cds1.evaluations), 8)
 
     def test_check_cds_6(self):
         """Verify correct number of errors with correct CDS feature."""
@@ -1968,48 +1968,62 @@ class TestImportGenomeClass7(unittest.TestCase):
         self.assertEqual(count, 1)
 
     def test_check_cds_12(self):
+        """Verify correct number of errors with incorrect stop coordinate."""
+        self.cds1.stop = -1
+        import_genome.check_cds(self.cds1, self.eval_flags)
+        count = count_status(self.cds1, "error")
+        self.assertEqual(count, 1)
+
+    def test_check_cds_13(self):
+        """Verify correct number of errors with incorrect parts."""
+        self.cds1.parts = 0
+        import_genome.check_cds(self.cds1, self.eval_flags)
+        count = count_status(self.cds1, "error")
+        self.assertEqual(count, 1)
+
+    def test_check_cds_14(self):
         """Verify correct number of errors with incorrect orientation."""
         self.cds1.orientation = "f"
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error")
         self.assertEqual(count, 1)
 
-    def test_check_cds_13(self):
+    def test_check_cds_15(self):
         """Verify correct number of errors with missing locus_tag."""
         self.cds1.locus_tag = ""
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_cds_14(self):
+    def test_check_cds_16(self):
         """Verify correct number of errors with incorrect locus_tag."""
         self.cds1.locus_tag = "ABCXYZ"
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_cds_15(self):
+    def test_check_cds_17(self):
         """Verify correct number of errors with missing gene qualifier."""
         self.cds1.gene = ""
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error", "warning")
         self.assertEqual(count, 3)
 
-    def test_check_cds_16(self):
+    def test_check_cds_18(self):
         """Verify correct number of errors with non-integer gene qualifier."""
         self.cds1.gene = "A"
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_cds_17(self):
+    def test_check_cds_19(self):
         """Verify correct number of errors with non-integer gene qualifier."""
         self.cds1.gene = "11"
         import_genome.check_cds(self.cds1, self.eval_flags)
         count = count_status(self.cds1, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_cds_18(self):
+    def test_check_cds_20(self):
         """Verify correct number of errors with non-matching integer in
         gene qualifier and locus_tag."""
         self.cds1.gene = "11"
@@ -2017,7 +2031,7 @@ class TestImportGenomeClass7(unittest.TestCase):
         count = count_status(self.cds1, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_cds_19(self):
+    def test_check_cds_21(self):
         """Verify correct number of errors with non-matching integer in
         gene qualifier and locus_tag."""
         import_genome.check_cds(self.cds1, self.eval_flags,

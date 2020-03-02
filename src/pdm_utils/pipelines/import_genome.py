@@ -1358,7 +1358,10 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
                             eval_def=EDD["CDS_005"])
     cds_ftr.check_magnitude("stop", ">", 0, eval_id="CDS_013",
                             eval_def=EDD["CDS_013"])
+    cds_ftr.check_magnitude("parts", ">", 0, eval_id="CDS_014",
+                            eval_def=EDD["CDS_014"])
     cds_ftr.check_orientation(format="fr_short", case=True, eval_id="CDS_006", eval_def=EDD["CDS_006"])
+
     if eval_flags["check_locus_tag"]:
         cds_ftr.check_attribute("locus_tag", {""}, expect=False, eval_id="CDS_007",
                                 fail="warning", eval_def=EDD["CDS_007"])

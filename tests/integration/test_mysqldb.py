@@ -406,10 +406,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
-                "1000, '', '', 'F', '', '');"
+                "1000, '', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -458,10 +458,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
-                "1000, '', '', 'F', '', '');"
+                "1000, '', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -514,10 +514,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
-                "1000, '', '', 'F', '', '');"
+                "1000, '', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -571,10 +571,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, "
-                "1000, '', '', 'F', '', '');"
+                "1000, '', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -677,10 +677,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
-                "'', '', 'F', '', '');"
+                "'', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -749,10 +749,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
-                "'', '', 'F', '', '');"
+                "'', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -825,10 +825,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
-                "'', '', 'F', '', '');"
+                "'', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -877,10 +877,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
-                "'', '', 'F', '', '');"
+                "'', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
         connection.commit()
@@ -925,10 +925,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for cds_data in input_cds_data:
             sql2 = ("INSERT INTO gene "
                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                "Translation, Orientation, Notes, LocusTag) "
+                "Translation, Orientation, Notes, LocusTag, Parts) "
                 "VALUES "
                 f"('{cds_data[0]}', '{cds_data[1]}', 1, 100, 1000, "
-                "'', '', 'F', '', '');"
+                "'', '', 'F', '', '', 1);"
                 )
             cur.execute(sql2)
 
@@ -1193,7 +1193,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
         self.std_cds_query = (
              "SELECT GeneID, PhageID, Start, Stop, Length, Name, "
-             "Translation, Orientation, Notes, LocusTag FROM gene "
+             "Translation, Orientation, Notes, LocusTag, Parts FROM gene "
              "WHERE PhageID = 'L5'")
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
@@ -1215,6 +1215,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cds1.genome_id = "L5"
         cds1.start = 5
         cds1.stop = 10
+        cds1.parts = 1
         cds1.translation_length = 20
         cds1.name = "Int"
         cds1.type = "CDS"
@@ -1244,10 +1245,10 @@ class TestMysqldbFunctions2(unittest.TestCase):
         connection.close()
         exp = ("INSERT INTO gene "
                "(GeneID, PhageID, Start, Stop, Length, Name, "
-               "Translation, Orientation, Notes, LocusTag) "
+               "Translation, Orientation, Notes, LocusTag, Parts) "
                "VALUES "
                "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
-               "'ACKLG', 'F', 'integrase', 'TAG1');")
+               "'ACKLG', 'F', 'integrase', 'TAG1', 1);")
         with self.subTest():
             self.assertEqual(insert2, exp)
         with self.subTest():
@@ -1258,6 +1259,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
             self.assertEqual(results["Start"], 5)
         with self.subTest():
             self.assertEqual(results["Stop"], 10)
+        with self.subTest():
+            self.assertEqual(results["Parts"], 1)
         with self.subTest():
             self.assertEqual(results["Length"], 20)
         with self.subTest():
@@ -1350,15 +1353,15 @@ class TestMysqldbFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Subcluster"], "A2")
 
-    def test_create_cluster_statement_4(self):
+    def test_create_update_4(self):
         """Verify Gene table statement is created correctly."""
         # First add gene SEA_L5_123 to the database.
         input = ("INSERT INTO gene "
                "(GeneID, PhageID, Start, Stop, Length, Name, "
-               "Translation, Orientation, Notes, LocusTag) "
+               "Translation, Orientation, Notes, LocusTag, Parts) "
                "VALUES "
                "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
-               "'ACKLG', 'F', 'integrase', 'TAG1');")
+               "'ACKLG', 'F', 'integrase', 'TAG1', 1);")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)
@@ -1455,16 +1458,16 @@ class TestMysqldbFunctions2(unittest.TestCase):
         # First add two genes to the database.
         input1 = ("INSERT INTO gene "
                   "(GeneID, PhageID, Start, Stop, Length, Name, "
-                  "Translation, Orientation, Notes, LocusTag) "
+                  "Translation, Orientation, Notes, LocusTag, Parts) "
                   "VALUES "
                   "('SEA_L5_1', 'L5', 5, 10, 20, 'LysA', "
-                  "'ABCDEF', 'F', 'lysin', 'TAG1');")
+                  "'ABCDEF', 'F', 'lysin', 'TAG1', 1);")
         input2 = ("INSERT INTO gene "
                   "(GeneID, PhageID, Start, Stop, Length, Name, "
-                  "Translation, Orientation, Notes, LocusTag) "
+                  "Translation, Orientation, Notes, LocusTag, Parts) "
                   "VALUES "
                   "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
-                  "'ACKLG', 'F', 'integrase', 'TAG123');")
+                  "'ACKLG', 'F', 'integrase', 'TAG123', 1);")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)

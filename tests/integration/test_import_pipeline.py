@@ -250,13 +250,14 @@ def insert_data_into_gene_table(db, user, pwd, data_dict):
     sql = (
         "INSERT INTO gene "
         "(GeneID, PhageID, Start, Stop, Length, Name, "
-        "Translation, Orientation, Notes, LocusTag) "
+        "Translation, Orientation, Notes, LocusTag, Parts) "
         "VALUES ("
         f"'{data_dict['GeneID']}', '{data_dict['PhageID']}', "
         f"{data_dict['Start']}, {data_dict['Stop']}, "
         f"{data_dict['Length']}, '{data_dict['Name']}', "
         f"'{data_dict['Translation']}', '{data_dict['Orientation']}', "
-        f"'{data_dict['Notes']}', '{data_dict['LocusTag']}');"
+        f"'{data_dict['Notes']}', '{data_dict['LocusTag']}',"
+        f"{data_dict['Parts']});"
         )
     cur.execute(sql)
     connection.commit()
@@ -274,7 +275,7 @@ phage_table_query = (
 gene_table_query = (
     "SELECT "
     "GeneID, PhageID, Start, Stop, Length, Name, "
-    "Translation, Orientation, Notes, LocusTag "
+    "Translation, Orientation, Notes, LocusTag, Parts "
     "FROM gene;")
 
 
@@ -318,6 +319,7 @@ def process_gene_table_data(list_of_sql_results):
         data_dict["Length"] = int(data_dict["Length"])
         data_dict["Start"] = int(data_dict["Start"])
         data_dict["Stop"] = int(data_dict["Stop"])
+        data_dict["Parts"] = int(data_dict["Parts"])
         x += 1
 
 
@@ -443,6 +445,7 @@ def get_trixie_gene_table_data_1():
         "PhageID": "Trixie",
         "Start": 100,
         "Stop": 1100,
+        "Parts": 1,
         "Length": 1000,
         "Name": "1",
         "Translation": "ACTGC",
@@ -580,6 +583,7 @@ def get_alice_cds_252_draft_data_in_db(translation=alice_cds_252_translation):
         "PhageID": "Alice",
         "Start": 152829,
         "Stop": 4,
+        "Parts": 2,
         "Length": 191,
         "Name": "252",
         "Translation": translation,
@@ -613,6 +617,7 @@ def get_alice_cds_124_draft_data_in_db(translation=alice_cds_124_translation):
         "PhageID": "Alice",
         "Start": 70374,
         "Stop": 71285,
+        "Parts": 2,
         "Length": 303,
         "Name": "124",
         "Translation": translation,
@@ -644,6 +649,7 @@ def get_alice_cds_139_draft_data_in_db(translation=alice_cds_139_translation):
         "PhageID": "Alice",
         "Start": 88120,
         "Stop": 88447,
+        "Parts": 1,
         "Length": 108,
         "Name": "139",
         "Translation": translation,
@@ -673,6 +679,7 @@ def get_alice_cds_193_draft_data_in_db(translation=alice_cds_193_translation):
         "PhageID": "Alice",
         "Start": 110297,
         "Stop": 110537,
+        "Parts": 1,
         "Length": 79,
         "Name": "193",
         "Translation": translation,

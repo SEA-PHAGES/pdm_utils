@@ -114,6 +114,7 @@ EVAL_DESCRIPTIONS = {
     "CDS_011": ("The CDS feature is expected to have the same integer in the Gene and Locus_Tag qualifiers."),
     "CDS_012": ("The CDS feature is not expected to have a description in any qualifiers other than the selected qualifier, if the selected qualifier has no description."),
     "CDS_013": ("The CDS feature is expected to have an integer stop coordinate > 0."),
+    "CDS_014": ("The CDS feature is expected to be composed of 1 or more parts."),
 
 
     # Paired genomes

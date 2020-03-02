@@ -38,7 +38,8 @@ class Cds:
 
 
         # The following attributes are common to MySQL database.
-        self.pham = 0 # TODO build method to implement this.
+        self.pham_id = 0
+        self.domain_status = -1
         self.raw_description = "" # Raw gene description
         self.description = "" # Non-generic gene descriptions
 

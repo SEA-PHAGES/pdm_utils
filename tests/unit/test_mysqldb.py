@@ -125,11 +125,14 @@ class TestMysqldbFunctions1(unittest.TestCase):
                      "PhageID":"L5",
                      "Start":10,
                      "Stop":100,
+                     "Parts":1,
                      "Length":1000,
                      "Name":"1",
                      "Translation":"AGGPT",
                      "Orientation":"F",
                      "Notes":"description".encode("utf-8"),
+                     "DomainStatus":1,
+                     "PhamID":1,
                      "LocusTag":"SEA_L5_001"}
 
         cds1 = mysqldb.parse_gene_table_data(data_dict)
@@ -142,6 +145,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(cds1.start, 10)
         with self.subTest():
             self.assertEqual(cds1.stop, 100)
+        with self.subTest():
+            self.assertEqual(cds1.parts, 1)
         with self.subTest():
             self.assertEqual(cds1.length, 1000)
         with self.subTest():
@@ -160,6 +165,10 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(cds1.translation_table, 11)
         with self.subTest():
             self.assertEqual(cds1.coordinate_format, "0_half_open")
+        with self.subTest():
+            self.assertEqual(cds1.domain_status, 1)
+        with self.subTest():
+            self.assertEqual(cds1.pham_id, 1)
 
 
     def test_parse_gene_table_data_2(self):
@@ -236,6 +245,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cds1.genome_id = "L5"
         cds1.start = 10
         cds1.stop = 100
+        cds1.parts = 1
         cds1.length = 1000
         cds1.name = "1"
         cds1.type = "CDS"
@@ -248,6 +258,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
         cds2.genome_id = "L5"
         cds2.start = 100
         cds2.stop = 1000
+        cds2.parts = 1
         cds2.length = 10000
         cds2.name = "2"
         cds2.type = "CDS"

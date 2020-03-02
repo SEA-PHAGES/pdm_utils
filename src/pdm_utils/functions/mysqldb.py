@@ -156,6 +156,11 @@ def parse_gene_table_data(data_dict, trans_table=11):
     except:
         pass
 
+    try:
+        cds_ftr.parts = int(data_dict["Parts"])
+    except:
+        pass
+
     cds_ftr.coordinate_format = "0_half_open"
 
     try:
@@ -185,6 +190,16 @@ def parse_gene_table_data(data_dict, trans_table=11):
 
     try:
         cds_ftr.locus_tag = data_dict["LocusTag"]
+    except:
+        pass
+
+    try:
+        cds_ftr.pham_id = int(data_dict["PhamID"])
+    except:
+        pass
+
+    try:
+        cds_ftr.domain_status = int(data_dict["DomainStatus"])
     except:
         pass
 
@@ -454,13 +469,13 @@ def create_gene_table_insert(cds_ftr):
     """
     statement = ("INSERT INTO gene "
                  "(GeneID, PhageID, Start, Stop, Length, Name, "
-                 "Translation, Orientation, Notes, LocusTag) "
+                 "Translation, Orientation, Notes, LocusTag, Parts) "
                  "VALUES "
                  f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.start}, "
                  f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
                  f"'{cds_ftr.name}', '{cds_ftr.translation}', "
                  f"'{cds_ftr.orientation}', '{cds_ftr.description}', "
-                 f"'{cds_ftr.locus_tag}');"
+                 f"'{cds_ftr.locus_tag}', {cds_ftr.parts});"
                  )
     return statement
 
