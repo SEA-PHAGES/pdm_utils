@@ -111,16 +111,6 @@ IMPORT_TICKET_TYPE_SET = set(["add", "replace"])
 # Create set of most common gene description genbank qualifiers.
 DESCRIPTION_FIELD_SET = set(["product", "note", "function"])
 
-
-# TODO this is probably no longer needed.
-# # Create list of potential host names to ignore.
-# # This is primarily for databases that contain phages of all host phyla
-# # and not just Actinobacteria.
-# HOST_IGNORE = ['enterobacteria','phage','bacteriophage','cyanophage']
-
-
-
-
 # List of names that represent authors that have control over
 # a genome record annotations. This constant is stored as a list
 # so that multiple names can be stored, if needed.
@@ -204,10 +194,6 @@ PHAGE_ID_DICT = {
     }
 
 
-
-
-
-
 # Host genus typo dictionary.
 # Key = Host genus as it is spelled in the GenBank-formatted record.
 # Value = Host genus as it is spelled in PhagesDB and/or the MySQL database, and thus
@@ -218,14 +204,9 @@ HOST_GENUS_DICT = {
     "Mycolicibacterium":"Mycobacterium"
     }
 
-
+# TODO HOST_GENUS_DICT may no longer be needed.
 # List of host_genus synonyms.
 HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
-
-
-
-
-
 
 
 # Hatfull lab server info

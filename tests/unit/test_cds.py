@@ -87,6 +87,15 @@ class TestCdsClass(unittest.TestCase):
         self.feature.set_locus_tag(tag="SEA_TRIXI_AB20")
         self.assertEqual(self.feature._locus_tag_num, "")
 
+    def test_set_locus_tag_10(self):
+        """Verify that empty locus_tag data from database
+        is stored correctly."""
+        self.feature.set_locus_tag(tag=None)
+        with self.subTest():
+            self.assertEqual(self.feature.locus_tag, "")
+        with self.subTest():
+            self.assertEqual(self.feature._locus_tag_num, "")
+
 
 
 
@@ -334,23 +343,6 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(start, -1)
         with self.subTest():
             self.assertEqual(end, -1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -826,11 +818,6 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-
-
-
-
-
     def test_set_nucleotide_length_1(self):
         """Verify the nucleotide length is correct when computed directly
         from a sequence."""
@@ -864,9 +851,6 @@ class TestCdsClass(unittest.TestCase):
         self.feature.coordinate_format = "invalid"
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature.length, -1)
-
-
-
 
 
 
@@ -1179,12 +1163,6 @@ class TestCdsClass(unittest.TestCase):
         self.feature.product = ""
         self.feature.check_generic_data()
         self.assertEqual(self.feature.evaluations[0].status, "correct")
-
-
-
-
-
-
 
 
 

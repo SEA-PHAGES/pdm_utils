@@ -189,7 +189,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr.locus_tag = data_dict["LocusTag"]
+        cds_ftr.set_locus_tag(data_dict["LocusTag"])
     except:
         pass
 
@@ -399,9 +399,9 @@ def create_accession_set(engine):
     return result_set
 
 
-def convert_for_sql(value):
+def convert_for_sql(value, check_set=set()):
     """Convert a value for inserting into MySQL."""
-    if (basic.check_empty(value) == True or value.capitalize() == "Singleton"):
+    if value in check_set:
         value = "NULL"
     else:
         value = f"'{value}'"
@@ -432,9 +432,10 @@ def create_update(table, field2, value2, field1, value1):
     :returns: A MySQL UPDATE statement.
     :rtype: set
     """
+    check_set = constants.EMPTY_SET | {"Singleton"}
     part1 = f"UPDATE {table} SET {field2} = "
     part3 = f" WHERE {field1} = '{value1}';"
-    part2 = convert_for_sql(value2)
+    part2 = convert_for_sql(value2, check_set=check_set)
     statement = part1 + part2 + part3
     return statement
 
@@ -467,6 +468,10 @@ def create_gene_table_insert(cds_ftr):
         with data for several fields.
     :rtype: str
     """
+    locus_tag = convert_for_sql(cds_ftr.locus_tag, check_set={""})
+
+    # cds_ftr.translation is a BioPython Seq object.
+    # It is coerced to string by default.
     statement = ("INSERT INTO gene "
                  "(GeneID, PhageID, Start, Stop, Length, Name, "
                  "Translation, Orientation, Notes, LocusTag, Parts) "
@@ -475,8 +480,9 @@ def create_gene_table_insert(cds_ftr):
                  f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
                  f"'{cds_ftr.name}', '{cds_ftr.translation}', "
                  f"'{cds_ftr.orientation}', '{cds_ftr.description}', "
-                 f"'{cds_ftr.locus_tag}', {cds_ftr.parts});"
+                 f"{locus_tag}, {cds_ftr.parts});"
                  )
+
     return statement
 
 
@@ -490,9 +496,11 @@ def create_phage_table_insert(gnm):
         with data for several fields.
     :rtype: str
     """
-    cluster = convert_for_sql(gnm.cluster)
-    subcluster = convert_for_sql(gnm.subcluster)
+    cluster = convert_for_sql(gnm.cluster, check_set={"Singleton"})
+    subcluster = convert_for_sql(gnm.subcluster, check_set={"none"})
 
+    # gnm.seq is a BioPython Seq object.
+    # It is coerced to string by default.
     statement = ("INSERT INTO phage "
                  "(PhageID, Accession, Name, HostGenus, Sequence, "
                  "Length, GC, Status, DateLastModified, "
@@ -840,51 +848,3 @@ def execute_transaction(engine, statement_list=list()):
     # with engine.begin() as connection:
     #     for statement in statement_list:
     #         r1 = connection.execute(statement)
-
-
-
-
-
-
-
-
-
-# TODO this may no longer be needed.
-# def copy_data(bndl, from_type, to_type, flag="retain"):
-#     """Copy data from a MySQL database genome object.
-#
-#     If a genome object stored in the Bundle object has
-#     attributes that are set to be 'retained' from a MySQL database,
-#     copy any necessary data from the genome with 'type' attribute
-#     set to 'mysql' to the new genome.
-#
-#     :param bndl: A pdm_utils Bundle object.
-#     :type bndl: Bundle
-#     :param from_type:
-#         Indicates the value of the source genome's 'type',
-#         indicating the genome from which data will be copied.
-#     :type from_type: str
-#     :param to_type:
-#         Indicates the value of the target genome's 'type',
-#         indicating the genome to which data will be copied.
-#     :type to_type: str
-#     :param flag:
-#         Indicates the value that attributes of the target genome object
-#         must have in order be updated from the 'mysql' genome object.
-#     :type flag: str
-#     """
-#     if to_type in bndl.genome_dict.keys():
-#         to_gnm = bndl.genome_dict[to_type]
-#         to_gnm.set_value_flag(flag)
-#         if to_gnm._value_flag:
-#             if from_type in bndl.genome_dict.keys():
-#                 from_gnm = bndl.genome_dict[from_type]
-#
-#                 # Copy all data that is set to be copied and
-#                 # add to Bundle object.
-#                 genome_pair = genomepair.GenomePair()
-#                 genome_pair.genome1 = to_gnm
-#                 genome_pair.genome2 = from_gnm
-#                 genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
-#                 bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
-#         to_gnm.set_value_flag(flag)

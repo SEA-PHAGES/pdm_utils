@@ -101,17 +101,17 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
     def test_convert_for_sql_1(self):
         """Verify non-empy value returned contains ''."""
-        value = mysqldb.convert_for_sql("A")
+        value = mysqldb.convert_for_sql("A", check_set={"Singleton"})
         self.assertEqual(value, "'A'")
 
     def test_convert_for_sql_2(self):
         """Verify empty value returned is NULL."""
-        value = mysqldb.convert_for_sql("")
+        value = mysqldb.convert_for_sql("", check_set={""})
         self.assertEqual(value, "NULL")
 
     def test_convert_for_sql_3(self):
-        """Verify 'singleton' value returned is NULL."""
-        value = mysqldb.convert_for_sql("SINGLETON")
+        """Verify 'Singleton' value returned is NULL."""
+        value = mysqldb.convert_for_sql("Singleton", check_set={"Singleton"})
         self.assertEqual(value, "NULL")
 
 
@@ -177,7 +177,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         data_dict = {"GeneID":"L5_001",
                      "PhageID":"L5",
-                     "Start":10}
+                     "Start":10,
+                     "LocusTag":None}
         cds1 = mysqldb.parse_gene_table_data(data_dict)
         with self.subTest():
             self.assertEqual(cds1.id, "L5_001")
@@ -185,6 +186,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(cds1.genome_id, "L5")
         with self.subTest():
             self.assertEqual(cds1.start, 10)
+        with self.subTest():
+            self.assertEqual(cds1.locus_tag, "")
         with self.subTest():
             self.assertEqual(cds1.translation_table, 11)
 
@@ -285,115 +288,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="add")
         self.assertEqual(len(statements), 3)
-
-
-
-
-# class TestMysqldbFunctions2(unittest.TestCase):
-#
-#     def setUp(self):
-#
-#
-#         self.genome1 = genome.Genome()
-#         self.genome1.id = "L5"
-#         self.genome1.type = "add"
-#         self.genome1.host_genus = "Gordonia"
-#         self.genome1.cluster = "B"
-#         self.genome1._value_flag = True
-#
-#         self.bundle1 = bundle.Bundle()
-#
-#
-#         self.genome2 = genome.Genome()
-#         self.genome2.id = "L5"
-#         self.genome2.type = "mysql"
-#         self.genome2.host_genus = "Mycobacterium"
-#         self.genome2.cluster = "A"
-#
-#     def test_copy_data_1(self):
-#         """Check that an "add" genome with no fields set to 'retain' is
-#         not impacted."""
-#
-#         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         mysqldb.copy_data(self.bundle1, "mysql", "add")
-#         genome1 = self.bundle1.genome_dict["add"]
-#         with self.subTest():
-#             self.assertFalse(genome1._value_flag)
-#         with self.subTest():
-#             self.assertEqual(genome1.host_genus, "Gordonia")
-#         with self.subTest():
-#             self.assertEqual(genome1.cluster, "B")
-#
-#     def test_copy_data_2(self):
-#         """Check that an "add" genome with host_genus field set to 'retain' is
-#         populated correctly."""
-#
-#         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         self.genome1.host_genus = "retain"
-#         self.bundle1.genome_dict[self.genome2.type] = self.genome2
-#         mysqldb.copy_data(self.bundle1, "mysql", "add")
-#         genome1 = self.bundle1.genome_dict["add"]
-#         with self.subTest():
-#             self.assertFalse(genome1._value_flag)
-#         with self.subTest():
-#             self.assertEqual(genome1.host_genus, "Mycobacterium")
-#         with self.subTest():
-#             self.assertEqual(genome1.cluster, "B")
-#
-#     def test_copy_data_3(self):
-#         """Check that an "invalid" genome with host_genus field set to 'retain' is
-#         not populated correctly."""
-#
-#         self.genome1.type = "invalid"
-#         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         self.genome1.host_genus = "retain"
-#         mysqldb.copy_data(self.bundle1, "mysql", "add")
-#         with self.subTest():
-#             self.assertEqual(
-#                 len(self.bundle1.genome_pair_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(self.genome1.host_genus, "retain")
-#
-#     def test_copy_data_4(self):
-#         """Check that an "add" genome with host_genus field set to 'retain' is
-#         not populated correctly when "invalid" type is requested."""
-#
-#         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         self.genome1.host_genus = "retain"
-#         mysqldb.copy_data(self.bundle1, "mysql", "invalid")
-#         with self.subTest():
-#             self.assertEqual(
-#                 len(self.bundle1.genome_pair_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(self.genome1.host_genus, "retain")
-#
-#     def test_copy_data_5(self):
-#         """Check that an "add" genome with host_genus field set to 'retain' is
-#         not populated correctly when there is no matching "mysql"
-#         genomet type."""
-#
-#         self.bundle1.genome_dict[self.genome1.type] = self.genome1
-#         self.genome1.host_genus = "retain"
-#         self.genome1._value_flag = False
-#         mysqldb.copy_data(self.bundle1, "mysql", "add")
-#         with self.subTest():
-#             self.assertTrue(self.genome1._value_flag)
-#         with self.subTest():
-#             self.assertEqual(
-#                 len(self.bundle1.genome_pair_dict.keys()), 0)
-#         with self.subTest():
-#             self.assertEqual(self.genome1.host_genus, "retain")
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

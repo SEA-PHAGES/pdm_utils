@@ -306,21 +306,6 @@ class TestGenomeClass1(unittest.TestCase):
         self.assertEqual(self.gnm.subcluster, "none")
 
 
-    # TODO these are probably no longer needed.
-    # def test_set_subcluster_5(self):
-    #     """Check that empty_string subcluster is set appropriately from
-    #     none_string."""
-    #     subcluster = "none"
-    #     self.gnm.set_subcluster(subcluster)
-    #     self.assertEqual(self.gnm.subcluster, "")
-    #
-    # def test_set_subcluster_6(self):
-    #     """Check that case is accounted for."""
-    #     subcluster = "NONE"
-    #     self.gnm.set_subcluster(subcluster, "empty_string")
-    #     self.assertEqual(self.gnm.subcluster, "")
-
-
 
 
     def test_set_date_1(self):
@@ -866,23 +851,6 @@ class TestGenomeClass1(unittest.TestCase):
 
 
 
-    def test_set_value_flag_1(self):
-        """Verify that the 'retain' setting is set to True."""
-        self.gnm._value_flag = False
-        self.gnm.cluster = "retain"
-        self.gnm.set_value_flag("retain")
-        self.assertTrue(self.gnm._value_flag)
-
-    def test_set_value_flag_2(self):
-        """Verify that the 'retain' setting is set to False."""
-        self.gnm._value_flag = True
-        self.gnm.cluster = "A"
-        self.gnm.set_value_flag("retain")
-        self.assertFalse(self.gnm._value_flag)
-
-
-
-
     def test_clear_locus_tags_1(self):
         """Verify that each locus tag is cleared."""
         self.cds1.locus_tag = "L5_1"
@@ -1131,43 +1099,6 @@ class TestGenomeClass1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(
                 self.gnm._organism_host_genus, expected_host)
-
-
-
-
-    def test_check_value_flag_1(self):
-        """Verify that no error is produced when the _value_flag
-        field is True and is expected to be True."""
-        self.gnm._value_flag = True
-        self.gnm.check_value_flag(True, "eval_id")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "correct")
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].id, "eval_id")
-
-    def test_check_value_flag_2(self):
-        """Verify that an error is produced when the _value_flag
-        field is False and is expected to be True."""
-        self.gnm._value_flag = False
-        self.gnm.check_value_flag(True)
-        with self.subTest():
-            self.assertEqual(self.gnm.evaluations[0].status, "error")
-        with self.subTest():
-            self.assertIsNone(self.gnm.evaluations[0].id)
-
-    def test_check_value_flag_3(self):
-        """Verify that no error is produced when the _value_flag
-        field is False and is expected to be False."""
-        self.gnm._value_flag = False
-        self.gnm.check_value_flag(False)
-        self.assertEqual(self.gnm.evaluations[0].status, "correct")
-
-    def test_check_value_flag_4(self):
-        """Verify that an error is produced when the _value_flag
-        field is True and is expected to be False."""
-        self.gnm._value_flag = True
-        self.gnm.check_value_flag(False)
-        self.assertEqual(self.gnm.evaluations[0].status, "error")
 
 
 

@@ -1,10 +1,10 @@
-"""Unit tests for constants."""
+"""Unit tests for run_modes."""
 
 import unittest
 from pdm_utils.functions import run_modes
 from unittest.mock import patch
 
-class TestConstants(unittest.TestCase):
+class TestRunModes(unittest.TestCase):
 
     def test_get_eval_flag_dict_1(self):
         """Verify 'base' eval dictionary is returned."""
@@ -44,5 +44,5 @@ class TestConstants(unittest.TestCase):
         with self.subTest():
             self.assertFalse(dict["check_locus_tag"])
 
-
-###
+if __name__ == '__main__':
+    unittest.main()

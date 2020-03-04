@@ -12,7 +12,6 @@ class TestMiscFunctions(unittest.TestCase):
 
 
     def setUp(self):
-        pass
 
         self.genome1 = genome.Genome()
         self.genome1.id = "Trixie"
@@ -37,10 +36,6 @@ class TestMiscFunctions(unittest.TestCase):
 
         self.bundle1 = bundle.Bundle()
         self.bundle2 = bundle.Bundle()
-
-
-
-
 
 
 
@@ -85,12 +80,6 @@ class TestMiscFunctions(unittest.TestCase):
             self.bundle1, genomes_to_match, "mysql", "new_type")
         matched_genome = self.bundle1.genome_dict["new_type"]
         self.assertEqual(matched_genome.name, "Genome2")
-
-
-
-
-
-
 
 
 
@@ -166,7 +155,6 @@ class TestMiscFunctions(unittest.TestCase):
 
 
 
-
     def test_create_fasta_seqrecord_1(self):
         """."""
         record = misc.create_fasta_seqrecord("Mycobacterium phage Trixie", "ATCGC")
@@ -178,23 +166,6 @@ class TestMiscFunctions(unittest.TestCase):
             self.assertEqual(record.description, "Mycobacterium phage Trixie")
         with self.subTest():
             self.assertEqual(record.seq, "ATCGC")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

@@ -785,7 +785,11 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
         tkt.data_dict["annotation_status"] = gnm.annotation_status
         tkt.data_dict["annotation_author"] = gnm.annotation_author
         tkt.description_field = "product"
-        tkt.data_dict["accession"] = gnm.accession
+        # Accession is set to 'parse' to ensure that during import,
+        # the file's accession is directly compared to the database
+        # record's accession.
+        # tkt.data_dict["accession"] = gnm.accession
+        tkt.data_dict["accession"] = "parse"
         tkt.run_mode = "auto"
         # TODO secondary_phage_id data is for old ticket format.
         tkt.data_dict["secondary_phage_id"] = gnm.id

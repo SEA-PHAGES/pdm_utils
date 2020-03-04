@@ -281,7 +281,7 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     """Parse data from a Biopython SeqRecord object into a Genome object.
 
     All Source, CDS, tRNA, and tmRNA features are parsed into their
-    associates Source, Cds, Trna, and Tmrna objects.
+    associated Source, Cds, Trna, and Tmrna objects.
 
     :param seqrecord: A Biopython SeqRecord object.
     :type seqrecord: SeqRecord
@@ -303,17 +303,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     gnm.set_filename(filepath)
     gnm.type = gnm_type
 
-    # TODO name is set further below based on the id_field parameter, so
-    # this may no longer be needed.
-    try:
-        gnm.name = seqrecord.name
-        # It appears that if name is not present, Biopython auto-populates
-        # this attribute as "<unknown name>"
-        if gnm.name == "<unknown name>":
-            gnm.name = ""
-    except:
-        gnm.name = ""
-
     try:
         gnm.organism = seqrecord.annotations["organism"]
     except:
@@ -321,17 +310,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
 
     # Identifies host and phage name from organism field.
     gnm.parse_organism()
-
-    # TODO id is set further below based on the id_field parameter, so
-    # this may no longer be needed.
-    try:
-        gnm.id = seqrecord.id
-        # It appears that if id is not present, Biopython auto-populates
-        # this attribute as "<unknown id>"
-        if gnm.id == "<unknown id>":
-            gnm.id = ""
-    except:
-        gnm.id = ""
 
     try:
         # Since accessions are stored in a list, there may be more than
@@ -389,13 +367,34 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
         date = seqrecord.annotations["date"]
         gnm.date = datetime.strptime(date, "%d-%b-%Y")
     except:
-        gnm.date = basic.convert_empty("", "empty_datetime_obj")
+        gnm.date = constants.EMPTY_DATE
 
-    # Now that record fields are parsed, set the genome name, id,
-    # and host_genus.
 
-    gnm.name = getattr(gnm, genome_id_field)
-    gnm.set_id(value=gnm.name)
+    # # Now that record fields are parsed, set the genome name, id,
+    # # and host_genus.
+    if genome_id_field != "":
+        gnm.name = getattr(gnm, genome_id_field)
+        gnm.set_id(value=gnm.name)
+    else:
+        # The seqrecord name and id are used if genome_id_field is empty.
+        try:
+            gnm.name = seqrecord.name
+            # It appears that if name is not present, Biopython auto-populates
+            # this attribute as "<unknown name>"
+            if gnm.name == "<unknown name>":
+                gnm.name = ""
+        except:
+            gnm.name = ""
+
+        try:
+            gnm.id = seqrecord.id
+            # It appears that if id is not present, Biopython auto-populates
+            # this attribute as "<unknown id>"
+            if gnm.id == "<unknown id>":
+                gnm.id = ""
+        except:
+            gnm.id = ""
+
     gnm.set_host_genus(attribute=host_genus_field)
 
     # Create lists of parsed features.
@@ -448,110 +447,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     #gnm.set_feature_ids(use_type=True, use_trna=True)
     return gnm
 
-
-
-
-def copy_data(bndl, from_type, to_type, flag="ticket"):
-    """Copy data to a genome object derived from a 'flat_file'.
-
-    The Bundle object is expected to contain at least two Genome objects
-    in its 'genome_dict' dictionary. The first 'donor' genome is expected to be
-    stored in the dictionary with its key equivalent to its 'type'.
-    The second 'receiver' genome is expected to be derived
-    from a GenBank-formatted flat file and stored in the Bundle
-    object's 'genome_dict' dictionary with a 'flat_file' key.
-    A GenomePair is created using these two genomes,
-    and the data is copied from the donor genome to the
-    'flat_file' genome.
-
-    :param bndl:
-        A Bundle object containing both Genome objects stored
-        in the 'genome_dict' attribute.
-    :type bndl: Bundle
-    :param from_type:
-        Indicates the value of the source genome's 'type',
-        indicating the genome from which data will be copied.
-    :type from_type: str
-    :param to_type:
-        The value of the donor genome's 'type' attribute, which is
-        used as the its key in the Bundle's 'genome_dict' dictionary.
-    :type to_type: str
-    :param flag:
-        The value used to indicate which 'flat_file'
-        attributes should be populated from the donor genome.
-        Several 'flat_file' genome attributes are set to this value.
-        Using a GenomePair method, the 'flat_file' attributes
-        with this flag are re-populated from data of the corresponding
-        attributed in the donor genome.
-    :type flag: str
-    """
-    if to_type in bndl.genome_dict.keys():
-        to_gnm = bndl.genome_dict[to_type]
-        to_gnm.cluster = flag
-        to_gnm.subcluster = flag
-        to_gnm.name = flag
-        to_gnm.host_genus = flag
-        to_gnm.accession = flag
-        to_gnm.annotation_status = flag
-        to_gnm.annotation_author = flag
-        to_gnm.retrieve_record = flag
-        to_gnm.set_value_flag(flag)
-        if from_type in bndl.genome_dict.keys():
-            from_gnm = bndl.genome_dict[from_type]
-            # Copy all data that is set to 'ticket' and
-            # add to Bundle object.
-            genome_pair = genomepair.GenomePair()
-            genome_pair.genome1 = to_gnm
-            genome_pair.genome2 = from_gnm
-            genome_pair.copy_data("type", from_gnm.type, to_gnm.type, flag)
-            bndl.set_genome_pair(genome_pair, to_gnm.type, from_gnm.type)
-        to_gnm.set_value_flag(flag)
-
-# TODO this may no longer be needed.
-# def parse_files(file_list, id_field="organism_name"):
-#     """Parse data from a list of flat files.
-#
-#     All GenBank-formatted flat files present in the list of files
-#     are first parsed into Biopython SeqRecord objects, and
-#     then parsed into pdm_utils Genome objects.
-#
-#     :param file_list: A list of filenames.
-#     :type file_list: list
-#     :param id_field:
-#         The name of the attribute in the SeqRecord object
-#         from which the unique genome identifier/name is stored.
-#     :type id_field: str
-#     :returns:
-#         tuple (genomes, valid_files, failed_files)
-#         WHERE
-#         genomes(list) is a list of pdm_utils Genome objects parsed
-#         from the files.
-#         valid_files(list) is a list of filenames from which a
-#         Biopython SeqRecord object was successfully parsed.
-#         failed_files(list) is a list of filenames from which a
-#         Biopython SeqRecord object was not successfully parsed.
-#     """
-#     failed_files = []
-#     valid_files = []
-#     genomes = []
-#     for filename in file_list:
-#         try:
-#             seqrecords = list(SeqIO.parse(filename, "genbank"))
-#         except:
-#             seqrecords = []
-#
-#         if len(seqrecords) == 1:
-#             gnm = parse_genome_data(seqrecords[0], filename, id_field)
-#             genomes.append(gnm)
-#             valid_files.append(filename)
-#         else:
-#             failed_files.append(filename)
-#             # # If there is no parseable record, a genome object is still
-#             # # created and populated with 'type and 'filename'.
-#             # gnm = genome.Genome()
-#             # gnm.type = "flat_file"
-#             # gnm.set_filename(filename)
-#     return (genomes, valid_files, failed_files)
 
 def genome_to_seqrecord(phage_genome):
     """Creates a SeqRecord object from a Genome object.
@@ -692,15 +587,6 @@ def get_seqrecord_annotations_comments(phage_genome):
             annotation_status_comment, retrieval_value)
 
 
-
-
-
-
-
-
-
-
-
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
 def parse_trna_seqfeature(seqfeature):
@@ -710,7 +596,6 @@ def parse_trna_seqfeature(seqfeature):
     return trna_ftr
 
 
-
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
 def parse_tmrna_seqfeature(seqfeature):
@@ -718,165 +603,3 @@ def parse_tmrna_seqfeature(seqfeature):
     """
     tmrna = ""
     return tmrna
-
-
-
-
-
-
-
-
-
-#
-# #TODO implement this function
-#
-# #Parse tRNA features
-# def parse_trna_feature(feature):
-#
-#     #TODO need to implement this function
-#     #return(None)
-#
-#     #Retrieve tRNA coordinates
-#     try:
-#         #Biopython converts coordinates to 0-index
-#         #Start coordinates are 0-based inclusive (feature starts there)
-#         #Stop coordinates are 0-based exclusive (feature stops 1bp prior to coordinate)
-#         tRNA_start = str(feature.location.start)
-#         tRNA_stop = str(feature.location.end)
-#
-#     except:
-#         #TODO error handling
-#         write_out(output_file,"\nError: a tRNA has incorrect coordinates in phage %s."\
-#                 % phageName)
-#         record_errors += 1
-#         continue
-#
-#     #Retrieve top strand of tRNA feature. It is NOT necessarily
-#     #in the correct orientation
-#     tRNA_size = abs(tRNA_stop - tRNA_start)
-#     tRNA_seq = phageSeq[tRNA_start:tRNA_stop].upper()
-#
-#     #Convert sequence to reverse complement if it is on bottom strand
-#     if feature.strand == 1:
-#         pass
-#     elif feature.strand == -1:
-#         tRNA_seq = tRNA_seq.reverse_complement()
-#     else:
-#         #TODO error handling
-#         record_errors += 1
-#         write_out(output_file,"\Error: tRNA starting at %s does not have proper orientation in %s phage." \
-#                 % (tRNA_start + 1,phageName))
-#         continue
-#
-#     #Retrieve and check product
-#     try:
-#         tRNA_product = feature.qualifiers['product'][0].lower().strip()
-#     except:
-#         #TODO error handling
-#         write_out(output_file,"\nError: tRNA starting at %s is missing product field in phage %s." \
-#             % (tRNA_start + 1,phageName))
-#         record_errors += 1
-#         tRNA_product = ''
-#
-#     #Retrieve note
-#     #In the future, this field may need to be parsed in a similar
-#     #manner as the product field. For now, do nothing.
-#     try:
-#         tRNA_note = feature.qualifiers['note'][0].lower().strip()
-#     except:
-#         tRNA_note = ''
-#
-#     return pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Functions that are no longer needed.
-
-
-
-# # TODO this is probably no longer needed. There is no need to impose
-# # restrictions on file extensions for flat files.
-# def check_extension(filepath):
-#     """Verify the file extension is common for GenBank-formatted flat files."""
-#     valid = False
-#     filename = filepath.split("/")[-1]
-#     if filename.split('.')[-1] in constants.ADMISSIBLE_FILE_TYPES:
-#         valid = True
-#     return valid
-
-# TODO the follow create_parsed_flat_file() and
-# create_parsed_flat_file_list() functions may no longer be needed.
-# def create_parsed_flat_file(filename, id_field="organism_name"):
-#     """Create a genome object parsed from flat files."""
-#
-#     valid = check_extension(filename)
-#     if valid:
-#         try:
-#             records = list(SeqIO.parse(filename, "genbank"))
-#         except:
-#             records = []
-#
-#         if len(records) == 1:
-#             gnm = parse_genome_data(records[0], filename, id_field)
-#         else:
-#             gnm = genome.Genome()
-#     else:
-#         gnm = genome.Genome()
-#
-#     # TODO currently the parse_genome_data() sets filename and type,
-#     # so this is redundant. But some attribute needs to be set
-#     # even if there is a problem with parsing the record in the file.
-#
-#     # If there is no parseable record, a genome object is still
-#     # created and populated with 'type and 'filename'.
-#     gnm.type = "flat_file"
-#     gnm.set_filename(filename)
-#
-#     return gnm
-#
-#
-# def create_parsed_flat_file_list(all_files, id_field="organism_name"):
-#     """Create a list of genome objects containing data parsed from
-#     flat files."""
-#
-#     failed_files = []
-#     valid_files = []
-#     genomes = []
-#     for filename in all_files:
-#         gnm = create_parsed_flat_file(filename, id_field = id_field)
-#         genomes.append(gnm)
-#         if gnm.id == "":
-#             # If the file was not parsed, the id will remain empty.
-#             failed_files.append(filename)
-#         else:
-#             valid_files.append(filename)
-#     return (genomes, valid_files, failed_files)
-#
-#
-#
-#
-
-
-
-
-###

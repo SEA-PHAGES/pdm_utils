@@ -589,7 +589,7 @@ def get_alice_cds_252_draft_data_in_db(translation=alice_cds_252_translation):
         "Translation": translation,
         "Orientation": "F",
         "Notes": "",
-        "LocusTag": ""
+        "LocusTag": None
         }
     return dict
 
@@ -623,7 +623,7 @@ def get_alice_cds_124_draft_data_in_db(translation=alice_cds_124_translation):
         "Translation": translation,
         "Orientation": "F",
         "Notes": "",
-        "LocusTag": ""
+        "LocusTag": None
         }
     return dict
 
@@ -655,7 +655,7 @@ def get_alice_cds_139_draft_data_in_db(translation=alice_cds_139_translation):
         "Translation": translation,
         "Orientation": "R",
         "Notes": "",
-        "LocusTag": ""
+        "LocusTag": None
         }
     return dict
 
@@ -685,7 +685,7 @@ def get_alice_cds_193_draft_data_in_db(translation=alice_cds_193_translation):
         "Translation": translation,
         "Orientation": "F",
         "Notes": "",
-        "LocusTag": ""
+        "LocusTag": None
         }
     return dict
 

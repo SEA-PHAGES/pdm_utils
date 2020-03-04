@@ -505,11 +505,6 @@ class TestBasicFunctions(unittest.TestCase):
 
 
 
-
-
-
-
-
     def test_reformat_description_1(self):
         """Verify 'None' raw_description is converted."""
         raw_description = None
@@ -732,10 +727,6 @@ class TestBasicFunctions(unittest.TestCase):
         expected_output_string = "abc"
         output_string = basic.trim_characters(input_string)
         self.assertEqual(output_string, expected_output_string)
-
-
-
-
 
 
 
@@ -1393,21 +1384,6 @@ class TestBasicFunctions(unittest.TestCase):
         value = "Trixie"
         result = basic.check_value_in_two_sets(value, set1, set2)
         self.assertEqual(result, "both")
-
-
-
-    # TODO this is probably no longer needed.
-    # def test_convert_author_1(self):
-    #     """Check that author in author_set is converted to 1."""
-    #     input_value = "Hatfull"
-    #     output_value = basic.convert_author(input_value)
-    #     self.assertEqual(output_value, 1)
-    #
-    # def test_convert_author_2(self):
-    #     """Check that author not in author_set is converted to 0."""
-    #     input_value = "Unknown author"
-    #     output_value = basic.convert_author(input_value)
-    #     self.assertEqual(output_value, 0)
 
 
 

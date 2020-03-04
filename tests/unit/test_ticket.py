@@ -58,23 +58,6 @@ class TestImportTicketClass(unittest.TestCase):
 
 
 
-    def test_set_value_flag_1(self):
-        """Verify that the 'retain' setting is set to True."""
-        self.tkt._value_flag = False
-        self.tkt.cluster = "retain"
-        self.tkt.set_value_flag("retain")
-        self.assertTrue(self.tkt._value_flag)
-
-    def test_set_value_flag_2(self):
-        """Verify that the 'retain' setting is set to False."""
-        self.tkt._value_flag = True
-        self.tkt.cluster = "A"
-        self.tkt.set_value_flag("retain")
-        self.assertFalse(self.tkt._value_flag)
-
-
-
-
     def test_check_attribute_1(self):
         """Verify no error is produced when the id
         is in the check_set and is expected to be in the set."""

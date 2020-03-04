@@ -959,13 +959,13 @@ class TestMysqldbFunctions1(unittest.TestCase):
         gnm.host_genus = "Mycobacterium"
         gnm.annotation_status = "final"
         gnm.accession = "ABC123"
-        gnm.seq = "ATCG"
+        gnm.seq = Seq("ATCG", IUPAC.ambiguous_dna)
         gnm.length = 4
         gnm.gc = 0.5001
         gnm.date = constants.EMPTY_DATE
         gnm.retrieve_record = 1
         gnm.annotation_author = 1
-        gnm.cluster = "singleton"
+        gnm.cluster = "Singleton"
         gnm.subcluster = "A2"
         statement = mysqldb.create_phage_table_insert(gnm)
         connection = pymysql.connect(host="localhost",
@@ -1205,6 +1205,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
 
 
+
     def test_create_gene_table_insert_1(self):
         """Verify gene table INSERT statement is created correctly."""
         # Note: even though this function returns a string and doesn't
@@ -1219,7 +1220,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cds1.translation_length = 20
         cds1.name = "Int"
         cds1.type = "CDS"
-        cds1.translation = "ACKLG"
+        cds1.translation = Seq("ACKLG", IUPAC.protein)
         cds1.orientation = "F"
         cds1.description = "integrase"
         cds1.locus_tag = "TAG1"
@@ -1275,6 +1276,77 @@ class TestMysqldbFunctions2(unittest.TestCase):
             self.assertEqual(results["LocusTag"], "TAG1")
 
 
+    def test_create_gene_table_insert_2(self):
+        """Verify gene table INSERT statement is created correctly when
+        locus_tag is empty."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+        cds1 = cds.Cds()
+        cds1.id = "SEA_L5_123"
+        cds1.genome_id = "L5"
+        cds1.start = 5
+        cds1.stop = 10
+        cds1.parts = 1
+        cds1.translation_length = 20
+        cds1.name = "Int"
+        cds1.type = "CDS"
+        cds1.translation = Seq("ACKLG", IUPAC.protein)
+        cds1.orientation = "F"
+        cds1.description = "integrase"
+        cds1.locus_tag = ""
+        insert2 = mysqldb.create_gene_table_insert(cds1)
+        connection = pymysql.connect(host="localhost",
+                                     user=user,
+                                     password=pwd,
+                                     database=db,
+                                     cursorclass=pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(insert2)
+        connection.commit()
+        connection.close()
+        connection = pymysql.connect(host = "localhost",
+                                     user = user,
+                                     password = pwd,
+                                     database = db,
+                                     cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        cur.execute(self.std_cds_query)
+        results = cur.fetchall()[0]
+        cur.close()
+        connection.close()
+        exp = ("INSERT INTO gene "
+               "(GeneID, PhageID, Start, Stop, Length, Name, "
+               "Translation, Orientation, Notes, LocusTag, Parts) "
+               "VALUES "
+               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
+               "'ACKLG', 'F', 'integrase', NULL, 1);")
+        with self.subTest():
+            self.assertEqual(insert2, exp)
+        with self.subTest():
+            self.assertEqual(results["GeneID"], "SEA_L5_123")
+        with self.subTest():
+            self.assertEqual(results["PhageID"], "L5")
+        with self.subTest():
+            self.assertEqual(results["Start"], 5)
+        with self.subTest():
+            self.assertEqual(results["Stop"], 10)
+        with self.subTest():
+            self.assertEqual(results["Parts"], 1)
+        with self.subTest():
+            self.assertEqual(results["Length"], 20)
+        with self.subTest():
+            self.assertEqual(results["Name"], "Int")
+        with self.subTest():
+            self.assertEqual(results["Translation"], "ACKLG")
+        with self.subTest():
+            self.assertEqual(results["Orientation"], "F")
+        with self.subTest():
+            self.assertEqual(results["Notes"].decode("utf-8"), "integrase")
+        with self.subTest():
+            self.assertEqual(results["LocusTag"], None)
+
+
 
 
     def test_create_update_1(self):
@@ -1305,7 +1377,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
     def test_create_update_2(self):
         """Verify correct Cluster statement is created for a singleton."""
         statement = mysqldb.create_update(
-            "phage", "Cluster", "SINGLETON", "PhageID", "L5")
+            "phage", "Cluster", "Singleton", "PhageID", "L5")
         connection = pymysql.connect(host="localhost",user=user,
                                      password=pwd, database=db,
                                      cursorclass=pymysql.cursors.DictCursor)

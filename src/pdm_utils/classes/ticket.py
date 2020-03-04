@@ -30,7 +30,6 @@ class ImportTicket:
 
         # Used to check the structure of the ticket data.
         self.evaluations = []
-        self._value_flag = False
 
 
 
@@ -60,22 +59,6 @@ class ImportTicket:
         :type value: str
         """
         self.run_mode = value.lower()
-
-
-    def set_value_flag(self, value):
-        """Sets the flag if any attributes contain the specified 'value'.
-
-        :param value:
-            Indicates the value that should be searched within
-            the attributes.
-        :type value: str
-        """
-        if value in vars(self).values():
-            self._value_flag = True
-        else:
-            self._value_flag = False
-
-
 
 
     # Evaluations

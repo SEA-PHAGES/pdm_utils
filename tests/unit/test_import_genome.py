@@ -34,7 +34,6 @@ class TestImportGenomeClass1(unittest.TestCase):
 
     def setUp(self):
 
-        # self.null_set = constants.EMPTY_SET
         self.type_set = constants.IMPORT_TICKET_TYPE_SET
         self.run_mode_set = run_modes.RUN_MODES.keys()
         self.description_field_set = constants.DESCRIPTION_FIELD_SET

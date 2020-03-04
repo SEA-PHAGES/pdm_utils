@@ -82,6 +82,10 @@ class Cds:
             is provided, the genome_id attribute is used.
         :type check_value: str
         """
+
+        # MySQL database-output format
+        if tag is None:
+            tag = ""
         self.locus_tag = tag
         if check_value is None:
             check_value = self.genome_id
@@ -668,32 +672,6 @@ class Cds:
         definition = "Check if the locus_tag qualifier is structured correctly."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
-
-
-    # TODO is this needed? CDS ids are not directly parsed from file.
-    # They are now automatically generated. So there doesn't seem to be
-    # a need to check that it is spelled correctly.
-    # TODO implement.
-    # TODO unittest
-    # def check_id_typo(self, check_value=None, eval_id=None):
-    #     """Check if the id contains potential typos."""
-    #
-    #     if check_value is None:
-    #         check_value = self.id
-    #
-    #     pattern = re.compile(check_value.lower())
-    #     search_result = pattern.search(self.id.lower())
-    #
-    #     if search_result == None:
-    #         result = "The id has a typo."
-    #         status = "error"
-    #     else:
-    #         result = "The id is correct."
-    #         status = "correct"
-    #     definition = "Check if the id contains a typo."
-    #     evl = eval.Eval(eval_id, definition, result, status)
-    #     self.evaluations.append(evl)
-
 
 
     def check_gene_structure(self, eval_id=None, success="correct", fail="error", eval_def=None):

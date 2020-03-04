@@ -634,7 +634,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
     bndl.id = id
     seqrecord = flat_files.retrieve_genome_data(filepath)
     if seqrecord is None:
-        logger.info(f"No record was retrieved from the file: {filepath.name}.")
+        logger.error(f"No record was retrieved from the file: {filepath.name}.")
     else:
         logger.info(f"Parsing record from the file: {filepath.name}.")
         ff_gnm = flat_files.parse_genome_data(
@@ -1179,6 +1179,8 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
         # If the genome is being replaced, and if it has an accession,
         # the prior version of the genome may or may not have had
         # accession data, so no need to check for 'replace' tickets.
+        # Direct comparison of the accession from the old and new genomes
+        # occurs in compare_genomes().
         if gnm.accession != "":
             gnm.check_attribute("accession", accession_set, expect=False,
                                 eval_id="GNM_005", eval_def=EDD["GNM_005"])
@@ -1435,7 +1437,7 @@ def compare_genomes(genome_pair, eval_flags):
             genome_pair.compare_attribute("name",
                 expect_same=True, eval_id="GP_013", fail="warning", eval_def=EDD["GP_013"])
 
-            # TODO this is tricky. Yes, if replacing, you only expect a
+            # This is tricky. Yes, if replacing, you only expect a
             # final -> final, or unknown -> unknown. However, if the
             # check_replace = True, such as when a new final is available from
             # PhagesDB, then you only expect to go from draft -> final,
@@ -1486,7 +1488,8 @@ def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
                 logger.info("Data successfully imported.")
                 logger.info("The following SQL statements were executed:")
                 for statement in bndl.sql_statements:
-                    logger.info(statement[:150] + "...")
+                    statement = basic.truncate_value(statement, 150, "...")
+                    logger.info(statement)
         else:
             result = True
             logger.info("Data can be imported if set to production run.")

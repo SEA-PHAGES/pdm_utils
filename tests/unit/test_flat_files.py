@@ -2,19 +2,18 @@
 GenBank-formatted flat files."""
 
 
+from datetime import datetime
 import pathlib
 import unittest
-from datetime import datetime
-from pdm_utils.functions import basic
-from pdm_utils.functions import flat_files
-from pdm_utils.classes import cds
-from pdm_utils.classes import source
-from pdm_utils.classes import genome
+
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
-from pdm_utils.classes import bundle
+
+from pdm_utils.constants import constants
+from pdm_utils.classes import cds, source, genome
+from pdm_utils.functions import basic, flat_files
 
 class TestFlatFileFunctions1(unittest.TestCase):
 
@@ -272,17 +271,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
     def test_create_seqfeature_dictionary_1(self):
         """Verify feature dictionary is constructed correctly with
         one feature."""
@@ -451,14 +439,6 @@ class TestFlatFileFunctions1(unittest.TestCase):
         self.assertEqual(comments[2],
                          "Annotation Status: 1; Annotation Author: 1")
         self.assertEqual(comments[3], "RetrieveRecord: 1")
-
-
-
-
-
-
-
-
 
 
 
@@ -888,11 +868,13 @@ class TestFlatFileFunctions3(unittest.TestCase):
                                 features = self.feature_list
                                 )
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
-                                           gnm_type="")
+                                           gnm_type="", genome_id_field="")
         with self.subTest():
             self.assertEqual(gnm.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(gnm.name, "KatherineG")
+            self.assertEqual(gnm.id, "OPQ123.1")
+        with self.subTest():
+            self.assertEqual(gnm.name, "")
         with self.subTest():
             self.assertEqual(gnm.type, "")
 
@@ -922,11 +904,13 @@ class TestFlatFileFunctions3(unittest.TestCase):
                                 features = self.feature_list,
                                 )
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
-                                                gnm_type="flat_file")
+                                    gnm_type="flat_file", genome_id_field="")
         with self.subTest():
             self.assertEqual(gnm.filename, "Phage_ZZZ")
         with self.subTest():
-            self.assertEqual(gnm.id, "KatherineG")
+            self.assertEqual(gnm.id, "")
+        with self.subTest():
+            self.assertEqual(gnm.name, "XYZ123")
 
 
     def test_parse_genome_data_5(self):
@@ -1138,7 +1122,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         self.annotation_dict.pop("date")
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
                                                 gnm_type="flat_file")
-        self.exp_date = basic.convert_empty("","empty_datetime_obj")
+        self.exp_date = constants.EMPTY_DATE
         with self.subTest():
             self.assertEqual(gnm.filename, "Phage_ZZZ")
         with self.subTest():
@@ -1177,101 +1161,6 @@ class TestFlatFileFunctions3(unittest.TestCase):
 
 
 class TestFlatFileFunctions4(unittest.TestCase):
-
-
-    def setUp(self):
-
-
-        self.genome1 = genome.Genome()
-        self.genome1.id = "L5"
-        self.genome1.cluster = "B"
-        self.genome1.type = "flat_file"
-        self.genome1._value_flag = False
-        self.genome1.translation_table = "empty"
-
-        self.bundle1 = bundle.Bundle()
-
-
-        self.genome2 = genome.Genome()
-        self.genome2.id = "L5"
-        self.genome2.type = "add"
-        self.genome2.cluster = "A"
-        self.genome2.subcluster = "A2"
-        self.genome2.name = "L5_Draft"
-        self.genome2.host_genus = "Mycobacterium"
-        self.genome2.accession = "ABC123"
-        self.genome2.annotation_status = "final"
-        self.genome2.annotation_author = 1
-        self.genome2.retrieve_record = 3
-        self.genome2.translation_table = 11
-
-
-    def test_copy_data_1(self):
-        """Check that a "flat_file" genome is successfully populated."""
-
-        self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data(self.bundle1, "add", "flat_file")
-        genome1 = self.bundle1.genome_dict["flat_file"]
-        with self.subTest():
-            self.assertFalse(genome1._value_flag)
-        with self.subTest():
-            self.assertEqual(genome1.cluster, "A")
-        with self.subTest():
-            self.assertEqual(genome1.subcluster, "A2")
-        with self.subTest():
-            self.assertEqual(genome1.name, "L5_Draft")
-        with self.subTest():
-            self.assertEqual(genome1.host_genus, "Mycobacterium")
-        with self.subTest():
-            self.assertEqual(genome1.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(genome1.annotation_status, "final")
-        with self.subTest():
-            self.assertEqual(genome1.annotation_author, 1)
-        with self.subTest():
-            self.assertEqual(genome1.retrieve_record, 3)
-        with self.subTest():
-            self.assertEqual(genome1.translation_table, "empty")
-
-
-    def test_copy_data_2(self):
-        """Check that the function can handle a missing "flat_file" genome."""
-
-        self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data(self.bundle1, "flat_file", "add")
-        self.assertEqual(len(self.bundle1.genome_pair_dict.keys()), 0)
-
-
-    def test_copy_data_3(self):
-        """Check that a "flat_file" genome is not successfully populated
-        when a second genome is absent."""
-
-        self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        flat_files.copy_data(self.bundle1, "add", "flat_file")
-        genome1 = self.bundle1.genome_dict["flat_file"]
-        self.assertTrue(genome1._value_flag)
-
-
-    def test_copy_data_4(self):
-        """Check that a "flat_file" genome is successfully populated when
-        a non-standard field flag is used."""
-
-        self.bundle1.genome_dict[self.genome1.type] = self.genome1
-        self.bundle1.genome_dict[self.genome2.type] = self.genome2
-        flat_files.copy_data(self.bundle1, "add", "flat_file", "empty")
-        genome1 = self.bundle1.genome_dict["flat_file"]
-        with self.subTest():
-            self.assertFalse(genome1._value_flag)
-        with self.subTest():
-            self.assertEqual(genome1.cluster, "A")
-        with self.subTest():
-            self.assertEqual(genome1.translation_table, 11)
-
-
-
-
-class TestFlatFileFunctions5(unittest.TestCase):
 
     def setUp(self):
         self.string1 = "Mycobacterium phage Trixie"
@@ -1342,8 +1231,6 @@ class TestFlatFileFunctions5(unittest.TestCase):
             self.assertEqual(src_ftr.lab_host, "")
         with self.subTest():
             self.assertEqual(src_ftr._lab_host_host_genus, "")
-
-
 
 
 

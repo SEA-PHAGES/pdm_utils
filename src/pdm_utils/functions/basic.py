@@ -189,6 +189,7 @@ def reformat_coordinates(start, stop, current, new):
     return (new_start, new_stop)
 
 
+# TODO this may no longer be needed.
 def check_empty(value, lower=True):
     """Checks if the value represents a null value.
 

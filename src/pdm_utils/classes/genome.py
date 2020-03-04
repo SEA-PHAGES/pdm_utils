@@ -1,19 +1,15 @@
 """Represents a collection of data about a genome that are commonly used to
 maintain and update SEA-PHAGES phage genomics data.
 """
-
-import pathlib
-from pdm_utils.functions import basic
-from pdm_utils.constants import constants
-from pdm_utils.classes import eval
-from datetime import datetime
-from Bio.SeqUtils import GC
-from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
-import re
 from operator import attrgetter
-from pdm_utils.classes import cds, trna, source
 
+from Bio.Alphabet import IUPAC
+from Bio.Seq import Seq
+from Bio.SeqUtils import GC
+
+from pdm_utils.classes import eval, cds, trna, source
+from pdm_utils.constants import constants
+from pdm_utils.functions import basic
 
 class Genome:
     """Class to hold data about a phage genome."""
@@ -82,7 +78,6 @@ class Genome:
         self.type = "" # Identifier to describes how this genome is used
                        # (e.g. import, MySQL database, PhagesDB, etc.)
         self.evaluations = [] # List of warnings and errors about the data
-        self._value_flag = False
         self.misc = None # Unstructured attribute to store misc. data not
                          # applicable to any of the other attributes and that
                          # may be used differently for downstream applications.
@@ -375,22 +370,6 @@ class Genome:
             basic.identify_unique_items(self._cds_end_orient_ids)
         self._cds_unique_end_orient_ids = set(unique_id_tuples)
         self._cds_duplicate_end_orient_ids = set(duplicate_id_tuples)
-
-
-
-
-    def set_value_flag(self, value):
-        """Sets the flag if any attributes contain a specified value.
-
-        :param value:
-            Indicates the value that should be searched within
-            the attributes.
-        :type value: str
-        """
-        if value in vars(self).values():
-            self._value_flag = True
-        else:
-            self._value_flag = False
 
 
     def set_feature_ids(self, use_type=False, use_cds=False,
@@ -834,34 +813,6 @@ class Genome:
         definition = ("Check whether CDS features can be uniquely "
                       "identified by their orientation and transcription end "
                       "coordinate.")
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-
-    # TODO this may no longer be needed.
-    def check_value_flag(self, expect=False, eval_id=None,
-                         success="correct", fail="error", eval_def=None):
-        """Check if there all attributes are populated as expected.
-
-        :param expect: Indicates the expected status of the value flag.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
-        """
-        if self._value_flag:
-            if expect:
-                result = "All attributes are populated."
-                status = success
-            else:
-                result = "Some attributes are not populated."
-                status = fail
-        else:
-            if not expect:
-                result = "All attributes are populated."
-                status = success
-            else:
-                result = "Some attributes are not populated."
-                status = fail
-        definition = "Check if there are any attributes that are set correctly."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
