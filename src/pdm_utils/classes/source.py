@@ -80,14 +80,14 @@ class Source:
             value1 = None
         if test:
             value1_short = basic.truncate_value(str(value1), 30, "...")
-            msg = f"The {attribute} value '{value1_short}' is "
+            result = f"The {attribute} value '{value1_short}' is "
             value2 = basic.check_value_expected_in_set(
                         value1, check_set, expect)
             if value2:
-                result = "valid."
+                result = result + "valid."
                 status = success
             else:
-                result = "not valid."
+                result = result + "not valid."
                 status = fail
         else:
             result = f"'{attribute}' is not a valid attribute to be evaluated."

@@ -1372,6 +1372,42 @@ class TestImportGenomeClass4(unittest.TestCase):
 
 
 
+    def test_check_retain_genome_1(self):
+        """Verify correct number of evaluations are produced using:
+        all eval_flags = True."""
+        import_genome.check_retain_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags)
+        self.assertEqual(len(self.gnm.evaluations), 1)
+
+    def test_check_retain_genome_2(self):
+        """Verify correct number of evaluations are produced using:
+        check_replace = False."""
+        self.eval_dict["check_replace"] = False
+        import_genome.check_retain_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags)
+        self.assertEqual(len(self.gnm.evaluations), 0)
+
+    def test_check_retain_genome_3(self):
+        """Verify correct number of errors are produced using:
+        all eval_flags = True,
+        'annotation_status' = 'draft'."""
+        import_genome.check_retain_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags)
+        count = count_status(self.gnm, "error", "warning")
+        self.assertEqual(count, 0)
+
+    def test_check_retain_genome_4(self):
+        """Verify correct number of errors are produced using:
+        all eval_flags = True,
+        'annotation_status' = 'final'."""
+        self.gnm.annotation_status = "final"
+        import_genome.check_retain_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags)
+        count = count_status(self.gnm, "error", "warning")
+        self.assertEqual(count, 1)
+
+
+
 class TestImportGenomeClass5(unittest.TestCase):
 
     def setUp(self):
@@ -2151,15 +2187,16 @@ class TestImportGenomeClass8(unittest.TestCase):
         count = count_status(self.src1, "error")
         self.assertEqual(count, 0)
 
-    def test_check_source_12(self):
-        """Verify correct number of errors with permissible synonym
-        in organism host genus but not in lab host host genus."""
-        self.src1._organism_host_genus = "Mycobacterio"
-        self.src1._lab_host_host_genus = "Mycobacterio"
-        import_genome.check_source(self.src1, self.eval_flags,
-                                   host_genus="Mycobacterium")
-        count = count_status(self.src1, "error", "warning")
-        self.assertEqual(count, 1)
+    # TODO this may no longer be needed, if host_genus synonyms are not used.
+    # def test_check_source_12(self):
+    #     """Verify correct number of errors with permissible synonym
+    #     in organism host genus but not in lab host host genus."""
+    #     self.src1._organism_host_genus = "Mycobacterio"
+    #     self.src1._lab_host_host_genus = "Mycobacterio"
+    #     import_genome.check_source(self.src1, self.eval_flags,
+    #                                host_genus="Mycobacterium")
+    #     count = count_status(self.src1, "error", "warning")
+    #     self.assertEqual(count, 1)
 
 
 

@@ -390,11 +390,12 @@ class GenomePair:
 
             v1_short = basic.truncate_value(str(value1), 30, "...")
             v2_short = basic.truncate_value(str(value2), 30, "...")
-            result = (f"The '{self.genome1.id}' genome '{attribute}' attribute "
-                   f" contains: '{v1_short}'. "
-                   f"The '{self.genome2.id}' genome '{attribute}' attribute "
-                   f" contains: '{v2_short}'. "
-                   "These two values are ")
+            result = (f"The first genome is ID: {self.genome1.id}, "
+                      f"Type: {self.genome1.type}. The '{attribute}' attribute "
+                      f" contains: '{v1_short}'. "
+                      f"The second genome is ID: {self.genome2.id}, "
+                      f"Type: {self.genome2.type}. The '{attribute}' attribute "
+                      f" contains: '{v2_short}'. These two values are ")
 
             if actual_same:
                 result = result + "identical, "

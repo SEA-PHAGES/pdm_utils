@@ -193,21 +193,9 @@ PHAGE_ID_DICT = {
     "Ta17a": "TA17a"
     }
 
-
-# Host genus typo dictionary.
-# Key = Host genus as it is spelled in the GenBank-formatted record.
-# Value = Host genus as it is spelled in PhagesDB and/or the MySQL database, and thus
-# how it should be spelled in the import ticket.
-# The host genus parsed from the GenBank-formatted record gets
-# reassigned this corrected name.
-HOST_GENUS_DICT = {
-    "Mycolicibacterium":"Mycobacterium"
-    }
-
 # TODO HOST_GENUS_DICT may no longer be needed.
 # List of host_genus synonyms.
 HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
-
 
 # Hatfull lab server info
 DB_HOST = "phamerator.webfactional.com"

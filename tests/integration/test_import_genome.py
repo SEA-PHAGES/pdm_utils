@@ -138,9 +138,6 @@ def count_contents(path_to_folder):
     return count
 
 
-
-
-
 class TestImportGenomeMain1(unittest.TestCase):
 
 
@@ -191,8 +188,6 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.data_dict = self.data_dict
 
         self.tkt2 = ticket.ImportTicket()
-
-        self.id_dict = constants.PHAGE_ID_DICT
 
 
     def tearDown(self):
@@ -334,7 +329,33 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(pdb_gnm.cluster, "A")
 
 
-    def test_prepare_bundle_6(self):
+    @patch("pdm_utils.functions.phagesdb.get_genome")
+    def test_prepare_bundle_6(self, gg_mock):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'add' ticket, with PhagesDB data to be retrieved,
+        but unable to retrieve PhagesDB data."""
+        # Use cluster and host_genus to confirm that only attributes
+        # within the data_retrieve set are copied.
+        gg_mock.return_value = None
+        self.tkt1.data_add = set(["cluster", "subcluster",
+                                  "annotation_status", "annotation_author",
+                                  "retrieve_record", "accession"])
+        self.tkt1.data_dict["host_genus"] = "retrieve"
+        self.tkt1.data_retrieve = set(["host_genus"])
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(
+                    filepath=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1,
+                    genome_id_field="_organism_name",
+                    file_ref="flat_file",
+                    retrieve_ref="phagesdb")
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 2)
+        with self.subTest():
+            self.assertFalse("phagesdb" in bndl.genome_dict.keys())
+
+
+    def test_prepare_bundle_7(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with MySQL data,
         and no PhagesDB data."""
@@ -397,7 +418,7 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(pmr_gnm.accession, "EFG789")
 
 
-    def test_prepare_bundle_7(self):
+    def test_prepare_bundle_8(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, no MySQL data,
         and no PhagesDB data."""
@@ -450,7 +471,7 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.host_genus, "")
 
 
-    def test_prepare_bundle_8(self):
+    def test_prepare_bundle_9(self):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with MySQL data,
         no MySQL engine, and no PhagesDB data."""
@@ -502,10 +523,10 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
 
 
-    def test_prepare_bundle_9(self):
+    def test_prepare_bundle_10(self):
         """Verify bundle is returned with the genome id converted using
         the id dictionary."""
-        self.id_dict["L5"] = "new_id"
+        id_dict = {"L5": "new_id"}
         self.tkt1.phage_id = "new_id"
         self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
                                   "annotation_status", "annotation_author",
@@ -519,7 +540,7 @@ class TestImportGenomeMain1(unittest.TestCase):
                     host_genus_field="_organism_host_genus",
                     file_ref="flat_file",
                     ticket_ref="ticket",
-                    id_conversion_dict = self.id_dict)
+                    id_conversion_dict=id_dict)
         ff_gnm = bndl.genome_dict["flat_file"]
         tkt_gnm = bndl.genome_dict["ticket"]
         bndl_tkt = bndl.ticket
@@ -537,7 +558,7 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     @patch("pdm_utils.functions.basic.choose_from_list")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_prepare_bundle_10(self, ask_mock, choose_mock):
+    def test_prepare_bundle_11(self, ask_mock, choose_mock):
         """Verify bundle is returned with the CDS descriptions derived
         from 'product' instead of 'function', after it is
         interactively selected using interactive = True.
@@ -691,6 +712,9 @@ class TestImportGenomeMain2(unittest.TestCase):
 class TestImportGenomeMain3(unittest.TestCase):
 
     def setUp(self):
+        # The test_db is only needed to test shema compatibility.
+        # Otherwise, Actinobacteriophage is sufficient.
+        create_new_db(schema_filepath, db, user, pwd)
 
         self.import_table = Path(test_files_path, "test_import_table_1.csv")
         self.base_dir = Path(test_root_dir, "test_folder")
@@ -700,11 +724,11 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.output_folder = Path(self.base_dir, "output_folder")
         self.log_file = Path(self.base_dir, "test_log.txt")
 
-        self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
+        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
         self.args_list = ["run.py",
                           "import",
-                          "Actinobacteriophage",
+                          db,
                           str(self.input_folder),
                           str(self.import_table),
                           "-g", "FILENAME",
@@ -718,12 +742,16 @@ class TestImportGenomeMain3(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.base_dir)
         self.engine.dispose()
+        remove_db(db, user, pwd)
+
+
+
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.functions.mysqldb.check_schema_compatibility")
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock, csc_mock, data_io_mock):
+    def test_main_1(self, ctd_mock, data_io_mock):
         """Verify that correct args calls data_io."""
+        insert_data_into_version_table(db, user, pwd, version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
@@ -736,6 +764,7 @@ class TestImportGenomeMain3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_2(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
+        insert_data_into_version_table(db, user, pwd, version_table_data)
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
         import_genome.main(self.args_list)
@@ -747,6 +776,7 @@ class TestImportGenomeMain3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_3(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""
+        insert_data_into_version_table(db, user, pwd, version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[4] = ""
@@ -756,10 +786,26 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    @patch("pdm_utils.functions.basic.make_new_dir")
+    @patch("sys.exit")
+    def test_main_4(self, sys_exit_mock, mnd_mock, ctd_mock, data_io_mock):
+        """Verify that invalid output folder calls sys exit."""
+        insert_data_into_version_table(db, user, pwd, version_table_data)
+        self.input_folder.mkdir()
+        # Need to provide filename in a valid directory to create log file
+        # since output folder is invalid.
+        mnd_mock.return_value = Path(self.input_folder, "temp")
+        ctd_mock.return_value = self.engine
+        import_genome.main(self.args_list)
+        self.assertTrue(sys_exit_mock.called)
+
+
+    @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("pdm_utils.functions.mysqldb.check_schema_compatibility")
     @patch("sys.exit")
     @patch("getpass.getpass")
-    def test_main_4(self, getpass_mock, sys_exit_mock, csc_mock, data_io_mock):
+    def test_main_5(self, getpass_mock, sys_exit_mock, csc_mock, data_io_mock):
         """Verify that invalid database calls sys exit."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
@@ -774,8 +820,20 @@ class TestImportGenomeMain3(unittest.TestCase):
         self.assertTrue(sys_exit_mock.called)
 
 
-    # TODO no tests for main() when output_folder is invalid
-    # TODO no tests for main() when log_file is invalid
+    @patch("pdm_utils.pipelines.import_genome.data_io")
+    @patch("sys.exit")
+    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    def test_main_6(self, ctd_mock, sys_exit_mock, data_io_mock):
+        """Verify that invalid database schema version calls sys exit."""
+        new_version_table_data = {"Version":1, "SchemaVersion":0}
+        insert_data_into_version_table(db, user, pwd, new_version_table_data)
+        self.input_folder.mkdir()
+        self.output_folder.mkdir()
+        ctd_mock.return_value = self.engine
+        import_genome.main(self.args_list)
+        self.assertTrue(sys_exit_mock.called)
+
+
 
 
 class TestImportGenomeMain4(unittest.TestCase):
@@ -1006,7 +1064,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(evaluation_dict.keys()), 0)
 
-    # Patching so avoid an attempt to add data to the database.
+    # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
     # Patching glp since the bundled data is incomplete,
     # bndl.check_for_errors() will always throw an error.
@@ -1050,7 +1108,7 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(f_count, 0)
 
 
-    # Patching so avoid an attempt to add data to the database.
+    # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
     def test_process_files_and_tickets_3(self, import_into_db_mock):
         """Verify correct output using:
@@ -1090,7 +1148,7 @@ class TestImportGenomeMain5(unittest.TestCase):
             self.assertEqual(f_count, 0)
 
 
-    # Patching so avoid an attempt to add data to the database.
+    # Patching to avoid an attempt to add data to the database.
     @patch("pdm_utils.pipelines.import_genome.import_into_db")
     def test_process_files_and_tickets_4(self, import_into_db_mock):
         """Verify correct output using:
@@ -2339,25 +2397,82 @@ class TestImportGenomeMain8(unittest.TestCase):
         self.tkt = ticket.ImportTicket()
 
 
+
+
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_cds_descriptions_1(self, ask_mock):
-        """Verify no change if description_field is correct."""
+        """Verify no change if there are no CDS features."""
         ask_mock.return_value = True
-        features = [self.cds1, self.cds2, self.cds3]
+        features = []
         new_field = import_genome.review_cds_descriptions(features, self.field)
-        self.assertEqual(new_field, "product")
+        with self.subTest():
+            self.assertFalse(ask_mock.called)
+        with self.subTest():
+            self.assertEqual(new_field, "product")
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_cds_descriptions_2(self, ask_mock):
-        """Verify no change if description_field is not correct,
-        and new field is not selected."""
-        ask_mock.side_effect = [False, None]
-        features = [self.cds1, self.cds2, self.cds3]
+        """Verify no change if no descriptions in fields other than
+        description_field."""
+        ask_mock.return_value = True
+        features = [self.cds1]
         new_field = import_genome.review_cds_descriptions(features, self.field)
-        self.assertEqual(new_field, "product")
+        with self.subTest():
+            self.assertFalse(ask_mock.called)
+        with self.subTest():
+            self.assertEqual(new_field, "product")
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_cds_descriptions_3(self, ask_mock):
+        """Verify no change if there is a description in 'product' field and
+        description_field = 'function', and
+        description_field is not changed."""
+        ask_mock.return_value = True
+        features = [self.cds1]
+        new_field = import_genome.review_cds_descriptions(features, "function")
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertEqual(new_field, "function")
+
+    @patch("pdm_utils.functions.basic.choose_from_list")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_4(self, ask_mock, cfl_mock):
+        """Verify no change if there is a description in 'product' field and
+        description_field = 'function', and
+        description_field is changed."""
+        ask_mock.return_value = False
+        cfl_mock.return_value = "product"
+        features = [self.cds1]
+        new_field = import_genome.review_cds_descriptions(features, "function")
+        self.assertEqual(new_field, "product")
+
+    @patch("pdm_utils.functions.basic.choose_from_list")
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_5(self, ask_mock, cfl_mock):
+        """Verify no change if there is a description in 'product' field and
+        description_field = 'function', and
+        description_field was not correctly chosen from list."""
+        ask_mock.return_value = False
+        cfl_mock.return_value = None
+        features = [self.cds1]
+        new_field = import_genome.review_cds_descriptions(features, "function")
+        self.assertEqual(new_field, "function")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_6(self, ask_mock):
+        """Verify no change if there are descriptions in fields in
+        multiple CDS features other than description_field."""
+        ask_mock.return_value = True
+        features = [self.cds1, self.cds2, self.cds3]
+        new_field = import_genome.review_cds_descriptions(features, self.field)
+        with self.subTest():
+            self.assertTrue(ask_mock.called)
+        with self.subTest():
+            self.assertEqual(new_field, "product")
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_cds_descriptions_7(self, ask_mock):
         """Verify no change if description_field is not correct,
         and no new field is selected."""
         ask_mock.side_effect = [False, False, False]
@@ -2366,7 +2481,7 @@ class TestImportGenomeMain8(unittest.TestCase):
         self.assertEqual(new_field, "product")
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_cds_descriptions_4(self, ask_mock):
+    def test_review_cds_descriptions_8(self, ask_mock):
         """Verify no change if description_field is not correct,
         and new field is selected."""
         ask_mock.side_effect = [False, False, True]

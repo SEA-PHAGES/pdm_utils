@@ -2911,7 +2911,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
-            self.assertEqual(len(gene_table_results), 4)
+            self.assertEqual(len(gene_table_results), 0)
 
 
     @patch("getpass.getpass")

@@ -50,7 +50,7 @@ def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
             value = value + suffix
     elif option.lower() == "remove":
         if value.lower().endswith(suffix.lower()):
-            value = value.strip(suffix)
+            value = value[:-len(suffix)]
     else:
         pass
     return value
@@ -977,7 +977,7 @@ def make_new_dir(output_dir, new_dir, attempt=1):
     else:
         return new_path
 
-
+# TODO this may not be needed, if a standard config file format is used. 
 def parse_flag_file(flag_file):
     """Parse a file to an evaluation flag dictionary.
 
@@ -1040,12 +1040,10 @@ def choose_from_list(options):
 
 def get_synonyms(search_value, list_of_synonyms):
     """Search for a set of values from a list of sets."""
-    syn_set = set([search_value])
-    x = 0
-    while x < len(list_of_synonyms):
+    syn_set = {search_value}
+    for x in range(len(list_of_synonyms)):
         if search_value in list_of_synonyms[x]:
             syn_set = list_of_synonyms[x]
-        x += 1
     return syn_set
 
 

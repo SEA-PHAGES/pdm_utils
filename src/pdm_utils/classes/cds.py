@@ -487,7 +487,7 @@ class Cds:
         else:
             result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check the value of the '{attribute}' attribute."
+        definition = f"Check the value of the '{attribute}' attribute for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -528,7 +528,7 @@ class Cds:
         else:
             result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check the magnitude of the '{attribute}' attribute."
+        definition = f"Check the magnitude of the '{attribute}' attribute for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -558,7 +558,7 @@ class Cds:
         else:
             result = result + "and sequence are correct."
             status = success
-        definition = "Check that the feature contains the expected translation."
+        definition = f"Check that {self.id} contains the expected translation."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -583,7 +583,7 @@ class Cds:
             result = result + "no unexpected amino acids."
             status = success
 
-        definition = "Check if all amino acids in the translation are expected."
+        definition = f"Check if all amino acids in the translation are expected for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -611,7 +611,7 @@ class Cds:
         else:
             result = result + "incorrectly."
             status = fail
-        definition = "Check if the orientation is set correctly."
+        definition = f"Check if the orientation is set correctly for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -669,7 +669,7 @@ class Cds:
         else:
             result = result + "not structured correctly. " + " ".join(results)
             status = fail
-        definition = "Check if the locus_tag qualifier is structured correctly."
+        definition = f"Check if the locus_tag qualifier is structured correctly for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -693,7 +693,7 @@ class Cds:
         else:
             result = result + "does not contain an integer, which is not expected."
             status = fail
-        definition = "Check if the gene qualifier contains an integer."
+        definition = f"Check if the gene qualifier contains an integer for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -714,7 +714,7 @@ class Cds:
         else:
             result = result + "not consistent."
             status = fail
-        definition = "Check if the gene and locus_tag numbers are consistent."
+        definition = f"Check if the gene and locus_tag numbers are consistent for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -767,7 +767,7 @@ class Cds:
             result = result + "as expected."
             status = success
         definition = ("Check if there is a discrepancy "
-                      "between description fields.")
+                      f"between description fields for {self.id}.")
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -804,7 +804,7 @@ class Cds:
         else:
             result = f"The '{attribute}' field is not correct."
             status = fail
-        definition = f"Check if the '{attribute}' field contains generic data."
+        definition = f"Check if the '{attribute}' field contains generic data for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 

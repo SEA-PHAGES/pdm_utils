@@ -58,8 +58,9 @@ def main(unparsed_args_list):
     results_folder = pathlib.Path(RESULTS_FOLDER)
     results_path = basic.make_new_dir(args.output_folder,
                                       results_folder, attempt=10)
+
     if results_path is None:
-        print("Unable to create output_folder.")
+        print("Unable to create results folder.")
         sys.exit(1)
 
     args.log_file = pathlib.Path(results_path, args.log_file)
@@ -79,12 +80,10 @@ def main(unparsed_args_list):
     # Verify database connection and schema compatibility.
     engine = mysqldb.connect_to_db(args.database)
     logger.info(f"Connected to database: {args.database}.")
-
-    # TODO unittest schema compatibility.
     mysqldb.check_schema_compatibility(engine, "the import pipeline")
     logger.info(f"Schema version is compatible.")
 
-    # If everything checks out, pass on args for data input/output:
+    # If everything checks out, pass on args for data input/output.
     data_io(engine=engine,
             genome_folder=args.input_folder,
             import_table_file=args.import_table,
@@ -489,9 +488,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     file_count = 1
     for filepath in files_in_folder:
         replace_gnm_pair_key = file_ref + "_" + retain_ref
-        progress = f"Preparing data for file #{file_count}: {filepath.name}."
+        progress = f"Processing data for file #{file_count}: {filepath.name}."
         print("\n\n" + progress)
         logger.info(progress)
+
         bndl = prepare_bundle(filepath=filepath, ticket_dict=ticket_dict,
                               engine=engine,
                               genome_id_field=genome_id_field,
@@ -499,7 +499,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               id=bundle_count,
                               file_ref=file_ref, ticket_ref=ticket_ref,
                               retrieve_ref=retrieve_ref, retain_ref=retain_ref,
-                              interactive=interactive)
+                              # interactive=interactive)
+                              interactive=interactive,
+                              id_conversion_dict=constants.PHAGE_ID_DICT)
 
         # Create sets of unique values for different data fields.
         # Since data from each parsed flat file is imported into the
@@ -646,12 +648,11 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
 
         # Some phage names in the flat file are spelled differently
         # than in the database. In order to match the flat file
-        # with the ticket (which presumably contains the name spelling
+        # with the ticket (which presumably contains the spelling used
         # in the database), the genome ID needs to be changed.
-        # PHAGE_ID_DICT key = incorrect spelling ; value = correct spelling
+        # id_conversion_dict key = incorrect spelling; value = correct spelling
         if ff_gnm.id in id_conversion_dict.keys():
             ff_gnm.id = id_conversion_dict[ff_gnm.id]
-
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
         # Match ticket (if available) to flat file.
@@ -686,9 +687,6 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
             if len(bndl.ticket.data_retrieve) > 0:
                 pdb_gnm = phagesdb.get_genome(bndl.ticket.phage_id,
                                               gnm_type=retrieve_ref)
-
-                # TODO unit test 'is not None' block.
-                # pdb_gnm is None if PhageID not in PhagesDB
                 if pdb_gnm is not None:
                     bndl.genome_dict[pdb_gnm.type] = pdb_gnm
 
@@ -759,29 +757,21 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                          seq_set=seq_set, host_genus_set=host_genus_set,
                          cluster_set=cluster_set, subcluster_set=subcluster_set)
 
-            # Check CDS features.
-            x = 0
-            while x < len(gnm.cds_features):
+            # Check each type of feature.
+            for x in range(len(gnm.cds_features)):
                 check_cds(gnm.cds_features[x], eval_flags,
                           description_field=tkt.description_field)
-                x += 1
 
-            # TODO this check_trna flag should be moved within
-            # the check_trna function. Eventually, the default should be to
-            # check trna features.
-            # Check tRNA features.
-            if eval_flags["check_trna"]:
-                y = 0
-                while y < len(gnm.trna_features):
-                    check_trna(gnm.trna_features[y], eval_flags)
-                    y += 1
+            for x in range(len(gnm.trna_features)):
+                check_trna(gnm.trna_features[x], eval_flags)
 
-            # Check Source features.
-            z = 0
-            while z < len(gnm.source_features):
-                check_source(gnm.source_features[z], eval_flags,
+            for x in range(len(gnm.source_features)):
+                check_source(gnm.source_features[x], eval_flags,
                              host_genus=gnm.host_genus)
-                z += 1
+
+            # TODO implement tmrna
+            # for x in range(len(gnm.tmrna_features)):
+            #     check_trna(gnm.tmrna_features[x], eval_flags)
 
         if retain_ref in bndl.genome_dict.keys():
             gnm2 = bndl.genome_dict[retain_ref]
@@ -851,7 +841,7 @@ def review_object_list(object_list, type, attr_list, interactive=False):
             object = object_list[x]
             # Compile description of the object being reviewed.
             string = get_result_string(object, attr_list)
-            partial_msg = f" evaluations for {type}: {string}."
+            partial_msg = f"evaluations for {type}: {string}."
             if len(object.evaluations) > 0:
                 log_and_print("Reviewing " + partial_msg, interactive)
                 if exit == False:
@@ -899,7 +889,7 @@ def review_evaluation(evl, interactive=False):
     """Review an evaluation object.
     """
     exit = False
-    msg = "Status was changed from 'warning' to 'error' {}."
+    msg = " Status was changed from 'warning' to 'error' {}."
     summary = (f"Evaluation ID: {evl.id}."
                f"\nStatus: {evl.status}."
                f"\nDefinition: {evl.definition}"
@@ -972,7 +962,6 @@ def set_cds_descriptions(gnm, tkt, interactive=False):
     gnm.tally_cds_descriptions()
 
 
-# TODO improve unittests since the function has become more complicated.
 def review_cds_descriptions(feature_list, description_field):
     """Iterate through all CDS features and review descriptions.
     """
@@ -980,7 +969,6 @@ def review_cds_descriptions(feature_list, description_field):
     summary = []
     x = 20
     y = "..."
-    mod_field = "processed_" + description_field
     tally = 0
     for cds in feature_list:
         # Get truncated descriptions to report to user.
@@ -999,11 +987,11 @@ def review_cds_descriptions(feature_list, description_field):
 
         # Count the number of descriptions that are not
         # in the selected description field.
-        if (mod_field != "product" and len(short_product) > 0):
+        if (description_field != "product" and len(short_product) > 0):
             tally += 1
-        if (mod_field != "function" and len(short_function) > 0):
+        if (description_field != "function" and len(short_function) > 0):
             tally += 1
-        if (mod_field != "note" and len(short_note) > 0):
+        if (description_field != "note" and len(short_note) > 0):
             tally += 1
 
 
@@ -1057,20 +1045,25 @@ def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref="
     bndl.check_ticket(eval_id="BNDL_001", eval_def=EDD["BNDL_001"])
     if bndl.ticket is not None:
         logger.info(f"Ticket: {bndl.ticket.type}, {bndl.ticket.phage_id}.")
-        bndl.check_genome_dict(file_ref, expect=True, eval_id="BNDL_002", eval_def=EDD["BNDL_002"])
+        bndl.check_genome_dict(file_ref, expect=True, eval_id="BNDL_002",
+                               eval_def=EDD["BNDL_002"])
         tkt = bndl.ticket
         if len(tkt.data_add) > 0:
-            bndl.check_genome_dict(ticket_ref, expect=True, eval_id="BNDL_003", eval_def=EDD["BNDL_003"])
+            bndl.check_genome_dict(ticket_ref, expect=True, eval_id="BNDL_003",
+                                   eval_def=EDD["BNDL_003"])
         # There may or may not be data retrieved from PhagesDB.
         if len(tkt.data_retrieve) > 0:
             bndl.check_genome_dict(retrieve_ref,
-                                   expect=True, eval_id="BNDL_004", eval_def=EDD["BNDL_004"])
+                                   expect=True, eval_id="BNDL_004",
+                                   eval_def=EDD["BNDL_004"])
         if tkt.type == "replace":
-            bndl.check_genome_dict(retain_ref, expect=True, eval_id="BNDL_005", eval_def=EDD["BNDL_005"])
+            bndl.check_genome_dict(retain_ref, expect=True, eval_id="BNDL_005",
+                                   eval_def=EDD["BNDL_005"])
             # There should be a genome_pair between the current MySQL
             # genome and the new flat_file genome.
             pair_key = f"{file_ref}_{retain_ref}"
-            bndl.check_genome_pair_dict(pair_key, eval_id="BNDL_006", eval_def=EDD["BNDL_006"])
+            bndl.check_genome_pair_dict(pair_key, eval_id="BNDL_006",
+                                        eval_def=EDD["BNDL_006"])
 
 
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
@@ -1124,7 +1117,8 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
                         expect=False, eval_id="TKT_007", eval_def=EDD["TKT_007"])
 
     # Check how genome attributes will be determined.
-    tkt.check_compatible_type_and_data_retain(eval_id="TKT_008", eval_def=EDD["TKT_008"])
+    tkt.check_compatible_type_and_data_retain(eval_id="TKT_008",
+                                              eval_def=EDD["TKT_008"])
     tkt.check_valid_data_source("data_add", add_set,
                                 eval_id="TKT_009", eval_def=EDD["TKT_009"])
     tkt.check_valid_data_source("data_retain", retain_set,
@@ -1139,7 +1133,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                  seq_set=set(), host_genus_set=set(),
                  cluster_set=set(), subcluster_set=set(),
                  accession_set=set()):
-    """Check a Genome object for errors.
+    """Check a Genome object parsed from file for errors.
 
     :param gnm: A pdm_utils Genome object.
     :type gnm: Genome
@@ -1187,12 +1181,12 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
     # 'replace' ticket checks.
     else:
-        gnm.check_attribute("id", phage_id_set,
-                            expect=True, eval_id="GNM_006", eval_def=EDD["GNM_006"])
-        gnm.check_attribute("seq", seq_set,
-                            expect=True, eval_id="GNM_007", eval_def=EDD["GNM_007"])
-        gnm.check_attribute("annotation_status", {"draft"},
-                            expect=False, eval_id="GNM_008", fail="warning",
+        gnm.check_attribute("id", phage_id_set, expect=True, eval_id="GNM_006",
+                            eval_def=EDD["GNM_006"])
+        gnm.check_attribute("seq", seq_set, expect=True, eval_id="GNM_007",
+                            eval_def=EDD["GNM_007"])
+        gnm.check_attribute("annotation_status", {"draft"}, expect=False,
+                            eval_id="GNM_008", fail="warning",
                             eval_def=EDD["GNM_008"])
 
 
@@ -1209,11 +1203,14 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
     if gnm.annotation_status == "draft":
         gnm.check_attribute("name", {check_name}, expect=True,
-                            eval_id="GNM_009", fail="warning", eval_def=EDD["GNM_009"])
+                            eval_id="GNM_009", fail="warning",
+                            eval_def=EDD["GNM_009"])
         gnm.check_magnitude("_cds_descriptions_tally", "=", 0,
-                            eval_id="GNM_010", fail="warning", eval_def=EDD["GNM_010"])
+                            eval_id="GNM_010", fail="warning",
+                            eval_def=EDD["GNM_010"])
         gnm.check_attribute("accession", {""}, expect=True,
-                            eval_id="GNM_011", fail="warning", eval_def=EDD["GNM_011"])
+                            eval_id="GNM_011", fail="warning",
+                            eval_def=EDD["GNM_011"])
 
     else:
         # TODO set trna=True and tmrna=True after they are implemented.
@@ -1223,9 +1220,11 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
         if gnm.annotation_status == "final":
             gnm.check_attribute("name", {check_name}, expect=False,
-                                eval_id="GNM_012", fail="warning", eval_def=EDD["GNM_012"])
+                                eval_id="GNM_012", fail="warning",
+                                eval_def=EDD["GNM_012"])
             gnm.check_magnitude("_cds_descriptions_tally", ">", 0,
-                                eval_id="GNM_013", fail="warning", eval_def=EDD["GNM_013"])
+                                eval_id="GNM_013", fail="warning",
+                                eval_def=EDD["GNM_013"])
 
     check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)
     gnm.check_attribute("id", {check_id}, expect=False,
@@ -1244,14 +1243,21 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                         eval_id="GNM_020", fail="warning", eval_def=EDD["GNM_020"])
     gnm.check_attribute("host_genus", host_genus_set, expect=True,
                         eval_id="GNM_021", fail="warning", eval_def=EDD["GNM_021"])
-    gnm.check_cluster_structure(eval_id="GNM_022", fail="warning", eval_def=EDD["GNM_022"])
-    gnm.check_subcluster_structure(eval_id="GNM_023", fail="warning", eval_def=EDD["GNM_023"])
-    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_024", eval_def=EDD["GNM_024"])
+
+    gnm.check_cluster_structure(eval_id="GNM_022", fail="warning",
+                                eval_def=EDD["GNM_022"])
+    gnm.check_subcluster_structure(eval_id="GNM_023", fail="warning",
+                                   eval_def=EDD["GNM_023"])
+    gnm.check_compatible_cluster_and_subcluster(eval_id="GNM_024",
+                                                eval_def=EDD["GNM_024"])
     gnm.check_magnitude("date", ">", constants.EMPTY_DATE, eval_id="GNM_025",
                         eval_def=EDD["GNM_025"])
-    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_026", eval_def=EDD["GNM_026"])
-    gnm.check_magnitude("gc", "<", 100.0001, eval_id="GNM_027", eval_def=EDD["GNM_027"])
-    gnm.check_magnitude("length", ">", 0, eval_id="GNM_028", eval_def=EDD["GNM_028"])
+    gnm.check_magnitude("gc", ">", -0.0001, eval_id="GNM_026",
+                        eval_def=EDD["GNM_026"])
+    gnm.check_magnitude("gc", "<", 100.0001, eval_id="GNM_027",
+                        eval_def=EDD["GNM_027"])
+    gnm.check_magnitude("length", ">", 0, eval_id="GNM_028",
+                        eval_def=EDD["GNM_028"])
     gnm.check_magnitude("_cds_features_tally", ">", 0, eval_id="GNM_029",
                         fail="warning", eval_def=EDD["GNM_029"])
 
@@ -1262,17 +1268,22 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
     if eval_flags["check_id_typo"]:
         gnm.compare_two_attributes("id", "_description_name", expect_same=True,
-                                   eval_id="GNM_032", fail="warning", eval_def=EDD["GNM_032"])
+                                   eval_id="GNM_032", fail="warning",
+                                   eval_def=EDD["GNM_032"])
         gnm.compare_two_attributes("id", "_source_name", expect_same=True,
-                                   eval_id="GNM_033", fail="warning", eval_def=EDD["GNM_033"])
+                                   eval_id="GNM_033", fail="warning",
+                                   eval_def=EDD["GNM_033"])
         gnm.compare_two_attributes("id", "_organism_name", expect_same=True,
-                                   eval_id="GNM_034", fail="warning", eval_def=EDD["GNM_034"])
+                                   eval_id="GNM_034", fail="warning",
+                                   eval_def=EDD["GNM_034"])
 
     if eval_flags["check_host_typo"]:
 
-        # TODO change these checks in parallel with source feature checks.
-        # Get a set of host genus synonyms and use check_attribute()
-
+        # TODO change these checks in parallel with source feature checks?
+        # Could get a set of host genus synonyms and use check_attribute()
+        # Actually, it may be better to make source feature checks parallel to
+        # these genome checks. May no longer need host genus synonyms.
+        # Host genus can be defined by ticket, which is set to gnm.host_genus.
         gnm.compare_two_attributes("host_genus", "_description_host_genus",
                                    expect_same=True, eval_id="GNM_035",
                                    fail="warning", eval_def=EDD["GNM_035"])
@@ -1297,12 +1308,8 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                               eval_def=EDD["GNM_040"])
 
 
-
-
-# TODO unittest.
-# This function is meant to check the current genome in mysql.
 def check_retain_genome(gnm, tkt_type, eval_flags):
-    """Check a Genome object for errors.
+    """Check a Genome object currently in database for errors.
 
     :param gnm: A pdm_utils Genome object.
     :type gnm: Genome
@@ -1312,7 +1319,8 @@ def check_retain_genome(gnm, tkt_type, eval_flags):
     logger.info(f"Checking genome: {gnm.id}, {gnm.type}.")
     if eval_flags["check_replace"]:
         gnm.check_attribute("annotation_status", {"draft"},
-                            expect=True, eval_id="GNM2_001", fail="warning", eval_def=EDD["GNM2_001"])
+                            expect=True, eval_id="GNM2_001", fail="warning",
+                            eval_def=EDD["GNM2_001"])
 
 
 def check_source(src_ftr, eval_flags, host_genus=""):
@@ -1321,23 +1329,33 @@ def check_source(src_ftr, eval_flags, host_genus=""):
 
     if eval_flags["check_id_typo"]:
         src_ftr.check_attribute("_organism_name", {src_ftr.genome_id},
-                                expect=True, eval_id="SRC_001", fail="warning", eval_def=EDD["SRC_001"])
+                                expect=True, eval_id="SRC_001", fail="warning",
+                                eval_def=EDD["SRC_001"])
 
     if eval_flags["check_host_typo"]:
-        host_genus_synonyms = basic.get_synonyms(
-                                host_genus, constants.HOST_GENUS_SYNONYMS)
+
+        # TODO not sure if host genus synonyms is needed anymore.
+        # Strategy to utilize host genus synonyms, such as 'Mycolicibacterium'.
+        # host_genus_synonyms = basic.get_synonyms(host_genus,
+        #                                 constants.HOST_GENUS_SYNONYMS)
+        # Alternatively, a host_genus_set could be passed into the function,
+        # instead of a string, and the decision to pass in a set of synonyms
+        # could be pushed up a level.
 
         # Only evaluate attributes if the field is not empty, since they
         # are not required to be present.
         if src_ftr.organism != "":
-            src_ftr.check_attribute("_organism_host_genus", host_genus_synonyms,
-                                    expect=True, eval_id="SRC_002", fail="warning", eval_def=EDD["SRC_002"])
+            src_ftr.check_attribute("_organism_host_genus", {host_genus},
+                                    expect=True, eval_id="SRC_002",
+                                    fail="warning", eval_def=EDD["SRC_002"])
         if src_ftr.host != "":
-            src_ftr.check_attribute("_host_host_genus", host_genus,
-                                    expect=True, eval_id="SRC_003", fail="warning", eval_def=EDD["SRC_003"])
+            src_ftr.check_attribute("_host_host_genus", {host_genus},
+                                    expect=True, eval_id="SRC_003",
+                                    fail="warning", eval_def=EDD["SRC_003"])
         if src_ftr.lab_host != "":
-            src_ftr.check_attribute("_lab_host_host_genus", host_genus,
-                                    expect=True, eval_id="SRC_004", fail="warning", eval_def=EDD["SRC_004"])
+            src_ftr.check_attribute("_lab_host_host_genus", {host_genus},
+                                    expect=True, eval_id="SRC_004",
+                                    fail="warning", eval_def=EDD["SRC_004"])
 
 
 
@@ -1356,13 +1374,15 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
     cds_ftr.check_attribute("translation_table", {11},
                             expect=True, eval_id="CDS_004", fail="warning",
                             eval_def=EDD["CDS_004"])
-    cds_ftr.check_magnitude("start", ">", 0, eval_id="CDS_005",
+    # Start can be 0 since coordinate_format = 0_half_open
+    cds_ftr.check_magnitude("start", ">", -1, eval_id="CDS_005",
                             eval_def=EDD["CDS_005"])
     cds_ftr.check_magnitude("stop", ">", 0, eval_id="CDS_013",
                             eval_def=EDD["CDS_013"])
     cds_ftr.check_magnitude("parts", ">", 0, eval_id="CDS_014",
                             eval_def=EDD["CDS_014"])
-    cds_ftr.check_orientation(format="fr_short", case=True, eval_id="CDS_006", eval_def=EDD["CDS_006"])
+    cds_ftr.check_orientation(format="fr_short", case=True, eval_id="CDS_006",
+                              eval_def=EDD["CDS_006"])
 
     if eval_flags["check_locus_tag"]:
         cds_ftr.check_attribute("locus_tag", {""}, expect=False, eval_id="CDS_007",
@@ -1374,10 +1394,12 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
     if eval_flags["check_gene"]:
         cds_ftr.check_attribute("gene", {""}, expect=False, eval_id="CDS_009",
                                 fail="warning", eval_def=EDD["CDS_009"])
-        cds_ftr.check_gene_structure(eval_id="CDS_010", fail="warning", eval_def=EDD["CDS_010"])
+        cds_ftr.check_gene_structure(eval_id="CDS_010", fail="warning",
+                                     eval_def=EDD["CDS_010"])
     if (eval_flags["check_locus_tag"] and eval_flags["check_gene"]):
         cds_ftr.check_compatible_gene_and_locus_tag(eval_id="CDS_011",
-                                                    fail="warning", eval_def=EDD["CDS_011"])
+                                                    fail="warning",
+                                                    eval_def=EDD["CDS_011"])
 
     # if eval_flags["check_description"]:
         # TODO the "check_generic_data" method should be implemented at the genome level.
@@ -1385,7 +1407,8 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
         # TODO not implemented yet: cds_ftr.check_valid_description(eval_id="CDS_013")
     if eval_flags["check_description_field"]:
         cds_ftr.check_description_field(attribute=description_field,
-                                        eval_id="CDS_012", fail="warning", eval_def=EDD["CDS_012"])
+                                        eval_id="CDS_012", fail="warning",
+                                        eval_def=EDD["CDS_012"])
 
 def compare_genomes(genome_pair, eval_flags):
     """Compare two genomes to identify discrepancies."""
@@ -1396,24 +1419,29 @@ def compare_genomes(genome_pair, eval_flags):
                 f"Type: {genome_pair.genome2.type}."
                 )
 
-    genome_pair.compare_attribute("id",
-        expect_same=True, eval_id="GP_001", fail="warning", eval_def=EDD["GP_001"])
-    genome_pair.compare_attribute("seq",
-        expect_same=True, eval_id="GP_002", fail="warning", eval_def=EDD["GP_002"])
-    genome_pair.compare_attribute("length",
-        expect_same=True, eval_id="GP_003", fail="warning", eval_def=EDD["GP_003"])
-    genome_pair.compare_attribute("cluster",
-        expect_same=True, eval_id="GP_004", fail="warning", eval_def=EDD["GP_004"])
-    genome_pair.compare_attribute("subcluster",
-        expect_same=True, eval_id="GP_005", fail="warning", eval_def=EDD["GP_005"])
-    genome_pair.compare_attribute("host_genus",
-        expect_same=True, eval_id="GP_006", fail="warning", eval_def=EDD["GP_006"])
-    genome_pair.compare_attribute("annotation_author",
-        expect_same=True, eval_id="GP_007", fail="warning", eval_def=EDD["GP_007"])
-    genome_pair.compare_attribute("translation_table",
-        expect_same=True, eval_id="GP_008", fail="warning", eval_def=EDD["GP_008"])
-    genome_pair.compare_attribute("retrieve_record",
-        expect_same=True, eval_id="GP_009", fail="warning", eval_def=EDD["GP_009"])
+    genome_pair.compare_attribute("id", expect_same=True, eval_id="GP_001",
+                                  fail="warning", eval_def=EDD["GP_001"])
+    genome_pair.compare_attribute("seq", expect_same=True, eval_id="GP_002",
+                                  fail="warning", eval_def=EDD["GP_002"])
+    genome_pair.compare_attribute("length", expect_same=True, eval_id="GP_003",
+                                  fail="warning", eval_def=EDD["GP_003"])
+    genome_pair.compare_attribute("cluster", expect_same=True, eval_id="GP_004",
+                                  fail="warning", eval_def=EDD["GP_004"])
+    genome_pair.compare_attribute("subcluster", expect_same=True,
+                                  eval_id="GP_005", fail="warning",
+                                  eval_def=EDD["GP_005"])
+    genome_pair.compare_attribute("host_genus", expect_same=True,
+                                  eval_id="GP_006", fail="warning",
+                                  eval_def=EDD["GP_006"])
+    genome_pair.compare_attribute("annotation_author", expect_same=True,
+                                  eval_id="GP_007", fail="warning",
+                                  eval_def=EDD["GP_007"])
+    genome_pair.compare_attribute("translation_table", expect_same=True,
+                                  eval_id="GP_008", fail="warning",
+                                  eval_def=EDD["GP_008"])
+    genome_pair.compare_attribute("retrieve_record", expect_same=True,
+                                  eval_id="GP_009", fail="warning",
+                                  eval_def=EDD["GP_009"])
 
     if eval_flags["check_replace"]:
         # The following checks assume that:
@@ -1422,30 +1450,36 @@ def compare_genomes(genome_pair, eval_flags):
 
         # The new genome to be evaluated is expected to be
         # newer than the current MySQL genome annotations.
-        genome_pair.compare_date("newer", eval_id="GP_010", fail="warning", eval_def=EDD["GP_010"])
+        genome_pair.compare_date("newer", eval_id="GP_010", fail="warning",
+                                 eval_def=EDD["GP_010"])
 
         if genome_pair.genome2.annotation_status == "draft":
             # It is expected that the replacing genome name no longer
             # retains the "_Draft" suffix, so the name should change.
-            genome_pair.compare_attribute("name",
-                expect_same=False, eval_id="GP_011", fail="warning", eval_def=EDD["GP_011"])
+            genome_pair.compare_attribute("name", expect_same=False,
+                                          eval_id="GP_011", fail="warning",
+                                          eval_def=EDD["GP_011"])
 
             # The status should change from 'draft'.
-            genome_pair.compare_attribute("annotation_status",
-                expect_same=False, eval_id="GP_012", fail="warning", eval_def=EDD["GP_012"])
+            genome_pair.compare_attribute("annotation_status", expect_same=False,
+                                          eval_id="GP_012", fail="warning",
+                                          eval_def=EDD["GP_012"])
         else:
-            genome_pair.compare_attribute("name",
-                expect_same=True, eval_id="GP_013", fail="warning", eval_def=EDD["GP_013"])
+            genome_pair.compare_attribute("name", expect_same=True,
+                                          eval_id="GP_013", fail="warning",
+                                          eval_def=EDD["GP_013"])
 
             # This is tricky. Yes, if replacing, you only expect a
             # final -> final, or unknown -> unknown. However, if the
             # check_replace = True, such as when a new final is available from
             # PhagesDB, then you only expect to go from draft -> final,
             # and you don't expect the current MySQL genome to be final.
-            genome_pair.compare_attribute("annotation_status",
-                expect_same=True, eval_id="GP_014", fail="warning", eval_def=EDD["GP_014"])
-            genome_pair.compare_attribute("accession",
-                expect_same=True, eval_id="GP_015", fail="warning", eval_def=EDD["GP_015"])
+            genome_pair.compare_attribute("annotation_status", expect_same=True,
+                                          eval_id="GP_014", fail="warning",
+                                          eval_def=EDD["GP_014"])
+            genome_pair.compare_attribute("accession", expect_same=True,
+                                          eval_id="GP_015", fail="warning",
+                                          eval_def=EDD["GP_015"])
 
 
 
@@ -1455,7 +1489,10 @@ def compare_genomes(genome_pair, eval_flags):
 def check_trna(trna_obj, eval_flags):
     """Check a TrnaFeature object for errors."""
 
-    pass
+    if eval_flags["check_trna"]:
+        pass
+    else:
+        pass
 
 
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
