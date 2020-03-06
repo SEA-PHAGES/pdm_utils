@@ -139,11 +139,6 @@ def set_missing_keys(data_dict, expected_keys):
     missing_keys = expected_keys - data_dict.keys()
     for key in missing_keys:
         data_dict[key] = ""
-        # print("added key")
-        # print(key)
-        # print(data_dict[key])
-        # print(type(data_dict[key]))
-        # input("check keys")
 
 def set_dict_value(data_dict, key, first, second):
     """Set the value for a specific key based on 'type' key-value.
@@ -181,10 +176,16 @@ def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
             # if they weren't set within the ticket.
             if tkt.description_field == "":
                 tkt.description_field = description_field
+                # Add description_field to data_dict so that it
+                # can be saved to file.
+                tkt.data_dict["description_field"] = description_field
 
             if tkt.run_mode == "":
                 tkt.run_mode = input_run_mode
                 tkt.eval_flags = input_eval_flag_dict
+                # Add run_mode to data_dict so that it can be saved to file.
+                tkt.data_dict["run_mode"] = input_run_mode
+
             else:
                 if tkt.run_mode in run_modes.RUN_MODES.keys():
                     tkt.eval_flags = run_modes.get_eval_flag_dict(tkt.run_mode)

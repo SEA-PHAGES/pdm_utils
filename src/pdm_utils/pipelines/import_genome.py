@@ -57,7 +57,7 @@ def main(unparsed_args_list):
 
     results_folder = pathlib.Path(RESULTS_FOLDER)
     results_path = basic.make_new_dir(args.output_folder,
-                                      results_folder, attempt=10)
+                                      results_folder, attempt=50)
 
     if results_path is None:
         print("Unable to create results folder.")
@@ -282,7 +282,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
             failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
             basic.export_data_dict(failed_ticket_list, failed_tkt_file,
                                        headers, include_headers=True)
-            summary.append(f"{len(failed_ticket_list)} ticket(s) NOT processed:")
+            summary.append(f"{len(failed_ticket_list)} ticket(s) NOT implemented:")
             for tkt in failed_ticket_list:
                 tkt_summary = (f"Ticket Type: {tkt['type']}. "
                                f"PhageID: {tkt['phage_id']}.")
@@ -595,7 +595,7 @@ def get_logfile_path(bndl, paths_dict=None, filepath=None, file_ref=None):
         if filepath is None:
             # If there is no filepath, then it is an unmatched ticket.
             id = bndl.ticket.phage_id
-            filename = "none"
+            filename = "no_file"
         else:
             # If there is a filepath, get the parsed genome id.
             filename = filepath.stem
@@ -603,7 +603,7 @@ def get_logfile_path(bndl, paths_dict=None, filepath=None, file_ref=None):
                 gnm = bndl.genome_dict[file_ref]
                 id = gnm.id
             else:
-                id = "none"
+                id = "no_id"
         new_file_name = id + "__" + filename + ".log"
         logfile_path = pathlib.Path(log_folder_path, new_file_name)
     else:
@@ -965,6 +965,8 @@ def set_cds_descriptions(gnm, tkt, interactive=False):
 def review_cds_descriptions(feature_list, description_field):
     """Iterate through all CDS features and review descriptions.
     """
+    logger.info("Reviewing CDS description fields.")
+
     # Print a table of CDS data for user to review.
     summary = []
     x = 20
@@ -1014,10 +1016,17 @@ def review_cds_descriptions(feature_list, description_field):
         new_field = basic.choose_from_list(list(field_options))
         if new_field is None:
             new_field = description_field
+            msg = ("No new CDS description field was selected. "
+                  f"The '{new_field}' CDS description field will be used.")
         else:
-            print(f"The '{new_field}' field was selected.")
+            msg = (f"The '{new_field}' CDS description field was selected.")
+
     else:
         new_field = description_field
+        msg = (f"The '{new_field}' CDS description field is correct, "
+               "so it will be used.")
+    print(msg)
+    logger.info(msg)
 
     # Return either the original or the new description field.
     return new_field

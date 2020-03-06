@@ -26,7 +26,7 @@ class ImportTicket:
         self.data_retain = set() # Data that should be retained from the MySQL database.
         self.data_add = set() # Data to be added to genome from ticket.
         self.data_parse = set() # Data that should be parsed from the flat file.
-        self.data_dict = {} # Original data from import table.
+        self.data_dict = {} # All data from import table.
 
         # Used to check the structure of the ticket data.
         self.evaluations = []

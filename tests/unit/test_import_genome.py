@@ -2260,7 +2260,7 @@ class TestImportGenomeClass9(unittest.TestCase):
         logfile_path = import_genome.get_logfile_path(self.bndl,
                             paths_dict=self.paths_dict, filepath=None,
                             file_ref=None)
-        exp_name = (self.tkt.phage_id + "__" + "none" + ".log")
+        exp_name = (self.tkt.phage_id + "__" + "no_file" + ".log")
         exp_path = pathlib.Path(self.fail_path, exp_name)
         self.assertEqual(logfile_path, exp_path)
 
@@ -2274,7 +2274,7 @@ class TestImportGenomeClass9(unittest.TestCase):
                             paths_dict=self.paths_dict,
                             filepath=self.flatfile_path,
                             file_ref="flat_file")
-        exp_name = "none" + "__" + self.flatfile_path.stem + ".log"
+        exp_name = "no_id" + "__" + self.flatfile_path.stem + ".log"
         exp_path = pathlib.Path(self.fail_path, exp_name)
         self.assertEqual(logfile_path, exp_path)
 
@@ -2304,7 +2304,7 @@ class TestImportGenomeClass9(unittest.TestCase):
         logfile_path = import_genome.get_logfile_path(self.bndl,
                             paths_dict=self.paths_dict, filepath=None,
                             file_ref="flat_file")
-        exp_name = (self.tkt.phage_id + "__" + "none" + ".log")
+        exp_name = (self.tkt.phage_id + "__" + "no_file" + ".log")
         exp_path = pathlib.Path(self.fail_path, exp_name)
         self.assertEqual(logfile_path, exp_path)
 

@@ -82,6 +82,16 @@ class Genome:
                          # applicable to any of the other attributes and that
                          # may be used differently for downstream applications.
 
+    def __str__(self):
+        str_list = []
+        if self.id != "":
+            str_list.append(f"ID: {self.id}")
+        if self.type != "":
+            str_list.append(f"Type: {self.type}")
+        if self.filename != "":
+            str_list.append(f"Filename: {self.filename}")
+        return ", ".join(str_list)
+
 
     def set_filename(self, filepath):
         """Set the filename. Discard the path and file extension.

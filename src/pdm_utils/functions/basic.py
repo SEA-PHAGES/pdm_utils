@@ -977,7 +977,7 @@ def make_new_dir(output_dir, new_dir, attempt=1):
     else:
         return new_path
 
-# TODO this may not be needed, if a standard config file format is used. 
+# TODO this may not be needed, if a standard config file format is used.
 def parse_flag_file(flag_file):
     """Parse a file to an evaluation flag dictionary.
 
@@ -1023,7 +1023,7 @@ def choose_from_list(options):
     result = False
     option = None
     x = 0
-    print(f"These are the options: {options}.")
+    print(f"These are the options: {', '.join(options)}.")
     while (exit == False and result is False and x < len(options)):
         option = options[x]
         prompt = f"Would you like to select '{option}'? "

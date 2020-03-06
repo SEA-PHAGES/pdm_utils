@@ -77,7 +77,7 @@ EVAL_DESCRIPTIONS = {
     "BNDL_002": (f"{pfx6} genome data parsed from a file that will be imported."),
     "BNDL_003": (f"{pfx6} genome data parsed from an import ticket that is not present within the file."),
     "BNDL_004": (f"{pfx6} genome data parsed from PhagesDB that is not present within the file."),
-    "BNDL_005": (f"{pfx6} genome data parsed the MySQL database."),
+    "BNDL_005": (f"{pfx6} genome data parsed from the MySQL database."),
     "BNDL_006": (f"{pfx6} paired genome data from a file and from a MySQL database."),
 
     # Import ticket

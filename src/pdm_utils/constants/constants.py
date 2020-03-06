@@ -13,83 +13,83 @@ CURRENT_DATE = date.today().strftime("%Y%m%d")
 
 IMPORT_TABLE_STRUCTURE = {
     "order": [
-                        "type",
-                        "phage_id",
-                        "description_field",
-                        "run_mode",
-                        "host_genus",
-                        "cluster",
-                        "subcluster",
-                        "accession",
-                        "annotation_author",
-                        "retrieve_record",
-                        "annotation_status"],
-    "required": set([
-                        "type",
-                        "phage_id"]),
-    "optional": set([
-                        "description_field",
-                        "run_mode",
-                        "host_genus",
-                        "cluster",
-                        "subcluster",
-                        "annotation_status",
-                        "annotation_author",
-                        "accession",
-                        "retrieve_record"]),
-    "valid_ticket": set([
-                        "type",
-                        "phage_id",
-                        "description_field",
-                        "run_mode"]),
-    "valid_retain": set([
-                        "host_genus",
-                        "cluster",
-                        "subcluster",
-                        "annotation_author",
-                        "accession",
-                        "retrieve_record"]),
-    "valid_retrieve": set([
-                        "host_genus",
-                        "cluster",
-                        "subcluster",
-                        "accession"]),
-    "valid_add": set([
-                        "host_genus",
-                        "cluster",
-                        "subcluster",
-                        "annotation_author",
-                        "annotation_status",
-                        "accession",
-                        "retrieve_record"]),
-    "valid_parse": set([
-                        "host_genus",
-                        "accession"]),
-    "keywords": set(["parse", "retrieve", "retain", "none"])
+                    "type",
+                    "phage_id",
+                    "description_field",
+                    "run_mode",
+                    "host_genus",
+                    "cluster",
+                    "subcluster",
+                    "accession",
+                    "annotation_author",
+                    "retrieve_record",
+                    "annotation_status"],
+    "required": {
+                    "type",
+                    "phage_id"},
+    "optional": {
+                    "description_field",
+                    "run_mode",
+                    "host_genus",
+                    "cluster",
+                    "subcluster",
+                    "annotation_status",
+                    "annotation_author",
+                    "accession",
+                    "retrieve_record"},
+    "valid_ticket": {
+                    "type",
+                    "phage_id",
+                    "description_field",
+                    "run_mode"},
+    "valid_retain": {
+                    "host_genus",
+                    "cluster",
+                    "subcluster",
+                    "annotation_author",
+                    "accession",
+                    "retrieve_record"},
+    "valid_retrieve": {
+                    "host_genus",
+                    "cluster",
+                    "subcluster",
+                    "accession"},
+    "valid_add": {
+                    "host_genus",
+                    "cluster",
+                    "subcluster",
+                    "annotation_author",
+                    "annotation_status",
+                    "accession",
+                    "retrieve_record"},
+    "valid_parse": {
+                    "host_genus",
+                    "accession"},
+    "keywords": {"parse", "retrieve", "retain", "none"}
 }
 
 NAME_SUFFIX = "_Draft"
-ANNOTATION_STATUS_SET = set(["draft", "final", "unknown"])
-ANNOTATION_AUTHOR_SET = set([0,1])
-RETRIEVE_RECORD_SET = set([0,1])
+ANNOTATION_STATUS_SET = {"draft", "final", "unknown"}
+ANNOTATION_AUTHOR_SET = {0,1}
+RETRIEVE_RECORD_SET = {0,1}
 EMPTY_DATE = datetime.strptime("1/1/0001 00:00:00", "%m/%d/%Y %H:%M:%S")
 
 # Some locus tags have "PHIRE", but this should not be the case.
-LOCUS_TAG_PREFIX_SET = set(["SEA", "PBI"])
+LOCUS_TAG_PREFIX_SET = {"SEA", "PBI"}
 EMPTY_GENOME_SEQ = Seq("", IUPAC.ambiguous_dna)
 EMPTY_PROTEIN_SEQ = Seq("", IUPAC.protein)
 
 # Common list of values that represent empty or null values.
-EMPTY_SET = set(["",
-                "none",
-                "null",
-                None,
-                "not applicable",
-                "na",
-                "n/a",
-                "0",
-                0,
-                EMPTY_DATE])
+EMPTY_SET = {"",
+             "none",
+             "null",
+             None,
+             "not applicable",
+             "na",
+             "n/a",
+             "0",
+             0,
+             EMPTY_DATE}
 
 # Path to blastclust binary
 BLASTCLUST_PATH = Path("~/bin/blast-2.2.14/bin").expanduser()
@@ -106,15 +106,15 @@ PROTEIN_ALPHABET = set(IUPAC.protein.letters)
 # Replace = delete a genome and replace it with another.
 # Update = make changes to one or more fields related to a genome
 # already present in the database (e.g. HostGenus, Cluster, Subcluster, etc.)
-IMPORT_TICKET_TYPE_SET = set(["add", "replace"])
+IMPORT_TICKET_TYPE_SET = {"add", "replace"}
 
 # Create set of most common gene description genbank qualifiers.
-DESCRIPTION_FIELD_SET = set(["product", "note", "function"])
+DESCRIPTION_FIELD_SET = {"product", "note", "function"}
 
 # List of names that represent authors that have control over
 # a genome record annotations. This constant is stored as a list
 # so that multiple names can be stored, if needed.
-AUTHOR_SET = set(["hatfull"])
+AUTHOR_SET = {"hatfull"}
 
 
 # Settings to access data through the PhagesDB API.
@@ -132,7 +132,9 @@ API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/"
                  f"&page_size={SEQUENCED_SIZE}")
 
 
-
+# TODO this may no longer be needed, now that get_data pipeline
+# determines which new genomes to retrieve based on the
+# MySQL database instance instead of PhagesDB.
 UNPHAMERATED_PHAGE_LIST = "https://phagesdb.org/data/unphameratedlist"
 
 
@@ -151,6 +153,8 @@ PHAGE_ID_DICT = {
     # PhagesDB is unable to handle underscores.
     "ATCC29399B_C": "ATCC29399BC",
     "ATCC29399B_T": "ATCC29399BT",
+    "vB_ArtM-ArV1": "ArV1",
+    "vB_ArS-ArV2": "ArV2",
 
     # ELB20 was reported as 'ELB20' in the original publication, but spelled
     # 'phiELB20' in the GenBank record.
