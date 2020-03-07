@@ -414,14 +414,14 @@ def get_final_data(output_folder, matched_genomes):
     count1 = len(import_tickets)
     if count1 > 0:
         print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
-        filepath = basic.prepare_filepath(phagesdb_folder, "import_table.csv")
+        filepath = basic.prepare_filepath(phagesdb_folder, "legacy_import_table.csv")
         import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
         basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         if BOTH:
-            filepath2 = basic.prepare_filepath(phagesdb_folder, "test_import_table.csv")
+            filepath2 = basic.prepare_filepath(phagesdb_folder, "import_table.csv")
             import_tickets2 = convert_tickets_to_dict(import_tickets)
             basic.export_data_dict(import_tickets2, filepath2,
                                    IMPORT_COLUMNS2, include_headers=True)
@@ -798,14 +798,14 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
 
     # Now make the import table.
     if len(import_tickets) > 0:
-        filepath = basic.prepare_filepath(output_folder, "import_table.csv")
+        filepath = basic.prepare_filepath(output_folder, "legacy_import_table.csv")
         import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
         basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         if BOTH:
-            filepath2 = basic.prepare_filepath(output_folder, "test_import_table.csv")
+            filepath2 = basic.prepare_filepath(output_folder, "import_table.csv")
             import_tickets2 = convert_tickets_to_dict(import_tickets)
             basic.export_data_dict(import_tickets2, filepath2,
                                    IMPORT_COLUMNS2, include_headers=True)
@@ -905,14 +905,14 @@ def retrieve_drafts(output_folder, phage_list):
 
     # Now make the import table.
     if len(import_tickets) > 0:
-        filepath = basic.prepare_filepath(output_folder, "import_table.csv")
+        filepath = basic.prepare_filepath(output_folder, "legacy_import_table.csv")
         import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
         basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         if BOTH:
-            filepath2 = basic.prepare_filepath(output_folder, "test_import_table.csv")
+            filepath2 = basic.prepare_filepath(output_folder, "import_table.csv")
             import_tickets2 = convert_tickets_to_dict(import_tickets)
             basic.export_data_dict(import_tickets2, filepath2,
                                    IMPORT_COLUMNS2, include_headers=True)

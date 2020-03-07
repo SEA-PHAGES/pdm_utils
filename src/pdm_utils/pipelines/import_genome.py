@@ -390,15 +390,17 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
     logger.info("Identifying duplicate tickets.")
     tkt_id_dupes, phage_id_dupes = tickets.identify_duplicates(list_of_tkts)
 
-
     ticket_dict = {}
-    x = 0
-    while x < len(list_of_tkts):
+    for x in range(len(list_of_tkts)):
         tkt = list_of_tkts[x]
         tkt_summary = (f"ID: {tkt.id}. "
                        f"Type: {tkt.type}. "
                        f"PhageID: {tkt.phage_id}.")
         logger.info(f"Checking ticket structure for: {tkt_summary}")
+        string_list = []
+        for key in tkt.eval_flags:
+            string_list.append(f"{key}: {tkt.eval_flags[key]}")
+        logger.info(f"Eval flags are {', '.join(string_list)}")
         check_ticket(tkt,
                      type_set=constants.IMPORT_TICKET_TYPE_SET,
                      description_field_set=constants.DESCRIPTION_FIELD_SET,
@@ -420,13 +422,13 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
             else:
                 logger.info(evl_summary)
         ticket_dict[tkt.phage_id] = tkt
-        x += 1
 
     if tkt_errors > 0:
         logger.error("Error generating tickets from import table.")
         return None
     else:
         logger.info("Tickets were successfully generated from import table.")
+
         return ticket_dict
 
 def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
@@ -1100,7 +1102,7 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     # But it does not evaluate the quality of the data itself for
     # the other fields, since those are genome-specific fields and
     # can be checked within Genome objects.
-    logger.info(f"Checking ticket: {tkt.id}, {tkt.type}, {tkt.phage_id}.")
+    # logger.info(f"Checking ticket: {tkt.id}, {tkt.type}, {tkt.phage_id}.")
 
     # Check for duplicated values.
     tkt.check_attribute("id", id_dupe_set,
