@@ -2,7 +2,7 @@
 
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
-from pdm_utils.functions import run_modes
+from pdm_utils.functions import eval_modes
 from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
@@ -42,7 +42,7 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
         # Certain fields should be lowercase.
         data_dict["type"] = data_dict["type"].lower()
         data_dict["description_field"] = data_dict["description_field"].lower()
-        data_dict["run_mode"] = data_dict["run_mode"].lower()
+        data_dict["eval_mode"] = data_dict["eval_mode"].lower()
         # For fields that are empty (""), set them with default values.
         set_dict_value(data_dict, "host_genus", "retrieve", "retain")
         set_dict_value(data_dict, "cluster", "retrieve", "retain")
@@ -77,7 +77,7 @@ def parse_import_ticket_data(data_dict):
             7. Feature field
             8. Accession
             9. Retrieve Record (int)
-            10. Run mode
+            10. Eval mode
 
     :type data_dict: dict
     :returns: A pdm_utils Ticket object.
@@ -151,11 +151,11 @@ def set_dict_value(data_dict, key, first, second):
         else:
             data_dict[key] = second
 
-# TODO it probably makes more sense to pass the 'run_mode' and
+# TODO it probably makes more sense to pass the 'eval_mode' and
 # 'description_field' data into modify_import_data() so that they get added
 # to the data_dict. As a result, those values will be exported to the
 # revised import table file when the script completes.
-def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
+def construct_tickets(list_of_data_dict, eval_data_dict, description_field,
                       required_keys, optional_keys, keywords):
     """Construct tickets from parsed data dictionaries."""
 
@@ -164,15 +164,15 @@ def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
     for dict in list_of_data_dict:
         tkt_id += 1
         # Each ticket should contain a distinct eval_flag dictionary object.
-        input_run_mode = run_mode_eval_dict["run_mode"]
-        input_eval_flag_dict = run_mode_eval_dict["eval_flag_dict"].copy()
+        input_eval_mode = eval_data_dict["eval_mode"]
+        input_eval_flag_dict = eval_data_dict["eval_flag_dict"].copy()
 
         result = modify_import_data(dict, required_keys, optional_keys, keywords)
         if result:
             tkt = parse_import_ticket_data(dict)
             tkt.id = tkt_id
 
-            # Only set description_field and run_mode from parameters
+            # Only set description_field and eval_mode from parameters
             # if they weren't set within the ticket.
             if tkt.description_field == "":
                 tkt.description_field = description_field
@@ -180,15 +180,15 @@ def construct_tickets(list_of_data_dict, run_mode_eval_dict, description_field,
                 # can be saved to file.
                 tkt.data_dict["description_field"] = description_field
 
-            if tkt.run_mode == "":
-                tkt.run_mode = input_run_mode
+            if tkt.eval_mode == "":
+                tkt.eval_mode = input_eval_mode
                 tkt.eval_flags = input_eval_flag_dict
-                # Add run_mode to data_dict so that it can be saved to file.
-                tkt.data_dict["run_mode"] = input_run_mode
+                # Add eval_mode to data_dict so that it can be saved to file.
+                tkt.data_dict["eval_mode"] = input_eval_mode
 
             else:
-                if tkt.run_mode in run_modes.RUN_MODES.keys():
-                    tkt.eval_flags = run_modes.get_eval_flag_dict(tkt.run_mode)
+                if tkt.eval_mode in eval_modes.EVAL_MODES.keys():
+                    tkt.eval_flags = eval_modes.get_eval_flag_dict(tkt.eval_mode)
             list_of_tickets.append(tkt)
         else:
             print("Unable to create ticket.")

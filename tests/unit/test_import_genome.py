@@ -14,7 +14,7 @@ from pdm_utils.classes import source
 from pdm_utils.classes import cds
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
-from pdm_utils.functions import run_modes
+from pdm_utils.functions import eval_modes
 from pdm_utils.pipelines import import_genome
 from pdm_utils.classes import ticket, eval
 
@@ -35,7 +35,7 @@ class TestImportGenomeClass1(unittest.TestCase):
     def setUp(self):
 
         self.type_set = constants.IMPORT_TICKET_TYPE_SET
-        self.run_mode_set = run_modes.RUN_MODES.keys()
+        self.eval_mode_set = eval_modes.EVAL_MODES.keys()
         self.description_field_set = constants.DESCRIPTION_FIELD_SET
 
         self.retain_set = constants.IMPORT_TABLE_STRUCTURE["valid_retain"]
@@ -58,7 +58,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         self.tkt.id = 1
         self.tkt.type = "replace"
         self.tkt.phage_id = "Trixie"
-        self.tkt.run_mode = "final"
+        self.tkt.eval_mode = "final"
         self.tkt.description_field = "product"
         self.tkt.data_dict = self.data_dict
         self.tkt.eval_flags = {"a":1, "b":2}
@@ -85,9 +85,9 @@ class TestImportGenomeClass1(unittest.TestCase):
 
     def test_get_result_string_1(self):
         """Verify string is constructed correctly."""
-        attr_list = ["type", "phage_id", "run_mode"]
+        attr_list = ["type", "phage_id", "eval_mode"]
         string = import_genome.get_result_string(self.tkt, attr_list)
-        exp = "type: replace, phage_id: Trixie, run_mode: final"
+        exp = "type: replace, phage_id: Trixie, eval_mode: final"
         self.assertEqual(string, exp)
 
 
@@ -99,7 +99,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -115,7 +115,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set([1]), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -128,7 +128,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(["Trixie"]),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -142,7 +142,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -156,7 +156,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -165,12 +165,12 @@ class TestImportGenomeClass1(unittest.TestCase):
 
     def test_check_ticket_6(self):
         """Verify correct number of errors is produced with
-        an invalid run_mode."""
-        self.tkt.run_mode = "invalid"
+        an invalid eval_mode."""
+        self.tkt.eval_mode = "invalid"
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -184,7 +184,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -198,7 +198,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -212,7 +212,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -226,7 +226,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -240,7 +240,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -254,7 +254,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)
@@ -268,7 +268,7 @@ class TestImportGenomeClass1(unittest.TestCase):
         import_genome.check_ticket(
             self.tkt, type_set=self.type_set,
             description_field_set=self.description_field_set,
-            run_mode_set=self.run_mode_set,
+            eval_mode_set=self.eval_mode_set,
             id_dupe_set=set(), phage_id_dupe_set=set(),
             retain_set=self.retain_set, retrieve_set=self.retrieve_set,
             add_set=self.add_set, parse_set=self.parse_set)

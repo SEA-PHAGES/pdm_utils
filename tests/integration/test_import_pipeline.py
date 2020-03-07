@@ -68,7 +68,7 @@ import unittest
 from unittest.mock import patch
 from pdm_utils import run
 from pdm_utils.constants import constants
-from pdm_utils.functions import run_modes
+from pdm_utils.functions import eval_modes
 from pdm_utils.pipelines import import_genome
 
 # Format of the date the script imports into the database.
@@ -479,7 +479,7 @@ def get_alice_ticket_data_complete():
         "annotation_status": "draft",
         "annotation_author": 1,
         "retrieve_record": 1,
-        "run_mode": "draft"
+        "eval_mode": "draft"
         }
     return dict
 
@@ -554,7 +554,7 @@ def get_unparsed_draft_import_args():
                       str(import_table),
                       "-g", "_organism_name",
                       "-p",
-                      "-r", "draft",
+                      "-e", "draft",
                       "-d", "product",
                       "-o", str(output_folder),
                       "-l", str(log_file)
@@ -927,10 +927,10 @@ class TestImportGenomeMain1(unittest.TestCase):
     9. Set some ticket fields to 'retrieve', but have PhageID that is not found on PhagesDB.
     10. How multiple successful tickets and genomes are handled.
     11. How a failed and successful ticket are handled.
-    12. Different run_modes in ticket and/or from command line are handled.
-    13. Custom run_mode from command line.
-    14. Custom run_mode from ticket.
-    15. More than one custom run_mode in ticket table.
+    12. Different eval_modes in ticket and/or from command line are handled.
+    13. Custom eval_mode from command line.
+    14. Custom eval_mode from ticket.
+    15. More than one custom eval_mode in ticket table.
     """
 
     def setUp(self):
@@ -1277,11 +1277,11 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_add_9(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
-        but invalid run_mode."""
+        but invalid eval_mode."""
         logging.info("test_add_9")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        self.alice_ticket["run_mode"] = "invalid"
+        self.alice_ticket["eval_mode"] = "invalid"
         create_import_table([self.alice_ticket], import_table)
         pft_mock.return_value = ([], [], [], [], [])
         run.main(self.unparsed_args)
@@ -1881,9 +1881,9 @@ class TestImportGenomeMain1(unittest.TestCase):
         SeqIO.write(self.alice_record, l5_flat_file_path, "genbank")
         l5_ticket = get_alice_ticket_data_complete()
         l5_ticket["phage_id"] = "L5"
-        # By changing run_mode to 'final',
+        # By changing eval_mode to 'final',
         # the flat file will fail certain checks.
-        l5_ticket["run_mode"] = "final"
+        l5_ticket["eval_mode"] = "final"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -1912,14 +1912,14 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_add_37(self, getpass_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
-        command line args select invalid run_mode 'final', but ticket
-        contains correct valid run_mode 'draft'."""
+        command line args select invalid eval_mode 'final', but ticket
+        contains correct valid eval_mode 'draft'."""
         logging.info("test_add_37")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        # self.alice_ticket = 'draft' run_mode
+        # self.alice_ticket = 'draft' eval_mode
         create_import_table([self.alice_ticket], import_table)
-        # unparsed_args = 'final' run_mode
+        # unparsed_args = 'final' eval_mode
         unparsed_args = get_unparsed_final_import_args()
         run.main(unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -1933,14 +1933,14 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("getpass.getpass")
     def test_add_38(self, getpass_mock):
         """Test pipeline with:
-        Same test as in test_add_37, but run_modes are reversed."""
+        Same test as in test_add_37, but eval_modes are reversed."""
         logging.info("test_add_38")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        # self.alice_ticket = 'final' run_mode
-        self.alice_ticket["run_mode"] = "final"
+        # self.alice_ticket = 'final' eval_mode
+        self.alice_ticket["eval_mode"] = "final"
         create_import_table([self.alice_ticket], import_table)
-        # unparsed_args = 'draft' run_mode
+        # unparsed_args = 'draft' eval_mode
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
         gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
@@ -1955,14 +1955,14 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_add_39(self, getpass_mock, ask_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
-        custom run_mode at command line causes invalid import."""
+        custom eval_mode at command line causes invalid import."""
         logging.info("test_add_39")
         getpass_mock.side_effect = [user, pwd]
         ask_mock.return_value = True
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        # Remove run_mode from ticket, so the custom run_mode selected
+        # Remove eval_mode from ticket, so the custom eval_mode selected
         # at the command line is implemented.
-        self.alice_ticket.pop("run_mode")
+        self.alice_ticket.pop("eval_mode")
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args[9] = "custom"
         run.main(self.unparsed_args)
@@ -1981,12 +1981,12 @@ class TestImportGenomeMain1(unittest.TestCase):
     def test_add_40(self, getpass_mock, ask_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
-        custom run_mode in ticket causes invalid import."""
+        custom eval_mode in ticket causes invalid import."""
         logging.info("test_add_40")
         getpass_mock.side_effect = [user, pwd]
         ask_mock.return_value = True
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        self.alice_ticket["run_mode"] = "custom"
+        self.alice_ticket["eval_mode"] = "custom"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -2003,16 +2003,16 @@ class TestImportGenomeMain1(unittest.TestCase):
     @patch("getpass.getpass")
     def test_add_41(self, getpass_mock, ask_mock):
         """Test pipeline with:
-        two valid add tickets for draft genomes using custom run_mode.
+        two valid add tickets for draft genomes using custom eval_mode.
         The first genome has incorrect locus_tags, which should fail
-        when the locus_tag check is turned on through the custom run_mode.
+        when the locus_tag check is turned on through the custom eval_mode.
         The second genome contains a '-' nucleotide, which should fail
-        but the sequence check is turned off through custom run_mode."""
+        but the sequence check is turned off through custom eval_mode."""
         # Note: there are probably other checks that would also fail
         # in the first genome since all checks are turned on.
         logging.info("test_add_41")
         getpass_mock.side_effect = [user, pwd]
-        count = len(run_modes.EVAL_FLAGS.keys())
+        count = len(eval_modes.EVAL_FLAGS.keys())
         # True_list is to set eval_flags for Alice custom ticket, and
         # False_list is to set eval_flags for L5 custom ticket.
         true_list = [True] * count
@@ -2044,8 +2044,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         SeqIO.write(self.alice_record, l5_flat_file_path, "genbank")
         l5_ticket = get_alice_ticket_data_complete()
         l5_ticket["phage_id"] = "L5"
-        l5_ticket["run_mode"] = "custom"
-        self.alice_ticket["run_mode"] = "custom"
+        l5_ticket["eval_mode"] = "custom"
+        self.alice_ticket["eval_mode"] = "custom"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -2113,7 +2113,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     16. Verify that CDS features are completely replaced - test by inserting diff data at the beginning.
     17. Test interactivity.
     18.  Adding 'final' without replacement.
-    19.  Adding 'unknown' using 'misc' run_mode without replacement.
+    19.  Adding 'unknown' using 'misc' eval_mode without replacement.
     """
 
 
@@ -2218,7 +2218,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         self.alice_ticket["type"] = "replace"
         self.alice_ticket["accession"] = "JF704092"
         self.alice_ticket["annotation_status"] = "final"
-        self.alice_ticket["run_mode"] = "final"
+        self.alice_ticket["eval_mode"] = "final"
 
         # Get data to run the entire pipeline.
         self.unparsed_args = get_unparsed_final_import_args()
@@ -2619,7 +2619,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     @patch("getpass.getpass")
     def test_replacement_12(self, getpass_mock):
         """Test pipeline with:
-        valid replace ticket for final genome using 'final' run mode,
+        valid replace ticket for final genome using 'final' eval mode,
         valid flat file,
         Alice data already in the database and is 'final',
         and annotation_status remains 'final'."""
@@ -2650,7 +2650,7 @@ class TestImportGenomeMain2(unittest.TestCase):
     @patch("getpass.getpass")
     def test_replacement_13(self, getpass_mock):
         """Identical to test_replacement_12,
-        except using 'auto' run mode."""
+        except using 'auto' eval mode."""
         logging.info("test_replacement_13")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
@@ -2658,7 +2658,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
         insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
-        self.alice_ticket["run_mode"] = "auto"
+        self.alice_ticket["eval_mode"] = "auto"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
@@ -3113,13 +3113,13 @@ class TestImportGenomeMain2(unittest.TestCase):
     @patch("getpass.getpass")
     def test_replacement_32(self, getpass_mock):
         """Test pipeline with:
-        Same test as in test_replacement_30, but 'run_mode' = 'misc'."""
+        Same test as in test_replacement_30, but 'eval_mode' = 'misc'."""
         logging.info("test_replacement_32")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_ticket["type"] = "add"
         self.alice_ticket["annotation_status"] = "unknown"
-        self.alice_ticket["run_mode"] = "misc"
+        self.alice_ticket["eval_mode"] = "misc"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = get_sql_data(db, user, pwd, phage_table_query)

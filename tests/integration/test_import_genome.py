@@ -182,7 +182,7 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.tkt1.id = 1
         self.tkt1.type = "add"
         self.tkt1.phage_id = "L5"
-        self.tkt1.run_mode = "final"
+        self.tkt1.eval_mode = "final"
         self.tkt1.description_field = "product"
         self.tkt1.eval_flags = self.eval_flags
         self.tkt1.data_dict = self.data_dict
@@ -628,7 +628,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertFalse(args.prod_run)
         with self.subTest():
-            self.assertEqual(args.run_mode, "final")
+            self.assertEqual(args.eval_mode, "final")
         with self.subTest():
             self.assertEqual(args.description_field, "product")
         with self.subTest():
@@ -654,7 +654,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         log_file = "logfile.txt"
         self.args_list.extend(["-g", "FILENAME",
                                "-p",
-                               "-r", "DRAFT",
+                               "-e", "DRAFT",
                                "-d", "FUNCTION",
                                "-o", output_folder,
                                "-l", log_file,
@@ -666,7 +666,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertTrue(args.prod_run)
         with self.subTest():
-            self.assertEqual(args.run_mode, "draft")
+            self.assertEqual(args.eval_mode, "draft")
         with self.subTest():
             self.assertEqual(args.description_field, "function")
         with self.subTest():
@@ -684,7 +684,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         log_file = "logfile.txt"
         self.args_list.extend(["--genome_id_field", "FILENAME",
                                "--prod_run",
-                               "--run_mode", "DRAFT",
+                               "--eval_mode", "DRAFT",
                                "--description_field", "FUNCTION",
                                "--output_folder", output_folder,
                                "--log_file", log_file,
@@ -696,7 +696,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         with self.subTest():
             self.assertTrue(args.prod_run)
         with self.subTest():
-            self.assertEqual(args.run_mode, "draft")
+            self.assertEqual(args.eval_mode, "draft")
         with self.subTest():
             self.assertEqual(args.description_field, "function")
         with self.subTest():
@@ -733,7 +733,7 @@ class TestImportGenomeMain3(unittest.TestCase):
                           str(self.import_table),
                           "-g", "FILENAME",
                           "-p",
-                          "-r", "DRAFT",
+                          "-e", "DRAFT",
                           "-d", "FUNCTION",
                           "-o", str(self.output_folder),
                           "-l", str(self.log_file)
@@ -840,7 +840,7 @@ class TestImportGenomeMain4(unittest.TestCase):
 
     def setUp(self):
 
-        self.run_mode_eval_dict = {"run_mode": "custom_run_mode",
+        self.eval_data_dict = {"eval_mode": "custom_eval_mode",
                                    "eval_flag_dict": {"a":1}}
 
         self.table_structure_dict = constants.IMPORT_TABLE_STRUCTURE
@@ -853,7 +853,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         self.data_dict1["type"] = "replace"
         self.data_dict1["phage_id"] = "Trixie"
         self.data_dict1["description_field"] = "product"
-        self.data_dict1["run_mode"] = "final"
+        self.data_dict1["eval_mode"] = "final"
         self.data_dict1["host_genus"] = "retrieve"
         self.data_dict1["cluster"] = "retain"
 
@@ -862,7 +862,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         self.data_dict2["type"] = "replace"
         self.data_dict2["phage_id"] = "L5"
         self.data_dict2["description_field"] = "product"
-        self.data_dict2["run_mode"] = "final"
+        self.data_dict2["eval_mode"] = "final"
         self.data_dict2["host_genus"] = "retrieve"
         self.data_dict2["cluster"] = "retain"
 
@@ -877,7 +877,7 @@ class TestImportGenomeMain4(unittest.TestCase):
 
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table_1,
-                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        eval_data_dict=self.eval_data_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertEqual(len(tkt_dict.keys()), 2)
@@ -893,7 +893,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table_1,
-                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        eval_data_dict=self.eval_data_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertEqual(len(tkt_dict.keys()), 2)
@@ -908,7 +908,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table_1,
-                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        eval_data_dict=self.eval_data_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
@@ -926,7 +926,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table_1,
-                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        eval_data_dict=self.eval_data_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
@@ -942,7 +942,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table_1,
-                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        eval_data_dict=self.eval_data_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
@@ -958,7 +958,7 @@ class TestImportGenomeMain4(unittest.TestCase):
         mock_retrieve_tickets.return_value = self.dict1_dict2
         tkt_dict = import_genome.prepare_tickets(
                         import_table_file=self.test_import_table_1,
-                        run_mode_eval_dict=self.run_mode_eval_dict,
+                        eval_data_dict=self.eval_data_dict,
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
@@ -992,7 +992,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict1["type"] = "replace"
         self.data_dict1["phage_id"] = "L5"
         self.data_dict1["description_field"] = "product"
-        self.data_dict1["run_mode"] = "final"
+        self.data_dict1["eval_mode"] = "final"
         self.data_dict1["host_genus"] = "Mycobacterium"
         self.data_dict1["cluster"] = "A"
         self.data_dict1["annotation_status"] = "draft"
@@ -1000,7 +1000,7 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.tkt1 = ticket.ImportTicket()
         self.tkt1.id = 1
         self.tkt1.phage_id = "L5"
-        self.tkt1.run_mode = "final"
+        self.tkt1.eval_mode = "final"
         self.tkt1.description_field = "product"
         self.tkt1.eval_flags = self.eval_flags
         self.tkt1.data_dict = self.data_dict1
@@ -1010,14 +1010,14 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2["id"] = 1
         self.data_dict2["phage_id"] = "Trixie"
         self.data_dict2["description_field"] = "product"
-        self.data_dict2["run_mode"] = "final"
+        self.data_dict2["eval_mode"] = "final"
         self.data_dict2["host_genus"] = "Gordonia"
         self.data_dict2["cluster"] = "B"
 
         self.tkt2 = ticket.ImportTicket()
         self.tkt2.id = 2
         self.tkt2.phage_id = "Trixie"
-        self.tkt2.run_mode = "final"
+        self.tkt2.eval_mode = "final"
         self.tkt2.description_field = "product"
         self.tkt2.eval_flags = self.eval_flags
         self.tkt2.data_dict = self.data_dict2

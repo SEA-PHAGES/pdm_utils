@@ -1,4 +1,4 @@
-"""Run mode functions and dictionaries."""
+"""Eval mode functions and dictionaries."""
 
 from pdm_utils.functions import basic
 
@@ -21,8 +21,8 @@ EVAL_FLAGS = {
     "check_seq": "Should the nucleotide sequence be evaluated? "
     }
 
-# Run mode definitions.
-RUN_MODES = {
+# Eval mode definitions.
+EVAL_MODES = {
     "draft": ("Relaxed evaluations for automatically generated draft "
               "genome annotations since data have not been manually reviewed."),
     "final": ("Stringent evaluations for manual genome annotations."),
@@ -33,7 +33,7 @@ RUN_MODES = {
     "custom": ("User-defined evaluations for customized import.")
     }
 
-def get_eval_flag_dict(run_mode):
+def get_eval_flag_dict(eval_mode):
     """."""
     # Base dictionary with all flags set to True.
     dict = {}
@@ -41,7 +41,7 @@ def get_eval_flag_dict(run_mode):
         dict[key] = True
 
     # Auto-annotations.
-    if run_mode == "draft":
+    if eval_mode == "draft":
         dict["check_locus_tag"] = False
         dict["check_trna"] = False
         dict["import_locus_tag"] = False
@@ -51,11 +51,11 @@ def get_eval_flag_dict(run_mode):
         dict["check_description"] = False
 
     # Manual annotations.
-    elif run_mode == "final":
+    elif eval_mode == "final":
         dict["import_locus_tag"] = False
 
     # SEA-PHAGES GenBank records.
-    elif run_mode == "auto":
+    elif eval_mode == "auto":
         dict["check_locus_tag"] = False
         dict["check_description_field"] = False
         dict["check_replace"] = False
@@ -67,7 +67,7 @@ def get_eval_flag_dict(run_mode):
         dict["check_gene"] = False
 
     # Non-SEA-PHAGES GenBank records.
-    elif run_mode == "misc":
+    elif eval_mode == "misc":
         dict["check_locus_tag"] = False
         dict["check_replace"] = False
         dict["check_trna"] = False
@@ -78,9 +78,9 @@ def get_eval_flag_dict(run_mode):
         dict["check_gene"] = False
 
     # Custom QC settings. User can select the settings, so it is initialized as
-    # a copy of the base run_mode. The user can provide the
+    # a copy of the base eval_mode. The user can provide the
     # customized combination of options.
-    elif run_mode == "custom":
+    elif eval_mode == "custom":
         for key in dict.keys():
             prompt = f"Eval_flag: {key}. {EVAL_FLAGS[key]}"
             response = basic.ask_yes_no(prompt=prompt, response_attempt=3)
@@ -89,5 +89,5 @@ def get_eval_flag_dict(run_mode):
             else:
                 dict[key] = response
     else:
-        print("A valid run_mode has not been selected.")
+        print("A valid eval_mode has not been selected.")
     return dict

@@ -16,7 +16,7 @@ IMPORT_TABLE_STRUCTURE = {
                     "type",
                     "phage_id",
                     "description_field",
-                    "run_mode",
+                    "eval_mode",
                     "host_genus",
                     "cluster",
                     "subcluster",
@@ -29,7 +29,7 @@ IMPORT_TABLE_STRUCTURE = {
                     "phage_id"},
     "optional": {
                     "description_field",
-                    "run_mode",
+                    "eval_mode",
                     "host_genus",
                     "cluster",
                     "subcluster",
@@ -41,7 +41,7 @@ IMPORT_TABLE_STRUCTURE = {
                     "type",
                     "phage_id",
                     "description_field",
-                    "run_mode"},
+                    "eval_mode"},
     "valid_retain": {
                     "host_genus",
                     "cluster",

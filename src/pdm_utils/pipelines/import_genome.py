@@ -19,7 +19,7 @@ from pdm_utils.functions import mysqldb
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants, eval_descriptions
-from pdm_utils.functions import run_modes
+from pdm_utils.functions import eval_modes
 
 # Add a logger named after this module. Then add a null handler, which
 # suppresses any output statements. This allows other modules that call this
@@ -91,7 +91,7 @@ def main(unparsed_args_list):
             host_genus_field=args.host_genus_field,
             prod_run=args.prod_run,
             description_field=args.description_field,
-            run_mode=args.run_mode,
+            eval_mode=args.eval_mode,
             output_folder=results_path,
             interactive=args.interactive)
 
@@ -120,7 +120,7 @@ def parse_args(unparsed_args_list):
             7. Annotation authorship (hatfull, gbk)
             8. Gene description field (product, note, function)
             9. Accession
-            10. Run mode
+            10. Eval mode
         """
     GENOME_ID_FIELD_HELP = """
         Indicates the flat file field that should be used
@@ -135,7 +135,7 @@ def parse_args(unparsed_args_list):
          "If True, the production run will implement all changes in the "
          "indicated database. If False, the test run will not "
          "implement any changes.")
-    RUN_MODE_HELP = \
+    EVAL_MODE_HELP = \
         ("Indicates the evaluation configuration "
          "for importing genomes.")
     DESCRIPTION_FIELD_HELP = \
@@ -165,9 +165,9 @@ def parse_args(unparsed_args_list):
         help=GENOME_ID_FIELD_HELP)
     parser.add_argument("-p", "--prod_run", action="store_true",
         default=False, help=PROD_RUN_HELP)
-    parser.add_argument("-r", "--run_mode", type=str.lower,
-        choices=list(run_modes.RUN_MODES.keys()), default="final",
-        help=RUN_MODE_HELP)
+    parser.add_argument("-e", "--eval_mode", type=str.lower,
+        choices=list(eval_modes.EVAL_MODES.keys()), default="final",
+        help=EVAL_MODE_HELP)
     parser.add_argument("-d", "--description_field", type=str.lower,
         default="product", choices=list(constants.DESCRIPTION_FIELD_SET),
         help=DESCRIPTION_FIELD_HELP)
@@ -190,7 +190,7 @@ def parse_args(unparsed_args_list):
 
 def data_io(engine=None, genome_folder=pathlib.Path(),
     import_table_file=pathlib.Path(), genome_id_field="", host_genus_field="",
-    prod_run=False, description_field="", run_mode="",
+    prod_run=False, description_field="", eval_mode="",
     output_folder=pathlib.Path(), interactive=False):
     """Set up output directories, log files, etc. for import."""
 
@@ -207,10 +207,10 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         log_and_print(file_msg, True)
 
     # Get the tickets.
-    eval_flags = run_modes.get_eval_flag_dict(run_mode.lower())
-    run_mode_eval_dict = {"run_mode": run_mode, "eval_flag_dict": eval_flags}
+    eval_flags = eval_modes.get_eval_flag_dict(eval_mode.lower())
+    eval_data_dict = {"eval_mode": eval_mode, "eval_flag_dict": eval_flags}
     ticket_dict = prepare_tickets(import_table_file,
-                                  run_mode_eval_dict,
+                                  eval_data_dict,
                                   description_field,
                                   constants.IMPORT_TABLE_STRUCTURE)
     if ticket_dict is None:
@@ -354,7 +354,7 @@ def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
 
 
 
-def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
+def prepare_tickets(import_table_file=pathlib.Path(), eval_data_dict=None,
         description_field="", table_structure_dict={}):
     """Prepare dictionary of pdm_utils Tickets."""
     # 1. Parse ticket data from table.
@@ -381,7 +381,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
     logger.info("Retrieving ticket data.")
     list_of_data_dicts = basic.retrieve_data_dict(import_table_file)
     logger.info("Constructing tickets.")
-    list_of_tkts = tickets.construct_tickets(list_of_data_dicts, run_mode_eval_dict,
+    list_of_tkts = tickets.construct_tickets(list_of_data_dicts, eval_data_dict,
                     description_field, required_keys, optional_keys,
                     keywords)
     if len(list_of_data_dicts) != len(list_of_tkts):
@@ -404,7 +404,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), run_mode_eval_dict=None,
         check_ticket(tkt,
                      type_set=constants.IMPORT_TICKET_TYPE_SET,
                      description_field_set=constants.DESCRIPTION_FIELD_SET,
-                     run_mode_set=run_modes.RUN_MODES.keys(),
+                     eval_mode_set=eval_modes.EVAL_MODES.keys(),
                      id_dupe_set=tkt_id_dupes,
                      phage_id_dupe_set=phage_id_dupes,
                      retain_set=valid_retain,
@@ -1078,7 +1078,7 @@ def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref="
 
 
 def check_ticket(tkt, type_set=set(), description_field_set=set(),
-        run_mode_set=set(), id_dupe_set=set(), phage_id_dupe_set=set(),
+        eval_mode_set=set(), id_dupe_set=set(), phage_id_dupe_set=set(),
         retain_set=set(), retrieve_set=set(), add_set=set(), parse_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
     The assumptions for how each field is populated varies depending on
@@ -1088,8 +1088,8 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     :type tkt: Ticket
     :param description_field_set: Valid description_field options.
     :type description_field_set: set
-    :param run_mode_set: Valid run mode options.
-    :type run_mode_set: set
+    :param eval_mode_set: Valid eval mode options.
+    :type eval_mode_set: set
     :param id_dupe_set: Predetermined duplicate ticket ids.
     :type id_dupe_set: set
     :param phage_id_dupe_set: Predetermined duplicate PhageIDs.
@@ -1097,7 +1097,7 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
     """
     # This function simply evaluates whether there is data in the
     # appropriate ticket attributes given the type of ticket.
-    # It confirms that ticket attributes 'type', 'run_mode', and
+    # It confirms that ticket attributes 'type', 'eval_mode', and
     # 'description_field' are populated with specific values.
     # But it does not evaluate the quality of the data itself for
     # the other fields, since those are genome-specific fields and
@@ -1115,7 +1115,7 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
                         expect=True, eval_id="TKT_003", eval_def=EDD["TKT_003"])
     tkt.check_attribute("description_field", description_field_set,
                         expect=True, eval_id="TKT_004", eval_def=EDD["TKT_004"])
-    tkt.check_attribute("run_mode", run_mode_set,
+    tkt.check_attribute("eval_mode", eval_mode_set,
                         expect=True, eval_id="TKT_005", eval_def=EDD["TKT_005"])
 
     # This method may be refactored so that it accepts a list of

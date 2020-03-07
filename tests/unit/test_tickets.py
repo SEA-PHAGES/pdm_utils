@@ -5,7 +5,6 @@ from pdm_utils.classes import genome
 from pdm_utils.classes import ticket
 from pdm_utils.classes import eval
 from pdm_utils.functions import tickets
-from pdm_utils.functions import run_modes
 from pdm_utils.constants import constants
 import unittest
 
@@ -25,7 +24,7 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict1["type"] = "add"
         self.ticket_dict1["phage_id"] = "Trixie"
         self.ticket_dict1["description_field"] = "product"
-        self.ticket_dict1["run_mode"] = "final"
+        self.ticket_dict1["eval_mode"] = "final"
         self.ticket_dict1["host_genus"] = "retrieve"
         self.ticket_dict1["cluster"] = "retain"
         self.ticket_dict1["subcluster"] = "A2"
@@ -38,7 +37,7 @@ class TestTicketFunctions1(unittest.TestCase):
         self.ticket_dict3["type"] = "ADD"
         self.ticket_dict3["phage_id"] = "Trixie"
         self.ticket_dict3["description_field"] = "PRODUCT"
-        self.ticket_dict3["run_mode"] = "FINAL"
+        self.ticket_dict3["eval_mode"] = "FINAL"
         self.ticket_dict3["host_genus"] = "RETRIEVE"
         self.ticket_dict3["subcluster"] = None
         self.ticket_dict3["accession"] = "PARSE"
@@ -84,14 +83,14 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.ticket_dict3["description_field"], "product")
         with self.subTest():
-            self.assertEqual(self.ticket_dict3["run_mode"], "final")
+            self.assertEqual(self.ticket_dict3["eval_mode"], "final")
 
 
     def test_modify_import_data_4(self):
         """Verify returns True with completed dictionary from a
         minimal add ticket."""
         self.ticket_dict4["description_field"] = "product"
-        self.ticket_dict4["run_mode"] = "final"
+        self.ticket_dict4["eval_mode"] = "final"
         result = tickets.modify_import_data(self.ticket_dict4,
                     self.required_keys, self.optional_keys, self.keywords)
         with self.subTest():
@@ -117,7 +116,7 @@ class TestTicketFunctions1(unittest.TestCase):
         minimal replace ticket."""
         self.ticket_dict4["type"] = "replace"
         self.ticket_dict4["description_field"] = "product"
-        self.ticket_dict4["run_mode"] = "final"
+        self.ticket_dict4["eval_mode"] = "final"
         result = tickets.modify_import_data(self.ticket_dict4,
                     self.required_keys, self.optional_keys, self.keywords)
         with self.subTest():
@@ -150,7 +149,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.description_field, "product")
         with self.subTest():
-            self.assertEqual(tkt.run_mode, "final")
+            self.assertEqual(tkt.eval_mode, "final")
         with self.subTest():
             self.assertEqual(len(tkt.data_dict.keys()), 8)
         with self.subTest():
@@ -177,7 +176,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.description_field, "product")
         with self.subTest():
-            self.assertEqual(tkt.run_mode, "final")
+            self.assertEqual(tkt.eval_mode, "final")
         with self.subTest():
             self.assertEqual(len(tkt.data_dict.keys()), 8)
         with self.subTest():
@@ -205,7 +204,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(tkt.description_field, "product")
         with self.subTest():
-            self.assertEqual(tkt.run_mode, "final")
+            self.assertEqual(tkt.eval_mode, "final")
         with self.subTest():
             self.assertEqual(len(tkt.data_dict.keys()), 8)
         with self.subTest():
@@ -302,17 +301,17 @@ class TestTicketFunctions1(unittest.TestCase):
         The first ticket contains all required and optional fields.
         The second ticket contains all required fields."""
         dict_list = [self.ticket_dict1, self.ticket_dict4]
-        run_mode_eval_dict = {"run_mode": "custom_run_mode",
-                              "eval_flag_dict": {"check_locus_tag": False}}
+        eval_data_dict = {"eval_mode": "custom_eval_mode",
+                          "eval_flag_dict": {"check_locus_tag": False}}
         list_of_tickets = tickets.construct_tickets(dict_list,
-                run_mode_eval_dict, "function", self.required_keys,
+                eval_data_dict, "function", self.required_keys,
                 self.optional_keys, self.keywords)
         with self.subTest():
             self.assertEqual(len(list_of_tickets), 2)
         with self.subTest():
             self.assertEqual(list_of_tickets[0].id, 1)
         with self.subTest():
-            self.assertEqual(list_of_tickets[0].run_mode, "final")
+            self.assertEqual(list_of_tickets[0].eval_mode, "final")
         with self.subTest():
             self.assertEqual(list_of_tickets[0].description_field, "product")
         with self.subTest():
@@ -320,7 +319,7 @@ class TestTicketFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(list_of_tickets[1].id, 2)
         with self.subTest():
-            self.assertEqual(list_of_tickets[1].run_mode, "custom_run_mode")
+            self.assertEqual(list_of_tickets[1].eval_mode, "custom_eval_mode")
         with self.subTest():
             self.assertEqual(list_of_tickets[1].description_field, "function")
         with self.subTest():
@@ -330,10 +329,10 @@ class TestTicketFunctions1(unittest.TestCase):
         """Verify one ticket is constructed correctly. The second data
         dictionary is not structured correctly."""
         dict_list = [self.ticket_dict1, self.ticket_dict2]
-        run_mode_eval_dict = {"run_mode": "custom_run_mode",
-                              "eval_flag_dict": {}}
+        eval_data_dict = {"eval_mode": "custom_eval_mode",
+                          "eval_flag_dict": {}}
         list_of_tickets = tickets.construct_tickets(dict_list,
-                run_mode_eval_dict, "function", self.required_keys,
+                eval_data_dict, "function", self.required_keys,
                 self.optional_keys, self.keywords)
         with self.subTest():
             self.assertEqual(len(list_of_tickets), 1)
@@ -349,13 +348,13 @@ class TestTicketFunctions1(unittest.TestCase):
         tkt_dict1["type"] = "add"
         tkt_dict1["phage_id"] = "Trixie"
         tkt_dict1["description_field"] = "product"
-        tkt_dict1["run_mode"] = "final"
+        tkt_dict1["eval_mode"] = "final"
 
         tkt_dict2 = {}
         tkt_dict2["type"] = "add"
         tkt_dict2["phage_id"] = "L5"
         tkt_dict2["description_field"] = "product"
-        tkt_dict2["run_mode"] = "final"
+        tkt_dict2["eval_mode"] = "final"
 
         tkt_dict3 = {}
         tkt_dict3["type"] = "add"
@@ -366,10 +365,10 @@ class TestTicketFunctions1(unittest.TestCase):
         tkt_dict4["phage_id"] = "Bxb1"
 
         dict_list = [tkt_dict1, tkt_dict2, tkt_dict3, tkt_dict4]
-        run_mode_eval_dict = {"run_mode": "custom_run_mode",
-                              "eval_flag_dict": {"check_locus_tag": False}}
+        eval_data_dict = {"eval_mode": "custom_eval_mode",
+                          "eval_flag_dict": {"check_locus_tag": False}}
         tkt_list = tickets.construct_tickets(dict_list,
-                run_mode_eval_dict, "function", self.required_keys,
+                eval_data_dict, "function", self.required_keys,
                 self.optional_keys, self.keywords)
 
         tkt_list[0].eval_flags["check_locus_tag"] = 0
@@ -626,7 +625,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.add_ticket = ticket.ImportTicket()
         self.add_ticket.type = "add"
         self.add_ticket.phage_id = "Trixie_Draft"
-        self.add_ticket.run_mode = "final"
+        self.add_ticket.eval_mode = "final"
         self.add_ticket.description_field = "product"
         self.add_ticket.host_genus = "Mycobacterium smegmatis"
         self.add_ticket.cluster = "A"
@@ -642,7 +641,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.remove_ticket = ticket.ImportTicket()
         self.remove_ticket.type = "replace"
         self.remove_ticket.phage_id = "Trixie_Draft"
-        self.remove_ticket.run_mode = "final"
+        self.remove_ticket.eval_mode = "final"
         self.remove_ticket.description_field = "product"
         self.remove_ticket.host_genus = "Mycobacterium smegmatis"
         self.remove_ticket.cluster = "A"
@@ -661,7 +660,7 @@ class TestTicketFunctions4(unittest.TestCase):
         self.invalid_ticket = ticket.ImportTicket()
         self.invalid_ticket.type = "invalid"
         self.invalid_ticket.phage_id = "Trixie_Draft"
-        self.invalid_ticket.run_mode = "final"
+        self.invalid_ticket.eval_mode = "final"
         self.invalid_ticket.description_field = "product"
         self.invalid_ticket.host_genus = "Mycobacterium smegmatis"
         self.invalid_ticket.cluster = "A"

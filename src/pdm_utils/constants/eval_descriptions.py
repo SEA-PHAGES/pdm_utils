@@ -85,7 +85,7 @@ EVAL_DESCRIPTIONS = {
     "TKT_002": ("The import ticket is expected to have a unique PhageID."),
     "TKT_003": ("The import ticket is expected to have a valid type (e.g. Add or Replace)."),
     "TKT_004": ("The import ticket is expected to have a valid description field (e.g. Product)."),
-    "TKT_005": ("The import ticket is expected to have a valid Run Mode (e.g. 'final')."),
+    "TKT_005": ("The import ticket is expected to have a valid Eval Mode (e.g. 'final')."),
     "TKT_006": ("The import ticket is expected to have a set of evaluation flags."),
     "TKT_007": ("The import ticket is not expected to have an empty PhageID."),
     "TKT_008": ("The import ticket is expected to have a compatible type and retain settings."),

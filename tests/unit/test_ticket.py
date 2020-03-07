@@ -43,17 +43,17 @@ class TestImportTicketClass(unittest.TestCase):
 
 
 
-    def test_set_run_mode_1(self):
+    def test_set_eval_mode_1(self):
         """Check that value is lowercased when not 'none'."""
         value = "Final"
-        self.tkt.set_run_mode(value)
-        self.assertEqual(self.tkt.run_mode, "final")
+        self.tkt.set_eval_mode(value)
+        self.assertEqual(self.tkt.eval_mode, "final")
 
-    def test_set_run_mode_2(self):
+    def test_set_eval_mode_2(self):
         """Check that value is lowercased when 'none'."""
         value = "NONE"
-        self.tkt.set_run_mode(value)
-        self.assertEqual(self.tkt.run_mode, "none")
+        self.tkt.set_eval_mode(value)
+        self.assertEqual(self.tkt.eval_mode, "none")
 
 
 

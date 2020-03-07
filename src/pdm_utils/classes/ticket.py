@@ -16,7 +16,7 @@ class ImportTicket:
         self.id = None # Unique identifier
         self.type = "" # Add, Replace
         self.phage_id = ""
-        self.run_mode = ""
+        self.eval_mode = ""
         self.description_field = ""
         self.eval_flags = {} # Dictionary of evaluation flags.
 
@@ -52,13 +52,13 @@ class ImportTicket:
         """
         self.description_field = value.lower()
 
-    def set_run_mode(self, value):
-        """Set the run_mode.
+    def set_eval_mode(self, value):
+        """Set the eval_mode.
 
-        :param value: Value to be set as the run_mode.
+        :param value: Value to be set as the eval_mode.
         :type value: str
         """
-        self.run_mode = value.lower()
+        self.eval_mode = value.lower()
 
 
     # Evaluations

@@ -30,7 +30,7 @@ IMPORT_COLUMNS1 = ["type",
                    "annotation_author",
                    "description_field",
                    "accession",
-                   "run_mode",
+                   "eval_mode",
                    "secondary_phage_id"]
 
 # New format
@@ -327,16 +327,16 @@ def convert_tickets_to_dict(list_of_tickets, old_format=False):
         tkt_data["accession"] = tkt.data_dict["accession"]
 
         if old_format == True:
-            if tkt.run_mode == "auto":
-                tkt_data["run_mode"] = "ncbi_auto"
-            elif tkt.run_mode == "draft":
-                tkt_data["run_mode"] = "pecaan"
-            elif tkt.run_mode == "final":
-                tkt_data["run_mode"] = "phagesdb"
+            if tkt.eval_mode == "auto":
+                tkt_data["eval_mode"] = "ncbi_auto"
+            elif tkt.eval_mode == "draft":
+                tkt_data["eval_mode"] = "pecaan"
+            elif tkt.eval_mode == "final":
+                tkt_data["eval_mode"] = "phagesdb"
             else:
-                tkt_data["run_mode"] = tkt.run_mode
+                tkt_data["eval_mode"] = tkt.eval_mode
         else:
-            tkt_data["run_mode"] = tkt.run_mode
+            tkt_data["eval_mode"] = tkt.eval_mode
 
         if old_format == True:
             tkt_data["secondary_phage_id"] = tkt.data_dict["secondary_phage_id"]
@@ -404,7 +404,7 @@ def get_final_data(output_folder, matched_genomes):
                 tkt.data_dict["annotation_author"] = 1
                 tkt.description_field = "product"
                 tkt.data_dict["accession"] = "retrieve"
-                tkt.run_mode = "final"
+                tkt.eval_mode = "final"
                 # TODO secondary_phage_id data is for old ticket format.
                 tkt.data_dict["secondary_phage_id"] = mysqldb_gnm.id
                 tkt.data_dict["retrieve_record"] = 1
@@ -790,7 +790,7 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
         # record's accession.
         # tkt.data_dict["accession"] = gnm.accession
         tkt.data_dict["accession"] = "parse"
-        tkt.run_mode = "auto"
+        tkt.eval_mode = "auto"
         # TODO secondary_phage_id data is for old ticket format.
         tkt.data_dict["secondary_phage_id"] = gnm.id
         tkt.data_dict["retrieve_record"] = 1
@@ -894,7 +894,7 @@ def retrieve_drafts(output_folder, phage_list):
             tkt.data_dict["annotation_author"] = 1
             tkt.description_field = "product"
             tkt.data_dict["accession"] = "none"
-            tkt.run_mode = "draft"
+            tkt.eval_mode = "draft"
             # TODO secondary_phage_id data is for old ticket format.
             tkt.data_dict["secondary_phage_id"] = "none"
             tkt.data_dict["retrieve_record"] = 1
