@@ -29,10 +29,13 @@ engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
 
 
 unittest_file = Path(__file__)
-unittest_dir = unittest_file.parent
+# unittest_dir = unittest_file.parent
+test_dir = unittest_file.parent.parent
+test_file_dir = Path(test_dir, "test_files")
+
 schema_version = constants.CODE_SCHEMA_VERSION
 schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+schema_filepath = Path(test_file_dir, schema_file)
 version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 # Assumes that output message contains "SQLAlchemy Error..."

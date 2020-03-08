@@ -113,16 +113,17 @@ user = "pdm_anon"
 pwd = "pdm_anon"
 db = "test_db"
 unittest_file = Path(__file__)
-unittest_dir = unittest_file.parent
+test_dir = unittest_file.parent.parent
+test_file_dir = Path(test_dir, "test_files")
 schema_version = constants.CODE_SCHEMA_VERSION
 schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+schema_filepath = Path(test_file_dir, schema_file)
 version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 
 # Alice ("test_flat_file_10.gb"),
 base_flat_file = Path("test_flat_file_10.gb")
-base_flat_file_path = Path(unittest_dir, "test_files/", base_flat_file)
+base_flat_file_path = Path(test_file_dir, base_flat_file)
 base_dir = Path(test_root_dir, "test_import")
 import_table_name = Path("import_table.csv")
 import_table = Path(base_dir, import_table_name)

@@ -9,18 +9,19 @@ from pdm_utils.classes import genome
 import os
 from Bio.SeqRecord import SeqRecord
 
+
+unittest_file = Path(__file__)
+test_dir = unittest_file.parent.parent
+test_file_dir = Path(test_dir, "test_files")
+
+
 class TestFlatFileFunctions(unittest.TestCase):
 
 
     def setUp(self):
-
-        self.unittest_file = Path(__file__)
-        self.unittest_dir = self.unittest_file.parent
-        self.base_dir = Path(self.unittest_dir,"test_files")
-        self.test_filepath1 = Path(self.base_dir, "test_flat_file_1.gb")
-        self.test_filepath2 = Path(self.base_dir, "test_flat_file_2.gb")
-        self.test_filepath3 = Path(self.base_dir, "test_flat_file_5.gb")
-
+        self.test_filepath1 = Path(test_file_dir, "test_flat_file_1.gb")
+        self.test_filepath2 = Path(test_file_dir, "test_flat_file_2.gb")
+        self.test_filepath3 = Path(test_file_dir, "test_flat_file_5.gb")
 
 
     def test_retrieve_genome_data_1(self):

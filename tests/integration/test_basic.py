@@ -9,7 +9,8 @@ from unittest.mock import patch
 from pdm_utils.functions import basic
 
 unittest_file = Path(__file__)
-unittest_dir = unittest_file.parent
+test_dir = unittest_file.parent.parent
+test_file_dir = Path(test_dir, "test_files")
 
 TMPDIR_PREFIX = "pdm_utils_tests_basic_"
 # Can set TMPDIR_BASE to string such as "/tmp/" to track tmp directory location.
@@ -19,8 +20,7 @@ TMPDIR_BASE = "/tmp"
 class TestBasicFunctions1(unittest.TestCase):
 
     def setUp(self):
-        self.test_filepath1 = Path(unittest_dir,
-                                "test_files/test_flat_file_1.gb")
+        self.test_filepath1 = Path(test_file_dir, "test_flat_file_1.gb")
         self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,
                                                   dir=TMPDIR_BASE)
         self.test_directory1 = Path(self.tmpdir.name).resolve()
@@ -160,7 +160,7 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_parse_flag_file_1(self):
         """Verify that all three rows are parsed correctly."""
-        flag_file = Path(unittest_dir, "test_files/test_flag_file_1.csv")
+        flag_file = Path(test_file_dir, "test_flag_file_1.csv")
         flag_dict = basic.parse_flag_file(flag_file)
         with self.subTest():
             self.assertEqual(len(flag_dict.keys()), 3)
@@ -173,7 +173,7 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_parse_flag_file_2(self):
         """Verify that only one row is parsed correctly."""
-        flag_file = Path(unittest_dir, "test_files/test_flag_file_2.csv")
+        flag_file = Path(test_file_dir, "test_flag_file_2.csv")
         flag_dict = basic.parse_flag_file(flag_file)
         self.assertEqual(len(flag_dict.keys()), 1)
 
@@ -662,8 +662,7 @@ class TestBasicFunctions6(unittest.TestCase):
 
 
     def setUp(self):
-        self.test_import_table_1 = Path(unittest_dir,
-                                     "test_files/test_import_table_1.csv")
+        self.test_import_table_1 = Path(test_file_dir, "test_import_table_1.csv")
         self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}
         self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
         self.tmpdir = tempfile.TemporaryDirectory(prefix=TMPDIR_PREFIX,

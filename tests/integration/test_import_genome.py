@@ -58,14 +58,12 @@ db2 = "Actinobacteriophage"
 engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
 engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
 
-
 unittest_file = Path(__file__)
-unittest_dir = unittest_file.parent
-
-test_files_path = Path(unittest_dir, "test_files")
+test_dir = unittest_file.parent.parent
+test_file_dir = Path(test_dir, "test_files")
 schema_version = constants.CODE_SCHEMA_VERSION
 schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(test_files_path, schema_file)
+schema_filepath = Path(test_file_dir, schema_file)
 version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 
@@ -151,8 +149,8 @@ class TestImportGenomeMain1(unittest.TestCase):
         self.genome_folder = Path(self.base_dir,"genome_folder")
         self.genome_folder.mkdir()
 
-        self.test_flat_file1 = Path(test_files_path, "test_flat_file_1.gb")
-        self.test_flat_file2 = Path(test_files_path, "test_flat_file_2.gb")
+        self.test_flat_file1 = Path(test_file_dir, "test_flat_file_1.gb")
+        self.test_flat_file2 = Path(test_file_dir, "test_flat_file_2.gb")
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
@@ -596,7 +594,7 @@ class TestImportGenomeMain2(unittest.TestCase):
 
     def setUp(self):
 
-        self.test_filepath1 = Path(test_files_path, "test_flat_file_1.gb")
+        self.test_filepath1 = Path(test_file_dir, "test_flat_file_1.gb")
         self.test_directory1 = Path(test_root_dir, "test_dir")
         self.test_directory1.mkdir()
 
@@ -716,7 +714,7 @@ class TestImportGenomeMain3(unittest.TestCase):
         # Otherwise, Actinobacteriophage is sufficient.
         create_new_db(schema_filepath, db, user, pwd)
 
-        self.import_table = Path(test_files_path, "test_import_table_1.csv")
+        self.import_table = Path(test_file_dir, "test_import_table_1.csv")
         self.base_dir = Path(test_root_dir, "test_folder")
         self.base_dir.mkdir()
 
@@ -845,8 +843,7 @@ class TestImportGenomeMain4(unittest.TestCase):
 
         self.table_structure_dict = constants.IMPORT_TABLE_STRUCTURE
 
-        self.test_import_table_1 = Path(unittest_dir,
-                                     "test_files/test_import_table_1.csv")
+        self.test_import_table_1 = Path(test_file_dir, "test_import_table_1.csv")
 
         # Valid data dictionary.
         self.data_dict1 = {}
@@ -971,8 +968,8 @@ class TestImportGenomeMain5(unittest.TestCase):
 
     def setUp(self):
 
-        self.flat_file_l5 = Path(test_files_path, "test_flat_file_1.gb")
-        self.flat_file_trixie = Path(test_files_path, "test_flat_file_6.gb")
+        self.flat_file_l5 = Path(test_file_dir, "test_flat_file_1.gb")
+        self.flat_file_trixie = Path(test_file_dir, "test_flat_file_6.gb")
 
         self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
 
@@ -1423,9 +1420,9 @@ class TestImportGenomeMain6(unittest.TestCase):
         self.flat_file1 = Path(self.genome_folder, "flat_file1.txt")
         self.flat_file2 = Path(self.genome_folder, "flat_file2.txt")
 
-        self.valid_import_table_file = Path(test_files_path,
+        self.valid_import_table_file = Path(test_file_dir,
                                             "test_import_table_1.csv")
-        self.invalid_import_table_file = Path(test_files_path,
+        self.invalid_import_table_file = Path(test_file_dir,
                                             "test_import_table_2.csv")
         self.output_folder = Path(self.base_dir, import_genome.RESULTS_FOLDER)
 
