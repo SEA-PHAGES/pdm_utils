@@ -32,9 +32,12 @@ db = "test_db"
 engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
 
 unittest_file = Path(__file__)
-unittest_dir = unittest_file.parent
+test_dir = unittest_file.parent.parent
+test_file_dir = Path(test_dir, "test_files")
 schema_file = "test_db.sql"
-schema_filepath = Path(unittest_dir, "test_files/", schema_file)
+schema_filepath = Path(test_file_dir, schema_file)
+
+
 
 
 class TestPhamerationFunctions(unittest.TestCase):
