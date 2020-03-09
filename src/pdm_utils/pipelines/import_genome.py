@@ -525,15 +525,30 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
         review_bundled_objects(bndl, interactive=interactive)
         bndl.check_for_errors()
-        dict_of_eval_lists = bndl.get_evaluations()
 
-        logfile_path = get_logfile_path(bndl, paths_dict=log_folder_paths_dict,
-                                        filepath=filepath, file_ref=file_ref)
+        # TODO remove after testing below
+        # dict_of_eval_lists = bndl.get_evaluations()
+        # logfile_path = get_logfile_path(bndl, paths_dict=log_folder_paths_dict,
+        #                                 filepath=filepath, file_ref=file_ref)
+        #
+        # log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
+        # evaluation_dict[bndl.id] = dict_of_eval_lists
+        # TODO remove above after testing below
 
-        log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
-        evaluation_dict[bndl.id] = dict_of_eval_lists
+        # TODO if an eval result is stored in the bundle, import_into_db does not need to return a result.
         result = import_into_db(bndl, engine=engine,
                                 gnm_key=file_ref, prod_run=prod_run)
+
+        # TODO test below
+        # Check for errors again after attempting to import data.
+        bndl.check_for_errors()
+        dict_of_eval_lists = bndl.get_evaluations()
+        logfile_path = get_logfile_path(bndl, paths_dict=log_folder_paths_dict,
+                                        filepath=filepath, file_ref=file_ref)
+        log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
+        evaluation_dict[bndl.id] = dict_of_eval_lists
+        # TODO test above
+
         if result:
             success_ticket_list.append(bndl.ticket.data_dict)
             success_filepath_list.append(filepath)
@@ -655,6 +670,15 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
         # id_conversion_dict key = incorrect spelling; value = correct spelling
         if ff_gnm.id in id_conversion_dict.keys():
             ff_gnm.id = id_conversion_dict[ff_gnm.id]
+
+            # TODO unittest.
+            # TODO need to recompute the feature ids using the new genome id.
+            ff_gnm.set_feature_ids(use_type=True, use_cds=True)
+            ff_gnm.set_feature_ids(use_type=True, use_source=True)
+            ff_gnm.set_feature_genome_ids("cds")
+            ff_gnm.set_feature_genome_ids("source")
+            # TODO set tRNA feature ids.
+
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
         # Match ticket (if available) to flat file.
@@ -1505,7 +1529,7 @@ def check_trna(trna_obj, eval_flags):
     else:
         pass
 
-
+# TODO unittest now that eval object is created and stored in bundle.
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
     """Import data into the MySQL database."""
     IMPORT_DATE = datetime.today().replace(hour=0, minute=0,
@@ -1527,24 +1551,43 @@ def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
         bndl.sql_statements = mysqldb.create_genome_statements(
                                 import_gnm, bndl.ticket.type)
         if prod_run:
-            result = mysqldb.execute_transaction(engine, bndl.sql_statements)
-            if result == 1:
-                logger.info("Error executing statements to import data.")
+            # TODO remove old execute_transaction once new function is tested.
+            # import_result = mysqldb.execute_transaction(engine, bndl.sql_statements)
+            import_result, msg = mysqldb.execute_transaction2(engine, bndl.sql_statements)
+            if import_result == 1:
+                logger.error("Error importing data. " + msg)
                 result = False
             else:
                 result = True
-                logger.info("Data successfully imported.")
+                logger.info("Data successfully imported. " + msg)
                 logger.info("The following SQL statements were executed:")
                 for statement in bndl.sql_statements:
                     statement = basic.truncate_value(statement, 150, "...")
                     logger.info(statement)
         else:
+            # TODO this should probably be none
+            import_result = 0
+            msg = ""
+            # TODO test
+
             result = True
             logger.info("Data can be imported if set to production run.")
     else:
+        # TODO this should probably be none
+        import_result = 0
+        msg = ""
+        # TODO test
+
         result = False
         logger.info("Data contains errors, so it will not be imported.")
+    # TODO unittest.
+    bndl.check_import(import_result, msg, eval_id="BNDL_007", eval_def=EDD["BNDL_007"])
+
     return result
+
+
+
+
 
 
 ###

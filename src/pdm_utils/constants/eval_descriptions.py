@@ -79,6 +79,9 @@ EVAL_DESCRIPTIONS = {
     "BNDL_004": (f"{pfx6} genome data parsed from PhagesDB that is not present within the file."),
     "BNDL_005": (f"{pfx6} genome data parsed from the MySQL database."),
     "BNDL_006": (f"{pfx6} paired genome data from a file and from a MySQL database."),
+    "BNDL_007": (f"MySQL statements generated from the bundled data are expected to be successfully executed in a MySQL database."),
+
+
 
     # Import ticket
     "TKT_001": ("The import ticket is expected to have a unique TicketID."),

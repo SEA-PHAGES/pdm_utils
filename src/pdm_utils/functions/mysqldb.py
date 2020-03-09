@@ -457,7 +457,7 @@ def create_delete(table, field, data):
     statement = f"DELETE FROM {table} WHERE {field} = '{data}';"
     return statement
 
-
+# TODO unittest after changing quote level.
 def create_gene_table_insert(cds_ftr):
     """Create a MySQL gene table INSERT statement.
 
@@ -472,16 +472,33 @@ def create_gene_table_insert(cds_ftr):
 
     # cds_ftr.translation is a BioPython Seq object.
     # It is coerced to string by default.
-    statement = ("INSERT INTO gene "
-                 "(GeneID, PhageID, Start, Stop, Length, Name, "
-                 "Translation, Orientation, Notes, LocusTag, Parts) "
-                 "VALUES "
-                 f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.start}, "
-                 f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
-                 f"'{cds_ftr.name}', '{cds_ftr.translation}', "
-                 f"'{cds_ftr.orientation}', '{cds_ftr.description}', "
-                 f"{locus_tag}, {cds_ftr.parts});"
-                 )
+
+    # Statement should be triple quoted. String data inserted into database
+    # should be encapsulated with double quotes, since gene.Notes data
+    # can sometimes contain "'".
+    statement = ("""INSERT INTO gene """
+                 """(GeneID, PhageID, Start, Stop, Length, Name, """
+                 """Translation, Orientation, Notes, LocusTag, Parts) """
+                 """VALUES """
+                 """("{}", "{}", {}, {}, {}, "{}", "{}", "{}", "{}", {}, {});""")
+    statement = statement.format(cds_ftr.id, cds_ftr.genome_id,
+                                 cds_ftr.start, cds_ftr.stop,
+                                 cds_ftr.translation_length,
+                                 cds_ftr.name, cds_ftr.translation,
+                                 cds_ftr.orientation, cds_ftr.description,
+                                 locus_tag, cds_ftr.parts)
+
+    # TODO remove below after testing revised statement above.
+    # statement = ("INSERT INTO gene "
+    #              "(GeneID, PhageID, Start, Stop, Length, Name, "
+    #              "Translation, Orientation, Notes, LocusTag, Parts) "
+    #              "VALUES "
+    #              f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.start}, "
+    #              f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
+    #              f"'{cds_ftr.name}', '{cds_ftr.translation}', "
+    #              f"'{cds_ftr.orientation}', '{cds_ftr.description}', "
+    #              f"{locus_tag}, {cds_ftr.parts});"
+    #              )
 
     return statement
 
@@ -812,9 +829,51 @@ def construct_engine_string(db_type="mysql", driver="pymysql",
     return engine_string
 
 
+# # Copied and modeled from MySQLConnectionHandler.execute_transaction,
+# # but simplified since Engine does the work of connecting to the database.
+# def execute_transaction(engine, statement_list=list()):
+#     """Execute list of MySQL statements within a single defined transaction.
+#
+#     :param engine:
+#         a sqlalchemy Engine object containing
+#         information on which database to connect to.
+#     :type engine: Engine
+#     :param statement_list:
+#         a list of any number of MySQL statements with
+#         no expectation that anything will return
+#     :return: 0 or 1 status code. 0 means no problems, 1 means problems
+#     :rtype: int
+#     """
+#
+#     connection = engine.connect()
+#     trans = connection.begin()
+#     try:
+#         for statement in statement_list:
+#             connection.execute(statement)
+#         trans.commit()
+#         result = 0
+#     except:
+#         print("Error executing MySQL statements.")
+#         print("Rolling back transaction...")
+#         trans.rollback()
+#         result = 1
+#         # Raising the exception will cause the code to break.
+#         # raise
+#     return result
+#
+#     # Code block below does same thing, but doesn't return a value based if there is an error.
+#     # with engine.begin() as connection:
+#     #     for statement in statement_list:
+#     #         r1 = connection.execute(statement)
+
+
+
+# TODO unittest.
+# TODO should replace execute_transaction()
+# Modified to handle exceptions better, similar to find_domains pipeline.
 # Copied and modeled from MySQLConnectionHandler.execute_transaction,
 # but simplified since Engine does the work of connecting to the database.
-def execute_transaction(engine, statement_list=list()):
+def execute_transaction2(engine, statement_list=[]):
     """Execute list of MySQL statements within a single defined transaction.
 
     :param engine:
@@ -827,22 +886,48 @@ def execute_transaction(engine, statement_list=list()):
     :return: 0 or 1 status code. 0 means no problems, 1 means problems
     :rtype: int
     """
+    msg = "Error executing MySQL statements. "
 
     connection = engine.connect()
     trans = connection.begin()
+
     try:
         for statement in statement_list:
             connection.execute(statement)
         trans.commit()
-        result = 0
+
+    except sqlalchemy.exc.DBAPIError as err:
+        err_stmt = err.statement
+        sqla_err_type = str(type(err))
+        pymysql_err_type = str(type(err.orig))
+        pymysql_err_code = err.orig.args[0]
+        pymysql_err_msg = err.orig.args[1]
+        msg = msg + ("Unable to execute MySQL statements. "
+                     f"SQLAlchemy Error type: {sqla_err_type}. "
+                     f"PyMySQL Error type: {pymysql_err_type}. "
+                     f"PyMYSQL Error code: {pymysql_err_code}. "
+                     f"PyMySQL Error message: {pymysql_err_msg}."
+                     f"Statement: {err_stmt}")
+        result = 1
+    except TypeError as err:
+        msg = msg + "Unable to execute statements due to a TypeError. "
+        result = 1
+
+    # TODO not sure how to test this block. Would need to construct a
+    # statement that causes a Python built-in exception other than TypeError.
     except:
-        print("Error executing MySQL statements.")
+        msg = msg + "Unable to execute statements. "
+        result = 1
+    else:
+        msg = "Successful execution of statements. "
+        result = 0
+
+    if result == 1:
+        print(msg)
         print("Rolling back transaction...")
         trans.rollback()
-        result = 1
-        # Raising the exception will cause the code to break.
-        # raise
-    return result
+
+    return result, msg
 
     # Code block below does same thing, but doesn't return a value based if there is an error.
     # with engine.begin() as connection:

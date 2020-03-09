@@ -153,17 +153,13 @@ PHAGE_ID_DICT = {
     # PhagesDB is unable to handle underscores.
     "ATCC29399B_C": "ATCC29399BC",
     "ATCC29399B_T": "ATCC29399BT",
-    "vB_ArtM-ArV1": "ArV1",
-    "vB_ArS-ArV2": "ArV2",
-
-    # ELB20 was reported as 'ELB20' in the original publication, but spelled
-    # 'phiELB20' in the GenBank record.
-    "phiELB20": "ELB20",
 
     # Names are spelled differently in GenBank record compared to
     # the original publication.
     "P100_1": "P100.1",
     "P100_A": "P100A",
+    "P14":"P14.4",
+    "phiELB20": "ELB20",
 
     # 'LeBron' was changed to 'Bron' by ICTV. They won't change it back.
     "Bron": "LeBron",
@@ -194,7 +190,16 @@ PHAGE_ID_DICT = {
     "Packman": "PackMan",
     "lockley": "Lockley",
     "Rockyhorror": "RockyHorror",
-    "Ta17a": "TA17a"
+    "Ta17a": "TA17a",
+
+    # Remove host data from phage name
+    "ReqiDocB7": "DocB7",
+    "ReqiPepy6": "Pepy6",
+    "ReqiPoco6": "Poco6",
+    "ReqiPine5": "Pine5",
+    "vB_ArtM-ArV1": "ArV1",
+    "vB_ArS-ArV2": "ArV2",
+    "vB_MoxS-ISF9": "ISF9"
     }
 
 # TODO HOST_GENUS_DICT may no longer be needed.

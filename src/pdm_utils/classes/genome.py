@@ -470,7 +470,31 @@ class Genome:
 
 
 
+###TODO in progress below
+    # TODO unittest
+    def set_feature_genome_ids(self, feature_type, value=None):
+        """Sets the genome_id of each feature.
+        """
+        if value is None:
+            value = self.id
 
+        if feature_type.lower() == "cds":
+            feature_list = self.cds_features
+        elif feature_type.lower() == "source":
+            feature_list = self.source_features
+        # TODO implement.
+        # elif feature_type.lower() == "trna":
+        #     feature_list = self.trna_features
+        # elif feature_type.lower() == "tmrna":
+        #     feature_list = self.source_features
+        else:
+            feature_list = []
+
+        for feature in feature_list:
+            feature.genome_id = value
+
+
+###TODO in progress above
 
 
     # Evaluations.
@@ -674,7 +698,7 @@ class Genome:
         if len(nucleotide_error_set) > 0:
             nes_string = basic.join_strings(nucleotide_error_set, delimiter=", ")
             result = ("There are unexpected nucleotides in the sequence: "
-                      f"{nes_string}")
+                      f"{nes_string}.")
             status = fail
         else:
             result = "There are no unexpected nucleotides in the sequence."
@@ -926,7 +950,7 @@ class Genome:
                             format="fr_short") == "r"):
                     msgs.append(ftrs)
                     msgs.append(("Feature1 and Feature2 contain "
-                                 "identical stop coordinate."))
+                                 "identical stop coordinates."))
                 elif (current.stop == next.stop and
                         basic.reformat_strand(current.orientation,
                             format="fr_short") == "f" and
@@ -934,7 +958,7 @@ class Genome:
                             format="fr_short") == "f"):
                     msgs.append(ftrs)
                     msgs.append(("Feature1 and Feature2 contain "
-                                 "identical stop coordinate."))
+                                 "identical stop coordinates."))
                 else:
                     pass
                 index += 1
