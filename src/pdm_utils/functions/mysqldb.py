@@ -336,20 +336,63 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
 
 
 
-
-def create_phage_id_set(engine):
-    """Create set of phage_ids currently in a MySQL database.
+def get_distinct_data(engine, table, column, null=None):
+    """Get set of distinct values currently in a MySQL database.
 
     :param engine:
         A sqlalchemy Engine object containing
         information on which database to connect to.
     :type engine: Engine
-    :returns: A set of PhageIDs.
+    :returns: A set of .
     :rtype: set
     """
-    query = "SELECT PhageID FROM phage"
+    query = f"SELECT DISTINCT({column}) FROM {table}"
     result_set = query_set(engine, query)
+
+    if None in result_set:
+        result_set.remove(None)
+        result_set.add(null)
+
     return result_set
+
+
+# TODO probably no longer needed.
+def create_cluster_set(engine):
+    """Create set of Cluster data currently in a MySQL database.
+
+    :param engine:
+        A sqlalchemy Engine object containing
+        information on which database to connect to.
+    :type engine: Engine
+    :returns: A set of Clusters.
+    :rtype: set
+    """
+    # Singletons stored as NULL, which gets returned as None.
+    cluster_set = get_distinct_data(engine, "phage", "Cluster")
+    if None in cluster_set:
+        cluster_set.remove(None)
+        cluster_set.add("Singleton")
+    return cluster_set
+
+
+# TODO probably no longer needed.
+def create_subcluster_set(engine):
+    """Create set of Subcluster data currently in a MySQL database.
+
+    :param engine:
+        A sqlalchemy Engine object containing
+        information on which database to connect to.
+    :type engine: Engine
+    :returns: A set of Subclusters.
+    :rtype: set
+    """
+    # Singletons stored as NULL, which gets returned as None.
+    subcluster_set = get_distinct_data(engine, "phage", "Subcluster")
+    if None in subcluster_set:
+        subcluster_set.remove(None)
+        subcluster_set.add("none")
+    return subcluster_set
+
 
 
 def create_seq_set(engine):
@@ -383,28 +426,15 @@ def create_seq_set(engine):
 
 
 
-
-def create_accession_set(engine):
-    """Create set of accessions currently in a MySQL database.
-
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
-    :type engine: Engine
-    :returns: A set of accessions.
-    :rtype: set
-    """
-    query = "SELECT Accession FROM phage"
-    result_set = query_set(engine, query)
-    return result_set
-
-
-def convert_for_sql(value, check_set=set()):
+def convert_for_sql(value, check_set=set(), single=True):
     """Convert a value for inserting into MySQL."""
     if value in check_set:
         value = "NULL"
     else:
-        value = f"'{value}'"
+        if single == True:
+            value = f"'{value}'"
+        else:
+            value = f'"{value}"'
     return value
 
 
@@ -435,7 +465,7 @@ def create_update(table, field2, value2, field1, value1):
     check_set = constants.EMPTY_SET | {"Singleton"}
     part1 = f"UPDATE {table} SET {field2} = "
     part3 = f" WHERE {field1} = '{value1}';"
-    part2 = convert_for_sql(value2, check_set=check_set)
+    part2 = convert_for_sql(value2, check_set=check_set, single=True)
     statement = part1 + part2 + part3
     return statement
 
@@ -457,7 +487,7 @@ def create_delete(table, field, data):
     statement = f"DELETE FROM {table} WHERE {field} = '{data}';"
     return statement
 
-# TODO unittest after changing quote level.
+
 def create_gene_table_insert(cds_ftr):
     """Create a MySQL gene table INSERT statement.
 
@@ -468,14 +498,15 @@ def create_gene_table_insert(cds_ftr):
         with data for several fields.
     :rtype: str
     """
-    locus_tag = convert_for_sql(cds_ftr.locus_tag, check_set={""})
+    locus_tag = convert_for_sql(cds_ftr.locus_tag, check_set={""}, single=False)
 
     # cds_ftr.translation is a BioPython Seq object.
     # It is coerced to string by default.
-
-    # Statement should be triple quoted. String data inserted into database
-    # should be encapsulated with double quotes, since gene.Notes data
-    # can sometimes contain "'".
+    # Statement should be triple quoted.
+    # Descriptions may contain a "'", so at least description attribute needs
+    # to be encapsulated with double quotes.
+    # locus_tag can be NULL or can be a string, so it should not be
+    # encapsulated with '"'.
     statement = ("""INSERT INTO gene """
                  """(GeneID, PhageID, Start, Stop, Length, Name, """
                  """Translation, Orientation, Notes, LocusTag, Parts) """
@@ -487,19 +518,6 @@ def create_gene_table_insert(cds_ftr):
                                  cds_ftr.name, cds_ftr.translation,
                                  cds_ftr.orientation, cds_ftr.description,
                                  locus_tag, cds_ftr.parts)
-
-    # TODO remove below after testing revised statement above.
-    # statement = ("INSERT INTO gene "
-    #              "(GeneID, PhageID, Start, Stop, Length, Name, "
-    #              "Translation, Orientation, Notes, LocusTag, Parts) "
-    #              "VALUES "
-    #              f"('{cds_ftr.id}', '{cds_ftr.genome_id}', {cds_ftr.start}, "
-    #              f"{cds_ftr.stop}, {cds_ftr.translation_length}, "
-    #              f"'{cds_ftr.name}', '{cds_ftr.translation}', "
-    #              f"'{cds_ftr.orientation}', '{cds_ftr.description}', "
-    #              f"{locus_tag}, {cds_ftr.parts});"
-    #              )
-
     return statement
 
 
@@ -513,8 +531,8 @@ def create_phage_table_insert(gnm):
         with data for several fields.
     :rtype: str
     """
-    cluster = convert_for_sql(gnm.cluster, check_set={"Singleton"})
-    subcluster = convert_for_sql(gnm.subcluster, check_set={"none"})
+    cluster = convert_for_sql(gnm.cluster, check_set={"Singleton"}, single=True)
+    subcluster = convert_for_sql(gnm.subcluster, check_set={"none"}, single=True)
 
     # gnm.seq is a BioPython Seq object.
     # It is coerced to string by default.
@@ -829,51 +847,10 @@ def construct_engine_string(db_type="mysql", driver="pymysql",
     return engine_string
 
 
-# # Copied and modeled from MySQLConnectionHandler.execute_transaction,
-# # but simplified since Engine does the work of connecting to the database.
-# def execute_transaction(engine, statement_list=list()):
-#     """Execute list of MySQL statements within a single defined transaction.
-#
-#     :param engine:
-#         a sqlalchemy Engine object containing
-#         information on which database to connect to.
-#     :type engine: Engine
-#     :param statement_list:
-#         a list of any number of MySQL statements with
-#         no expectation that anything will return
-#     :return: 0 or 1 status code. 0 means no problems, 1 means problems
-#     :rtype: int
-#     """
-#
-#     connection = engine.connect()
-#     trans = connection.begin()
-#     try:
-#         for statement in statement_list:
-#             connection.execute(statement)
-#         trans.commit()
-#         result = 0
-#     except:
-#         print("Error executing MySQL statements.")
-#         print("Rolling back transaction...")
-#         trans.rollback()
-#         result = 1
-#         # Raising the exception will cause the code to break.
-#         # raise
-#     return result
-#
-#     # Code block below does same thing, but doesn't return a value based if there is an error.
-#     # with engine.begin() as connection:
-#     #     for statement in statement_list:
-#     #         r1 = connection.execute(statement)
-
-
-
-# TODO unittest.
-# TODO should replace execute_transaction()
-# Modified to handle exceptions better, similar to find_domains pipeline.
+# Handles exceptions similar to find_domains pipeline.
 # Copied and modeled from MySQLConnectionHandler.execute_transaction,
 # but simplified since Engine does the work of connecting to the database.
-def execute_transaction2(engine, statement_list=[]):
+def execute_transaction(engine, statement_list=[]):
     """Execute list of MySQL statements within a single defined transaction.
 
     :param engine:
@@ -886,11 +863,9 @@ def execute_transaction2(engine, statement_list=[]):
     :return: 0 or 1 status code. 0 means no problems, 1 means problems
     :rtype: int
     """
-    msg = "Error executing MySQL statements. "
-
+    msg = "Unable to execute MySQL statements. "
     connection = engine.connect()
     trans = connection.begin()
-
     try:
         for statement in statement_list:
             connection.execute(statement)
@@ -902,24 +877,23 @@ def execute_transaction2(engine, statement_list=[]):
         pymysql_err_type = str(type(err.orig))
         pymysql_err_code = err.orig.args[0]
         pymysql_err_msg = err.orig.args[1]
-        msg = msg + ("Unable to execute MySQL statements. "
+        msg = msg + ("A MySQL error was encountered. "
                      f"SQLAlchemy Error type: {sqla_err_type}. "
                      f"PyMySQL Error type: {pymysql_err_type}. "
                      f"PyMYSQL Error code: {pymysql_err_code}. "
-                     f"PyMySQL Error message: {pymysql_err_msg}."
+                     f"PyMySQL Error message: {pymysql_err_msg}. "
                      f"Statement: {err_stmt}")
         result = 1
     except TypeError as err:
-        msg = msg + "Unable to execute statements due to a TypeError. "
+        msg = msg + "A Python TypeError was encountered. "
         result = 1
-
-    # TODO not sure how to test this block. Would need to construct a
-    # statement that causes a Python built-in exception other than TypeError.
     except:
-        msg = msg + "Unable to execute statements. "
+        # TODO not sure how to test this block. Would need to construct a
+        # statement that causes a Python built-in exception other than TypeError.
+        msg = msg + "An unidentified error was encountered. "
         result = 1
     else:
-        msg = "Successful execution of statements. "
+        msg = "MySQL statements were successfully executed. "
         result = 0
 
     if result == 1:

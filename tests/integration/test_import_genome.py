@@ -1392,6 +1392,12 @@ class TestImportGenomeMain5(unittest.TestCase):
 
         prep_mock.side_effect = [bndl1, bndl2]
         ask_mock.side_effect = [False, True]
+
+        # Since the first bundle contains errors, it doesn't call
+        # execute_transaction, so only one side_effect is needed for the
+        # second bundle.
+        execute_mock.side_effect = [(0, "Success")]
+
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
                             files, engine=self.engine,
                             prod_run=True, genome_id_field="_organism_name",

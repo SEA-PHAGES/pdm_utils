@@ -146,6 +146,28 @@ class TestBundleClass1(unittest.TestCase):
 
 
 
+    def test_check_statements_1(self):
+        """Check that no error is produced when execution of MySQL statements
+        is successful."""
+        msg = "Successul statement execution."
+        self.bndl.check_statements(0, msg, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
+
+    def test_check_statements_2(self):
+        """Check that an error is produced when execution of MySQL statements
+        is not successful."""
+        msg = "Failed statement execution."
+        self.bndl.check_statements(1, msg, eval_id="eval_id")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].status, "error")
+        with self.subTest():
+            self.assertEqual(self.bndl.evaluations[0].id, "eval_id")
+
+
+
 
 class TestBundleClass2(unittest.TestCase):
 

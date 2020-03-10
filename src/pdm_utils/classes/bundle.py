@@ -145,28 +145,17 @@ class Bundle:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-
-    # TODO in progress below
-    # TODO unittest.
-    def check_import(self, import_result, import_msg, eval_id=None,
-                     success="correct", fail="error", eval_def=None):
-        """Check for whether MySQL statements were successfully executed.
+    def check_statements(self, execute_result, execute_msg, eval_id=None,
+                         success="correct", fail="error", eval_def=None):
+        """Check if MySQL statements were successfully executed.
         """
-        #import_result = 0 is successful
-        result = import_msg
-        if import_result == 0:
+        if execute_result == 0:
             status = success
         else:
             status = fail
-        definition = "Check whether MySQL statements were successfully executed."
+        definition = "Check if MySQL statements were successfully executed."
         definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-    ### TODO in progress above
-
-
-
-
-
+        self.set_eval(eval_id, definition, execute_msg, status)
 
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle

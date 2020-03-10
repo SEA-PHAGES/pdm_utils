@@ -100,18 +100,26 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
     def test_convert_for_sql_1(self):
-        """Verify non-empy value returned contains ''."""
-        value = mysqldb.convert_for_sql("A", check_set={"Singleton"})
+        """Verify non-empty value returned is encapsulated with "'"."""
+        value = mysqldb.convert_for_sql("A", check_set={"Singleton"},
+                                        single=True)
         self.assertEqual(value, "'A'")
 
     def test_convert_for_sql_2(self):
-        """Verify empty value returned is NULL."""
-        value = mysqldb.convert_for_sql("", check_set={""})
-        self.assertEqual(value, "NULL")
+        """Verify non-empty value returned is encapsulated with '"'."""
+        value = mysqldb.convert_for_sql("A", check_set={"Singleton"},
+                                        single=False)
+        self.assertEqual(value, '"A"')
 
     def test_convert_for_sql_3(self):
+        """Verify empty value returned is NULL."""
+        value = mysqldb.convert_for_sql("", check_set={""}, single=True)
+        self.assertEqual(value, "NULL")
+
+    def test_convert_for_sql_4(self):
         """Verify 'Singleton' value returned is NULL."""
-        value = mysqldb.convert_for_sql("Singleton", check_set={"Singleton"})
+        value = mysqldb.convert_for_sql("Singleton", check_set={"Singleton"},
+                                        single=True)
         self.assertEqual(value, "NULL")
 
 

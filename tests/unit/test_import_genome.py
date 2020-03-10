@@ -1816,8 +1816,9 @@ class TestImportGenomeClass6(unittest.TestCase):
 
 
 
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
     @patch("pdm_utils.classes.genome.Genome.clear_locus_tags")
-    def test_import_into_db_1(self, clear_mock):
+    def test_import_into_db_1(self, clear_mock, execute_mock):
         """Verify import_into_db works using a bundle with:
         1 error, prod_run = True, import_locus_tag = True."""
         self.bndl._errors = 1
@@ -1827,9 +1828,14 @@ class TestImportGenomeClass6(unittest.TestCase):
             self.assertFalse(result)
         with self.subTest():
             self.assertFalse(clear_mock.called)
+        with self.subTest():
+            self.assertFalse(execute_mock.called)
+        with self.subTest():
+            self.assertEqual(len(self.bndl.evaluations), 0)
 
 
-    def test_import_into_db_2(self):
+    @patch("pdm_utils.functions.mysqldb.execute_transaction")
+    def test_import_into_db_2(self, execute_mock):
         """Verify import_into_db works using a bundle with:
         0 errors, genome present, prod_run = False."""
         self.bndl._errors = 0
@@ -1838,35 +1844,50 @@ class TestImportGenomeClass6(unittest.TestCase):
         self.bndl.genome_dict["flat_file"] = self.gnm1
         result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=False)
-        self.assertTrue(result)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertFalse(execute_mock.called)
+        with self.subTest():
+            self.assertEqual(len(self.bndl.evaluations), 0)
 
 
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
-    def test_import_into_db_3(self, execute_transaction_mock):
+    def test_import_into_db_3(self, execute_mock):
         """Verify import_into_db works using a bundle with:
         0 errors, genome present, prod_run = True, execution = failed."""
-        execute_transaction_mock.return_value = 1
+        execute_mock.return_value = (1, "Fail")
         self.bndl._errors = 0
         self.tkt.type = "replace"
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["flat_file"] = self.gnm1
         result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=True)
-        self.assertFalse(result)
+        with self.subTest():
+            self.assertFalse(result)
+        with self.subTest():
+            self.assertTrue(execute_mock.called)
+        with self.subTest():
+            self.assertEqual(len(self.bndl.evaluations), 1)
 
 
     @patch("pdm_utils.functions.mysqldb.execute_transaction")
-    def test_import_into_db_4(self, execute_transaction_mock):
+    def test_import_into_db_4(self, execute_mock):
         """Verify import_into_db works using a bundle with:
         0 errors, genome present, prod_run = True, execution = successful."""
-        execute_transaction_mock.return_value = 0
+        execute_mock.return_value = (0, "Success")
         self.bndl._errors = 0
         self.tkt.type = "replace"
         self.bndl.ticket = self.tkt
         self.bndl.genome_dict["flat_file"] = self.gnm1
         result = import_genome.import_into_db(self.bndl, self.engine,
                     gnm_key="flat_file", prod_run=True)
-        self.assertTrue(result)
+        with self.subTest():
+            self.assertTrue(result)
+        with self.subTest():
+            self.assertTrue(execute_mock.called)
+        with self.subTest():
+            self.assertEqual(len(self.bndl.evaluations), 1)
 
 
     @patch("pdm_utils.classes.genome.Genome.clear_locus_tags")

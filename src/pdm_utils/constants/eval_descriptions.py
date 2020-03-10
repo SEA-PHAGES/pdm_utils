@@ -40,7 +40,7 @@ EVAL_DESCRIPTIONS = {
     "GNM_010": ("A genome with 'draft' annotation status is expected to have 0 CDS descriptions."),
     "GNM_011": ("A genome with 'draft' annotation status is expected to have a '' Accession."),
     "GNM_012": (f"A genome with 'final' annotation status is not expected to contain the '{suffix}' suffix in the Name."),
-    "GNM_013": ("A genome with 'draft' annotation status is expected to have > 0 CDS descriptions."),
+    "GNM_013": ("A genome with 'final' annotation status is expected to have > 0 CDS descriptions."),
     "GNM_014": (f"The genome is not expected to contain the '{suffix}' suffix in the PhageID."),
     "GNM_015": (f"{pfx3} a valid Annotation Status: {statuses}."),
     "GNM_016": (f"{pfx3} a valid Annotation Author: {authors}."),

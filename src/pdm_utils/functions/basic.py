@@ -298,6 +298,14 @@ def reformat_description(raw_description):
         processed_description = ""
     elif processed_description == "conserved hypothetical protein":
         processed_description = ""
+    elif processed_description == "conserved phage protein":
+        processed_description = ""
+    elif processed_description == "hypothetical phage protein":
+        processed_description = ""
+    elif processed_description == "hypothetical phage membrane protein":
+        processed_description = ""
+    elif processed_description == "conserved phage membrane protein":
+        processed_description = ""
     elif processed_description == "\\n":
         processed_description = ""
     elif processed_description == ".":

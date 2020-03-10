@@ -98,59 +98,119 @@ class TestMysqldbFunctions1(unittest.TestCase):
         remove_db(db, user, pwd)
 
 
-    def test_create_phage_id_set_1(self):
-        """Retrieve a set of all data from PhageID column."""
 
-        input_phage_ids = ["L5", "Trixie", "D29"]
+
+    def test_get_distinct_data_1(self):
+        """Retrieve a set of all distinct values from PhageID column."""
+        input_phage_data = [("L5", "Mycobacterium", "ABC123", "'A'", "'A1'"),
+                           ("Trixie", "Mycobacterium", "XYZ456", "'B'", "NULL"),
+                           ("D29", "Gordonia", "", "NULL", "NULL")]
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
                                         database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        for id in input_phage_ids:
+        for id, host_genus, acc, cluster, subcluster in input_phage_data:
             sql = (
                 "INSERT INTO phage (PhageID, Accession, Name, "
                 "HostGenus, Sequence, Length, GC, Status, "
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor, "
+                "Cluster, Subcluster) "
                 "VALUES ("
-                f"'{id}', '', '', '', '', 1, 1, 'final', "
-                f"'{constants.EMPTY_DATE}', 1, 1);"
+                f"'{id}', '{acc}', '', '{host_genus}', '', 1, 1, 'final', "
+                f"'{constants.EMPTY_DATE}', 1, 1, {cluster}, {subcluster});"
                 )
 
             cur.execute(sql)
         connection.commit()
         connection.close()
+        result1 = mysqldb.get_distinct_data(self.engine, "phage", "PhageID")
+        result2 = mysqldb.get_distinct_data(self.engine, "phage", "HostGenus", null="test")
+        result3 = mysqldb.get_distinct_data(self.engine, "phage", "Accession")
+        result4 = mysqldb.get_distinct_data(self.engine, "phage", "Cluster", null="Singleton")
+        result5 = mysqldb.get_distinct_data(self.engine, "phage", "Subcluster", null="none")
 
-        result = mysqldb.create_phage_id_set(self.engine)
-        self.assertEqual(len(result), 3)
+        exp_phage_id = {"L5", "Trixie", "D29"}
+        exp_host_genus = {"Mycobacterium", "Gordonia"}
+        exp_accession = {"ABC123", "XYZ456", ""}
+        exp_cluster = {"A", "B", "Singleton"}
+        exp_subcluster = {"A1", "none"}
+
+        with self.subTest():
+            self.assertEqual(result1, exp_phage_id)
+        with self.subTest():
+            self.assertEqual(result2, exp_host_genus)
+        with self.subTest():
+            self.assertEqual(result3, exp_accession)
+        with self.subTest():
+            self.assertEqual(result4, exp_cluster)
+        with self.subTest():
+            self.assertEqual(result5, exp_subcluster)
 
 
 
-    def test_create_accession_set_1(self):
-        """Retrieve a set of all data from PhageID column."""
-        input_phage_ids_and_accs = [["L5", "ABC123"],
-                                    ["Trixie", "XYZ456"],
-                                    ["D29", "MNO789"]]
+
+    def test_create_cluster_set_1(self):
+        """Retrieve a set of all distinct Cluster data from a database."""
+        input_phage_ids = [("L5", "'A'"),
+                           ("Trixie", "'B'"),
+                           ("D29", "NULL")]
         connection = pymysql.connect(host = "localhost",
                                         user = user,
                                         password = pwd,
                                         database = db,
                                         cursorclass = pymysql.cursors.DictCursor)
         cur = connection.cursor()
-        for id_and_accs in input_phage_ids_and_accs:
-            sql = \
-                "INSERT INTO phage (PhageID, Accession, Name, " + \
-                "HostGenus, Sequence, Length, GC, Status, " + \
-                "DateLastModified, RetrieveRecord, AnnotationAuthor) " + \
-                "VALUES (" + \
-                f"'{id_and_accs[0]}', '{id_and_accs[1]}', '', '', " + \
-                f"'', 1, 1, 'final', '{constants.EMPTY_DATE}', 1, 1);"
+        for id, cluster in input_phage_ids:
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor, "
+                "Cluster) "
+                "VALUES ("
+                f"'{id}', '', '', '', '', 1, 1, 'final', "
+                f"'{constants.EMPTY_DATE}', 1, 1, {cluster});"
+                )
             cur.execute(sql)
         connection.commit()
         connection.close()
-        result = mysqldb.create_accession_set(self.engine)
-        self.assertEqual(len(result), 3)
+        result = mysqldb.create_cluster_set(self.engine)
+        exp = {"A", "B", "Singleton"}
+        with self.subTest():
+            self.assertEqual(result, exp)
+
+
+
+
+    def test_create_subcluster_set_1(self):
+        """Retrieve a set of all distinct Cluster data from a database."""
+        input_phage_ids = [("L5", "'A1'"),
+                           ("Trixie", "'B1'"),
+                           ("D29", "NULL")]
+        connection = pymysql.connect(host = "localhost",
+                                        user = user,
+                                        password = pwd,
+                                        database = db,
+                                        cursorclass = pymysql.cursors.DictCursor)
+        cur = connection.cursor()
+        for id, subcluster in input_phage_ids:
+            sql = (
+                "INSERT INTO phage (PhageID, Accession, Name, "
+                "HostGenus, Sequence, Length, GC, Status, "
+                "DateLastModified, RetrieveRecord, AnnotationAuthor, "
+                "Subcluster) "
+                "VALUES ("
+                f"'{id}', '', '', '', '', 1, 1, 'final', "
+                f"'{constants.EMPTY_DATE}', 1, 1, {subcluster});"
+                )
+            cur.execute(sql)
+        connection.commit()
+        connection.close()
+        result = mysqldb.create_subcluster_set(self.engine)
+        exp = {"A1", "B1", "none"}
+        with self.subTest():
+            self.assertEqual(result, exp)
 
 
 
@@ -1208,7 +1268,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
 
     def test_create_gene_table_insert_1(self):
-        """Verify gene table INSERT statement is created correctly."""
+        """Verify gene table INSERT statement is created correctly when
+        locus_tag is not empty and description contains a "'"."""
         # Note: even though this function returns a string and doesn't
         # actually utilize a MySQL database, this test ensures
         # that the returned statement will function properly in MySQL.
@@ -1223,7 +1284,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         cds1.type = "CDS"
         cds1.translation = Seq("ACKLG", IUPAC.protein)
         cds1.orientation = "F"
-        cds1.description = "integrase"
+        cds1.description = "5' nucleotide phosphatase"
         cds1.locus_tag = "TAG1"
         insert2 = mysqldb.create_gene_table_insert(cds1)
         connection = pymysql.connect(host="localhost",
@@ -1245,12 +1306,13 @@ class TestMysqldbFunctions2(unittest.TestCase):
         results = cur.fetchall()[0]
         cur.close()
         connection.close()
-        exp = ("INSERT INTO gene "
-               "(GeneID, PhageID, Start, Stop, Length, Name, "
-               "Translation, Orientation, Notes, LocusTag, Parts) "
-               "VALUES "
-               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
-               "'ACKLG', 'F', 'integrase', 'TAG1', 1);")
+        exp = ("""INSERT INTO gene """
+               """(GeneID, PhageID, Start, Stop, Length, Name, """
+               """Translation, Orientation, Notes, LocusTag, Parts) """
+               """VALUES """
+               """("SEA_L5_123", "L5", 5, 10, 20, "Int", """
+               """"ACKLG", "F", "5' nucleotide phosphatase", "TAG1", 1);""")
+
         with self.subTest():
             self.assertEqual(insert2, exp)
         with self.subTest():
@@ -1272,7 +1334,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Orientation"], "F")
         with self.subTest():
-            self.assertEqual(results["Notes"].decode("utf-8"), "integrase")
+            self.assertEqual(results["Notes"].decode("utf-8"),
+                             "5' nucleotide phosphatase")
         with self.subTest():
             self.assertEqual(results["LocusTag"], "TAG1")
 
@@ -1316,12 +1379,12 @@ class TestMysqldbFunctions2(unittest.TestCase):
         results = cur.fetchall()[0]
         cur.close()
         connection.close()
-        exp = ("INSERT INTO gene "
-               "(GeneID, PhageID, Start, Stop, Length, Name, "
-               "Translation, Orientation, Notes, LocusTag, Parts) "
-               "VALUES "
-               "('SEA_L5_123', 'L5', 5, 10, 20, 'Int', "
-               "'ACKLG', 'F', 'integrase', NULL, 1);")
+        exp = ("""INSERT INTO gene """
+               """(GeneID, PhageID, Start, Stop, Length, Name, """
+               """Translation, Orientation, Notes, LocusTag, Parts) """
+               """VALUES """
+               """("SEA_L5_123", "L5", 5, 10, 20, "Int", """
+               """"ACKLG", "F", "integrase", NULL, 1);""")
         with self.subTest():
             self.assertEqual(insert2, exp)
         with self.subTest():
@@ -1625,7 +1688,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
                    "'ATCG', 4, 0.5001, 'final', "
                    f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
         valid_stmts = [valid1, valid2]
-        return_code = mysqldb.execute_transaction(self.engine, valid_stmts)
+        return_code, msg = mysqldb.execute_transaction(self.engine, valid_stmts)
         query = "SELECT COUNT(PhageID) FROM phage"
         result_list = self.engine.execute(query).fetchall()
         count = result_list[0][0]
@@ -1653,7 +1716,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
                    "'ATCG', 4, 0.5001, 'final', "
                    f"'{constants.EMPTY_DATE}', 1, 1, 'A', 'A2');")
         invalid_stmts = [valid1, invalid1]
-        return_code = mysqldb.execute_transaction(self.engine, invalid_stmts)
+        return_code, msg = mysqldb.execute_transaction(self.engine, invalid_stmts)
         query = "SELECT COUNT(PhageID) FROM phage"
         result_list = self.engine.execute(query).fetchall()
         count = result_list[0][0]
@@ -1664,7 +1727,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
     def test_execute_transaction_3(self):
         """Everything ok but no transaction should return 0."""
-        return_code = mysqldb.execute_transaction(self.engine)
+        return_code, msg = mysqldb.execute_transaction(self.engine)
         self.assertEqual(return_code, 0)
 
 

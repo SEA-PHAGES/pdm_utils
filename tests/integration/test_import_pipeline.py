@@ -1016,12 +1016,12 @@ class TestImportGenomeMain1(unittest.TestCase):
             "date": self.alice_date}
         self.alice_seq = get_seq(base_flat_file_path)
         self.alice_record = SeqRecord(
-                                seq = self.alice_seq,
-                                id = "",
-                                name = "JF704092",
-                                annotations = self.alice_annotation_dict,
-                                description = self.alice_description,
-                                features = self.alice_feature_list
+                                seq=self.alice_seq,
+                                id="",
+                                name="JF704092",
+                                annotations=self.alice_annotation_dict,
+                                description=self.alice_description,
+                                features=self.alice_feature_list
                                 )
 
         # Get data to set up import table.
@@ -2154,8 +2154,10 @@ class TestImportGenomeMain2(unittest.TestCase):
 
         self.alice_cds_193_translation = alice_cds_193_translation
         self.alice_cds_193_qualifier_dict = get_alice_cds_193_qualifier_dict()
-        self.alice_cds_193_qualifier_dict["product"] = ["repressor"]
 
+        # Description intentionally contains "'" to verify that
+        # descriptions with this character don't crash MySQL.
+        self.alice_cds_193_qualifier_dict["product"] = ["5' phosphatase"]
         self.alice_cds_193_qualifier_dict["translation"] = \
             [self.alice_cds_193_translation]
         self.alice_cds_193 = get_alice_cds_193_seqfeature()
@@ -2175,8 +2177,6 @@ class TestImportGenomeMain2(unittest.TestCase):
 
         self.alice_source_1 = get_alice_source_1()
         self.alice_source_1.qualifiers = self.alice_source_1_qualifiers
-
-        #HERE
         self.alice_feature_list = [self.alice_source_1,
                                    self.alice_cds_252, # Wrap around gene
                                    self.alice_cds_124, # Compound gene
@@ -2285,7 +2285,7 @@ class TestImportGenomeMain2(unittest.TestCase):
         expected_cds124_data = get_alice_cds_124_draft_data_in_db()
         expected_cds139_data = get_alice_cds_139_draft_data_in_db()
         expected_cds193_data = get_alice_cds_193_draft_data_in_db()
-        expected_cds193_data["Notes"] = "repressor"
+        expected_cds193_data["Notes"] = "5' phosphatase"
 
         cds252_errors = compare_data(expected_cds252_data, cds252_data)
         cds124_errors = compare_data(expected_cds124_data, cds124_data)
@@ -3129,6 +3129,59 @@ class TestImportGenomeMain2(unittest.TestCase):
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
             self.assertEqual(len(gene_table_results), 4)
+
+
+
+    # Run tests using data that crashes MySQL.
+
+    @patch("getpass.getpass")
+    def test_replacement_33(self, getpass_mock):
+        """Test pipeline with:
+        CDS descriptions that contains '%', which crashes MySQL.
+        The '%' character will cause an error when the SQLAlchemy Engine's
+        Connection object attempts to insert this string into the database.
+        """
+        logging.info("test_replacement_33")
+        getpass_mock.side_effect = [user, pwd]
+
+        # features[6] = alice_cds_193
+        self.alice_record.features[6].qualifiers["product"] = "60% homology"
+        SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
+        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+
+        # Modify several values of CDS 139 that is inserted into the database.
+        alice_cds_193_mod = get_alice_cds_193_draft_data_in_db()
+        alice_cds_193_mod["GeneID"] = "Alice_CDS_2000"
+        alice_cds_193_mod["Name"] = "abc123"
+        alice_cds_193_mod["Orientation"] = "F"
+        alice_cds_193_mod["LocusTag"] = "abc123"
+        alice_cds_193_mod["Notes"] = "repressor"
+        insert_data_into_gene_table(db, user, pwd, alice_cds_193_mod)
+        create_import_table([self.alice_ticket], import_table)
+        run.main(self.unparsed_args)
+        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        process_phage_table_data(phage_table_results)
+        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = get_alice_genome_draft_data_in_db()
+        expected_phage_table_data["DateLastModified"] = \
+            datetime.strptime('1/1/2018', '%m/%d/%Y')
+        genome_errors = compare_data(expected_phage_table_data,
+                                     output_genome_data)
+        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        process_gene_table_data(gene_table_results)
+        cds193_data = filter_gene_data(gene_table_results, alice_cds_193_coords)
+        expected_cds193_data = alice_cds_193_mod
+        cds193_errors = compare_data(expected_cds193_data, cds193_data)
+        with self.subTest():
+            self.assertEqual(len(phage_table_results), 1)
+        with self.subTest():
+            self.assertEqual(len(gene_table_results), 1)
+        with self.subTest():
+            self.assertEqual(genome_errors, 0)
+        with self.subTest():
+            self.assertEqual(cds193_errors, 0)
+        with self.subTest():
+            self.assertTrue(fail_alice_path.exists())
 
 
 

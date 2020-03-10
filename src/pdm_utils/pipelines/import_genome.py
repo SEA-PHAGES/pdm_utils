@@ -29,7 +29,9 @@ from pdm_utils.functions import eval_modes
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+
 DEFAULT_OUTPUT_FOLDER = "/tmp/"
+IMPORT_DATE = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_import"
 SUCCESS_FOLDER = "success"
@@ -509,14 +511,26 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
         # Since data from each parsed flat file is imported into the
         # database one file at a time, these sets are not static.
         # So these sets should be recomputed for every flat file evaluated.
-        phamerator_phage_id_set = mysqldb.create_phage_id_set(engine)
-        phamerator_seq_set = mysqldb.create_seq_set(engine)
-        phamerator_accession_set = mysqldb.create_accession_set(engine)
+
+        mysql_phage_id_set = mysqldb.get_distinct_data(engine, "phage", "PhageID")
+        mysql_accession_set = mysqldb.get_distinct_data(engine, "phage", "Accession")
+        mysql_seq_set = mysqldb.create_seq_set(engine)
+
+        # TODO test below
+        # mysql_cluster_set = mysqldb.create_cluster_set(engine)
+        # mysql_subcluster_set = mysqldb.create_subcluster_set(engine)
+        # mysql_host_genera_set = mysqldb.create_host_genera_set(engine)
+        #
+        # ref_host_genera_set = mysql_host_genera_set | phagesdb_host_genera_set
+        # ref_cluster_set = mysql_cluster_set | phagesdb_cluster_set
+        # ref_subcluster_set = mysql_subcluster_set | phagesdb_subcluster_set
+        # TODO test above.
+
         logger.info(f"Checking file: {filepath.name}.")
         run_checks(bndl,
-                   accession_set=phamerator_accession_set,
-                   phage_id_set=phamerator_phage_id_set,
-                   seq_set=phamerator_seq_set,
+                   accession_set=mysql_accession_set,
+                   phage_id_set=mysql_phage_id_set,
+                   seq_set=mysql_seq_set,
                    host_genus_set=phagesdb_host_genera_set,
                    cluster_set=phagesdb_cluster_set,
                    subcluster_set=phagesdb_subcluster_set,
@@ -524,30 +538,21 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                    retrieve_ref=retrieve_ref, retain_ref=retain_ref)
 
         review_bundled_objects(bndl, interactive=interactive)
+
+        # TODO this section below could probably be improved.
+        # import_into_db may not need to return result, since it now
+        # records in an Eval object whether import succeeded or not.
+        # It also checks_for_errors twice (before and after attempting to add
+        # data to MySQL), which can probably be simplified.
         bndl.check_for_errors()
-
-        # TODO remove after testing below
-        # dict_of_eval_lists = bndl.get_evaluations()
-        # logfile_path = get_logfile_path(bndl, paths_dict=log_folder_paths_dict,
-        #                                 filepath=filepath, file_ref=file_ref)
-        #
-        # log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
-        # evaluation_dict[bndl.id] = dict_of_eval_lists
-        # TODO remove above after testing below
-
-        # TODO if an eval result is stored in the bundle, import_into_db does not need to return a result.
         result = import_into_db(bndl, engine=engine,
                                 gnm_key=file_ref, prod_run=prod_run)
-
-        # TODO test below
-        # Check for errors again after attempting to import data.
         bndl.check_for_errors()
         dict_of_eval_lists = bndl.get_evaluations()
         logfile_path = get_logfile_path(bndl, paths_dict=log_folder_paths_dict,
                                         filepath=filepath, file_ref=file_ref)
         log_evaluations({bndl.id: dict_of_eval_lists}, logfile_path=logfile_path)
         evaluation_dict[bndl.id] = dict_of_eval_lists
-        # TODO test above
 
         if result:
             success_ticket_list.append(bndl.ticket.data_dict)
@@ -563,9 +568,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     # to flat files. If there are any tickets left, errors need to be counted.
     if len(ticket_dict.keys()) > 0:
         logger.info("Processing unmatched tickets.")
-        phamerator_phage_id_set = mysqldb.create_phage_id_set(engine)
-        phamerator_seq_set = mysqldb.create_seq_set(engine)
-        phamerator_accession_set = mysqldb.create_accession_set(engine)
+
+        mysql_phage_id_set = mysqldb.get_distinct_data(engine, "phage", "PhageID")
+        mysql_accession_set = mysqldb.get_distinct_data(engine, "phage", "Accession")
+        mysql_seq_set = mysqldb.create_seq_set(engine)
         key_list = list(ticket_dict.keys())
         for key in key_list:
             bndl = bundle.Bundle()
@@ -574,9 +580,9 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
             logger.info("Checking data for ticket: "
                         f"{bndl.ticket.id}, {bndl.ticket.phage_id}.")
             run_checks(bndl,
-                      accession_set=phamerator_accession_set,
-                      phage_id_set=phamerator_phage_id_set,
-                      seq_set=phamerator_seq_set,
+                      accession_set=mysql_accession_set,
+                      phage_id_set=mysql_phage_id_set,
+                      seq_set=mysql_seq_set,
                       host_genus_set=phagesdb_host_genera_set,
                       cluster_set=phagesdb_cluster_set,
                       subcluster_set=phagesdb_subcluster_set,
@@ -1529,16 +1535,12 @@ def check_trna(trna_obj, eval_flags):
     else:
         pass
 
-# TODO unittest now that eval object is created and stored in bundle.
+
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
     """Import data into the MySQL database."""
-    IMPORT_DATE = datetime.today().replace(hour=0, minute=0,
-                                           second=0, microsecond=0)
 
     if bndl._errors == 0:
         import_gnm = bndl.genome_dict[gnm_key]
-        logger.info("Importing data into the database for "
-                    f"genome: {import_gnm.id}.")
 
         # If locus_tag data should not be imported, clear all locus_tag data.
         if bndl.ticket.eval_flags["import_locus_tag"] is False:
@@ -1551,37 +1553,35 @@ def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
         bndl.sql_statements = mysqldb.create_genome_statements(
                                 import_gnm, bndl.ticket.type)
         if prod_run:
-            # TODO remove old execute_transaction once new function is tested.
-            # import_result = mysqldb.execute_transaction(engine, bndl.sql_statements)
-            import_result, msg = mysqldb.execute_transaction2(engine, bndl.sql_statements)
-            if import_result == 1:
-                logger.error("Error importing data. " + msg)
+            logger.info("Importing data into the database for "
+                        f"genome: {import_gnm.id}.")
+            execute_result, msg = mysqldb.execute_transaction(engine,
+                                        bndl.sql_statements)
+            if execute_result == 1:
                 result = False
+                logger.error("Error importing data. " + msg)
             else:
                 result = True
                 logger.info("Data successfully imported. " + msg)
-                logger.info("The following SQL statements were executed:")
+                logger.info("The following MySQL statements were executed:")
                 for statement in bndl.sql_statements:
                     statement = basic.truncate_value(statement, 150, "...")
                     logger.info(statement)
-        else:
-            # TODO this should probably be none
-            import_result = 0
-            msg = ""
-            # TODO test
 
+            # Result of statement execution is stored in an eval object
+            # so that it can be recorded in the log file.
+            # It is stored in the bundle object instead of the genome object
+            # since the collection of MySQL statements are constructed
+            # based on the ticket data and the genome data combined,
+            # and not just the genome data.
+            bndl.check_statements(execute_result, msg, eval_id="BNDL_007",
+                                  eval_def=EDD["BNDL_007"])
+        else:
             result = True
             logger.info("Data can be imported if set to production run.")
     else:
-        # TODO this should probably be none
-        import_result = 0
-        msg = ""
-        # TODO test
-
         result = False
         logger.info("Data contains errors, so it will not be imported.")
-    # TODO unittest.
-    bndl.check_import(import_result, msg, eval_id="BNDL_007", eval_def=EDD["BNDL_007"])
 
     return result
 
