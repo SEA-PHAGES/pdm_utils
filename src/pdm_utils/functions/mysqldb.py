@@ -356,45 +356,6 @@ def get_distinct_data(engine, table, column, null=None):
     return result_set
 
 
-# TODO probably no longer needed.
-def create_cluster_set(engine):
-    """Create set of Cluster data currently in a MySQL database.
-
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
-    :type engine: Engine
-    :returns: A set of Clusters.
-    :rtype: set
-    """
-    # Singletons stored as NULL, which gets returned as None.
-    cluster_set = get_distinct_data(engine, "phage", "Cluster")
-    if None in cluster_set:
-        cluster_set.remove(None)
-        cluster_set.add("Singleton")
-    return cluster_set
-
-
-# TODO probably no longer needed.
-def create_subcluster_set(engine):
-    """Create set of Subcluster data currently in a MySQL database.
-
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
-    :type engine: Engine
-    :returns: A set of Subclusters.
-    :rtype: set
-    """
-    # Singletons stored as NULL, which gets returned as None.
-    subcluster_set = get_distinct_data(engine, "phage", "Subcluster")
-    if None in subcluster_set:
-        subcluster_set.remove(None)
-        subcluster_set.add("none")
-    return subcluster_set
-
-
-
 def create_seq_set(engine):
     """Create set of genome sequences currently in a MySQL database.
 

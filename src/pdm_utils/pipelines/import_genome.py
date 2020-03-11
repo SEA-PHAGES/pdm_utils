@@ -472,20 +472,16 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     failed_filepath_list = []
     evaluation_dict = {}
 
+    # TODO should add a flag to set default empty values
+    # for external data if the import doesn't need to rely on PhagesDB.
+    # This would be for building non-Actinobacteriophage databases
+    # if retrieve_phagesdb == True:
+    #    external_ref_data = get_phagesdb_reference_sets()
+    # else:
+    #   external_ref_data = <empty data dictionary>
 
-    # TODO should add some sort of flag to set default empty values
-    # for PhagesDB sets to account for creation of databases that
-    # do not rely on PhagesDB?
-    # Retrieve data from PhagesDB to create sets of
-    # valid host genera, clusters, and subclusters.
-    # Cluster "UNK" may or may not already be present, but it is valid.
-    # If there is no subcluster, value may be empty string or "none".
-    phagesdb_host_genera_set = phagesdb.create_host_genus_set()
-    results_tuple = phagesdb.create_cluster_subcluster_sets()
-    phagesdb_cluster_set = results_tuple[0]
-    phagesdb_subcluster_set = results_tuple[1]
-    phagesdb_cluster_set.add("UNK")
-
+    # Retrieve valid cluster, subcluster, host data from PhagesDB.
+    external_ref_data = get_phagesdb_reference_sets()
 
     # To minimize memory usage, each flat_file is evaluated one by one.
     bundle_count = 1
@@ -503,7 +499,6 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               id=bundle_count,
                               file_ref=file_ref, ticket_ref=ticket_ref,
                               retrieve_ref=retrieve_ref, retain_ref=retain_ref,
-                              # interactive=interactive)
                               interactive=interactive,
                               id_conversion_dict=constants.PHAGE_ID_DICT)
 
@@ -511,29 +506,17 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
         # Since data from each parsed flat file is imported into the
         # database one file at a time, these sets are not static.
         # So these sets should be recomputed for every flat file evaluated.
-
-        mysql_phage_id_set = mysqldb.get_distinct_data(engine, "phage", "PhageID")
-        mysql_accession_set = mysqldb.get_distinct_data(engine, "phage", "Accession")
-        mysql_seq_set = mysqldb.create_seq_set(engine)
-
-        # TODO test below
-        # mysql_cluster_set = mysqldb.create_cluster_set(engine)
-        # mysql_subcluster_set = mysqldb.create_subcluster_set(engine)
-        # mysql_host_genera_set = mysqldb.create_host_genera_set(engine)
-        #
-        # ref_host_genera_set = mysql_host_genera_set | phagesdb_host_genera_set
-        # ref_cluster_set = mysql_cluster_set | phagesdb_cluster_set
-        # ref_subcluster_set = mysql_subcluster_set | phagesdb_subcluster_set
-        # TODO test above.
-
+        # Retrieve valid data from MySQL and merge with the valid external data.
+        mysql_ref_data = get_mysql_reference_sets(engine)
+        ref_data = basic.merge_set_dicts(external_ref_data, mysql_ref_data)
         logger.info(f"Checking file: {filepath.name}.")
         run_checks(bndl,
-                   accession_set=mysql_accession_set,
-                   phage_id_set=mysql_phage_id_set,
-                   seq_set=mysql_seq_set,
-                   host_genus_set=phagesdb_host_genera_set,
-                   cluster_set=phagesdb_cluster_set,
-                   subcluster_set=phagesdb_subcluster_set,
+                   accession_set=ref_data["accession_set"],
+                   phage_id_set=ref_data["phage_id_set"],
+                   seq_set=ref_data["seq_set"],
+                   host_genus_set=ref_data["host_genera_set"],
+                   cluster_set=ref_data["cluster_set"],
+                   subcluster_set=ref_data["subcluster_set"],
                    file_ref=file_ref, ticket_ref=ticket_ref,
                    retrieve_ref=retrieve_ref, retain_ref=retain_ref)
 
@@ -568,10 +551,6 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     # to flat files. If there are any tickets left, errors need to be counted.
     if len(ticket_dict.keys()) > 0:
         logger.info("Processing unmatched tickets.")
-
-        mysql_phage_id_set = mysqldb.get_distinct_data(engine, "phage", "PhageID")
-        mysql_accession_set = mysqldb.get_distinct_data(engine, "phage", "Accession")
-        mysql_seq_set = mysqldb.create_seq_set(engine)
         key_list = list(ticket_dict.keys())
         for key in key_list:
             bndl = bundle.Bundle()
@@ -579,16 +558,10 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
             bndl.id = bundle_count
             logger.info("Checking data for ticket: "
                         f"{bndl.ticket.id}, {bndl.ticket.phage_id}.")
-            run_checks(bndl,
-                      accession_set=mysql_accession_set,
-                      phage_id_set=mysql_phage_id_set,
-                      seq_set=mysql_seq_set,
-                      host_genus_set=phagesdb_host_genera_set,
-                      cluster_set=phagesdb_cluster_set,
-                      subcluster_set=phagesdb_subcluster_set,
-                      file_ref=file_ref, ticket_ref=ticket_ref,
-                      retrieve_ref=retrieve_ref, retain_ref=retain_ref)
-
+            # Since the ticket has no matching genome data,
+            # no data sets from MySQL and PhagesDB are needed.
+            run_checks(bndl, file_ref=file_ref, ticket_ref=ticket_ref,
+                       retrieve_ref=retrieve_ref, retain_ref=retain_ref)
             bndl.check_for_errors()
             dict_of_eval_lists = bndl.get_evaluations()
             logfile_path = get_logfile_path(bndl,
@@ -601,6 +574,44 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
     return (success_ticket_list, failed_ticket_list, success_filepath_list,
             failed_filepath_list, evaluation_dict)
+
+
+def get_phagesdb_reference_sets():
+    """Get multiple sets of data from PhagesDB for reference."""
+
+    # Retrieve data from PhagesDB to create sets of
+    # valid host genera, clusters, and subclusters.
+    # If there is no subcluster, value may be empty string or "none".
+    host_genera = phagesdb.create_host_genus_set()
+    results_tuple = phagesdb.create_cluster_subcluster_sets()
+    clusters = results_tuple[0]
+    subclusters = results_tuple[1]
+    dict = {"host_genera_set": host_genera,
+            "cluster_set": clusters,
+            "subcluster_set": subclusters}
+    return dict
+
+
+def get_mysql_reference_sets(engine):
+    """Get multiple sets of data from the MySQL database for reference."""
+    phage_ids = mysqldb.get_distinct_data(engine, "phage", "PhageID")
+    accessions = mysqldb.get_distinct_data(engine, "phage", "Accession")
+    clusters = mysqldb.get_distinct_data(engine, "phage", "Cluster",
+                                         null="Singleton")
+
+    # Cluster "UNK" may or may not already be present, but it is valid.
+    clusters.add("UNK")
+    subclusters = mysqldb.get_distinct_data(engine, "phage", "Subcluster",
+                                            null="none")
+    host_genera = mysqldb.get_distinct_data(engine, "phage", "HostGenus")
+    seqs = mysqldb.create_seq_set(engine)
+    dict = {"phage_id_set": phage_ids,
+            "accession_set": accessions,
+            "seq_set": seqs,
+            "host_genera_set": host_genera,
+            "cluster_set": clusters,
+            "subcluster_set": subclusters}
+    return dict
 
 
 def get_logfile_path(bndl, paths_dict=None, filepath=None, file_ref=None):
@@ -671,19 +682,18 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
 
         # Some phage names in the flat file are spelled differently
         # than in the database. In order to match the flat file
-        # with the ticket (which presumably contains the spelling used
+        # with the ticket (which must contain the spelling used
         # in the database), the genome ID needs to be changed.
         # id_conversion_dict key = incorrect spelling; value = correct spelling
         if ff_gnm.id in id_conversion_dict.keys():
             ff_gnm.id = id_conversion_dict[ff_gnm.id]
 
-            # TODO unittest.
-            # TODO need to recompute the feature ids using the new genome id.
+            # Need to recompute the feature ids using the new genome id.
             ff_gnm.set_feature_ids(use_type=True, use_cds=True)
             ff_gnm.set_feature_ids(use_type=True, use_source=True)
             ff_gnm.set_feature_genome_ids("cds")
             ff_gnm.set_feature_genome_ids("source")
-            # TODO set tRNA feature ids.
+            # TODO set tRNA and tmRNA feature ids.
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 

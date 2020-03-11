@@ -1241,3 +1241,26 @@ def join_strings(input_list, delimiter=" "):
     else:
         string = ""
     return string
+
+
+def merge_set_dicts(dict1, dict2):
+    """Merge two dictionaries of sets.
+
+    Each dictionary elements is a set. The merged dictionary will contain
+    all keys from both dictionaries, and shared keys will result in merged sets.
+    """
+    keys = dict1.keys() | dict2.keys()
+    dict3 = {}
+    for key in keys:
+        if key in dict1.keys():
+            set1 = dict1[key]
+        else:
+            set1 = set()
+
+        if key in dict2.keys():
+            set2 = dict2[key]
+        else:
+            set2 = set()
+
+        dict3[key] = set1 | set2
+    return dict3

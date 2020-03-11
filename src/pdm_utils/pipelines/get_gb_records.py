@@ -62,8 +62,6 @@ def main(unparsed_args_list):
     # Create data sets
     print("Retrieving accessions from the database...")
     accessions = mysqldb.get_distinct_data(engine, "phage", "Accession")
-    # TODO remove line below once above line is tested.
-    # accessions = mysqldb.create_accession_set(engine)
     engine.dispose()
     if "" in accessions:
         accessions.remove("")

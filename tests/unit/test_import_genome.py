@@ -29,7 +29,7 @@ def count_status(item, *args):
     return count
 
 
-class TestImportGenomeClass1(unittest.TestCase):
+class TestImportGenome1(unittest.TestCase):
 
 
     def setUp(self):
@@ -277,7 +277,7 @@ class TestImportGenomeClass1(unittest.TestCase):
 
 
 
-class TestImportGenomeClass2(unittest.TestCase):
+class TestImportGenome2(unittest.TestCase):
 
 
     def setUp(self):
@@ -323,7 +323,7 @@ class TestImportGenomeClass2(unittest.TestCase):
 
 
 
-class TestImportGenomeClass3(unittest.TestCase):
+class TestImportGenome3(unittest.TestCase):
 
     def setUp(self):
 
@@ -547,7 +547,7 @@ class TestImportGenomeClass3(unittest.TestCase):
 
 
 
-class TestImportGenomeClass4(unittest.TestCase):
+class TestImportGenome4(unittest.TestCase):
 
     def setUp(self):
         self.date_jan1 = datetime.strptime('1/1/2000', '%m/%d/%Y')
@@ -1408,7 +1408,7 @@ class TestImportGenomeClass4(unittest.TestCase):
 
 
 
-class TestImportGenomeClass5(unittest.TestCase):
+class TestImportGenome5(unittest.TestCase):
 
     def setUp(self):
         self.tkt = ticket.ImportTicket()
@@ -1554,7 +1554,7 @@ class TestImportGenomeClass5(unittest.TestCase):
 
 
 
-class TestImportGenomeClass6(unittest.TestCase):
+class TestImportGenome6(unittest.TestCase):
 
     def setUp(self):
         self.eval_dict = {"check_replace": True,
@@ -1906,7 +1906,7 @@ class TestImportGenomeClass6(unittest.TestCase):
 
 
 
-class TestImportGenomeClass7(unittest.TestCase):
+class TestImportGenome7(unittest.TestCase):
 
 
     def setUp(self):
@@ -2097,7 +2097,7 @@ class TestImportGenomeClass7(unittest.TestCase):
 
 
 
-class TestImportGenomeClass8(unittest.TestCase):
+class TestImportGenome8(unittest.TestCase):
 
 
     def setUp(self):
@@ -2222,7 +2222,7 @@ class TestImportGenomeClass8(unittest.TestCase):
 
 
 
-class TestImportGenomeClass9(unittest.TestCase):
+class TestImportGenome9(unittest.TestCase):
 
     def setUp(self):
         self.tkt = ticket.ImportTicket()
@@ -2339,6 +2339,8 @@ class TestImportGenomeClass9(unittest.TestCase):
                             paths_dict=None, filepath=None,
                             file_ref=None)
         self.assertIsNone(logfile_path)
+
+
 
 
 if __name__ == '__main__':

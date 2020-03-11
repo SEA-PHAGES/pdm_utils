@@ -1,6 +1,7 @@
 """Integration tests for the main import pipeline."""
 
 import csv
+from datetime import datetime
 import getpass
 from pathlib import Path
 import pymysql
@@ -110,6 +111,39 @@ def remove_db(db, user, pwd):
     connection.commit()
     connection.close()
 
+
+def insert_data_into_phage_table(db, user, pwd, data_dict):
+    """Insert data into the phage table."""
+    connection = pymysql.connect(host = "localhost",
+                                 user = user,
+                                 password = pwd,
+                                 database = db,
+                                 cursorclass = pymysql.cursors.DictCursor)
+    cur = connection.cursor()
+    # Don't encapsulate Cluster or Subcluster with quotes, since they
+    # can sometimes be assigned NULL.
+    sql = (
+        "INSERT INTO phage "
+        "(PhageID, Accession, Name, "
+        "HostGenus, Sequence, Length, GC, Status, "
+        "DateLastModified, RetrieveRecord, AnnotationAuthor, "
+        "Cluster, Subcluster) "
+        "VALUES ("
+        f"'{data_dict['PhageID']}', '{data_dict['Accession']}', "
+        f"'{data_dict['Name']}', '{data_dict['HostGenus']}', "
+        f"'{data_dict['Sequence']}', {data_dict['Length']}, "
+        f"{data_dict['GC']}, '{data_dict['Status']}', "
+        f"'{data_dict['DateLastModified']}', "
+        f"{data_dict['RetrieveRecord']}, "
+        f"{data_dict['AnnotationAuthor']}, "
+        f"{data_dict['Cluster']}, {data_dict['Subcluster']});"
+        )
+    cur.execute(sql)
+    connection.commit()
+    connection.close()
+
+
+
 def insert_data_into_version_table(db, user, pwd, data_dict):
     """Insert data into the version table."""
     connection = pymysql.connect(host = "localhost",
@@ -136,7 +170,28 @@ def count_contents(path_to_folder):
     return count
 
 
-class TestImportGenomeMain1(unittest.TestCase):
+
+
+def get_d29_phage_table_data():
+    """Mock phage table data for D29."""
+    dict = {
+        "PhageID": "D29",
+        "Accession": "XYZ123",
+        "Name": "D29",
+        "HostGenus": "Microbacterium",
+        "Sequence": "ATGCATGCATGCATGC",
+        "Length": 16,
+        "GC": 0.5,
+        "Status": "unknown",
+        "DateLastModified": datetime.strptime('1/1/0001', '%m/%d/%Y'),
+        "RetrieveRecord": 0,
+        "AnnotationAuthor": 0,
+        "Cluster": "D",
+        "Subcluster": "D1"
+        }
+    return dict
+
+class TestImportGenome1(unittest.TestCase):
 
 
     def setUp(self):
@@ -523,13 +578,15 @@ class TestImportGenomeMain1(unittest.TestCase):
 
     def test_prepare_bundle_10(self):
         """Verify bundle is returned with the genome id converted using
-        the id dictionary."""
+        the id dictionary. Several attributes in the genome object should
+        be updated, including the genome's 'id' attribute,
+        the 'genome_id' of each feature (which should match the new 'id'),
+        and the 'id' of each feature (which should begin with the new 'id')."""
         id_dict = {"L5": "new_id"}
         self.tkt1.phage_id = "new_id"
         self.tkt1.data_add = set(["host_genus", "cluster", "subcluster",
                                   "annotation_status", "annotation_author",
                                   "retrieve_record", "accession"])
-
         tkt_dict = {"new_id":self.tkt1, "Trixie":self.tkt2}
         bndl = import_genome.prepare_bundle(
                     filepath=self.test_flat_file1,
@@ -542,6 +599,9 @@ class TestImportGenomeMain1(unittest.TestCase):
         ff_gnm = bndl.genome_dict["flat_file"]
         tkt_gnm = bndl.genome_dict["ticket"]
         bndl_tkt = bndl.ticket
+        cds1 = ff_gnm.cds_features[0]
+        source1 = ff_gnm.source_features[0]
+        # TODO test id conversion in tRNA and tmRNA features once implemented.
         with self.subTest():
             self.assertEqual(ff_gnm.id, "new_id")
         with self.subTest():
@@ -550,6 +610,14 @@ class TestImportGenomeMain1(unittest.TestCase):
             self.assertEqual(ff_gnm.cluster, "B")
         with self.subTest():
             self.assertEqual(ff_gnm.subcluster, "B2")
+        with self.subTest():
+            self.assertTrue(cds1.id.startswith("new_id"))
+        with self.subTest():
+            self.assertTrue(cds1.genome_id.startswith("new_id"))
+        with self.subTest():
+            self.assertTrue(source1.id.startswith("new_id"))
+        with self.subTest():
+            self.assertTrue(source1.genome_id.startswith("new_id"))
         with self.subTest():
             self.assertEqual(bndl_tkt.phage_id, "new_id")
 
@@ -590,7 +658,64 @@ class TestImportGenomeMain1(unittest.TestCase):
 
 
 
-class TestImportGenomeMain2(unittest.TestCase):
+    def test_get_mysql_reference_sets_1(self):
+        """Verify data dictionary is constructed properly."""
+        phage_data1 = get_d29_phage_table_data()
+        phage_data2 = get_d29_phage_table_data()
+        phage_data3 = get_d29_phage_table_data()
+
+        phage_data1["PhageID"] = "D29"
+        phage_data1["Accession"] = "ABC"
+        phage_data1["HostGenus"] = "Mycobacterium"
+        phage_data1["Sequence"] = "AAAA"
+        phage_data1["Cluster"] = "'A'"
+        phage_data1["Subcluster"] = "'A1'"
+
+        phage_data2["PhageID"] = "Trixie"
+        phage_data2["Accession"] = "EFG"
+        phage_data2["HostGenus"] = "Mycobacterium"
+        phage_data2["Sequence"] = "TTTT"
+        phage_data2["Cluster"] = "NULL"
+        phage_data2["Subcluster"] = "NULL"
+
+        phage_data3["PhageID"] = "L5"
+        phage_data3["Accession"] = ""
+        phage_data3["HostGenus"] = "Gordonia"
+        phage_data3["Sequence"] = "CCCC"
+        phage_data3["Cluster"] = "'B'"
+        phage_data3["Subcluster"] = "NULL"
+
+        insert_data_into_phage_table(db, user, pwd, phage_data1)
+        insert_data_into_phage_table(db, user, pwd, phage_data2)
+        insert_data_into_phage_table(db, user, pwd, phage_data3)
+
+        ref_dict = import_genome.get_mysql_reference_sets(self.engine)
+        exp_keys = {"phage_id_set", "accession_set", "seq_set",
+                    "host_genera_set", "cluster_set", "subcluster_set"}
+        exp_phage_ids = {"D29", "Trixie", "L5"}
+        exp_seqs = {"AAAA", "TTTT", "CCCC"}
+        exp_accessions = {"ABC", "EFG", ""}
+        exp_host_genera = {"Mycobacterium", "Gordonia"}
+        exp_clusters = {"A", "B", "Singleton", "UNK"}
+        exp_subclusters = {"A1", "none"}
+        with self.subTest():
+            self.assertEqual(ref_dict.keys(), exp_keys)
+        with self.subTest():
+            self.assertEqual(ref_dict["phage_id_set"], exp_phage_ids)
+        with self.subTest():
+            self.assertEqual(ref_dict["accession_set"], exp_accessions)
+        with self.subTest():
+            self.assertEqual(ref_dict["seq_set"], exp_seqs)
+        with self.subTest():
+            self.assertEqual(ref_dict["host_genera_set"], exp_host_genera)
+        with self.subTest():
+            self.assertEqual(ref_dict["cluster_set"], exp_clusters)
+        with self.subTest():
+            self.assertEqual(ref_dict["subcluster_set"], exp_subclusters)
+
+
+
+class TestImportGenome2(unittest.TestCase):
 
     def setUp(self):
 
@@ -707,7 +832,7 @@ class TestImportGenomeMain2(unittest.TestCase):
 
 
 
-class TestImportGenomeMain3(unittest.TestCase):
+class TestImportGenome3(unittest.TestCase):
 
     def setUp(self):
         # The test_db is only needed to test shema compatibility.
@@ -834,7 +959,7 @@ class TestImportGenomeMain3(unittest.TestCase):
 
 
 
-class TestImportGenomeMain4(unittest.TestCase):
+class TestImportGenome4(unittest.TestCase):
 
     def setUp(self):
 
@@ -963,7 +1088,7 @@ class TestImportGenomeMain4(unittest.TestCase):
 
 
 
-class TestImportGenomeMain5(unittest.TestCase):
+class TestImportGenome5(unittest.TestCase):
 
 
     def setUp(self):
@@ -992,6 +1117,8 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict1["eval_mode"] = "final"
         self.data_dict1["host_genus"] = "Mycobacterium"
         self.data_dict1["cluster"] = "A"
+        self.data_dict1["subcluster"] = "A1"
+        self.data_dict1["accession"] = "ABC"
         self.data_dict1["annotation_status"] = "draft"
 
         self.tkt1 = ticket.ImportTicket()
@@ -1010,6 +1137,8 @@ class TestImportGenomeMain5(unittest.TestCase):
         self.data_dict2["eval_mode"] = "final"
         self.data_dict2["host_genus"] = "Gordonia"
         self.data_dict2["cluster"] = "B"
+        self.data_dict2["subcluster"] = "B1"
+        self.data_dict2["accession"] = "XYZ"
 
         self.tkt2 = ticket.ImportTicket()
         self.tkt2.id = 2
@@ -1414,7 +1543,7 @@ class TestImportGenomeMain5(unittest.TestCase):
 
 
 
-class TestImportGenomeMain6(unittest.TestCase):
+class TestImportGenome6(unittest.TestCase):
 
     def setUp(self):
 
@@ -1749,7 +1878,7 @@ class TestImportGenomeMain6(unittest.TestCase):
 
 
 
-class TestImportGenomeMain7(unittest.TestCase):
+class TestImportGenome7(unittest.TestCase):
 
 
     def setUp(self):
@@ -2363,7 +2492,7 @@ class TestImportGenomeMain7(unittest.TestCase):
 
 
 
-class TestImportGenomeMain8(unittest.TestCase):
+class TestImportGenome8(unittest.TestCase):
 
     def setUp(self):
 
@@ -2626,7 +2755,20 @@ class TestImportGenomeClass9(unittest.TestCase):
 
 
 
+class TestImportGenome10(unittest.TestCase):
 
+    def test_get_phagesdb_reference_sets_1(self):
+        """Verify data dictionary is constructed properly."""
+        dict = import_genome.get_phagesdb_reference_sets()
+        keys = {"host_genera_set", "cluster_set", "subcluster_set"}
+        with self.subTest():
+            self.assertEqual(dict.keys(), keys)
+        with self.subTest():
+            self.assertTrue(len(dict["host_genera_set"]) > 0)
+        with self.subTest():
+            self.assertTrue(len(dict["cluster_set"]) > 0)
+        with self.subTest():
+            self.assertTrue(len(dict["subcluster_set"]) > 0)
 
 
 

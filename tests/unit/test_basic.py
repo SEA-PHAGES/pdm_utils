@@ -9,7 +9,7 @@ import re
 
 
 
-class TestBasicFunctions(unittest.TestCase):
+class TestBasicFunctions1(unittest.TestCase):
 
     def test_edit_suffix_1(self):
         """Verify '_Draft' suffix is removed."""
@@ -1528,6 +1528,72 @@ class TestBasicFunctions(unittest.TestCase):
         output = basic.join_strings(input_list, delimiter="; ")
         expected = "string1; string2"
         self.assertEqual(output, expected)
+
+
+
+
+class TestBasicFunctions2(unittest.TestCase):
+
+    def setUp(self):
+        self.set1 = {1, 2}
+        self.set2 = {3, 4}
+        self.set3 = {1, 5}
+        self.set4 = {6, 7}
+        self.dict1 = {"a": self.set1, "b": self.set2}
+        self.dict2 = {"a": self.set3, "c": self.set4}
+        self.dict3 = {}
+
+    def test_merge_set_dicts_1(self):
+        """Verify new dict contains all keys and merged sets
+        two non-empty dictionaries with non-identical keys."""
+        dict4 = basic.merge_set_dicts(self.dict1, self.dict2)
+        keys4 = {"a", "b", "c"}
+        set5 = {1, 2, 5}
+        set6 = {3, 4}
+        set7 = {6, 7}
+        with self.subTest():
+            self.assertEqual(dict4.keys(), keys4)
+        with self.subTest():
+            self.assertEqual(dict4["a"], set5)
+        with self.subTest():
+            self.assertEqual(dict4["b"], set6)
+        with self.subTest():
+            self.assertEqual(dict4["c"], set7)
+        with self.subTest():
+            self.assertEqual(self.dict1.keys(), {"a", "b"})
+        with self.subTest():
+            self.assertEqual(self.dict1["a"], self.set1)
+        with self.subTest():
+            self.assertEqual(self.dict1["b"], self.set2)
+        with self.subTest():
+            self.assertEqual(self.dict2.keys(), {"a", "c"})
+        with self.subTest():
+            self.assertEqual(self.dict2["a"], self.set3)
+        with self.subTest():
+            self.assertEqual(self.dict2["c"], self.set4)
+
+    def test_merge_set_dicts_2(self):
+        """Verify new dict contains all keys and merged sets from
+        one non-empty dictionary and one empty dictionary."""
+        dict4 = basic.merge_set_dicts(self.dict1, self.dict3)
+        keys3 = {"a", "b"}
+        set5 = {1, 2}
+        set6 = {3, 4}
+        with self.subTest():
+            self.assertEqual(dict4.keys(), keys3)
+        with self.subTest():
+            self.assertEqual(dict4["a"], set5)
+        with self.subTest():
+            self.assertEqual(dict4["b"], set6)
+        with self.subTest():
+            self.assertEqual(self.dict1.keys(), {"a", "b"})
+        with self.subTest():
+            self.assertEqual(self.dict1["a"], set5)
+        with self.subTest():
+            self.assertEqual(self.dict1["b"], set6)
+        with self.subTest():
+            self.assertEqual(self.dict3.keys(), set())
+
 
 
 
