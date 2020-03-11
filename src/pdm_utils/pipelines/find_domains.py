@@ -29,6 +29,12 @@ INSERT_INTO_DOMAIN = """INSERT INTO domain (HitID, DomainID, Name, Description) 
 INSERT_INTO_GENE_DOMAIN = """INSERT INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("{}", "{}", {}, {}, {})"""
 UPDATE_GENE = "UPDATE gene SET DomainStatus = 1 WHERE GeneID = '{}'"
 
+CLEAR_GENE_DOMAIN = "TRUNCATE gene_domain"
+CLEAR_DOMAIN = "DELETE FROM domain"
+CLEAR_GENE_DOMAINSTATUS = "UPDATE gene SET DomainStatus = 0"
+
+
+
 # MISC
 VERSION = pdm_utils.__version__
 RESULTS_FOLDER = f"{constants.CURRENT_DATE}_cdd"
@@ -55,6 +61,7 @@ def setup_argparser():
         "MySQL database.")
     output_folder_help = "Directory where log data can be generated."
     log_file_help = "Name of the log file generated."
+    reset_help = "Clear all domain data currently in the database before finding domains."
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
@@ -74,6 +81,8 @@ def setup_argparser():
         default=pathlib.Path("/tmp/"), help=output_folder_help)
     parser.add_argument("--log_file", type=str, default="find_domains.log",
         help=log_file_help)
+    parser.add_argument("--reset", action="store_true",
+        default=False, help=reset_help)
     return parser
 
 
@@ -199,6 +208,7 @@ def main(argument_list):
     tmp_dir = args.tmp_dir
     output_folder = args.output_folder
     log_file = args.log_file
+    reset = args.reset
 
     # Set up directory.
     output_folder = basic.set_path(output_folder, kind="dir", expect=True)
@@ -241,6 +251,9 @@ def main(argument_list):
     logger.info(f"Schema version is compatible.")
     logger.info("Command line arguments verified.")
 
+    if reset:
+        logger.info("Clearing all domain data currently in the database.")
+        clear_domain_data(engine)
 
     # Get gene data that needs to be processed
     # in dict format where key = column name, value = stored value.
@@ -463,3 +476,19 @@ def execute_statement(connection, statement):
         result = 0
 
     return result, type_error, msg
+
+
+
+def clear_domain_data(engine):
+    """Delete all domain data stored in the database."""
+    connection = engine.connect()
+    stmts = [CLEAR_GENE_DOMAIN, CLEAR_DOMAIN, CLEAR_GENE_DOMAINSTATUS]
+    exe_result = execute_transaction(connection, stmts)
+    if exe_result == 1:
+        logger.error("Unable to clear all domain data.")
+    else:
+        logger.info("All domain data cleared.")
+
+
+
+###
