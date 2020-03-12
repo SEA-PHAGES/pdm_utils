@@ -270,7 +270,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     headers = constants.IMPORT_TABLE_STRUCTURE["order"]
     if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
         if len(success_ticket_list) > 0:
-            success_tkt_file = pathlib.Path(success_path, "import_tickets.csv")
+            success_tkt_file = pathlib.Path(success_path, "import_table.csv")
             basic.export_data_dict(success_ticket_list, success_tkt_file,
                                        headers, include_headers=True)
         if len(success_filepath_list) > 0:
@@ -281,7 +281,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     logger.info("Logging failed tickets and files.")
     if (len(failed_ticket_list) > 0 or len(failed_filepath_list) > 0):
         if len(failed_ticket_list) > 0:
-            failed_tkt_file = pathlib.Path(failed_path, "import_tickets.csv")
+            failed_tkt_file = pathlib.Path(failed_path, "import_table.csv")
             basic.export_data_dict(failed_ticket_list, failed_tkt_file,
                                        headers, include_headers=True)
             summary.append(f"{len(failed_ticket_list)} ticket(s) NOT implemented:")
@@ -1234,8 +1234,8 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     else:
         gnm.check_attribute("id", phage_id_set, expect=True, eval_id="GNM_006",
                             eval_def=EDD["GNM_006"])
-        gnm.check_attribute("seq", seq_set, expect=True, eval_id="GNM_007",
-                            eval_def=EDD["GNM_007"])
+        gnm.check_attribute("seq", seq_set, expect=True,
+                            eval_id="GNM_007", eval_def=EDD["GNM_007"])
         gnm.check_attribute("annotation_status", {"draft"}, expect=False,
                             eval_id="GNM_008", fail="warning",
                             eval_def=EDD["GNM_008"])
@@ -1264,18 +1264,22 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                             eval_def=EDD["GNM_011"])
 
     else:
+        if gnm.annotation_status == "final":
+            gnm.check_attribute("name", {check_name}, expect=False,
+                                eval_id="GNM_012", fail="warning",
+                                eval_def=EDD["GNM_012"])
+
+            if eval_flags["check_description_tally"]:
+                gnm.check_magnitude("_cds_descriptions_tally", ">", 0,
+                                    eval_id="GNM_013", fail="warning",
+                                    eval_def=EDD["GNM_013"])
+
+    if eval_flags["check_coords"]:
         # TODO set trna=True and tmrna=True after they are implemented.
         gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna_ftr=False,
                                       strand=False, eval_id="GNM_030",
                                       eval_def=EDD["GNM_030"], fail="warning")
 
-        if gnm.annotation_status == "final":
-            gnm.check_attribute("name", {check_name}, expect=False,
-                                eval_id="GNM_012", fail="warning",
-                                eval_def=EDD["GNM_012"])
-            gnm.check_magnitude("_cds_descriptions_tally", ">", 0,
-                                eval_id="GNM_013", fail="warning",
-                                eval_def=EDD["GNM_013"])
 
     check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)
     gnm.check_attribute("id", {check_id}, expect=False,
@@ -1420,7 +1424,8 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
                             expect=False, eval_id="CDS_003",
                             eval_def=EDD["CDS_003"])
     cds_ftr.check_amino_acids(check_set=constants.PROTEIN_ALPHABET,
-                              eval_id="CDS_001", eval_def=EDD["CDS_001"])
+                              fail="warning", eval_id="CDS_001",
+                              eval_def=EDD["CDS_001"])
     cds_ftr.check_translation(eval_id="CDS_002", eval_def=EDD["CDS_002"])
     cds_ftr.check_attribute("translation_table", {11},
                             expect=True, eval_id="CDS_004", fail="warning",

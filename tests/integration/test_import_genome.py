@@ -13,7 +13,7 @@ from unittest.mock import patch
 import sqlalchemy
 from pdm_utils.classes import bundle, genome, genomepair, ticket, eval, cds, source
 from pdm_utils.constants import constants
-from pdm_utils.functions import basic, mysqldb
+from pdm_utils.functions import basic, eval_modes, mysqldb
 from pdm_utils.pipelines import import_genome
 
 
@@ -209,18 +209,8 @@ class TestImportGenome1(unittest.TestCase):
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
-        self.eval_flags = {
-            "check_locus_tag":True,
-            "check_description_field":True,
-            "check_replace":True,
-            "check_trna":True,
-            "import_locus_tag":True,
-            "check_id_typo":True,
-            "check_host_typo":True,
-            "check_author":True,
-            "check_description":True,
-            "check_gene":True
-            }
+        # Eval dict with all flags = True.
+        self.eval_flags = eval_modes.get_eval_flag_dict("base")
 
         self.data_dict = {}
         self.data_dict["host_genus"] = "Arthrobacter"
@@ -1098,17 +1088,8 @@ class TestImportGenome5(unittest.TestCase):
 
         self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
 
-        self.eval_flags = {}
-        self.eval_flags["check_seq"] = True
-        self.eval_flags["check_id_typo"] = True
-        self.eval_flags["check_host_typo"] = True
-        self.eval_flags["check_author"] = True
-        self.eval_flags["check_trna"] = True
-        self.eval_flags["check_gene"] = True
-        self.eval_flags["check_locus_tag"] = True
-        self.eval_flags["check_description"] = True
-        self.eval_flags["check_description_field"] = True
-        self.eval_flags["import_locus_tag"] = True
+        # Eval dict with all flags = True.
+        self.eval_flags = eval_modes.get_eval_flag_dict("base")
 
         self.data_dict1 = {}
         self.data_dict1["type"] = "replace"
@@ -1580,12 +1561,12 @@ class TestImportGenome6(unittest.TestCase):
         self.date = time.strftime("%Y%m%d")
 
         self.exp_success = Path(self.output_folder, "success")
-        self.exp_success_tkt_table = Path(self.exp_success, "import_tickets.csv")
+        self.exp_success_tkt_table = Path(self.exp_success, "import_table.csv")
         self.exp_success_genomes = Path(self.exp_success, "genomes")
         self.exp_success_logs = Path(self.exp_success, "logs")
 
         self.exp_fail = Path(self.output_folder, "fail")
-        self.exp_fail_tkt_table = Path(self.exp_fail, "import_tickets.csv")
+        self.exp_fail_tkt_table = Path(self.exp_fail, "import_table.csv")
         self.exp_fail_genomes = Path(self.exp_fail, "genomes")
         self.exp_fail_logs = Path(self.exp_fail, "logs")
 

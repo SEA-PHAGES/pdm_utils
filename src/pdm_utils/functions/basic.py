@@ -290,25 +290,26 @@ def reformat_description(raw_description):
     raw_description = raw_description.strip()
     processed_description = raw_description.lower()
     split_description = processed_description.split(" ")
-    if processed_description == "hypothetical protein":
-        processed_description = ""
-    elif processed_description == "phage protein":
-        processed_description = ""
-    elif processed_description == "unknown":
-        processed_description = ""
-    elif processed_description == "conserved hypothetical protein":
-        processed_description = ""
-    elif processed_description == "conserved phage protein":
-        processed_description = ""
-    elif processed_description == "hypothetical phage protein":
-        processed_description = ""
-    elif processed_description == "hypothetical phage membrane protein":
-        processed_description = ""
-    elif processed_description == "conserved phage membrane protein":
-        processed_description = ""
-    elif processed_description == "\\n":
-        processed_description = ""
-    elif processed_description == ".":
+
+    generic_set = {"hypothetical protein",
+                   "phage protein",
+                   "unknown",
+                   "conserved hypothetical protein",
+                   "conserved phage protein",
+                   "hypothetical phage protein",
+                   "hypothetical phage membrane protein",
+                   "conserved phage membrane protein",
+                   "hypothetical phageprotein",
+                   "phage membrane protein",
+                   "membrane protein",
+                   "structural protein",
+                   "regulatory protein",
+                   "integral membrane protein",
+                   "\\n",
+                   "."
+                   }
+
+    if processed_description in generic_set:
         processed_description = ""
     elif processed_description.isdigit():
         processed_description = ""

@@ -10,7 +10,8 @@ EVAL_FLAGS = {
     "import_locus_tag": "Should CDS feature locus_tags be imported? ",
 
     # Options that are utilized during the evaluation stage:
-    "check_locus_tag": "Should the structure of CDS feature locus_tags be checked? ",
+    "check_locus_tag": "Should the structure of CDS feature locus_tags be evaluated? ",
+    "check_description_tally": "Should the number of descriptions be evaluated? ",
     "check_description_field": "Should CDS descriptions in unexpected fields be reported? ",
     "check_description": "Should unexpected CDS descriptions be reported? ",
     "check_trna": "Should tRNA features be evaluated? ",
@@ -18,7 +19,8 @@ EVAL_FLAGS = {
     "check_host_typo": "Should host typos be reported? ",
     "check_author": "Should unexpected authors be reported? ",
     "check_gene": "Should the CDS 'gene' qualifier be evaluated? ",
-    "check_seq": "Should the nucleotide sequence be evaluated? "
+    "check_seq": "Should the nucleotide sequence be evaluated? ",
+    "check_coords": "Should feature duplication be evaluated? "
     }
 
 # Eval mode definitions.
@@ -49,6 +51,7 @@ def get_eval_flag_dict(eval_mode):
         dict["check_host_typo"] = False
         dict["check_author"] = False
         dict["check_description"] = False
+        dict["check_coords"] = False
 
     # Manual annotations.
     elif eval_mode == "final":
@@ -64,17 +67,23 @@ def get_eval_flag_dict(eval_mode):
         dict["check_host_typo"] = False
         dict["check_author"] = False
         dict["check_description"] = False
+        dict["check_description_tally"] = False
         dict["check_gene"] = False
+        dict["check_coords"] = False
 
     # Non-SEA-PHAGES GenBank records.
     elif eval_mode == "misc":
         dict["check_locus_tag"] = False
+        # TODO below should probably be True, but it causes problems
+        # when checking the current genome, GNM2_001, since these are not 'draft'
+        # genomes.
         dict["check_replace"] = False
         dict["check_trna"] = False
         dict["check_id_typo"] = False
         dict["check_host_typo"] = False
         dict["check_author"] = False
         dict["check_description"] = False
+        dict["check_description_tally"] = False
         dict["check_gene"] = False
 
     # Custom QC settings. User can select the settings, so it is initialized as
@@ -88,6 +97,9 @@ def get_eval_flag_dict(eval_mode):
                 print("The default setting for this eval_flag will be used.")
             else:
                 dict[key] = response
+
+    elif eval_mode == "base":
+        pass
     else:
         print("A valid eval_mode has not been selected.")
     return dict

@@ -160,6 +160,7 @@ PHAGE_ID_DICT = {
     "P100_A": "P100A",
     "P14":"P14.4",
     "phiELB20": "ELB20",
+    "ZL12": "pZL12",
 
     # 'LeBron' was changed to 'Bron' by ICTV. They won't change it back.
     "Bron": "LeBron",
@@ -191,6 +192,10 @@ PHAGE_ID_DICT = {
     "lockley": "Lockley",
     "Rockyhorror": "RockyHorror",
     "Ta17a": "TA17a",
+
+    # TODO may be able to correct back to normal
+    "Wait": "Waits",
+
 
     # Remove host data from phage name
     "ReqiDocB7": "DocB7",
