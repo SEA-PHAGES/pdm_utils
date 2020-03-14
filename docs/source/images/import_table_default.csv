@@ -1,0 +1,3 @@
+type,phage_id,description_field,eval_mode,host_genus,cluster,subcluster,accession,annotation_author,retrieve_record,annotation_status
+add,<manual>,<command>,<command>,retrieve,retrieve,retrieve,retrieve,1,1,draft
+replace,<manual>,<command>,<command>,retain,retain,retain,retain,retain,retain,final or retain

@@ -35,20 +35,16 @@ After creating the GenBank-formatted flat file, annotators can follow the steps 
         > mkdir validation
         > cd ./validation
 
-    7. Within this new folder, create a csv-formatted import table (such as 'import_table.csv') of :ref:`import tickets <ticketimport>`. A template table is provided on the ``pdm_utils`` source code repository on GitHub. Below are tips to structure tickets for routine review your flat files:
+    7. Within this new folder, create a csv-formatted import table (such as 'import_table.csv') of :ref:`import tickets <ticketimport>`. For routine review of flat files to replace auto-annotated 'draft' genomes in the database, a simplified import table can be used consisting only of the 'type' and 'phage_id' fields. A template table is provided on the ``pdm_utils`` source code repository on :pdmutils:`GitHub <>`. The ticket table should contain one ticket per flat file, in which:
 
-        1. Ticket Type should be set to “replace”.
-        2. Host, Cluster, Subcluster, and Accession should be set to “retrieve”.
-        3. Annotation Status should be set to “final”.
-        4. Annotation Author this should be set to “hatfull”.
-        5. Gene Description Field should be set to “product”.
-        6. Run mode should be set to “phagesdb”.
-        7. Only the Primary PhageID and Secondary PhageID need to be changed for each flat file.
+        1. 'type' is set to 'replace'.
+        2. 'phage_id' should be changed for each flat file.
 
-        Example ticket in ticket table (columns labeled only for illustration):
+        Example ticket table with 3 tickets:
 
         .. csv-table::
-            :file: ../images/import_table.csv
+            :file: ../images/import_table_reduced.csv
+
 
 
     8.	Create a new folder (such as 'genomes') within the validation folder to contain all flat files you would like to check::
@@ -59,17 +55,17 @@ After creating the GenBank-formatted flat file, annotators can follow the steps 
 
     10.	Run ``import``. The pipeline requires you to indicate the name of the database, the folder of flat files, and the import table. Below is an example of the command that executes the script, assuming you are still in the ‘validation’ folder::
 
-        > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv
+        > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv -o ./
 
     .. note::
 
-        By default, the pipeline runs in 'test' mode so it does not actually make any changes to the database.
+        By default, the pipeline does not run in 'production' mode so it does not actually make any changes to the database.
 
     11.	When prompted, provide your MySQL username and password to access your local Actinobacteriophage database.
 
-    12.	Monitor the output as the file is processed.
+    12.	The file is automatically processed, generating a log file of errors.
 
-    13.	After the evaluation is complete, review specific warnings and errors in the log file if needed.
+    13.	After the evaluation is complete, review specific errors in the log file if needed.
 
     14.	Repeat process if needed. After any errors are identified, re-create the flat files with the appropriate corrections, and repeat the import process to ensure the corrected file now passes validation.
 

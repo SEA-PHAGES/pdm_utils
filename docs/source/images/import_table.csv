@@ -1,2 +1,2 @@
-Ticket Type,Primary PhageID,Host Genus,Cluster,Subcluster,Annotation Status,Annotation Author,Gene Description Field,Accession,Run Mode,Secondary PhageID
-replace,Trixie,retrieve,retrieve,retrieve,final,hatfull,product,retrieve,phagesdb,Trixie
+type,phage_id,description_field,eval_mode,host_genus,cluster,subcluster,accession,annotation_author,retrieve_record,annotation_status
+replace,Trixie,product,final,retain,retain,retain,retain,1,1,final
