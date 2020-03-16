@@ -16,7 +16,7 @@ idna==2.8
 imagesize==1.2.0
 Jinja2==2.11.1
 MarkupSafe==1.1.1
-mkl-fft
+mkl_fft
 mkl-random==1.1.0
 mkl-service==2.3.0
 networkx==2.4
