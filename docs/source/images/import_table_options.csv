@@ -1,0 +1,6 @@
+type,phage_id,description_field,eval_mode,host_genus,cluster,subcluster,accession,annotation_author,retrieve_record,annotation_status
+,,,,retrieve,retrieve,retrieve,retrieve,,,
+,,,,retain,retain,retain,retain,retain,retain,
+,,,,parse,,,parse,,,
+,,command,command,,,,,,,
+,,,,,,none,none,,,
