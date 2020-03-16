@@ -16,9 +16,6 @@ idna==2.8
 imagesize==1.2.0
 Jinja2==2.11.1
 MarkupSafe==1.1.1
-mkl-fft
-mkl-random
-mkl-service
 networkx==2.4
 numpy==1.18.1
 packaging==20.3
