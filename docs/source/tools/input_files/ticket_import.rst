@@ -20,7 +20,7 @@ Within the import table, an individual row of data populating 11 columns constru
 
     3. **description_field**: indicates the field in the CDS feature annotations in the associated Genbank-formatted flat file that is expected to contain the gene descriptions ('product', 'function', 'note').
 
-    4. **eval_mode**: indicates the :ref:`eval mode <runmodes>` ('draft', 'final', 'auto', 'misc', 'custom'), determining which QC checks to implement and thus how the flat file is evaluated.
+    4. **eval_mode**: indicates the :ref:`eval mode <evalmodes>` ('draft', 'final', 'auto', 'misc', 'custom'), determining which QC checks to implement and thus how the flat file is evaluated.
 
     5. **host_genus**: the genus of the bacterial host that the phage infects.
 
@@ -48,7 +48,7 @@ Within the import table, an individual row of data populating 11 columns constru
     10. **retrieve_record**: indicates whether the genome should be automatically updated when the associated GenBank record (if available) is updated. This should be:
 
         - '1' if new versions of the GenBank record should be retrieved.
-        - '0' if new versions of the GenBank record should not be retrieved.
+        - '0' if new versions of the GenBank record should NOT be retrieved.
 
     11. **annotation_status**: the stage of gene annotations, which should be:
 
@@ -104,19 +104,3 @@ The table below indicates default settings for each type of ticket:
 
 .. csv-table::
     :file: ../../images/import_table_default.csv
-
-
-
-
-.. type
-.. phage_id
-.. description_field
-.. eval_mode
-..
-.. host_genus
-.. cluster
-.. subcluster
-.. accession
-.. annotation_author
-.. retrieve_record
-.. annotation_status

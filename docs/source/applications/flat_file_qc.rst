@@ -5,7 +5,7 @@ Reviewing genome annotations
 
 The Actinobacteriophage database is routinely updated with new genomics data. When new genome annotations need to to be imported into the database, they are processed using ``pdm_utils import`` which reviews the quality of the annotations and how they relate to data already present in the database. The :ref:`import pipeline <import>` processes GenBank-formatted flat files and checks for a variety of potential errors, including:
 
-    1.	Accidental changes to the genome sequence
+    1.	Changes to the genome sequence
     2.	Phage name typos
     3.	Host name typos
     4.	Missing CDS locus tags
@@ -47,19 +47,19 @@ After creating the GenBank-formatted flat file, annotators can follow the steps 
 
 
 
-    8.	Create a new folder (such as 'genomes') within the validation folder to contain all flat files you would like to check::
+    8.	Create a new folder (such as 'genomes') within the validation folder to contain all flat files to be checked::
 
         > mkdir genomes
 
     9. Manually move all flat files into that folder. No other files should be present.
 
-    10.	Run ``import``. The pipeline requires you to indicate the name of the database, the folder of flat files, and the import table. Below is an example of the command that executes the script, assuming you are still in the ‘validation’ folder::
+    10.	Run ``import``. The pipeline requires you to indicate the name of the database, the folder of flat files, the import table, and where to create the output folder. Below is an example of the command that executes the script, assuming you are still in the ‘validation’ folder::
 
         > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv -o ./
 
     .. note::
 
-        By default, the pipeline does not run in 'production' mode so it does not actually make any changes to the database.
+        By default, the pipeline does not run in 'production' mode, so it does not actually make any changes to the database.
 
     11.	When prompted, provide your MySQL username and password to access your local Actinobacteriophage database.
 

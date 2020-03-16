@@ -36,5 +36,5 @@ Supplementary information associated with different tools:
     NCBI creds <./tools/input_files/ncbicreds>
     Import tickets <./tools/input_files/ticket_import>
     Update tickets <./tools/input_files/ticket_update>
-    Run modes <./tools/input_files/run_modes>
+    Eval modes <./tools/input_files/eval_modes>
     Flat files <./tools/input_files/flatfile>
