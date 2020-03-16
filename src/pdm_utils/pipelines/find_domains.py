@@ -37,7 +37,7 @@ CLEAR_GENE_DOMAINSTATUS = "UPDATE gene SET DomainStatus = 0"
 
 # MISC
 VERSION = pdm_utils.__version__
-RESULTS_FOLDER = f"{constants.CURRENT_DATE}_cdd"
+RESULTS_FOLDER = f"{constants.CURRENT_DATE}_find_domains"
 
 # LOGGING
 # Add a logger named after this module. Then add a null handler, which
@@ -73,7 +73,7 @@ def setup_argparser():
                         help="number of concurrent CDD searches to run")
     parser.add_argument("--evalue", default=0.001, type=float,
                         help="evalue cutoff for rpsblast hits")
-    parser.add_argument("--tmp_dir", default="/tmp/cdd", type=str,
+    parser.add_argument("--tmp_dir", default="/tmp/find_domains", type=str,
                         help="path to temporary directory for file I/O")
     parser.add_argument("--rpsblast", default="", type=str,
                         help="path to rpsblast(+) binary")

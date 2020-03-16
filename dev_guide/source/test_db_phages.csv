@@ -1,0 +1,16 @@
+PhageID,Host,Cluster,Notes
+Sparky,Mycobacterium,Singleton,
+Yvonnetastic,Gordonia,Singleton,
+D29,Mycobacterium,A2,
+L5,Mycobacterium,A2,
+Et2Brutus,Mycobacterium,A11,
+Alice,Mycobacterium,C1,"Has tRNAs, tmRNA, wraparound gene"
+Atlantean,Mycobacterium,C1,"Has tRNAs, tmRNA, wraparound gene"
+Myrna,Mycobacterium,C2,"Has tRNAs, tmRNA"
+BaxterFox,Gordonia,CZ3,
+Octobien14,Gordonia,DU,
+Aubergine,Microbacterium,EA1,
+Lucky3,Microbacterium,EA4,
+Constance,Arthrobacter,FA,
+Mufasa8,Arthrobacter,FG,
+MichelleMyBell,Mycobacterium,N,"Unrelated to BaxterFox but has genes in same pham"

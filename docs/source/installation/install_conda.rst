@@ -14,7 +14,7 @@ Anaconda
 
 Some of them also have Python or non-Python dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install Python and other dependencies.
 
-Conda is available as part of Anaconda or Miniconda, and complete installation instructions are available in the Conda :conda_docs:`user guide <>`. The directions below highlight installation of Anaconda, but either of these tools is fine since they both install Conda:
+Conda is available as part of Anaconda or Miniconda, and complete installation instructions are available in the Conda :conda_docs:`user guide <>`. ``pdm_utils`` has been developed and tested using Conda >=4.5. The directions below highlight installation of Anaconda, but either of these tools is fine since they both install Conda:
 
 #. Install Conda locally through the :anaconda:`Anaconda <>` package.
 
