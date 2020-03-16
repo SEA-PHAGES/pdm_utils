@@ -35,7 +35,7 @@ def main(unparsed_args):
         "get_gb_records",
         "update",
         "import",
-        "import_dev",
+        "import_legacy",
         "find_domains",
         "phamerate",
         "export",
@@ -61,9 +61,9 @@ def main(unparsed_args):
     # Note: import_phage is the legacy import script and will be deprecated.
     # Once import_genome is tested and operational, 'import' will call the
     # 'import_genome' module instead of the 'import_phage' module.
-    elif args.pipeline == "import":
+    elif args.pipeline == "import_legacy":
         import_phage.main(unparsed_args)
-    elif args.pipeline == "import_dev":
+    elif args.pipeline == "import":
         import_genome.main(unparsed_args)
     elif args.pipeline == "find_domains":
         find_domains.main(unparsed_args[unparsed_args.index("find_domains") + 1:])

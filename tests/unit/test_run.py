@@ -10,7 +10,7 @@ class TestRunFunctions1(unittest.TestCase):
     def test_main_1(self, run_pipeline_mock):
         """Verify that main runs correctly with:
         valid pipeline and valid default options."""
-        unparsed_args = ["pdm_utils.run", "import_dev"]
+        unparsed_args = ["pdm_utils.run", "import"]
         run.main(unparsed_args)
         with self.subTest():
             self.assertTrue(run_pipeline_mock.called)

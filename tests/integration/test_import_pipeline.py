@@ -105,7 +105,7 @@ import_pipeline_test_log = import_pipeline_test_log.resolve()
 logging.basicConfig(filename=import_pipeline_test_log, filemode="w",
                     level=logging.DEBUG)
 
-pipeline = "import_dev"
+pipeline = "import"
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
